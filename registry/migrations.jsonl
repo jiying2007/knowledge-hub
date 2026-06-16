@@ -1,1 +1,2 @@
 {"from":"","to":"","mode":"none","status":"bootstrap-empty","checked_at":"2026-06-16","notes":"No content migration performed during bootstrap."}
+{"from":"registry/sources.json","to":"artifacts/manifests/source-inventory-20260616.md","mode":"read-only-inventory","status":"completed","checked_at":"2026-06-16","notes":"Generated migration baseline and priority plan; no source content copied, moved, deleted, renamed, edited, or promoted."}
