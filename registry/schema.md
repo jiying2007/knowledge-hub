@@ -30,6 +30,7 @@ decision
 project-current
 project-archive
 validation
+audit
 patent
 codex-session
 codex-workflow
