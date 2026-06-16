@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "defaults": {
+    "draft_review_days": 30,
+    "active_review_days": 90,
+    "archive_review_days": 180
+  },
+  "rules": [
+    {
+      "domain": "domains/personal",
+      "policy": "personal-local; never promote without explicit review"
+    },
+    {
+      "domain": "domains/codex",
+      "policy": "archive workflow evidence; do not use as engineering fact authority"
+    }
+  ]
+}

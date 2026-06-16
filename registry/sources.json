@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "embedded-knowledge",
+      "path": "/home/leiwenjun/embedded/knowledge",
+      "role": "team-knowledge-source",
+      "authority": "legacy-team-ssot",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash /home/leiwenjun/embedded/knowledge/scripts/check-all.sh"
+    },
+    {
+      "id": "engineering-archive",
+      "path": "/home/leiwenjun/embedded/engineering_archive",
+      "role": "project-archive-source",
+      "authority": "legacy-project-history",
+      "status": "registered",
+      "write_policy": "copy-first-migration-only",
+      "check": ""
+    },
+    {
+      "id": "patent-disclosure",
+      "path": "/home/leiwenjun/embedded/patent_disclosure",
+      "role": "patent-source",
+      "authority": "patent-materials",
+      "status": "registered",
+      "write_policy": "do-not-mix-with-engineering-knowledge",
+      "check": ""
+    },
+    {
+      "id": "codex-archive",
+      "path": "/home/leiwenjun/codex/docs/archive",
+      "role": "codex-governance-source",
+      "authority": "codex-workflow-history",
+      "status": "registered",
+      "write_policy": "use-codex-archive-tools",
+      "check": "rtk bash /home/leiwenjun/codex/scripts/archive-check.sh"
+    },
+    {
+      "id": "codex-memories",
+      "path": "/home/leiwenjun/.codex/memories",
+      "role": "auxiliary-memory-source",
+      "authority": "auxiliary-recall-only",
+      "status": "registered",
+      "write_policy": "read-only-unless-explicitly-approved",
+      "check": ""
+    },
+    {
+      "id": "pcr02-project-docs",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs",
+      "role": "project-current-docs-source",
+      "authority": "legacy-project-current-docs",
+      "status": "registered",
+      "write_policy": "externalize-to-knowledge-hub-before-prune",
+      "check": ""
+    }
+  ]
+}

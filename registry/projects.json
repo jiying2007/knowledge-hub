@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "projects": [
+    {
+      "id": "pcr02",
+      "name": "PCR02",
+      "domain": "domains/projects/pcr02",
+      "legacy_docs": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs",
+      "legacy_archive": "/home/leiwenjun/embedded/engineering_archive/pcr02",
+      "status": "registered"
+    }
+  ]
+}

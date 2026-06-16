@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "owners": [
+    {
+      "id": "leiwenjun",
+      "display_name": "leiwenjun",
+      "default_review_cycle_days": 90
+    }
+  ]
+}

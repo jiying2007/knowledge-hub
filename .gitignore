@@ -1,0 +1,42 @@
+# Local caches
+.cache/
+.tmp/
+tmp/
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Runtime logs and generated reports
+*.log
+*.trace
+*.tmp
+*.bak
+reports/generated/
+
+# Heavy or binary artifacts should be referenced from registry, not committed.
+artifacts/raw/
+artifacts/downloads/
+artifacts/binaries/
+*.bin
+*.elf
+*.hex
+*.img
+*.iso
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.rar
+
+# Secret-bearing local files
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx

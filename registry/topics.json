@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "topics": [
+    {"id": "embedded-standards", "domain": "domains/embedded/standards", "allowed_kinds": ["standard"]},
+    {"id": "embedded-runbooks", "domain": "domains/embedded/runbooks", "allowed_kinds": ["runbook"]},
+    {"id": "project-current", "domain": "domains/projects", "allowed_kinds": ["project-current", "architecture", "runbook", "validation"]},
+    {"id": "project-archive", "domain": "domains/projects", "allowed_kinds": ["project-archive", "decision", "validation"]},
+    {"id": "patents", "domain": "domains/patents", "allowed_kinds": ["patent", "artifact-ref"]},
+    {"id": "codex", "domain": "domains/codex", "allowed_kinds": ["codex-session", "codex-workflow"]},
+    {"id": "personal", "domain": "domains/personal", "allowed_kinds": ["personal-note"]}
+  ]
+}
