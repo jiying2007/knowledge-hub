@@ -7,3 +7,4 @@
 - Target domain: `domains/projects/pcr02`
 - Classification baseline: `artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - Copy-first dry-run manifest: `artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
+- Copy-first applied report: `artifacts/manifests/pcr02-copy-first-applied-20260616.md`
