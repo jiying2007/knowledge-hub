@@ -10,3 +10,5 @@
 - Governance rules: `governance`
 - Chinese long-term asset templates: `templates`
 - Governance manifests: `artifacts/manifests`
+- ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
+- PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
