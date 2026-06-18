@@ -12,6 +12,13 @@
 - `templates/`：新增知识条目的模板。
 - `artifacts/`：大文件、日志、SDK、制品的 manifest；不保存大文件正文。
 
+## 中文长期资产规范
+
+- 人读正文默认简体中文，命令、路径、协议字段、API 名称和代码标识保留原样。
+- 结论、证据、推断、建议和风险分开写，长期条目必须可复核。
+- 详细规范见 `governance/chinese-readability.md`、`governance/glossary.md`、`governance/evidence-rules.md`、`governance/naming-boundaries.md`、`governance/ai-generated-content-labeling.md`。
+- 模板入口见 `templates/README.md`。
+
 ## 权威边界
 
 1. 团队标准和跨项目 runbook 进入 `domains/embedded/`。

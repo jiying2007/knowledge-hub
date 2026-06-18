@@ -7,3 +7,6 @@
 - Patents: `domains/patents`
 - Codex workflows: `domains/codex`
 - Personal notes: `domains/personal`
+- Governance rules: `governance`
+- Chinese long-term asset templates: `templates`
+- Governance manifests: `artifacts/manifests`
