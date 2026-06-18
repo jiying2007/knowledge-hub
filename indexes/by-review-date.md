@@ -17,3 +17,5 @@
 - 2026-09-17: `pcr02-dvr-motor-closeout-targets-20260618`
 - 2026-09-17: `pcr02-remaining-owner-gates-20260618`
 - 2026-09-17: `pcr02-docs-governance-closeout-20260618`
+- 2026-09-17: `pcr02-owner-action-board-20260618`
+- 2026-09-17: `pcr02-governance-handoff-20260618`
