@@ -28,5 +28,8 @@
 - Owner hard gate summary: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - PCR02 owner-gated source identity: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
 - Source identity match: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
+- PCR02 owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
+- Owner resolution state transition: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
+- Source identity match cannot auto active: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - PCR02 governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
 - Needs owner resolution: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
