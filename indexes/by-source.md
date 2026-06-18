@@ -12,3 +12,5 @@
 ## Source-Specific Review Artifacts
 
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN split targets are tracked by `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.
+- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only governance is tracked by `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`.
+- `codex-memories`: remains auxiliary recall only; memory auto-curation governance must not write `~/.codex/memories/**`.

@@ -12,3 +12,5 @@
 - Governance manifests: `artifacts/manifests`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
+- Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
+- No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
