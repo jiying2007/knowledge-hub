@@ -16,4 +16,6 @@
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan closeout is tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU fact split and archive-only boundary are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only metadata and memory-candidate exclusion are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
+- `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata owner/gate evidence boundary is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
 - `codex-memories`: remains auxiliary recall only; memory auto-curation governance must not write `~/.codex/memories/**`.

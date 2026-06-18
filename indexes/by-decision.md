@@ -2,6 +2,8 @@
 
 - `knowledge-hub-root-path`
 - `automation-report-only-default`
+- `pcr02-owner-review-001`: PCR02 docs `AGENTS.md` remains reference-only pending owner gate; current gate manifest is `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
+- `pcr02-owner-review-002`: PCR02 diag command metadata remains reference-only pending owner and gate evidence; current gate manifest is `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
 - `pcr02-owner-review-003`: ASAN split decision is pending owner worksheet completion; current target manifest is `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.
 - `pcr02-owner-review-004`: memory auto-curation remains blocked-personal-local; current report-only governance manifest is `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`.
 - `pcr02-owner-review-005`: DVR plan status remains owner-gated; current closeout manifest is `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.

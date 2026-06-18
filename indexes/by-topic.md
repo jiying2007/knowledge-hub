@@ -17,3 +17,6 @@
 - PCR02 DVR closeout: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
 - PCR02 motor MCU debug boundary: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
 - DVR session archive-only boundary: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
+- PCR02 project docs agent rules: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
+- PCR02 diag command metadata: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
+- Reference-only pending owner-gate: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
