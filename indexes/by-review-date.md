@@ -1,8 +1,19 @@
 # By Review Date
 
+- 2026-07-16: `pcr02-copy-first-dry-run-20260616`
+- 2026-07-16: `pcr02-copy-first-applied-20260616`
+- 2026-07-16: `pcr02-project-docs-classification-20260616`
+- 2026-07-17: `pcr02-review-required-resolution-20260617`
+- 2026-07-18: `pcr02-reference-artifact-ref-applied-20260618`
+- 2026-07-18: `pcr02-owner-review-package-20260618`
+- 2026-07-18: `pcr02-owner-review-follow-up-20260618`
+- 2026-07-18: `pcr02-owner-decision-worksheets-20260618`
 - 2026-09-16: `knowledge-hub-root`
 - 2026-09-16: `knowledge-hub-ultimate-maintenance-plan`
+- 2026-09-17: `pcr02-docs-index-reference-20260618`
+- 2026-09-17: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
 - 2026-09-17: `pcr02-asan-split-targets-20260618`
 - 2026-09-17: `memory-auto-curation-report-only-governance-20260618`
 - 2026-09-17: `pcr02-dvr-motor-closeout-targets-20260618`
 - 2026-09-17: `pcr02-remaining-owner-gates-20260618`
+- 2026-09-17: `pcr02-docs-governance-closeout-20260618`

@@ -20,3 +20,6 @@
 - PCR02 project docs agent rules: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
 - PCR02 diag command metadata: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
 - Reference-only pending owner-gate: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
+- PCR02 docs governance closeout: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
+- PCR02 registry/index closeout: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
+- Owner-gated not active: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`

@@ -17,7 +17,16 @@
 - `knowledge-hub-zh-template-set-20260618`
 - `knowledge-hub-registry-schema-readability-extension`
 - `chinese-developer-long-term-assets-20260618`
+- `pcr02-project-docs-classification-20260616`
+- `pcr02-copy-first-dry-run-20260616`
+- `pcr02-copy-first-applied-20260616`
+- `pcr02-review-required-resolution-20260617`
+- `pcr02-reference-artifact-ref-applied-20260618`
+- `pcr02-owner-review-package-20260618`
+- `pcr02-owner-review-follow-up-20260618`
+- `pcr02-owner-decision-worksheets-20260618`
 - `pcr02-asan-split-targets-20260618`
 - `memory-auto-curation-report-only-governance-20260618`
 - `pcr02-dvr-motor-closeout-targets-20260618`
 - `pcr02-remaining-owner-gates-20260618`
+- `pcr02-docs-governance-closeout-20260618`
