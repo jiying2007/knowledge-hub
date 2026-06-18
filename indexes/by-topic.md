@@ -14,3 +14,6 @@
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
 - Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
+- PCR02 DVR closeout: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
+- PCR02 motor MCU debug boundary: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
+- DVR session archive-only boundary: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`

@@ -19,3 +19,4 @@
 - `chinese-developer-long-term-assets-20260618`
 - `pcr02-asan-split-targets-20260618`
 - `memory-auto-curation-report-only-governance-20260618`
+- `pcr02-dvr-motor-closeout-targets-20260618`
