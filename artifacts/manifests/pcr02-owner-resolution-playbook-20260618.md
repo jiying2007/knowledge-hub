@@ -64,6 +64,7 @@
 - `none`
 - `reference-only`
 - `archive-only`
+- `project-local-rule`
 - `project-current`
 - `project-decision`
 - `candidate-only`
@@ -74,7 +75,7 @@
 
 | Source path | Owner decision | Allowed target action | Forbidden transition |
 | --- | --- | --- | --- |
-| `AGENTS.md` | `project-local-rule` | PCR02 project-local rule；`review_status=owner-approved-project-local-rule-pending-verification`；`promotion_decision=project-current` | 根 `AGENTS.md`、全局 Codex 规则、team standard、`domains/embedded/standards` |
+| `AGENTS.md` | `project-local-rule` | PCR02 project-local rule；`review_status=owner-approved-project-local-rule-pending-verification`；`promotion_decision=project-local-rule` | 根 `AGENTS.md`、全局 Codex 规则、team standard、`domains/embedded/standards` |
 | `AGENTS.md` | `reference-only` | 仅保留引用；`review_status=owner-approved-reference-only`；`promotion_decision=reference-only` | active/current/team/global |
 | `AGENTS.md` | `no-migration` | 关闭迁移路径；`review_status=owner-rejected`；`promotion_decision=no-migration` | 任何正文迁移 |
 | `standards/diag-command-metadata-standard.md` | `pcr02-project-decision-after-owner-gate` | PCR02 decision 候选；`owner-approved-project-decision-pending-verification` | 无 gate evidence 或 owner exception 时直接 current；team standard |
@@ -83,10 +84,15 @@
 | `runbooks/asan-debug-guide.md` | `split-approved` | 仅批准拆分；team 部分 candidate-only，PCR02 细节 project-local；`owner-approved-split-pending-rewrite` | 整篇复制到 team active；PCR02 `DEBUG=256`、`prog_pcr02`、`/customer/*` 变跨项目默认 |
 | `runbooks/asan-debug-guide.md` | `active-project-local` | PCR02 project-local runbook 候选 | team active；embedded standards |
 | `runbooks/asan-debug-guide.md` | `team-candidate-only` | team candidate-only，不 active | 直接 active |
+| `runbooks/asan-debug-guide.md` | `reference-only` | 仅保留引用；不复制正文 | project current；team active |
+| `runbooks/asan-debug-guide.md` | `rejected` | 关闭迁移路径；记录 owner 拒绝原因 | 任何正文迁移 |
 | `runbooks/memory-auto-curation-guide.md` | `personal-local` | 仅 personal/local；`promotion_decision=no-migration` | team active index；自动化启用 |
 | `runbooks/memory-auto-curation-guide.md` | `teamized-report-only` | disabled report-only governance candidate；`teamized-report-only-disabled` | 写 memory；启用自动 send/commit/publish/delete/promote |
+| `runbooks/memory-auto-curation-guide.md` | `rejected` | 关闭迁移路径；记录 owner 拒绝原因 | team active；自动化启用 |
+| `runbooks/memory-auto-curation-guide.md` | `no-migration` | 不迁移正文；保留控制面记录 | 写 memory；写 team active index |
 | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `completed` / `superseded` | owner closeout；可 archive-only 或 closeout artifact | 把计划命令当验证结果；保持 active |
 | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `active-if-owner-confirms-current-baseline` | current-baseline pending verification；必须有 branch/commit/tag 和实际验证结果 | 未确认当前基线就 active/current |
+| `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `archive-only` | 明确只归档；不保留 active 计划语义 | current-baseline；project current |
 | `reports/2026-05-29-motor-mcu-debug-record.md` | `archive-only` | archive-only | 推断变 verified root cause；生产策略 |
 | `reports/2026-05-29-motor-mcu-debug-record.md` | `validation-report-candidate` | validation candidate pending verification | 直接 current；隐藏 open items |
 | `reports/2026-06-16-dvr-record-replay-session-archive.md` | `archive-only` | 仅 archive-only；抽取 decision/validation evidence 需新 owner review | 整篇 current；写 memory candidates；dirty-state/handoff 当项目事实 |
@@ -141,6 +147,12 @@
 4. `registry/migrations.jsonl` 只追加，不覆盖历史行。
 5. `indexes/by-status.md` 保留 canonical bucket，额外用 overlay bullet 说明 owner gate 结果。
 6. `indexes/by-project.md` 必须保留 closeout / resolution artifact 引用，即使结果是 `no-migration`。
+
+机器校验：
+
+- 受控枚举、source_path 到 owner_decision 的映射、额外必填字段和禁止组合由 `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md` 固化。
+- 若本 playbook 的 prose 描述与 schema/worksheet 不一致，先以 worksheet 和 schema 为 owner 决策落地依据，再追加修正 playbook。
+- schema 仍是 `reviewing` 控制面制品，不代表 owner gate 已满足，也不允许自动 active/current。
 
 ## 验证矩阵
 

@@ -23,6 +23,7 @@
 - `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
 - `pcr02-project-docs owner-gated source identity`: current source SHA256/size preflight is tracked by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
+- `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.
 - `registry/items.jsonl; registry/migrations.jsonl; indexes/by-*.md`: PCR02 control-plane closeout audit is tracked by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`.
 - `codex-memories`: remains auxiliary recall only; memory auto-curation governance must not write `~/.codex/memories/**`.

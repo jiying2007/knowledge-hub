@@ -22,3 +22,4 @@
 - 2026-09-17: `pcr02-owner-intake-package-20260618`
 - 2026-09-17: `pcr02-owner-source-identity-preflight-20260618`
 - 2026-09-17: `pcr02-owner-resolution-playbook-20260618`
+- 2026-09-17: `pcr02-owner-resolution-schema-20260618`

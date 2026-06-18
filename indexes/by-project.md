@@ -21,5 +21,6 @@
 - Owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - Owner source identity preflight: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
 - Owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
+- Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`

@@ -31,5 +31,8 @@
 - PCR02 owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Owner resolution state transition: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Source identity match cannot auto active: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
+- PCR02 owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
+- Owner decision value set: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
+- Owner invalid-combination gate: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - PCR02 governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
 - Needs owner resolution: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
