@@ -18,5 +18,6 @@
 - Docs governance closeout: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
 - Owner action board: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
 - Governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
+- Owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`

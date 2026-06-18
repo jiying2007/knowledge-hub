@@ -24,5 +24,7 @@
 - PCR02 registry/index closeout: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
 - Owner-gated not active: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
 - PCR02 owner action board: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
+- PCR02 owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
+- Owner hard gate summary: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - PCR02 governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
 - Needs owner resolution: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
