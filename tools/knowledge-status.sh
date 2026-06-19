@@ -121,7 +121,18 @@ open_owner_rows = sorted(
     ),
 )
 next_owner_gate = {}
+summary_commands = []
 if open_owner_rows:
+    for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
+        summary_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--summary",
+        ]
+        summary_commands.append(" ".join(shlex.quote(str(part)) for part in summary_command))
     first_open = open_owner_rows[0]
     next_open_command = [
         "rtk",
@@ -172,6 +183,11 @@ if knowledge_check["exit_code"] != 0:
 if active_exposure_count:
     next_actions.append("立即移除 owner-gated active exposure，owner 决策闭环前不得 active。")
 if open_owner_gate_count:
+    if summary_commands:
+        next_actions.append(
+            "先查看 owner gate 总览以分派全部 open gate；运行："
+            f"{summary_commands[0]}。"
+        )
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
@@ -225,6 +241,7 @@ result = {
         "open_count": open_owner_gate_count,
         "resolved_count": owner_payload.get("resolved_count", 0),
         "active_exposure_count": active_exposure_count,
+        "summary_commands": summary_commands,
         "next_open": next_owner_gate,
     },
     "errors": errors,
@@ -266,6 +283,10 @@ print(f"- rows: {result['owner_gates']['row_count']}")
 print(f"- open: {open_owner_gate_count}")
 print(f"- resolved: {owner_payload.get('resolved_count', 0)}")
 print(f"- active exposure: {active_exposure_count}")
+if summary_commands:
+    print("- summary commands:")
+    for command in summary_commands:
+        print(f"  - `{command}`")
 if next_owner_gate:
     print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
     print(f"- next-open command: `{next_owner_gate['next_open_command']}`")

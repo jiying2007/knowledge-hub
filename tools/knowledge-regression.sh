@@ -423,10 +423,12 @@ def test_status_next_owner_gate():
     except Exception:
         pass
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
+    summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     next_actions = parsed.get("next_actions_zh", [])
     expect(
         result["exit_code"] == 0
         and parsed.get("status") == "needs-owner-review"
+        and any("--summary" in str(command) for command in summary_commands)
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
         and "--checklist" in next_open.get("next_open_command", "")
@@ -434,13 +436,15 @@ def test_status_next_owner_gate():
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", "")
         and "--checklist" in next_open.get("focus_command", "")
         and "--forms" in next_open.get("focus_command", "")
+        and any("--summary" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions),
         "status-next-owner-gate",
-        "status dashboard exposes next owner gate focus command",
+        "status dashboard exposes owner summary and next owner gate focus commands",
         {
             "exit_code": result["exit_code"],
             "status": parsed.get("status"),
             "worksheet_id": next_open.get("worksheet_id"),
+            "summary_commands": summary_commands,
             "next_open_command": next_open.get("next_open_command", ""),
             "focus_command": next_open.get("focus_command", ""),
             "next_actions_zh": next_actions,
