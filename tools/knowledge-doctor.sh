@@ -5,17 +5,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 ITEM_ID=""
+OWNER_GATES_SOURCE_ID=""
 
 usage() {
   cat <<EOF
 Usage:
-  rtk bash tools/knowledge-doctor.sh [--id <item-id>]
+  rtk bash tools/knowledge-doctor.sh [--id <item-id>] [--owner-gates <source-id>]
 
 Examples:
   rtk bash tools/knowledge-doctor.sh
   rtk bash tools/knowledge-doctor.sh --id knowledge-hub-root
+  rtk bash tools/knowledge-doctor.sh --owner-gates pcr02-project-docs
 
-This command is read-only. It runs diagnostics, optional item explain and optional search; it never creates, edits, commits or promotes files.
+This command is read-only. It runs diagnostics, optional item explain/search and optional owner gate board; it never creates, edits, commits or promotes files.
 EOF
 }
 
@@ -34,6 +36,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --id)
       ITEM_ID="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --owner-gates)
+      OWNER_GATES_SOURCE_ID="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     -h|--help)
@@ -80,11 +86,20 @@ if [[ -n "$ITEM_ID" ]]; then
   }
 fi
 
+if [[ -n "$OWNER_GATES_SOURCE_ID" ]]; then
+  run_step "Owner gate 看板: $OWNER_GATES_SOURCE_ID" rtk bash "$ROOT/tools/knowledge-owner-gates.sh" --source-id "$OWNER_GATES_SOURCE_ID" || {
+    step_status=$?
+    if [[ "$final_status" -eq 0 ]]; then
+      final_status="$step_status"
+    fi
+  }
+fi
+
 printf "\n## 下一步\n\n"
 if [[ "$final_status" -eq 0 ]]; then
-  printf "诊断通过。若刚新增或修改条目，仍需确认 registry、核心索引、migration 和正文已经人工复核。\n"
+  printf "诊断通过。若刚新增或修改条目，仍需确认 registry、核心索引、migration、owner gate 和正文已经人工复核。\n"
 else
-  printf "诊断未通过。优先按 diagnostics.category 的 action_zh 修复；若提供了 --id，再参考 explain 和 search 输出定位具体条目。\n"
+  printf "诊断未通过。优先按 diagnostics.category 的 action_zh 修复；若提供了 --id 或 --owner-gates，再参考 explain、search 和 owner gate 看板定位具体条目。\n"
 fi
 
 exit "$final_status"
