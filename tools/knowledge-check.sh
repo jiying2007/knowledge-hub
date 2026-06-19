@@ -22,6 +22,7 @@ parser.add_argument("--sources-only", action="store_true")
 parser.add_argument("--project", default="")
 parser.add_argument("--domain", default="")
 parser.add_argument("--explain", default="", metavar="ITEM_ID")
+parser.add_argument("--diagnostics", action="store_true")
 args = parser.parse_args(argv)
 
 errors = []
@@ -130,6 +131,145 @@ def load_jsonl(path):
         except Exception as exc:
             errors.append(f"{path}:{lineno}: invalid jsonl: {exc}")
     return rows
+
+def build_diagnostics(error_items, warning_items):
+    rules = [
+        (
+            "registry-parse",
+            "registry JSON/JSONL 解析失败",
+            "先修复对应 registry 文件的 JSON 或 JSONL 语法，再重跑 knowledge-check。",
+            lambda msg: "invalid json" in msg or "invalid jsonl" in msg,
+        ),
+        (
+            "source-registry",
+            "source registry 字段或枚举异常",
+            "检查 registry/sources.json 中对应 source 的 id、role、authority、status 和 write_policy。",
+            lambda msg: msg.startswith("sources:"),
+        ),
+        (
+            "source-index",
+            "source index 漏登或残留",
+            "同步 indexes/by-source.md 的 Knowledge Sources 表，确保和 registry/sources.json 一致。",
+            lambda msg: msg.startswith("index:indexes/by-source.md"),
+        ),
+        (
+            "owner-project-topic-registry",
+            "owner/project/topic registry 异常",
+            "检查 registry/owners.json、registry/projects.json 或 registry/topics.json 的登记项和枚举。",
+            lambda msg: msg.startswith(("owners:", "projects:", "topics:")),
+        ),
+        (
+            "migration-record",
+            "migration 记录异常",
+            "检查 registry/migrations.jsonl 的 from、to、mode、status、checked_at、notes 和本地目标路径。",
+            lambda msg: msg.startswith("migrations:"),
+        ),
+        (
+            "template-schema",
+            "模板字段缺失",
+            "检查 templates/*.md，补齐 registry/schema.md 要求的字段，保持人工新增入口可用。",
+            lambda msg: msg.startswith("template:"),
+        ),
+        (
+            "manual-entry",
+            "人工新增入口过期",
+            "同步 tools/knowledge-new.sh 和 templates/README.md 中当前 registry/index/migration 门禁提示。",
+            lambda msg: msg.startswith("manual-entry:"),
+        ),
+        (
+            "item-source-ref",
+            "item source 或 artifact 引用异常",
+            "检查 registry/items.jsonl 中 source_id、migration_manifest、source_sha256 或 artifact-ref 元数据。",
+            lambda msg: msg.startswith("items:") and any(
+                token in msg
+                for token in [
+                    "source_id",
+                    "migration_manifest",
+                    "source_sha256",
+                    "artifact-ref",
+                    "artifact ",
+                    "artifact sha256",
+                    "artifact size",
+                ]
+            ),
+        ),
+        (
+            "validation-ref",
+            "validation_refs 异常",
+            "检查 registry/items.jsonl 中 validation_refs 是否为非空字符串列表；本地路径必须存在，命令型引用不会被执行。",
+            lambda msg: msg.startswith("items:") and "validation_ref" in msg,
+        ),
+        (
+            "item-boundary",
+            "item 字段、枚举或边界异常",
+            "检查 registry/items.jsonl 中对应 item 的必填字段、枚举、domain/path/scope/visibility 边界。",
+            lambda msg: msg.startswith("items:"),
+        ),
+        (
+            "core-index",
+            "核心索引覆盖异常",
+            "同步 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md，确保每个 registry item 恰好有规范引用。",
+            lambda msg: msg.startswith(("index:indexes/by-owner.md", "index:indexes/by-review-date.md", "index:indexes/by-status.md")),
+        ),
+        (
+            "index-local-ref",
+            "索引中的本地路径引用失效",
+            "检查 indexes/*.md 中反引号包裹的本地路径或 glob，修正为存在的 Knowledge Hub 相对路径。",
+            lambda msg: msg.startswith("index:") and "missing local" in msg,
+        ),
+        (
+            "active-safety",
+            "active 安全边界异常",
+            "检查 active bucket、personal-local、AI 生成内容人工复核字段，未满足门禁前不要提升为 active。",
+            lambda msg: "active bucket references" in msg or "personal-local" in msg or "ai-generated active" in msg,
+        ),
+        (
+            "secret-pattern",
+            "疑似 secret 模式命中",
+            "立即检查对应文本，移除 token、private key、password、cookie 等运行时 secret；保留脱敏引用。",
+            lambda msg: msg.startswith("secret-pattern:"),
+        ),
+        (
+            "explain",
+            "explain 目标不存在",
+            "确认 --explain 参数使用的是 registry/items.jsonl 中真实存在的 item id。",
+            lambda msg: msg.startswith("explain:"),
+        ),
+    ]
+    buckets = {}
+    for message in error_items:
+        category = None
+        for category_id, title_zh, action_zh, matcher in rules:
+            if matcher(message):
+                category = (category_id, title_zh, action_zh)
+                break
+        if category is None:
+            category = ("other", "未分类错误", "查看原始 ERROR 行，必要时补充 diagnostics 分类规则。")
+        category_id, title_zh, action_zh = category
+        bucket = buckets.setdefault(
+            category_id,
+            {
+                "id": category_id,
+                "title_zh": title_zh,
+                "severity": "error",
+                "count": 0,
+                "action_zh": action_zh,
+                "examples": [],
+            },
+        )
+        bucket["count"] += 1
+        if len(bucket["examples"]) < 5:
+            bucket["examples"].append(message)
+    warning_examples = list(warning_items[:5])
+    return {
+        "summary_zh": f"发现 {len(error_items)} 个错误，{len(warning_items)} 个警告，归类为 {len(buckets)} 类。",
+        "categories": sorted(buckets.values(), key=lambda item: (-item["count"], item["id"])),
+        "warnings": {
+            "count": len(warning_items),
+            "examples": warning_examples,
+            "action_zh": "warning 不阻断检查，但应按 review_after、兼容参数或外部 source 可用性安排人工复核。",
+        },
+    }
 
 sources_path = root / "registry" / "sources.json"
 sources = load_json(sources_path).get("sources", [])
@@ -721,6 +861,8 @@ result = {
 }
 if explain is not None:
     result["explain"] = explain
+if args.diagnostics:
+    result["diagnostics"] = build_diagnostics(errors, warnings)
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 else:
@@ -747,5 +889,19 @@ else:
             print(f"  index {rel_index}: {detail['status']} ({detail['reference_count']}x{bucket})")
         for hint in explain["maintenance_hints"]:
             print(f"  hint: {hint}")
+    if args.diagnostics:
+        diagnostics = result["diagnostics"]
+        print("diagnostics:")
+        print(f"  summary: {diagnostics['summary_zh']}")
+        for category in diagnostics["categories"]:
+            print(f"  category {category['id']}: {category['title_zh']} ({category['count']}x)")
+            print(f"    action: {category['action_zh']}")
+            for example in category["examples"]:
+                print(f"    example: {example}")
+        if diagnostics["warnings"]["count"]:
+            print(f"  warnings: {diagnostics['warnings']['count']}x")
+            print(f"    action: {diagnostics['warnings']['action_zh']}")
+            for example in diagnostics["warnings"]["examples"]:
+                print(f"    example: {example}")
 sys.exit(0 if not errors else 1)
 PY

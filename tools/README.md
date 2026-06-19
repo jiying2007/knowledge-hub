@@ -10,7 +10,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 不要在长期文档中直接引用内部 Python 入口，也不要绕过 `rtk` 裸跑 shell 命令。
 
-- `knowledge-check.sh`: read-only validation, including registry JSON/JSONL parse checks, registry owner/project/topic registration checks, source index coverage checks, registry item date consistency checks, item source reference checks, validation reference structure/path checks, item tag/promotion checks, registry field/path/enum/domain-boundary checks, migration record structure/local-target checks, item template required-field checks, personal-local active blocking, AI-generated active human-review gates, source enum checks, secret-pattern scan for text knowledge and `artifacts/manifests/`, core index drift checks for missing/stale/duplicate item refs, local path/glob reference checks in `indexes/*.md`, and `--explain <item-id>` item-level manual maintenance diagnostics.
+- `knowledge-check.sh`: read-only validation, including registry JSON/JSONL parse checks, registry owner/project/topic registration checks, source index coverage checks, registry item date consistency checks, item source reference checks, validation reference structure/path checks, item tag/promotion checks, registry field/path/enum/domain-boundary checks, migration record structure/local-target checks, item template required-field checks, personal-local active blocking, AI-generated active human-review gates, source enum checks, secret-pattern scan for text knowledge and `artifacts/manifests/`, core index drift checks for missing/stale/duplicate item refs, local path/glob reference checks in `indexes/*.md`, `--explain <item-id>` item-level manual maintenance diagnostics, and `--diagnostics` Chinese error grouping.
 - Stale `review_after` values in registry items are warnings, not blocking errors; invalid date format and `updated_at < created_at` remain errors.
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
@@ -28,10 +28,13 @@ Writing requires explicit future implementation and must not be used by unattend
 
 `--explain <item-id>` 是只读人工诊断入口，用于解释单个 registry item 的基础字段、正文路径是否存在、核心索引引用计数、`by-status` bucket 和维护提示。它不修复文件、不生成索引、不执行 `validation_refs`，适合在 `knowledge-check` 报缺失或重复引用后定位人工修改点。
 
+`--diagnostics` 是只读错误分组入口，用于把原始 errors 按 registry、source、migration、template、manual-entry、item、index、secret 和 explain 等类别生成中文摘要与人工修复提示。它不隐藏原始错误、不改变退出码、不自动修复，适合在全仓门禁失败后快速判断先改哪个文件。
+
 示例：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-root
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 ## Evidence

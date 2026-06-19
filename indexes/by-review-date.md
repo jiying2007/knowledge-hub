@@ -83,3 +83,4 @@
 - 2026-09-19: `knowledge-hub-index-duplicate-gate-20260619`
 - 2026-09-19: `knowledge-hub-manual-entry-freshness-gate-20260619`
 - 2026-09-19: `knowledge-hub-item-explain-diagnostic-20260619`
+- 2026-09-19: `knowledge-hub-check-diagnostics-20260619`

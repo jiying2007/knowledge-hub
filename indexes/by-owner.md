@@ -60,6 +60,7 @@
 - `knowledge-hub-index-duplicate-gate-20260619`
 - `knowledge-hub-manual-entry-freshness-gate-20260619`
 - `knowledge-hub-item-explain-diagnostic-20260619`
+- `knowledge-hub-check-diagnostics-20260619`
 
 ## pcr02-registry-owner
 
