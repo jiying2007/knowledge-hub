@@ -334,6 +334,27 @@ if not args.sources_only:
                 if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
                     errors.append(f"template:{rel_template} artifact-ref missing {field}")
 
+    manual_entry_terms = [
+        "promotion",
+        "tags",
+        "validation_refs",
+        "indexes/by-owner.md",
+        "indexes/by-review-date.md",
+        "indexes/by-status.md",
+        "registry/migrations.jsonl",
+        "duplicate",
+    ]
+    manual_entry_files = [
+        root / "tools" / "knowledge-new.sh",
+        root / "templates" / "README.md",
+    ]
+    for manual_entry_file in manual_entry_files:
+        manual_text = manual_entry_file.read_text()
+        rel_manual = manual_entry_file.relative_to(root)
+        for term in manual_entry_terms:
+            if term not in manual_text:
+                errors.append(f"manual-entry:{rel_manual} missing current gate term: {term}")
+
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
     today = dt.date.today()

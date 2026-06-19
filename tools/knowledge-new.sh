@@ -111,8 +111,8 @@ $(usage)
 
 1. 先确认正文唯一位置，避免同一正文维护两份。
 2. 从 ${TEMPLATE} 复制内容到目标路径，正文默认使用简体中文。
-3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md。
-4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id。
+3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、tags、validation_refs 已填写。
+4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 5. 如需主题入口，在 indexes/by-topic.md 增加可读路径引用。
 6. 在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径。
 7. 运行验证：

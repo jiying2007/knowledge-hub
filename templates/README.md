@@ -25,4 +25,4 @@
 - `artifact-ref.md`：制品引用。
 - `patent-disclosure.md`：专利披露。
 
-`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after` 和 `validation_refs`，并同步 registry、index 与 migration。
+`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after`、`promotion`、`tags` 和 `validation_refs`，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 与 `registry/migrations.jsonl`；核心索引不得留下 duplicate item reference。

@@ -58,3 +58,4 @@
 - Knowledge Hub validation reference gate: `artifacts/manifests/knowledge-hub-validation-ref-gate-20260619.md`
 - Knowledge Hub item discoverability gate: `artifacts/manifests/knowledge-hub-item-discoverability-gate-20260619.md`
 - Knowledge Hub index duplicate gate: `artifacts/manifests/knowledge-hub-index-duplicate-gate-20260619.md`
+- Knowledge Hub manual entry freshness gate: `artifacts/manifests/knowledge-hub-manual-entry-freshness-gate-20260619.md`
