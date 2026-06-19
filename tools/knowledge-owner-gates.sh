@@ -17,6 +17,7 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Print a read-only owner-gate board from owner decision worksheets.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
+parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
@@ -99,6 +100,23 @@ def make_decision_form(row):
     for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
         form.setdefault(field, default_field_value(field, row))
     return form
+
+def make_owner_checklist(row):
+    return {
+        "worksheet_id": row["id"],
+        "source_id": row["source_id"],
+        "source_path": row["source_path"],
+        "owner": row["owner"],
+        "owner_question_zh": row.get("owner_question_zh", ""),
+        "default_state": row.get("default_state", ""),
+        "allowed_owner_decisions": row["decision_options"],
+        "allowed_next_status": row.get("allowed_next_status", []),
+        "required_owner_fields": row["required_owner_fields"],
+        "hard_gate_summary": row.get("hard_gate_summary", ""),
+        "hard_gate": row.get("hard_gate", ""),
+        "must_not": row["must_not"],
+        "notes_zh": "本清单只把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
+    }
 
 def is_filled(value):
     return _is_filled(value)
@@ -270,6 +288,18 @@ worksheet_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decisio
 if not worksheet_paths:
     errors.append("missing artifacts/manifests/*owner-decision-worksheets-*.jsonl")
 
+intake_paths = sorted((root / "artifacts" / "manifests").glob("*owner-intake-package-*.jsonl"))
+intake_by_worksheet = {}
+intake_by_source_path = {}
+for intake_path in intake_paths:
+    for intake in load_jsonl(intake_path):
+        worksheet_id = str(intake.get("next_worksheet", ""))
+        source_path = str(intake.get("source_path", ""))
+        if worksheet_id:
+            intake_by_worksheet[worksheet_id] = intake
+        if source_path:
+            intake_by_source_path[source_path] = intake
+
 rows = []
 for worksheet_path in worksheet_paths:
     for row in load_jsonl(worksheet_path):
@@ -285,6 +315,7 @@ for worksheet_path in worksheet_paths:
         row_status = "resolved" if resolved else "open"
         if args.status != "all" and row_status != args.status:
             continue
+        intake = intake_by_worksheet.get(row_id) or intake_by_source_path.get(source_path, {})
         rows.append(
             {
                 "id": row_id,
@@ -300,6 +331,11 @@ for worksheet_path in worksheet_paths:
                 "worksheet": str(worksheet_path.relative_to(root)),
                 "registry_items": items_by_source_path.get(key, []),
                 "active_registry_items": active_by_source_path.get(key, []),
+                "owner_question_zh": intake.get("owner_question_zh", ""),
+                "default_state": intake.get("default_state", ""),
+                "allowed_next_status": intake.get("allowed_next_status", []),
+                "hard_gate_summary": intake.get("hard_gate_summary", ""),
+                "hard_gate": intake.get("hard_gate", ""),
             }
         )
 
@@ -327,6 +363,9 @@ result = {
 
 if args.forms:
     result["decision_forms"] = [make_decision_form(row) for row in rows if row["status"] == "open"]
+
+if args.checklist:
+    result["owner_checklists"] = [make_owner_checklist(row) for row in rows if row["status"] == "open"]
 
 form_validation = None
 if args.validate_forms:
@@ -423,6 +462,31 @@ if args.forms:
     print()
     print("以下骨架只供 owner 人工复制、填写和复核；本命令不写文件、不关闭门禁、不提升 active。")
     print("写入任何 owner decision 前，必须补齐证据引用、reviewed_by、reviewed_at、source hash/size 和 status_reason。")
+
+if args.checklist:
+    print()
+    print("## Owner Closure Checklists")
+    print()
+    print("以下清单把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。")
+    for checklist in [make_owner_checklist(row) for row in rows if row["status"] == "open"]:
+        print()
+        print(f"### {checklist['worksheet_id']}")
+        print(f"- source_path: `{checklist['source_path']}`")
+        print(f"- owner: {checklist['owner'] or '<missing-owner>'}")
+        if checklist["owner_question_zh"]:
+            print(f"- owner_question: {checklist['owner_question_zh']}")
+        if checklist["default_state"]:
+            print(f"- default_state: {checklist['default_state']}")
+        if checklist["hard_gate_summary"]:
+            print(f"- hard_gate_summary: {checklist['hard_gate_summary']}")
+        if checklist["hard_gate"]:
+            print(f"- hard_gate: {checklist['hard_gate']}")
+        if checklist["allowed_owner_decisions"]:
+            print(f"- allowed_owner_decisions: {', '.join(str(item) for item in checklist['allowed_owner_decisions'])}")
+        if checklist["required_owner_fields"]:
+            print(f"- required_owner_fields: {', '.join(str(item) for item in checklist['required_owner_fields'])}")
+        if checklist["must_not"]:
+            print(f"- must_not: {', '.join(str(item) for item in checklist['must_not'])}")
 
 for row in rows:
     active_marker = "YES" if row["active_registry_items"] else "no"

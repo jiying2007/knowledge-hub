@@ -97,6 +97,7 @@
 - `knowledge-hub-manual-entry-owner-override-20260619`
 - `knowledge-hub-regression-manifest-coverage-20260619`
 - `knowledge-hub-manual-entry-owner-doc-sync-20260619`
+- `knowledge-hub-owner-checklist-helper-20260619`
 
 ## pcr02-registry-owner
 

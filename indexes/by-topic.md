@@ -53,6 +53,7 @@
 - Knowledge Hub manual entry owner override: `artifacts/manifests/knowledge-hub-manual-entry-owner-override-20260619.md`
 - Knowledge Hub regression manifest coverage: `artifacts/manifests/knowledge-hub-regression-manifest-coverage-20260619.md`
 - Knowledge Hub manual entry owner doc sync: `artifacts/manifests/knowledge-hub-manual-entry-owner-doc-sync-20260619.md`
+- Knowledge Hub owner checklist helper: `artifacts/manifests/knowledge-hub-owner-checklist-helper-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`

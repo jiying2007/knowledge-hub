@@ -177,6 +177,48 @@ def test_owner_single_form():
         },
     )
 
+def test_owner_checklist_context():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--checklist",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checklists = parsed.get("owner_checklists", [])
+    first = checklists[0] if checklists else {}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 1
+        and len(checklists) == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and "是否确认" in first.get("owner_question_zh", "")
+        and first.get("hard_gate_summary") == "门禁待补证"
+        and "owner_decision" in first.get("required_owner_fields", []),
+        "owner-checklist-context",
+        "owner checklist merges intake context with worksheet row",
+        {
+            "exit_code": result["exit_code"],
+            "row_count": parsed.get("row_count"),
+            "checklist_count": len(checklists),
+            "owner_question_zh": first.get("owner_question_zh", ""),
+            "hard_gate_summary": first.get("hard_gate_summary", ""),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_status_next_owner_gate():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     parsed = {}
@@ -531,6 +573,7 @@ def test_regression_manifest_coverage():
         "status-noncanonical-only",
         "owner-partial-resolved",
         "owner-single-form",
+        "owner-checklist-context",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
         "manual-entry-project-index-hint",
@@ -544,14 +587,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "13 个回归场景" in manifest_text,
+        and "14 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "13 个回归场景",
+            "expected_count_text": "14 个回归场景",
         },
     )
 
@@ -560,6 +603,7 @@ test_status_wrong_bucket()
 test_status_noncanonical_only()
 test_owner_partial_resolved()
 test_owner_single_form()
+test_owner_checklist_context()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()
