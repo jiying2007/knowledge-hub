@@ -159,6 +159,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("source-coverage:"),
         ),
         (
+            "owner-gated-active",
+            "owner-gated 源路径被提升为 active",
+            "检查 owner decision worksheets；未完成 owner_decision、target_decision 和 resolved/closed 状态前，不要把对应 source_path 登记为 active。",
+            lambda msg: msg.startswith("owner-gated:"),
+        ),
+        (
             "owner-project-topic-registry",
             "owner/project/topic registry 异常",
             "检查 registry/owners.json、registry/projects.json 或 registry/topics.json 的登记项和枚举。",
@@ -385,6 +391,27 @@ if not args.sources_only:
         for covered_source_id in sorted(source_coverage_ids):
             if covered_source_id not in source_ids:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} stale source {covered_source_id}")
+
+    owner_gated_source_paths = {}
+    owner_gate_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
+    owner_gate_resolved_tokens = ("resolved", "owner-approved", "approved", "closed")
+    for owner_gate_path in owner_gate_paths:
+        for row in load_jsonl(owner_gate_path):
+            row_source_id = row.get("source_id")
+            row_source_path = row.get("source_path")
+            if not row_source_id or not row_source_path:
+                continue
+            row_state = " ".join(
+                str(row.get(field, ""))
+                for field in ["worksheet_status", "row_status", "status", "default_state"]
+            ).lower()
+            has_owner_decision = any(
+                row.get(field)
+                for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at"]
+            )
+            if has_owner_decision and any(token in row_state for token in owner_gate_resolved_tokens):
+                continue
+            owner_gated_source_paths[(row_source_id, row_source_path)] = owner_gate_path.relative_to(root)
 
     owner_ids = set()
     owners_doc = load_json(root / "registry" / "owners.json")
@@ -617,6 +644,14 @@ if not args.sources_only:
             source_sha256 = source.get("source_sha256")
             if source_sha256 and not SHA256_RE.fullmatch(str(source_sha256)):
                 errors.append(f"items:{item_id} invalid source_sha256: {source_sha256}")
+            item_source_path = source.get("source_path")
+            if item.get("status") == "active" and item_source_id and item_source_path:
+                owner_gate_path = owner_gated_source_paths.get((item_source_id, item_source_path))
+                if owner_gate_path:
+                    errors.append(
+                        f"owner-gated:{item_id} active item references unresolved owner-gated source "
+                        f"{item_source_id}:{item_source_path} ({owner_gate_path})"
+                    )
         if item.get("kind") and item.get("kind") not in ALLOWED_ITEM_KINDS:
             errors.append(f"items:{item_id} invalid kind: {item.get('kind')}")
         if item.get("status") and item.get("status") not in ALLOWED_ITEM_STATUSES:

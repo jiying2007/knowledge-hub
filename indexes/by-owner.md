@@ -75,6 +75,7 @@
 - `codex-memories-auxiliary-boundary-20260619`
 - `knowledge-hub-index-plan-helper-20260619`
 - `knowledge-hub-source-coverage-gate-20260619`
+- `knowledge-hub-owner-gated-active-gate-20260619`
 
 ## pcr02-registry-owner
 

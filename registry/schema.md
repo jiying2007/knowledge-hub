@@ -66,6 +66,7 @@ Source reference invariants:
 - item `source.source_id`, when present, must be registered in `registry/sources.json`.
 - item `source.migration_manifest`, when present, must be a relative existing Knowledge Hub local path.
 - item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
+- active item `source.source_id` + `source.source_path` must not match an unresolved owner-gated row in owner decision worksheet manifests.
 - `artifact-ref` item `sha256` must be a lowercase 64-character SHA256 hex string, and `size` must be a positive integer.
 
 Validation reference invariants:
