@@ -94,6 +94,7 @@
 - `knowledge-hub-manual-entry-conditional-project-index-20260619`
 - `knowledge-hub-manual-entry-project-derivation-20260619`
 - `knowledge-hub-manual-entry-default-dates-20260619`
+- `knowledge-hub-manual-entry-owner-override-20260619`
 
 ## pcr02-registry-owner
 

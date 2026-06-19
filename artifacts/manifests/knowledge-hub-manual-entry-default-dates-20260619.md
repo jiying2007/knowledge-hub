@@ -9,6 +9,8 @@
 
 维护者仍可在落盘前按 owner 或 review cycle 要求修改这些日期。该能力只减少手工占位符替换，不自动创建或修改文件。
 
+后续增强：`knowledge-hub-manual-entry-owner-override-20260619` 增加 `--owner <owner>`，减少所有新增条目默认落到单一 owner 的维护瓶颈。
+
 ## 问题地图
 
 | ID | 问题 | 风险 | 处理 |

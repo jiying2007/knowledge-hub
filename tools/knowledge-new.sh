@@ -7,17 +7,18 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 KIND=""
 DOMAIN=""
 PROJECT=""
+OWNER="leiwenjun"
 ITEM_ID=""
 TARGET_PATH=""
 
 usage() {
   cat <<EOF
 Usage:
-  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>]
+  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>]
 
 Examples:
   rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
-  rtk bash tools/knowledge-new.sh --kind decision --domain governance --id governance-example-decision --path governance/example-decision.md
+  rtk bash tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
 
 This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.
 EOF
@@ -53,6 +54,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --project)
       PROJECT="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --owner)
+      OWNER="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --id)
@@ -100,6 +105,7 @@ DISPLAY_ID="${ITEM_ID:-<id>}"
 DISPLAY_KIND="${KIND:-<kind>}"
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_PATH="${TARGET_PATH:-<path>}"
+DISPLAY_OWNER="${OWNER:-leiwenjun}"
 DISPLAY_SCOPE="team-general"
 PROJECT_WARNING_BLOCK=""
 if [[ "$DOMAIN" == projects/* ]]; then
@@ -117,6 +123,7 @@ JSON_KIND="$(json_escape "$DISPLAY_KIND")"
 JSON_DOMAIN="$(json_escape "$DISPLAY_DOMAIN")"
 JSON_PATH="$(json_escape "$DISPLAY_PATH")"
 JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
+JSON_OWNER="$(json_escape "$DISPLAY_OWNER")"
 JSON_TITLE="$(json_escape "<中文标题>")"
 JSON_SOURCE_FROM="$(json_escape "manual-entry:knowledge-new.sh")"
 TODAY="$(date -u +%F)"
@@ -147,6 +154,7 @@ $(usage)
 - kind: ${KIND:-<待填写>}
 - domain: ${DOMAIN:-<待填写>}
 - project: ${PROJECT:-<可选>}
+- owner: ${DISPLAY_OWNER}
 - path: ${TARGET_PATH:-<待填写>}
 - 推荐模板: ${TEMPLATE}
 ${PROJECT_WARNING_BLOCK}
@@ -177,7 +185,7 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"leiwenjun","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 
 ### 核心索引

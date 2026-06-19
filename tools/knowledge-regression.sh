@@ -430,6 +430,58 @@ def test_manual_entry_default_dates():
         },
     )
 
+def test_manual_entry_owner_override():
+    default_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--id",
+            "governance-owner-default",
+            "--path",
+            "governance/owner-default.md",
+        ],
+    )
+    override_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--owner",
+            "team-core",
+            "--id",
+            "governance-owner-override",
+            "--path",
+            "governance/owner-override.md",
+        ],
+    )
+    expect(
+        default_result["exit_code"] == 0
+        and override_result["exit_code"] == 0
+        and '"owner":"leiwenjun"' in default_result["stdout"]
+        and '"owner":"team-core"' in override_result["stdout"]
+        and "- owner: team-core" in override_result["stdout"],
+        "manual-entry-owner-override",
+        "manual entry skeleton supports owner override",
+        {
+            "default_exit_code": default_result["exit_code"],
+            "override_exit_code": override_result["exit_code"],
+            "default_has_owner": '"owner":"leiwenjun"' in default_result["stdout"],
+            "override_has_owner": '"owner":"team-core"' in override_result["stdout"],
+            "override_stdout_sample": override_result["stdout"][:1200],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
@@ -440,6 +492,7 @@ test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()
 test_manual_entry_project_from_domain()
 test_manual_entry_default_dates()
+test_manual_entry_owner_override()
 
 if not args.keep_temp:
     for temp_root in temp_roots:
