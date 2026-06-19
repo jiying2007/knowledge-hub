@@ -482,6 +482,44 @@ def test_manual_entry_owner_override():
         },
     )
 
+def test_regression_manifest_coverage():
+    manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
+    try:
+        manifest_text = manifest_path.read_text()
+    except Exception as exc:
+        manifest_text = ""
+        read_error = str(exc)
+    else:
+        read_error = ""
+    required_ids = [
+        "baseline-knowledge-check",
+        "status-wrong-bucket",
+        "status-noncanonical-only",
+        "owner-partial-resolved",
+        "owner-single-form",
+        "status-next-owner-gate",
+        "owner-landing-plan-project-index",
+        "manual-entry-project-index-hint",
+        "manual-entry-project-derived-from-domain",
+        "manual-entry-default-dates",
+        "manual-entry-owner-override",
+        "regression-manifest-coverage",
+    ]
+    missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
+    expect(
+        not read_error
+        and not missing_ids
+        and "12 个回归场景" in manifest_text,
+        "regression-manifest-coverage",
+        "regression helper manifest covers current regression ids",
+        {
+            "manifest": str(manifest_path.relative_to(root)),
+            "read_error": read_error,
+            "missing_ids": missing_ids,
+            "expected_count_text": "12 个回归场景",
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
@@ -493,6 +531,7 @@ test_manual_entry_project_index_hint()
 test_manual_entry_project_from_domain()
 test_manual_entry_default_dates()
 test_manual_entry_owner_override()
+test_regression_manifest_coverage()
 
 if not args.keep_temp:
     for temp_root in temp_roots:
