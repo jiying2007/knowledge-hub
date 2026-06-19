@@ -76,6 +76,7 @@
 - `knowledge-hub-index-plan-helper-20260619`
 - `knowledge-hub-source-coverage-gate-20260619`
 - `knowledge-hub-owner-gated-active-gate-20260619`
+- `knowledge-hub-owner-gate-field-active-gate-20260619`
 
 ## pcr02-registry-owner
 

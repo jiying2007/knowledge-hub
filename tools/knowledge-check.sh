@@ -71,6 +71,17 @@ ALLOWED_ITEM_VISIBILITIES = {
 ALLOWED_ITEM_PROMOTIONS = {
     "none",
 }
+OWNER_GATE_BLOCKING_REVIEW_STATUSES = {
+    "pending-owner-review",
+    "needs-owner-resolution",
+    "owner-intake-ready",
+    "source-identity-match",
+    "embedded-knowledge-owner-review-required",
+    "blocked-pending-owner-review",
+    "blocked-pending-owner-status-decision",
+    "blocked-personal-local",
+    "blocked-pending-archive-metadata",
+}
 ALLOWED_DOMAIN_ROOTS = {
     "root",
     "governance",
@@ -161,8 +172,8 @@ def build_diagnostics(error_items, warning_items):
         (
             "owner-gated-active",
             "owner-gated 源路径被提升为 active",
-            "检查 owner decision worksheets；未完成 owner_decision、target_decision 和 resolved/closed 状态前，不要把对应 source_path 登记为 active。",
-            lambda msg: msg.startswith("owner-gated:"),
+            "检查 owner decision worksheets 和 item owner gate 字段；未完成 owner 决策、目标决策和复核证据前，不要登记为 active。",
+            lambda msg: msg.startswith(("owner-gated:", "owner-gate:")),
         ),
         (
             "owner-project-topic-registry",
@@ -702,6 +713,13 @@ if not args.sources_only:
             if review_date:
                 if review_date < today:
                     warnings.append(f"items:{item_id} review_after is stale: {item.get('review_after')}")
+        if status == "active":
+            owner_gate_verified = item.get("owner_gate_verified")
+            if owner_gate_verified is False or str(owner_gate_verified).strip().lower() == "false":
+                errors.append(f"owner-gate:{item_id} active item has owner_gate_verified=false")
+            review_status = str(item.get("review_status", "")).strip()
+            if review_status in OWNER_GATE_BLOCKING_REVIEW_STATUSES:
+                errors.append(f"owner-gate:{item_id} active item has blocking review_status: {review_status}")
         if status == "superseded" and not item.get("superseded_by"):
             errors.append(f"items:{item_id} superseded missing superseded_by")
         if item.get("kind") == "artifact-ref":

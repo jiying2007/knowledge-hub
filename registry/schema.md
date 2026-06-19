@@ -36,6 +36,7 @@ Recommended evidence fields:
 - `evidence_strength`
 - `evidence_refs`
 - `review_status`
+- `owner_gate_verified`
 
 Recommended AI provenance fields:
 
@@ -67,6 +68,8 @@ Source reference invariants:
 - item `source.migration_manifest`, when present, must be a relative existing Knowledge Hub local path.
 - item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
 - active item `source.source_id` + `source.source_path` must not match an unresolved owner-gated row in owner decision worksheet manifests.
+- active item must not use `owner_gate_verified=false`.
+- active item must not use blocking owner-gate `review_status` values such as `pending-owner-review`, `needs-owner-resolution`, `owner-intake-ready`, `source-identity-match` or `embedded-knowledge-owner-review-required`.
 - `artifact-ref` item `sha256` must be a lowercase 64-character SHA256 hex string, and `size` must be a positive integer.
 
 Validation reference invariants:
