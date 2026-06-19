@@ -15,6 +15,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>` and optional search without writing files.
 - `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date` and `by-status` views without writing files.
+- `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields and active exposure status without writing files.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
@@ -41,6 +42,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain kno
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 ```
 
 ## Evidence

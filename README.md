@@ -37,6 +37,7 @@
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --source <path> --kind <kind> --dry-run
@@ -50,7 +51,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 2. 从 `templates/` 复制合适模板到唯一正文位置。
 3. 同步 `registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 和 `registry/migrations.jsonl`。
 4. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all`，对照 registry 派生视图复核核心索引。
-5. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`，先看 diagnostics、explain 和 search。
-6. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
+5. 如涉及 owner-gated 内容，先运行 `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id>`，确认 owner、必填证据和 active exposure。
+6. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`，先看 diagnostics、explain 和 search。
+7. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
 
 人工可以直接按模板新增内容；脚本只是防漏清单，不是唯一入口。

@@ -101,3 +101,4 @@
 - 2026-09-19: `knowledge-hub-source-coverage-gate-20260619`
 - 2026-09-19: `knowledge-hub-owner-gated-active-gate-20260619`
 - 2026-09-19: `knowledge-hub-owner-gate-field-active-gate-20260619`
+- 2026-09-19: `knowledge-hub-owner-gate-board-helper-20260619`
