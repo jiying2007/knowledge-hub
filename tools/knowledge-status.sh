@@ -18,6 +18,7 @@ argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only Knowledge Hub status dashboard.")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
 args = parser.parse_args(argv)
 
 today = dt.date.today()
@@ -120,7 +121,7 @@ elif open_owner_gate_count:
 else:
     status = "ok"
 
-exit_code = 1 if status in {"blocked", "needs-fix"} else 0
+exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
 
 next_actions = []
 if knowledge_check["exit_code"] != 0:
@@ -138,6 +139,7 @@ result = {
     "schema_version": 1,
     "root": str(root),
     "read_only": True,
+    "strict": args.strict,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "status": status,
     "today": today.isoformat(),
@@ -187,6 +189,7 @@ print()
 print("本命令只读汇总 Knowledge Hub 当前控制面状态，不创建、不修改、不提交、不提升任何文件。")
 print()
 print(f"- status: {status}")
+print(f"- strict: {str(args.strict).lower()}")
 print(f"- today: {today.isoformat()}")
 print(f"- knowledge-check: {result['knowledge_check']['status']} (exit={knowledge_check['exit_code']}, errors={result['knowledge_check']['error_count']}, warnings={result['knowledge_check']['warning_count']})")
 print(f"- registry items: {len(items)}")
@@ -229,6 +232,7 @@ print()
 print("```bash")
 print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("rtk bash tools/knowledge-owner-gates.sh --status all --json")
+print("rtk bash tools/knowledge-status.sh --strict")
 print("```")
 
 sys.exit(exit_code)

@@ -16,6 +16,7 @@
 
 - 新增命令：`rtk bash tools/knowledge-status.sh`。
 - 支持 JSON：`rtk bash tools/knowledge-status.sh --json`。
+- 支持严格终态门禁：`rtk bash tools/knowledge-status.sh --strict`，任何非 `ok` 状态都返回 1。
 - 命令只读，不创建、不修改、不提交、不提升任何文件。
 - 状态语义：
   - `ok`：控制面通过，且无 owner gate open。
@@ -37,8 +38,9 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | --- | --- | --- | --- | --- |
-| `rtk bash tools/knowledge-status.sh` | 0 | 输出中文状态总览；当前状态为 `needs-owner-review`，`knowledge-check=pass`，104 个 registry item、6 个 registered sources、69 条 migrations、7 open owner gates、0 active exposure。 | `tools/knowledge-status.sh` | Knowledge Hub | status-dashboard |
-| `rtk bash tools/knowledge-status.sh --json` | 0 | 输出可机器读取 JSON；`status=needs-owner-review`、`registry.by_status.active=2`、`reviewing=95`、`archived=7`、`stale_review_after_count=0`。 | `tools/knowledge-status.sh` | Knowledge Hub | status-dashboard |
+| `rtk bash tools/knowledge-status.sh` | 0 | 输出中文状态总览；当前控制面为 `needs-owner-review`，`knowledge-check=pass`，owner gates 为 7 open、0 active exposure。 | `tools/knowledge-status.sh` | Knowledge Hub | status-dashboard |
+| `rtk bash tools/knowledge-status.sh --json` | 0 | 输出可机器读取 JSON；包含 registry/source/migration/current owner gate 快照，且 `stale_review_after_count=0`。 | `tools/knowledge-status.sh` | Knowledge Hub | status-dashboard |
+| `rtk bash tools/knowledge-status.sh --strict --json` | 1 expected | 严格终态门禁在当前 7 个 owner gate open 时返回 1，防止误声明终态完成。 | `tools/knowledge-status.sh` | Knowledge Hub | status-dashboard |
 | `/tmp status active exposure fixture` | 1 expected | 临时副本注入 owner-gated active item 后，dashboard 返回 `needs-fix`，`active_exposure_count=1`，`knowledge_check.status=fail`。 | 本 manifest 的“负向 fixture 复现契约” | Negative fixture | status-dashboard |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 新增状态总览工具和登记制品后全仓门禁应通过。 | `tools/knowledge-check.sh` | Knowledge Hub | status-dashboard |
 | `rtk bash tools/knowledge-search.sh status-dashboard-applied --json` | 0 | 本制品应可检索，命中 registry、status index 和本 manifest。 | `registry/items.jsonl`、`indexes/by-status.md`、本 manifest | Knowledge Hub | status-dashboard |
