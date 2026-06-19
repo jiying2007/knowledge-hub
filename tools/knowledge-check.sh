@@ -143,6 +143,21 @@ for source in sources:
         warnings.append(f"sources:{source.get('id')} path missing: {path}")
 
 if not args.sources_only:
+    for registry_json_path in sorted((root / "registry").glob("*.json")):
+        try:
+            json.loads(registry_json_path.read_text())
+        except Exception as exc:
+            errors.append(f"registry:{registry_json_path.relative_to(root)} invalid json: {exc}")
+
+    for registry_jsonl_path in sorted((root / "registry").glob("*.jsonl")):
+        for lineno, line in enumerate(registry_jsonl_path.read_text().splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                json.loads(line)
+            except Exception as exc:
+                errors.append(f"registry:{registry_jsonl_path.relative_to(root)}:{lineno} invalid jsonl: {exc}")
+
     migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     local_migration_target_prefixes = (
         "artifacts/",
