@@ -153,6 +153,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("index:indexes/by-source.md"),
         ),
         (
+            "source-coverage",
+            "source coverage 终态矩阵异常",
+            "更新最新 artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl，确保每个 registered source 都有终态分类、决策和风险说明。",
+            lambda msg: msg.startswith("source-coverage:"),
+        ),
+        (
             "owner-project-topic-registry",
             "owner/project/topic registry 异常",
             "检查 registry/owners.json、registry/projects.json 或 registry/topics.json 的登记项和枚举。",
@@ -347,6 +353,38 @@ if not args.sources_only:
         for indexed_source_id in sorted(by_source_ids):
             if indexed_source_id not in source_ids:
                 errors.append(f"index:indexes/by-source.md stale source {indexed_source_id}")
+
+    source_coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    if not source_coverage_paths:
+        errors.append("source-coverage: missing knowledge-hub-source-coverage-closeout manifest")
+    else:
+        source_coverage_path = source_coverage_paths[-1]
+        source_coverage_rows = load_jsonl(source_coverage_path)
+        source_coverage_ids = set()
+        for row in source_coverage_rows:
+            row_source_id = row.get("source_id")
+            row_id = row.get("id", row_source_id or "<unknown>")
+            if not row_source_id:
+                errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} row {row_id} missing source_id")
+                continue
+            if row_source_id in source_coverage_ids:
+                errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} duplicate source {row_source_id}")
+            source_coverage_ids.add(row_source_id)
+            for field in ["status", "classification", "decision", "risk", "owner", "checked_at"]:
+                if not row.get(field):
+                    errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} source {row_source_id} missing {field}")
+            checked_at = str(row.get("checked_at", ""))
+            if checked_at:
+                try:
+                    dt.date.fromisoformat(checked_at)
+                except Exception:
+                    errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} source {row_source_id} invalid checked_at: {checked_at}")
+        for source_id in sorted(source_ids):
+            if source_id not in source_coverage_ids:
+                errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} missing source {source_id}")
+        for covered_source_id in sorted(source_coverage_ids):
+            if covered_source_id not in source_ids:
+                errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} stale source {covered_source_id}")
 
     owner_ids = set()
     owners_doc = load_json(root / "registry" / "owners.json")
