@@ -25,6 +25,7 @@
 - 更新 `tools/knowledge-check.sh`：新增 migration 必填字段、日期、相对本地 `to` 目标存在性检查。
 - 更新 `registry/schema.md`：新增 `migrations.jsonl` schema 与 invariants。
 - 更新 `tools/README.md`：说明 `knowledge-check.sh` 覆盖 migration record checks。
+- 更新 `templates/migration-record.md`：改为可复制 JSONL 行、字段说明和验证命令，避免人工按旧 Markdown/frontmatter 模板新增不合规记录。
 - 更新 `registry/migrations.jsonl`：归一中文长期资产治理记录的 `to`，并登记本次门禁。
 - 更新 registry 与核心索引，登记本治理制品。
 
