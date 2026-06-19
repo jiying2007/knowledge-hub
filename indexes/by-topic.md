@@ -117,3 +117,4 @@
 - PCR02 memory auto-curation owner-ready package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
 - PCR02 DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
 - PCR02 motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
+- PCR02 DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
