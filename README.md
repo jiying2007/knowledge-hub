@@ -35,6 +35,7 @@
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --source <path> --kind <kind> --dry-run
@@ -47,7 +48,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 1. 运行 `knowledge-new.sh` 生成只读清单，不让脚本自动写文件。
 2. 从 `templates/` 复制合适模板到唯一正文位置。
 3. 同步 `registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 和 `registry/migrations.jsonl`。
-4. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json`。
-5. 用 `knowledge-search.sh "<id>" --json` 确认可检索。
+4. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`，先看 diagnostics、explain 和 search。
+5. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
 
 人工可以直接按模板新增内容；脚本只是防漏清单，不是唯一入口。

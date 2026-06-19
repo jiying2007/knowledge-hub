@@ -63,6 +63,7 @@
 - `knowledge-hub-check-diagnostics-20260619`
 - `knowledge-hub-manual-entry-copyable-skeleton-20260619`
 - `knowledge-hub-doctor-helper-20260619`
+- `knowledge-hub-readme-maintenance-path-sync-20260619`
 
 ## pcr02-registry-owner
 
