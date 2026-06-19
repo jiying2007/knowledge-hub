@@ -131,6 +131,7 @@ if open_owner_rows:
         first_open.get("source_id", ""),
         "--worksheet-id",
         first_open.get("id", ""),
+        "--checklist",
         "--forms",
     ]
     next_owner_gate = {

@@ -231,7 +231,9 @@ def test_status_next_owner_gate():
         result["exit_code"] == 0
         and parsed.get("status") == "needs-owner-review"
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
-        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", ""),
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", "")
+        and "--checklist" in next_open.get("focus_command", "")
+        and "--forms" in next_open.get("focus_command", ""),
         "status-next-owner-gate",
         "status dashboard exposes next owner gate focus command",
         {

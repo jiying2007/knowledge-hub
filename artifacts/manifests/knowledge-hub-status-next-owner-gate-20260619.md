@@ -2,7 +2,7 @@
 
 ## 结论
 
-`tools/knowledge-status.sh` 现在会在 owner gate 未闭环时直接输出下一条可处理的 owner decision worksheet，并在 JSON 中提供可复制的聚焦命令。
+`tools/knowledge-status.sh` 现在会在 owner gate 未闭环时直接输出下一条可处理的 owner decision worksheet，并在 JSON 中提供可复制的聚焦命令。聚焦命令会同时打开 `--checklist` 和 `--forms`，让人工先看中文硬门禁和必填字段，再复制 owner decision JSONL 骨架。
 
 这个能力只负责把“下一步该看哪一条”显式化，不关闭 owner gate，不生成 owner decision，不修改源项目 docs，也不启用任何自动化。
 
@@ -10,7 +10,7 @@
 
 | 文件 | 变更 |
 |---|---|
-| `tools/knowledge-status.sh` | 在 `owner_gates.next_open` 中输出下一条 open worksheet 的 `worksheet_id`、`source_id`、`source_path`、`owner`、`review_after`、`selection_order` 和 `focus_command`。 |
+| `tools/knowledge-status.sh` | 在 `owner_gates.next_open` 中输出下一条 open worksheet 的 `worksheet_id`、`source_id`、`source_path`、`owner`、`review_after`、`selection_order` 和包含 `--checklist --forms` 的 `focus_command`。 |
 | `tools/knowledge-regression.sh` | 增加 `status-next-owner-gate` 回归场景，固定校验当前下一条 owner gate 聚焦命令。 |
 | `README.md` | 在人工维护最短路径中提示可先读取 `owner_gates.next_open.focus_command`。 |
 | `tools/README.md` | 更新 `knowledge-status.sh` 描述，明确它会提示下一条 open owner gate。 |
@@ -28,7 +28,7 @@
 聚焦命令：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms
 ```
 
 ## 决策
@@ -43,9 +43,9 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --workshe
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；JSON 中 `owner_gates.next_open.worksheet_id` 为 `pcr02-owner-decision-worksheet-001`，并包含 `focus_command` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
+| `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；JSON 中 `owner_gates.next_open.worksheet_id` 为 `pcr02-owner-decision-worksheet-001`，并包含带 `--checklist --forms` 的 `focus_command` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 | `rtk bash tools/knowledge-status.sh` | 0 | 通过；文本看板输出 `next open` 和 `focus command` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；6 个回归场景全部 pass，包含新增 `status-next-owner-gate` 场景 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；14 个回归场景全部 pass，包含 `status-next-owner-gate` 场景 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 
 ## 边界
