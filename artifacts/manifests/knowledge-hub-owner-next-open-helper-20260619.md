@@ -25,7 +25,7 @@
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --checklist --forms --json` | 0 | 通过；只输出 1 条 next open owner gate，包含 checklist 和 decision form | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-next-open-helper-20260619` |
 | `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；`owner_gates.next_open.next_open_command` 和 `next_actions_zh` 使用 `--next-open --checklist --forms` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-owner-next-open-helper-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，包含 `owner-next-open-focus` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-next-open-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，包含 `owner-next-open-focus` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-next-open-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-next-open-helper-20260619` |
 
 ## 边界

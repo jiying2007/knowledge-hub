@@ -131,3 +131,4 @@
 - 2026-09-20: `knowledge-hub-status-owner-summary-command-20260620`
 - 2026-09-20: `knowledge-hub-status-strict-blockers-20260620`
 - 2026-09-20: `knowledge-hub-owner-source-identity-validation-20260620`
+- 2026-09-20: `knowledge-hub-final-gate-20260620`

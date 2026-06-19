@@ -130,6 +130,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-status-owner-summary-command-20260620`
 - reviewing: `knowledge-hub-status-strict-blockers-20260620`
 - reviewing: `knowledge-hub-owner-source-identity-validation-20260620`
+- reviewing: `knowledge-hub-final-gate-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -214,3 +215,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - status-owner-summary-command-applied: `tools/knowledge-status.sh` exposes `owner_gates.summary_commands` and next action guidance for all-open owner gate summary, documented by `artifacts/manifests/knowledge-hub-status-owner-summary-command-20260620.jsonl`.
 - status-strict-blockers-applied: `tools/knowledge-status.sh` exposes structured `strict_blockers` for final-state failures, documented by `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.jsonl`.
 - owner-source-identity-validation-applied: `tools/knowledge-owner-gates.sh` rejects owner forms whose `source_sha256/source_size` do not match current observed source identity when using `--validate-forms`; documented by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.jsonl`.
+- final-gate-applied: `tools/knowledge-final-gate.sh` aggregates `knowledge-check`、`knowledge-regression` and `knowledge-status --strict` for terminal validation, documented by `artifacts/manifests/knowledge-hub-final-gate-20260620.jsonl`.

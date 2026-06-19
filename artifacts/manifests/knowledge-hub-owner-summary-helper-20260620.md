@@ -25,7 +25,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | 0 | 通过；输出 7 条 open gate 摘要，`source_identity_counts.match=7`，`active_exposure_count=0`，不含 `decision_forms` 和 `owner_checklists` | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-summary-helper-20260620` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，包含 `owner-summary-all-open` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-summary-helper-20260620` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，包含 `owner-summary-all-open` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-summary-helper-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-summary-helper-20260620` |
 
 ## 边界

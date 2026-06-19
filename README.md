@@ -40,6 +40,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
@@ -68,5 +69,6 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 6. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`；如涉及 owner-gated source，加 `--owner-gates <source-id>`，先看 diagnostics、explain、search 和 owner gate 看板。
 7. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
 8. 涉及门禁、索引或 owner gate 工具变更时，运行 `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`，确认关键负向 fixture 仍会失败。
+9. 终态验收运行 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；它聚合 `knowledge-check`、`knowledge-regression` 和 `knowledge-status --strict`，当前 PCR02 owner gate 未签收时应返回 `needs-owner-review`。
 
 人工可以直接按模板新增内容；脚本只是防漏清单，不是唯一入口。

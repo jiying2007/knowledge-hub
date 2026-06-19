@@ -22,7 +22,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；`owner_gates.summary_commands` 包含 `--summary`，`next_actions_zh` 同时提示 summary 和 next-open | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-owner-summary-command-20260620` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，`status-next-owner-gate` 覆盖 summary command 和 next-open command | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-owner-summary-command-20260620` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，`status-next-owner-gate` 覆盖 summary command 和 next-open command | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-owner-summary-command-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-status-owner-summary-command-20260620` |
 
 ## 边界

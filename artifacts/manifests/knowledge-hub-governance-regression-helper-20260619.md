@@ -19,6 +19,7 @@
 | owner-summary-all-open | 当前 owner gate helper 输出全部 open gate 摘要 | `--summary` 输出 7 条 open gate、owner 分布、source identity 计数和聚焦命令，但不输出 forms/checklists |
 | owner-next-open-focus | 当前 owner gate helper 自动聚焦下一条 open worksheet | `--next-open --checklist --forms` 只输出下一条 open gate 的 checklist 和 form，不需要人工复制 worksheet id |
 | status-next-owner-gate | 当前状态看板输出下一条 owner gate 聚焦命令 | JSON 中存在 `owner_gates.next_open.next_open_command` 和 `focus_command`；`next_actions_zh` 使用 `--next-open --checklist --forms`，兼容字段仍指向 `pcr02-owner-decision-worksheet-001` |
+| final-gate-owner-review-blocker | 当前终态 gate 聚合 check、regression 和 strict status | `knowledge-check` 与 `knowledge-regression` 必须通过；当前只因 `owner-gates-open` 返回 `needs-owner-review` |
 | owner-landing-plan-project-index | 当前 landing plan 输出 owner 决策人工落地文件清单 | `required_manual_files` 包含 `indexes/by-project.md` 和 `indexes/by-status.md` |
 | owner-form-source-identity-mismatch | 当前 owner 表单校验拒绝过期源文件身份 | owner 回填的 `source_sha256` 不等于当前只读观测 hash 时，`--validate-forms` 返回失败 |
 | manual-entry-project-index-hint | 当前人工新增项目条目向导输出项目索引提示 | 项目域包含 `indexes/by-project.md`，非项目域不包含项目索引噪音 |
@@ -26,7 +27,7 @@
 | manual-entry-default-dates | 当前人工新增向导输出默认日期 | registry / migration 草稿填入 ISO 日期，不保留日期占位符 |
 | manual-entry-owner-override | 当前人工新增向导支持 owner 覆盖 | 默认 owner 为 `leiwenjun`，传入 `--owner team-core` 时草稿使用 `team-core` |
 | manual-entry-docs-owner-option | 当前 README、tools README 和 `knowledge-new.sh --help` 暴露人工新增 owner 参数 | README、tools README 与工具 help 均包含 `knowledge-new.sh` 和 `--owner`；项目示例展示从 domain 推导 project |
-| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 包含 19 个回归场景和所有当前测试 ID |
+| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 包含 20 个回归场景和所有当前测试 ID |
 
 ## 决策
 
@@ -39,7 +40,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，覆盖 status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、owner checklist、owner form 上下文、owner source identity 上下文、owner source identity 过期拒绝、owner summary、owner next-open 聚焦、status next owner gate、owner landing plan、manual entry 防漏、owner 文档可发现性和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，覆盖 status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、owner checklist、owner form 上下文、owner source identity 上下文、owner source identity 过期拒绝、owner summary、owner next-open 聚焦、status next owner gate、final gate owner blocker、owner landing plan、manual entry 防漏、owner 文档可发现性和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 

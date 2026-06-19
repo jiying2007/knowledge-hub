@@ -24,7 +24,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；`owner_gates.next_open.next_open_command` 包含 `--next-open --checklist --forms`，兼容 `focus_command` 包含 `--checklist --forms` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-owner-checklist-focus-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，`status-next-owner-gate` 覆盖 checklist/forms 聚焦命令 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-owner-checklist-focus-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，`status-next-owner-gate` 覆盖 checklist/forms 聚焦命令 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-owner-checklist-focus-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，全仓知识门禁无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-status-owner-checklist-focus-20260619` |
 
 ## 边界

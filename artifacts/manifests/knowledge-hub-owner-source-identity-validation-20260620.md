@@ -36,7 +36,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | ---: | --- | --- | --- | --- |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，新增 `owner-form-source-identity-mismatch` 负例。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-source-identity-validation-20260620` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；20 个回归场景全部 pass，新增 `owner-form-source-identity-mismatch` 负例。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-source-identity-validation-20260620` |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --validate-forms <mismatch-fixture> --json` | 1 expected | 预期失败；`source_sha256 does not match observed source identity`。 | `/tmp/kh-regression-owner-source-identity-*` | Negative fixture | `owner-form-source-identity-mismatch` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings。 | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-owner-source-identity-validation-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-owner-source-identity-validation-20260620` | 0 | 通过；registry item 和核心索引可解释。 | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-owner-source-identity-validation-20260620` |

@@ -8,6 +8,7 @@ exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import datetime as dt
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -473,6 +474,49 @@ def test_status_next_owner_gate():
         },
     )
 
+def test_final_gate_owner_review_blocker():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-owner-review-blocker",
+            "final gate includes check, regression and strict owner blockers",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
+    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checks = parsed.get("checks", {})
+    blockers = parsed.get("blockers", [])
+    owner_blocker = next(
+        (blocker for blocker in blockers if blocker.get("id") == "owner-gates-open"),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-owner-review"
+        and checks.get("knowledge_check", {}).get("status") == "pass"
+        and checks.get("knowledge_check", {}).get("exit_code") == 0
+        and checks.get("knowledge_regression", {}).get("status") == "pass"
+        and checks.get("knowledge_regression", {}).get("exit_code") == 0
+        and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
+        and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
+        and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
+        and owner_blocker.get("count") == 7,
+        "final-gate-owner-review-blocker",
+        "final gate includes check, regression and strict owner blockers",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "checks": checks,
+            "blockers": blockers,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_owner_landing_plan_project_index():
     forms_result = run_cmd(
         root,
@@ -897,6 +941,7 @@ def test_regression_manifest_coverage():
         "owner-summary-all-open",
         "owner-next-open-focus",
         "status-next-owner-gate",
+        "final-gate-owner-review-blocker",
         "owner-landing-plan-project-index",
         "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
@@ -910,14 +955,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "19 个回归场景" in manifest_text,
+        and "20 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "19 个回归场景",
+            "expected_count_text": "20 个回归场景",
         },
     )
 
@@ -932,6 +977,7 @@ test_owner_source_identity_context()
 test_owner_summary_all_open()
 test_owner_next_open_focus()
 test_status_next_owner_gate()
+test_final_gate_owner_review_blocker()
 test_owner_landing_plan_project_index()
 test_owner_form_source_identity_mismatch()
 test_manual_entry_project_index_hint()

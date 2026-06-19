@@ -15,6 +15,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - Stale `review_after` values in registry items are warnings, not blocking errors; invalid date format and `updated_at < created_at` remain errors.
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-status.sh`: read-only control-plane dashboard; summarizes `knowledge-check`, registry counts, source coverage, migrations, stale review dates, owner gate status, all-open owner summary commands, the next open owner gate commands and structured `strict_blockers`. Use `--strict` as a final-state gate that returns non-zero unless the status is `ok`.
+- `knowledge-final-gate.sh`: repository read-only final-state gate; runs `knowledge-check --diagnostics`, `knowledge-regression --json` and `knowledge-status --strict --json` together so terminal validation cannot miss regression drift. It returns non-zero unless all three gates are terminal-ok. The regression subcommand may create and clean temporary fixtures under `/tmp`; it must not modify Knowledge Hub content, registry, indexes or source project docs.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>`/search and optional `--owner-gates <source-id>` board without writing files.
 - `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date` and `by-status` views without writing files.
 - `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields, active exposure status and read-only current source identity without writing files. Use `--summary` to show all open gates, owner distribution, source identity counts and focus commands, `--checklist` to merge owner intake questions, hard gates and source identity into a closure checklist, `--forms` to print copyable owner decision JSONL skeletons with read-only context, `--validate-forms <jsonl>` to check filled owner forms including required fields, owner decision enums, date formats and `source_sha256/source_size` matching the observed current source identity, `--landing-plan` with validation to print a no-write manual landing plan, `--worksheet-id <id>` to focus one owner gate, and `--next-open` to focus the next open owner gate by `review_after, worksheet_id`.
@@ -47,6 +48,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain kno
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
