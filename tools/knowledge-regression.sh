@@ -288,7 +288,7 @@ def test_owner_landing_plan_project_index():
     )
 
 def test_manual_entry_project_index_hint():
-    result = run_cmd(
+    project_result = run_cmd(
         root,
         [
             "rtk",
@@ -306,16 +306,37 @@ def test_manual_entry_project_index_hint():
             "domains/projects/pcr02/current/runbooks/regression.md",
         ],
     )
+    governance_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--id",
+            "governance-regression-decision",
+            "--path",
+            "governance/regression-decision.md",
+        ],
+    )
     expect(
-        result["exit_code"] == 0
-        and "indexes/by-project.md" in result["stdout"]
-        and "domains/projects/pcr02/current/runbooks/regression.md" in result["stdout"],
+        project_result["exit_code"] == 0
+        and governance_result["exit_code"] == 0
+        and "indexes/by-project.md" in project_result["stdout"]
+        and "domains/projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
+        and "indexes/by-project.md" not in governance_result["stdout"],
         "manual-entry-project-index-hint",
-        "manual project entries mention by-project index",
+        "manual project entries mention by-project index only for project domains",
         {
-            "exit_code": result["exit_code"],
-            "has_by_project": "indexes/by-project.md" in result["stdout"],
-            "stdout_sample": result["stdout"][:1200],
+            "project_exit_code": project_result["exit_code"],
+            "governance_exit_code": governance_result["exit_code"],
+            "project_has_by_project": "indexes/by-project.md" in project_result["stdout"],
+            "governance_has_by_project": "indexes/by-project.md" in governance_result["stdout"],
+            "project_stdout_sample": project_result["stdout"][:1200],
+            "governance_stdout_sample": governance_result["stdout"][:1200],
         },
     )
 

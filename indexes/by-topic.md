@@ -47,6 +47,7 @@
 - Knowledge Hub status next owner gate: `artifacts/manifests/knowledge-hub-status-next-owner-gate-20260619.md`
 - Knowledge Hub owner landing project index alignment: `artifacts/manifests/knowledge-hub-owner-landing-project-index-alignment-20260619.md`
 - Knowledge Hub manual entry project index alignment: `artifacts/manifests/knowledge-hub-manual-entry-project-index-alignment-20260619.md`
+- Knowledge Hub manual entry conditional project index: `artifacts/manifests/knowledge-hub-manual-entry-conditional-project-index-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
