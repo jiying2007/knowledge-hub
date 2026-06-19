@@ -119,6 +119,12 @@ JSON_PATH="$(json_escape "$DISPLAY_PATH")"
 JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
 JSON_TITLE="$(json_escape "<中文标题>")"
 JSON_SOURCE_FROM="$(json_escape "manual-entry:knowledge-new.sh")"
+TODAY="$(date -u +%F)"
+if DEFAULT_REVIEW_AFTER="$(date -u -d '+3 months' +%F 2>/dev/null)"; then
+  :
+else
+  DEFAULT_REVIEW_AFTER="$TODAY"
+fi
 PROJECT_INDEX_DRAFT=""
 PROJECT_STEP_5="5. 如需主题入口，在 indexes/by-topic.md 增加可读路径引用。"
 if [[ "$DOMAIN" == projects/* ]]; then
@@ -166,10 +172,12 @@ ${PROJECT_STEP_5}
 
 以下内容是人工填写起点，不会自动落盘。复制前必须把尖括号占位符替换为真实值，并确认 owner、review_after、source、validation_refs、tags 和 migration notes。
 
+默认日期已按当前 UTC 日期生成：created_at / updated_at / checked_at = ${TODAY}，review_after = ${DEFAULT_REVIEW_AFTER}。如 owner 或 review cycle 另有要求，人工落盘前可修改。
+
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"leiwenjun","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"<YYYY-MM-DD>","promotion":"none","created_at":"<YYYY-MM-DD>","updated_at":"<YYYY-MM-DD>"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"leiwenjun","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 
 ### 核心索引
@@ -179,7 +187,7 @@ ${PROJECT_STEP_5}
 - \`${DISPLAY_ID}\`
 
 # indexes/by-review-date.md
-- <YYYY-MM-DD>: \`${DISPLAY_ID}\`
+- ${DEFAULT_REVIEW_AFTER}: \`${DISPLAY_ID}\`
 
 # indexes/by-status.md
 - reviewing: \`${DISPLAY_ID}\`
@@ -189,7 +197,7 @@ ${PROJECT_INDEX_DRAFT}
 ### registry/migrations.jsonl
 
 \`\`\`json
-{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"<YYYY-MM-DD>","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}
+{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"${TODAY}","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}
 \`\`\`
 
 ### Evidence Index

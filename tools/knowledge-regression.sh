@@ -6,6 +6,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
+import datetime as dt
 import json
 import pathlib
 import shutil
@@ -392,6 +393,43 @@ def test_manual_entry_project_from_domain():
         },
     )
 
+def test_manual_entry_default_dates():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--id",
+            "governance-date-defaults",
+            "--path",
+            "governance/date-defaults.md",
+        ],
+    )
+    today = dt.datetime.utcnow().date().isoformat()
+    expect(
+        result["exit_code"] == 0
+        and f'"created_at":"{today}"' in result["stdout"]
+        and f'"updated_at":"{today}"' in result["stdout"]
+        and f'"checked_at":"{today}"' in result["stdout"]
+        and '"review_after":"<YYYY-MM-DD>"' not in result["stdout"]
+        and "checked_at\":\"<YYYY-MM-DD>" not in result["stdout"],
+        "manual-entry-default-dates",
+        "manual entry skeleton fills default ISO dates",
+        {
+            "exit_code": result["exit_code"],
+            "today": today,
+            "has_created_at": f'"created_at":"{today}"' in result["stdout"],
+            "has_updated_at": f'"updated_at":"{today}"' in result["stdout"],
+            "has_checked_at": f'"checked_at":"{today}"' in result["stdout"],
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
@@ -401,6 +439,7 @@ test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()
 test_manual_entry_project_from_domain()
+test_manual_entry_default_dates()
 
 if not args.keep_temp:
     for temp_root in temp_roots:
