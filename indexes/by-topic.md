@@ -5,6 +5,9 @@
 - Project current facts: `domains/projects/*/current`
 - Project archives: `domains/projects/*/archive`
 - Patents: `domains/patents`
+- Patent disclosure copy-first applied: `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
+- Patent disclosure Markdown corpus: `domains/patents/archive/patent-disclosure`
+- Patent disclosure artifact references: `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex workflows: `domains/codex`
 - Personal notes: `domains/personal`
 - Governance rules: `governance`

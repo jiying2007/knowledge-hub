@@ -17,6 +17,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
+- `knowledge-artifact-ref-plan.sh`: creates a JSONL artifact reference manifest with source URI, size and sha256 for non-text source files; it does not copy binary content.
 - `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files.
 - `knowledge-capture.sh`: dry-run candidate capture.
 - `knowledge-promote.sh`: dry-run promotion plan.

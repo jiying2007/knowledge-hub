@@ -46,10 +46,14 @@ def rel_target(path_text, bucket):
     target = pathlib.PurePosixPath(path_text)
     if target.is_absolute() or ".." in target.parts:
         raise ValueError(f"unsafe target path: {path_text}")
-    if target.parts[:3] != ("domains", "projects", "pcr02"):
-        raise ValueError(f"target outside domains/projects/pcr02: {path_text}")
-    if len(target.parts) < 4 or target.parts[3] != bucket:
-        raise ValueError(f"target bucket mismatch: bucket={bucket} path={path_text}")
+    if target.parts[:3] == ("domains", "projects", "pcr02"):
+        if len(target.parts) < 4 or target.parts[3] != bucket:
+            raise ValueError(f"target bucket mismatch: bucket={bucket} path={path_text}")
+    elif target.parts[:2] == ("domains", "patents"):
+        if len(target.parts) < 3 or target.parts[2] != bucket:
+            raise ValueError(f"target bucket mismatch: bucket={bucket} path={path_text}")
+    else:
+        raise ValueError(f"target outside supported copy-first domains: {path_text}")
     return root / pathlib.Path(*target.parts)
 
 def rel_source(source_root_text, source_path_text):

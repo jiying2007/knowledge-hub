@@ -66,6 +66,9 @@
 - `knowledge-hub-readme-maintenance-path-sync-20260619`
 - `knowledge-hub-evidence-index-template-20260619`
 - `engineering-archive-copy-first-applied-20260619`
+- `patent-disclosure-copy-first-applied-20260619`
+- `patent-disclosure-markdown-corpus-20260619`
+- `patent-disclosure-artifact-ref-manifest-20260619`
 
 ## pcr02-registry-owner
 

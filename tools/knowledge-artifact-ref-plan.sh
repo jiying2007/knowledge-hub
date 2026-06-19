@@ -15,15 +15,11 @@ import sys
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
-parser = argparse.ArgumentParser(description="Create a reviewed copy-first migration manifest for a registered source.")
+parser = argparse.ArgumentParser(description="Create an artifact-ref manifest for non-text files from a registered source.")
 parser.add_argument("--source-id", required=True)
-parser.add_argument("--target-prefix", required=True, help="Knowledge Hub relative target directory.")
-parser.add_argument("--bucket", default="archive", choices=["current", "decisions", "archive", "validation"])
-parser.add_argument("--owner", default="team-core")
-parser.add_argument("--review-status", default="ready-for-copy-first-dry-run")
-parser.add_argument("--source-status", default="archived")
 parser.add_argument("--id-prefix", default="")
 parser.add_argument("--output", required=True)
+parser.add_argument("--exclude-ext", action="append", default=[".md", ".txt"])
 parser.add_argument("--force", action="store_true")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
@@ -42,7 +38,7 @@ def slugify(text):
     text = text.lower()
     text = re.sub(r"[^a-z0-9]+", "-", text)
     text = re.sub(r"-+", "-", text).strip("-")
-    return text or "item"
+    return text or "artifact"
 
 def safe_rel(path_text):
     rel = pathlib.PurePosixPath(path_text)
@@ -50,20 +46,8 @@ def safe_rel(path_text):
         raise ValueError(f"unsafe relative path: {path_text}")
     return rel
 
-def validate_target_prefix(prefix, bucket):
-    if prefix.parts[:3] == ("domains", "projects", "pcr02"):
-        if len(prefix.parts) < 4 or prefix.parts[3] != bucket:
-            raise ValueError(f"target-prefix bucket mismatch: bucket={bucket} path={prefix.as_posix()}")
-        return
-    if prefix.parts[:2] == ("domains", "patents"):
-        if len(prefix.parts) < 3 or prefix.parts[2] != bucket:
-            raise ValueError(f"target-prefix bucket mismatch: bucket={bucket} path={prefix.as_posix()}")
-        return
-    raise ValueError(f"target-prefix outside supported copy-first domains: {prefix.as_posix()}")
-
-sources_path = root / "registry" / "sources.json"
 try:
-    sources_doc = json.loads(sources_path.read_text())
+    sources_doc = json.loads((root / "registry" / "sources.json").read_text())
 except Exception as exc:
     sources_doc = {"sources": []}
     errors.append(f"registry/sources.json unreadable: {exc}")
@@ -76,13 +60,6 @@ for candidate in sources_doc.get("sources", []):
 if not source:
     errors.append(f"source not registered: {args.source_id}")
 
-target_prefix = None
-try:
-    target_prefix = safe_rel(args.target_prefix)
-    validate_target_prefix(target_prefix, args.bucket)
-except Exception as exc:
-    errors.append(str(exc))
-
 output = root / safe_rel(args.output)
 if output.exists() and not args.force:
     errors.append(f"output already exists: {args.output}")
@@ -90,44 +67,36 @@ if not str(output.relative_to(root)).startswith("artifacts/manifests/"):
     errors.append(f"output must live under artifacts/manifests/: {args.output}")
 
 rows = []
-if source and target_prefix and not errors:
+if source and not errors:
     source_root = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser().resolve()
     if not source_root.exists() or not source_root.is_dir():
         errors.append(f"source path missing or not directory: {source_root}")
     else:
+        excluded = {ext.lower() for ext in args.exclude_ext}
+        id_prefix = args.id_prefix or f"{slugify(args.source_id)}-artifact"
         files = []
         for path in sorted(source_root.rglob("*")):
             if not path.is_file():
                 continue
             if any(part.startswith(".") for part in path.relative_to(source_root).parts):
                 continue
-            if path.suffix.lower() not in {".md", ".txt"}:
-                warnings.append(f"skip unsupported extension: {path.relative_to(source_root).as_posix()}")
+            if path.suffix.lower() in excluded:
                 continue
             files.append(path)
-        id_prefix = args.id_prefix or f"{slugify(args.source_id)}-copyfirst"
         for index, path in enumerate(files, 1):
             rel = path.relative_to(source_root).as_posix()
-            target = pathlib.PurePosixPath(*target_prefix.parts) / pathlib.PurePosixPath(rel)
-            target_path = root / pathlib.Path(*target.parts)
-            if target_path.exists():
-                errors.append(f"target already exists: {target.as_posix()}")
             rows.append(
                 {
                     "id": f"{id_prefix}-{index:03d}",
                     "source_id": args.source_id,
                     "source_root": str(source_root),
                     "source_path": rel,
-                    "target_path": target.as_posix(),
-                    "bucket": args.bucket,
-                    "mode": "copy-first-dry-run",
-                    "source_sha256": sha256(path),
+                    "uri": f"source://{args.source_id}/{rel}",
                     "size": path.stat().st_size,
-                    "owner": args.owner,
-                    "review_status": args.review_status,
-                    "risk": "archive-only-copy-first",
-                    "rollback_policy": "remove-copied-target-only",
-                    "source_status": args.source_status,
+                    "sha256": sha256(path),
+                    "artifact_type": path.suffix.lower().lstrip(".") or "binary",
+                    "mode": "artifact-ref-register",
+                    "status": "registered-reference-only",
                 }
             )
 
