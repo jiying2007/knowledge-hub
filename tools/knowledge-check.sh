@@ -169,6 +169,17 @@ if not args.sources_only:
             errors.append(f"owners:{owner_id} duplicate id")
         owner_ids.add(owner_id)
 
+    project_ids = set()
+    projects_doc = load_json(root / "registry" / "projects.json")
+    for project in projects_doc.get("projects", []):
+        project_id = project.get("id")
+        if not project_id:
+            errors.append("projects: missing id")
+            continue
+        if project_id in project_ids:
+            errors.append(f"projects:{project_id} duplicate id")
+        project_ids.add(project_id)
+
     migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     local_migration_target_prefixes = (
         "artifacts/",
@@ -277,6 +288,10 @@ if not args.sources_only:
             errors.append(f"items:{item_id} invalid domain root: {domain}")
         if item.get("scope") == "project-specific" and not domain.startswith("projects/"):
             errors.append(f"items:{item_id} project-specific scope outside projects domain: {domain}")
+        if domain.startswith("projects/"):
+            project_id = domain.split("/", 1)[1]
+            if project_id not in project_ids:
+                errors.append(f"items:{item_id} project not registered: {project_id}")
         if item.get("scope") == "codex-memory-curation-governance" and domain != "codex":
             errors.append(f"items:{item_id} codex memory scope outside codex domain: {domain}")
         rel_path = pathlib.Path(str(item.get("path", "")))

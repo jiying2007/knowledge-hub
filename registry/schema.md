@@ -196,6 +196,20 @@ Recommended owner fields:
 - `display_name`
 - `default_review_cycle_days`
 
+## projects.json
+
+登记 registry item 可使用的 project id。每个 `registry/items.jsonl` 条目若使用 `domain=projects/<project>`，则 `<project>` 必须能在这里找到，避免项目 id 拼写漂移或临时项目目录长期残留。
+
+Required project fields:
+
+- `id`
+
+Recommended project fields:
+
+- `name`
+- `domain`
+- `status`
+
 ## migrations.jsonl
 
 登记 Knowledge Hub 治理、迁移、引用、归档和门禁变更的可追溯记录。
@@ -221,6 +235,7 @@ Migration invariants:
 
 - `active` and `reviewing` items must have `owner` and `review_after`.
 - item `owner` must be registered in `registry/owners.json`.
+- item `domain=projects/<project>` must use a project id registered in `registry/projects.json`.
 - `superseded` items must have `superseded_by`.
 - `artifact-ref` items must have `uri`, `size`, and `sha256`.
 - `project-specific` items must not live under `domains/embedded/standards`.
