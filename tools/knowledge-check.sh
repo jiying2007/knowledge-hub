@@ -21,14 +21,18 @@ parser.add_argument("--json", action="store_true")
 parser.add_argument("--sources-only", action="store_true")
 parser.add_argument("--project", default="")
 parser.add_argument("--domain", default="")
+parser.add_argument("--explain", default="", metavar="ITEM_ID")
 args = parser.parse_args(argv)
 
 errors = []
 warnings = []
+explain = None
 if args.project:
     warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
 if args.domain:
     warnings.append(f"knowledge-check: --domain is reserved and does not narrow validation scope: {args.domain}")
+if args.sources_only and args.explain:
+    warnings.append(f"knowledge-check: --explain is ignored with --sources-only: {args.explain}")
 
 ALLOWED_ITEM_KINDS = {
     "standard",
@@ -597,6 +601,70 @@ if not args.sources_only:
                 errors.append(f"index:{rel_index} duplicate item reference {indexed_id} ({count}x)")
 
     items_by_id = {item.get("id"): item for item in items if item.get("id")}
+    if args.explain:
+        explain_id = args.explain
+        explained_item = items_by_id.get(explain_id)
+        explain = {
+            "id": explain_id,
+            "found": bool(explained_item),
+            "registry": {},
+            "indexes": {},
+            "maintenance_hints": [],
+        }
+        if not explained_item:
+            errors.append(f"explain:{explain_id} item not found")
+        else:
+            explained_path = pathlib.Path(str(explained_item.get("path", "")))
+            explained_path_exists = (
+                bool(str(explained_item.get("path", "")))
+                and not explained_path.is_absolute()
+                and (root / explained_path).exists()
+            )
+            validation_refs = explained_item.get("validation_refs", [])
+            if not isinstance(validation_refs, list):
+                validation_refs = []
+            explain["registry"] = {
+                "title": explained_item.get("title", ""),
+                "kind": explained_item.get("kind", ""),
+                "domain": explained_item.get("domain", ""),
+                "path": explained_item.get("path", ""),
+                "path_exists": explained_path_exists,
+                "scope": explained_item.get("scope", ""),
+                "visibility": explained_item.get("visibility", ""),
+                "status": explained_item.get("status", ""),
+                "owner": explained_item.get("owner", ""),
+                "review_after": explained_item.get("review_after", ""),
+                "promotion": explained_item.get("promotion", ""),
+                "tags_count": len(explained_item.get("tags", [])) if isinstance(explained_item.get("tags"), list) else 0,
+                "validation_refs_count": len(validation_refs),
+            }
+            for rel_index in ["indexes/by-owner.md", "indexes/by-review-date.md", "indexes/by-status.md"]:
+                canonical_only = rel_index == "indexes/by-status.md"
+                ref_count = item_ref_counts(root / rel_index, canonical_status_only=canonical_only).get(explain_id, 0)
+                if ref_count == 0:
+                    index_status = "missing"
+                    explain["maintenance_hints"].append(f"{rel_index}: add `{explain_id}` to the appropriate section")
+                elif ref_count == 1:
+                    index_status = "ok"
+                else:
+                    index_status = "duplicate"
+                    explain["maintenance_hints"].append(f"{rel_index}: keep exactly one canonical `{explain_id}` reference")
+                explain["indexes"][rel_index] = {
+                    "reference_count": ref_count,
+                    "status": index_status,
+                }
+            status_index_path = root / "indexes" / "by-status.md"
+            for bucket in ["active", "reviewing", "archived"]:
+                if explain_id in status_bucket_ids(status_index_path, bucket):
+                    explain["indexes"]["indexes/by-status.md"]["bucket"] = bucket
+                    break
+            if not explained_path_exists:
+                explain["maintenance_hints"].append("registry path is missing or absolute; keep item path repo-relative and existing")
+            if explained_item.get("status") in {"active", "reviewing"} and not validation_refs:
+                explain["maintenance_hints"].append("active/reviewing item needs non-empty validation_refs")
+            if not explain["maintenance_hints"]:
+                explain["maintenance_hints"].append("no immediate manual maintenance action detected for this item")
+
     active_index_ids = status_bucket_ids(root / "indexes" / "by-status.md", "active")
     for indexed_id in sorted(active_index_ids):
         item = items_by_id.get(indexed_id)
@@ -651,6 +719,8 @@ result = {
     "warnings": warnings,
     "dry_run": bool(args.dry_run),
 }
+if explain is not None:
+    result["explain"] = explain
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
 else:
@@ -661,5 +731,21 @@ else:
         print(f"ERROR {item}")
     for item in warnings[:40]:
         print(f"WARN {item}")
+    if explain is not None:
+        print("explain:")
+        print(f"  id: {explain['id']}")
+        print(f"  found: {str(explain['found']).lower()}")
+        if explain["registry"]:
+            registry = explain["registry"]
+            print(f"  title: {registry.get('title', '')}")
+            print(f"  status: {registry.get('status', '')}")
+            print(f"  owner: {registry.get('owner', '')}")
+            print(f"  path: {registry.get('path', '')}")
+            print(f"  path_exists: {str(registry.get('path_exists', False)).lower()}")
+        for rel_index, detail in explain["indexes"].items():
+            bucket = f", bucket={detail['bucket']}" if "bucket" in detail else ""
+            print(f"  index {rel_index}: {detail['status']} ({detail['reference_count']}x{bucket})")
+        for hint in explain["maintenance_hints"]:
+            print(f"  hint: {hint}")
 sys.exit(0 if not errors else 1)
 PY
