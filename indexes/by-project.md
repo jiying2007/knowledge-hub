@@ -26,6 +26,7 @@
 - Owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
 - AGENTS owner-ready package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
 - Diag metadata owner-ready package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
+- ASAN owner-ready package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
