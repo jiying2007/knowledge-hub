@@ -103,6 +103,47 @@ Recommended source fields:
 - `retrieved_at`
 - `review_status`
 
+Allowed source `role`:
+
+```text
+team-knowledge-source
+project-archive-source
+patent-source
+codex-governance-source
+auxiliary-memory-source
+project-current-docs-source
+```
+
+Allowed source `authority`:
+
+```text
+legacy-team-ssot
+legacy-project-history
+patent-materials
+codex-workflow-history
+auxiliary-recall-only
+legacy-project-current-docs
+```
+
+Allowed source `status`:
+
+```text
+registered
+deprecated
+retired
+```
+
+Allowed source `write_policy`:
+
+```text
+do-not-write-through-knowledge-hub
+copy-first-migration-only
+do-not-mix-with-engineering-knowledge
+use-codex-archive-tools
+read-only-unless-explicitly-approved
+externalize-to-knowledge-hub-before-prune
+```
+
 ## Safety invariants
 
 - `active` and `reviewing` items must have `owner` and `review_after`.

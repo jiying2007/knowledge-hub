@@ -26,6 +26,60 @@ args = parser.parse_args(argv)
 errors = []
 warnings = []
 
+ALLOWED_ITEM_KINDS = {
+    "standard",
+    "runbook",
+    "architecture",
+    "decision",
+    "project-current",
+    "project-archive",
+    "validation",
+    "audit",
+    "patent",
+    "codex-session",
+    "codex-workflow",
+    "personal-note",
+    "artifact-ref",
+}
+ALLOWED_ITEM_STATUSES = {
+    "draft",
+    "active",
+    "reviewing",
+    "archived",
+    "superseded",
+    "rejected",
+    "personal",
+}
+ALLOWED_SOURCE_ROLES = {
+    "team-knowledge-source",
+    "project-archive-source",
+    "patent-source",
+    "codex-governance-source",
+    "auxiliary-memory-source",
+    "project-current-docs-source",
+}
+ALLOWED_SOURCE_AUTHORITIES = {
+    "legacy-team-ssot",
+    "legacy-project-history",
+    "patent-materials",
+    "codex-workflow-history",
+    "auxiliary-recall-only",
+    "legacy-project-current-docs",
+}
+ALLOWED_SOURCE_STATUSES = {
+    "registered",
+    "deprecated",
+    "retired",
+}
+ALLOWED_SOURCE_WRITE_POLICIES = {
+    "do-not-write-through-knowledge-hub",
+    "copy-first-migration-only",
+    "do-not-mix-with-engineering-knowledge",
+    "use-codex-archive-tools",
+    "read-only-unless-explicitly-approved",
+    "externalize-to-knowledge-hub-before-prune",
+}
+
 def load_json(path):
     try:
         return json.loads(path.read_text())
@@ -53,6 +107,15 @@ for source in sources:
     for field in ["id", "path", "role", "authority", "status", "write_policy"]:
         if not source.get(field):
             errors.append(f"sources:{source.get('id', '<unknown>')} missing {field}")
+    source_id = source.get("id", "<unknown>")
+    if source.get("role") and source.get("role") not in ALLOWED_SOURCE_ROLES:
+        errors.append(f"sources:{source_id} invalid role: {source.get('role')}")
+    if source.get("authority") and source.get("authority") not in ALLOWED_SOURCE_AUTHORITIES:
+        errors.append(f"sources:{source_id} invalid authority: {source.get('authority')}")
+    if source.get("status") and source.get("status") not in ALLOWED_SOURCE_STATUSES:
+        errors.append(f"sources:{source_id} invalid status: {source.get('status')}")
+    if source.get("write_policy") and source.get("write_policy") not in ALLOWED_SOURCE_WRITE_POLICIES:
+        errors.append(f"sources:{source_id} invalid write_policy: {source.get('write_policy')}")
     path = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser()
     if not path.exists():
         warnings.append(f"sources:{source.get('id')} path missing: {path}")
@@ -72,6 +135,10 @@ if not args.sources_only:
         for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at"]:
             if field not in item or item.get(field) in ("", None, []):
                 errors.append(f"items:{item_id} missing {field}")
+        if item.get("kind") and item.get("kind") not in ALLOWED_ITEM_KINDS:
+            errors.append(f"items:{item_id} invalid kind: {item.get('kind')}")
+        if item.get("status") and item.get("status") not in ALLOWED_ITEM_STATUSES:
+            errors.append(f"items:{item_id} invalid status: {item.get('status')}")
         rel_path = pathlib.Path(str(item.get("path", "")))
         if rel_path.is_absolute():
             errors.append(f"items:{item_id} path must be relative: {rel_path}")
