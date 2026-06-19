@@ -97,3 +97,4 @@
 - 2026-09-19: `embedded-knowledge-owner-review-gate-20260619`
 - 2026-09-19: `codex-archive-reference-boundary-20260619`
 - 2026-09-19: `codex-memories-auxiliary-boundary-20260619`
+- 2026-09-19: `knowledge-hub-index-plan-helper-20260619`

@@ -73,6 +73,7 @@
 - `embedded-knowledge-owner-review-gate-20260619`
 - `codex-archive-reference-boundary-20260619`
 - `codex-memories-auxiliary-boundary-20260619`
+- `knowledge-hub-index-plan-helper-20260619`
 
 ## pcr02-registry-owner
 

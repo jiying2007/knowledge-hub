@@ -139,8 +139,9 @@ $(usage)
 5. 如需主题入口，在 indexes/by-topic.md 增加可读路径引用。
 6. 在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径。
 7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
-8. 运行验证：
+8. 运行只读索引计划和验证：
 
+   rtk bash tools/knowledge-index-plan.sh --section all
    rtk bash tools/knowledge-check.sh --dry-run --json
    rtk bash tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
    rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
