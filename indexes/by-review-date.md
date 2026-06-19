@@ -134,3 +134,4 @@
 - 2026-09-20: `knowledge-hub-final-gate-20260620`
 - 2026-09-20: `pcr02-owner-decision-intake-execution-20260620`
 - 2026-09-20: `knowledge-hub-regression-temp-cleanup-20260620`
+- 2026-09-20: `pcr02-agents-owner-ready-package-20260620`

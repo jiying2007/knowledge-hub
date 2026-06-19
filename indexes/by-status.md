@@ -133,6 +133,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-final-gate-20260620`
 - reviewing: `pcr02-owner-decision-intake-execution-20260620`
 - reviewing: `knowledge-hub-regression-temp-cleanup-20260620`
+- reviewing: `pcr02-agents-owner-ready-package-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -220,3 +221,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - final-gate-applied: `tools/knowledge-final-gate.sh` aggregates `knowledge-check`、`knowledge-regression` and `knowledge-status --strict` for terminal validation, documented by `artifacts/manifests/knowledge-hub-final-gate-20260620.jsonl`.
 - owner-intake-execution-ready: PCR02 consolidated owner decision intake execution package is ready for manual assignment and sign-off by `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.jsonl`; no owner gate is resolved by this package alone.
 - regression-temp-cleanup-applied: `tools/knowledge-regression.sh` cleans temp fixtures per scenario, records low-temp-space/internal exceptions as structured failure details, and exposes them as JSON in `--json` / final-gate paths, documented by `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.jsonl`.
+- owner-ready-no-decision: PCR02 `AGENTS.md` has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-001` remains open.
