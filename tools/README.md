@@ -23,7 +23,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
 - `knowledge-artifact-ref-plan.sh`: creates a JSONL artifact reference manifest with source URI, size and sha256 for non-text source files; it does not copy binary content.
-- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files.
+- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files. Supports `--owner <owner>`; defaults owner to `leiwenjun`, derives project from `--domain projects/<project>` when `--project` is omitted, and prints UTC default dates for registry and migration drafts.
 - `knowledge-capture.sh`: dry-run candidate capture.
 - `knowledge-promote.sh`: dry-run promotion plan.
 - `knowledge-retire.sh`: dry-run retirement plan.
@@ -55,6 +55,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl>
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
 ```
 

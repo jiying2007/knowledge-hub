@@ -17,7 +17,7 @@ Usage:
   rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>]
 
 Examples:
-  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
+  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
   rtk bash tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
 
 This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.

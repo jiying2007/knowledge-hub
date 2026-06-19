@@ -120,3 +120,4 @@
 - 2026-09-19: `knowledge-hub-manual-entry-default-dates-20260619`
 - 2026-09-19: `knowledge-hub-manual-entry-owner-override-20260619`
 - 2026-09-19: `knowledge-hub-regression-manifest-coverage-20260619`
+- 2026-09-19: `knowledge-hub-manual-entry-owner-doc-sync-20260619`

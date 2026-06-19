@@ -19,7 +19,8 @@
 | manual-entry-project-derived-from-domain | 当前人工新增项目条目向导从 domain 推导项目名 | 未传 `--project` 时由 `projects/<project>` 推导；不一致时输出 warning |
 | manual-entry-default-dates | 当前人工新增向导输出默认日期 | registry / migration 草稿填入 ISO 日期，不保留日期占位符 |
 | manual-entry-owner-override | 当前人工新增向导支持 owner 覆盖 | 默认 owner 为 `leiwenjun`，传入 `--owner team-core` 时草稿使用 `team-core` |
-| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 包含 12 个回归场景和所有当前测试 ID |
+| manual-entry-docs-owner-option | 当前 README、tools README 和 `knowledge-new.sh --help` 暴露人工新增 owner 参数 | README、tools README 与工具 help 均包含 `knowledge-new.sh` 和 `--owner`；项目示例展示从 domain 推导 project |
+| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 包含 13 个回归场景和所有当前测试 ID |
 
 ## 决策
 
@@ -32,7 +33,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；12 个回归场景全部 pass，覆盖 status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、status next owner gate、owner landing plan、manual entry 防漏和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；13 个回归场景全部 pass，覆盖 status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、status next owner gate、owner landing plan、manual entry 防漏、owner 文档可发现性和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 

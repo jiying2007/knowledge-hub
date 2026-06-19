@@ -119,6 +119,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-manual-entry-default-dates-20260619`
 - reviewing: `knowledge-hub-manual-entry-owner-override-20260619`
 - reviewing: `knowledge-hub-regression-manifest-coverage-20260619`
+- reviewing: `knowledge-hub-manual-entry-owner-doc-sync-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -192,3 +193,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - manual-entry-default-dates-applied: `tools/knowledge-new.sh` fills default ISO dates in manual skeletons, documented by `artifacts/manifests/knowledge-hub-manual-entry-default-dates-20260619.jsonl`.
 - manual-entry-owner-override-applied: `tools/knowledge-new.sh` supports `--owner <owner>` in manual skeletons, documented by `artifacts/manifests/knowledge-hub-manual-entry-owner-override-20260619.jsonl`.
 - regression-manifest-coverage-applied: `tools/knowledge-regression.sh` checks its governance helper manifest coverage, documented by `artifacts/manifests/knowledge-hub-regression-manifest-coverage-20260619.jsonl`.
+- manual-entry-owner-doc-sync-applied: README, tools README and `knowledge-new.sh --help` expose manual entry `--owner`, documented by `artifacts/manifests/knowledge-hub-manual-entry-owner-doc-sync-20260619.jsonl`.

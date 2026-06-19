@@ -49,7 +49,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl>
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --source <path> --kind <kind> --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target embedded/runbooks --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
@@ -57,7 +57,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 
 ## 人工新增最短路径
 
-1. 运行 `knowledge-new.sh` 生成只读清单，不让脚本自动写文件。
+1. 运行 `knowledge-new.sh` 生成只读清单，不让脚本自动写文件。`--owner` 会写入草稿 registry owner；未传时默认 `leiwenjun`。当 `--domain projects/<project>` 且未传 `--project` 时，脚本会从 domain 推导 project；默认日期按 UTC 生成，`created_at` / `updated_at` / `checked_at` 为当天，`review_after` 默认约 3 个月后。
 2. 从 `templates/` 复制合适模板到唯一正文位置。
 3. 同步 `registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 和 `registry/migrations.jsonl`。
 4. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all`，对照 registry 派生视图复核核心索引。

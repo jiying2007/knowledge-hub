@@ -482,6 +482,40 @@ def test_manual_entry_owner_override():
         },
     )
 
+def test_manual_entry_docs_owner_option():
+    readme_path = root / "README.md"
+    tools_readme_path = root / "tools" / "README.md"
+    try:
+        readme = readme_path.read_text()
+        tools_readme = tools_readme_path.read_text()
+        help_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-new.sh", "--help"])
+        read_error = ""
+    except Exception as exc:
+        readme = ""
+        tools_readme = ""
+        help_result = {"exit_code": 1, "stdout": "", "stderr": str(exc)}
+        read_error = str(exc)
+    readme_has_owner = "knowledge-new.sh" in readme and "--owner" in readme
+    tools_readme_has_owner = "knowledge-new.sh" in tools_readme and "--owner" in tools_readme
+    help_has_owner_example = (
+        help_result["exit_code"] == 0
+        and "--owner team-core" in help_result["stdout"]
+        and "--domain projects/pcr02 --owner" in help_result["stdout"]
+    )
+    expect(
+        not read_error and readme_has_owner and tools_readme_has_owner and help_has_owner_example,
+        "manual-entry-docs-owner-option",
+        "manual entry docs mention owner option",
+        {
+            "read_error": read_error,
+            "readme_has_owner": readme_has_owner,
+            "tools_readme_has_owner": tools_readme_has_owner,
+            "help_exit_code": help_result["exit_code"],
+            "help_has_owner_example": help_has_owner_example,
+            "help_stdout_sample": help_result["stdout"][:800],
+        },
+    )
+
 def test_regression_manifest_coverage():
     manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
     try:
@@ -503,20 +537,21 @@ def test_regression_manifest_coverage():
         "manual-entry-project-derived-from-domain",
         "manual-entry-default-dates",
         "manual-entry-owner-override",
+        "manual-entry-docs-owner-option",
         "regression-manifest-coverage",
     ]
     missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
     expect(
         not read_error
         and not missing_ids
-        and "12 个回归场景" in manifest_text,
+        and "13 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "12 个回归场景",
+            "expected_count_text": "13 个回归场景",
         },
     )
 
@@ -531,6 +566,7 @@ test_manual_entry_project_index_hint()
 test_manual_entry_project_from_domain()
 test_manual_entry_default_dates()
 test_manual_entry_owner_override()
+test_manual_entry_docs_owner_option()
 test_regression_manifest_coverage()
 
 if not args.keep_temp:
