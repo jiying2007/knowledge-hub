@@ -10,6 +10,7 @@ import collections
 import datetime as dt
 import json
 import pathlib
+import shlex
 import subprocess
 import sys
 
@@ -111,6 +112,36 @@ owner_payload = owner_gates["payload"]
 check_payload = knowledge_check["payload"]
 active_exposure_count = int(owner_payload.get("active_exposure_count", 0) or 0)
 open_owner_gate_count = int(owner_payload.get("open_count", 0) or 0)
+owner_rows = owner_payload.get("rows", [])
+open_owner_rows = sorted(
+    [row for row in owner_rows if row.get("status") == "open"],
+    key=lambda row: (
+        str(row.get("review_after", "") or "9999-12-31"),
+        str(row.get("id", "")),
+    ),
+)
+next_owner_gate = {}
+if open_owner_rows:
+    first_open = open_owner_rows[0]
+    focus_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--forms",
+    ]
+    next_owner_gate = {
+        "worksheet_id": first_open.get("id", ""),
+        "source_id": first_open.get("source_id", ""),
+        "source_path": first_open.get("source_path", ""),
+        "owner": first_open.get("owner", ""),
+        "review_after": first_open.get("review_after", ""),
+        "selection_order": "review_after, worksheet_id",
+        "focus_command": " ".join(shlex.quote(str(part)) for part in focus_command),
+    }
 
 if errors:
     status = "blocked"
@@ -129,7 +160,13 @@ if knowledge_check["exit_code"] != 0:
 if active_exposure_count:
     next_actions.append("立即移除 owner-gated active exposure，owner 决策闭环前不得 active。")
 if open_owner_gate_count:
-    next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
+    if next_owner_gate:
+        next_actions.append(
+            "继续处理 owner decision worksheet；下一条是 "
+            f"{next_owner_gate['worksheet_id']} ({next_owner_gate['source_path']})。"
+        )
+    else:
+        next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
 if stale_items:
     next_actions.append("复核 review_after 已过期的 active/reviewing 条目。")
 if not next_actions:
@@ -175,6 +212,7 @@ result = {
         "open_count": open_owner_gate_count,
         "resolved_count": owner_payload.get("resolved_count", 0),
         "active_exposure_count": active_exposure_count,
+        "next_open": next_owner_gate,
     },
     "errors": errors,
     "next_actions_zh": next_actions,
@@ -215,6 +253,9 @@ print(f"- rows: {result['owner_gates']['row_count']}")
 print(f"- open: {open_owner_gate_count}")
 print(f"- resolved: {owner_payload.get('resolved_count', 0)}")
 print(f"- active exposure: {active_exposure_count}")
+if next_owner_gate:
+    print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
+    print(f"- focus command: `{next_owner_gate['focus_command']}`")
 print()
 print("## 下一步")
 print()

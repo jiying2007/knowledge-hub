@@ -112,3 +112,4 @@
 - 2026-09-19: `knowledge-hub-owner-status-gate-hardening-20260619`
 - 2026-09-19: `knowledge-hub-governance-regression-helper-20260619`
 - 2026-09-19: `knowledge-hub-owner-worksheet-focus-helper-20260619`
+- 2026-09-19: `knowledge-hub-status-next-owner-gate-20260619`

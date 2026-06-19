@@ -176,11 +176,36 @@ def test_owner_single_form():
         },
     )
 
+def test_status_next_owner_gate():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    next_open = parsed.get("owner_gates", {}).get("next_open", {})
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("status") == "needs-owner-review"
+        and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", ""),
+        "status-next-owner-gate",
+        "status dashboard exposes next owner gate focus command",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "worksheet_id": next_open.get("worksheet_id"),
+            "focus_command": next_open.get("focus_command", ""),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
 test_owner_partial_resolved()
 test_owner_single_form()
+test_status_next_owner_gate()
 
 if not args.keep_temp:
     for temp_root in temp_roots:
