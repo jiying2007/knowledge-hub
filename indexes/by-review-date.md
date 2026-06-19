@@ -68,3 +68,4 @@
 - 2026-09-19: `knowledge-hub-active-safety-gate-20260619`
 - 2026-09-19: `knowledge-hub-migration-record-gate-20260619`
 - 2026-09-19: `knowledge-hub-manual-entry-guide-20260619`
+- 2026-09-19: `knowledge-hub-template-schema-gate-20260619`

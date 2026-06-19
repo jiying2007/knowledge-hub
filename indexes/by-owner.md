@@ -45,6 +45,7 @@
 - `knowledge-hub-active-safety-gate-20260619`
 - `knowledge-hub-migration-record-gate-20260619`
 - `knowledge-hub-manual-entry-guide-20260619`
+- `knowledge-hub-template-schema-gate-20260619`
 
 ## pcr02-registry-owner
 

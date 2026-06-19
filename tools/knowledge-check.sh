@@ -188,6 +188,35 @@ if not args.sources_only:
             elif not (root / target_path).exists():
                 errors.append(f"migrations:{migration_id} missing local target: {target_ref}")
 
+    template_required_fields = [
+        "id",
+        "title",
+        "kind",
+        "domain",
+        "path",
+        "scope",
+        "visibility",
+        "status",
+        "owner",
+        "source",
+        "review_after",
+        "created_at",
+        "updated_at",
+    ]
+    template_skip = {"README.md", "migration-record.md"}
+    for template_path in sorted((root / "templates").glob("*.md")):
+        rel_template = template_path.relative_to(root)
+        if template_path.name in template_skip:
+            continue
+        template_text = template_path.read_text()
+        for field in template_required_fields:
+            if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
+                errors.append(f"template:{rel_template} missing {field}")
+        if template_path.name == "artifact-ref.md":
+            for field in ["uri", "size", "sha256"]:
+                if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
+                    errors.append(f"template:{rel_template} artifact-ref missing {field}")
+
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
     today = dt.date.today()
