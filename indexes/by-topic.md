@@ -61,3 +61,4 @@
 - Knowledge Hub manual entry freshness gate: `artifacts/manifests/knowledge-hub-manual-entry-freshness-gate-20260619.md`
 - Knowledge Hub item explain diagnostic: `artifacts/manifests/knowledge-hub-item-explain-diagnostic-20260619.md`
 - Knowledge Hub check diagnostics: `artifacts/manifests/knowledge-hub-check-diagnostics-20260619.md`
+- Knowledge Hub manual entry copyable skeleton: `artifacts/manifests/knowledge-hub-manual-entry-copyable-skeleton-20260619.md`

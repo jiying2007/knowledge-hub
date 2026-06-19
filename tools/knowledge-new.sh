@@ -34,6 +34,13 @@ read_value() {
   printf "%s" "$value"
 }
 
+json_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  printf "%s" "$value"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --kind)
@@ -89,6 +96,22 @@ case "$KIND" in
     ;;
 esac
 
+DISPLAY_ID="${ITEM_ID:-<id>}"
+DISPLAY_KIND="${KIND:-<kind>}"
+DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
+DISPLAY_PATH="${TARGET_PATH:-<path>}"
+DISPLAY_SCOPE="team-general"
+if [[ "$DOMAIN" == projects/* ]]; then
+  DISPLAY_SCOPE="project-specific"
+fi
+JSON_ID="$(json_escape "$DISPLAY_ID")"
+JSON_KIND="$(json_escape "$DISPLAY_KIND")"
+JSON_DOMAIN="$(json_escape "$DISPLAY_DOMAIN")"
+JSON_PATH="$(json_escape "$DISPLAY_PATH")"
+JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
+JSON_TITLE="$(json_escape "<中文标题>")"
+JSON_SOURCE_FROM="$(json_escape "manual-entry:knowledge-new.sh")"
+
 cat <<EOF
 # Knowledge Hub 人工新增向导
 
@@ -118,7 +141,39 @@ $(usage)
 7. 运行验证：
 
    rtk bash tools/knowledge-check.sh --dry-run --json
+   rtk bash tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
+   rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
    rtk bash tools/knowledge-search.sh "${ITEM_ID:-<id>}" --json
+
+## 可复制草稿
+
+以下内容是人工填写起点，不会自动落盘。复制前必须把尖括号占位符替换为真实值，并确认 owner、review_after、source、validation_refs、tags 和 migration notes。
+
+### registry/items.jsonl
+
+\`\`\`json
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"leiwenjun","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"<YYYY-MM-DD>","promotion":"none","created_at":"<YYYY-MM-DD>","updated_at":"<YYYY-MM-DD>"}
+\`\`\`
+
+### 核心索引
+
+\`\`\`md
+# indexes/by-owner.md
+- \`${DISPLAY_ID}\`
+
+# indexes/by-review-date.md
+- <YYYY-MM-DD>: \`${DISPLAY_ID}\`
+
+# indexes/by-status.md
+# 追加到现有 "- reviewing:" 行，避免新增重复 bucket。
+\`${DISPLAY_ID}\`
+\`\`\`
+
+### registry/migrations.jsonl
+
+\`\`\`json
+{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"<YYYY-MM-DD>","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}
+\`\`\`
 
 ## 不要做
 
