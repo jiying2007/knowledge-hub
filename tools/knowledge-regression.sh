@@ -200,12 +200,100 @@ def test_status_next_owner_gate():
         },
     )
 
+def test_owner_landing_plan_project_index():
+    forms_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed_forms = {}
+    try:
+        parsed_forms = json.loads(forms_result["stdout"])
+    except Exception:
+        pass
+    forms = parsed_forms.get("decision_forms", [])
+    if not forms:
+        expect(
+            False,
+            "owner-landing-plan-project-index",
+            "owner landing plan requires by-project index",
+            {"setup_error": "missing decision form", "stdout_sample": forms_result["stdout"][:1000]},
+        )
+        return
+    form = forms[0]
+    for key, value in {
+        "owner_decision": form.get("allowed_owner_decisions", ["project-local-rule"])[0],
+        "target_decision": "project-local-rule",
+        "reviewed_by": "regression-fixture-owner",
+        "reviewed_at": "2026-06-19",
+        "review_after": "2026-09-19",
+        "source_status": "owner-reviewed-fixture",
+        "source_sha256": "a" * 64,
+        "source_size": 123,
+        "current_validity": "fixture-only",
+        "scope_statement": "PCR02 project-local only",
+        "applicable_project_version": "fixture-version",
+        "evidence_refs": ["artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md"],
+        "status_reason": "Regression fixture for landing-plan required files.",
+    }.items():
+        form[key] = value
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-landing-plan-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--landing-plan",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    required_files = parsed.get("landing_plan", {}).get("required_manual_files", [])
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("landing_plan", {}).get("status") == "planned"
+        and "indexes/by-project.md" in required_files
+        and "indexes/by-status.md" in required_files,
+        "owner-landing-plan-project-index",
+        "owner landing plan requires by-project index",
+        {
+            "exit_code": result["exit_code"],
+            "landing_status": parsed.get("landing_plan", {}).get("status"),
+            "required_manual_files": required_files,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
 test_owner_partial_resolved()
 test_owner_single_form()
 test_status_next_owner_gate()
+test_owner_landing_plan_project_index()
 
 if not args.keep_temp:
     for temp_root in temp_roots:

@@ -14,6 +14,7 @@
 | owner-partial-resolved | 临时副本只填 `owner_decision` 并把 worksheet 状态改为 `owner-approved` | owner gate 仍保持 open，不能 resolved |
 | owner-single-form | 当前仓库按单个 `worksheet_id` 输出 owner form | 只输出 1 条 row 和 1 条 decision form |
 | status-next-owner-gate | 当前状态看板输出下一条 owner gate 聚焦命令 | JSON 中存在 `owner_gates.next_open.focus_command`，并指向 `pcr02-owner-decision-worksheet-001` |
+| owner-landing-plan-project-index | 当前 landing plan 输出 owner 决策人工落地文件清单 | `required_manual_files` 包含 `indexes/by-project.md` 和 `indexes/by-status.md` |
 
 ## 决策
 
@@ -26,7 +27,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；6 个回归场景全部 pass，包含 2 个 status 负向 fixture、1 个 owner partial resolved 负向 fixture、1 个 owner single form 正向 fixture 和 1 个 status next owner gate 正向 fixture | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；7 个回归场景全部 pass，包含 status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、status next owner gate 和 landing plan project index 正向 fixture | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 
