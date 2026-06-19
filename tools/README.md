@@ -10,7 +10,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 不要在长期文档中直接引用内部 Python 入口，也不要绕过 `rtk` 裸跑 shell 命令。
 
-- `knowledge-check.sh`: read-only validation, including registry field/path/enum/domain-boundary checks, source enum checks, secret-pattern scan, core index drift checks for missing/stale item refs, and local path/glob reference checks in `indexes/*.md`.
+- `knowledge-check.sh`: read-only validation, including registry field/path/enum/domain-boundary checks, personal-local active blocking, AI-generated active human-review gates, source enum checks, secret-pattern scan, core index drift checks for missing/stale item refs, and local path/glob reference checks in `indexes/*.md`.
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.

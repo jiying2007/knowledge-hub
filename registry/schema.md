@@ -189,7 +189,8 @@ externalize-to-knowledge-hub-before-prune
 - `superseded` items must have `superseded_by`.
 - `artifact-ref` items must have `uri`, `size`, and `sha256`.
 - `project-specific` items must not live under `domains/embedded/standards`.
-- `personal-local` items must not be referenced by active team indexes.
+- `personal-local` items must not use `active` status and must not be referenced by active team indexes.
 - Human-readable title, summary, conclusion, risk and review notes should be Chinese by default.
 - AI generated or AI transformed content must not become `active` without human review evidence.
+- AI generated `active` items must provide `human_reviewed_by`, `human_reviewed_at`, and `review_basis`.
 - External-source derived items must record source metadata, read status and promotion decision before promotion.

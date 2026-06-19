@@ -211,7 +211,17 @@ if not args.sources_only:
         if item.get("scope") == "project-specific" and str(item.get("path", "")).startswith("domains/embedded/standards/"):
             errors.append(f"items:{item_id} project-specific under embedded standards")
         if item.get("visibility") == "personal-local" and item.get("status") == "active":
-            warnings.append(f"items:{item_id} personal-local active item requires careful review")
+            errors.append(f"items:{item_id} personal-local item must not be active")
+        if item.get("generated_by_ai") is True and item.get("status") == "active":
+            missing_review = [
+                field
+                for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+                if not item.get(field)
+            ]
+            if missing_review:
+                errors.append(
+                    f"items:{item_id} ai-generated active item missing human review fields: {','.join(missing_review)}"
+                )
 
     def expand_range_ids(text, path):
         expanded = set()
@@ -245,6 +255,19 @@ if not args.sources_only:
             found.update(expand_range_ids(line, path))
         return found
 
+    def status_bucket_ids(path, bucket):
+        if not path.exists():
+            errors.append(f"index missing: {path.relative_to(root)}")
+            return set()
+        found = set()
+        prefix = f"- {bucket}:"
+        for line in path.read_text().splitlines():
+            if not line.startswith(prefix):
+                continue
+            found.update(re.findall(r"`([^`]+)`", line))
+            found.update(expand_range_ids(line, path))
+        return found
+
     index_requirements = {
         "indexes/by-owner.md": "owner",
         "indexes/by-review-date.md": "review_after",
@@ -260,6 +283,15 @@ if not args.sources_only:
         for indexed_id in sorted(stale_seen):
             if indexed_id not in ids:
                 errors.append(f"index:{rel_index} stale item reference {indexed_id}")
+
+    items_by_id = {item.get("id"): item for item in items if item.get("id")}
+    active_index_ids = status_bucket_ids(root / "indexes" / "by-status.md", "active")
+    for indexed_id in sorted(active_index_ids):
+        item = items_by_id.get(indexed_id)
+        if not item:
+            continue
+        if item.get("visibility") == "personal-local" or item.get("domain") == "personal":
+            errors.append(f"index:indexes/by-status.md active bucket references personal-local item {indexed_id}")
 
     local_path_prefixes = (
         "artifacts/",
