@@ -210,6 +210,16 @@ Recommended project fields:
 - `domain`
 - `status`
 
+## topics.json
+
+登记主题导航入口及允许的 item kind。每个 topic 必须有唯一 `id`、存在的相对本地 `domain` 路径和非空 `allowed_kinds` 列表；`allowed_kinds` 只能使用 `items.jsonl` 的 allowed `kind`。
+
+Required topic fields:
+
+- `id`
+- `domain`
+- `allowed_kinds`
+
 ## migrations.jsonl
 
 登记 Knowledge Hub 治理、迁移、引用、归档和门禁变更的可追溯记录。
@@ -236,6 +246,7 @@ Migration invariants:
 - `active` and `reviewing` items must have `owner` and `review_after`.
 - item `owner` must be registered in `registry/owners.json`.
 - item `domain=projects/<project>` must use a project id registered in `registry/projects.json`.
+- topic `domain` must be a relative existing local path, and topic `allowed_kinds` must use item kind enums.
 - `superseded` items must have `superseded_by`.
 - `artifact-ref` items must have `uri`, `size`, and `sha256`.
 - `project-specific` items must not live under `domains/embedded/standards`.

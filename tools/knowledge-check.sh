@@ -180,6 +180,33 @@ if not args.sources_only:
             errors.append(f"projects:{project_id} duplicate id")
         project_ids.add(project_id)
 
+    topic_ids = set()
+    topics_doc = load_json(root / "registry" / "topics.json")
+    for topic in topics_doc.get("topics", []):
+        topic_id = topic.get("id")
+        if not topic_id:
+            errors.append("topics: missing id")
+            continue
+        if topic_id in topic_ids:
+            errors.append(f"topics:{topic_id} duplicate id")
+        topic_ids.add(topic_id)
+        topic_domain = topic.get("domain")
+        if not topic_domain:
+            errors.append(f"topics:{topic_id} missing domain")
+        else:
+            topic_path = pathlib.Path(str(topic_domain))
+            if topic_path.is_absolute():
+                errors.append(f"topics:{topic_id} domain must be relative: {topic_domain}")
+            elif not (root / topic_path).exists():
+                errors.append(f"topics:{topic_id} domain path missing: {topic_domain}")
+        allowed_kinds = topic.get("allowed_kinds")
+        if not isinstance(allowed_kinds, list) or not allowed_kinds:
+            errors.append(f"topics:{topic_id} missing allowed_kinds")
+        else:
+            for allowed_kind in allowed_kinds:
+                if allowed_kind not in ALLOWED_ITEM_KINDS:
+                    errors.append(f"topics:{topic_id} invalid allowed_kind: {allowed_kind}")
+
     migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     local_migration_target_prefixes = (
         "artifacts/",
