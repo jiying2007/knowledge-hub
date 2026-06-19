@@ -112,3 +112,4 @@
 - PCR02 owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
 - Knowledge Hub regression temp cleanup: `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.md`
 - PCR02 AGENTS owner-ready package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
+- PCR02 diag metadata owner-ready package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`

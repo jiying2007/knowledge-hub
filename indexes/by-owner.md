@@ -111,6 +111,7 @@
 - `pcr02-owner-decision-intake-execution-20260620`
 - `knowledge-hub-regression-temp-cleanup-20260620`
 - `pcr02-agents-owner-ready-package-20260620`
+- `pcr02-diag-owner-ready-package-20260620`
 
 ## pcr02-registry-owner
 

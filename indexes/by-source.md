@@ -19,6 +19,7 @@
 - `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
 - `pcr02-project-docs/AGENTS.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`.
 - `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata owner/gate evidence boundary is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`.
 - `pcr02-project-docs`: 32/32 docs governance coverage and registry/index closeout are tracked by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`.
 - `pcr02-project-docs owner gates`: executable owner decision board is tracked by `artifacts/manifests/pcr02-owner-action-board-20260618.md`.
 - `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
