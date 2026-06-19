@@ -377,9 +377,20 @@ def test_owner_summary_all_open():
         and summary.get("row_count") == 7
         and summary.get("open_count") == 7
         and summary.get("active_exposure_count") == 0
+        and summary.get("owner_ready_package_count") == 7
+        and summary.get("owner_ready_missing_count") == 0
+        and summary.get("owner_ready_invalid_count") == 0
+        and summary.get("owner_ready_duplicate_count") == 0
+        and summary.get("owner_ready_package_coverage") == "7/7"
         and summary.get("source_identity_counts", {}).get("match") == 7
         and len(summary_rows) == 7
         and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("owner_ready_package_status") == "covered"
+        and first.get("owner_ready_package_count") == 1
+        and first.get("owner_ready_packages", [{}])[0].get("status") == "valid"
+        and first.get("owner_ready_packages", [{}])[0].get("decision") == "owner-ready-no-decision"
+        and first.get("owner_ready_packages", [{}])[0].get("open_gate_remains") is True
+        and first.get("owner_ready_packages", [{}])[0].get("identity_status") == "match"
         and first.get("required_owner_field_count") == 13
         and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first.get("focus_command", "")
         and "decision_forms" not in parsed
@@ -392,6 +403,10 @@ def test_owner_summary_all_open():
             "open_count": parsed.get("open_count"),
             "summary_status": summary.get("status"),
             "summary_row_count": summary.get("row_count"),
+            "owner_ready_package_coverage": summary.get("owner_ready_package_coverage"),
+            "owner_ready_missing_count": summary.get("owner_ready_missing_count"),
+            "owner_ready_invalid_count": summary.get("owner_ready_invalid_count"),
+            "owner_ready_duplicate_count": summary.get("owner_ready_duplicate_count"),
             "identity_counts": summary.get("source_identity_counts", {}),
             "first": first,
             "has_decision_forms": "decision_forms" in parsed,
@@ -462,6 +477,7 @@ def test_status_next_owner_gate():
     except Exception:
         pass
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
+    owner_gates = parsed.get("owner_gates", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     next_actions = parsed.get("next_actions_zh", [])
     strict_blockers = strict_parsed.get("strict_blockers", [])
@@ -475,6 +491,11 @@ def test_status_next_owner_gate():
         and parsed.get("status") == "needs-owner-review"
         and strict_parsed.get("strict") is True
         and strict_parsed.get("status") == "needs-owner-review"
+        and owner_gates.get("owner_ready_package_count") == 7
+        and owner_gates.get("owner_ready_missing_count") == 0
+        and owner_gates.get("owner_ready_invalid_count") == 0
+        and owner_gates.get("owner_ready_duplicate_count") == 0
+        and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and any("--summary" in str(command) for command in summary_commands)
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
@@ -495,6 +516,10 @@ def test_status_next_owner_gate():
             "strict_exit_code": strict_result["exit_code"],
             "status": parsed.get("status"),
             "strict_status": strict_parsed.get("status"),
+            "owner_ready_package_coverage": owner_gates.get("owner_ready_package_coverage"),
+            "owner_ready_missing_count": owner_gates.get("owner_ready_missing_count"),
+            "owner_ready_invalid_count": owner_gates.get("owner_ready_invalid_count"),
+            "owner_ready_duplicate_count": owner_gates.get("owner_ready_duplicate_count"),
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "next_open_command": next_open.get("next_open_command", ""),

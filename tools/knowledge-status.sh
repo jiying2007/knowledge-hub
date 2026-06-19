@@ -112,6 +112,11 @@ owner_payload = owner_gates["payload"]
 check_payload = knowledge_check["payload"]
 active_exposure_count = int(owner_payload.get("active_exposure_count", 0) or 0)
 open_owner_gate_count = int(owner_payload.get("open_count", 0) or 0)
+owner_ready_package_count = int(owner_payload.get("owner_ready_package_count", 0) or 0)
+owner_ready_missing_count = int(owner_payload.get("owner_ready_missing_count", 0) or 0)
+owner_ready_invalid_count = int(owner_payload.get("owner_ready_invalid_count", 0) or 0)
+owner_ready_duplicate_count = int(owner_payload.get("owner_ready_duplicate_count", 0) or 0)
+owner_ready_package_coverage = str(owner_payload.get("owner_ready_package_coverage", ""))
 owner_rows = owner_payload.get("rows", [])
 open_owner_rows = sorted(
     [row for row in owner_rows if row.get("status") == "open"],
@@ -183,6 +188,11 @@ if knowledge_check["exit_code"] != 0:
 if active_exposure_count:
     next_actions.append("立即移除 owner-gated active exposure，owner 决策闭环前不得 active。")
 if open_owner_gate_count:
+    if owner_ready_missing_count or owner_ready_invalid_count or owner_ready_duplicate_count:
+        next_actions.append(
+            "先补齐 owner-ready package 强校验覆盖，再分派 owner 决策；"
+            f"当前缺失 {owner_ready_missing_count} 条、无效 {owner_ready_invalid_count} 条、重复 {owner_ready_duplicate_count} 条。"
+        )
     if summary_commands:
         next_actions.append(
             "先查看 owner gate 总览以分派全部 open gate；运行："
@@ -278,6 +288,14 @@ result = {
         "open_count": open_owner_gate_count,
         "resolved_count": owner_payload.get("resolved_count", 0),
         "active_exposure_count": active_exposure_count,
+        "owner_ready_package_count": owner_ready_package_count,
+        "owner_ready_missing_count": owner_ready_missing_count,
+        "owner_ready_invalid_count": owner_ready_invalid_count,
+        "owner_ready_duplicate_count": owner_ready_duplicate_count,
+        "owner_ready_package_coverage": owner_ready_package_coverage,
+        "owner_ready_missing": owner_payload.get("owner_ready_missing", []),
+        "owner_ready_invalid": owner_payload.get("owner_ready_invalid", []),
+        "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
         "summary_commands": summary_commands,
         "next_open": next_owner_gate,
     },
@@ -302,6 +320,10 @@ print(f"- registry items: {len(items)}")
 print(f"- registered sources: {len(sources)}")
 print(f"- migrations: {len(migrations)}")
 print(f"- owner gates: open={open_owner_gate_count}, resolved={owner_payload.get('resolved_count', 0)}, active_exposure={active_exposure_count}")
+print(
+    f"- owner-ready packages: {owner_ready_package_coverage or str(owner_ready_package_count) + '/' + str(owner_payload.get('row_count', 0))}, "
+    f"missing={owner_ready_missing_count}, invalid={owner_ready_invalid_count}, duplicate={owner_ready_duplicate_count}"
+)
 if latest_source_coverage:
     print(f"- source coverage: `{latest_source_coverage}`")
 print()
@@ -321,6 +343,10 @@ print(f"- rows: {result['owner_gates']['row_count']}")
 print(f"- open: {open_owner_gate_count}")
 print(f"- resolved: {owner_payload.get('resolved_count', 0)}")
 print(f"- active exposure: {active_exposure_count}")
+print(f"- owner-ready packages: {owner_ready_package_coverage or str(owner_ready_package_count) + '/' + str(result['owner_gates']['row_count'])}")
+print(f"- owner-ready missing: {owner_ready_missing_count}")
+print(f"- owner-ready invalid: {owner_ready_invalid_count}")
+print(f"- owner-ready duplicate: {owner_ready_duplicate_count}")
 if summary_commands:
     print("- summary commands:")
     for command in summary_commands:

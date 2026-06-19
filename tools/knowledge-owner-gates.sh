@@ -193,15 +193,151 @@ def make_owner_checklist(row):
         "notes_zh": "本清单只把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
     }
 
+def _row_ref(row):
+    return {
+        "worksheet_id": row["id"],
+        "source_id": row["source_id"],
+        "source_path": row["source_path"],
+        "owner": row["owner"],
+        "review_after": row["review_after"],
+    }
+
+def _display_path(path):
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+def _read_jsonl_local(path):
+    local_errors = []
+    rows_local = []
+    if not path.exists():
+        return [], [f"missing {_display_path(path)}"]
+    try:
+        lines = path.read_text().splitlines()
+    except Exception as exc:
+        return [], [f"cannot read {_display_path(path)}: {exc}"]
+    for line_no, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+        try:
+            rows_local.append(json.loads(line))
+        except Exception as exc:
+            local_errors.append(f"{_display_path(path)}:{line_no}: invalid jsonl: {exc}")
+    return rows_local, local_errors
+
+def inspect_owner_ready_item(row, item):
+    tags = item.get("tags", [])
+    source = item.get("source", {}) if isinstance(item.get("source"), dict) else {}
+    path_value = str(item.get("path", "") or "")
+    md_path = root / path_value if path_value else root / "__missing_owner_ready_path__"
+    jsonl_path = root / str(pathlib.Path(path_value).with_suffix(".jsonl")) if path_value else root / "__missing_owner_ready_path__.jsonl"
+    checks = {}
+    errors_local = []
+
+    def check(name, condition, message):
+        checks[name] = bool(condition)
+        if not condition:
+            errors_local.append(message)
+
+    check("registry_kind_audit", item.get("kind") == "audit", "registry kind must be audit")
+    check("registry_status_reviewing", item.get("status") == "reviewing", "registry status must be reviewing")
+    check("registry_review_status_owner_ready", item.get("review_status") == "owner-ready-no-decision", "registry review_status must be owner-ready-no-decision")
+    check("registry_tags_owner_gate_ready", "owner-gate" in tags and "owner-ready" in tags, "registry tags must include owner-gate and owner-ready")
+    check("registry_source_type_generated", source.get("type") == "generated", "registry source.type must be generated")
+    check("registry_source_id_match", source.get("source_id") == row["source_id"], "registry source_id must match worksheet")
+    check("registry_source_path_match", source.get("source_path") == row["source_path"], "registry source_path must match worksheet")
+    check("artifact_path_owner_ready_package", path_value.startswith("artifacts/manifests/") and "owner-ready-package" in pathlib.Path(path_value).name, "artifact path must point to an owner-ready package manifest")
+    check("artifact_markdown_exists", md_path.is_file(), "owner-ready package markdown must exist")
+    check("artifact_jsonl_exists", jsonl_path.is_file(), "owner-ready package jsonl must exist")
+
+    package_rows, package_errors = _read_jsonl_local(jsonl_path)
+    errors_local.extend(package_errors)
+    check("package_jsonl_single_row", len(package_rows) == 1, "owner-ready package jsonl must contain exactly one row")
+    package = package_rows[0] if len(package_rows) == 1 else {}
+    identity = package.get("observed_source_identity", {}) if isinstance(package.get("observed_source_identity"), dict) else {}
+    check("package_classification_match", package.get("classification") == "single-owner-ready-package", "package classification must be single-owner-ready-package")
+    check("package_worksheet_id_match", package.get("worksheet_id") == row["id"], "package worksheet_id must match worksheet")
+    check("package_source_id_match", package.get("source_id") == row["source_id"], "package source_id must match worksheet")
+    check("package_source_path_match", package.get("source_path") == row["source_path"], "package source_path must match worksheet")
+    check("package_decision_owner_ready", package.get("decision") == "owner-ready-no-decision", "package decision must be owner-ready-no-decision")
+    check("package_status_reviewing", package.get("status") == "reviewing", "package status must be reviewing")
+    check("package_open_gate_remains", package.get("open_gate_remains") is True, "package open_gate_remains must be true")
+    check("package_identity_match", identity.get("status") == "match", "package observed_source_identity.status must be match")
+
+    return {
+        "id": item.get("id", ""),
+        "path": path_value,
+        "jsonl_path": _display_path(jsonl_path),
+        "review_status": item.get("review_status", ""),
+        "decision": package.get("decision", ""),
+        "open_gate_remains": package.get("open_gate_remains", None),
+        "identity_status": identity.get("status", ""),
+        "status": "valid" if not errors_local else "invalid",
+        "coverage_checks": checks,
+        "errors": errors_local,
+    }
+
+def owner_ready_items(row):
+    candidates = [
+        item
+        for item in row.get("registry_items", [])
+        if item.get("review_status") == "owner-ready-no-decision" or "owner-ready" in item.get("tags", [])
+    ]
+    return [inspect_owner_ready_item(row, item) for item in candidates]
+
+def owner_ready_state(row):
+    packages = owner_ready_items(row)
+    valid_packages = [item for item in packages if item["status"] == "valid"]
+    if not packages:
+        return "missing", packages
+    if len(packages) > 1:
+        return "duplicate", packages
+    if len(valid_packages) == 1:
+        return "covered", packages
+    return "invalid", packages
+
+def make_owner_ready_coverage(rows):
+    coverage = {
+        "owner_ready_package_count": 0,
+        "owner_ready_missing_count": 0,
+        "owner_ready_invalid_count": 0,
+        "owner_ready_duplicate_count": 0,
+        "owner_ready_missing": [],
+        "owner_ready_invalid": [],
+        "owner_ready_duplicate": [],
+    }
+    for row in rows:
+        status, packages = owner_ready_state(row)
+        if status == "covered":
+            coverage["owner_ready_package_count"] += 1
+        elif status == "missing":
+            coverage["owner_ready_missing_count"] += 1
+            coverage["owner_ready_missing"].append(_row_ref(row))
+        elif status == "invalid":
+            coverage["owner_ready_invalid_count"] += 1
+            entry = _row_ref(row)
+            entry["owner_ready_packages"] = packages
+            coverage["owner_ready_invalid"].append(entry)
+        elif status == "duplicate":
+            coverage["owner_ready_duplicate_count"] += 1
+            entry = _row_ref(row)
+            entry["owner_ready_packages"] = packages
+            coverage["owner_ready_duplicate"].append(entry)
+    coverage["owner_ready_package_coverage"] = f"{coverage['owner_ready_package_count']}/{len(rows)}"
+    return coverage
+
 def make_owner_summary(rows):
     summary_rows = []
     source_identity_counts = {}
     owner_counts = {}
+    owner_ready_coverage = make_owner_ready_coverage(rows)
     for row in rows:
         identity_status = row.get("observed_source_identity", {}).get("identity_status", "unavailable")
         source_identity_counts[identity_status] = source_identity_counts.get(identity_status, 0) + 1
         owner = row.get("owner", "") or "<missing-owner>"
         owner_counts[owner] = owner_counts.get(owner, 0) + 1
+        ready_status, ready_items = owner_ready_state(row)
         summary_rows.append(
             {
                 "worksheet_id": row["id"],
@@ -215,6 +351,9 @@ def make_owner_summary(rows):
                 "required_owner_field_count": len(row["required_owner_fields"]),
                 "allowed_owner_decisions": row["decision_options"],
                 "active_exposure_count": len(row["active_registry_items"]),
+                "owner_ready_package_status": ready_status,
+                "owner_ready_package_count": len(ready_items),
+                "owner_ready_packages": ready_items,
                 "focus_command": (
                     "rtk bash tools/knowledge-owner-gates.sh "
                     f"--source-id {row['source_id']} --worksheet-id {row['id']} --checklist --forms"
@@ -228,6 +367,7 @@ def make_owner_summary(rows):
         "open_count": sum(1 for row in rows if row["status"] == "open"),
         "resolved_count": sum(1 for row in rows if row["status"] == "resolved"),
         "active_exposure_count": sum(len(row["active_registry_items"]) for row in rows),
+        **owner_ready_coverage,
         "source_identity_counts": dict(sorted(source_identity_counts.items())),
         "owner_counts": dict(sorted(owner_counts.items())),
         "rows": summary_rows,
@@ -410,9 +550,12 @@ for item in items:
     key = (source_id, source_path)
     item_ref = {
         "id": item.get("id", ""),
+        "kind": item.get("kind", ""),
         "status": item.get("status", ""),
         "path": item.get("path", ""),
         "review_status": item.get("review_status", ""),
+        "tags": item.get("tags", []),
+        "source": source,
     }
     items_by_source_path.setdefault(key, []).append(item_ref)
     if item.get("status") == "active":
@@ -486,6 +629,7 @@ if args.next_open and not errors:
 open_count = sum(1 for row in rows if row["status"] == "open")
 resolved_count = sum(1 for row in rows if row["status"] == "resolved")
 active_exposure_count = sum(len(row["active_registry_items"]) for row in rows)
+owner_ready_coverage = make_owner_ready_coverage(rows)
 result_status = "blocked" if errors else "needs-fix" if active_exposure_count else "ok"
 exit_status = 1 if errors or active_exposure_count else 0
 
@@ -502,6 +646,7 @@ result = {
     "open_count": open_count,
     "resolved_count": resolved_count,
     "active_exposure_count": active_exposure_count,
+    **owner_ready_coverage,
     "errors": errors,
     "rows": rows,
 }
@@ -555,6 +700,10 @@ print(f"- rows: {len(rows)}")
 print(f"- open: {open_count}")
 print(f"- resolved: {resolved_count}")
 print(f"- active exposure: {active_exposure_count}")
+print(f"- owner-ready packages: {owner_ready_coverage['owner_ready_package_coverage']}")
+print(f"- owner-ready missing: {owner_ready_coverage['owner_ready_missing_count']}")
+print(f"- owner-ready invalid: {owner_ready_coverage['owner_ready_invalid_count']}")
+print(f"- owner-ready duplicate: {owner_ready_coverage['owner_ready_duplicate_count']}")
 if args.source_id:
     print(f"- source_id: {args.source_id}")
 print(f"- filter: {args.status}")
@@ -574,6 +723,8 @@ if args.summary:
     print(f"- open: {summary['open_count']}")
     print(f"- resolved: {summary['resolved_count']}")
     print(f"- active_exposure: {summary['active_exposure_count']}")
+    print(f"- owner_ready_packages: {summary['owner_ready_package_count']}/{summary['row_count']}")
+    print(f"- owner_ready_missing: {summary['owner_ready_missing_count']}")
     if summary["source_identity_counts"]:
         identity_parts = [f"{key}={value}" for key, value in summary["source_identity_counts"].items()]
         print(f"- source_identity: {', '.join(identity_parts)}")
@@ -581,13 +732,13 @@ if args.summary:
         owner_parts = [f"{key}={value}" for key, value in summary["owner_counts"].items()]
         print(f"- owners: {', '.join(owner_parts)}")
     print()
-    print("| worksheet | source path | owner | identity | required fields | focus command |")
-    print("|---|---|---|---|---:|---|")
+    print("| worksheet | source path | owner | identity | owner-ready | required fields | focus command |")
+    print("|---|---|---|---|---|---:|---|")
     for item in summary["rows"]:
         print(
             f"| `{item['worksheet_id']}` | `{item['source_path']}` | "
             f"{item['owner'] or '<missing-owner>'} | {item['source_identity_status']} | "
-            f"{item['required_owner_field_count']} | `{item['focus_command']}` |"
+            f"{item['owner_ready_package_status']} | {item['required_owner_field_count']} | `{item['focus_command']}` |"
         )
 
 if form_validation:
@@ -683,6 +834,9 @@ for row in detail_rows:
     print(f"- status: {row['status']} ({row['worksheet_status'] or '<missing-worksheet-status>'})")
     print(f"- review_after: {row['review_after'] or '<missing-review_after>'}")
     print(f"- active exposure: {active_marker}")
+    ready_items = owner_ready_items(row)
+    ready_status, _ = owner_ready_state(row)
+    print(f"- owner-ready package: {ready_status}")
     if row["decision_options"]:
         print(f"- decision_options: {', '.join(str(item) for item in row['decision_options'])}")
     if row["required_owner_fields"]:
@@ -702,6 +856,7 @@ for row in detail_rows:
         for item in row["registry_items"]:
             print(
                 f"  - `{item['id']}` status={item['status'] or '<missing-status>'} "
+                f"review_status={item['review_status'] or '<missing-review-status>'} "
                 f"path={item['path'] or '<missing-path>'}"
             )
     if args.forms and row["status"] == "open":
