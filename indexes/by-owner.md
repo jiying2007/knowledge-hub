@@ -105,6 +105,7 @@
 - `knowledge-hub-owner-source-identity-context-20260619`
 - `knowledge-hub-owner-summary-helper-20260620`
 - `knowledge-hub-status-owner-summary-command-20260620`
+- `knowledge-hub-status-strict-blockers-20260620`
 
 ## pcr02-registry-owner
 

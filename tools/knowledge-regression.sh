@@ -417,17 +417,31 @@ def test_owner_next_open_focus():
 
 def test_status_next_owner_gate():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    strict_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
     parsed = {}
+    strict_parsed = {}
     try:
         parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    try:
+        strict_parsed = json.loads(strict_result["stdout"])
     except Exception:
         pass
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     next_actions = parsed.get("next_actions_zh", [])
+    strict_blockers = strict_parsed.get("strict_blockers", [])
+    owner_blocker = next(
+        (blocker for blocker in strict_blockers if blocker.get("id") == "owner-gates-open"),
+        {},
+    )
     expect(
         result["exit_code"] == 0
+        and strict_result["exit_code"] == 1
         and parsed.get("status") == "needs-owner-review"
+        and strict_parsed.get("strict") is True
+        and strict_parsed.get("status") == "needs-owner-review"
         and any("--summary" in str(command) for command in summary_commands)
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
@@ -437,18 +451,25 @@ def test_status_next_owner_gate():
         and "--checklist" in next_open.get("focus_command", "")
         and "--forms" in next_open.get("focus_command", "")
         and any("--summary" in str(action) for action in next_actions)
-        and any("--next-open --checklist --forms" in str(action) for action in next_actions),
+        and any("--next-open --checklist --forms" in str(action) for action in next_actions)
+        and owner_blocker.get("count") == 7
+        and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", [])),
         "status-next-owner-gate",
-        "status dashboard exposes owner summary and next owner gate focus commands",
+        "status dashboard exposes owner summary, next owner gate focus and strict blockers",
         {
             "exit_code": result["exit_code"],
+            "strict_exit_code": strict_result["exit_code"],
             "status": parsed.get("status"),
+            "strict_status": strict_parsed.get("status"),
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "next_open_command": next_open.get("next_open_command", ""),
             "focus_command": next_open.get("focus_command", ""),
+            "strict_blockers": strict_blockers,
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
+            "strict_stdout_sample": strict_result["stdout"][:1000],
         },
     )
 

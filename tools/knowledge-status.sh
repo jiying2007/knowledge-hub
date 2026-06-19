@@ -201,6 +201,43 @@ if stale_items:
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
+strict_blockers = []
+if errors:
+    strict_blockers.append({
+        "id": "status-dashboard-errors",
+        "severity": "blocker",
+        "count": len(errors),
+        "summary_zh": "status dashboard 自身读取或解析失败，不能作为终态证据。",
+        "commands": ["rtk bash tools/knowledge-status.sh --json"],
+    })
+if knowledge_check["exit_code"] != 0:
+    strict_blockers.append({
+        "id": "knowledge-check-failed",
+        "severity": "blocker",
+        "count": len(check_payload.get("errors", [])),
+        "summary_zh": "knowledge-check 存在阻断错误，必须先按 diagnostics 修复。",
+        "commands": ["rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics"],
+    })
+if active_exposure_count:
+    strict_blockers.append({
+        "id": "owner-gated-active-exposure",
+        "severity": "blocker",
+        "count": active_exposure_count,
+        "summary_zh": "存在 unresolved owner-gated 内容暴露为 active，必须先移除 active exposure。",
+        "commands": ["rtk bash tools/knowledge-owner-gates.sh --status all --json"],
+    })
+if open_owner_gate_count:
+    owner_commands = list(summary_commands)
+    if next_owner_gate.get("next_open_command"):
+        owner_commands.append(next_owner_gate["next_open_command"])
+    strict_blockers.append({
+        "id": "owner-gates-open",
+        "severity": "owner-review",
+        "count": open_owner_gate_count,
+        "summary_zh": "仍有 owner decision worksheet 未签收；这是语义门禁，不是工具失败。",
+        "commands": owner_commands,
+    })
+
 result = {
     "schema_version": 1,
     "root": str(root),
@@ -245,6 +282,7 @@ result = {
         "next_open": next_owner_gate,
     },
     "errors": errors,
+    "strict_blockers": strict_blockers,
     "next_actions_zh": next_actions,
 }
 
@@ -292,6 +330,14 @@ if next_owner_gate:
     print(f"- next-open command: `{next_owner_gate['next_open_command']}`")
     print(f"- focus command: `{next_owner_gate['focus_command']}`")
 print()
+if strict_blockers:
+    print("## Strict Blockers")
+    print()
+    for blocker in strict_blockers:
+        print(f"- `{blocker['id']}` ({blocker['severity']}): {blocker['summary_zh']} count={blocker['count']}")
+        for command in blocker.get("commands", []):
+            print(f"  - `{command}`")
+    print()
 print("## 下一步")
 print()
 for action in next_actions:

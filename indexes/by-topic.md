@@ -106,3 +106,4 @@
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Embedded knowledge owner-review gate: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Codex memories auxiliary-only boundary: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
+- Knowledge Hub status strict blockers: `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.md`
