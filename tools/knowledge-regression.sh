@@ -287,6 +287,38 @@ def test_owner_landing_plan_project_index():
         },
     )
 
+def test_manual_entry_project_index_hint():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--project",
+            "pcr02",
+            "--id",
+            "pcr02-regression-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/regression.md",
+        ],
+    )
+    expect(
+        result["exit_code"] == 0
+        and "indexes/by-project.md" in result["stdout"]
+        and "domains/projects/pcr02/current/runbooks/regression.md" in result["stdout"],
+        "manual-entry-project-index-hint",
+        "manual project entries mention by-project index",
+        {
+            "exit_code": result["exit_code"],
+            "has_by_project": "indexes/by-project.md" in result["stdout"],
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
@@ -294,6 +326,7 @@ test_owner_partial_resolved()
 test_owner_single_form()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
+test_manual_entry_project_index_hint()
 
 if not args.keep_temp:
     for temp_root in temp_roots:

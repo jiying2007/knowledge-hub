@@ -113,6 +113,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-worksheet-focus-helper-20260619`
 - reviewing: `knowledge-hub-status-next-owner-gate-20260619`
 - reviewing: `knowledge-hub-owner-landing-project-index-alignment-20260619`
+- reviewing: `knowledge-hub-manual-entry-project-index-alignment-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -180,3 +181,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-worksheet-focus-helper-applied: `tools/knowledge-owner-gates.sh` supports `--worksheet-id <id>` to focus one owner gate workflow, documented by `artifacts/manifests/knowledge-hub-owner-worksheet-focus-helper-20260619.jsonl`.
 - status-next-owner-gate-applied: `tools/knowledge-status.sh` exposes `owner_gates.next_open.focus_command`, documented by `artifacts/manifests/knowledge-hub-status-next-owner-gate-20260619.jsonl`.
 - owner-landing-project-index-alignment-applied: `tools/knowledge-owner-gates.sh` landing plans include `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-owner-landing-project-index-alignment-20260619.jsonl`.
+- manual-entry-project-index-alignment-applied: `tools/knowledge-new.sh` project entry guidance includes `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-index-alignment-20260619.jsonl`.

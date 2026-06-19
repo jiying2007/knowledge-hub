@@ -99,6 +99,7 @@ esac
 DISPLAY_ID="${ITEM_ID:-<id>}"
 DISPLAY_KIND="${KIND:-<kind>}"
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
+DISPLAY_PROJECT="${PROJECT:-<project>}"
 DISPLAY_PATH="${TARGET_PATH:-<path>}"
 DISPLAY_SCOPE="team-general"
 if [[ "$DOMAIN" == projects/* ]]; then
@@ -136,7 +137,7 @@ $(usage)
 2. 从 ${TEMPLATE} 复制内容到目标路径，正文默认使用简体中文。
 3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、tags、validation_refs 已填写。
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
-5. 如需主题入口，在 indexes/by-topic.md 增加可读路径引用。
+5. 如为项目域条目，同步 indexes/by-project.md 的项目导航入口；如需主题入口，在 indexes/by-topic.md 增加可读路径引用。
 6. 在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径。
 7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
 8. 运行只读索引计划和验证：
@@ -168,6 +169,10 @@ $(usage)
 
 # indexes/by-status.md
 - reviewing: \`${DISPLAY_ID}\`
+
+# indexes/by-project.md
+# 仅项目域条目需要：在对应项目段增加目标路径或 manifest 路径。
+- ${DISPLAY_PROJECT:-<project>}: ${DISPLAY_PATH}
 \`\`\`
 
 ### registry/migrations.jsonl

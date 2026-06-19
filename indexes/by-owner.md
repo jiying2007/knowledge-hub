@@ -90,6 +90,7 @@
 - `knowledge-hub-owner-worksheet-focus-helper-20260619`
 - `knowledge-hub-status-next-owner-gate-20260619`
 - `knowledge-hub-owner-landing-project-index-alignment-20260619`
+- `knowledge-hub-manual-entry-project-index-alignment-20260619`
 
 ## pcr02-registry-owner
 
