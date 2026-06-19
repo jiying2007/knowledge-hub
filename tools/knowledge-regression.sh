@@ -340,6 +340,58 @@ def test_manual_entry_project_index_hint():
         },
     )
 
+def test_manual_entry_project_from_domain():
+    derived_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--id",
+            "pcr02-derived-project-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/derived.md",
+        ],
+    )
+    mismatch_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--project",
+            "wrong-project",
+            "--id",
+            "pcr02-mismatch-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/mismatch.md",
+        ],
+    )
+    expect(
+        derived_result["exit_code"] == 0
+        and "- pcr02: domains/projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"]
+        and mismatch_result["exit_code"] == 0
+        and "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
+        "manual-entry-project-derived-from-domain",
+        "manual project entries derive project id from domain and warn on mismatch",
+        {
+            "derived_exit_code": derived_result["exit_code"],
+            "mismatch_exit_code": mismatch_result["exit_code"],
+            "derived_has_project": "- pcr02: domains/projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"],
+            "mismatch_has_warning": "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
+            "derived_stdout_sample": derived_result["stdout"][:1200],
+            "mismatch_stdout_sample": mismatch_result["stdout"][:1200],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
@@ -348,6 +400,7 @@ test_owner_single_form()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()
+test_manual_entry_project_from_domain()
 
 if not args.keep_temp:
     for temp_root in temp_roots:

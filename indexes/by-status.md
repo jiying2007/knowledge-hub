@@ -115,6 +115,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-landing-project-index-alignment-20260619`
 - reviewing: `knowledge-hub-manual-entry-project-index-alignment-20260619`
 - reviewing: `knowledge-hub-manual-entry-conditional-project-index-20260619`
+- reviewing: `knowledge-hub-manual-entry-project-derivation-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -184,3 +185,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-landing-project-index-alignment-applied: `tools/knowledge-owner-gates.sh` landing plans include `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-owner-landing-project-index-alignment-20260619.jsonl`.
 - manual-entry-project-index-alignment-applied: `tools/knowledge-new.sh` project entry guidance includes `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-index-alignment-20260619.jsonl`.
 - manual-entry-conditional-project-index-applied: `tools/knowledge-new.sh` shows `indexes/by-project.md` only for project-domain entries, documented by `artifacts/manifests/knowledge-hub-manual-entry-conditional-project-index-20260619.jsonl`.
+- manual-entry-project-derivation-applied: `tools/knowledge-new.sh` derives project ids from `projects/<project>` domains, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-derivation-20260619.jsonl`.

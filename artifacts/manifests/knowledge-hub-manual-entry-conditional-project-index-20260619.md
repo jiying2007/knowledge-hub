@@ -6,6 +6,8 @@
 
 这个修复继续保持人工新增向导只读，不创建、不修改、不提交任何文件。
 
+后续增强：`knowledge-hub-manual-entry-project-derivation-20260619` 进一步从 `projects/<project>` 自动推导项目名，并对 `--project` 不一致给出 warning。
+
 ## 问题地图
 
 | ID | 问题 | 风险 | 处理 |

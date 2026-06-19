@@ -99,12 +99,19 @@ esac
 DISPLAY_ID="${ITEM_ID:-<id>}"
 DISPLAY_KIND="${KIND:-<kind>}"
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
-DISPLAY_PROJECT="${PROJECT:-<project>}"
 DISPLAY_PATH="${TARGET_PATH:-<path>}"
 DISPLAY_SCOPE="team-general"
+PROJECT_WARNING_BLOCK=""
 if [[ "$DOMAIN" == projects/* ]]; then
   DISPLAY_SCOPE="project-specific"
+  PROJECT_FROM_DOMAIN="${DOMAIN#projects/}"
+  if [[ -z "$PROJECT" ]]; then
+    PROJECT="$PROJECT_FROM_DOMAIN"
+  elif [[ "$PROJECT" != "$PROJECT_FROM_DOMAIN" ]]; then
+    printf -v PROJECT_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: --project `%s` 与 --domain `%s` 推导出的项目 `%s` 不一致；请人工确认项目导航和 registry domain。\n' "$PROJECT" "$DOMAIN" "$PROJECT_FROM_DOMAIN"
+  fi
 fi
+DISPLAY_PROJECT="${PROJECT:-<project>}"
 JSON_ID="$(json_escape "$DISPLAY_ID")"
 JSON_KIND="$(json_escape "$DISPLAY_KIND")"
 JSON_DOMAIN="$(json_escape "$DISPLAY_DOMAIN")"
@@ -136,6 +143,7 @@ $(usage)
 - project: ${PROJECT:-<可选>}
 - path: ${TARGET_PATH:-<待填写>}
 - 推荐模板: ${TEMPLATE}
+${PROJECT_WARNING_BLOCK}
 
 ## 最小人工步骤
 
