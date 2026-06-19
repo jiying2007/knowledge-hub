@@ -91,9 +91,17 @@ def make_decision_form(row):
         "source_path": row["source_path"],
         "worksheet": row["worksheet"],
         "owner": row["owner"],
+        "status": row.get("status", ""),
+        "worksheet_status": row.get("worksheet_status", ""),
+        "owner_question_zh": row.get("owner_question_zh", ""),
+        "default_state": row.get("default_state", ""),
+        "allowed_next_status": row.get("allowed_next_status", []),
+        "hard_gate_summary": row.get("hard_gate_summary", ""),
+        "hard_gate": row.get("hard_gate", ""),
         "allowed_owner_decisions": row["decision_options"],
+        "required_owner_fields": row["required_owner_fields"],
         "must_not": row["must_not"],
-        "notes_zh": "本骨架只供 owner 人工填写和复核；脚本不写文件、不关闭门禁、不提升 active。",
+        "notes_zh": "本骨架只供 owner 人工填写和复核；status、worksheet_status、owner_question_zh、default_state、allowed_next_status、hard_gate_summary、hard_gate、allowed_owner_decisions、required_owner_fields 和 must_not 是只读上下文；脚本不写文件、不关闭门禁、不提升 active。",
     }
     for field in row["required_owner_fields"]:
         form.setdefault(field, default_field_value(field, row))

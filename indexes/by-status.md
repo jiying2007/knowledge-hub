@@ -123,6 +123,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-checklist-helper-20260619`
 - reviewing: `knowledge-hub-status-owner-checklist-focus-20260619`
 - reviewing: `knowledge-hub-status-next-action-command-20260619`
+- reviewing: `knowledge-hub-owner-form-context-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -181,7 +182,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - doctor-owner-gates-applied: `tools/knowledge-doctor.sh` supports `--owner-gates <source-id>` to include the owner gate board in the unified read-only diagnostic path.
 - status-dashboard-applied: `tools/knowledge-status.sh` provides a read-only control-plane dashboard for knowledge-check, registry counts, source coverage, migrations, stale review dates and owner gate state.
 - status-strict-gate-applied: `tools/knowledge-status.sh` supports `--strict` as a final-state gate that fails unless status is `ok`.
-- owner-decision-forms-applied: `tools/knowledge-owner-gates.sh` supports `--forms` to print copyable owner decision JSONL skeletons for open owner-gated rows.
+- owner-decision-forms-applied: `tools/knowledge-owner-gates.sh` supports `--forms` to print copyable owner decision JSONL skeletons with read-only owner context for open owner-gated rows.
 - owner-decision-form-validation-applied: `tools/knowledge-owner-gates.sh` supports `--validate-forms <jsonl>` to check filled owner decision JSONL before manual landing.
 - owner-decision-landing-plan-applied: `tools/knowledge-owner-gates.sh` supports `--landing-plan` with validated owner decision JSONL to print no-write manual landing steps.
 - status-index-multiline-bucket-applied: `indexes/by-status.md` canonical buckets support multiple short lines, documented by `artifacts/manifests/knowledge-hub-status-index-multiline-bucket-20260619.jsonl`.
@@ -200,3 +201,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-checklist-helper-applied: `tools/knowledge-owner-gates.sh` supports `--checklist` to merge owner intake questions and worksheet hard gates in a read-only view, documented by `artifacts/manifests/knowledge-hub-owner-checklist-helper-20260619.jsonl`.
 - status-owner-checklist-focus-applied: `tools/knowledge-status.sh` next owner gate focus command includes `--checklist` and `--forms`, documented by `artifacts/manifests/knowledge-hub-status-owner-checklist-focus-20260619.jsonl`.
 - status-next-action-command-applied: `tools/knowledge-status.sh` includes the next owner gate focus command in `next_actions_zh`, documented by `artifacts/manifests/knowledge-hub-status-next-action-command-20260619.jsonl`.
+- owner-form-context-applied: `tools/knowledge-owner-gates.sh` owner decision forms include owner question and hard gate context, documented by `artifacts/manifests/knowledge-hub-owner-form-context-20260619.jsonl`.

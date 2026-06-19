@@ -219,6 +219,56 @@ def test_owner_checklist_context():
         },
     )
 
+def test_owner_form_context():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    forms = parsed.get("decision_forms", [])
+    first = forms[0] if forms else {}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 1
+        and len(forms) == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("status") == "open"
+        and first.get("worksheet_status") == "owner-fill-required"
+        and "是否确认" in first.get("owner_question_zh", "")
+        and first.get("default_state") == "reference-only-pending-owner-gate"
+        and "reference-only" in first.get("allowed_next_status", [])
+        and first.get("hard_gate_summary") == "门禁待补证"
+        and bool(first.get("hard_gate", ""))
+        and "owner_decision" in first.get("required_owner_fields", [])
+        and "owner_decision" in first
+        and first.get("owner_decision") == "",
+        "owner-form-context",
+        "owner decision form carries read-only intake context",
+        {
+            "exit_code": result["exit_code"],
+            "row_count": parsed.get("row_count"),
+            "form_count": len(forms),
+            "owner_question_zh": first.get("owner_question_zh", ""),
+            "default_state": first.get("default_state", ""),
+            "hard_gate_summary": first.get("hard_gate_summary", ""),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_status_next_owner_gate():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     parsed = {}
@@ -579,6 +629,7 @@ def test_regression_manifest_coverage():
         "owner-partial-resolved",
         "owner-single-form",
         "owner-checklist-context",
+        "owner-form-context",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
         "manual-entry-project-index-hint",
@@ -592,14 +643,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "14 个回归场景" in manifest_text,
+        and "15 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "14 个回归场景",
+            "expected_count_text": "15 个回归场景",
         },
     )
 
@@ -609,6 +660,7 @@ test_status_noncanonical_only()
 test_owner_partial_resolved()
 test_owner_single_form()
 test_owner_checklist_context()
+test_owner_form_context()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()
