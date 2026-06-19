@@ -93,3 +93,7 @@
 - 2026-09-19: `patent-disclosure-copy-first-applied-20260619`
 - 2026-09-19: `patent-disclosure-markdown-corpus-20260619`
 - 2026-09-19: `patent-disclosure-artifact-ref-manifest-20260619`
+- 2026-09-19: `knowledge-hub-source-coverage-closeout-20260619`
+- 2026-09-19: `embedded-knowledge-owner-review-gate-20260619`
+- 2026-09-19: `codex-archive-reference-boundary-20260619`
+- 2026-09-19: `codex-memories-auxiliary-boundary-20260619`

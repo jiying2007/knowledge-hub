@@ -29,3 +29,6 @@
 - `codex-memories`: remains auxiliary recall only; memory auto-curation governance must not write `~/.codex/memories/**`.
 - `engineering-archive`: 38 PCR02 historical engineering archive files were copy-first migrated to `domains/projects/pcr02/archive/engineering-archive` and verified by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`.
 - `patent-disclosure`: 10 Markdown patent disclosure files were copy-first migrated to `domains/patents/archive/patent-disclosure`; 181 non-text attachments are registered by `artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl` and summarized in `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`.
+- `embedded-knowledge`: remains an external legacy team SSOT pending owner review and source stabilization; source coverage boundary is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
+- `codex-archive`: remains reference-first through Codex archive tools; boundary is tracked by `domains/codex/archive/codex-archive.ref.md` and `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
+- `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.

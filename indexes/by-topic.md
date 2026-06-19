@@ -9,6 +9,7 @@
 - Patent disclosure Markdown corpus: `domains/patents/archive/patent-disclosure`
 - Patent disclosure artifact references: `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex workflows: `domains/codex`
+- Codex archive reference-first boundary: `domains/codex/archive/codex-archive.ref.md`
 - Personal notes: `domains/personal`
 - Governance rules: `governance`
 - Chinese long-term asset templates: `templates`
@@ -70,3 +71,6 @@
 - Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
 - Engineering archive PCR02 archive corpus: `domains/projects/pcr02/archive/engineering-archive`
+- Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
+- Embedded knowledge owner-review gate: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
+- Codex memories auxiliary-only boundary: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`

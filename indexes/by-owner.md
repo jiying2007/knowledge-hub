@@ -69,6 +69,10 @@
 - `patent-disclosure-copy-first-applied-20260619`
 - `patent-disclosure-markdown-corpus-20260619`
 - `patent-disclosure-artifact-ref-manifest-20260619`
+- `knowledge-hub-source-coverage-closeout-20260619`
+- `embedded-knowledge-owner-review-gate-20260619`
+- `codex-archive-reference-boundary-20260619`
+- `codex-memories-auxiliary-boundary-20260619`
 
 ## pcr02-registry-owner
 
