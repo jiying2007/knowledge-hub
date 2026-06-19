@@ -21,6 +21,8 @@
 ## 已落盘
 
 - 更新 `tools/knowledge-new.sh`：支持 `--kind`、`--domain`、`--project`、`--id`、`--path`，只输出人工维护清单。
+- 更新 `README.md`：新增人工新增最短路径和 `knowledge-new.sh` 常用命令。
+- 更新 `tools/knowledge-new.sh`：补充 usage 示例和缺少参数值的友好错误。
 - 更新 `tools/README.md`：登记 `knowledge-new.sh` 为只读人工新增向导。
 - 更新 `templates/README.md`：说明模板仍可人工复制，脚本不是唯一入口。
 - 更新 registry、migration 和索引，登记本治理制品。

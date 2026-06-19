@@ -10,31 +10,55 @@ PROJECT=""
 ITEM_ID=""
 TARGET_PATH=""
 
+usage() {
+  cat <<EOF
+Usage:
+  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>]
+
+Examples:
+  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
+  rtk bash tools/knowledge-new.sh --kind decision --domain governance --id governance-example-decision --path governance/example-decision.md
+
+This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.
+EOF
+}
+
+read_value() {
+  local option="$1"
+  local value="${2:-}"
+  if [[ -z "$value" || "$value" == --* ]]; then
+    printf "ERROR %s requires a value.\n" "$option" >&2
+    printf "Run: rtk bash %s --help\n" "$0" >&2
+    exit 2
+  fi
+  printf "%s" "$value"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --kind)
-      KIND="${2:-}"
+      KIND="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --domain)
-      DOMAIN="${2:-}"
+      DOMAIN="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --project)
-      PROJECT="${2:-}"
+      PROJECT="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --id)
-      ITEM_ID="${2:-}"
+      ITEM_ID="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --path)
-      TARGET_PATH="${2:-}"
+      TARGET_PATH="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     -h|--help)
-      KIND="${KIND:-}"
-      shift
+      usage
+      exit 0
       ;;
     *)
       printf "ERROR unknown argument: %s\n" "$1" >&2
@@ -69,6 +93,10 @@ cat <<EOF
 # Knowledge Hub 人工新增向导
 
 本命令只输出人工维护清单，不创建、不修改、不提交任何文件。
+
+## 用法
+
+$(usage)
 
 ## 输入摘要
 
