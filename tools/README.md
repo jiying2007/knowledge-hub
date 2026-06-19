@@ -21,6 +21,10 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 Writing requires explicit future implementation and must not be used by unattended automations.
 
+## `knowledge-check.sh` 参数语义
+
+`knowledge-check.sh` 是全仓一致性门禁。`--project` 和 `--domain` 目前只是兼容保留参数，不会缩小检查范围；传入时会在 `warnings` 中提示仍执行全仓检查。
+
 ## Evidence
 
 命令证据应记录执行目录、完整 `rtk ...` 命令、日期、退出码、覆盖范围和中文结果摘要。写入计划工具默认先 dry-run；`--apply` 只能由人工在 reviewed manifest、owner、rollback policy、hash 校验和验证命令齐备后触发。

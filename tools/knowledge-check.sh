@@ -25,6 +25,10 @@ args = parser.parse_args(argv)
 
 errors = []
 warnings = []
+if args.project:
+    warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
+if args.domain:
+    warnings.append(f"knowledge-check: --domain is reserved and does not narrow validation scope: {args.domain}")
 
 ALLOWED_ITEM_KINDS = {
     "standard",
