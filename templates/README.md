@@ -24,4 +24,4 @@
 - `migration-record.md`：迁移记录。
 - `patent-disclosure.md`：专利披露。
 
-`knowledge-new.sh` 完成前，模板通过人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after` 和 `validation_refs`。
+`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after` 和 `validation_refs`，并同步 registry、index 与 migration。

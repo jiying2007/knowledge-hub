@@ -1,0 +1,2 @@
+{"id":"MEG-001","gate":"manual-entry-guide","status":"applied","scope":"tools/knowledge-new.sh","enforced_by":"human-readable guide","failure_condition":"manual user cannot discover registry/index/migration steps","expected_result":"guide prints minimal checklist","notes_zh":"新增入口只读输出清单，不写文件。"}
+{"id":"MEG-002","gate":"no-auto-write","status":"applied","scope":"tools/knowledge-new.sh","enforced_by":"script behavior","failure_condition":"script creates or edits files","expected_result":"no file writes","notes_zh":"避免让自动化成为新增知识条目的强依赖。"}

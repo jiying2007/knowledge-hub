@@ -14,6 +14,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
+- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration and validation steps without writing files.
 - `knowledge-capture.sh`: dry-run candidate capture.
 - `knowledge-promote.sh`: dry-run promotion plan.
 - `knowledge-retire.sh`: dry-run retirement plan.
