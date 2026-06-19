@@ -108,9 +108,11 @@ for worksheet_path in worksheet_paths:
 open_count = sum(1 for row in rows if row["status"] == "open")
 resolved_count = sum(1 for row in rows if row["status"] == "resolved")
 active_exposure_count = sum(len(row["active_registry_items"]) for row in rows)
+result_status = "blocked" if errors else "needs-fix" if active_exposure_count else "ok"
+exit_status = 1 if errors or active_exposure_count else 0
 
 result = {
-    "status": "blocked" if errors else "ok",
+    "status": result_status,
     "root": str(root),
     "read_only": True,
     "source_id": args.source_id,
@@ -126,7 +128,7 @@ result = {
 
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    sys.exit(1 if errors else 0)
+    sys.exit(exit_status)
 
 print("# Knowledge Owner Gates")
 print()
@@ -143,6 +145,8 @@ if args.source_id:
 print(f"- filter: {args.status}")
 for error in errors:
     print(f"- ERROR: {error}")
+if active_exposure_count:
+    print("- ERROR: active exposure exists; run knowledge-check and keep owner-gated rows out of active until owner decisions are closed.")
 
 for row in rows:
     active_marker = "YES" if row["active_registry_items"] else "no"
@@ -176,5 +180,5 @@ print("```bash")
 print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("```")
 
-sys.exit(1 if errors else 0)
+sys.exit(exit_status)
 PY
