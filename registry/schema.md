@@ -19,6 +19,8 @@ Required fields:
 - `review_after`
 - `created_at`
 - `updated_at`
+- `promotion`
+- `tags`
 
 Recommended readability fields:
 
@@ -74,6 +76,12 @@ Validation reference invariants:
 - absolute paths, `./` paths, `../` paths, and unsupported path-like refs are rejected unless they are part of a command-shaped ref.
 - command-shaped refs are recorded but not executed by `knowledge-check`.
 
+Discoverability and promotion invariants:
+
+- `tags` must be a non-empty list of non-empty strings.
+- `promotion` must be present.
+- currently allowed item `promotion` value is `none`; future promotion states must be added to schema and `knowledge-check` before use.
+
 Allowed `kind`:
 
 ```text
@@ -117,6 +125,12 @@ Allowed `visibility`:
 ```text
 team-internal
 personal-local
+```
+
+Allowed `promotion`:
+
+```text
+none
 ```
 
 Allowed `domain` roots:

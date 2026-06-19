@@ -56,3 +56,4 @@
 - Knowledge Hub item date gate: `artifacts/manifests/knowledge-hub-item-date-gate-20260619.md`
 - Knowledge Hub item source reference gate: `artifacts/manifests/knowledge-hub-item-source-ref-gate-20260619.md`
 - Knowledge Hub validation reference gate: `artifacts/manifests/knowledge-hub-validation-ref-gate-20260619.md`
+- Knowledge Hub item discoverability gate: `artifacts/manifests/knowledge-hub-item-discoverability-gate-20260619.md`

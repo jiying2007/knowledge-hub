@@ -56,6 +56,7 @@
 - `knowledge-hub-item-date-gate-20260619`
 - `knowledge-hub-item-source-ref-gate-20260619`
 - `knowledge-hub-validation-ref-gate-20260619`
+- `knowledge-hub-item-discoverability-gate-20260619`
 
 ## pcr02-registry-owner
 

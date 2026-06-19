@@ -12,6 +12,7 @@ source:
 review_after:
 created_at:
 updated_at:
+promotion: none
 tags: []
 related: []
 validation_refs: []

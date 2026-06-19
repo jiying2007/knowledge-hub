@@ -63,6 +63,9 @@ ALLOWED_ITEM_VISIBILITIES = {
     "team-internal",
     "personal-local",
 }
+ALLOWED_ITEM_PROMOTIONS = {
+    "none",
+}
 ALLOWED_DOMAIN_ROOTS = {
     "root",
     "governance",
@@ -314,6 +317,8 @@ if not args.sources_only:
         "review_after",
         "created_at",
         "updated_at",
+        "promotion",
+        "tags",
     ]
     template_skip = {"README.md", "migration-record.md"}
     for template_path in sorted((root / "templates").glob("*.md")):
@@ -340,9 +345,19 @@ if not args.sources_only:
         if item_id in ids:
             errors.append(f"items:{item_id} duplicate id")
         ids.add(item_id)
-        for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at"]:
+        for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at", "promotion", "tags"]:
             if field not in item or item.get(field) in ("", None, []):
                 errors.append(f"items:{item_id} missing {field}")
+        tags = item.get("tags")
+        if tags is not None:
+            if not isinstance(tags, list):
+                errors.append(f"items:{item_id} tags must be list")
+            else:
+                for tag in tags:
+                    if not isinstance(tag, str) or not tag.strip():
+                        errors.append(f"items:{item_id} invalid tag: {tag}")
+        if item.get("promotion") and item.get("promotion") not in ALLOWED_ITEM_PROMOTIONS:
+            errors.append(f"items:{item_id} invalid promotion: {item.get('promotion')}")
         item_dates = {}
         for field in ["created_at", "updated_at", "review_after"]:
             value = str(item.get(field, ""))
