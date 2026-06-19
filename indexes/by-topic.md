@@ -39,6 +39,7 @@
 - Knowledge Hub status strict gate: `artifacts/manifests/knowledge-hub-status-strict-gate-20260619.md`
 - Knowledge Hub owner decision forms: `artifacts/manifests/knowledge-hub-owner-decision-forms-20260619.md`
 - Knowledge Hub owner decision form validation: `artifacts/manifests/knowledge-hub-owner-decision-form-validation-20260619.md`
+- Knowledge Hub owner decision landing plan: `artifacts/manifests/knowledge-hub-owner-decision-landing-plan-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`

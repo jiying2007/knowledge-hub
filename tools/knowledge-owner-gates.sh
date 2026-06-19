@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description="Print a read-only owner-gate board
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
+parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
 args = parser.parse_args(argv)
@@ -173,11 +174,69 @@ def validate_forms_file(path, rows):
         "path": str(path),
         "form_count": len(forms),
         "checked_count": len(seen),
+        "forms": forms,
         "error_count": len(form_errors),
         "warning_count": len(warnings),
         "errors": form_errors,
         "warnings": warnings,
     }
+
+def make_landing_plan(form_validation, rows):
+    open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
+    blocked = form_validation is None or form_validation.get("status") != "pass"
+    plan = {
+        "status": "blocked" if blocked else "planned",
+        "read_only": True,
+        "source_form": form_validation.get("path", "") if form_validation else "",
+        "reason": "form validation must pass before landing plan is usable" if blocked else "",
+        "steps": [],
+        "required_manual_files": [
+            "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
+            "registry/items.jsonl",
+            "registry/migrations.jsonl",
+            "indexes/by-owner.md",
+            "indexes/by-review-date.md",
+            "indexes/by-status.md",
+            "indexes/by-topic.md",
+        ],
+        "verification_commands": [
+            "rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics",
+            "rtk bash tools/knowledge-owner-gates.sh --status all --json",
+            "rtk bash tools/knowledge-status.sh --strict --json",
+        ],
+        "must_not": [
+            "do not treat this plan as owner approval",
+            "do not auto-edit registry/index/migration",
+            "do not promote project-specific content to domains/embedded/standards",
+            "do not write ~/.codex/memories",
+            "do not modify source project docs",
+        ],
+    }
+    if blocked:
+        return plan
+    for form in form_validation.get("forms", []):
+        worksheet_id = form.get("worksheet_id", "")
+        row = open_by_id.get(worksheet_id, {})
+        plan["steps"].append(
+            {
+                "worksheet_id": worksheet_id,
+                "source_id": form.get("source_id", ""),
+                "source_path": form.get("source_path", ""),
+                "owner_decision": form.get("owner_decision", ""),
+                "target_decision": form.get("target_decision", ""),
+                "reviewed_by": form.get("reviewed_by", ""),
+                "reviewed_at": form.get("reviewed_at", ""),
+                "manual_actions_zh": [
+                    "把已审 owner decision 追加到 owner decision landing JSONL 制品。",
+                    "按 target_decision 更新或新增对应 registry item，状态不得越过 owner 决策允许范围。",
+                    "同步 registry/migrations.jsonl，记录从 owner-gated 到目标状态的人工迁移决策。",
+                    "同步 by-owner、by-review-date、by-status 和 by-topic 核心索引。",
+                    "运行 verification_commands 中的命令；strict gate 只有所有 owner gates 闭环后才会返回 0。",
+                ],
+                "guardrails": row.get("must_not", []),
+            }
+        )
+    return plan
 
 items = load_jsonl(root / "registry" / "items.jsonl")
 items_by_source_path = {}
@@ -266,6 +325,23 @@ if args.validate_forms:
         result["status"] = result_status
         exit_status = 1
 
+landing_plan = None
+if args.landing_plan:
+    if not args.validate_forms:
+        landing_plan = {
+            "status": "blocked",
+            "read_only": True,
+            "reason": "--landing-plan requires --validate-forms <jsonl>",
+            "steps": [],
+        }
+        result["landing_plan"] = landing_plan
+        result_status = "needs-fix"
+        result["status"] = result_status
+        exit_status = 1
+    else:
+        landing_plan = make_landing_plan(form_validation, rows)
+        result["landing_plan"] = landing_plan
+
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
     sys.exit(exit_status)
@@ -302,6 +378,32 @@ if form_validation:
         print(f"- ERROR: {item}")
     for item in form_validation["warnings"][:20]:
         print(f"- WARNING: {item}")
+
+if landing_plan:
+    print()
+    print("## Owner Decision Landing Plan")
+    print()
+    print("本计划只读输出人工落地步骤，不写文件、不关闭门禁、不提升 active。")
+    print(f"- status: {landing_plan['status']}")
+    if landing_plan.get("reason"):
+        print(f"- reason: {landing_plan['reason']}")
+    if landing_plan.get("required_manual_files"):
+        print("- required_manual_files:")
+        for item in landing_plan["required_manual_files"]:
+            print(f"  - `{item}`")
+    if landing_plan.get("verification_commands"):
+        print("- verification_commands:")
+        for item in landing_plan["verification_commands"]:
+            print(f"  - `{item}`")
+    for step in landing_plan.get("steps", []):
+        print()
+        print(f"### {step['worksheet_id']}")
+        print(f"- source_path: `{step['source_path']}`")
+        print(f"- owner_decision: `{step['owner_decision']}`")
+        print(f"- target_decision: `{step['target_decision']}`")
+        print("- manual_actions:")
+        for action in step["manual_actions_zh"]:
+            print(f"  - {action}")
 
 if args.forms:
     print()

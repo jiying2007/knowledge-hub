@@ -83,6 +83,7 @@
 - `knowledge-hub-status-strict-gate-20260619`
 - `knowledge-hub-owner-decision-forms-20260619`
 - `knowledge-hub-owner-decision-form-validation-20260619`
+- `knowledge-hub-owner-decision-landing-plan-20260619`
 
 ## pcr02-registry-owner
 
