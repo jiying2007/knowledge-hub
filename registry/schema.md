@@ -66,6 +66,14 @@ Source reference invariants:
 - item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
 - `artifact-ref` item `sha256` must be a lowercase 64-character SHA256 hex string, and `size` must be a positive integer.
 
+Validation reference invariants:
+
+- `active` and `reviewing` items must have non-empty `validation_refs`.
+- `validation_refs`, when present, must be a list of non-empty strings.
+- validation refs that are plain local Knowledge Hub paths must be normalized repository-relative paths and must exist.
+- absolute paths, `./` paths, `../` paths, and unsupported path-like refs are rejected unless they are part of a command-shaped ref.
+- command-shaped refs are recorded but not executed by `knowledge-check`.
+
 Allowed `kind`:
 
 ```text

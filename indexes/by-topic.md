@@ -55,3 +55,4 @@
 - Needs owner resolution: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
 - Knowledge Hub item date gate: `artifacts/manifests/knowledge-hub-item-date-gate-20260619.md`
 - Knowledge Hub item source reference gate: `artifacts/manifests/knowledge-hub-item-source-ref-gate-20260619.md`
+- Knowledge Hub validation reference gate: `artifacts/manifests/knowledge-hub-validation-ref-gate-20260619.md`

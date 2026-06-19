@@ -250,9 +250,9 @@ if not args.sources_only:
                 if allowed_kind not in ALLOWED_ITEM_KINDS:
                     errors.append(f"topics:{topic_id} invalid allowed_kind: {allowed_kind}")
 
-    migrations = load_jsonl(root / "registry" / "migrations.jsonl")
-    local_migration_target_prefixes = (
+    local_path_prefixes = (
         "artifacts/",
+        "docs/",
         "domains/",
         "registry/",
         "indexes/",
@@ -260,6 +260,7 @@ if not args.sources_only:
         "tools/",
         "templates/",
     )
+    migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     for migration in migrations:
         migration_id = migration.get("to") or migration.get("mode") or "<unknown>"
         missing_fields = set()
@@ -290,7 +291,7 @@ if not args.sources_only:
             if target_path.is_absolute():
                 errors.append(f"migrations:{migration_id} to must be relative local path: {target_ref}")
                 continue
-            if not (target_ref.startswith(local_migration_target_prefixes) or target_ref in {"README.md", "AGENTS.md"}):
+            if not (target_ref.startswith(local_path_prefixes) or target_ref in {"README.md", "AGENTS.md"}):
                 errors.append(f"migrations:{migration_id} to must reference a Knowledge Hub local path: {target_ref}")
                 continue
             if "*" in target_ref:
@@ -358,6 +359,28 @@ if not args.sources_only:
                 )
         if item.get("owner") and item.get("owner") not in owner_ids:
             errors.append(f"items:{item_id} owner not registered: {item.get('owner')}")
+        validation_refs = item.get("validation_refs")
+        if item.get("status") in {"active", "reviewing"}:
+            if validation_refs in (None, []):
+                errors.append(f"items:{item_id} active/reviewing missing validation_refs")
+        if validation_refs is not None:
+            if not isinstance(validation_refs, list):
+                errors.append(f"items:{item_id} validation_refs must be list")
+            else:
+                for validation_ref in validation_refs:
+                    if not isinstance(validation_ref, str) or not validation_ref.strip():
+                        errors.append(f"items:{item_id} invalid validation_ref: {validation_ref}")
+                        continue
+                    if " " in validation_ref:
+                        continue
+                    if pathlib.Path(validation_ref).is_absolute() or validation_ref.startswith(("./", "../")):
+                        errors.append(f"items:{item_id} validation_ref must be repo-relative or command: {validation_ref}")
+                        continue
+                    if validation_ref.startswith(local_path_prefixes) or validation_ref in {"README.md", "AGENTS.md"}:
+                        if not (root / validation_ref).exists():
+                            errors.append(f"items:{item_id} validation_ref missing local path: {validation_ref}")
+                    elif "/" in validation_ref or pathlib.Path(validation_ref).suffix:
+                        errors.append(f"items:{item_id} unsupported validation_ref format: {validation_ref}")
         source = item.get("source")
         if source and not isinstance(source, dict):
             errors.append(f"items:{item_id} source must be object")
@@ -521,15 +544,6 @@ if not args.sources_only:
         if item.get("visibility") == "personal-local" or item.get("domain") == "personal":
             errors.append(f"index:indexes/by-status.md active bucket references personal-local item {indexed_id}")
 
-    local_path_prefixes = (
-        "artifacts/",
-        "domains/",
-        "registry/",
-        "indexes/",
-        "governance/",
-        "tools/",
-        "templates/",
-    )
     for index_path in sorted((root / "indexes").glob("*.md")):
         text = index_path.read_text()
         for ref in sorted(set(re.findall(r"`([^`]+)`", text))):
