@@ -11,6 +11,7 @@
 - resolved_count: 0
 - active_exposure_count: 0
 - source_identity: 7/7 match
+- owner_ready_package_coverage: 7/7
 
 ## 使用顺序
 
@@ -54,17 +55,31 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validat
 | `personal-owner-and-team-review-if-teamized` | 1 | `runbooks/memory-auto-curation-guide.md` |
 | `motor-mcu-or-soc-owner` | 1 | `reports/2026-05-29-motor-mcu-debug-record.md` |
 
+## Owner-ready Package 覆盖
+
+7 条 owner gate 均已有单项 owner-ready 签收包。下表是人工分派时的唯一入口索引；这些包都只是签收材料，不代表 owner decision 已落地。
+
+| worksheet | owner-ready package | review_status | focus command |
+| --- | --- | --- | --- |
+| `pcr02-owner-decision-worksheet-001` | `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-002` | `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-002 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-003` | `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-003 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-004` | `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-004 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-005` | `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-006` | `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-006 --checklist --forms` |
+| `pcr02-owner-decision-worksheet-007` | `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md` | `owner-ready-no-decision` | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-007 --checklist --forms` |
+
 ## 执行队列
 
-| worksheet | source path | owner | default state | allowed owner decisions | required fields | identity | hard gate summary |
-| --- | --- | --- | --- | --- | ---: | --- | --- |
-| `pcr02-owner-decision-worksheet-001` | `AGENTS.md` | `team-core-or-pcr02-docs-owner` | `reference-only-pending-owner-gate` | `project-local-rule`, `reference-only`, `no-migration` | 13 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-002` | `standards/diag-command-metadata-standard.md` | `pcr02-diag-owner-or-team-core` | `reference-only-pending-owner-gate` | `pcr02-project-decision-after-owner-gate`, `pcr02-project-current-after-owner-gate`, `reference-only`, `no-migration` | 14 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-003` | `runbooks/asan-debug-guide.md` | `team-core` | `split-required / blocked-pending-owner-review` | `split-approved`, `active-project-local`, `reference-only`, `rejected`, `team-candidate-only` | 15 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-004` | `runbooks/memory-auto-curation-guide.md` | `personal-owner-and-team-review-if-teamized` | `blocked-personal-local` | `personal-local`, `teamized-report-only`, `rejected`, `no-migration` | 18 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-005` | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `project-owner` | `completed-after-owner-gate preferred, otherwise blocked-pending-owner-status-decision` | `completed`, `superseded`, `active-if-owner-confirms-current-baseline`, `archive-only` | 20 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-006` | `reports/2026-05-29-motor-mcu-debug-record.md` | `motor-mcu-or-soc-owner` | `archive-only` | `archive-only`, `validation-report-candidate` | 19 | match | 门禁待补证 |
-| `pcr02-owner-decision-worksheet-007` | `reports/2026-06-16-dvr-record-replay-session-archive.md` | `project-owner` | `archive-only` | `archive-only` | 24 | match | 门禁待补证 |
+| worksheet | source path | owner | owner-ready package | default state | allowed owner decisions | required fields | identity | hard gate summary |
+| --- | --- | --- | --- | --- | --- | ---: | --- | --- |
+| `pcr02-owner-decision-worksheet-001` | `AGENTS.md` | `team-core-or-pcr02-docs-owner` | `pcr02-agents-owner-ready-package-20260620` | `reference-only-pending-owner-gate` | `project-local-rule`, `reference-only`, `no-migration` | 13 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-002` | `standards/diag-command-metadata-standard.md` | `pcr02-diag-owner-or-team-core` | `pcr02-diag-owner-ready-package-20260620` | `reference-only-pending-owner-gate` | `pcr02-project-decision-after-owner-gate`, `pcr02-project-current-after-owner-gate`, `reference-only`, `no-migration` | 14 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-003` | `runbooks/asan-debug-guide.md` | `team-core` | `pcr02-asan-owner-ready-package-20260620` | `split-required / blocked-pending-owner-review` | `split-approved`, `active-project-local`, `reference-only`, `rejected`, `team-candidate-only` | 15 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-004` | `runbooks/memory-auto-curation-guide.md` | `personal-owner-and-team-review-if-teamized` | `pcr02-memory-auto-curation-owner-ready-package-20260620` | `blocked-personal-local` | `personal-local`, `teamized-report-only`, `rejected`, `no-migration` | 18 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-005` | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `project-owner` | `pcr02-dvr-plan-owner-ready-package-20260620` | `completed-after-owner-gate preferred, otherwise blocked-pending-owner-status-decision` | `completed`, `superseded`, `active-if-owner-confirms-current-baseline`, `archive-only` | 20 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-006` | `reports/2026-05-29-motor-mcu-debug-record.md` | `motor-mcu-or-soc-owner` | `pcr02-motor-mcu-owner-ready-package-20260620` | `archive-only` | `archive-only`, `validation-report-candidate` | 19 | match | 门禁待补证 |
+| `pcr02-owner-decision-worksheet-007` | `reports/2026-06-16-dvr-record-replay-session-archive.md` | `project-owner` | `pcr02-dvr-session-archive-owner-ready-package-20260620` | `archive-only` | `archive-only` | 24 | match | 门禁待补证 |
 
 ## 每条必须带回的字段
 
@@ -93,6 +108,9 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validat
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms --checklist --json` | 0 | 7 条 checklist 和 decision form skeleton 均可生成，source identity 均为 match。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-owner-decision-intake-execution-20260620` |
 | `rtk bash tools/knowledge-status.sh --strict --json` | 1 expected | 预期仍为 `needs-owner-review`，唯一 blocker 为 `owner-gates-open count=7`。 | `tools/knowledge-status.sh` | Strict status | `pcr02-owner-decision-intake-execution-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 全仓一致性门禁应通过。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-owner-decision-intake-execution-20260620` |
+| `rtk bash tools/knowledge-check.sh --dry-run --json --explain pcr02-owner-decision-intake-execution-20260620` | 0 | registry item 存在，artifact path 存在，owner/review-date/status core indexes 均命中；validation_refs_count=7。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-owner-decision-intake-execution-20260620` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 20 个回归场景通过，`kept_temp=false`。 | `tools/knowledge-regression.sh` | Regression | `pcr02-owner-decision-intake-execution-20260620` |
+| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 预期返回 `needs-owner-review`；knowledge-check 与 regression 均 pass；唯一 blocker 为 7 个 open owner gates；owner-ready 包覆盖不等于 owner gate 已签收。 | `tools/knowledge-final-gate.sh` | Final gate | `pcr02-owner-decision-intake-execution-20260620` |
 
 ## 非目标
 
