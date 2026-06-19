@@ -183,6 +183,19 @@ read-only-unless-explicitly-approved
 externalize-to-knowledge-hub-before-prune
 ```
 
+## owners.json
+
+登记 registry item 可使用的 owner id。每个 `registry/items.jsonl` 条目的 `owner` 必须能在这里找到，避免责任人拼写漂移或临时 owner 长期残留。
+
+Required owner fields:
+
+- `id`
+
+Recommended owner fields:
+
+- `display_name`
+- `default_review_cycle_days`
+
 ## migrations.jsonl
 
 登记 Knowledge Hub 治理、迁移、引用、归档和门禁变更的可追溯记录。
@@ -207,6 +220,7 @@ Migration invariants:
 ## Safety invariants
 
 - `active` and `reviewing` items must have `owner` and `review_after`.
+- item `owner` must be registered in `registry/owners.json`.
 - `superseded` items must have `superseded_by`.
 - `artifact-ref` items must have `uri`, `size`, and `sha256`.
 - `project-specific` items must not live under `domains/embedded/standards`.

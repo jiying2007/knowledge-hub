@@ -5,6 +5,16 @@
       "id": "leiwenjun",
       "display_name": "leiwenjun",
       "default_review_cycle_days": 90
+    },
+    {
+      "id": "pcr02-registry-owner",
+      "display_name": "PCR02 registry owner",
+      "default_review_cycle_days": 90
+    },
+    {
+      "id": "team-core",
+      "display_name": "team-core",
+      "default_review_cycle_days": 90
     }
   ]
 }

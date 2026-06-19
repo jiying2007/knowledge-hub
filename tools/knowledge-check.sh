@@ -158,6 +158,17 @@ if not args.sources_only:
             except Exception as exc:
                 errors.append(f"registry:{registry_jsonl_path.relative_to(root)}:{lineno} invalid jsonl: {exc}")
 
+    owner_ids = set()
+    owners_doc = load_json(root / "registry" / "owners.json")
+    for owner in owners_doc.get("owners", []):
+        owner_id = owner.get("id")
+        if not owner_id:
+            errors.append("owners: missing id")
+            continue
+        if owner_id in owner_ids:
+            errors.append(f"owners:{owner_id} duplicate id")
+        owner_ids.add(owner_id)
+
     migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     local_migration_target_prefixes = (
         "artifacts/",
@@ -250,6 +261,8 @@ if not args.sources_only:
         for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at"]:
             if field not in item or item.get(field) in ("", None, []):
                 errors.append(f"items:{item_id} missing {field}")
+        if item.get("owner") and item.get("owner") not in owner_ids:
+            errors.append(f"items:{item_id} owner not registered: {item.get('owner')}")
         if item.get("kind") and item.get("kind") not in ALLOWED_ITEM_KINDS:
             errors.append(f"items:{item_id} invalid kind: {item.get('kind')}")
         if item.get("status") and item.get("status") not in ALLOWED_ITEM_STATUSES:
