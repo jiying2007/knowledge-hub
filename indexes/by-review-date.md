@@ -88,3 +88,5 @@
 - 2026-09-19: `knowledge-hub-doctor-helper-20260619`
 - 2026-09-19: `knowledge-hub-readme-maintenance-path-sync-20260619`
 - 2026-09-19: `knowledge-hub-evidence-index-template-20260619`
+- 2026-09-19: `engineering-archive-copy-first-applied-20260619`
+- 2026-09-19: `engineering-archive-pcr02-archive-corpus-20260619`

@@ -65,3 +65,5 @@
 - Knowledge Hub doctor helper: `artifacts/manifests/knowledge-hub-doctor-helper-20260619.md`
 - Knowledge Hub README maintenance path sync: `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.md`
 - Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
+- Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
+- Engineering archive PCR02 archive corpus: `domains/projects/pcr02/archive/engineering-archive`

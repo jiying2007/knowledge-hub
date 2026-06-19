@@ -117,8 +117,6 @@ for index, row in enumerate(rows, 1):
     if item_id in seen:
         errors.append(f"{item_id}: duplicate id")
     seen.add(item_id)
-    if row["source_id"] != "pcr02-project-docs":
-        errors.append(f"{item_id}: unsupported source_id: {row['source_id']}")
     if row["mode"] != "copy-first-dry-run":
         errors.append(f"{item_id}: unsupported mode: {row['mode']}")
     if row["rollback_policy"] != "remove-copied-target-only":

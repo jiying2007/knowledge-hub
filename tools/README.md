@@ -15,6 +15,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>` and optional search without writing files.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
+- `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
 - `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files.
 - `knowledge-capture.sh`: dry-run candidate capture.

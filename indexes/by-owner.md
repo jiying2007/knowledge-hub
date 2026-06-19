@@ -65,6 +65,7 @@
 - `knowledge-hub-doctor-helper-20260619`
 - `knowledge-hub-readme-maintenance-path-sync-20260619`
 - `knowledge-hub-evidence-index-template-20260619`
+- `engineering-archive-copy-first-applied-20260619`
 
 ## pcr02-registry-owner
 
@@ -96,3 +97,4 @@
 - `migrated-pcr02-docs-copyfirst-022`
 - `migrated-pcr02-docs-copyfirst-023`
 - `pcr02-docs-index-reference-20260618`
+- `engineering-archive-pcr02-archive-corpus-20260619`

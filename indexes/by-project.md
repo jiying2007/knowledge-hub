@@ -24,3 +24,5 @@
 - Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
+- Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
+- Engineering archive corpus: `domains/projects/pcr02/archive/engineering-archive`
