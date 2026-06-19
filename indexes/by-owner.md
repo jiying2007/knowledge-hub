@@ -115,6 +115,7 @@
 - `pcr02-asan-owner-ready-package-20260620`
 - `pcr02-memory-auto-curation-owner-ready-package-20260620`
 - `pcr02-dvr-plan-owner-ready-package-20260620`
+- `pcr02-motor-mcu-owner-ready-package-20260620`
 
 ## pcr02-registry-owner
 

@@ -18,6 +18,7 @@
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan closeout is tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`.
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU fact split and archive-only boundary are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
+- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`.
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only metadata and memory-candidate exclusion are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
 - `pcr02-project-docs/AGENTS.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`.
