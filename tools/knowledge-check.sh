@@ -125,11 +125,16 @@ def load_jsonl(path):
 
 sources_path = root / "registry" / "sources.json"
 sources = load_json(sources_path).get("sources", [])
+source_ids = set()
 for source in sources:
     for field in ["id", "path", "role", "authority", "status", "write_policy"]:
         if not source.get(field):
             errors.append(f"sources:{source.get('id', '<unknown>')} missing {field}")
     source_id = source.get("id", "<unknown>")
+    if source.get("id"):
+        if source_id in source_ids:
+            errors.append(f"sources:{source_id} duplicate id")
+        source_ids.add(source_id)
     if source.get("role") and source.get("role") not in ALLOWED_SOURCE_ROLES:
         errors.append(f"sources:{source_id} invalid role: {source.get('role')}")
     if source.get("authority") and source.get("authority") not in ALLOWED_SOURCE_AUTHORITIES:
@@ -157,6 +162,43 @@ if not args.sources_only:
                 json.loads(line)
             except Exception as exc:
                 errors.append(f"registry:{registry_jsonl_path.relative_to(root)}:{lineno} invalid jsonl: {exc}")
+
+    by_source_path = root / "indexes" / "by-source.md"
+    if not by_source_path.exists():
+        errors.append("index missing: indexes/by-source.md")
+    else:
+        by_source_ids = set()
+        in_sources_section = False
+        in_source_table = False
+        for line in by_source_path.read_text().splitlines():
+            stripped = line.strip()
+            if stripped.startswith("# "):
+                in_sources_section = stripped == "# Knowledge Sources"
+                in_source_table = False
+                continue
+            if in_sources_section and stripped.startswith("#"):
+                break
+            if not in_sources_section:
+                continue
+            if not stripped:
+                if in_source_table:
+                    break
+                continue
+            if not stripped.startswith("|"):
+                if in_source_table:
+                    break
+                continue
+            in_source_table = True
+            cells = [cell.strip().strip("`") for cell in stripped.strip("|").split("|")]
+            if len(cells) < 3 or cells[0] in {"Source", "---"}:
+                continue
+            by_source_ids.add(cells[0])
+        for source_id in sorted(source_ids):
+            if source_id not in by_source_ids:
+                errors.append(f"index:indexes/by-source.md missing source {source_id}")
+        for indexed_source_id in sorted(by_source_ids):
+            if indexed_source_id not in source_ids:
+                errors.append(f"index:indexes/by-source.md stale source {indexed_source_id}")
 
     owner_ids = set()
     owners_doc = load_json(root / "registry" / "owners.json")

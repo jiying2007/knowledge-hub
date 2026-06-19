@@ -52,6 +52,7 @@
 - `knowledge-hub-owner-registry-gate-20260619`
 - `knowledge-hub-project-registry-gate-20260619`
 - `knowledge-hub-topic-registry-gate-20260619`
+- `knowledge-hub-source-index-gate-20260619`
 
 ## pcr02-registry-owner
 

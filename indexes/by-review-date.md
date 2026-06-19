@@ -75,3 +75,4 @@
 - 2026-09-19: `knowledge-hub-owner-registry-gate-20260619`
 - 2026-09-19: `knowledge-hub-project-registry-gate-20260619`
 - 2026-09-19: `knowledge-hub-topic-registry-gate-20260619`
+- 2026-09-19: `knowledge-hub-source-index-gate-20260619`

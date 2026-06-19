@@ -25,6 +25,7 @@
 - Knowledge Hub owner registry gate: `artifacts/manifests/knowledge-hub-owner-registry-gate-20260619.md`
 - Knowledge Hub project registry gate: `artifacts/manifests/knowledge-hub-project-registry-gate-20260619.md`
 - Knowledge Hub topic registry gate: `artifacts/manifests/knowledge-hub-topic-registry-gate-20260619.md`
+- Knowledge Hub source index gate: `artifacts/manifests/knowledge-hub-source-index-gate-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`

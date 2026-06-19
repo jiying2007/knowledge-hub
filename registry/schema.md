@@ -183,6 +183,12 @@ read-only-unless-explicitly-approved
 externalize-to-knowledge-hub-before-prune
 ```
 
+Source/index invariants:
+
+- source `id` must be unique.
+- `indexes/by-source.md` main source table must include every source `id`.
+- `indexes/by-source.md` main source table must not include unregistered source ids.
+
 ## owners.json
 
 登记 registry item 可使用的 owner id。每个 `registry/items.jsonl` 条目的 `owner` 必须能在这里找到，避免责任人拼写漂移或临时 owner 长期残留。
