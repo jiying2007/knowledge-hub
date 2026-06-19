@@ -400,7 +400,13 @@ if not args.sources_only:
         re.compile(r"(?i)(api[_-]?key|token|password|passwd|secret)\s*[:=]\s*['\"]?[^'\"\s]{12,}"),
         re.compile(r"(?i)cookie\s*[:=]\s*['\"]?[^'\"\s]{12,}"),
     ]
-    scan_roots = [root / "domains", root / "registry", root / "governance", root / "templates"]
+    scan_roots = [
+        root / "domains",
+        root / "registry",
+        root / "governance",
+        root / "templates",
+        root / "artifacts" / "manifests",
+    ]
     for base in scan_roots:
         if not base.exists():
             continue

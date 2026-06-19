@@ -20,6 +20,7 @@
 - Knowledge Hub manual entry guide: `artifacts/manifests/knowledge-hub-manual-entry-guide-20260619.md`
 - Knowledge Hub template schema gate: `artifacts/manifests/knowledge-hub-template-schema-gate-20260619.md`
 - Knowledge Hub check filter compatibility: `artifacts/manifests/knowledge-hub-check-filter-compat-20260619.md`
+- Knowledge Hub manifest secret scan gate: `artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
