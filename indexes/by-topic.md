@@ -115,3 +115,4 @@
 - PCR02 diag metadata owner-ready package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
 - PCR02 ASAN owner-ready package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
 - PCR02 memory auto-curation owner-ready package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
+- PCR02 DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
