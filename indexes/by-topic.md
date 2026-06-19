@@ -54,3 +54,4 @@
 - PCR02 governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
 - Needs owner resolution: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
 - Knowledge Hub item date gate: `artifacts/manifests/knowledge-hub-item-date-gate-20260619.md`
+- Knowledge Hub item source reference gate: `artifacts/manifests/knowledge-hub-item-source-ref-gate-20260619.md`

@@ -101,6 +101,7 @@ ALLOWED_SOURCE_WRITE_POLICIES = {
     "read-only-unless-explicitly-approved",
     "externalize-to-knowledge-hub-before-prune",
 }
+SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 def load_json(path):
     try:
@@ -357,6 +358,24 @@ if not args.sources_only:
                 )
         if item.get("owner") and item.get("owner") not in owner_ids:
             errors.append(f"items:{item_id} owner not registered: {item.get('owner')}")
+        source = item.get("source")
+        if source and not isinstance(source, dict):
+            errors.append(f"items:{item_id} source must be object")
+            source = {}
+        if isinstance(source, dict):
+            item_source_id = source.get("source_id")
+            if item_source_id and item_source_id not in source_ids:
+                errors.append(f"items:{item_id} source_id not registered: {item_source_id}")
+            migration_manifest = source.get("migration_manifest")
+            if migration_manifest:
+                manifest_path = pathlib.Path(str(migration_manifest))
+                if manifest_path.is_absolute():
+                    errors.append(f"items:{item_id} migration_manifest must be relative: {migration_manifest}")
+                elif not (root / manifest_path).exists():
+                    errors.append(f"items:{item_id} migration_manifest missing: {migration_manifest}")
+            source_sha256 = source.get("source_sha256")
+            if source_sha256 and not SHA256_RE.fullmatch(str(source_sha256)):
+                errors.append(f"items:{item_id} invalid source_sha256: {source_sha256}")
         if item.get("kind") and item.get("kind") not in ALLOWED_ITEM_KINDS:
             errors.append(f"items:{item_id} invalid kind: {item.get('kind')}")
         if item.get("status") and item.get("status") not in ALLOWED_ITEM_STATUSES:
@@ -413,6 +432,10 @@ if not args.sources_only:
             for field in ["uri", "size", "sha256"]:
                 if not item.get(field):
                     errors.append(f"items:{item_id} artifact-ref missing {field}")
+            if item.get("sha256") and not SHA256_RE.fullmatch(str(item.get("sha256"))):
+                errors.append(f"items:{item_id} invalid artifact sha256: {item.get('sha256')}")
+            if item.get("size") and (not isinstance(item.get("size"), int) or item.get("size") <= 0):
+                errors.append(f"items:{item_id} invalid artifact size: {item.get('size')}")
         if item.get("scope") == "project-specific" and str(item.get("path", "")).startswith("domains/embedded/standards/"):
             errors.append(f"items:{item_id} project-specific under embedded standards")
         if item.get("visibility") == "personal-local" and item.get("status") == "active":

@@ -77,3 +77,4 @@
 - 2026-09-19: `knowledge-hub-topic-registry-gate-20260619`
 - 2026-09-19: `knowledge-hub-source-index-gate-20260619`
 - 2026-09-19: `knowledge-hub-item-date-gate-20260619`
+- 2026-09-19: `knowledge-hub-item-source-ref-gate-20260619`

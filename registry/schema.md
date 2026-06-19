@@ -58,6 +58,14 @@ Date invariants:
 - `updated_at` must be the same date as or later than `created_at`.
 - stale `review_after` is a warning, not an error; it should guide human review without blocking unrelated maintenance.
 
+Source reference invariants:
+
+- item `source` must be an object.
+- item `source.source_id`, when present, must be registered in `registry/sources.json`.
+- item `source.migration_manifest`, when present, must be a relative existing Knowledge Hub local path.
+- item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
+- `artifact-ref` item `sha256` must be a lowercase 64-character SHA256 hex string, and `size` must be a positive integer.
+
 Allowed `kind`:
 
 ```text

@@ -10,7 +10,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 不要在长期文档中直接引用内部 Python 入口，也不要绕过 `rtk` 裸跑 shell 命令。
 
-- `knowledge-check.sh`: read-only validation, including registry JSON/JSONL parse checks, registry owner/project/topic registration checks, source index coverage checks, registry item date consistency checks, registry field/path/enum/domain-boundary checks, migration record structure/local-target checks, item template required-field checks, personal-local active blocking, AI-generated active human-review gates, source enum checks, secret-pattern scan for text knowledge and `artifacts/manifests/`, core index drift checks for missing/stale item refs, and local path/glob reference checks in `indexes/*.md`.
+- `knowledge-check.sh`: read-only validation, including registry JSON/JSONL parse checks, registry owner/project/topic registration checks, source index coverage checks, registry item date consistency checks, item source reference checks, registry field/path/enum/domain-boundary checks, migration record structure/local-target checks, item template required-field checks, personal-local active blocking, AI-generated active human-review gates, source enum checks, secret-pattern scan for text knowledge and `artifacts/manifests/`, core index drift checks for missing/stale item refs, and local path/glob reference checks in `indexes/*.md`.
 - Stale `review_after` values in registry items are warnings, not blocking errors; invalid date format and `updated_at < created_at` remain errors.
 - `knowledge-search.sh`: read-only text search across registered sources and local domains.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
