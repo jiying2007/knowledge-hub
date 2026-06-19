@@ -109,6 +109,7 @@
 - `knowledge-hub-owner-source-identity-validation-20260620`
 - `knowledge-hub-final-gate-20260620`
 - `pcr02-owner-decision-intake-execution-20260620`
+- `knowledge-hub-regression-temp-cleanup-20260620`
 
 ## pcr02-registry-owner
 

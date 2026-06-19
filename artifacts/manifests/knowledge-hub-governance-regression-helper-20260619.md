@@ -2,7 +2,7 @@
 
 ## 结论
 
-新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。
+新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会转成结构化 JSON 失败结果，避免 final gate 只能看到空输出或残留临时目录。
 
 ## 覆盖范围
 
@@ -33,7 +33,8 @@
 
 - 不引入测试框架。
 - 不写真实仓库。
-- 不保存临时 fixture；需要排查时使用 `--keep-temp`。
+- 不保存临时 fixture；默认逐场景清理，需要排查时使用 `--keep-temp`。
+- 低空间预检使用 `KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES`，默认 4 MiB；空间不足或复制异常时输出 JSON failure，而不是留下不可解析的 traceback。
 - 作为提交前可选回归入口，覆盖最容易造成终态漂移的 owner/status 门禁。
 
 ## Evidence Index

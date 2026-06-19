@@ -25,6 +25,8 @@ args = parser.parse_args(argv)
 
 results = []
 temp_roots = []
+temp_dir = pathlib.Path(tempfile.gettempdir()).resolve()
+min_tmp_free_bytes = int(os.environ.get("KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES", str(4 * 1024 * 1024)))
 
 def run_cmd(repo, command):
     completed = subprocess.run(
@@ -42,11 +44,41 @@ def run_cmd(repo, command):
     }
 
 def copy_repo(label):
+    free_bytes = shutil.disk_usage(temp_dir).free
+    if free_bytes < min_tmp_free_bytes:
+        raise RuntimeError(
+            f"insufficient temp space in {temp_dir}: free={free_bytes} required={min_tmp_free_bytes}"
+        )
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{label}-"))
     temp_roots.append(temp_root)
     repo = temp_root / "repo"
     shutil.copytree(root, repo, ignore=shutil.ignore_patterns(".git"))
     return repo
+
+def cleanup_temp_roots():
+    if args.keep_temp:
+        return
+    while temp_roots:
+        temp_root = temp_roots.pop()
+        shutil.rmtree(temp_root, ignore_errors=True)
+
+def run_test(fn):
+    try:
+        fn()
+    except Exception as exc:
+        record(
+            fn.__name__.replace("test_", "").replace("_", "-"),
+            f"{fn.__name__} raised an exception",
+            "fail",
+            {
+                "exception": str(exc),
+                "temp_dir": str(temp_dir),
+                "temp_free_bytes": shutil.disk_usage(temp_dir).free,
+                "min_tmp_free_bytes": min_tmp_free_bytes,
+            },
+        )
+    finally:
+        cleanup_temp_roots()
 
 def record(test_id, title, status, details, repo=None):
     results.append(
@@ -966,30 +998,29 @@ def test_regression_manifest_coverage():
         },
     )
 
-test_baseline()
-test_status_wrong_bucket()
-test_status_noncanonical_only()
-test_owner_partial_resolved()
-test_owner_single_form()
-test_owner_checklist_context()
-test_owner_form_context()
-test_owner_source_identity_context()
-test_owner_summary_all_open()
-test_owner_next_open_focus()
-test_status_next_owner_gate()
-test_final_gate_owner_review_blocker()
-test_owner_landing_plan_project_index()
-test_owner_form_source_identity_mismatch()
-test_manual_entry_project_index_hint()
-test_manual_entry_project_from_domain()
-test_manual_entry_default_dates()
-test_manual_entry_owner_override()
-test_manual_entry_docs_owner_option()
-test_regression_manifest_coverage()
-
-if not args.keep_temp:
-    for temp_root in temp_roots:
-        shutil.rmtree(temp_root, ignore_errors=True)
+for test_fn in [
+    test_baseline,
+    test_status_wrong_bucket,
+    test_status_noncanonical_only,
+    test_owner_partial_resolved,
+    test_owner_single_form,
+    test_owner_checklist_context,
+    test_owner_form_context,
+    test_owner_source_identity_context,
+    test_owner_summary_all_open,
+    test_owner_next_open_focus,
+    test_status_next_owner_gate,
+    test_final_gate_owner_review_blocker,
+    test_owner_landing_plan_project_index,
+    test_owner_form_source_identity_mismatch,
+    test_manual_entry_project_index_hint,
+    test_manual_entry_project_from_domain,
+    test_manual_entry_default_dates,
+    test_manual_entry_owner_override,
+    test_manual_entry_docs_owner_option,
+    test_regression_manifest_coverage,
+]:
+    run_test(test_fn)
 
 status = "pass" if all(result["status"] == "pass" for result in results) else "fail"
 output = {

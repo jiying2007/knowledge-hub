@@ -132,6 +132,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-source-identity-validation-20260620`
 - reviewing: `knowledge-hub-final-gate-20260620`
 - reviewing: `pcr02-owner-decision-intake-execution-20260620`
+- reviewing: `knowledge-hub-regression-temp-cleanup-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -218,3 +219,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-source-identity-validation-applied: `tools/knowledge-owner-gates.sh` rejects owner forms whose `source_sha256/source_size` do not match current observed source identity when using `--validate-forms`; documented by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.jsonl`.
 - final-gate-applied: `tools/knowledge-final-gate.sh` aggregates `knowledge-check`、`knowledge-regression` and `knowledge-status --strict` for terminal validation, documented by `artifacts/manifests/knowledge-hub-final-gate-20260620.jsonl`.
 - owner-intake-execution-ready: PCR02 consolidated owner decision intake execution package is ready for manual assignment and sign-off by `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.jsonl`; no owner gate is resolved by this package alone.
+- regression-temp-cleanup-applied: `tools/knowledge-regression.sh` cleans temp fixtures per scenario and reports low-temp-space/internal exceptions as structured JSON, documented by `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.jsonl`.

@@ -110,3 +110,4 @@
 - Knowledge Hub owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
 - Knowledge Hub final gate: `artifacts/manifests/knowledge-hub-final-gate-20260620.md`
 - PCR02 owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
+- Knowledge Hub regression temp cleanup: `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.md`
