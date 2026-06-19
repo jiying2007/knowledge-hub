@@ -43,6 +43,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --source <path> --kind <kind> --dry-run

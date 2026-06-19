@@ -81,6 +81,7 @@
 - `knowledge-hub-doctor-owner-gates-20260619`
 - `knowledge-hub-status-dashboard-20260619`
 - `knowledge-hub-status-strict-gate-20260619`
+- `knowledge-hub-owner-decision-forms-20260619`
 
 ## pcr02-registry-owner
 

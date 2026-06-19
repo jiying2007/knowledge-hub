@@ -15,6 +15,7 @@ argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only owner-gate board from owner decision worksheets.")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
 parser.add_argument("--source-id", default="")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
 args = parser.parse_args(argv)
@@ -50,6 +51,32 @@ def is_resolved(row):
         for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at"]
     )
     return has_owner_decision and any(token in state_text for token in ["resolved", "owner-approved", "approved", "closed"])
+
+def default_field_value(field, row):
+    if field == "review_after":
+        return row.get("review_after", "")
+    if field.endswith("_refs") or field in {"evidence_refs", "open_items"}:
+        return []
+    if field in {"automation_enabled", "writes_memory", "writes_team_active_index", "no_memory_write_gate", "not_active_source", "contains_memory_candidates"}:
+        return None
+    return ""
+
+def make_decision_form(row):
+    form = {
+        "worksheet_id": row["id"],
+        "source_id": row["source_id"],
+        "source_path": row["source_path"],
+        "worksheet": row["worksheet"],
+        "owner": row["owner"],
+        "allowed_owner_decisions": row["decision_options"],
+        "must_not": row["must_not"],
+        "notes_zh": "本骨架只供 owner 人工填写和复核；脚本不写文件、不关闭门禁、不提升 active。",
+    }
+    for field in row["required_owner_fields"]:
+        form.setdefault(field, default_field_value(field, row))
+    for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
+        form.setdefault(field, default_field_value(field, row))
+    return form
 
 items = load_jsonl(root / "registry" / "items.jsonl")
 items_by_source_path = {}
@@ -126,6 +153,9 @@ result = {
     "rows": rows,
 }
 
+if args.forms:
+    result["decision_forms"] = [make_decision_form(row) for row in rows if row["status"] == "open"]
+
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
     sys.exit(exit_status)
@@ -147,6 +177,13 @@ for error in errors:
     print(f"- ERROR: {error}")
 if active_exposure_count:
     print("- ERROR: active exposure exists; run knowledge-check and keep owner-gated rows out of active until owner decisions are closed.")
+
+if args.forms:
+    print()
+    print("## Owner Decision JSONL Skeletons")
+    print()
+    print("以下骨架只供 owner 人工复制、填写和复核；本命令不写文件、不关闭门禁、不提升 active。")
+    print("写入任何 owner decision 前，必须补齐证据引用、reviewed_by、reviewed_at、source hash/size 和 status_reason。")
 
 for row in rows:
     active_marker = "YES" if row["active_registry_items"] else "no"
@@ -172,6 +209,11 @@ for row in rows:
                 f"  - `{item['id']}` status={item['status'] or '<missing-status>'} "
                 f"path={item['path'] or '<missing-path>'}"
             )
+    if args.forms and row["status"] == "open":
+        print()
+        print("```json")
+        print(json.dumps(make_decision_form(row), ensure_ascii=False, sort_keys=True))
+        print("```")
 
 print()
 print("## 验证")
