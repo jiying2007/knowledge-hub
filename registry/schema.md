@@ -183,6 +183,27 @@ read-only-unless-explicitly-approved
 externalize-to-knowledge-hub-before-prune
 ```
 
+## migrations.jsonl
+
+登记 Knowledge Hub 治理、迁移、引用、归档和门禁变更的可追溯记录。
+
+Required migration fields:
+
+- `from`
+- `to`
+- `mode`
+- `status`
+- `checked_at`
+- `notes`
+
+Migration invariants:
+
+- `checked_at` must use ISO date format: `YYYY-MM-DD`.
+- `to` must reference an existing Knowledge Hub local path, such as `artifacts/`, `domains/`, `registry/`, `indexes/`, `governance/`, `tools/` or `templates/`.
+- `to` must be relative, not absolute.
+- Multiple `to` references may be separated by semicolons.
+- The bootstrap placeholder may use empty `from` and `to` only when `mode=none` and `status=bootstrap-empty`.
+
 ## Safety invariants
 
 - `active` and `reviewing` items must have `owner` and `review_after`.

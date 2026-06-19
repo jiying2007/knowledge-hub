@@ -139,6 +139,55 @@ for source in sources:
         warnings.append(f"sources:{source.get('id')} path missing: {path}")
 
 if not args.sources_only:
+    migrations = load_jsonl(root / "registry" / "migrations.jsonl")
+    local_migration_target_prefixes = (
+        "artifacts/",
+        "domains/",
+        "registry/",
+        "indexes/",
+        "governance/",
+        "tools/",
+        "templates/",
+    )
+    for migration in migrations:
+        migration_id = migration.get("to") or migration.get("mode") or "<unknown>"
+        missing_fields = set()
+        for field in ["from", "to", "mode", "status", "checked_at", "notes"]:
+            if field not in migration:
+                missing_fields.add(field)
+                errors.append(f"migrations:{migration_id} missing {field}")
+        is_bootstrap_empty = migration.get("mode") == "none" and migration.get("status") == "bootstrap-empty"
+        for field in ["mode", "status", "checked_at", "notes"]:
+            if field in missing_fields:
+                continue
+            if migration.get(field) in ("", None, []):
+                errors.append(f"migrations:{migration_id} empty {field}")
+        if not is_bootstrap_empty:
+            for field in ["from", "to"]:
+                if field in missing_fields:
+                    continue
+                if migration.get(field) in ("", None, []):
+                    errors.append(f"migrations:{migration_id} empty {field}")
+        checked_at = str(migration.get("checked_at", ""))
+        try:
+            dt.date.fromisoformat(checked_at)
+        except Exception:
+            errors.append(f"migrations:{migration_id} invalid checked_at: {checked_at}")
+        target_refs = [part.strip() for part in re.split(r"\s*;\s*", str(migration.get("to", ""))) if part.strip()]
+        for target_ref in target_refs:
+            target_path = pathlib.Path(target_ref)
+            if target_path.is_absolute():
+                errors.append(f"migrations:{migration_id} to must be relative local path: {target_ref}")
+                continue
+            if not (target_ref.startswith(local_migration_target_prefixes) or target_ref in {"README.md", "AGENTS.md"}):
+                errors.append(f"migrations:{migration_id} to must reference a Knowledge Hub local path: {target_ref}")
+                continue
+            if "*" in target_ref:
+                if not list(root.glob(target_ref)):
+                    errors.append(f"migrations:{migration_id} missing local glob target: {target_ref}")
+            elif not (root / target_path).exists():
+                errors.append(f"migrations:{migration_id} missing local target: {target_ref}")
+
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
     today = dt.date.today()

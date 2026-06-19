@@ -16,6 +16,7 @@
 - Knowledge Hub registry enum gate: `artifacts/manifests/knowledge-hub-registry-enum-gate-20260619.md`
 - Knowledge Hub registry boundary gate: `artifacts/manifests/knowledge-hub-registry-boundary-gate-20260619.md`
 - Knowledge Hub active safety gate: `artifacts/manifests/knowledge-hub-active-safety-gate-20260619.md`
+- Knowledge Hub migration record gate: `artifacts/manifests/knowledge-hub-migration-record-gate-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
