@@ -37,6 +37,7 @@
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
