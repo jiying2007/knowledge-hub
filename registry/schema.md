@@ -52,6 +52,12 @@ Recommended external-source fields:
 - `source_license`
 - `promotion_decision`
 
+Date invariants:
+
+- `created_at`, `updated_at` and `review_after` must use ISO date format: `YYYY-MM-DD`.
+- `updated_at` must be the same date as or later than `created_at`.
+- stale `review_after` is a warning, not an error; it should guide human review without blocking unrelated maintenance.
+
 Allowed `kind`:
 
 ```text

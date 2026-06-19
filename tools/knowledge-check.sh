@@ -341,6 +341,20 @@ if not args.sources_only:
         for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at"]:
             if field not in item or item.get(field) in ("", None, []):
                 errors.append(f"items:{item_id} missing {field}")
+        item_dates = {}
+        for field in ["created_at", "updated_at", "review_after"]:
+            value = str(item.get(field, ""))
+            if not value:
+                continue
+            try:
+                item_dates[field] = dt.date.fromisoformat(value)
+            except Exception:
+                errors.append(f"items:{item_id} invalid {field}: {value}")
+        if item_dates.get("created_at") and item_dates.get("updated_at"):
+            if item_dates["updated_at"] < item_dates["created_at"]:
+                errors.append(
+                    f"items:{item_id} updated_at before created_at: {item.get('updated_at')} < {item.get('created_at')}"
+                )
         if item.get("owner") and item.get("owner") not in owner_ids:
             errors.append(f"items:{item_id} owner not registered: {item.get('owner')}")
         if item.get("kind") and item.get("kind") not in ALLOWED_ITEM_KINDS:
@@ -389,13 +403,10 @@ if not args.sources_only:
         if status in {"active", "reviewing"}:
             if not item.get("owner"):
                 errors.append(f"items:{item_id} active/reviewing missing owner")
-            review_after = str(item.get("review_after", ""))
-            try:
-                review_date = dt.date.fromisoformat(review_after)
+            review_date = item_dates.get("review_after")
+            if review_date:
                 if review_date < today:
-                    warnings.append(f"items:{item_id} review_after is stale: {review_after}")
-            except Exception:
-                errors.append(f"items:{item_id} invalid review_after: {review_after}")
+                    warnings.append(f"items:{item_id} review_after is stale: {item.get('review_after')}")
         if status == "superseded" and not item.get("superseded_by"):
             errors.append(f"items:{item_id} superseded missing superseded_by")
         if item.get("kind") == "artifact-ref":
