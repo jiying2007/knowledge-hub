@@ -9,3 +9,4 @@
 {"id":"zh-longterm-assets-009","topic":"中英文命名边界","path":"governance/naming-boundaries.md","status":"reviewing","owner":"leiwenjun","review_after":"2026-09-18","notes":"机器字段保持英文稳定枚举和 ASCII 路径，人读字段默认中文。"}
 {"id":"zh-longterm-assets-010","topic":"AI 生成内容标注","path":"governance/ai-generated-content-labeling.md","status":"reviewing","owner":"leiwenjun","review_after":"2026-09-18","notes":"AI 内容进入 active 或团队规范前必须有 source、evidence_refs、human review、owner 和 review_after。"}
 {"id":"zh-longterm-assets-011","topic":"归档与专利模板对齐","path":"templates","status":"reviewing","owner":"leiwenjun","review_after":"2026-09-18","notes":"archive-note、patent-disclosure 和 migration-record 模板已对齐 registry/schema 与 migrations 门禁，降低人工新增条目的失败概率。"}
+{"id":"zh-longterm-assets-012","topic":"制品引用模板","path":"templates/artifact-ref.md","status":"reviewing","owner":"leiwenjun","review_after":"2026-09-18","notes":"新增 artifact-ref 模板并修正 knowledge-new 映射，人工登记制品引用时从 uri、size、sha256 和边界说明开始。"}

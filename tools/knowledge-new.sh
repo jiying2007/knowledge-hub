@@ -82,7 +82,7 @@ case "$KIND" in
     TEMPLATE="templates/archive-note.md"
     ;;
   artifact-ref)
-    TEMPLATE="templates/migration-record.md"
+    TEMPLATE="templates/artifact-ref.md"
     ;;
   *)
     TEMPLATE="templates/item.md"
