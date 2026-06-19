@@ -38,10 +38,14 @@ language: zh-CN
 
 ## 验证命令
 
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+| --- | --- | --- | --- | --- | --- |
+| `rtk ...` |  | 中文摘要。 |  | Knowledge Hub / Project / Tool / Device |  |
+
+补充说明：
+
 - date：
 - cwd：
-- command：
-- exit_code：
 - scope：
 
 ## 结果矩阵

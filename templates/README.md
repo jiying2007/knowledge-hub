@@ -7,6 +7,7 @@
 - frontmatter 必须对齐 `registry/schema.md` 的 required fields。
 - 正文至少写清摘要、适用范围、权威来源、当前结论、验证与证据、风险与限制、Review。
 - 结论、证据、推断、建议分开写。
+- 验证与证据优先使用 `governance/evidence-rules.md` 中的 Evidence Index 表格，记录完整 `rtk ...` 命令、退出码、中文摘要和证据路径。
 - 外部资料必须提供中文摘要和 source metadata。
 - AI 生成、摘要、翻译、分类或重写内容必须标注复核状态。
 - 大文件、raw log、SDK、release binary 只登记 artifact 引用，不写入正文。
@@ -25,4 +26,4 @@
 - `artifact-ref.md`：制品引用。
 - `patent-disclosure.md`：专利披露。
 
-`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after`、`promotion`、`tags` 和 `validation_refs`，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 与 `registry/migrations.jsonl`；核心索引不得留下 duplicate item reference。
+`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after`、`promotion`、`tags` 和 `validation_refs`，补齐 Evidence Index，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 与 `registry/migrations.jsonl`；核心索引不得留下 duplicate item reference。

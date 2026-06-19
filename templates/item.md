@@ -47,11 +47,15 @@ language: zh-CN
 
 ## 验证与证据
 
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+| --- | --- | --- | --- | --- | --- |
+| `rtk ...` |  | 中文摘要。 |  | Knowledge Hub / Project / Tool |  |
+
+补充说明：
+
 - date：
 - cwd：
-- command：
-- exit_code：
-- result_summary：
+- scope：
 - artifact_refs：
 
 ## 风险与限制

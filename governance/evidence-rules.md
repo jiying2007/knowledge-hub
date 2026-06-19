@@ -26,6 +26,23 @@
 
 不得只写“已验证”或“测试通过”，必须写清验证对象和证据。
 
+## Evidence Index
+
+长期条目、manifest 和验证报告建议使用同一张命令级证据索引表，方便人工复核和后续迁移：
+
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+| --- | --- | --- | --- | --- | --- |
+| `rtk ...` | `0` | 中文摘要。 | `artifacts/manifests/<id>.md` 或日志引用 | Knowledge Hub / Project / Tool | registry id、manifest 或制品引用 |
+
+写表时遵循：
+
+- `Command` 必须是完整 `rtk ...` 命令。
+- `Result Summary` 用中文说明证明了什么，不只写 pass。
+- `Evidence Path` 指向本仓相对路径、artifact ref 或外部 URI；大文件只写引用、size 和 hash。
+- `Layer` 说明证据属于 Knowledge Hub、Project、Tool、Device、Owner Review 或 External Reference。
+- `Related Artifact` 关联 registry id、manifest id、commit、日志或制品引用。
+- 如果命令无法执行，要写明 `Exit Code`、失败原因、影响和后续 owner。
+
 ## 证据强度
 
 建议使用以下强度标记：

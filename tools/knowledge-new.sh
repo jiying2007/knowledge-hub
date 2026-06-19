@@ -138,7 +138,8 @@ $(usage)
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 5. 如需主题入口，在 indexes/by-topic.md 增加可读路径引用。
 6. 在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径。
-7. 运行验证：
+7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
+8. 运行验证：
 
    rtk bash tools/knowledge-check.sh --dry-run --json
    rtk bash tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
@@ -173,6 +174,14 @@ $(usage)
 
 \`\`\`json
 {"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"<YYYY-MM-DD>","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}
+\`\`\`
+
+### Evidence Index
+
+\`\`\`md
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+| --- | --- | --- | --- | --- | --- |
+| \`rtk bash tools/knowledge-check.sh --dry-run --json\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
 \`\`\`
 
 ## 不要做

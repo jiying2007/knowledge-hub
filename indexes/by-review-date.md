@@ -87,3 +87,4 @@
 - 2026-09-19: `knowledge-hub-manual-entry-copyable-skeleton-20260619`
 - 2026-09-19: `knowledge-hub-doctor-helper-20260619`
 - 2026-09-19: `knowledge-hub-readme-maintenance-path-sync-20260619`
+- 2026-09-19: `knowledge-hub-evidence-index-template-20260619`

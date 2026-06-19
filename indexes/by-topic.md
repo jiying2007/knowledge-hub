@@ -64,3 +64,4 @@
 - Knowledge Hub manual entry copyable skeleton: `artifacts/manifests/knowledge-hub-manual-entry-copyable-skeleton-20260619.md`
 - Knowledge Hub doctor helper: `artifacts/manifests/knowledge-hub-doctor-helper-20260619.md`
 - Knowledge Hub README maintenance path sync: `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.md`
+- Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
