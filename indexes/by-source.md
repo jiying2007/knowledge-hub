@@ -14,6 +14,7 @@
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN split targets are tracked by `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.
 - `pcr02-project-docs/runbooks/asan-debug-guide.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`.
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only governance is tracked by `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`.
+- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`.
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan closeout is tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU fact split and archive-only boundary are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only metadata and memory-candidate exclusion are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.

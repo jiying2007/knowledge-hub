@@ -136,6 +136,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `pcr02-agents-owner-ready-package-20260620`
 - reviewing: `pcr02-diag-owner-ready-package-20260620`
 - reviewing: `pcr02-asan-owner-ready-package-20260620`
+- reviewing: `pcr02-memory-auto-curation-owner-ready-package-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -226,3 +227,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-ready-no-decision: PCR02 `AGENTS.md` has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-001` remains open.
 - owner-ready-no-decision: PCR02 diag metadata has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-002` remains open.
 - owner-ready-no-decision: PCR02 ASAN runbook has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-003` remains open.
+- owner-ready-no-decision: PCR02 memory auto-curation has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-004` remains open.
