@@ -574,6 +574,7 @@ if not args.sources_only:
         "indexes/by-owner.md",
         "indexes/by-review-date.md",
         "indexes/by-status.md",
+        "- reviewing:",
         "registry/migrations.jsonl",
         "duplicate",
     ]

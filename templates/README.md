@@ -27,3 +27,5 @@
 - `patent-disclosure.md`：专利披露。
 
 `knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`review_after`、`promotion`、`tags` 和 `validation_refs`，补齐 Evidence Index，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 与 `registry/migrations.jsonl`；核心索引不得留下 duplicate item reference。
+
+`indexes/by-status.md` 使用短 canonical 行维护状态归属，例如 `- reviewing: <id>`；不要把新条目只写入说明行，也不要继续扩展超长 status bucket。

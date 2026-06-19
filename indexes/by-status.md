@@ -109,6 +109,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-decision-landing-plan-20260619`
 - reviewing: `knowledge-hub-status-index-multiline-bucket-20260619`
 - reviewing: `knowledge-hub-owner-status-gate-hardening-20260619`
+- reviewing: `knowledge-hub-governance-regression-helper-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -172,3 +173,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-decision-landing-plan-applied: `tools/knowledge-owner-gates.sh` supports `--landing-plan` with validated owner decision JSONL to print no-write manual landing steps.
 - status-index-multiline-bucket-applied: `indexes/by-status.md` canonical buckets support multiple short lines, documented by `artifacts/manifests/knowledge-hub-status-index-multiline-bucket-20260619.jsonl`.
 - owner-status-gate-hardening-applied: owner gate resolved detection and canonical status bucket validation are hardened by `artifacts/manifests/knowledge-hub-owner-status-gate-hardening-20260619.jsonl`.
+- governance-regression-helper-applied: `tools/knowledge-regression.sh` runs /tmp-only positive and negative governance gate fixtures, documented by `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.jsonl`.
