@@ -59,6 +59,7 @@
 - Knowledge Hub owner form context: `artifacts/manifests/knowledge-hub-owner-form-context-20260619.md`
 - Knowledge Hub owner next-open helper: `artifacts/manifests/knowledge-hub-owner-next-open-helper-20260619.md`
 - Knowledge Hub owner source identity context: `artifacts/manifests/knowledge-hub-owner-source-identity-context-20260619.md`
+- Knowledge Hub owner summary helper: `artifacts/manifests/knowledge-hub-owner-summary-helper-20260620.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`

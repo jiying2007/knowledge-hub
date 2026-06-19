@@ -103,6 +103,7 @@
 - `knowledge-hub-owner-form-context-20260619`
 - `knowledge-hub-owner-next-open-helper-20260619`
 - `knowledge-hub-owner-source-identity-context-20260619`
+- `knowledge-hub-owner-summary-helper-20260620`
 
 ## pcr02-registry-owner
 

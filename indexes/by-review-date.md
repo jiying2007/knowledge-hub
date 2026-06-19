@@ -127,3 +127,4 @@
 - 2026-09-19: `knowledge-hub-owner-form-context-20260619`
 - 2026-09-19: `knowledge-hub-owner-next-open-helper-20260619`
 - 2026-09-19: `knowledge-hub-owner-source-identity-context-20260619`
+- 2026-09-20: `knowledge-hub-owner-summary-helper-20260620`

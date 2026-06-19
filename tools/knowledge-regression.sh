@@ -315,6 +315,58 @@ def test_owner_source_identity_context():
         },
     )
 
+def test_owner_summary_all_open():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--summary",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    summary = parsed.get("owner_summary", {})
+    summary_rows = summary.get("rows", [])
+    first = summary_rows[0] if summary_rows else {}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 7
+        and parsed.get("open_count") == 7
+        and summary.get("status") == "needs-owner-review"
+        and summary.get("row_count") == 7
+        and summary.get("open_count") == 7
+        and summary.get("active_exposure_count") == 0
+        and summary.get("source_identity_counts", {}).get("match") == 7
+        and len(summary_rows) == 7
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("required_owner_field_count") == 13
+        and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first.get("focus_command", "")
+        and "decision_forms" not in parsed
+        and "owner_checklists" not in parsed,
+        "owner-summary-all-open",
+        "owner summary gives all open gates without emitting forms or closing gates",
+        {
+            "exit_code": result["exit_code"],
+            "row_count": parsed.get("row_count"),
+            "open_count": parsed.get("open_count"),
+            "summary_status": summary.get("status"),
+            "summary_row_count": summary.get("row_count"),
+            "identity_counts": summary.get("source_identity_counts", {}),
+            "first": first,
+            "has_decision_forms": "decision_forms" in parsed,
+            "has_owner_checklists": "owner_checklists" in parsed,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_owner_next_open_focus():
     result = run_cmd(
         root,
@@ -729,6 +781,7 @@ def test_regression_manifest_coverage():
         "owner-checklist-context",
         "owner-form-context",
         "owner-source-identity-context",
+        "owner-summary-all-open",
         "owner-next-open-focus",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
@@ -743,14 +796,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "17 个回归场景" in manifest_text,
+        and "18 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "17 个回归场景",
+            "expected_count_text": "18 个回归场景",
         },
     )
 
@@ -762,6 +815,7 @@ test_owner_single_form()
 test_owner_checklist_context()
 test_owner_form_context()
 test_owner_source_identity_context()
+test_owner_summary_all_open()
 test_owner_next_open_focus()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()

@@ -126,6 +126,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-form-context-20260619`
 - reviewing: `knowledge-hub-owner-next-open-helper-20260619`
 - reviewing: `knowledge-hub-owner-source-identity-context-20260619`
+- reviewing: `knowledge-hub-owner-summary-helper-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -206,3 +207,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-form-context-applied: `tools/knowledge-owner-gates.sh` owner decision forms include owner question and hard gate context, documented by `artifacts/manifests/knowledge-hub-owner-form-context-20260619.jsonl`.
 - owner-next-open-helper-applied: `tools/knowledge-owner-gates.sh` supports `--next-open` to focus the next open owner gate without copying worksheet ids, documented by `artifacts/manifests/knowledge-hub-owner-next-open-helper-20260619.jsonl`.
 - owner-source-identity-context-applied: `tools/knowledge-owner-gates.sh` owner forms include read-only current source identity without filling owner decision fields, documented by `artifacts/manifests/knowledge-hub-owner-source-identity-context-20260619.jsonl`.
+- owner-summary-helper-applied: `tools/knowledge-owner-gates.sh` supports `--summary` to show all open owner gates, owner distribution, source identity counts and focus commands without emitting forms by default, documented by `artifacts/manifests/knowledge-hub-owner-summary-helper-20260620.jsonl`.

@@ -17,6 +17,7 @@ argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only owner-gate board from owner decision worksheets.")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--summary", action="store_true", help="Print a concise owner-facing summary for open rows.")
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
 parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
@@ -190,6 +191,47 @@ def make_owner_checklist(row):
         "observed_source_identity": row.get("observed_source_identity", {}),
         "must_not": row["must_not"],
         "notes_zh": "本清单只把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
+    }
+
+def make_owner_summary(rows):
+    summary_rows = []
+    source_identity_counts = {}
+    owner_counts = {}
+    for row in rows:
+        identity_status = row.get("observed_source_identity", {}).get("identity_status", "unavailable")
+        source_identity_counts[identity_status] = source_identity_counts.get(identity_status, 0) + 1
+        owner = row.get("owner", "") or "<missing-owner>"
+        owner_counts[owner] = owner_counts.get(owner, 0) + 1
+        summary_rows.append(
+            {
+                "worksheet_id": row["id"],
+                "source_id": row["source_id"],
+                "source_path": row["source_path"],
+                "owner": row["owner"],
+                "status": row["status"],
+                "worksheet_status": row["worksheet_status"],
+                "review_after": row["review_after"],
+                "source_identity_status": identity_status,
+                "required_owner_field_count": len(row["required_owner_fields"]),
+                "allowed_owner_decisions": row["decision_options"],
+                "active_exposure_count": len(row["active_registry_items"]),
+                "focus_command": (
+                    "rtk bash tools/knowledge-owner-gates.sh "
+                    f"--source-id {row['source_id']} --worksheet-id {row['id']} --checklist --forms"
+                ),
+            }
+        )
+    return {
+        "status": "needs-owner-review" if any(row["status"] == "open" for row in rows) else "ok",
+        "read_only": True,
+        "row_count": len(rows),
+        "open_count": sum(1 for row in rows if row["status"] == "open"),
+        "resolved_count": sum(1 for row in rows if row["status"] == "resolved"),
+        "active_exposure_count": sum(len(row["active_registry_items"]) for row in rows),
+        "source_identity_counts": dict(sorted(source_identity_counts.items())),
+        "owner_counts": dict(sorted(owner_counts.items())),
+        "rows": summary_rows,
+        "notes_zh": "只读 owner gate 总览；用于人工分派和收口，不生成 owner decision，不写文件，不关闭门禁，不提升 active。",
     }
 
 def is_filled(value):
@@ -453,6 +495,9 @@ result = {
     "rows": rows,
 }
 
+if args.summary:
+    result["owner_summary"] = make_owner_summary(rows)
+
 if args.forms:
     result["decision_forms"] = [make_decision_form(row) for row in rows if row["status"] == "open"]
 
@@ -506,6 +551,33 @@ for error in errors:
     print(f"- ERROR: {error}")
 if active_exposure_count:
     print("- ERROR: active exposure exists; run knowledge-check and keep owner-gated rows out of active until owner decisions are closed.")
+
+if args.summary:
+    summary = make_owner_summary(rows)
+    print()
+    print("## Owner Gate Summary")
+    print()
+    print("本摘要只读输出 owner gate 总览，供人工分派、排期和收口；不生成 owner decision，不写文件、不关闭门禁、不提升 active。")
+    print(f"- summary_status: {summary['status']}")
+    print(f"- rows: {summary['row_count']}")
+    print(f"- open: {summary['open_count']}")
+    print(f"- resolved: {summary['resolved_count']}")
+    print(f"- active_exposure: {summary['active_exposure_count']}")
+    if summary["source_identity_counts"]:
+        identity_parts = [f"{key}={value}" for key, value in summary["source_identity_counts"].items()]
+        print(f"- source_identity: {', '.join(identity_parts)}")
+    if summary["owner_counts"]:
+        owner_parts = [f"{key}={value}" for key, value in summary["owner_counts"].items()]
+        print(f"- owners: {', '.join(owner_parts)}")
+    print()
+    print("| worksheet | source path | owner | identity | required fields | focus command |")
+    print("|---|---|---|---|---:|---|")
+    for item in summary["rows"]:
+        print(
+            f"| `{item['worksheet_id']}` | `{item['source_path']}` | "
+            f"{item['owner'] or '<missing-owner>'} | {item['source_identity_status']} | "
+            f"{item['required_owner_field_count']} | `{item['focus_command']}` |"
+        )
 
 if form_validation:
     print()
@@ -588,7 +660,8 @@ if args.checklist:
         if checklist["must_not"]:
             print(f"- must_not: {', '.join(str(item) for item in checklist['must_not'])}")
 
-for row in rows:
+detail_rows = [] if args.summary and not args.forms else rows
+for row in detail_rows:
     active_marker = "YES" if row["active_registry_items"] else "no"
     print()
     print(f"## {row['source_path'] or row['id']}")
