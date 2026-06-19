@@ -305,6 +305,17 @@ def validate_forms_file(path, rows):
             validate_date(form.get("reviewed_at"), f"{prefix}: reviewed_at", form_errors)
         if is_filled(form.get("review_after")):
             validate_date(form.get("review_after"), f"{prefix}: review_after", form_errors)
+        identity = row.get("observed_source_identity", {})
+        identity_status = str(identity.get("identity_status", "unavailable"))
+        if identity_status != "match":
+            form_errors.append(f"{prefix}: observed source identity is {identity_status}, expected match before owner landing")
+        else:
+            observed_sha256 = str(identity.get("observed_sha256", ""))
+            observed_size = str(identity.get("observed_size", ""))
+            if observed_sha256 and str(form.get("source_sha256", "")) != observed_sha256:
+                form_errors.append(f"{prefix}: source_sha256 does not match observed source identity for {worksheet_id}")
+            if observed_size and str(form.get("source_size", "")) != observed_size:
+                form_errors.append(f"{prefix}: source_size does not match observed source identity for {worksheet_id}")
         if "must_not" in form and form.get("must_not") != row["must_not"]:
             warnings.append(f"{prefix}: must_not differs from worksheet; verify owner did not edit guardrails")
         if "allowed_owner_decisions" in form and form.get("allowed_owner_decisions") != row["decision_options"]:

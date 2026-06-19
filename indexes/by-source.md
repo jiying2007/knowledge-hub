@@ -22,6 +22,7 @@
 - `pcr02-project-docs owner gates`: executable owner decision board is tracked by `artifacts/manifests/pcr02-owner-action-board-20260618.md`.
 - `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
 - `pcr02-project-docs owner-gated source identity`: current source SHA256/size preflight is tracked by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`.
+- `pcr02-project-docs owner form source identity validation`: owner decision form validation rejects stale source SHA256/size by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.

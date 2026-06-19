@@ -107,3 +107,4 @@
 - Embedded knowledge owner-review gate: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Codex memories auxiliary-only boundary: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Knowledge Hub status strict blockers: `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.md`
+- Knowledge Hub owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`

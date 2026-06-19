@@ -503,6 +503,7 @@ def test_owner_landing_plan_project_index():
         )
         return
     form = forms[0]
+    identity = form.get("observed_source_identity", {})
     for key, value in {
         "owner_decision": form.get("allowed_owner_decisions", ["project-local-rule"])[0],
         "target_decision": "project-local-rule",
@@ -510,8 +511,8 @@ def test_owner_landing_plan_project_index():
         "reviewed_at": "2026-06-19",
         "review_after": "2026-09-19",
         "source_status": "owner-reviewed-fixture",
-        "source_sha256": "a" * 64,
-        "source_size": 123,
+        "source_sha256": identity.get("observed_sha256", ""),
+        "source_size": identity.get("observed_size", ""),
         "current_validity": "fixture-only",
         "scope_statement": "PCR02 project-local only",
         "applicable_project_version": "fixture-version",
@@ -556,6 +557,93 @@ def test_owner_landing_plan_project_index():
             "exit_code": result["exit_code"],
             "landing_status": parsed.get("landing_plan", {}).get("status"),
             "required_manual_files": required_files,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_owner_form_source_identity_mismatch():
+    forms_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed_forms = {}
+    try:
+        parsed_forms = json.loads(forms_result["stdout"])
+    except Exception:
+        pass
+    forms = parsed_forms.get("decision_forms", [])
+    if not forms:
+        expect(
+            False,
+            "owner-form-source-identity-mismatch",
+            "owner form rejects stale source identity",
+            {"setup_error": "missing decision form", "stdout_sample": forms_result["stdout"][:1000]},
+        )
+        return
+    form = forms[0]
+    identity = form.get("observed_source_identity", {})
+    for key, value in {
+        "owner_decision": form.get("allowed_owner_decisions", ["project-local-rule"])[0],
+        "target_decision": "project-local-rule",
+        "reviewed_by": "regression-fixture-owner",
+        "reviewed_at": "2026-06-19",
+        "review_after": "2026-09-19",
+        "source_status": "owner-reviewed-fixture",
+        "source_sha256": "0" * 64,
+        "source_size": identity.get("observed_size", ""),
+        "current_validity": "fixture-only",
+        "scope_statement": "PCR02 project-local only",
+        "applicable_project_version": "fixture-version",
+        "evidence_refs": ["artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md"],
+        "status_reason": "Regression fixture for stale source identity rejection.",
+    }.items():
+        form[key] = value
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-source-identity-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("form_validation", {}).get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and any("source_sha256 does not match observed source identity" in error for error in errors),
+        "owner-form-source-identity-mismatch",
+        "owner form rejects stale source identity",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": errors,
+            "observed_sha256": identity.get("observed_sha256", ""),
             "stdout_sample": result["stdout"][:1000],
         },
     )
@@ -810,6 +898,7 @@ def test_regression_manifest_coverage():
         "owner-next-open-focus",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
+        "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
         "manual-entry-project-derived-from-domain",
         "manual-entry-default-dates",
@@ -821,14 +910,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "18 个回归场景" in manifest_text,
+        and "19 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "18 个回归场景",
+            "expected_count_text": "19 个回归场景",
         },
     )
 
@@ -844,6 +933,7 @@ test_owner_summary_all_open()
 test_owner_next_open_focus()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
+test_owner_form_source_identity_mismatch()
 test_manual_entry_project_index_hint()
 test_manual_entry_project_from_domain()
 test_manual_entry_default_dates()

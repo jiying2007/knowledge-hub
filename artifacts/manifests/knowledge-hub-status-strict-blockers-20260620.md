@@ -43,7 +43,7 @@
 | --- | ---: | --- | --- | --- | --- |
 | `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；默认看板返回 `needs-owner-review`，包含 `strict_blockers[0].id=owner-gates-open`、`count=7` 和 owner summary/next-open 命令。 | `tools/knowledge-status.sh` | Knowledge Hub | `knowledge-hub-status-strict-blockers-20260620` |
 | `rtk bash tools/knowledge-status.sh --strict --json` | 1 expected | 负结果；strict 终态门禁仍因 7 条 owner gate open 返回 1，`strict_blockers` 明确阻塞原因。 | `tools/knowledge-status.sh` | Final-state gate | `knowledge-hub-status-strict-blockers-20260620` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；18 个回归场景全部 pass，`status-next-owner-gate` 覆盖 strict blocker。 | `tools/knowledge-regression.sh` | Regression | `knowledge-hub-status-strict-blockers-20260620` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，`status-next-owner-gate` 覆盖 strict blocker，`owner-form-source-identity-mismatch` 覆盖过期源文件身份拒绝。 | `tools/knowledge-regression.sh` | Regression | `knowledge-hub-status-strict-blockers-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认本制品登记后全仓门禁无漂移。 | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-status-strict-blockers-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-status-strict-blockers-20260620` | 0 | 通过；新增 item 的 registry、正文和核心索引引用均可解释。 | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-status-strict-blockers-20260620` |
 

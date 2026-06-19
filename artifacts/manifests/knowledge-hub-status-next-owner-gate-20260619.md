@@ -51,7 +51,7 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --workshe
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；JSON 中 `owner_gates.summary_commands` 包含 `--summary`，`owner_gates.next_open.worksheet_id` 为 `pcr02-owner-decision-worksheet-001`，并包含 `next_open_command` 和兼容 `focus_command` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 | `rtk bash tools/knowledge-status.sh` | 0 | 通过；文本看板输出 `next open`、`next-open command` 和 `focus command` | `tools/knowledge-status.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；18 个回归场景全部 pass，包含 `status-next-owner-gate` 场景 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，包含 `status-next-owner-gate` 场景 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-status-next-owner-gate-20260619` |
 
 ## 边界

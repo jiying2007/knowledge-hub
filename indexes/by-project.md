@@ -20,6 +20,7 @@
 - Governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
 - Owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - Owner source identity preflight: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
+- Owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
 - Owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`

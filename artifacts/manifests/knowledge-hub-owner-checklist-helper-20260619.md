@@ -26,7 +26,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --checklist --json` | 0 | 通过；输出 1 条 owner checklist，包含中文 owner question、`门禁待补证` 和 `owner_decision` 必填字段 | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-checklist-helper-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；18 个回归场景全部 pass，包含 `owner-checklist-context` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-checklist-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，包含 `owner-checklist-context` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-checklist-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，全仓知识门禁无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-checklist-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 1 expected | 负结果；`indexes/by-status.md` 中 command-shaped code span 被识别为 missing local path reference，已拆成路径和参数后恢复通过 | `indexes/by-status.md` | Negative fixture | `knowledge-hub-owner-checklist-helper-20260619` |
 

@@ -26,7 +26,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --forms --json` | 0 | 通过；下一条 owner form 包含 `observed_source_identity.identity_status=match`，但 `source_sha256` / `source_size` 仍为空 | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-source-identity-context-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；18 个回归场景全部 pass，包含 `owner-source-identity-context` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-source-identity-context-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；19 个回归场景全部 pass，包含 `owner-source-identity-context` 和 `owner-form-source-identity-mismatch` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-source-identity-context-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-source-identity-context-20260619` |
 
 ## 边界
