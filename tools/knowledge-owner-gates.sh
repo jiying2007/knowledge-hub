@@ -50,16 +50,28 @@ def path_from_arg(value):
         path = root / path
     return path
 
+def _is_filled(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
 def is_resolved(row):
     state_text = " ".join(
         str(row.get(field, ""))
         for field in ["worksheet_status", "row_status", "status", "default_state"]
     ).lower()
-    has_owner_decision = any(
-        row.get(field)
-        for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at"]
-    )
-    return has_owner_decision and any(token in state_text for token in ["resolved", "owner-approved", "approved", "closed"])
+    has_resolution_state = any(token in state_text for token in ["resolved", "owner-approved", "approved", "closed"])
+    if not has_resolution_state:
+        return False
+    required_fields = list(row.get("required_owner_fields", []))
+    for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
+        if field not in required_fields:
+            required_fields.append(field)
+    return all(_is_filled(row.get(field)) for field in required_fields)
 
 def default_field_value(field, row):
     if field == "review_after":
@@ -88,13 +100,7 @@ def make_decision_form(row):
     return form
 
 def is_filled(value):
-    if value is None:
-        return False
-    if isinstance(value, str):
-        return bool(value.strip())
-    if isinstance(value, (list, dict)):
-        return bool(value)
-    return True
+    return _is_filled(value)
 
 def validate_date(value, label, errors_out):
     try:

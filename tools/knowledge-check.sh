@@ -403,24 +403,37 @@ if not args.sources_only:
             if covered_source_id not in source_ids:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} stale source {covered_source_id}")
 
+    def owner_gate_value_filled(value):
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, (list, dict)):
+            return bool(value)
+        return True
+
+    def owner_gate_row_resolved(row):
+        row_state = " ".join(
+            str(row.get(field, ""))
+            for field in ["worksheet_status", "row_status", "status", "default_state"]
+        ).lower()
+        if not any(token in row_state for token in ("resolved", "owner-approved", "approved", "closed")):
+            return False
+        required_fields = list(row.get("required_owner_fields", []))
+        for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
+            if field not in required_fields:
+                required_fields.append(field)
+        return all(owner_gate_value_filled(row.get(field)) for field in required_fields)
+
     owner_gated_source_paths = {}
     owner_gate_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
-    owner_gate_resolved_tokens = ("resolved", "owner-approved", "approved", "closed")
     for owner_gate_path in owner_gate_paths:
         for row in load_jsonl(owner_gate_path):
             row_source_id = row.get("source_id")
             row_source_path = row.get("source_path")
             if not row_source_id or not row_source_path:
                 continue
-            row_state = " ".join(
-                str(row.get(field, ""))
-                for field in ["worksheet_status", "row_status", "status", "default_state"]
-            ).lower()
-            has_owner_decision = any(
-                row.get(field)
-                for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at"]
-            )
-            if has_owner_decision and any(token in row_state for token in owner_gate_resolved_tokens):
+            if owner_gate_row_resolved(row):
                 continue
             owner_gated_source_paths[(row_source_id, row_source_path)] = owner_gate_path.relative_to(root)
 
@@ -817,12 +830,26 @@ if not args.sources_only:
         "indexes/by-status.md": "status",
     }
     for rel_index, field in index_requirements.items():
-        seen = indexed_ids(root / rel_index)
+        index_path = root / rel_index
+        if rel_index == "indexes/by-status.md":
+            status_seen = {status: status_bucket_ids(index_path, status) for status in ["active", "reviewing", "archived"]}
+            seen = set().union(*status_seen.values())
+        else:
+            status_seen = {}
+            seen = indexed_ids(index_path)
         for item in items:
             item_id = item.get("id")
             if item_id and item_id not in seen:
                 errors.append(f"index:{rel_index} missing item {item_id} ({field}={item.get(field, '<missing>')})")
-        stale_seen = canonical_status_ids(root / rel_index) if rel_index == "indexes/by-status.md" else seen
+            if rel_index == "indexes/by-status.md" and item_id:
+                expected_status = item.get("status", "")
+                if expected_status in status_seen and item_id in seen and item_id not in status_seen[expected_status]:
+                    found_buckets = [status for status, bucket_ids in status_seen.items() if item_id in bucket_ids]
+                    errors.append(
+                        f"index:{rel_index} item {item_id} in wrong status bucket "
+                        f"(registry status={expected_status}, buckets={','.join(found_buckets) or '<none>'})"
+                    )
+        stale_seen = seen if rel_index == "indexes/by-status.md" else seen
         for indexed_id in sorted(stale_seen):
             if indexed_id not in ids:
                 errors.append(f"index:{rel_index} stale item reference {indexed_id}")

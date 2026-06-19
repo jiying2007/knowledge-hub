@@ -108,3 +108,5 @@
 - 2026-09-19: `knowledge-hub-owner-decision-forms-20260619`
 - 2026-09-19: `knowledge-hub-owner-decision-form-validation-20260619`
 - 2026-09-19: `knowledge-hub-owner-decision-landing-plan-20260619`
+- 2026-09-19: `knowledge-hub-status-index-multiline-bucket-20260619`
+- 2026-09-19: `knowledge-hub-owner-status-gate-hardening-20260619`

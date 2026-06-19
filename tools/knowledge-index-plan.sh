@@ -102,15 +102,15 @@ def print_status():
     for status in status_order:
         ids = by_status.get(status, [])
         if ids:
-            joined = ", ".join(f"`{item_id}`" for item_id in ids)
-            print(f"- {status}: {joined}")
+            for item_id in ids:
+                print(f"- {status}: `{item_id}`")
     extra_statuses = sorted(status for status in by_status if status not in status_order)
     if extra_statuses:
         print()
         print("### Non-canonical Status Values")
         for status in extra_statuses:
-            joined = ", ".join(f"`{item_id}`" for item_id in by_status[status])
-            print(f"- {status or '<missing-status>'}: {joined}")
+            for item_id in by_status[status]:
+                print(f"- {status or '<missing-status>'}: `{item_id}`")
 
 if args.section in {"all", "owner"}:
     print_owner()

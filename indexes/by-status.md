@@ -1,12 +1,121 @@
 # By Status
 
-Core status buckets are manually maintained and guarded by `knowledge-check`; use `rtk bash tools/knowledge-index-plan.sh --section status` for a read-only registry-derived view before editing.
+Core status buckets are manually maintained and guarded by `knowledge-check`.
 
-- active: `knowledge-hub-root`, `knowledge-hub-ultimate-maintenance-plan`
-- reviewing: `source-inventory-20260616`, `pcr02-project-docs-classification-20260616`, `pcr02-copy-first-dry-run-20260616`, `pcr02-copy-first-applied-20260616`, `pcr02-review-required-resolution-20260617`, `pcr02-reference-artifact-ref-applied-20260618`, `pcr02-owner-review-package-20260618`, `pcr02-owner-review-follow-up-20260618`, `pcr02-owner-decision-worksheets-20260618`, `pcr02-asan-split-targets-20260618`, `memory-auto-curation-report-only-governance-20260618`, `pcr02-dvr-motor-closeout-targets-20260618`, `pcr02-remaining-owner-gates-20260618`, `pcr02-docs-governance-closeout-20260618`, `pcr02-owner-action-board-20260618`, `pcr02-governance-handoff-20260618`, `pcr02-owner-intake-package-20260618`, `pcr02-owner-source-identity-preflight-20260618`, `pcr02-owner-resolution-playbook-20260618`, `pcr02-owner-resolution-schema-20260618`, `knowledge-hub-index-drift-remediation-20260619`, `knowledge-hub-stale-index-gate-20260619`, `knowledge-hub-index-path-gate-20260619`, `knowledge-hub-registry-enum-gate-20260619`, `knowledge-hub-registry-boundary-gate-20260619`, `knowledge-hub-active-safety-gate-20260619`, `knowledge-hub-migration-record-gate-20260619`, `knowledge-hub-manual-entry-guide-20260619`, `knowledge-hub-template-schema-gate-20260619`, `knowledge-hub-check-filter-compat-20260619`, `knowledge-hub-manifest-secret-scan-gate-20260619`, `knowledge-hub-registry-parse-gate-20260619`, `knowledge-hub-owner-registry-gate-20260619`, `knowledge-hub-project-registry-gate-20260619`, `knowledge-hub-topic-registry-gate-20260619`, `knowledge-hub-source-index-gate-20260619`, `knowledge-hub-item-date-gate-20260619`, `knowledge-hub-item-source-ref-gate-20260619`, `knowledge-hub-validation-ref-gate-20260619`, `knowledge-hub-item-discoverability-gate-20260619`, `knowledge-hub-index-duplicate-gate-20260619`, `knowledge-hub-manual-entry-freshness-gate-20260619`, `knowledge-hub-item-explain-diagnostic-20260619`, `knowledge-hub-check-diagnostics-20260619`, `knowledge-hub-manual-entry-copyable-skeleton-20260619`, `knowledge-hub-doctor-helper-20260619`, `knowledge-hub-readme-maintenance-path-sync-20260619`, `knowledge-hub-evidence-index-template-20260619`, `engineering-archive-copy-first-applied-20260619`, `patent-disclosure-copy-first-applied-20260619`, `patent-disclosure-markdown-corpus-20260619`, `patent-disclosure-artifact-ref-manifest-20260619`, `knowledge-hub-source-coverage-closeout-20260619`, `embedded-knowledge-owner-review-gate-20260619`, `codex-archive-reference-boundary-20260619`, `codex-memories-auxiliary-boundary-20260619`, `knowledge-hub-index-plan-helper-20260619`, `knowledge-hub-source-coverage-gate-20260619`, `knowledge-hub-owner-gated-active-gate-20260619`, `knowledge-hub-owner-gate-field-active-gate-20260619`, `knowledge-hub-owner-gate-board-helper-20260619`, `knowledge-hub-doctor-owner-gates-20260619`, `knowledge-hub-status-dashboard-20260619`, `knowledge-hub-status-strict-gate-20260619`, `knowledge-hub-owner-decision-forms-20260619`, `pcr02-docs-index-reference-20260618`, `pcr02-prog-tool-ci-smoke-session-ref-20260618`, `migrated-pcr02-docs-copyfirst-001`..`migrated-pcr02-docs-copyfirst-013`, `migrated-pcr02-docs-copyfirst-019`..`migrated-pcr02-docs-copyfirst-022`, `knowledge-hub-chinese-readability-rules`, `knowledge-hub-glossary-rules`, `knowledge-hub-evidence-rules`, `knowledge-hub-commit-changelog-pr-rules`, `knowledge-hub-owner-review-rules`, `knowledge-hub-debug-record-rules`, `knowledge-hub-command-tooling-rules`, `knowledge-hub-external-source-absorption-rules`, `knowledge-hub-naming-boundaries`, `knowledge-hub-ai-content-labeling-rules`, `knowledge-hub-zh-template-set-20260618`, `knowledge-hub-registry-schema-readability-extension`, `chinese-developer-long-term-assets-20260618`
+Use `rtk bash tools/knowledge-index-plan.sh --section status` for a read-only registry-derived view before editing.
+
+Canonical buckets may use multiple lines with the same `- active:`、`- reviewing:` or `- archived:` prefix. Prefer one short canonical line per item instead of extending legacy long lines.
+
+- active: `knowledge-hub-root`
+- active: `knowledge-hub-ultimate-maintenance-plan`
+- reviewing: `source-inventory-20260616`
+- reviewing: `pcr02-project-docs-classification-20260616`
+- reviewing: `pcr02-copy-first-dry-run-20260616`
+- reviewing: `pcr02-copy-first-applied-20260616`
+- reviewing: `migrated-pcr02-docs-copyfirst-001`
+- reviewing: `migrated-pcr02-docs-copyfirst-002`
+- reviewing: `migrated-pcr02-docs-copyfirst-003`
+- reviewing: `migrated-pcr02-docs-copyfirst-004`
+- reviewing: `migrated-pcr02-docs-copyfirst-005`
+- reviewing: `migrated-pcr02-docs-copyfirst-006`
+- reviewing: `migrated-pcr02-docs-copyfirst-007`
+- reviewing: `migrated-pcr02-docs-copyfirst-008`
+- reviewing: `migrated-pcr02-docs-copyfirst-009`
+- reviewing: `migrated-pcr02-docs-copyfirst-010`
+- reviewing: `migrated-pcr02-docs-copyfirst-011`
+- reviewing: `migrated-pcr02-docs-copyfirst-012`
+- reviewing: `migrated-pcr02-docs-copyfirst-013`
+- reviewing: `migrated-pcr02-docs-copyfirst-019`
+- reviewing: `migrated-pcr02-docs-copyfirst-020`
+- reviewing: `migrated-pcr02-docs-copyfirst-021`
+- reviewing: `migrated-pcr02-docs-copyfirst-022`
+- reviewing: `pcr02-review-required-resolution-20260617`
+- reviewing: `pcr02-reference-artifact-ref-applied-20260618`
+- reviewing: `pcr02-docs-index-reference-20260618`
+- reviewing: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
+- reviewing: `pcr02-owner-review-package-20260618`
+- reviewing: `pcr02-owner-review-follow-up-20260618`
+- reviewing: `pcr02-owner-decision-worksheets-20260618`
+- reviewing: `knowledge-hub-chinese-readability-rules`
+- reviewing: `knowledge-hub-glossary-rules`
+- reviewing: `knowledge-hub-evidence-rules`
+- reviewing: `knowledge-hub-commit-changelog-pr-rules`
+- reviewing: `knowledge-hub-owner-review-rules`
+- reviewing: `knowledge-hub-debug-record-rules`
+- reviewing: `knowledge-hub-command-tooling-rules`
+- reviewing: `knowledge-hub-external-source-absorption-rules`
+- reviewing: `knowledge-hub-naming-boundaries`
+- reviewing: `knowledge-hub-ai-content-labeling-rules`
+- reviewing: `knowledge-hub-zh-template-set-20260618`
+- reviewing: `knowledge-hub-registry-schema-readability-extension`
+- reviewing: `chinese-developer-long-term-assets-20260618`
+- reviewing: `pcr02-asan-split-targets-20260618`
+- reviewing: `memory-auto-curation-report-only-governance-20260618`
+- reviewing: `pcr02-dvr-motor-closeout-targets-20260618`
+- reviewing: `pcr02-remaining-owner-gates-20260618`
+- reviewing: `pcr02-docs-governance-closeout-20260618`
+- reviewing: `pcr02-owner-action-board-20260618`
+- reviewing: `pcr02-governance-handoff-20260618`
+- reviewing: `pcr02-owner-intake-package-20260618`
+- reviewing: `pcr02-owner-source-identity-preflight-20260618`
+- reviewing: `pcr02-owner-resolution-playbook-20260618`
+- reviewing: `pcr02-owner-resolution-schema-20260618`
+- reviewing: `knowledge-hub-index-drift-remediation-20260619`
+- reviewing: `knowledge-hub-stale-index-gate-20260619`
+- reviewing: `knowledge-hub-index-path-gate-20260619`
+- reviewing: `knowledge-hub-registry-enum-gate-20260619`
+- reviewing: `knowledge-hub-registry-boundary-gate-20260619`
+- reviewing: `knowledge-hub-active-safety-gate-20260619`
+- reviewing: `knowledge-hub-migration-record-gate-20260619`
+- reviewing: `knowledge-hub-manual-entry-guide-20260619`
+- reviewing: `knowledge-hub-template-schema-gate-20260619`
+- reviewing: `knowledge-hub-check-filter-compat-20260619`
+- reviewing: `knowledge-hub-manifest-secret-scan-gate-20260619`
+- reviewing: `knowledge-hub-registry-parse-gate-20260619`
+- reviewing: `knowledge-hub-owner-registry-gate-20260619`
+- reviewing: `knowledge-hub-project-registry-gate-20260619`
+- reviewing: `knowledge-hub-topic-registry-gate-20260619`
+- reviewing: `knowledge-hub-source-index-gate-20260619`
+- reviewing: `knowledge-hub-item-date-gate-20260619`
+- reviewing: `knowledge-hub-item-source-ref-gate-20260619`
+- reviewing: `knowledge-hub-validation-ref-gate-20260619`
+- reviewing: `knowledge-hub-item-discoverability-gate-20260619`
+- reviewing: `knowledge-hub-index-duplicate-gate-20260619`
+- reviewing: `knowledge-hub-manual-entry-freshness-gate-20260619`
+- reviewing: `knowledge-hub-item-explain-diagnostic-20260619`
+- reviewing: `knowledge-hub-check-diagnostics-20260619`
+- reviewing: `knowledge-hub-manual-entry-copyable-skeleton-20260619`
+- reviewing: `knowledge-hub-doctor-helper-20260619`
+- reviewing: `knowledge-hub-readme-maintenance-path-sync-20260619`
+- reviewing: `knowledge-hub-evidence-index-template-20260619`
+- reviewing: `engineering-archive-copy-first-applied-20260619`
+- reviewing: `patent-disclosure-copy-first-applied-20260619`
+- reviewing: `patent-disclosure-markdown-corpus-20260619`
+- reviewing: `patent-disclosure-artifact-ref-manifest-20260619`
+- reviewing: `knowledge-hub-source-coverage-closeout-20260619`
+- reviewing: `embedded-knowledge-owner-review-gate-20260619`
+- reviewing: `codex-archive-reference-boundary-20260619`
+- reviewing: `codex-memories-auxiliary-boundary-20260619`
+- reviewing: `knowledge-hub-index-plan-helper-20260619`
+- reviewing: `knowledge-hub-source-coverage-gate-20260619`
+- reviewing: `knowledge-hub-owner-gated-active-gate-20260619`
+- reviewing: `knowledge-hub-owner-gate-field-active-gate-20260619`
+- reviewing: `knowledge-hub-owner-gate-board-helper-20260619`
+- reviewing: `knowledge-hub-doctor-owner-gates-20260619`
+- reviewing: `knowledge-hub-status-dashboard-20260619`
+- reviewing: `knowledge-hub-status-strict-gate-20260619`
+- reviewing: `knowledge-hub-owner-decision-forms-20260619`
 - reviewing: `knowledge-hub-owner-decision-form-validation-20260619`
 - reviewing: `knowledge-hub-owner-decision-landing-plan-20260619`
-- archived: `migrated-pcr02-docs-copyfirst-014`..`migrated-pcr02-docs-copyfirst-018`, `migrated-pcr02-docs-copyfirst-023`, `engineering-archive-pcr02-archive-corpus-20260619`
+- reviewing: `knowledge-hub-status-index-multiline-bucket-20260619`
+- reviewing: `knowledge-hub-owner-status-gate-hardening-20260619`
+- archived: `migrated-pcr02-docs-copyfirst-014`
+- archived: `migrated-pcr02-docs-copyfirst-015`
+- archived: `migrated-pcr02-docs-copyfirst-016`
+- archived: `migrated-pcr02-docs-copyfirst-017`
+- archived: `migrated-pcr02-docs-copyfirst-018`
+- archived: `migrated-pcr02-docs-copyfirst-023`
+- archived: `engineering-archive-pcr02-archive-corpus-20260619`
 - blocked-pending-owner-review: PCR02 remaining unresolved review-required source files are tracked by `artifacts/manifests/pcr02-review-required-resolution-20260617.jsonl`
 - blocked-pending-owner-review: ASAN split remains blocked at row level by `artifacts/manifests/pcr02-asan-split-targets-20260618.jsonl`; registry item remains `reviewing` because `blocked` is not a registry status.
 - blocked-personal-local: memory auto-curation remains blocked at row level by `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.jsonl`; registry item remains `reviewing`.
@@ -61,3 +170,5 @@ Core status buckets are manually maintained and guarded by `knowledge-check`; us
 - owner-decision-forms-applied: `tools/knowledge-owner-gates.sh` supports `--forms` to print copyable owner decision JSONL skeletons for open owner-gated rows.
 - owner-decision-form-validation-applied: `tools/knowledge-owner-gates.sh` supports `--validate-forms <jsonl>` to check filled owner decision JSONL before manual landing.
 - owner-decision-landing-plan-applied: `tools/knowledge-owner-gates.sh` supports `--landing-plan` with validated owner decision JSONL to print no-write manual landing steps.
+- status-index-multiline-bucket-applied: `indexes/by-status.md` canonical buckets support multiple short lines, documented by `artifacts/manifests/knowledge-hub-status-index-multiline-bucket-20260619.jsonl`.
+- owner-status-gate-hardening-applied: owner gate resolved detection and canonical status bucket validation are hardened by `artifacts/manifests/knowledge-hub-owner-status-gate-hardening-20260619.jsonl`.

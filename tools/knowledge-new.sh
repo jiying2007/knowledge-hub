@@ -167,8 +167,7 @@ $(usage)
 - <YYYY-MM-DD>: \`${DISPLAY_ID}\`
 
 # indexes/by-status.md
-# 追加到现有 "- reviewing:" 行，避免新增重复 bucket。
-\`${DISPLAY_ID}\`
+- reviewing: \`${DISPLAY_ID}\`
 \`\`\`
 
 ### registry/migrations.jsonl
