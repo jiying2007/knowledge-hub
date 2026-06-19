@@ -109,3 +109,4 @@
 - Knowledge Hub status strict blockers: `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.md`
 - Knowledge Hub owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
 - Knowledge Hub final gate: `artifacts/manifests/knowledge-hub-final-gate-20260620.md`
+- PCR02 owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`

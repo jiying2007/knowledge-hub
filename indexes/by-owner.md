@@ -108,6 +108,7 @@
 - `knowledge-hub-status-strict-blockers-20260620`
 - `knowledge-hub-owner-source-identity-validation-20260620`
 - `knowledge-hub-final-gate-20260620`
+- `pcr02-owner-decision-intake-execution-20260620`
 
 ## pcr02-registry-owner
 
