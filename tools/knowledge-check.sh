@@ -50,6 +50,24 @@ ALLOWED_ITEM_STATUSES = {
     "rejected",
     "personal",
 }
+ALLOWED_ITEM_SCOPES = {
+    "team-general",
+    "project-specific",
+    "codex-memory-curation-governance",
+}
+ALLOWED_ITEM_VISIBILITIES = {
+    "team-internal",
+    "personal-local",
+}
+ALLOWED_DOMAIN_ROOTS = {
+    "root",
+    "governance",
+    "projects",
+    "embedded",
+    "patents",
+    "codex",
+    "personal",
+}
 ALLOWED_SOURCE_ROLES = {
     "team-knowledge-source",
     "project-archive-source",
@@ -139,11 +157,40 @@ if not args.sources_only:
             errors.append(f"items:{item_id} invalid kind: {item.get('kind')}")
         if item.get("status") and item.get("status") not in ALLOWED_ITEM_STATUSES:
             errors.append(f"items:{item_id} invalid status: {item.get('status')}")
+        if item.get("scope") and item.get("scope") not in ALLOWED_ITEM_SCOPES:
+            errors.append(f"items:{item_id} invalid scope: {item.get('scope')}")
+        if item.get("visibility") and item.get("visibility") not in ALLOWED_ITEM_VISIBILITIES:
+            errors.append(f"items:{item_id} invalid visibility: {item.get('visibility')}")
+        domain = str(item.get("domain", ""))
+        domain_root = domain.split("/", 1)[0] if domain else ""
+        if domain and domain_root not in ALLOWED_DOMAIN_ROOTS:
+            errors.append(f"items:{item_id} invalid domain root: {domain}")
+        if item.get("scope") == "project-specific" and not domain.startswith("projects/"):
+            errors.append(f"items:{item_id} project-specific scope outside projects domain: {domain}")
+        if item.get("scope") == "codex-memory-curation-governance" and domain != "codex":
+            errors.append(f"items:{item_id} codex memory scope outside codex domain: {domain}")
         rel_path = pathlib.Path(str(item.get("path", "")))
         if rel_path.is_absolute():
             errors.append(f"items:{item_id} path must be relative: {rel_path}")
         elif not (root / rel_path).exists():
             errors.append(f"items:{item_id} path missing: {rel_path}")
+        path_text = str(item.get("path", ""))
+        if domain == "root" and path_text not in {"README.md", "AGENTS.md"}:
+            errors.append(f"items:{item_id} root domain path outside root docs: {path_text}")
+        if domain == "governance" and not path_text.startswith(("governance/", "registry/", "indexes/", "tools/", "templates/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} governance domain path outside governance control plane: {path_text}")
+        if domain.startswith("projects/"):
+            project_id = domain.split("/", 1)[1]
+            if not path_text.startswith((f"domains/projects/{project_id}/", "artifacts/manifests/")):
+                errors.append(f"items:{item_id} project domain path mismatch: domain={domain} path={path_text}")
+        if domain == "codex" and not path_text.startswith(("domains/codex/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} codex domain path outside codex control plane: {path_text}")
+        if domain == "embedded" and not path_text.startswith(("domains/embedded/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} embedded domain path outside embedded/control artifacts: {path_text}")
+        if domain == "patents" and not path_text.startswith(("domains/patents/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} patents domain path outside patents/control artifacts: {path_text}")
+        if domain == "personal" and not path_text.startswith(("domains/personal/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} personal domain path outside personal/control artifacts: {path_text}")
         status = item.get("status")
         if status in {"active", "reviewing"}:
             if not item.get("owner"):

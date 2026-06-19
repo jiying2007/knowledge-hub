@@ -41,6 +41,7 @@
 - `knowledge-hub-stale-index-gate-20260619`
 - `knowledge-hub-index-path-gate-20260619`
 - `knowledge-hub-registry-enum-gate-20260619`
+- `knowledge-hub-registry-boundary-gate-20260619`
 
 ## pcr02-registry-owner
 

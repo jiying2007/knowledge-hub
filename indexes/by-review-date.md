@@ -64,3 +64,4 @@
 - 2026-09-19: `knowledge-hub-stale-index-gate-20260619`
 - 2026-09-19: `knowledge-hub-index-path-gate-20260619`
 - 2026-09-19: `knowledge-hub-registry-enum-gate-20260619`
+- 2026-09-19: `knowledge-hub-registry-boundary-gate-20260619`

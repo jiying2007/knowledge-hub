@@ -82,6 +82,45 @@ rejected
 personal
 ```
 
+Allowed `scope`:
+
+```text
+team-general
+project-specific
+codex-memory-curation-governance
+```
+
+Allowed `visibility`:
+
+```text
+team-internal
+personal-local
+```
+
+Allowed `domain` roots:
+
+```text
+root
+governance
+projects
+embedded
+patents
+codex
+personal
+```
+
+Domain/path invariants:
+
+- `root` domain path must be `README.md` or `AGENTS.md`.
+- `governance` domain path must live under `governance/`, `registry/`, `indexes/`, `tools/`, `templates/` or `artifacts/manifests/`.
+- `projects/<project>` domain path must live under `domains/projects/<project>/` or `artifacts/manifests/`.
+- `embedded` domain path must live under `domains/embedded/` or `artifacts/manifests/`.
+- `patents` domain path must live under `domains/patents/` or `artifacts/manifests/`.
+- `codex` domain path must live under `domains/codex/` or `artifacts/manifests/`.
+- `personal` domain path must live under `domains/personal/` or `artifacts/manifests/`.
+- `project-specific` scope must use `projects/<project>` domain.
+- `codex-memory-curation-governance` scope must use `codex` domain.
+
 ## sources.json
 
 登记 Knowledge Hub 挂接的外部或旧知识源。
