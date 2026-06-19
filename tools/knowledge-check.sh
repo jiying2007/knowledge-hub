@@ -99,19 +99,36 @@ if not args.sources_only:
         if item.get("visibility") == "personal-local" and item.get("status") == "active":
             warnings.append(f"items:{item_id} personal-local active item requires careful review")
 
-    def indexed_ids(path):
-        if not path.exists():
-            errors.append(f"index missing: {path.relative_to(root)}")
-            return set()
-        text = path.read_text()
-        found = set(re.findall(r"`([^`]+)`", text))
+    def expand_range_ids(text, path):
+        expanded = set()
         for prefix_start, number_start, prefix_end, number_end in re.findall(r"`([^`]+?)(\d+)`\.\.`([^`]+?)(\d+)`", text):
             if prefix_start != prefix_end:
                 warnings.append(f"index:{path.relative_to(root)} unsupported range prefix: {prefix_start}..{prefix_end}")
                 continue
             width = max(len(number_start), len(number_end))
             for number in range(int(number_start), int(number_end) + 1):
-                found.add(f"{prefix_start}{number:0{width}d}")
+                expanded.add(f"{prefix_start}{number:0{width}d}")
+        return expanded
+
+    def indexed_ids(path):
+        if not path.exists():
+            errors.append(f"index missing: {path.relative_to(root)}")
+            return set()
+        text = path.read_text()
+        found = set(re.findall(r"`([^`]+)`", text))
+        found.update(expand_range_ids(text, path))
+        return found
+
+    def canonical_status_ids(path):
+        if not path.exists():
+            errors.append(f"index missing: {path.relative_to(root)}")
+            return set()
+        found = set()
+        for line in path.read_text().splitlines():
+            if not (line.startswith("- active:") or line.startswith("- reviewing:") or line.startswith("- archived:")):
+                continue
+            found.update(re.findall(r"`([^`]+)`", line))
+            found.update(expand_range_ids(line, path))
         return found
 
     index_requirements = {
@@ -125,6 +142,10 @@ if not args.sources_only:
             item_id = item.get("id")
             if item_id and item_id not in seen:
                 errors.append(f"index:{rel_index} missing item {item_id} ({field}={item.get(field, '<missing>')})")
+        stale_seen = canonical_status_ids(root / rel_index) if rel_index == "indexes/by-status.md" else seen
+        for indexed_id in sorted(stale_seen):
+            if indexed_id not in ids:
+                errors.append(f"index:{rel_index} stale item reference {indexed_id}")
 
     secret_patterns = [
         re.compile(r"-----BEGIN (RSA |OPENSSH |EC |DSA |)PRIVATE KEY-----"),

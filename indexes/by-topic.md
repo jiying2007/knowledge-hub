@@ -11,6 +11,7 @@
 - Chinese long-term asset templates: `templates`
 - Governance manifests: `artifacts/manifests`
 - Knowledge Hub index drift remediation: `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.md`
+- Knowledge Hub stale index gate: `artifacts/manifests/knowledge-hub-stale-index-gate-20260619.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`

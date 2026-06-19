@@ -38,6 +38,7 @@
 - `pcr02-owner-resolution-playbook-20260618`
 - `pcr02-owner-resolution-schema-20260618`
 - `knowledge-hub-index-drift-remediation-20260619`
+- `knowledge-hub-stale-index-gate-20260619`
 
 ## pcr02-registry-owner
 
