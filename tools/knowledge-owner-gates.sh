@@ -20,6 +20,7 @@ parser.add_argument("--forms", action="store_true", help="Print copyable owner d
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
+parser.add_argument("--worksheet-id", default="", help="Limit output to one owner decision worksheet id.")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
 args = parser.parse_args(argv)
 
@@ -271,6 +272,9 @@ if not worksheet_paths:
 rows = []
 for worksheet_path in worksheet_paths:
     for row in load_jsonl(worksheet_path):
+        row_id = str(row.get("id", ""))
+        if args.worksheet_id and row_id != args.worksheet_id:
+            continue
         source_id = str(row.get("source_id", ""))
         source_path = str(row.get("source_path", ""))
         if args.source_id and source_id != args.source_id:
@@ -282,7 +286,7 @@ for worksheet_path in worksheet_paths:
             continue
         rows.append(
             {
-                "id": row.get("id", ""),
+                "id": row_id,
                 "source_id": source_id,
                 "source_path": source_path,
                 "owner": row.get("owner_required") or row.get("owner_candidate") or "",
@@ -309,6 +313,7 @@ result = {
     "root": str(root),
     "read_only": True,
     "source_id": args.source_id,
+    "worksheet_id": args.worksheet_id,
     "filter_status": args.status,
     "worksheet_count": len(worksheet_paths),
     "row_count": len(rows),

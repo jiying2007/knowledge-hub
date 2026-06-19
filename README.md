@@ -44,6 +44,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl>
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan

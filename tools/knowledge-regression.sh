@@ -140,10 +140,47 @@ def test_owner_partial_resolved():
         repo,
     )
 
+def test_owner_single_form():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 1
+        and parsed.get("open_count") == 1
+        and len(parsed.get("decision_forms", [])) == 1,
+        "owner-single-form",
+        "single worksheet form output is focused",
+        {
+            "exit_code": result["exit_code"],
+            "row_count": parsed.get("row_count"),
+            "open_count": parsed.get("open_count"),
+            "form_count": len(parsed.get("decision_forms", [])) if isinstance(parsed.get("decision_forms", []), list) else None,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 test_baseline()
 test_status_wrong_bucket()
 test_status_noncanonical_only()
 test_owner_partial_resolved()
+test_owner_single_form()
 
 if not args.keep_temp:
     for temp_root in temp_roots:

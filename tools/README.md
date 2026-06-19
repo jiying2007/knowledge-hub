@@ -17,7 +17,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-status.sh`: read-only control-plane dashboard; summarizes `knowledge-check`, registry counts, source coverage, migrations, stale review dates and owner gate status. Use `--strict` as a final-state gate that returns non-zero unless the status is `ok`.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>`/search and optional `--owner-gates <source-id>` board without writing files.
 - `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date` and `by-status` views without writing files.
-- `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields and active exposure status without writing files. Use `--forms` to print copyable owner decision JSONL skeletons, `--validate-forms <jsonl>` to check filled owner forms, and `--landing-plan` with validation to print a no-write manual landing plan.
+- `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields and active exposure status without writing files. Use `--forms` to print copyable owner decision JSONL skeletons, `--validate-forms <jsonl>` to check filled owner forms, `--landing-plan` with validation to print a no-write manual landing plan, and `--worksheet-id <id>` to focus one owner gate.
 - `knowledge-regression.sh`: read-only regression fixture runner; copies the repo to `/tmp`, mutates only temporary fixtures, and verifies key negative gates such as status bucket mismatch and partial owner resolution.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
@@ -51,6 +51,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl>
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan
