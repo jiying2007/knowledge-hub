@@ -7,6 +7,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import datetime as dt
+import hashlib
 import json
 import pathlib
 import sys
@@ -50,6 +51,16 @@ def load_jsonl(path):
             errors.append(f"{path.relative_to(root)}:{line_no}: invalid jsonl: {exc}")
     return rows
 
+def load_json(path):
+    if not path.exists():
+        errors.append(f"missing {path.relative_to(root)}")
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except Exception as exc:
+        errors.append(f"cannot load {path.relative_to(root)}: {exc}")
+        return {}
+
 def path_from_arg(value):
     path = pathlib.Path(value).expanduser()
     if not path.is_absolute():
@@ -88,6 +99,55 @@ def default_field_value(field, row):
         return None
     return ""
 
+def compute_source_identity(row):
+    source_id = str(row.get("source_id", ""))
+    source_path = str(row.get("source_path", ""))
+    expected_sha256 = str(row.get("source_sha256_expected", ""))
+    expected_size = row.get("source_size_expected", "")
+    source_root = source_roots.get(source_id, "")
+    identity = {
+        "source_root": source_root,
+        "source_path": source_path,
+        "source_file_exists": False,
+        "expected_sha256": expected_sha256,
+        "expected_size": expected_size,
+        "observed_sha256": "",
+        "observed_size": "",
+        "identity_status": "unavailable",
+        "notes_zh": "只读源文件身份提示；不代表 owner 已签收，不自动填充 source_sha256/source_size，不关闭门禁。",
+    }
+    if not source_root or not source_path:
+        return identity
+    base = pathlib.Path(source_root).expanduser().resolve()
+    candidate = (base / source_path).resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        identity["identity_status"] = "path-outside-source-root"
+        return identity
+    if not candidate.is_file():
+        identity["identity_status"] = "missing"
+        return identity
+    try:
+        data = candidate.read_bytes()
+    except Exception:
+        identity["identity_status"] = "read-error"
+        return identity
+    observed_sha256 = hashlib.sha256(data).hexdigest()
+    observed_size = len(data)
+    identity["source_file_exists"] = True
+    identity["observed_sha256"] = observed_sha256
+    identity["observed_size"] = observed_size
+    size_matches = str(expected_size) == str(observed_size) if expected_size != "" else False
+    sha_matches = bool(expected_sha256) and expected_sha256 == observed_sha256
+    if sha_matches and size_matches:
+        identity["identity_status"] = "match"
+    elif expected_sha256 or expected_size != "":
+        identity["identity_status"] = "mismatch"
+    else:
+        identity["identity_status"] = "observed-no-expected"
+    return identity
+
 def make_decision_form(row):
     form = {
         "worksheet_id": row["id"],
@@ -102,10 +162,11 @@ def make_decision_form(row):
         "allowed_next_status": row.get("allowed_next_status", []),
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
+        "observed_source_identity": row.get("observed_source_identity", {}),
         "allowed_owner_decisions": row["decision_options"],
         "required_owner_fields": row["required_owner_fields"],
         "must_not": row["must_not"],
-        "notes_zh": "本骨架只供 owner 人工填写和复核；status、worksheet_status、owner_question_zh、default_state、allowed_next_status、hard_gate_summary、hard_gate、allowed_owner_decisions、required_owner_fields 和 must_not 是只读上下文；脚本不写文件、不关闭门禁、不提升 active。",
+        "notes_zh": "本骨架只供 owner 人工填写和复核；status、worksheet_status、owner_question_zh、default_state、allowed_next_status、hard_gate_summary、hard_gate、observed_source_identity、allowed_owner_decisions、required_owner_fields 和 must_not 是只读上下文；脚本不写文件、不关闭门禁、不提升 active。",
     }
     for field in row["required_owner_fields"]:
         form.setdefault(field, default_field_value(field, row))
@@ -126,6 +187,7 @@ def make_owner_checklist(row):
         "required_owner_fields": row["required_owner_fields"],
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
+        "observed_source_identity": row.get("observed_source_identity", {}),
         "must_not": row["must_not"],
         "notes_zh": "本清单只把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
     }
@@ -276,6 +338,13 @@ def make_landing_plan(form_validation, rows):
         )
     return plan
 
+sources_payload = load_json(root / "registry" / "sources.json")
+source_roots = {
+    str(source.get("id", "")): str(source.get("path", ""))
+    for source in sources_payload.get("sources", [])
+    if isinstance(source, dict)
+}
+
 items = load_jsonl(root / "registry" / "items.jsonl")
 items_by_source_path = {}
 active_by_source_path = {}
@@ -348,6 +417,7 @@ for worksheet_path in worksheet_paths:
                 "allowed_next_status": intake.get("allowed_next_status", []),
                 "hard_gate_summary": intake.get("hard_gate_summary", ""),
                 "hard_gate": intake.get("hard_gate", ""),
+                "observed_source_identity": compute_source_identity(row),
             }
         )
 
@@ -503,6 +573,14 @@ if args.checklist:
             print(f"- hard_gate_summary: {checklist['hard_gate_summary']}")
         if checklist["hard_gate"]:
             print(f"- hard_gate: {checklist['hard_gate']}")
+        source_identity = checklist.get("observed_source_identity", {})
+        if source_identity:
+            print(
+                "- observed_source_identity: "
+                f"{source_identity.get('identity_status', '<missing-status>')} "
+                f"sha256={source_identity.get('observed_sha256', '<missing-sha256>')} "
+                f"size={source_identity.get('observed_size', '<missing-size>')}"
+            )
         if checklist["allowed_owner_decisions"]:
             print(f"- allowed_owner_decisions: {', '.join(str(item) for item in checklist['allowed_owner_decisions'])}")
         if checklist["required_owner_fields"]:
@@ -527,6 +605,14 @@ for row in rows:
         print(f"- required_owner_fields: {', '.join(str(item) for item in row['required_owner_fields'][:8])}")
     if row["must_not"]:
         print(f"- must_not: {', '.join(str(item) for item in row['must_not'][:5])}")
+    source_identity = row.get("observed_source_identity", {})
+    if source_identity:
+        print(
+            "- observed_source_identity: "
+            f"{source_identity.get('identity_status', '<missing-status>')} "
+            f"sha256={source_identity.get('observed_sha256', '<missing-sha256>')} "
+            f"size={source_identity.get('observed_size', '<missing-size>')}"
+        )
     if row["registry_items"]:
         print("- registry_items:")
         for item in row["registry_items"]:

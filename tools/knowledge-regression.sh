@@ -269,6 +269,52 @@ def test_owner_form_context():
         },
     )
 
+def test_owner_source_identity_context():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--next-open",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    forms = parsed.get("decision_forms", [])
+    first = forms[0] if forms else {}
+    identity = first.get("observed_source_identity", {})
+    expect(
+        result["exit_code"] == 0
+        and len(forms) == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and identity.get("identity_status") == "match"
+        and identity.get("source_file_exists") is True
+        and identity.get("observed_sha256") == identity.get("expected_sha256")
+        and identity.get("observed_size") == identity.get("expected_size")
+        and first.get("source_sha256") == ""
+        and first.get("source_size") == "",
+        "owner-source-identity-context",
+        "owner decision form carries read-only source identity without filling owner fields",
+        {
+            "exit_code": result["exit_code"],
+            "form_count": len(forms),
+            "worksheet_id": first.get("worksheet_id"),
+            "identity_status": identity.get("identity_status"),
+            "source_file_exists": identity.get("source_file_exists"),
+            "source_sha256_field": first.get("source_sha256"),
+            "source_size_field": first.get("source_size"),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_owner_next_open_focus():
     result = run_cmd(
         root,
@@ -682,6 +728,7 @@ def test_regression_manifest_coverage():
         "owner-single-form",
         "owner-checklist-context",
         "owner-form-context",
+        "owner-source-identity-context",
         "owner-next-open-focus",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
@@ -696,14 +743,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "16 个回归场景" in manifest_text,
+        and "17 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "16 个回归场景",
+            "expected_count_text": "17 个回归场景",
         },
     )
 
@@ -714,6 +761,7 @@ test_owner_partial_resolved()
 test_owner_single_form()
 test_owner_checklist_context()
 test_owner_form_context()
+test_owner_source_identity_context()
 test_owner_next_open_focus()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()

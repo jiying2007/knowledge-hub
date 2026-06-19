@@ -2,7 +2,7 @@
 
 ## 结论
 
-`tools/knowledge-owner-gates.sh --forms` 已补充 owner decision form 的只读上下文，避免人工只复制 form JSONL 时丢失 owner 中文问题、当前状态、默认状态、允许状态、必填字段和硬门禁信息。
+`tools/knowledge-owner-gates.sh --forms` 已补充 owner decision form 的只读上下文，避免人工只复制 form JSONL 时丢失 owner 中文问题、当前状态、默认状态、允许状态、必填字段、硬门禁和当前源文件身份提示。
 
 ## 问题地图
 
@@ -22,7 +22,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms --json` | 0 | 通过；单条 owner decision form 携带 owner 中文问题、当前状态、默认状态、允许状态、必填字段和硬门禁只读上下文 | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-form-context-20260619` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；16 个回归场景全部 pass，包含 `owner-form-context` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-form-context-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；17 个回归场景全部 pass，包含 `owner-form-context` 和 `owner-source-identity-context` | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-form-context-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 manifest、registry 和 index 登记无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-form-context-20260619` |
 
 ## 边界
