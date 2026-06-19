@@ -6,6 +6,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
+import datetime as dt
 import json
 import pathlib
 import sys
@@ -16,6 +17,7 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Print a read-only owner-gate board from owner decision worksheets.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
+parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--source-id", default="")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
 args = parser.parse_args(argv)
@@ -40,6 +42,12 @@ def load_jsonl(path):
         except Exception as exc:
             errors.append(f"{path.relative_to(root)}:{line_no}: invalid jsonl: {exc}")
     return rows
+
+def path_from_arg(value):
+    path = pathlib.Path(value).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    return path
 
 def is_resolved(row):
     state_text = " ".join(
@@ -77,6 +85,99 @@ def make_decision_form(row):
     for field in ["owner_decision", "target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
         form.setdefault(field, default_field_value(field, row))
     return form
+
+def is_filled(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+def validate_date(value, label, errors_out):
+    try:
+        parts = str(value).split("-")
+        if len(parts) != 3 or any(not part.isdigit() for part in parts):
+            raise ValueError("not YYYY-MM-DD")
+        year, month, day = (int(part) for part in parts)
+        dt.date(year, month, day)
+    except Exception:
+        errors_out.append(f"{label} invalid date: {value}")
+
+def validate_forms_file(path, rows):
+    form_errors = []
+    warnings = []
+    forms = []
+    if not path.exists():
+        form_errors.append(f"{path}: missing owner decision forms file")
+    else:
+        try:
+            lines = path.read_text().splitlines()
+        except Exception as exc:
+            form_errors.append(f"{path}: cannot read owner decision forms file: {exc}")
+            lines = []
+        for line_no, line in enumerate(lines, 1):
+            if not line.strip():
+                continue
+            try:
+                forms.append(json.loads(line))
+            except Exception as exc:
+                form_errors.append(f"{path}:{line_no}: invalid jsonl: {exc}")
+    if not forms:
+        form_errors.append(f"{path}: no owner decision forms found")
+    open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
+    seen = set()
+    for index, form in enumerate(forms, 1):
+        prefix = f"{path}:{index}"
+        worksheet_id = str(form.get("worksheet_id", ""))
+        if not worksheet_id:
+            form_errors.append(f"{prefix}: missing worksheet_id")
+            continue
+        if worksheet_id in seen:
+            form_errors.append(f"{prefix}: duplicate worksheet_id {worksheet_id}")
+            continue
+        seen.add(worksheet_id)
+        row = open_by_id.get(worksheet_id)
+        if not row:
+            form_errors.append(f"{prefix}: worksheet_id {worksheet_id} does not match an open owner gate row")
+            continue
+        if form.get("source_id") != row["source_id"]:
+            form_errors.append(f"{prefix}: source_id mismatch for {worksheet_id}")
+        if form.get("source_path") != row["source_path"]:
+            form_errors.append(f"{prefix}: source_path mismatch for {worksheet_id}")
+        owner_decision = form.get("owner_decision", "")
+        if not is_filled(owner_decision):
+            form_errors.append(f"{prefix}: missing owner_decision")
+        elif row["decision_options"] and owner_decision not in row["decision_options"]:
+            form_errors.append(
+                f"{prefix}: owner_decision {owner_decision!r} is not in allowed decisions {row['decision_options']}"
+            )
+        for field in row["required_owner_fields"]:
+            if not is_filled(form.get(field)):
+                form_errors.append(f"{prefix}: missing required field {field}")
+        for field in ["target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
+            if not is_filled(form.get(field)):
+                form_errors.append(f"{prefix}: missing required review field {field}")
+        if is_filled(form.get("reviewed_at")):
+            validate_date(form.get("reviewed_at"), f"{prefix}: reviewed_at", form_errors)
+        if is_filled(form.get("review_after")):
+            validate_date(form.get("review_after"), f"{prefix}: review_after", form_errors)
+        if "must_not" in form and form.get("must_not") != row["must_not"]:
+            warnings.append(f"{prefix}: must_not differs from worksheet; verify owner did not edit guardrails")
+        if "allowed_owner_decisions" in form and form.get("allowed_owner_decisions") != row["decision_options"]:
+            warnings.append(f"{prefix}: allowed_owner_decisions differs from worksheet; verify owner did not edit enum")
+    status = "pass" if not form_errors else "fail"
+    return {
+        "status": status,
+        "path": str(path),
+        "form_count": len(forms),
+        "checked_count": len(seen),
+        "error_count": len(form_errors),
+        "warning_count": len(warnings),
+        "errors": form_errors,
+        "warnings": warnings,
+    }
 
 items = load_jsonl(root / "registry" / "items.jsonl")
 items_by_source_path = {}
@@ -156,6 +257,15 @@ result = {
 if args.forms:
     result["decision_forms"] = [make_decision_form(row) for row in rows if row["status"] == "open"]
 
+form_validation = None
+if args.validate_forms:
+    form_validation = validate_forms_file(path_from_arg(args.validate_forms), rows)
+    result["form_validation"] = form_validation
+    if form_validation["status"] != "pass":
+        result_status = "needs-fix"
+        result["status"] = result_status
+        exit_status = 1
+
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
     sys.exit(exit_status)
@@ -177,6 +287,21 @@ for error in errors:
     print(f"- ERROR: {error}")
 if active_exposure_count:
     print("- ERROR: active exposure exists; run knowledge-check and keep owner-gated rows out of active until owner decisions are closed.")
+
+if form_validation:
+    print()
+    print("## Owner Decision Form Validation")
+    print()
+    print("本校验只读检查 owner 回填 JSONL，不写文件、不关闭门禁、不提升 active。")
+    print(f"- status: {form_validation['status']}")
+    print(f"- forms: {form_validation['form_count']}")
+    print(f"- checked: {form_validation['checked_count']}")
+    print(f"- errors: {form_validation['error_count']}")
+    print(f"- warnings: {form_validation['warning_count']}")
+    for item in form_validation["errors"][:20]:
+        print(f"- ERROR: {item}")
+    for item in form_validation["warnings"][:20]:
+        print(f"- WARNING: {item}")
 
 if args.forms:
     print()

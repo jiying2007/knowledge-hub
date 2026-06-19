@@ -17,7 +17,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-status.sh`: read-only control-plane dashboard; summarizes `knowledge-check`, registry counts, source coverage, migrations, stale review dates and owner gate status. Use `--strict` as a final-state gate that returns non-zero unless the status is `ok`.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>`/search and optional `--owner-gates <source-id>` board without writing files.
 - `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date` and `by-status` views without writing files.
-- `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields and active exposure status without writing files. Use `--forms` to print copyable owner decision JSONL skeletons.
+- `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields and active exposure status without writing files. Use `--forms` to print copyable owner decision JSONL skeletons, and `--validate-forms <jsonl>` to check filled owner forms before any manual landing.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
@@ -51,6 +51,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root --own
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl>
 ```
 
 ## Evidence
