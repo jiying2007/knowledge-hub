@@ -534,6 +534,27 @@ if not args.sources_only:
             found.update(expand_range_ids(line, path))
         return found
 
+    def item_ref_counts(path, canonical_status_only=False):
+        if not path.exists():
+            errors.append(f"index missing: {path.relative_to(root)}")
+            return {}
+        counts = {}
+        lines = path.read_text().splitlines()
+        range_pattern = re.compile(r"`([^`]+?)(\d+)`\.\.`([^`]+?)(\d+)`")
+        for line in lines:
+            if canonical_status_only and not (
+                line.startswith("- active:") or line.startswith("- reviewing:") or line.startswith("- archived:")
+            ):
+                continue
+            explicit_line = range_pattern.sub("", line)
+            for ref in re.findall(r"`([^`]+)`", explicit_line):
+                if ref in ids:
+                    counts[ref] = counts.get(ref, 0) + 1
+            for ref in expand_range_ids(line, path):
+                if ref in ids:
+                    counts[ref] = counts.get(ref, 0) + 1
+        return counts
+
     index_requirements = {
         "indexes/by-owner.md": "owner",
         "indexes/by-review-date.md": "review_after",
@@ -549,6 +570,10 @@ if not args.sources_only:
         for indexed_id in sorted(stale_seen):
             if indexed_id not in ids:
                 errors.append(f"index:{rel_index} stale item reference {indexed_id}")
+        duplicate_counts = item_ref_counts(root / rel_index, canonical_status_only=rel_index == "indexes/by-status.md")
+        for indexed_id, count in sorted(duplicate_counts.items()):
+            if count > 1:
+                errors.append(f"index:{rel_index} duplicate item reference {indexed_id} ({count}x)")
 
     items_by_id = {item.get("id"): item for item in items if item.get("id")}
     active_index_ids = status_bucket_ids(root / "indexes" / "by-status.md", "active")

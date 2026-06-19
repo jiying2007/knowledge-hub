@@ -80,3 +80,4 @@
 - 2026-09-19: `knowledge-hub-item-source-ref-gate-20260619`
 - 2026-09-19: `knowledge-hub-validation-ref-gate-20260619`
 - 2026-09-19: `knowledge-hub-item-discoverability-gate-20260619`
+- 2026-09-19: `knowledge-hub-index-duplicate-gate-20260619`

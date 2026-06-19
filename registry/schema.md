@@ -224,6 +224,7 @@ Source/index invariants:
 - source `id` must be unique.
 - `indexes/by-source.md` main source table must include every source `id`.
 - `indexes/by-source.md` main source table must not include unregistered source ids.
+- core item indexes `indexes/by-owner.md`, `indexes/by-review-date.md` and canonical status buckets in `indexes/by-status.md` must not duplicate registry item ids.
 
 ## owners.json
 
