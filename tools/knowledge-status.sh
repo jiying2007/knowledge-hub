@@ -164,7 +164,8 @@ if open_owner_gate_count:
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
-            f"{next_owner_gate['worksheet_id']} ({next_owner_gate['source_path']})。"
+            f"{next_owner_gate['worksheet_id']} ({next_owner_gate['source_path']})；运行："
+            f"{next_owner_gate['focus_command']}。"
         )
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")

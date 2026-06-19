@@ -14,7 +14,7 @@
 | owner-partial-resolved | 临时副本只填 `owner_decision` 并把 worksheet 状态改为 `owner-approved` | owner gate 仍保持 open，不能 resolved |
 | owner-single-form | 当前仓库按单个 `worksheet_id` 输出 owner form | 只输出 1 条 row 和 1 条 decision form |
 | owner-checklist-context | 当前仓库按单个 `worksheet_id` 输出 owner closure checklist | checklist 合并 intake 中文问题、硬门禁和 worksheet 必填字段 |
-| status-next-owner-gate | 当前状态看板输出下一条 owner gate 聚焦命令 | JSON 中存在 `owner_gates.next_open.focus_command`，指向 `pcr02-owner-decision-worksheet-001`，并包含 `--checklist --forms` |
+| status-next-owner-gate | 当前状态看板输出下一条 owner gate 聚焦命令 | JSON 中存在 `owner_gates.next_open.focus_command`，指向 `pcr02-owner-decision-worksheet-001`；`focus_command` 和 `next_actions_zh` 均包含 `--checklist --forms` |
 | owner-landing-plan-project-index | 当前 landing plan 输出 owner 决策人工落地文件清单 | `required_manual_files` 包含 `indexes/by-project.md` 和 `indexes/by-status.md` |
 | manual-entry-project-index-hint | 当前人工新增项目条目向导输出项目索引提示 | 项目域包含 `indexes/by-project.md`，非项目域不包含项目索引噪音 |
 | manual-entry-project-derived-from-domain | 当前人工新增项目条目向导从 domain 推导项目名 | 未传 `--project` 时由 `projects/<project>` 推导；不一致时输出 warning |

@@ -227,13 +227,15 @@ def test_status_next_owner_gate():
     except Exception:
         pass
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
+    next_actions = parsed.get("next_actions_zh", [])
     expect(
         result["exit_code"] == 0
         and parsed.get("status") == "needs-owner-review"
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", "")
         and "--checklist" in next_open.get("focus_command", "")
-        and "--forms" in next_open.get("focus_command", ""),
+        and "--forms" in next_open.get("focus_command", "")
+        and any("--checklist --forms" in str(action) for action in next_actions),
         "status-next-owner-gate",
         "status dashboard exposes next owner gate focus command",
         {
@@ -241,6 +243,7 @@ def test_status_next_owner_gate():
             "status": parsed.get("status"),
             "worksheet_id": next_open.get("worksheet_id"),
             "focus_command": next_open.get("focus_command", ""),
+            "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
         },
     )
