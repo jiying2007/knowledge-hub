@@ -62,3 +62,4 @@
 - 2026-09-18: `chinese-developer-long-term-assets-20260618`
 - 2026-09-19: `knowledge-hub-index-drift-remediation-20260619`
 - 2026-09-19: `knowledge-hub-stale-index-gate-20260619`
+- 2026-09-19: `knowledge-hub-index-path-gate-20260619`

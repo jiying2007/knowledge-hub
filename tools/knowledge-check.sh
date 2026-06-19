@@ -147,6 +147,26 @@ if not args.sources_only:
             if indexed_id not in ids:
                 errors.append(f"index:{rel_index} stale item reference {indexed_id}")
 
+    local_path_prefixes = (
+        "artifacts/",
+        "domains/",
+        "registry/",
+        "indexes/",
+        "governance/",
+        "tools/",
+        "templates/",
+    )
+    for index_path in sorted((root / "indexes").glob("*.md")):
+        text = index_path.read_text()
+        for ref in sorted(set(re.findall(r"`([^`]+)`", text))):
+            if not (ref.startswith(local_path_prefixes) or ref in {"README.md", "AGENTS.md"}):
+                continue
+            if "*" in ref:
+                if not list(root.glob(ref)):
+                    errors.append(f"index:{index_path.relative_to(root)} missing local glob reference {ref}")
+            elif not (root / ref).exists():
+                errors.append(f"index:{index_path.relative_to(root)} missing local path reference {ref}")
+
     secret_patterns = [
         re.compile(r"-----BEGIN (RSA |OPENSSH |EC |DSA |)PRIVATE KEY-----"),
         re.compile(r"(?i)(api[_-]?key|token|password|passwd|secret)\s*[:=]\s*['\"]?[^'\"\s]{12,}"),
