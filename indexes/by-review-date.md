@@ -125,3 +125,4 @@
 - 2026-09-19: `knowledge-hub-status-owner-checklist-focus-20260619`
 - 2026-09-19: `knowledge-hub-status-next-action-command-20260619`
 - 2026-09-19: `knowledge-hub-owner-form-context-20260619`
+- 2026-09-19: `knowledge-hub-owner-next-open-helper-20260619`

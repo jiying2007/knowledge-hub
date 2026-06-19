@@ -123,6 +123,16 @@ open_owner_rows = sorted(
 next_owner_gate = {}
 if open_owner_rows:
     first_open = open_owner_rows[0]
+    next_open_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--next-open",
+        "--checklist",
+        "--forms",
+    ]
     focus_command = [
         "rtk",
         "bash",
@@ -141,6 +151,7 @@ if open_owner_rows:
         "owner": first_open.get("owner", ""),
         "review_after": first_open.get("review_after", ""),
         "selection_order": "review_after, worksheet_id",
+        "next_open_command": " ".join(shlex.quote(str(part)) for part in next_open_command),
         "focus_command": " ".join(shlex.quote(str(part)) for part in focus_command),
     }
 
@@ -165,7 +176,7 @@ if open_owner_gate_count:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
             f"{next_owner_gate['worksheet_id']} ({next_owner_gate['source_path']})；运行："
-            f"{next_owner_gate['focus_command']}。"
+            f"{next_owner_gate['next_open_command']}。"
         )
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
@@ -257,6 +268,7 @@ print(f"- resolved: {owner_payload.get('resolved_count', 0)}")
 print(f"- active exposure: {active_exposure_count}")
 if next_owner_gate:
     print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
+    print(f"- next-open command: `{next_owner_gate['next_open_command']}`")
     print(f"- focus command: `{next_owner_gate['focus_command']}`")
 print()
 print("## 下一步")

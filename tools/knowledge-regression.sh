@@ -269,6 +269,54 @@ def test_owner_form_context():
         },
     )
 
+def test_owner_next_open_focus():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--next-open",
+            "--checklist",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checklists = parsed.get("owner_checklists", [])
+    forms = parsed.get("decision_forms", [])
+    first_row = parsed.get("rows", [{}])[0] if parsed.get("rows") else {}
+    first_form = forms[0] if forms else {}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("next_open") is True
+        and parsed.get("row_count") == 1
+        and parsed.get("open_count") == 1
+        and len(checklists) == 1
+        and len(forms) == 1
+        and first_row.get("id") == "pcr02-owner-decision-worksheet-001"
+        and first_form.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and "是否确认" in first_form.get("owner_question_zh", ""),
+        "owner-next-open-focus",
+        "owner gate helper focuses next open worksheet without manual worksheet id",
+        {
+            "exit_code": result["exit_code"],
+            "next_open": parsed.get("next_open"),
+            "row_count": parsed.get("row_count"),
+            "open_count": parsed.get("open_count"),
+            "worksheet_id": first_row.get("id"),
+            "form_count": len(forms),
+            "checklist_count": len(checklists),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_status_next_owner_gate():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     parsed = {}
@@ -282,16 +330,20 @@ def test_status_next_owner_gate():
         result["exit_code"] == 0
         and parsed.get("status") == "needs-owner-review"
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and "--next-open" in next_open.get("next_open_command", "")
+        and "--checklist" in next_open.get("next_open_command", "")
+        and "--forms" in next_open.get("next_open_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", "")
         and "--checklist" in next_open.get("focus_command", "")
         and "--forms" in next_open.get("focus_command", "")
-        and any("--checklist --forms" in str(action) for action in next_actions),
+        and any("--next-open --checklist --forms" in str(action) for action in next_actions),
         "status-next-owner-gate",
         "status dashboard exposes next owner gate focus command",
         {
             "exit_code": result["exit_code"],
             "status": parsed.get("status"),
             "worksheet_id": next_open.get("worksheet_id"),
+            "next_open_command": next_open.get("next_open_command", ""),
             "focus_command": next_open.get("focus_command", ""),
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
@@ -630,6 +682,7 @@ def test_regression_manifest_coverage():
         "owner-single-form",
         "owner-checklist-context",
         "owner-form-context",
+        "owner-next-open-focus",
         "status-next-owner-gate",
         "owner-landing-plan-project-index",
         "manual-entry-project-index-hint",
@@ -643,14 +696,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "15 个回归场景" in manifest_text,
+        and "16 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "15 个回归场景",
+            "expected_count_text": "16 个回归场景",
         },
     )
 
@@ -661,6 +714,7 @@ test_owner_partial_resolved()
 test_owner_single_form()
 test_owner_checklist_context()
 test_owner_form_context()
+test_owner_next_open_focus()
 test_status_next_owner_gate()
 test_owner_landing_plan_project_index()
 test_manual_entry_project_index_hint()

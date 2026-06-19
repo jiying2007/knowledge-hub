@@ -26,7 +26,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；13 个回归场景全部 pass，覆盖人工新增 owner 文档和 help 可发现性 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-manual-entry-owner-doc-sync-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；16 个回归场景全部 pass，覆盖人工新增 owner 文档和 help 可发现性 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-manual-entry-owner-doc-sync-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认全仓知识门禁无漂移 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-manual-entry-owner-doc-sync-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-manual-entry-owner-doc-sync-20260619` | 0 | 通过；新增 audit item 的 registry、正文和核心索引引用均可解释 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-manual-entry-owner-doc-sync-20260619` |
 

@@ -22,10 +22,14 @@ parser.add_argument("--validate-forms", default="", help="Validate a filled owne
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
 parser.add_argument("--worksheet-id", default="", help="Limit output to one owner decision worksheet id.")
+parser.add_argument("--next-open", action="store_true", help="Limit output to the next open owner gate by review_after and worksheet id.")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
 args = parser.parse_args(argv)
 
 errors = []
+
+if args.next_open and args.worksheet_id:
+    errors.append("--next-open cannot be combined with --worksheet-id")
 
 def load_jsonl(path):
     rows = []
@@ -347,6 +351,15 @@ for worksheet_path in worksheet_paths:
             }
         )
 
+if args.next_open and not errors:
+    rows = sorted(
+        [row for row in rows if row["status"] == "open"],
+        key=lambda row: (
+            str(row.get("review_after", "") or "9999-12-31"),
+            str(row.get("id", "")),
+        ),
+    )[:1]
+
 open_count = sum(1 for row in rows if row["status"] == "open")
 resolved_count = sum(1 for row in rows if row["status"] == "resolved")
 active_exposure_count = sum(len(row["active_registry_items"]) for row in rows)
@@ -359,6 +372,7 @@ result = {
     "read_only": True,
     "source_id": args.source_id,
     "worksheet_id": args.worksheet_id,
+    "next_open": args.next_open,
     "filter_status": args.status,
     "worksheet_count": len(worksheet_paths),
     "row_count": len(rows),

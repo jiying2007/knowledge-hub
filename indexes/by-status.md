@@ -124,6 +124,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-status-owner-checklist-focus-20260619`
 - reviewing: `knowledge-hub-status-next-action-command-20260619`
 - reviewing: `knowledge-hub-owner-form-context-20260619`
+- reviewing: `knowledge-hub-owner-next-open-helper-20260619`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -189,7 +190,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-status-gate-hardening-applied: owner gate resolved detection and canonical status bucket validation are hardened by `artifacts/manifests/knowledge-hub-owner-status-gate-hardening-20260619.jsonl`.
 - governance-regression-helper-applied: `tools/knowledge-regression.sh` runs /tmp-only positive and negative governance gate fixtures, documented by `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.jsonl`.
 - owner-worksheet-focus-helper-applied: `tools/knowledge-owner-gates.sh` supports `--worksheet-id <id>` to focus one owner gate workflow, documented by `artifacts/manifests/knowledge-hub-owner-worksheet-focus-helper-20260619.jsonl`.
-- status-next-owner-gate-applied: `tools/knowledge-status.sh` exposes `owner_gates.next_open.focus_command`, documented by `artifacts/manifests/knowledge-hub-status-next-owner-gate-20260619.jsonl`.
+- status-next-owner-gate-applied: `tools/knowledge-status.sh` exposes `owner_gates.next_open.next_open_command` and compatible `focus_command`, documented by `artifacts/manifests/knowledge-hub-status-next-owner-gate-20260619.jsonl`.
 - owner-landing-project-index-alignment-applied: `tools/knowledge-owner-gates.sh` landing plans include `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-owner-landing-project-index-alignment-20260619.jsonl`.
 - manual-entry-project-index-alignment-applied: `tools/knowledge-new.sh` project entry guidance includes `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-index-alignment-20260619.jsonl`.
 - manual-entry-conditional-project-index-applied: `tools/knowledge-new.sh` shows `indexes/by-project.md` only for project-domain entries, documented by `artifacts/manifests/knowledge-hub-manual-entry-conditional-project-index-20260619.jsonl`.
@@ -199,6 +200,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - regression-manifest-coverage-applied: `tools/knowledge-regression.sh` checks its governance helper manifest coverage, documented by `artifacts/manifests/knowledge-hub-regression-manifest-coverage-20260619.jsonl`.
 - manual-entry-owner-doc-sync-applied: README, tools README and `knowledge-new.sh --help` expose manual entry `--owner`, documented by `artifacts/manifests/knowledge-hub-manual-entry-owner-doc-sync-20260619.jsonl`.
 - owner-checklist-helper-applied: `tools/knowledge-owner-gates.sh` supports `--checklist` to merge owner intake questions and worksheet hard gates in a read-only view, documented by `artifacts/manifests/knowledge-hub-owner-checklist-helper-20260619.jsonl`.
-- status-owner-checklist-focus-applied: `tools/knowledge-status.sh` next owner gate focus command includes `--checklist` and `--forms`, documented by `artifacts/manifests/knowledge-hub-status-owner-checklist-focus-20260619.jsonl`.
-- status-next-action-command-applied: `tools/knowledge-status.sh` includes the next owner gate focus command in `next_actions_zh`, documented by `artifacts/manifests/knowledge-hub-status-next-action-command-20260619.jsonl`.
+- status-owner-checklist-focus-applied: `tools/knowledge-status.sh` next owner gate commands include checklist and forms context, documented by `artifacts/manifests/knowledge-hub-status-owner-checklist-focus-20260619.jsonl`.
+- status-next-action-command-applied: `tools/knowledge-status.sh` includes the next owner gate `next_open_command` in `next_actions_zh`, documented by `artifacts/manifests/knowledge-hub-status-next-action-command-20260619.jsonl`.
 - owner-form-context-applied: `tools/knowledge-owner-gates.sh` owner decision forms include owner question and hard gate context, documented by `artifacts/manifests/knowledge-hub-owner-form-context-20260619.jsonl`.
+- owner-next-open-helper-applied: `tools/knowledge-owner-gates.sh` supports `--next-open` to focus the next open owner gate without copying worksheet ids, documented by `artifacts/manifests/knowledge-hub-owner-next-open-helper-20260619.jsonl`.
