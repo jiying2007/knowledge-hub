@@ -59,8 +59,9 @@ for source in sources:
 
 if not args.sources_only:
     ids = set()
+    items = load_jsonl(root / "registry" / "items.jsonl")
     today = dt.date.today()
-    for item in load_jsonl(root / "registry" / "items.jsonl"):
+    for item in items:
         item_id = item.get("id")
         if not item_id:
             errors.append("items: missing id")
@@ -97,6 +98,33 @@ if not args.sources_only:
             errors.append(f"items:{item_id} project-specific under embedded standards")
         if item.get("visibility") == "personal-local" and item.get("status") == "active":
             warnings.append(f"items:{item_id} personal-local active item requires careful review")
+
+    def indexed_ids(path):
+        if not path.exists():
+            errors.append(f"index missing: {path.relative_to(root)}")
+            return set()
+        text = path.read_text()
+        found = set(re.findall(r"`([^`]+)`", text))
+        for prefix_start, number_start, prefix_end, number_end in re.findall(r"`([^`]+?)(\d+)`\.\.`([^`]+?)(\d+)`", text):
+            if prefix_start != prefix_end:
+                warnings.append(f"index:{path.relative_to(root)} unsupported range prefix: {prefix_start}..{prefix_end}")
+                continue
+            width = max(len(number_start), len(number_end))
+            for number in range(int(number_start), int(number_end) + 1):
+                found.add(f"{prefix_start}{number:0{width}d}")
+        return found
+
+    index_requirements = {
+        "indexes/by-owner.md": "owner",
+        "indexes/by-review-date.md": "review_after",
+        "indexes/by-status.md": "status",
+    }
+    for rel_index, field in index_requirements.items():
+        seen = indexed_ids(root / rel_index)
+        for item in items:
+            item_id = item.get("id")
+            if item_id and item_id not in seen:
+                errors.append(f"index:{rel_index} missing item {item_id} ({field}={item.get(field, '<missing>')})")
 
     secret_patterns = [
         re.compile(r"-----BEGIN (RSA |OPENSSH |EC |DSA |)PRIVATE KEY-----"),
