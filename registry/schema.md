@@ -17,6 +17,8 @@ Required fields:
 - `owner`
 - `source`
 - `review_after`
+- `validation_refs`
+- `review_status`
 - `created_at`
 - `updated_at`
 - `promotion`
@@ -79,6 +81,12 @@ Validation reference invariants:
 - validation refs that are plain local Knowledge Hub paths must be normalized repository-relative paths and must exist.
 - absolute paths, `./` paths, `../` paths, and unsupported path-like refs are rejected unless they are part of a command-shaped ref.
 - command-shaped refs are recorded but not executed by `knowledge-check`.
+
+Manual offline minimum fields:
+
+- 人工在 AI、Codex、网络或工具不可用时也可以先写正文和 registry/index，但必须保留 `validation_refs` 与 `review_status`。
+- 证据暂时不足时，`status` 使用 `reviewing`，`review_status` 使用 `manual-entry-pending-review`，`validation_refs` 至少填写人工可复核路径、现场记录或 no-check reason。
+- 无法立即运行工具时，在正文或相邻维护记录中保留 `manual_validation_pending: true`、原因、后续检查命令、owner 和 review_after。
 
 Discoverability and promotion invariants:
 
