@@ -62,6 +62,29 @@ rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target embedded/
 rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 ```
 
+## 新会话恢复
+
+新线程或 AI 恢复时，优先用少量命令恢复控制面状态，不需要重读全部历史 manifest：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
+rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
+```
+
+`knowledge-status.sh --json` 给出当前 owner gate、source coverage 和下一步命令；`knowledge-final-gate.sh --json` 判断是否只剩 owner 语义门禁；四个索引用于恢复 project、source、topic 和 decision 入口。
+
+## 搜索知识
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
+rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
+```
+
+全文搜索适合找正文和 manifest；核心索引搜索适合恢复项目、source、topic 和 decision 的治理入口。
+
 ## 人工维护 5 条最短路径
 
 ### 1. 新增一条知识
@@ -81,11 +104,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
 人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status` 和 `write_policy`，同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文或提升 active。最后运行：
 
 ```bash
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 

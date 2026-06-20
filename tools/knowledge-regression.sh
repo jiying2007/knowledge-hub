@@ -1595,6 +1595,106 @@ def test_manual_entry_docs_owner_option():
         },
     )
 
+def test_index_plan_extended_sections():
+    section_results = {}
+    parsed_by_section = {}
+    parse_errors = {}
+    for section in ["project", "source", "topic", "decision"]:
+        result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", section, "--json"])
+        section_results[section] = result
+        try:
+            parsed_by_section[section] = json.loads(result["stdout"])
+        except Exception as exc:
+            parsed_by_section[section] = {}
+            parse_errors[section] = str(exc)
+
+    project_index = parsed_by_section.get("project", {}).get("indexes", {}).get("by_project", {})
+    source_index = parsed_by_section.get("source", {}).get("indexes", {}).get("by_source", {})
+    topic_index = parsed_by_section.get("topic", {}).get("indexes", {}).get("by_topic", {})
+    decision_index = parsed_by_section.get("decision", {}).get("indexes", {}).get("by_decision", {})
+    registry_decisions = decision_index.get("registry_decisions", [])
+    owner_worksheets = decision_index.get("owner_worksheets", [])
+    migration_decisions = decision_index.get("migration_decisions", [])
+    pcr02_source = source_index.get("pcr02-project-tools", {})
+    source_coverage = pcr02_source.get("coverage", {})
+
+    expect(
+        not parse_errors
+        and all(result["exit_code"] == 0 for result in section_results.values())
+        and all(parsed_by_section.get(section, {}).get("status") == "planned" for section in section_results)
+        and "pcr02" in project_index
+        and project_index.get("pcr02", {}).get("domain") == "domains/projects/pcr02"
+        and "pcr02-project-tools" in source_index
+        and bool(source_coverage)
+        and source_coverage.get("checked_at") == "2026-06-20"
+        and "project-current" in topic_index
+        and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
+        and any(row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001" for row in owner_worksheets)
+        and any(row.get("decision_state") == "no owner decision generated" for row in owner_worksheets)
+        and bool(migration_decisions),
+        "index-plan-extended-sections",
+        "index planner covers project/source/topic/decision sections",
+        {
+            "exit_codes": {section: result["exit_code"] for section, result in section_results.items()},
+            "parse_errors": parse_errors,
+            "statuses": {section: parsed_by_section.get(section, {}).get("status") for section in section_results},
+            "project_keys_sample": sorted(project_index.keys())[:10],
+            "source_has_pcr02_project_tools": "pcr02-project-tools" in source_index,
+            "source_coverage_status": source_coverage.get("status", ""),
+            "topic_keys_sample": sorted(topic_index.keys())[:10],
+            "registry_decision_count": len(registry_decisions),
+            "owner_worksheet_count": len(owner_worksheets),
+            "migration_decision_count": len(migration_decisions),
+        },
+    )
+
+def test_source_manual_entry_guide():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source",
+            "--source-path",
+            "/tmp/example",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    required_fragments = [
+        "Knowledge Hub Source 登记向导",
+        "registry/sources.json object",
+        "indexes/by-source.md 主表行",
+        "source coverage JSONL row",
+        '"source_id":"example-source"',
+        '"no_check_reason":"classify-first pending source coverage"',
+        "rtk bash tools/knowledge-index-plan.sh --section source",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
+    today_compact = dt.datetime.utcnow().date().strftime("%Y%m%d")
+    expect(
+        result["exit_code"] == 0
+        and not missing_fragments
+        and f'"id":"SCC-{today_compact}-example-source"' in result["stdout"],
+        "source-manual-entry-guide",
+        "source manual entry guide prints registry, index and coverage drafts",
+        {
+            "exit_code": result["exit_code"],
+            "missing_fragments": missing_fragments,
+            "today_compact": today_compact,
+            "stdout_sample": result["stdout"][:1400],
+        },
+    )
+
 def test_regression_manifest_coverage():
     manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
     try:
@@ -1635,20 +1735,22 @@ def test_regression_manifest_coverage():
         "manual-entry-default-dates",
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
+        "index-plan-extended-sections",
+        "source-manual-entry-guide",
         "regression-manifest-coverage",
     ]
     missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
     expect(
         not read_error
         and not missing_ids
-        and "31 个回归场景" in manifest_text,
+        and "33 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "31 个回归场景",
+            "expected_count_text": "33 个回归场景",
         },
     )
 
@@ -1683,6 +1785,8 @@ for test_fn in [
     test_manual_entry_default_dates,
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
+    test_index_plan_extended_sections,
+    test_source_manual_entry_guide,
     test_regression_manifest_coverage,
 ]:
     run_test(test_fn)

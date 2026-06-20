@@ -189,6 +189,8 @@ Recommended source fields:
 - `translation_required`
 - `retrieved_at`
 - `review_status`
+- `check`
+- `no_check_reason`
 
 Allowed source `role`:
 
@@ -250,6 +252,10 @@ Source/index invariants:
 - source `id` must be unique.
 - `indexes/by-source.md` main source table must include every source `id`.
 - `indexes/by-source.md` main source table must not include unregistered source ids.
+- source `check`, when present, records a read-only validation command or inventory command.
+- if source `check` is empty, the latest source coverage manifest should record `no_check_reason`.
+- source coverage rows should include `source_id`, `status`, `classification`, `decision`, `risk`, `owner` and `checked_at`.
+- source coverage rows should include `source_identity` or `evidence_refs` when a directory source cannot be represented by one stable file hash.
 - core item indexes `indexes/by-owner.md`, `indexes/by-review-date.md` and canonical status buckets in `indexes/by-status.md` must not duplicate registry item ids.
 
 ## owners.json

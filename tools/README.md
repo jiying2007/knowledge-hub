@@ -17,14 +17,14 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-status.sh`: read-only control-plane dashboard; summarizes `knowledge-check`, registry counts, source coverage, migrations, stale review dates, owner gate status, all-open owner summary commands, by-owner owner summary commands, owner forms JSONL commands, owner filled-form validation command templates, no-write landing-plan command templates, the next open owner gate commands and structured `strict_blockers`. Use `--strict` as a final-state gate that returns non-zero unless the status is `ok`; `strict_blockers[].commands` contains directly executable commands, while `strict_blockers[].command_templates` contains commands that require replacing placeholders such as `<owner-decisions.jsonl>`.
 - `knowledge-final-gate.sh`: repository read-only final-state gate; runs `knowledge-check --diagnostics`, `knowledge-regression --json` and `knowledge-status --strict --json` together so terminal validation cannot miss regression drift. It returns non-zero unless all three gates are terminal-ok. The regression subcommand may create and clean temporary fixtures under `/tmp`; it must not modify Knowledge Hub content, registry, indexes or source project docs.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>`/search and optional `--owner-gates <source-id>` board without writing files.
-- `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date` and `by-status` views without writing files.
+- `knowledge-index-plan.sh`: read-only core index planner; prints registry-derived `by-owner`、`by-review-date`、`by-status`、`by-project`、`by-source`、`by-topic` and `by-decision` views without writing files.
 - `knowledge-owner-gates.sh`: read-only owner gate board; prints unresolved owner decision worksheet rows, required owner fields, active exposure status and read-only current source identity without writing files. Use `--summary` to show all open gates, owner distribution, source identity counts and focus commands, `--owner <owner>` to filter one exact owner for assignment, `--checklist` to merge owner intake questions, hard gates and source identity into a closure checklist, `--forms` to print human-readable context plus copyable owner decision JSONL skeletons, `--forms-jsonl` to print only one compact JSONL skeleton per open row on stdout, `--validate-forms <jsonl>` to check filled owner forms including required fields, owner decision enums, date formats and `source_sha256/source_size` matching the observed current source identity, `--landing-plan` with validation to print a no-write manual landing plan, `--worksheet-id <id>` to focus one owner gate, and `--next-open` to focus the next open owner gate by `review_after, worksheet_id`.
 - `knowledge-regression.sh`: read-only regression fixture runner; copies the repo to `/tmp`, mutates only temporary fixtures, and verifies key negative gates such as status bucket mismatch and partial owner resolution. It cleans temporary fixtures after each scenario by default, records structured failure details for internal exceptions, emits JSON in `--json` mode, and honors `KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES` for low-space preflight.
 - `knowledge-inventory.sh`: read-only inventory for registered sources.
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
 - `knowledge-artifact-ref-plan.sh`: creates a JSONL artifact reference manifest with source URI, size and sha256 for non-text source files; it does not copy binary content.
-- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files. Supports `--owner <owner>`; defaults owner to `leiwenjun`, derives project from `--domain projects/<project>` when `--project` is omitted, and prints UTC default dates for registry and migration drafts.
+- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files. Supports `--owner <owner>`; defaults owner to `leiwenjun`, derives project from `--domain projects/<project>` when `--project` is omitted, and prints UTC default dates for registry and migration drafts. Use `--source` to print source registry、by-source and source coverage JSONL skeletons without writing files.
 - `knowledge-capture.sh`: dry-run candidate capture.
 - `knowledge-promote.sh`: dry-run promotion plan.
 - `knowledge-retire.sh`: dry-run retirement plan.
@@ -53,6 +53,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 # 新增一个 source
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 # 归档一条历史记录
@@ -71,6 +73,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 `<owner-decisions.jsonl>` 是 owner 人工填写后的临时 JSONL 路径；工具只校验和生成 no-write landing plan，不代签、不关闭 gate。
 
+搜索和恢复入口：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
+rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
+```
+
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -80,6 +90,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section decision
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
