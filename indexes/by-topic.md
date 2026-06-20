@@ -137,3 +137,4 @@
 - Knowledge Hub final state goal: `docs/goals/knowledge-hub-final-state.md`
 - Knowledge Hub owner dispatch filter: `artifacts/manifests/knowledge-hub-owner-dispatch-filter-20260620.md`
 - Knowledge Hub index/source maintenance tools: `artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.md`
+- Knowledge Hub final gate gap map: `artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.md`

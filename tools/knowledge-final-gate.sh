@@ -130,12 +130,78 @@ if blockers:
 else:
     final_status = "ok"
 
+def blocker_to_gap(blocker):
+    blocker_id = str(blocker.get("id", "") or "<missing>")
+    is_owner_gate = blocker_id == "owner-gates-open"
+    return {
+        "gap_id": blocker_id,
+        "gap_type": "owner-review" if is_owner_gate else "final-gate",
+        "source_id": "pcr02-project-docs" if is_owner_gate else "",
+        "source_root": "registry/status/final-gate",
+        "evidence": blocker.get("summary_zh", ""),
+        "current_impact": (
+            "剩余人工 owner decision 未签收；Codex 不得代签、不得关闭 gate。"
+            if is_owner_gate
+            else "终态 gate 存在非 owner blocker，必须先修复工具、registry、index、manifest 或回归。"
+        ),
+        "codex_auto_can_complete": False if is_owner_gate else True,
+        "requires_owner_decision": bool(is_owner_gate),
+        "fix_action": (
+            "人工 owner 填写 owner decision JSONL 后，先运行 validate-forms，再生成 landing-plan。"
+            if is_owner_gate
+            else "按 blocker command 修复对应门禁，然后重跑 knowledge-final-gate。"
+        ),
+        "write_scope": (
+            "owner decision JSONL 由人工提供；Codex 只允许在校验通过后按 landing-plan 落地。"
+            if is_owner_gate
+            else "按具体 blocker 限定；共享 registry/index/tool 由主 agent 串行修改。"
+        ),
+        "validation_commands": blocker.get("commands", []) + blocker.get("command_templates", []),
+        "status": "open",
+    }
+
+gap_map = [blocker_to_gap(blocker) for blocker in blockers]
+only_owner_review_blockers = bool(blockers) and all(item.get("severity") == "owner-review" for item in blockers)
+core_checks_pass = (
+    not knowledge_check["parse_error"]
+    and knowledge_check["exit_code"] == 0
+    and not knowledge_regression["parse_error"]
+    and knowledge_regression["exit_code"] == 0
+)
+owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+automatic_governance_complete = (
+    core_checks_pass
+    and (final_status == "ok" or only_owner_review_blockers)
+)
+automatic_governance_status = (
+    "complete" if final_status == "ok"
+    else "complete-except-owner-review" if automatic_governance_complete and only_owner_review_blockers
+    else "needs-fix"
+)
+
 result = {
     "schema_version": 1,
     "root": str(root),
     "read_only": True,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "final_status": final_status,
+    "automatic_governance": {
+        "status": automatic_governance_status,
+        "complete": automatic_governance_complete,
+        "core_checks_pass": core_checks_pass,
+        "only_owner_review_blockers": only_owner_review_blockers,
+        "remaining_owner_gate_count": int(owner_payload.get("open_count", 0) or 0),
+        "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
+        "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
+        "no_owner_decision_generated": only_owner_review_blockers,
+        "summary_zh": (
+            "Codex 自动治理已闭环；剩余事项是人工 owner decision，不能由 Codex 代签。"
+            if automatic_governance_status == "complete-except-owner-review"
+            else "终态完全通过。"
+            if automatic_governance_status == "complete"
+            else "仍存在非 owner 的自动治理缺口，需要先修复。"
+        ),
+    },
     "checks": {
         "knowledge_check": {
             "exit_code": knowledge_check["exit_code"],
@@ -164,6 +230,7 @@ result = {
         },
     },
     "blockers": blockers,
+    "gap_map": gap_map,
     "next_actions_zh": strict_payload.get("next_actions_zh", []) if strict_payload else [],
 }
 
@@ -179,6 +246,7 @@ print("本命令只读聚合终态验收，不修改 Knowledge Hub 正文、regi
 print("注意：内部 regression 子命令可能使用 /tmp 临时 fixture，并在结束时清理。")
 print()
 print(f"- final_status: {final_status}")
+print(f"- automatic_governance: {result['automatic_governance']['status']}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")
@@ -194,6 +262,13 @@ if blockers:
             print(f"  - template: `{command}`")
         if blocker.get("command"):
             print(f"  - `{blocker['command']}`")
+if gap_map:
+    print()
+    print("## Gap Map")
+    print()
+    for gap in gap_map:
+        print(f"- `{gap['gap_id']}` ({gap['gap_type']}): {gap['current_impact']}")
+        print(f"  - fix: {gap['fix_action']}")
 if result["next_actions_zh"]:
     print()
     print("## 下一步")

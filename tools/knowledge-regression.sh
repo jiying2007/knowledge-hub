@@ -1043,13 +1043,27 @@ def test_final_gate_owner_review_blocker():
         pass
     checks = parsed.get("checks", {})
     blockers = parsed.get("blockers", [])
+    automatic_governance = parsed.get("automatic_governance", {})
+    gap_map = parsed.get("gap_map", [])
     owner_blocker = next(
         (blocker for blocker in blockers if blocker.get("id") == "owner-gates-open"),
+        {},
+    )
+    owner_gap = next(
+        (gap for gap in gap_map if gap.get("gap_id") == "owner-gates-open"),
         {},
     )
     expect(
         result["exit_code"] == 1
         and parsed.get("final_status") == "needs-owner-review"
+        and automatic_governance.get("status") == "complete-except-owner-review"
+        and automatic_governance.get("complete") is True
+        and automatic_governance.get("core_checks_pass") is True
+        and automatic_governance.get("only_owner_review_blockers") is True
+        and automatic_governance.get("remaining_owner_gate_count") == 7
+        and automatic_governance.get("owner_ready_package_coverage") == "7/7"
+        and automatic_governance.get("active_exposure_count") == 0
+        and automatic_governance.get("no_owner_decision_generated") is True
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("status") == "pass"
@@ -1057,14 +1071,22 @@ def test_final_gate_owner_review_blocker():
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
         and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
-        and owner_blocker.get("count") == 7,
+        and owner_blocker.get("count") == 7
+        and len(gap_map) == 1
+        and owner_gap.get("gap_type") == "owner-review"
+        and owner_gap.get("source_id") == "pcr02-project-docs"
+        and owner_gap.get("codex_auto_can_complete") is False
+        and owner_gap.get("requires_owner_decision") is True
+        and owner_gap.get("status") == "open",
         "final-gate-owner-review-blocker",
-        "final gate includes check, regression and strict owner blockers",
+        "final gate includes automatic governance state and owner gap map",
         {
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
+            "automatic_governance": automatic_governance,
             "checks": checks,
             "blockers": blockers,
+            "gap_map": gap_map,
             "stdout_sample": result["stdout"][:1200],
         },
     )

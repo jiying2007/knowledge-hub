@@ -128,6 +128,7 @@
 - `knowledge-hub-final-state-goal-20260620`
 - `knowledge-hub-owner-dispatch-filter-20260620`
 - `knowledge-hub-index-source-maintenance-tools-20260620`
+- `knowledge-hub-final-gate-gap-map-20260620`
 - `knowledge-hub-source-coverage-closeout-20260620`
 - `pcr02-tools-boundary-20260620`
 - `pcr02-knowledge-secret-config-boundary-20260620`
