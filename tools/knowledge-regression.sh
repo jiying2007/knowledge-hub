@@ -2113,6 +2113,95 @@ def test_source_manual_entry_guide():
         },
     )
 
+def test_knowledge_search_structured_filters():
+    active_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            "Knowledge Hub",
+            "--owner",
+            "leiwenjun",
+            "--status",
+            "active",
+            "--json",
+            "--limit",
+            "5",
+        ],
+    )
+    pcr02_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            "diag",
+            "--source-id",
+            "pcr02-project-docs",
+            "--json",
+            "--limit",
+            "5",
+        ],
+    )
+    parsed_active = {}
+    parsed_pcr02 = {}
+    parse_errors = {}
+    try:
+        parsed_active = json.loads(active_result["stdout"])
+    except Exception as exc:
+        parse_errors["active"] = str(exc)
+    try:
+        parsed_pcr02 = json.loads(pcr02_result["stdout"])
+    except Exception as exc:
+        parse_errors["pcr02"] = str(exc)
+    active_results = parsed_active.get("results", []) if isinstance(parsed_active, dict) else []
+    pcr02_results = parsed_pcr02.get("results", []) if isinstance(parsed_pcr02, dict) else []
+    expect(
+        not parse_errors
+        and active_result["exit_code"] == 0
+        and pcr02_result["exit_code"] == 0
+        and parsed_active.get("filters", {}).get("owner") == ["leiwenjun"]
+        and parsed_active.get("filters", {}).get("status") == ["active"]
+        and active_results
+        and all(row.get("owner") == "leiwenjun" for row in active_results)
+        and all(row.get("status") == "active" for row in active_results)
+        and all(row.get("item_id") for row in active_results)
+        and parsed_pcr02.get("filters", {}).get("source_id") == ["pcr02-project-docs"]
+        and pcr02_results
+        and all(row.get("source_id") == "pcr02-project-docs" for row in pcr02_results)
+        and all(row.get("item_id") for row in pcr02_results),
+        "knowledge-search-structured-filters",
+        "knowledge search supports registry-backed structured filters",
+        {
+            "parse_errors": parse_errors,
+            "active_exit_code": active_result["exit_code"],
+            "pcr02_exit_code": pcr02_result["exit_code"],
+            "active_count": parsed_active.get("count"),
+            "pcr02_count": parsed_pcr02.get("count"),
+            "active_first": active_results[0] if active_results else {},
+            "pcr02_first": pcr02_results[0] if pcr02_results else {},
+        },
+    )
+
+def test_knowledge_search_invalid_filters():
+    bad_status = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--status", "not-a-status"])
+    bad_kind = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--kind", "not-a-kind"])
+    expect(
+        bad_status["exit_code"] != 0
+        and bad_kind["exit_code"] != 0
+        and "invalid --status value" in bad_status["stderr"]
+        and "invalid --kind value" in bad_kind["stderr"],
+        "knowledge-search-invalid-filters",
+        "knowledge search rejects invalid enum filters",
+        {
+            "bad_status_exit_code": bad_status["exit_code"],
+            "bad_kind_exit_code": bad_kind["exit_code"],
+            "bad_status_stderr": bad_status["stderr"][:500],
+            "bad_kind_stderr": bad_kind["stderr"][:500],
+        },
+    )
+
 def test_regression_manifest_coverage():
     manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
     try:
@@ -2161,20 +2250,22 @@ def test_regression_manifest_coverage():
         "status-source-governance-summary",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
+        "knowledge-search-structured-filters",
+        "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
     ]
     missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
     expect(
         not read_error
         and not missing_ids
-        and "43 个回归场景" in manifest_text,
+        and "45 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "43 个回归场景",
+            "expected_count_text": "45 个回归场景",
         },
     )
 
@@ -2221,6 +2312,8 @@ for test_fn in [
     test_status_source_governance_summary,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
+    test_knowledge_search_structured_filters,
+    test_knowledge_search_invalid_filters,
     test_regression_manifest_coverage,
 ]:
     run_test(test_fn)

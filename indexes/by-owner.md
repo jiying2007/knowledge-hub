@@ -138,6 +138,7 @@
 - `knowledge-hub-final-maintenance-closure-20260620`
 - `knowledge-hub-index-recovery-hardening-20260620`
 - `knowledge-hub-terminal-gate-resilience-20260620`
+- `knowledge-hub-structured-search-filters-20260620`
 - `pcr02-tools-boundary-20260620`
 - `pcr02-knowledge-secret-config-boundary-20260620`
 - `pcr02-product-test-artifact-config-interface-boundary-20260620`

@@ -81,10 +81,12 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/pcr02 --kind project-current --status reviewing --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-project-docs --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
 ```
 
-全文搜索适合找正文和 manifest；核心索引搜索适合恢复项目、source、topic 和 decision 的治理入口。
+全文搜索适合找正文和 manifest；结构化过滤适合按 registry item 的 `owner`、`status`、`kind`、`domain` 和 `source.source_id` 缩小结果。`--source` 表示物理扫描源，`--source-id` 表示 registry item 的来源 source。核心索引搜索适合恢复项目、source、topic 和 decision 的治理入口。
 
 ## 人工维护 5 条最短路径
 
@@ -94,11 +96,14 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner>
 ```
 
-复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。同步 `registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。涉及迁移、引用或归档时补 `registry/migrations.jsonl`。最后运行：
+最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。涉及迁移、引用或归档时补 `registry/migrations.jsonl`。
+
+复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。最后运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
 ```
 
 ### 2. 新增一个 source
@@ -108,32 +113,33 @@ rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
+最小落盘文件：`registry/sources.json`、`indexes/by-source.md`、最新或相邻 source coverage / source identity manifest（例如 `artifacts/manifests/<source-id>-source-coverage-YYYYMMDD.{md,jsonl}` 或全局 closeout manifest），必要时同步 `indexes/by-project.md`、`indexes/by-topic.md`。
+
 人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<source-id>" --source knowledge-hub --json
 ```
 
-### 3. 复核过期项
-
-```bash
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
-rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-```
-
-先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` 和 `registry.review_after_command`。过期项不等于工具失败，但必须由 owner 复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing`，不得自动改 `active`、关闭 owner gate 或提升标准。
-
-### 4. 归档一条历史记录
+### 3. 归档一条历史记录
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --id <id> --path domains/projects/<project>/archive/<file>.md --owner <owner>
 ```
 
-复制 `templates/archive-note.md`，正文写清原始来源、归档边界、证据、当前状态和风险；registry item 默认 `status: archived` 或 `reviewing`，不把历史记录写成 active fact。按 `templates/migration-record.md` 追加迁移/归档记录，并同步项目、source、topic 或 decision 索引。
+最小落盘文件：`domains/projects/<project>/archive/<file>.md`、`registry/items.jsonl`、`registry/migrations.jsonl`、相关 `indexes/*.md`。
 
-### 5. owner 签收一个 gate
+复制 `templates/archive-note.md`，正文写清原始来源、归档边界、证据、当前状态和风险；registry item 默认 `status: archived` 或 `reviewing`，不把历史记录写成 active fact。按 `templates/migration-record.md` 追加迁移/归档记录，并同步项目、source、topic 或 decision 索引。最后运行：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --domain projects/<project> --kind project-archive --json
+```
+
+### 4. owner 签收一个 gate
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms
@@ -145,16 +151,28 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 
 建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。多 owner 分派时先用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
-### 6. 跑一次终态检查
+### 5. 跑一次终态检查
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk git diff --check
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
 如果结果是 `needs-owner-review`，确认唯一 blocker 是否为 `owner-gates-open`；这是人工语义 blocker，不等同于工具失败。
 JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治理状态；当值为 `complete-except-owner-review` 且 `gap_map` 只有 `owner-gates-open` 时，说明非 owner 自动治理门禁已闭环，剩余动作只能由 owner 人工签收。
 `final_state_audit` 会同时给出 Level 1 PCR02 docs、Level 2 PCR02 candidate sources、Level 3 registered sources 的摘要状态，用于快速判断终态证据缺在哪一层。
+
+## 常用辅助路径
+
+### 复核过期项
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+```
+
+先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` 和 `registry.review_after_command`。过期项不等于工具失败，但必须由 owner 复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing`，不得自动改 `active`、关闭 owner gate 或提升标准。
 
 ## 离线人工维护
 

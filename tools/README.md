@@ -13,7 +13,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-check.sh`: read-only validation.
   覆盖 registry JSON/JSONL 解析、owner/project/topic 登记、source index 和 source coverage 收口、source registry 终态字段、owner-gated active 阻断、owner gate 字段阻断、item 日期和 source reference、validation reference 结构与路径、tag/promotion、registry 字段/路径/枚举/边界、migration record、template 必填字段、personal-local active 阻断、AI-generated active 人工复核门禁、source enum、文本知识和 `artifacts/manifests/` secret-pattern scan、核心索引缺失/过期/重复 item ref、`indexes/*.md` 本地 path/glob 引用、`--explain <item-id>` 条目诊断，以及 `--diagnostics` 中文错误分组。
 - Stale `review_after` values in registry items are warnings, not blocking errors; invalid date format and `updated_at < created_at` remain errors.
-- `knowledge-search.sh`: read-only text search across registered sources and local domains.
+- `knowledge-search.sh`: read-only text search across registered sources and local domains. It also supports registry-backed filters for local registered items: `--owner`、`--status`、`--kind`、`--domain` and `--source-id`. `--source` keeps the old physical scan source meaning, while `--source-id` filters `registry/items.jsonl` item `source.source_id`.
 - `knowledge-status.sh`: read-only control-plane dashboard; summarizes `knowledge-check`, registry counts, source coverage, migrations, stale review dates, owner gate status, all-open owner summary commands, by-owner owner summary commands, all-open and by-owner owner forms JSONL commands, owner filled-form validation command templates, no-write landing-plan command templates, the next open owner gate commands, `final_gate_command` and structured `strict_blockers`. Use `--strict` as a final-state blocker dashboard, but use `final_gate_command` / `knowledge-final-gate.sh --json` as the terminal gate because it also runs regression; `strict_blockers[].commands` contains directly executable commands, while `strict_blockers[].command_templates` contains commands that require replacing placeholders such as `<owner-decisions.jsonl>`.
 - `knowledge-final-gate.sh`: repository read-only final-state gate; runs `knowledge-check --diagnostics`, `knowledge-regression --json`, `rtk git diff --check` and `knowledge-status --strict --json` together so terminal validation cannot miss regression drift or whitespace/conflict-marker drift. JSON output includes `automatic_governance`, `final_state_audit` and `gap_map` so automation and humans can distinguish `complete-except-owner-review` from real tool/registry/index/source-coverage failures. `final_state_audit.level3_registered_sources.missing_final_state_fields` reports source registry fields such as `owner`、`review_after`、`migration_strategy`、`final_disposition` or required `no_check_reason` before owner gates are considered the only remaining blocker. It returns non-zero unless all gates are terminal-ok. The regression subcommand may create and clean temporary fixtures under `/tmp`; it must not modify Knowledge Hub content, registry, indexes or source project docs.
 - `knowledge-doctor.sh`: read-only maintenance helper; runs `knowledge-check --diagnostics`, optional `--explain <item-id>`/search and optional `--owner-gates <source-id>` board without writing files.
@@ -50,16 +50,19 @@ Writing requires explicit future implementation and must not be used by unattend
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
 
 # 新增一个 source
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<source-id>" --source knowledge-hub --json
 
 # 归档一条历史记录
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --owner <owner> --id <id> --path domains/projects/<project>/archive/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --domain projects/<project> --kind project-archive --json
 
 # 复核过期项
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
@@ -88,8 +91,20 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/pcr02 --kind project-current --status reviewing --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-project-docs --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
 ```
+
+结构化过滤只对能关联到 `registry/items.jsonl` 的本仓登记条目生效；使用 `--owner`、`--status`、`--kind`、`--domain` 或 `--source-id` 时，未登记普通文件会被排除，避免把外部原始文件误当治理条目。JSON 输出保留旧的 `query/count/results` 字段，并在命中 registry item 时附带 `item_id/title/kind/domain/status/owner/source_id/review_after/tags`。
+
+| 场景 | 最小落盘文件 | 关键验证 |
+|---|---|---|
+| 新增知识 | 唯一正文、`registry/items.jsonl`、核心索引；涉及迁移/引用/归档时补 `registry/migrations.jsonl` | `knowledge-index-plan --section all`、`knowledge-check --diagnostics`、定向 `knowledge-search` |
+| 新增 source | `registry/sources.json`、`indexes/by-source.md`、source coverage/source identity manifest | `knowledge-index-plan --section source`、`knowledge-check --diagnostics`、`knowledge-search "<source-id>" --source knowledge-hub --json` |
+| 归档历史 | `domains/projects/<project>/archive/...`、`registry/items.jsonl`、`registry/migrations.jsonl`、相关索引 | `knowledge-check --diagnostics`、`knowledge-search "<keyword>" --domain projects/<project> --kind project-archive --json` |
+| owner signoff | owner 人工填写的临时 JSONL；真正落地文件以 `--landing-plan` 输出为准 | `--validate-forms '<owner-decisions.jsonl>' --json`、`--landing-plan --json` |
+| 终态检查 | 通常不新增文件；需要保存证据时落相邻 manifest | `rtk git diff --check`、`knowledge-final-gate.sh --json` |
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-root
