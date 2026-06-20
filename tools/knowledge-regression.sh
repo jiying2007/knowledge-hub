@@ -1085,6 +1085,7 @@ def test_final_gate_owner_review_blocker():
         and level3.get("registered_count") == level3.get("covered_count")
         and level3.get("registered_count") == 13
         and level3.get("missing_coverage_ids") == []
+        and level3.get("missing_final_state_fields") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
@@ -1722,6 +1723,8 @@ def test_source_manual_entry_guide():
         "source coverage JSONL row",
         '"source_id":"example-source"',
         '"no_check_reason":"classify-first pending source coverage"',
+        '"migration_strategy":"classify-first"',
+        '"final_disposition":"owner-gated-pending-decision"',
         "rtk bash tools/knowledge-index-plan.sh --section source",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]

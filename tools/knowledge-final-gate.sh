@@ -190,11 +190,32 @@ core_checks_pass = (
     and knowledge_regression["exit_code"] == 0
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
 source_registry_ids = {
     str(source.get("id", ""))
-    for source in load_json(root / "registry" / "sources.json").get("sources", [])
+    for source in source_registry
     if source.get("id")
 }
+source_final_state_required_fields = [
+    "id",
+    "path",
+    "role",
+    "authority",
+    "status",
+    "write_policy",
+    "migration_strategy",
+    "owner",
+    "review_after",
+    "final_disposition",
+]
+missing_source_final_state_fields = []
+for source in source_registry:
+    source_id = str(source.get("id", "<unknown>"))
+    for field in source_final_state_required_fields:
+        if not source.get(field):
+            missing_source_final_state_fields.append({"source_id": source_id, "field": field})
+    if not str(source.get("check", "")).strip() and not str(source.get("no_check_reason", "")).strip():
+        missing_source_final_state_fields.append({"source_id": source_id, "field": "no_check_reason"})
 latest_coverage_manifest = str(strict_payload.get("sources", {}).get("latest_coverage_manifest", ""))
 source_coverage_rows = load_jsonl(root / latest_coverage_manifest) if latest_coverage_manifest else []
 covered_source_ids = {
@@ -237,7 +258,11 @@ level1_status = (
     else "needs-fix"
 )
 level2_status = "complete" if not missing_level2_sources and not missing_level2_coverage else "needs-fix"
-level3_status = "complete" if source_registry_ids and not missing_registered_coverage else "needs-fix"
+level3_status = (
+    "complete"
+    if source_registry_ids and not missing_registered_coverage and not missing_source_final_state_fields
+    else "needs-fix"
+)
 final_state_audit = {
     "level1_pcr02_docs": {
         "status": level1_status,
@@ -275,12 +300,13 @@ final_state_audit = {
         "covered_count": len(source_registry_ids & covered_source_ids),
         "latest_coverage_manifest": latest_coverage_manifest,
         "missing_coverage_ids": missing_registered_coverage,
+        "missing_final_state_fields": missing_source_final_state_fields,
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
             "tools/knowledge-check.sh --dry-run --json --diagnostics",
         ],
-        "summary_zh": "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖。",
+        "summary_zh": "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖，且 source registry 终态字段已补齐。",
     },
 }
 

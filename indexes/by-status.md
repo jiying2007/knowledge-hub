@@ -154,6 +154,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-final-gate-gap-map-20260620`
 - reviewing: `knowledge-hub-final-state-audit-summary-20260620`
 - reviewing: `knowledge-hub-source-coverage-closeout-20260620`
+- reviewing: `knowledge-hub-source-registry-final-state-fields-20260620`
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
 - reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
@@ -276,3 +277,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - final-gate-gap-map-applied: `tools/knowledge-final-gate.sh` emits structured `automatic_governance` and `gap_map` fields so owner-only terminal state is machine-readable; documented by `artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.jsonl`.
 - final-state-audit-summary-applied: `tools/knowledge-final-gate.sh` emits `final_state_audit` Level 1/2/3 summary fields for PCR02 docs, PCR02 candidate sources and registered source coverage; documented by `artifacts/manifests/knowledge-hub-final-state-audit-summary-20260620.jsonl`.
 - source-coverage-closeout-level2-applied: PCR02 Level 2 candidate sources are registered and covered by the latest source coverage matrix; documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl`.
+- source-registry-final-state-fields-applied: `registry/sources.json` records source maintenance owner, review date, migration strategy, final disposition and no-check reason when needed; `knowledge-final-gate.sh` Level 3 reports `missing_final_state_fields`; documented by `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.jsonl`.

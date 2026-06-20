@@ -105,6 +105,7 @@
 - Engineering archive PCR02 archive corpus: `domains/projects/pcr02/archive/engineering-archive`
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - PCR02 Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- Source registry final-state fields: `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`
 - PCR02 tools boundary: `artifacts/manifests/pcr02-tools-boundary-20260620.md`
 - PCR02 knowledge secret/config boundary: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - PCR02 product-test artifact/config/interface boundary: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
@@ -139,3 +140,4 @@
 - Knowledge Hub index/source maintenance tools: `artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.md`
 - Knowledge Hub final gate gap map: `artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.md`
 - Knowledge Hub final state audit summary: `artifacts/manifests/knowledge-hub-final-state-audit-summary-20260620.md`
+- Knowledge Hub source registry final-state fields: `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`

@@ -152,8 +152,10 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   TODAY="$(date -u +%F)"
   TODAY_COMPACT="${TODAY//-/}"
   CHECK_FIELD=""
+  NO_CHECK_FIELD=",\"no_check_reason\":\"${JSON_SOURCE_NO_CHECK_REASON}\""
   if [[ -n "$DISPLAY_SOURCE_CHECK" ]]; then
     CHECK_FIELD=",\"check\":\"${JSON_SOURCE_CHECK}\""
+    NO_CHECK_FIELD=""
   fi
   cat <<EOF
 # Knowledge Hub Source 登记向导
@@ -189,7 +191,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
 ### registry/sources.json object
 
 \`\`\`json
-{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}"${CHECK_FIELD}}
+{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}","migration_strategy":"classify-first","owner":"${JSON_OWNER}","review_after":"${TODAY}","final_disposition":"owner-gated-pending-decision"${CHECK_FIELD}${NO_CHECK_FIELD}}
 \`\`\`
 
 ### indexes/by-source.md 主表行

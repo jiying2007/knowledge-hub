@@ -134,6 +134,18 @@ ALLOWED_SOURCE_WRITE_POLICIES = {
     "read-only-unless-explicitly-approved",
     "externalize-to-knowledge-hub-before-prune",
 }
+ALLOWED_SOURCE_FINAL_DISPOSITIONS = {
+    "fully-migrated",
+    "copy-first-migrated",
+    "reference-first-registered",
+    "artifact-ref-registered",
+    "archive-only-registered",
+    "owner-gated-pending-decision",
+    "no-migration-with-reason",
+    "auxiliary-recall-only",
+    "external-tool-owned",
+    "mixed-terminal-coverage",
+}
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 def load_json(path):
@@ -310,9 +322,14 @@ def build_diagnostics(error_items, warning_items):
 
 sources_path = root / "registry" / "sources.json"
 sources = load_json(sources_path).get("sources", [])
+owner_ids_for_sources = {
+    owner.get("id", "")
+    for owner in load_json(root / "registry" / "owners.json").get("owners", [])
+    if owner.get("id")
+}
 source_ids = set()
 for source in sources:
-    for field in ["id", "path", "role", "authority", "status", "write_policy"]:
+    for field in ["id", "path", "role", "authority", "status", "write_policy", "migration_strategy", "owner", "review_after", "final_disposition"]:
         if not source.get(field):
             errors.append(f"sources:{source.get('id', '<unknown>')} missing {field}")
     source_id = source.get("id", "<unknown>")
@@ -328,6 +345,17 @@ for source in sources:
         errors.append(f"sources:{source_id} invalid status: {source.get('status')}")
     if source.get("write_policy") and source.get("write_policy") not in ALLOWED_SOURCE_WRITE_POLICIES:
         errors.append(f"sources:{source_id} invalid write_policy: {source.get('write_policy')}")
+    if source.get("owner") and source.get("owner") not in owner_ids_for_sources:
+        errors.append(f"sources:{source_id} unknown owner: {source.get('owner')}")
+    if source.get("review_after"):
+        try:
+            dt.date.fromisoformat(str(source.get("review_after")))
+        except Exception:
+            errors.append(f"sources:{source_id} invalid review_after: {source.get('review_after')}")
+    if source.get("final_disposition") and source.get("final_disposition") not in ALLOWED_SOURCE_FINAL_DISPOSITIONS:
+        errors.append(f"sources:{source_id} invalid final_disposition: {source.get('final_disposition')}")
+    if not str(source.get("check", "")).strip() and not str(source.get("no_check_reason", "")).strip():
+        errors.append(f"sources:{source_id} missing no_check_reason for empty check")
     path = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser()
     if not path.exists():
         warnings.append(f"sources:{source.get('id')} path missing: {path}")

@@ -181,6 +181,10 @@ Required source fields:
 - `authority`
 - `status`
 - `write_policy`
+- `migration_strategy`
+- `owner`
+- `review_after`
+- `final_disposition`
 
 Recommended source fields:
 
@@ -247,13 +251,33 @@ read-only-unless-explicitly-approved
 externalize-to-knowledge-hub-before-prune
 ```
 
+Allowed source `final_disposition`:
+
+```text
+fully-migrated
+copy-first-migrated
+reference-first-registered
+artifact-ref-registered
+archive-only-registered
+owner-gated-pending-decision
+no-migration-with-reason
+auxiliary-recall-only
+external-tool-owned
+mixed-terminal-coverage
+```
+
 Source/index invariants:
 
 - source `id` must be unique.
 - `indexes/by-source.md` main source table must include every source `id`.
 - `indexes/by-source.md` main source table must not include unregistered source ids.
+- source `owner` is the maintenance owner for registry/source governance; it is not an owner decision or owner sign-off.
+- source `owner` must be registered in `registry/owners.json`.
+- source `review_after` must use ISO date format: `YYYY-MM-DD`.
+- source `migration_strategy` must explain how the source enters Knowledge Hub control-plane governance without implying copied正文 or active promotion.
+- source `final_disposition` must use the allowed enum and describe control-plane disposition, not owner approval.
 - source `check`, when present, records a read-only validation command or inventory command.
-- if source `check` is empty, the latest source coverage manifest should record `no_check_reason`.
+- if source `check` is empty, source registry must record `no_check_reason`; the latest source coverage manifest should also record or reference the reason.
 - source coverage rows should include `source_id`, `status`, `classification`, `decision`, `risk`, `owner` and `checked_at`.
 - source coverage rows should include `source_identity` or `evidence_refs` when a directory source cannot be represented by one stable file hash.
 - core item indexes `indexes/by-owner.md`, `indexes/by-review-date.md` and canonical status buckets in `indexes/by-status.md` must not duplicate registry item ids.

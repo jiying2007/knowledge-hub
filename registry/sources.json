@@ -8,7 +8,11 @@
       "authority": "legacy-team-ssot",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash /home/leiwenjun/embedded/knowledge/scripts/check-all.sh"
+      "migration_strategy": "reference-first-owner-review",
+      "owner": "team-core",
+      "review_after": "2026-09-20",
+      "check": "rtk bash /home/leiwenjun/embedded/knowledge/scripts/check-all.sh",
+      "final_disposition": "owner-gated-pending-decision"
     },
     {
       "id": "engineering-archive",
@@ -17,7 +21,12 @@
       "authority": "legacy-project-history",
       "status": "registered",
       "write_policy": "copy-first-migration-only",
-      "check": ""
+      "migration_strategy": "copy-first-archive",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "",
+      "no_check_reason": "Historical engineering archive is governed by copy-first applied manifest and registry/index checks.",
+      "final_disposition": "copy-first-migrated"
     },
     {
       "id": "patent-disclosure",
@@ -26,7 +35,12 @@
       "authority": "patent-materials",
       "status": "registered",
       "write_policy": "do-not-mix-with-engineering-knowledge",
-      "check": ""
+      "migration_strategy": "patent-copy-first-plus-artifact-ref",
+      "owner": "leiwenjun",
+      "review_after": "2026-09-20",
+      "check": "",
+      "no_check_reason": "Patent disclosure source is governed by patent archive and attachment artifact-ref manifests.",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "codex-archive",
@@ -35,7 +49,11 @@
       "authority": "codex-workflow-history",
       "status": "registered",
       "write_policy": "use-codex-archive-tools",
-      "check": "rtk bash /home/leiwenjun/codex/scripts/archive-check.sh"
+      "migration_strategy": "reference-first-via-codex-archive-tools",
+      "owner": "leiwenjun",
+      "review_after": "2026-09-20",
+      "check": "rtk bash /home/leiwenjun/codex/scripts/archive-check.sh",
+      "final_disposition": "reference-first-registered"
     },
     {
       "id": "codex-memories",
@@ -44,7 +62,12 @@
       "authority": "auxiliary-recall-only",
       "status": "registered",
       "write_policy": "read-only-unless-explicitly-approved",
-      "check": ""
+      "migration_strategy": "auxiliary-recall-only-no-memory-write",
+      "owner": "leiwenjun",
+      "review_after": "2026-09-20",
+      "check": "",
+      "no_check_reason": "Auxiliary recall source is intentionally not migrated and must not be written by Knowledge Hub automation.",
+      "final_disposition": "auxiliary-recall-only"
     },
     {
       "id": "pcr02-project-docs",
@@ -53,7 +76,12 @@
       "authority": "legacy-project-current-docs",
       "status": "registered",
       "write_policy": "externalize-to-knowledge-hub-before-prune",
-      "check": ""
+      "migration_strategy": "pcr02-docs-mixed-copy-reference-artifact-owner-gated",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "",
+      "no_check_reason": "PCR02 docs are governed by file-level classification, copy/reference/artifact manifests and owner gates.",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "pcr02-project-tools",
@@ -62,7 +90,11 @@
       "authority": "legacy-project-current-tools",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools'"
+      "migration_strategy": "reference-tool-validation-owner-gated-boundary",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools'",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "pcr02-project-knowledge",
@@ -71,7 +103,11 @@
       "authority": "legacy-project-current-knowledge",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge'"
+      "migration_strategy": "classify-first-secret-boundary-tool-ref",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge'",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "pcr02-product-test",
@@ -80,7 +116,11 @@
       "authority": "legacy-project-product-test",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test'"
+      "migration_strategy": "artifact-config-interface-validation-reference",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test'",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "pcr02-project-scratch",
@@ -89,7 +129,11 @@
       "authority": "legacy-project-scratch",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch'"
+      "migration_strategy": "archive-only-no-memory-write",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch'",
+      "final_disposition": "archive-only-registered"
     },
     {
       "id": "pcr02-project-root-artifacts",
@@ -98,7 +142,11 @@
       "authority": "legacy-project-root-artifacts",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo'"
+      "migration_strategy": "mixed-artifact-tool-reference-boundary",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo'",
+      "final_disposition": "mixed-terminal-coverage"
     },
     {
       "id": "pcr02-module-agent-rules",
@@ -107,7 +155,11 @@
       "authority": "legacy-project-agent-rules",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/cli/AGENTS.md'"
+      "migration_strategy": "module-local-owner-gated-rule-reference",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/cli/AGENTS.md'",
+      "final_disposition": "owner-gated-pending-decision"
     },
     {
       "id": "pcr02-project-agent-config",
@@ -116,7 +168,11 @@
       "authority": "legacy-project-agent-config",
       "status": "registered",
       "write_policy": "do-not-write-through-knowledge-hub",
-      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/.vscode/codex-tasks-sync.sh'"
+      "migration_strategy": "config-artifact-ref-report-only-automation-boundary",
+      "owner": "pcr02-registry-owner",
+      "review_after": "2026-09-20",
+      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/.vscode/codex-tasks-sync.sh'",
+      "final_disposition": "artifact-ref-registered"
     }
   ]
 }
