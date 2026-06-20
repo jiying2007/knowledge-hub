@@ -825,6 +825,8 @@ if args.forms:
     print()
     print("以下骨架只供 owner 人工复制、填写和复核；本命令不写文件、不关闭门禁、不提升 active。")
     print("写入任何 owner decision 前，必须补齐证据引用、reviewed_by、reviewed_at、source hash/size 和 status_reason。")
+    for form in [make_decision_form(row) for row in rows if row["status"] == "open"]:
+        print(json.dumps(form, ensure_ascii=False, separators=(",", ":")))
 
 if args.checklist:
     print()
@@ -859,7 +861,7 @@ if args.checklist:
         if checklist["must_not"]:
             print(f"- must_not: {', '.join(str(item) for item in checklist['must_not'])}")
 
-detail_rows = [] if args.summary and not args.forms else rows
+detail_rows = [] if args.summary or args.forms else rows
 for row in detail_rows:
     active_marker = "YES" if row["active_registry_items"] else "no"
     print()

@@ -210,6 +210,50 @@ def test_owner_single_form():
         },
     )
 
+def test_owner_forms_text_jsonl_output():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+        ],
+    )
+    jsonl_lines = []
+    for line in result["stdout"].splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            jsonl_lines.append(json.loads(line))
+        except Exception:
+            pass
+    first = jsonl_lines[0] if jsonl_lines else {}
+    expect(
+        result["exit_code"] == 0
+        and len(jsonl_lines) == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("source_path") == "AGENTS.md"
+        and "owner_decision" in first
+        and "observed_source_identity" in first
+        and "## Owner Decision JSONL Skeletons" in result["stdout"],
+        "owner-forms-text-jsonl-output",
+        "owner forms text mode prints copyable JSONL skeletons",
+        {
+            "exit_code": result["exit_code"],
+            "jsonl_line_count": len(jsonl_lines),
+            "worksheet_id": first.get("worksheet_id"),
+            "source_path": first.get("source_path"),
+            "has_owner_decision": "owner_decision" in first,
+            "has_observed_source_identity": "observed_source_identity" in first,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_owner_checklist_context():
     result = run_cmd(
         root,
@@ -1115,6 +1159,7 @@ def test_regression_manifest_coverage():
         "status-noncanonical-only",
         "owner-partial-resolved",
         "owner-single-form",
+        "owner-forms-text-jsonl-output",
         "owner-checklist-context",
         "owner-form-context",
         "owner-source-identity-context",
@@ -1138,14 +1183,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "23 个回归场景" in manifest_text,
+        and "24 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "23 个回归场景",
+            "expected_count_text": "24 个回归场景",
         },
     )
 
@@ -1155,6 +1200,7 @@ for test_fn in [
     test_status_noncanonical_only,
     test_owner_partial_resolved,
     test_owner_single_form,
+    test_owner_forms_text_jsonl_output,
     test_owner_checklist_context,
     test_owner_form_context,
     test_owner_source_identity_context,

@@ -143,3 +143,4 @@
 - 2026-09-20: `pcr02-dvr-session-archive-owner-ready-package-20260620`
 - 2026-09-20: `knowledge-hub-owner-ready-coverage-status-20260620`
 - 2026-09-20: `knowledge-hub-owner-landing-ready-gate-20260620`
+- 2026-09-20: `knowledge-hub-owner-forms-text-jsonl-20260620`

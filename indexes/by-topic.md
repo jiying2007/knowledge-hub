@@ -120,3 +120,4 @@
 - PCR02 DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Knowledge Hub owner-ready coverage status: `artifacts/manifests/knowledge-hub-owner-ready-coverage-status-20260620.md`
 - Knowledge Hub owner landing ready gate: `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.md`
+- Knowledge Hub owner forms text JSONL: `artifacts/manifests/knowledge-hub-owner-forms-text-jsonl-20260620.md`
