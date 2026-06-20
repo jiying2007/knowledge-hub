@@ -156,6 +156,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-source-coverage-closeout-20260620`
 - reviewing: `knowledge-hub-source-registry-final-state-fields-20260620`
 - reviewing: `knowledge-hub-status-owner-forms-jsonl-by-owner-20260620`
+- reviewing: `knowledge-hub-status-final-gate-command-20260620`
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
 - reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
@@ -280,3 +281,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - source-coverage-closeout-level2-applied: PCR02 Level 2 candidate sources are registered and covered by the latest source coverage matrix; documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl`.
 - source-registry-final-state-fields-applied: `registry/sources.json` records source maintenance owner, review date, migration strategy, final disposition and no-check reason when needed; `knowledge-final-gate.sh` Level 3 reports `missing_final_state_fields`; documented by `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.jsonl`.
 - status-owner-forms-jsonl-by-owner-applied: `tools/knowledge-status.sh` exposes by-owner owner decision JSONL skeleton commands in status output and owner blocker commands without generating owner decisions; documented by `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.jsonl`.
+- status-final-gate-command-applied: `tools/knowledge-status.sh` exposes `final_gate_command` so recovery flows can jump from status dashboard to the terminal final gate; documented by `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.jsonl`.

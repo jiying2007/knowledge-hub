@@ -294,6 +294,7 @@ else:
     status = "ok"
 
 exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
+final_gate_command = "rtk bash tools/knowledge-final-gate.sh --json"
 
 next_actions = []
 if knowledge_check["exit_code"] != 0:
@@ -301,6 +302,10 @@ if knowledge_check["exit_code"] != 0:
 if active_exposure_count:
     next_actions.append("立即移除 owner-gated active exposure，owner 决策闭环前不得 active。")
 if open_owner_gate_count:
+    next_actions.append(
+        "需要确认是否只剩 owner 语义门禁时，运行最终门禁："
+        f"{final_gate_command}。"
+    )
     if owner_ready_missing_count or owner_ready_invalid_count or owner_ready_duplicate_count:
         next_actions.append(
             "先补齐 owner-ready package 强校验覆盖，再分派 owner 决策；"
@@ -452,6 +457,7 @@ result = {
     },
     "errors": errors,
     "strict_blockers": strict_blockers,
+    "final_gate_command": final_gate_command,
     "next_actions_zh": next_actions,
 }
 
@@ -541,6 +547,7 @@ print("## 下一步")
 print()
 for action in next_actions:
     print(f"- {action}")
+print(f"- 最终门禁命令：{final_gate_command}")
 if errors:
     print()
     print("## Errors")
@@ -554,6 +561,7 @@ print("```bash")
 print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("rtk bash tools/knowledge-owner-gates.sh --status all --json")
 print("rtk bash tools/knowledge-status.sh --strict")
+print("rtk bash tools/knowledge-final-gate.sh --json")
 print("```")
 
 sys.exit(exit_code)

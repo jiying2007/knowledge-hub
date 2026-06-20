@@ -72,7 +72,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
 ```
 
-`knowledge-status.sh --json` 给出当前 owner gate、source coverage 和下一步命令；`knowledge-final-gate.sh --json` 判断是否只剩 owner 语义门禁；四个索引用于恢复 project、source、topic 和 decision 入口。
+`knowledge-status.sh --json` 给出当前 owner gate、source coverage、下一步命令和 `final_gate_command`；`knowledge-final-gate.sh --json` 判断是否只剩 owner 语义门禁；四个索引用于恢复 project、source、topic 和 decision 入口。
 
 ## 搜索知识
 
