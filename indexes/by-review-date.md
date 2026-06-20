@@ -148,3 +148,4 @@
 - 2026-09-20: `knowledge-hub-status-owner-forms-jsonl-command-20260620`
 - 2026-09-20: `knowledge-hub-status-owner-landing-command-20260620`
 - 2026-09-20: `knowledge-hub-status-command-template-split-20260620`
+- 2026-09-20: `knowledge-hub-owner-placeholder-quoting-20260620`

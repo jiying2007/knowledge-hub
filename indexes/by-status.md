@@ -147,6 +147,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-status-owner-forms-jsonl-command-20260620`
 - reviewing: `knowledge-hub-status-owner-landing-command-20260620`
 - reviewing: `knowledge-hub-status-command-template-split-20260620`
+- reviewing: `knowledge-hub-owner-placeholder-quoting-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -248,3 +249,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - status-owner-forms-jsonl-command-applied: `tools/knowledge-status.sh` exposes `owner_gates.forms_jsonl_commands` and next-open forms-jsonl commands in status actions and strict blockers; documented by `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-command-20260620.jsonl`.
 - status-owner-landing-command-applied: `tools/knowledge-status.sh` exposes `owner_gates.validate_forms_command_templates`, `owner_gates.landing_plan_command_templates` and next-open focus validation/landing-plan command templates in status actions and strict blocker `command_templates`; documented by `artifacts/manifests/knowledge-hub-status-owner-landing-command-20260620.jsonl`.
 - status-command-template-split-applied: `tools/knowledge-status.sh` and `tools/knowledge-final-gate.sh` separate executable owner blocker commands from placeholder-bearing command_templates; documented by `artifacts/manifests/knowledge-hub-status-command-template-split-20260620.jsonl`.
+- owner-placeholder-quoting-applied: human-facing Markdown validate-forms command examples quote `<owner-decisions.jsonl>` to avoid shell redirection ambiguity; documented by `artifacts/manifests/knowledge-hub-owner-placeholder-quoting-20260620.jsonl`.

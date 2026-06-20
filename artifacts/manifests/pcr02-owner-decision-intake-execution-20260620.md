@@ -30,8 +30,8 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-op
 3. Owner 填写 JSONL 后，先只读验证，不直接落地：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --json
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
 4. 只有验证通过后，才按 landing plan 手工更新正文、registry、migration 和索引；仍不得修改源项目 docs。

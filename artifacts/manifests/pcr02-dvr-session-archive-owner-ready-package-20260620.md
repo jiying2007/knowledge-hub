@@ -133,13 +133,13 @@ owner 选择 `archive-only` 时，仍必须显式确认以下元数据：
 1. Owner 填写 JSONL 后，先只读校验：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
 ```
 
 2. 校验通过后，生成只读落地计划：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
 3. 只按 landing plan 手工更新 Knowledge Hub，不修改源项目 docs，不复制整份 session archive，不写 memory，不把 handoff 或 memory candidates 变成 active facts。

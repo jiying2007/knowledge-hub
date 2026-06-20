@@ -141,13 +141,13 @@ owner decision JSONL 必须填写：
 1. Owner 填写 JSONL 后，先只读校验：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
 ```
 
 2. 校验通过后，生成只读落地计划：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms <owner-decisions.jsonl> --landing-plan --json
+rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
 3. 只按 landing plan 手工更新 Knowledge Hub，不修改源项目 docs，不把 planned commands 当证据，不提升到团队标准。

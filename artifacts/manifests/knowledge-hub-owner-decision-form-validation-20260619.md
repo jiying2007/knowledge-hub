@@ -15,7 +15,7 @@
 
 ## 决策
 
-- 新增参数：`rtk bash tools/knowledge-owner-gates.sh --validate-forms <owner-decisions.jsonl>`。
+- 新增参数：`rtk bash tools/knowledge-owner-gates.sh --validate-forms '<owner-decisions.jsonl>'`。
 - 可与 `--source-id pcr02-project-docs` 组合，限制校验范围。
 - 校验规则：
   - `worksheet_id` 必须匹配当前 open owner gate row。

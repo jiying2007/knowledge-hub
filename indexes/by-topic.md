@@ -125,3 +125,4 @@
 - Knowledge Hub status owner forms JSONL command: `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-command-20260620.md`
 - Knowledge Hub status owner landing command: `artifacts/manifests/knowledge-hub-status-owner-landing-command-20260620.md`
 - Knowledge Hub status command template split: `artifacts/manifests/knowledge-hub-status-command-template-split-20260620.md`
+- Knowledge Hub owner placeholder quoting: `artifacts/manifests/knowledge-hub-owner-placeholder-quoting-20260620.md`

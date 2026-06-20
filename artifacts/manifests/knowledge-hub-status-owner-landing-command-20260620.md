@@ -8,7 +8,7 @@
 - `owner_gates.landing_plan_command_templates`：按 source 生成无写入人工 landing plan，包含需人工替换的 `<owner-decisions.jsonl>` 占位符。
 - `owner_gates.next_open.focus_validate_forms_command_template`：按下一条 open worksheet 聚焦校验 owner 表单。
 - `owner_gates.next_open.focus_landing_plan_command_template`：按下一条 open worksheet 聚焦生成人工 landing plan。
-- `strict_blockers[].commands` 只保留可直接执行的命令；`strict_blockers[].command_templates` 和 `next_actions_zh` 会在 owner gate 未签收时包含 `--validate-forms <owner-decisions.jsonl>` 与 `--landing-plan` 模板。
+- `strict_blockers[].commands` 只保留可直接执行的命令；`strict_blockers[].command_templates` 和 `next_actions_zh` 会在 owner gate 未签收时包含 `--validate-forms '<owner-decisions.jsonl>'` 与 `--landing-plan` 模板。
 
 这个变更把 owner 审核路径从“导出空白表单”延伸到“校验已填表单”和“生成人工落地计划”，但不代替 owner 决策。
 

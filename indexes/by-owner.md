@@ -124,6 +124,7 @@
 - `knowledge-hub-status-owner-forms-jsonl-command-20260620`
 - `knowledge-hub-status-owner-landing-command-20260620`
 - `knowledge-hub-status-command-template-split-20260620`
+- `knowledge-hub-owner-placeholder-quoting-20260620`
 
 ## pcr02-registry-owner
 
