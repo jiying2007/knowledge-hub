@@ -190,6 +190,8 @@ if blockers:
         print(f"- `{blocker.get('id', '<missing>')}` ({blocker.get('severity', '<missing>')}): {blocker.get('summary_zh', '')}")
         for command in blocker.get("commands", []):
             print(f"  - `{command}`")
+        for command in blocker.get("command_templates", []):
+            print(f"  - template: `{command}`")
         if blocker.get("command"):
             print(f"  - `{blocker['command']}`")
 if result["next_actions_zh"]:
