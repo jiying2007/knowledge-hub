@@ -261,6 +261,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith(("index:indexes/by-owner.md", "index:indexes/by-review-date.md", "index:indexes/by-status.md")),
         ),
         (
+            "decision-index",
+            "决策索引覆盖异常",
+            "同步 registry/decisions.jsonl 与 indexes/by-decision.md，只要求 registry decision 在决策索引中恰好出现一次，不把 owner worksheet 或 migration decision 当作 registry decision。",
+            lambda msg: msg.startswith("index:indexes/by-decision.md"),
+        ),
+        (
             "index-local-ref",
             "索引中的本地路径引用失效",
             "检查 indexes/*.md 中反引号包裹的本地路径或 glob，修正为存在的 Knowledge Hub 相对路径。",
@@ -866,6 +872,32 @@ if not args.sources_only:
                 if ref in ids:
                     counts[ref] = counts.get(ref, 0) + 1
         return counts
+
+    decision_rows = load_jsonl(root / "registry" / "decisions.jsonl")
+    registry_decision_ids = set()
+    for decision in decision_rows:
+        decision_id = str(decision.get("decision_id", "")).strip()
+        if not decision_id:
+            errors.append("decisions: missing decision_id")
+            continue
+        if decision_id in registry_decision_ids:
+            errors.append(f"decisions:{decision_id} duplicate decision_id")
+        registry_decision_ids.add(decision_id)
+
+    by_decision_path = root / "indexes" / "by-decision.md"
+    by_decision_counts = {}
+    if not by_decision_path.exists():
+        errors.append("index missing: indexes/by-decision.md")
+    else:
+        for ref in re.findall(r"`([^`]+)`", by_decision_path.read_text()):
+            if ref in registry_decision_ids:
+                by_decision_counts[ref] = by_decision_counts.get(ref, 0) + 1
+    for decision_id in sorted(registry_decision_ids):
+        count = by_decision_counts.get(decision_id, 0)
+        if count == 0:
+            errors.append(f"index:indexes/by-decision.md missing registry decision {decision_id}")
+        elif count > 1:
+            errors.append(f"index:indexes/by-decision.md duplicate registry decision {decision_id} ({count}x)")
 
     index_requirements = {
         "indexes/by-owner.md": "owner",

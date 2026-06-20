@@ -1854,6 +1854,111 @@ def test_index_plan_extended_sections():
         },
     )
 
+def test_index_plan_topic_schema_health():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "topic", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    topics_doc = json.loads((root / "registry" / "topics.json").read_text())
+    registry_topic_ids = sorted(topic.get("id", "") for topic in topics_doc.get("topics", []) if topic.get("id"))
+    planner_topic_ids = sorted(parsed.get("indexes", {}).get("by_topic", {}).keys())
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "planned"
+        and planner_topic_ids == registry_topic_ids,
+        "index-plan-topic-schema-health",
+        "index planner topic section mirrors registry/topics.json ids",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "registry_topic_ids": registry_topic_ids,
+            "planner_topic_ids": planner_topic_ids,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_index_plan_decision_registry_health():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "decision", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    registry_decision_ids = []
+    for line in (root / "registry" / "decisions.jsonl").read_text().splitlines():
+        if not line.strip():
+            continue
+        registry_decision_ids.append(json.loads(line).get("decision_id", ""))
+    planner_decision_ids = [
+        decision.get("decision_id", "")
+        for decision in parsed.get("indexes", {}).get("by_decision", {}).get("registry_decisions", [])
+    ]
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "planned"
+        and sorted(planner_decision_ids) == sorted(registry_decision_ids)
+        and len(planner_decision_ids) == len(set(planner_decision_ids)),
+        "index-plan-decision-registry-health",
+        "index planner decision section covers registry decisions exactly once",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "registry_decision_ids": sorted(registry_decision_ids),
+            "planner_decision_ids": sorted(planner_decision_ids),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_index_decision_registry_gate():
+    repo = copy_repo("index-decision-registry-gate")
+    index_path = repo / "indexes" / "by-decision.md"
+    text = index_path.read_text()
+    index_path.write_text(text.replace("`automation-report-only-default`", "`automation-report-only-default-stale`", 1))
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    expect(
+        result["exit_code"] != 0
+        and "index:indexes/by-decision.md missing registry decision automation-report-only-default" in result["stdout"],
+        "index-decision-registry-subsection-gate",
+        "by-decision hard gate protects registry decisions without locking owner worksheet rows",
+        {
+            "exit_code": result["exit_code"],
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
+    )
+
+def test_index_topic_zero_bucket_allowed():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "topic", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    by_topic = parsed.get("indexes", {}).get("by_topic", {}) if isinstance(parsed, dict) else {}
+    empty_topics = sorted(topic_id for topic_id, detail in by_topic.items() if not detail.get("items"))
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "planned"
+        and set(empty_topics) <= set(by_topic.keys()),
+        "index-topic-zero-bucket-allowed",
+        "topic planner treats empty topics as health data instead of hard failure",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "empty_topics": empty_topics,
+            "topic_count": len(by_topic),
+        },
+    )
+
 def test_status_source_governance_summary():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     parsed = {}
@@ -2062,14 +2167,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "39 个回归场景" in manifest_text,
+        and "43 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "39 个回归场景",
+            "expected_count_text": "43 个回归场景",
         },
     )
 
@@ -2109,6 +2214,10 @@ for test_fn in [
     test_manual_entry_offline_docs,
     test_index_readme_maintenance_coverage,
     test_index_plan_extended_sections,
+    test_index_plan_topic_schema_health,
+    test_index_plan_decision_registry_health,
+    test_index_decision_registry_gate,
+    test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,

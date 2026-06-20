@@ -86,6 +86,32 @@ def load_jsonl(path):
             continue
     return rows
 
+def regression_environment_failure(result):
+    probes = [
+        str(result.get("stderr", "")),
+        str(result.get("parse_error", "")),
+    ]
+    payload = result.get("payload", {})
+    if isinstance(payload, dict):
+        probes.append(str(payload.get("status", "")))
+        probes.append(str(payload.get("error", "")))
+        for item in payload.get("results", []):
+            if not isinstance(item, dict):
+                continue
+            details = item.get("details", {})
+            probes.append(str(details.get("exception", "")))
+            probes.append(str(details.get("temp_dir", "")))
+            probes.append(str(details.get("temp_free_bytes", "")))
+            probes.append(str(details.get("min_tmp_free_bytes", "")))
+    haystack = "\n".join(probes).lower()
+    markers = [
+        "no space left on device",
+        "cannot create temp file",
+        "insufficient temp space",
+        "temp_free_bytes",
+    ]
+    return any(marker in haystack for marker in markers)
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
@@ -129,7 +155,16 @@ if git_diff_check["exit_code"] != 0:
         "stderr": git_diff_check["stderr"],
     })
 
-if knowledge_regression["parse_error"]:
+if regression_environment_failure(knowledge_regression):
+    blockers.append({
+        "id": "regression-environment-temp-space-exhausted",
+        "severity": "environment",
+        "summary_zh": "knowledge-regression 无法可靠启动或复制临时 fixture；宿主临时空间不足，不应误判为知识内容回归失败。",
+        "command": knowledge_regression["command"],
+        "stderr": knowledge_regression.get("stderr", ""),
+        "parse_error": knowledge_regression.get("parse_error", ""),
+    })
+elif knowledge_regression["parse_error"]:
     blockers.append({
         "id": "knowledge-regression-unparseable",
         "severity": "blocker",
@@ -181,27 +216,34 @@ else:
 def blocker_to_gap(blocker):
     blocker_id = str(blocker.get("id", "") or "<missing>")
     is_owner_gate = blocker_id == "owner-gates-open"
+    is_environment = blocker.get("severity") == "environment"
     return {
         "gap_id": blocker_id,
-        "gap_type": "owner-review" if is_owner_gate else "final-gate",
+        "gap_type": "owner-review" if is_owner_gate else "environment" if is_environment else "final-gate",
         "source_id": "pcr02-project-docs" if is_owner_gate else "",
         "source_root": "registry/status/final-gate",
         "evidence": blocker.get("summary_zh", ""),
         "current_impact": (
             "剩余人工 owner decision 未签收；Codex 不得代签、不得关闭 gate。"
             if is_owner_gate
+            else "宿主临时空间或执行环境不足，当前无法形成可信终态回归证据。"
+            if is_environment
             else "终态 gate 存在非 owner blocker，必须先修复工具、registry、index、manifest 或回归。"
         ),
-        "codex_auto_can_complete": False if is_owner_gate else True,
+        "codex_auto_can_complete": False if (is_owner_gate or is_environment) else True,
         "requires_owner_decision": bool(is_owner_gate),
         "fix_action": (
             "人工 owner 填写 owner decision JSONL 后，先运行 validate-forms，再生成 landing-plan。"
             if is_owner_gate
+            else "释放 /tmp 或配置可用临时空间后，重跑 knowledge-regression 和 knowledge-final-gate。"
+            if is_environment
             else "按 blocker command 修复对应门禁，然后重跑 knowledge-final-gate。"
         ),
         "write_scope": (
             "owner decision JSONL 由人工提供；Codex 只允许在校验通过后按 landing-plan 落地。"
             if is_owner_gate
+            else "环境修复不修改 Knowledge Hub 内容；只清理可重建缓存或调整临时目录。"
+            if is_environment
             else "按具体 blocker 限定；共享 registry/index/tool 由主 agent 串行修改。"
         ),
         "validation_commands": blocker.get("commands", []) + blocker.get("command_templates", []) + ([blocker.get("command")] if blocker.get("command") else []),
