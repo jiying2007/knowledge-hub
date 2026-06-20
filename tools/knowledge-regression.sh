@@ -1044,6 +1044,10 @@ def test_final_gate_owner_review_blocker():
     checks = parsed.get("checks", {})
     blockers = parsed.get("blockers", [])
     automatic_governance = parsed.get("automatic_governance", {})
+    final_state_audit = parsed.get("final_state_audit", {})
+    level1 = final_state_audit.get("level1_pcr02_docs", {})
+    level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
+    level3 = final_state_audit.get("level3_registered_sources", {})
     gap_map = parsed.get("gap_map", [])
     owner_blocker = next(
         (blocker for blocker in blockers if blocker.get("id") == "owner-gates-open"),
@@ -1064,6 +1068,24 @@ def test_final_gate_owner_review_blocker():
         and automatic_governance.get("owner_ready_package_coverage") == "7/7"
         and automatic_governance.get("active_exposure_count") == 0
         and automatic_governance.get("no_owner_decision_generated") is True
+        and level1.get("status") == "complete-except-owner-review"
+        and level1.get("source_id") == "pcr02-project-docs"
+        and level1.get("owner_gate_open_count") == 7
+        and level1.get("owner_ready_package_coverage") == "7/7"
+        and level1.get("active_exposure_count") == 0
+        and level1.get("no_owner_decision_generated") is True
+        and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in level1.get("evidence_refs", [])
+        and level2.get("status") == "complete"
+        and level2.get("registered_count") == 7
+        and level2.get("covered_count") == 7
+        and level2.get("missing_source_ids") == []
+        and level2.get("missing_coverage_ids") == []
+        and "registry/sources.json" in level2.get("evidence_refs", [])
+        and level3.get("status") == "complete"
+        and level3.get("registered_count") == level3.get("covered_count")
+        and level3.get("registered_count") == 13
+        and level3.get("missing_coverage_ids") == []
+        and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("status") == "pass"
@@ -1084,6 +1106,7 @@ def test_final_gate_owner_review_blocker():
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
             "automatic_governance": automatic_governance,
+            "final_state_audit": final_state_audit,
             "checks": checks,
             "blockers": blockers,
             "gap_map": gap_map,

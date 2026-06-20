@@ -152,6 +152,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-dispatch-filter-20260620`
 - reviewing: `knowledge-hub-index-source-maintenance-tools-20260620`
 - reviewing: `knowledge-hub-final-gate-gap-map-20260620`
+- reviewing: `knowledge-hub-final-state-audit-summary-20260620`
 - reviewing: `knowledge-hub-source-coverage-closeout-20260620`
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
@@ -273,4 +274,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-dispatch-filter-applied: `tools/knowledge-owner-gates.sh` with `--owner <owner>` and `tools/knowledge-status.sh` owner summary commands support read-only owner gate assignment by responsible owner; documented by `artifacts/manifests/knowledge-hub-owner-dispatch-filter-20260620.jsonl`.
 - index-source-maintenance-tools-applied: `tools/knowledge-index-plan.sh` covers project/source/topic/decision planning and `tools/knowledge-new.sh` with `--source` prints source registry/index/coverage drafts; documented by `artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.jsonl`.
 - final-gate-gap-map-applied: `tools/knowledge-final-gate.sh` emits structured `automatic_governance` and `gap_map` fields so owner-only terminal state is machine-readable; documented by `artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.jsonl`.
+- final-state-audit-summary-applied: `tools/knowledge-final-gate.sh` emits `final_state_audit` Level 1/2/3 summary fields for PCR02 docs, PCR02 candidate sources and registered source coverage; documented by `artifacts/manifests/knowledge-hub-final-state-audit-summary-20260620.jsonl`.
 - source-coverage-closeout-level2-applied: PCR02 Level 2 candidate sources are registered and covered by the latest source coverage matrix; documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl`.

@@ -49,6 +49,27 @@ def run_json(command, extra_env=None):
         "stderr": completed.stderr.strip(),
     }
 
+def load_json(path):
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return {}
+
+def load_jsonl(path):
+    rows = []
+    try:
+        lines = path.read_text().splitlines()
+    except Exception:
+        return rows
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except Exception:
+            continue
+    return rows
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
@@ -169,6 +190,27 @@ core_checks_pass = (
     and knowledge_regression["exit_code"] == 0
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+source_registry_ids = {
+    str(source.get("id", ""))
+    for source in load_json(root / "registry" / "sources.json").get("sources", [])
+    if source.get("id")
+}
+latest_coverage_manifest = str(strict_payload.get("sources", {}).get("latest_coverage_manifest", ""))
+source_coverage_rows = load_jsonl(root / latest_coverage_manifest) if latest_coverage_manifest else []
+covered_source_ids = {
+    str(row.get("source_id", ""))
+    for row in source_coverage_rows
+    if row.get("source_id")
+}
+pcr02_level2_source_ids = {
+    "pcr02-project-tools",
+    "pcr02-project-knowledge",
+    "pcr02-product-test",
+    "pcr02-project-scratch",
+    "pcr02-project-root-artifacts",
+    "pcr02-module-agent-rules",
+    "pcr02-project-agent-config",
+}
 automatic_governance_complete = (
     core_checks_pass
     and (final_status == "ok" or only_owner_review_blockers)
@@ -178,6 +220,69 @@ automatic_governance_status = (
     else "complete-except-owner-review" if automatic_governance_complete and only_owner_review_blockers
     else "needs-fix"
 )
+pcr02_docs_coverage = next(
+    (row for row in source_coverage_rows if row.get("source_id") == "pcr02-project-docs"),
+    {},
+)
+missing_level2_sources = sorted(pcr02_level2_source_ids - source_registry_ids)
+missing_level2_coverage = sorted(pcr02_level2_source_ids - covered_source_ids)
+missing_registered_coverage = sorted(source_registry_ids - covered_source_ids)
+level1_status = (
+    "complete-except-owner-review"
+    if core_checks_pass
+    and str(owner_payload.get("owner_ready_package_coverage", "")) == "7/7"
+    and int(owner_payload.get("open_count", 0) or 0) == 7
+    and int(owner_payload.get("active_exposure_count", 0) or 0) == 0
+    and bool(pcr02_docs_coverage)
+    else "needs-fix"
+)
+level2_status = "complete" if not missing_level2_sources and not missing_level2_coverage else "needs-fix"
+level3_status = "complete" if source_registry_ids and not missing_registered_coverage else "needs-fix"
+final_state_audit = {
+    "level1_pcr02_docs": {
+        "status": level1_status,
+        "source_id": "pcr02-project-docs",
+        "coverage_status": str(pcr02_docs_coverage.get("status", "")),
+        "owner_gate_open_count": int(owner_payload.get("open_count", 0) or 0),
+        "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
+        "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
+        "no_owner_decision_generated": only_owner_review_blockers,
+        "evidence_refs": [
+            latest_coverage_manifest,
+            "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl",
+            "artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md",
+            "tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json",
+        ],
+        "summary_zh": "PCR02 docs 控制面已闭合；剩余 7 个 owner-gated docs 只能由 owner 人工签收。",
+    },
+    "level2_pcr02_candidate_sources": {
+        "status": level2_status,
+        "required_source_ids": sorted(pcr02_level2_source_ids),
+        "registered_count": len(pcr02_level2_source_ids - set(missing_level2_sources)),
+        "covered_count": len(pcr02_level2_source_ids - set(missing_level2_coverage)),
+        "missing_source_ids": missing_level2_sources,
+        "missing_coverage_ids": missing_level2_coverage,
+        "evidence_refs": [
+            "registry/sources.json",
+            latest_coverage_manifest,
+            "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md",
+        ],
+        "summary_zh": "PCR02 docs 外 7 个关键候选 source 已登记并纳入 source coverage。",
+    },
+    "level3_registered_sources": {
+        "status": level3_status,
+        "registered_count": len(source_registry_ids),
+        "covered_count": len(source_registry_ids & covered_source_ids),
+        "latest_coverage_manifest": latest_coverage_manifest,
+        "missing_coverage_ids": missing_registered_coverage,
+        "evidence_refs": [
+            "registry/sources.json",
+            latest_coverage_manifest,
+            "tools/knowledge-check.sh --dry-run --json --diagnostics",
+        ],
+        "summary_zh": "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖。",
+    },
+}
 
 result = {
     "schema_version": 1,
@@ -202,6 +307,7 @@ result = {
             else "仍存在非 owner 的自动治理缺口，需要先修复。"
         ),
     },
+    "final_state_audit": final_state_audit,
     "checks": {
         "knowledge_check": {
             "exit_code": knowledge_check["exit_code"],
@@ -247,6 +353,9 @@ print("注意：内部 regression 子命令可能使用 /tmp 临时 fixture，�
 print()
 print(f"- final_status: {final_status}")
 print(f"- automatic_governance: {result['automatic_governance']['status']}")
+print(f"- level1_pcr02_docs: {final_state_audit['level1_pcr02_docs']['status']}")
+print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candidate_sources']['status']}")
+print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")
