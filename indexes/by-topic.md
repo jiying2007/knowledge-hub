@@ -146,3 +146,4 @@
 - Knowledge Hub status owner forms JSONL by owner: `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.md`
 - Knowledge Hub status final gate command: `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.md`
 - Knowledge Hub final state handoff: `artifacts/manifests/knowledge-hub-final-state-handoff-20260620.md`
+- Knowledge Hub final maintenance closure: `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.md`

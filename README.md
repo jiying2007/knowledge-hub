@@ -40,6 +40,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
+rtk git diff --check
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
@@ -72,7 +73,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md
 ```
 
-`knowledge-status.sh --json` 给出当前 owner gate、source coverage、下一步命令和 `final_gate_command`；`knowledge-final-gate.sh --json` 判断是否只剩 owner 语义门禁；四个索引用于恢复 project、source、topic 和 decision 入口。
+`knowledge-status.sh --json` 给出当前 owner gate、source coverage、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；四个索引用于恢复 project、source、topic 和 decision 入口。
 
 ## 搜索知识
 
@@ -107,7 +108,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
-人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；如果 `check` 为空，必须填写 `no_check_reason`。这里的 `owner` 是 source registry 维护责任人，不是 owner decision 或签收结论。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
+人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
@@ -138,6 +139,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
+rtk git diff --check
 ```
 
 如果结果是 `needs-owner-review`，确认唯一 blocker 是否为 `owner-gates-open`；这是人工语义 blocker，不等同于工具失败。
@@ -154,6 +156,20 @@ reason: tools unavailable / AI unavailable / offline field note
 required_followup: run knowledge-check and update registry/index
 owner: <owner>
 review_after: <date>
+```
+
+离线人工新增 registry item 时，默认保持未完成复核，不得直接设为 active 或 promotion。推荐最小字段如下：
+
+```json
+{
+  "source": {
+    "type": "manual",
+    "from": "field-debug / meeting / code-review / lab-test / owner-decision / design-review"
+  },
+  "status": "reviewing",
+  "review_status": "manual-entry-pending-review",
+  "validation_refs": ["manual_validation_pending: true"]
+}
 ```
 
 人工可以直接按模板新增内容；脚本只是防漏清单，不是唯一入口。AI 恢复后只能校验、补索引和提示风险，不得覆盖人工结论、自动改 active、关闭 owner gate 或写 memory。

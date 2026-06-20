@@ -184,9 +184,10 @@ def make_decision_form(row):
         "hard_gate": row.get("hard_gate", ""),
         "observed_source_identity": row.get("observed_source_identity", {}),
         "allowed_owner_decisions": row["decision_options"],
+        "target_candidates": row.get("target_candidates", []),
         "required_owner_fields": row["required_owner_fields"],
         "must_not": row["must_not"],
-        "notes_zh": "本骨架只供 owner 人工填写和复核；status、worksheet_status、owner_question_zh、default_state、allowed_next_status、hard_gate_summary、hard_gate、observed_source_identity、allowed_owner_decisions、required_owner_fields 和 must_not 是只读上下文；脚本不写文件、不关闭门禁、不提升 active。",
+        "notes_zh": "本骨架只供 owner 人工填写和复核；status、worksheet_status、owner_question_zh、default_state、allowed_next_status、hard_gate_summary、hard_gate、observed_source_identity、allowed_owner_decisions、target_candidates、required_owner_fields 和 must_not 是只读上下文；脚本不写文件、不关闭门禁、不提升 active。",
     }
     for field in row["required_owner_fields"]:
         form.setdefault(field, default_field_value(field, row))
@@ -203,6 +204,7 @@ def make_owner_checklist(row):
         "owner_question_zh": row.get("owner_question_zh", ""),
         "default_state": row.get("default_state", ""),
         "allowed_owner_decisions": row["decision_options"],
+        "target_candidates": row.get("target_candidates", []),
         "allowed_next_status": row.get("allowed_next_status", []),
         "required_owner_fields": row["required_owner_fields"],
         "hard_gate_summary": row.get("hard_gate_summary", ""),
@@ -667,6 +669,7 @@ for worksheet_path in worksheet_paths:
                 "status": row_status,
                 "worksheet_status": row.get("worksheet_status") or row.get("status") or row.get("default_state") or "",
                 "decision_options": row.get("decision_options", []),
+                "target_candidates": row.get("target_candidates", []),
                 "required_owner_fields": row.get("required_owner_fields", []),
                 "must_not": row.get("must_not", []),
                 "review_after": row.get("review_after", ""),

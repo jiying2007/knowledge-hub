@@ -518,6 +518,8 @@ def test_owner_forms_jsonl_single_output():
         and identity.get("source_file_exists") is True
         and "owner_decision" in first.get("required_owner_fields", [])
         and bool(first.get("allowed_owner_decisions", []))
+        and bool(first.get("target_candidates", []))
+        and "reference-only" in first.get("target_candidates", [])
         and bool(first.get("must_not", []))
         and not any(fragment in result["stdout"] for fragment in forbidden_fragments),
         "owner-forms-jsonl-single-output",
@@ -531,6 +533,7 @@ def test_owner_forms_jsonl_single_output():
             "owner_decision": first.get("owner_decision"),
             "source_sha256": first.get("source_sha256"),
             "source_size": first.get("source_size"),
+            "target_candidates": first.get("target_candidates", []),
             "identity_status": identity.get("identity_status"),
             "stdout_sample": result["stdout"][:1000],
             "stderr_sample": result["stderr"][:500],
@@ -576,6 +579,7 @@ def test_owner_forms_jsonl_all_open_output():
         and all(form.get("owner_decision") == "" for form in forms)
         and all(form.get("source_sha256") == "" for form in forms)
         and all(form.get("source_size") == "" for form in forms)
+        and all(form.get("target_candidates") for form in forms)
         and not any(fragment in result["stdout"] for fragment in forbidden_fragments),
         "owner-forms-jsonl-all-open-output",
         "owner forms JSONL-only mode prints all seven open skeletons",
@@ -586,6 +590,7 @@ def test_owner_forms_jsonl_all_open_output():
             "unique_worksheet_count": len(worksheet_ids),
             "parse_errors": parse_errors,
             "identity_statuses": identity_statuses,
+            "target_candidate_counts": [len(form.get("target_candidates", [])) for form in forms],
             "stdout_sample": result["stdout"][:1000],
             "stderr_sample": result["stderr"][:500],
         },
@@ -1035,6 +1040,25 @@ def test_status_next_owner_gate():
         },
     )
 
+def test_status_text_owner_summary_commands():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh"])
+    expect(
+        result["exit_code"] == 0
+        and "- owner summary commands:" in result["stdout"]
+        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
+        and "- owner forms-jsonl commands:" in result["stdout"]
+        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+        "status-text-owner-summary-commands",
+        "status text mode exposes by-owner owner summary and forms-jsonl commands",
+        {
+            "exit_code": result["exit_code"],
+            "has_owner_summary_heading": "- owner summary commands:" in result["stdout"],
+            "has_project_owner_summary": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"],
+            "has_project_owner_forms_jsonl": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_final_gate_owner_review_blocker():
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         expect(
@@ -1098,6 +1122,9 @@ def test_final_gate_owner_review_blocker():
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
+        and checks.get("git_diff_check", {}).get("status") == "pass"
+        and checks.get("git_diff_check", {}).get("exit_code") == 0
+        and checks.get("git_diff_check", {}).get("command") == "rtk git diff --check"
         and checks.get("knowledge_regression", {}).get("status") == "pass"
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
@@ -1121,6 +1148,41 @@ def test_final_gate_owner_review_blocker():
             "blockers": blockers,
             "gap_map": gap_map,
             "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
+def test_final_gate_default_regression_path():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-default-regression-path",
+            "final gate default path is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
+    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checks = parsed.get("checks", {})
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-owner-review"
+        and checks.get("knowledge_regression", {}).get("status") == "pass"
+        and checks.get("knowledge_regression", {}).get("exit_code") == 0
+        and checks.get("knowledge_regression", {}).get("result_count", 0) >= 1
+        and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
+        and checks.get("git_diff_check", {}).get("status") == "pass",
+        "final-gate-default-regression-path",
+        "final gate default path executes regression instead of relying on self-test skip",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "checks": checks,
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
         },
     )
 
@@ -1650,6 +1712,37 @@ def test_manual_entry_docs_owner_option():
         },
     )
 
+def test_manual_entry_offline_docs():
+    readme_path = root / "README.md"
+    templates_readme_path = root / "templates" / "README.md"
+    try:
+        readme = readme_path.read_text()
+        templates_readme = templates_readme_path.read_text()
+        read_error = ""
+    except Exception as exc:
+        readme = ""
+        templates_readme = ""
+        read_error = str(exc)
+    expect(
+        not read_error
+        and "manual_validation_pending: true" in readme
+        and '"type": "manual"' in readme
+        and '"from": "field-debug / meeting / code-review / lab-test / owner-decision / design-review"' in readme
+        and '"status": "reviewing"' in readme
+        and '"review_status": "manual-entry-pending-review"' in readme
+        and "registry/migrations.jsonl" in templates_readme
+        and "迁移、引用或归档" in templates_readme,
+        "manual-entry-offline-docs",
+        "manual and offline maintenance docs state default registry values and conditional migration records",
+        {
+            "read_error": read_error,
+            "readme_has_manual_validation_pending": "manual_validation_pending: true" in readme,
+            "readme_has_manual_source_type": '"type": "manual"' in readme,
+            "readme_has_reviewing_default": '"status": "reviewing"' in readme,
+            "templates_has_conditional_migration": "registry/migrations.jsonl" in templates_readme and "迁移、引用或归档" in templates_readme,
+        },
+    )
+
 def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
@@ -1781,7 +1874,9 @@ def test_regression_manifest_coverage():
         "owner-summary-by-owner",
         "owner-next-open-focus",
         "status-next-owner-gate",
+        "status-text-owner-summary-commands",
         "final-gate-owner-review-blocker",
+        "final-gate-default-regression-path",
         "owner-landing-plan-project-index",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
@@ -1792,6 +1887,7 @@ def test_regression_manifest_coverage():
         "manual-entry-default-dates",
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
+        "manual-entry-offline-docs",
         "index-plan-extended-sections",
         "source-manual-entry-guide",
         "regression-manifest-coverage",
@@ -1800,14 +1896,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "33 个回归场景" in manifest_text,
+        and "36 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "33 个回归场景",
+            "expected_count_text": "36 个回归场景",
         },
     )
 
@@ -1831,7 +1927,9 @@ for test_fn in [
     test_owner_summary_by_owner,
     test_owner_next_open_focus,
     test_status_next_owner_gate,
+    test_status_text_owner_summary_commands,
     test_final_gate_owner_review_blocker,
+    test_final_gate_default_regression_path,
     test_owner_landing_plan_project_index,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
@@ -1842,6 +1940,7 @@ for test_fn in [
     test_manual_entry_default_dates,
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
+    test_manual_entry_offline_docs,
     test_index_plan_extended_sections,
     test_source_manual_entry_guide,
     test_regression_manifest_coverage,

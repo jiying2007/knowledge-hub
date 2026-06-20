@@ -49,6 +49,22 @@ def run_json(command, extra_env=None):
         "stderr": completed.stderr.strip(),
     }
 
+def run_text(command):
+    completed = subprocess.run(
+        command,
+        cwd=root,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return {
+        "command": " ".join(command),
+        "exit_code": completed.returncode,
+        "stdout": completed.stdout.strip(),
+        "stderr": completed.stderr.strip(),
+    }
+
 def load_json(path):
     try:
         return json.loads(path.read_text())
@@ -71,6 +87,7 @@ def load_jsonl(path):
     return rows
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
         "command": "rtk bash tools/knowledge-regression.sh --json",
@@ -100,6 +117,16 @@ elif knowledge_check["exit_code"] != 0:
         "count": len(check_payload.get("errors", [])),
         "summary_zh": "knowledge-check 未通过，必须先修复全仓一致性错误。",
         "command": knowledge_check["command"],
+    })
+
+if git_diff_check["exit_code"] != 0:
+    blockers.append({
+        "id": "git-diff-check-failed",
+        "severity": "blocker",
+        "summary_zh": "git diff --check 未通过，当前 diff 存在空白或补丁格式问题，不能作为终态证据。",
+        "command": git_diff_check["command"],
+        "stdout": git_diff_check["stdout"],
+        "stderr": git_diff_check["stderr"],
     })
 
 if knowledge_regression["parse_error"]:
@@ -177,7 +204,7 @@ def blocker_to_gap(blocker):
             if is_owner_gate
             else "按具体 blocker 限定；共享 registry/index/tool 由主 agent 串行修改。"
         ),
-        "validation_commands": blocker.get("commands", []) + blocker.get("command_templates", []),
+        "validation_commands": blocker.get("commands", []) + blocker.get("command_templates", []) + ([blocker.get("command")] if blocker.get("command") else []),
         "status": "open",
     }
 
@@ -186,6 +213,7 @@ only_owner_review_blockers = bool(blockers) and all(item.get("severity") == "own
 core_checks_pass = (
     not knowledge_check["parse_error"]
     and knowledge_check["exit_code"] == 0
+    and git_diff_check["exit_code"] == 0
     and not knowledge_regression["parse_error"]
     and knowledge_regression["exit_code"] == 0
 )
@@ -353,6 +381,13 @@ result = {
                 if item.get("status") != "pass"
             ],
             "parse_error": knowledge_regression["parse_error"],
+        },
+        "git_diff_check": {
+            "exit_code": git_diff_check["exit_code"],
+            "status": "pass" if git_diff_check["exit_code"] == 0 else "fail",
+            "command": git_diff_check["command"],
+            "stdout": git_diff_check["stdout"],
+            "stderr": git_diff_check["stderr"],
         },
         "knowledge_status_strict": {
             "exit_code": strict_status["exit_code"],

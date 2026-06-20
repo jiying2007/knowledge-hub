@@ -508,6 +508,10 @@ if summary_commands:
     print("- summary commands:")
     for command in summary_commands:
         print(f"  - `{command}`")
+if owner_summary_commands:
+    print("- owner summary commands:")
+    for command in owner_summary_commands:
+        print(f"  - `{command}`")
 if forms_jsonl_commands:
     print("- forms-jsonl commands:")
     for command in forms_jsonl_commands:
