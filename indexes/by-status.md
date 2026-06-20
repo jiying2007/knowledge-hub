@@ -151,6 +151,9 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-final-state-goal-20260620`
 - reviewing: `knowledge-hub-owner-dispatch-filter-20260620`
 - reviewing: `knowledge-hub-source-coverage-closeout-20260620`
+- reviewing: `pcr02-tools-boundary-20260620`
+- reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
+- reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -238,6 +241,9 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - final-gate-applied: `tools/knowledge-final-gate.sh` aggregates `knowledge-check`、`knowledge-regression` and `knowledge-status --strict` for terminal validation, documented by `artifacts/manifests/knowledge-hub-final-gate-20260620.jsonl`.
 - owner-intake-execution-ready: PCR02 consolidated owner decision intake execution package is ready for manual assignment and sign-off by `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.jsonl`; it now records 7/7 owner-ready package coverage, but no owner gate is resolved by this package alone.
 - regression-temp-cleanup-applied: `tools/knowledge-regression.sh` cleans temp fixtures per scenario, records low-temp-space/internal exceptions as structured failure details, and exposes them as JSON in `--json` / final-gate paths, documented by `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.jsonl`.
+- pcr02-tools-boundary-applied: PCR02 tools directory is registered as tool/reference/validation boundary by `artifacts/manifests/pcr02-tools-boundary-20260620.jsonl`; memory automation remains owner-gated and report-only.
+- pcr02-knowledge-secret-config-boundary-applied: PCR02 knowledge source env/config, local rules, runbooks, standards-like docs, governance tools and skill assets are registered by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.jsonl`; no secret-like body is copied.
+- pcr02-product-test-boundary-applied: PCR02 product-test Markdown, artifacts, configs, C/C++ references and build residue are classified by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.jsonl`; source code and attachments remain reference-only.
 - owner-ready-no-decision: PCR02 `AGENTS.md` has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-001` remains open.
 - owner-ready-no-decision: PCR02 diag metadata has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-002` remains open.
 - owner-ready-no-decision: PCR02 ASAN runbook has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-003` remains open.

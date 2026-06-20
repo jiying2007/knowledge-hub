@@ -47,8 +47,11 @@
 - `embedded-knowledge`: remains an external legacy team SSOT pending owner review and source stabilization; source coverage boundary is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
 - `codex-archive`: remains reference-first through Codex archive tools; boundary is tracked by `domains/codex/archive/codex-archive.ref.md` and `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
 - `pcr02-project-tools`: tool/diag/memory automation source coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-tools`: concrete README/AGENTS, diag, runtime diagnostic, memory automation and generated artifact boundaries are tracked by `artifacts/manifests/pcr02-tools-boundary-20260620.md`.
 - `pcr02-project-knowledge`: classify-first, secret-boundary and tool/artifact boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-knowledge`: concrete env/config, project-local rule, runbook, standards-like doc, governance tool and skill-asset boundaries are tracked by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`.
 - `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-product-test`: concrete Markdown, PDF/archive, config, C/C++ reference and build artifact boundaries are tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`.
 - `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-module-agent-rules`: module-local owner-gated rule coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.

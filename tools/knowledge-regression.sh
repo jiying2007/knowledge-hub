@@ -212,6 +212,97 @@ def test_pcr02_level2_source_coverage():
         },
     )
 
+def test_pcr02_level2_boundary_manifests():
+    expected = {
+        "pcr02-tools-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-tools-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-tools-boundary-20260620.jsonl",
+            "source_id": "pcr02-project-tools",
+            "required_text": "memory-candidate-automation-ref",
+        },
+        "pcr02-knowledge-secret-config-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.jsonl",
+            "source_id": "pcr02-project-knowledge",
+            "required_text": "project-local-standard-candidate",
+        },
+        "pcr02-product-test-artifact-config-interface-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.jsonl",
+            "source_id": "pcr02-product-test",
+            "required_text": "build-artifact-generated",
+        },
+    }
+    errors = []
+    registry_ids = set()
+    by_source_text = ""
+    by_project_text = ""
+    try:
+        for line in (root / "registry" / "items.jsonl").read_text().splitlines():
+            if line.strip():
+                registry_ids.add(json.loads(line).get("id", ""))
+    except Exception as exc:
+        errors.append(f"registry parse: {exc}")
+    try:
+        by_source_text = (root / "indexes" / "by-source.md").read_text()
+        by_project_text = (root / "indexes" / "by-project.md").read_text()
+    except Exception as exc:
+        errors.append(f"index read: {exc}")
+    row_source_ids = {}
+    row_counts = {}
+    missing_files = []
+    missing_required_text = []
+    for item_id, spec in expected.items():
+        md_path = root / spec["md"]
+        jsonl_path = root / spec["jsonl"]
+        if not md_path.exists():
+            missing_files.append(spec["md"])
+        if not jsonl_path.exists():
+            missing_files.append(spec["jsonl"])
+            continue
+        rows = []
+        try:
+            for line in jsonl_path.read_text().splitlines():
+                if line.strip():
+                    rows.append(json.loads(line))
+        except Exception as exc:
+            errors.append(f"{spec['jsonl']} parse: {exc}")
+        row_counts[item_id] = len(rows)
+        row_source_ids[item_id] = sorted({row.get("source_id", "") for row in rows})
+        if rows and set(row_source_ids[item_id]) != {spec["source_id"]}:
+            errors.append(f"{item_id} source_id mismatch: {row_source_ids[item_id]}")
+        try:
+            md_text = md_path.read_text()
+        except Exception as exc:
+            errors.append(f"{spec['md']} read: {exc}")
+            md_text = ""
+        if spec["required_text"] not in md_text:
+            missing_required_text.append(spec["required_text"])
+    missing_registry = sorted(set(expected) - registry_ids)
+    missing_by_source = [spec["md"] for spec in expected.values() if spec["md"] not in by_source_text]
+    missing_by_project = [spec["md"] for spec in expected.values() if spec["md"] not in by_project_text]
+    expect(
+        not errors
+        and not missing_files
+        and not missing_registry
+        and not missing_by_source
+        and not missing_by_project
+        and not missing_required_text
+        and all(count > 0 for count in row_counts.values()),
+        "pcr02-level2-boundary-manifests",
+        "PCR02 Level 2 boundary manifests are registered and indexed",
+        {
+            "errors": errors,
+            "missing_files": missing_files,
+            "missing_registry": missing_registry,
+            "missing_by_source": missing_by_source,
+            "missing_by_project": missing_by_project,
+            "missing_required_text": missing_required_text,
+            "row_counts": row_counts,
+            "row_source_ids": row_source_ids,
+        },
+    )
+
 def test_status_wrong_bucket():
     repo = copy_repo("status-wrong-bucket")
     path = repo / "indexes" / "by-status.md"
@@ -1493,6 +1584,7 @@ def test_regression_manifest_coverage():
         "baseline-knowledge-check",
         "governance-goal-path-allowed",
         "pcr02-level2-source-coverage",
+        "pcr02-level2-boundary-manifests",
         "status-wrong-bucket",
         "status-noncanonical-only",
         "owner-partial-resolved",
@@ -1525,14 +1617,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "30 个回归场景" in manifest_text,
+        and "31 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "30 个回归场景",
+            "expected_count_text": "31 个回归场景",
         },
     )
 
@@ -1540,6 +1632,7 @@ for test_fn in [
     test_baseline,
     test_governance_goal_path_allowed,
     test_pcr02_level2_source_coverage,
+    test_pcr02_level2_boundary_manifests,
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,

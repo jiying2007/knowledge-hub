@@ -105,6 +105,9 @@
 - Engineering archive PCR02 archive corpus: `domains/projects/pcr02/archive/engineering-archive`
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - PCR02 Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- PCR02 tools boundary: `artifacts/manifests/pcr02-tools-boundary-20260620.md`
+- PCR02 knowledge secret/config boundary: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
+- PCR02 product-test artifact/config/interface boundary: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - Embedded knowledge owner-review gate: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Codex memories auxiliary-only boundary: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Knowledge Hub status strict blockers: `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.md`

@@ -152,3 +152,6 @@
 - 2026-09-20: `knowledge-hub-final-state-goal-20260620`
 - 2026-09-20: `knowledge-hub-owner-dispatch-filter-20260620`
 - 2026-09-20: `knowledge-hub-source-coverage-closeout-20260620`
+- 2026-09-20: `pcr02-tools-boundary-20260620`
+- 2026-09-20: `pcr02-knowledge-secret-config-boundary-20260620`
+- 2026-09-20: `pcr02-product-test-artifact-config-interface-boundary-20260620`
