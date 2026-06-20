@@ -104,6 +104,44 @@ def test_baseline():
         {"exit_code": result["exit_code"], "stderr": result["stderr"][:500]},
     )
 
+def test_governance_goal_path_allowed():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--explain",
+            "knowledge-hub-final-state-goal-20260620",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    explain = parsed.get("explain", {})
+    registry = explain.get("registry", {})
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("status") == "pass"
+        and explain.get("found") is True
+        and registry.get("path") == "docs/goals/knowledge-hub-final-state.md"
+        and registry.get("path_exists") is True,
+        "governance-goal-path-allowed",
+        "governance goal docs path is accepted and explainable",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "found": explain.get("found"),
+            "path": registry.get("path"),
+            "path_exists": registry.get("path_exists"),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_status_wrong_bucket():
     repo = copy_repo("status-wrong-bucket")
     path = repo / "indexes" / "by-status.md"
@@ -576,6 +614,7 @@ def test_owner_summary_all_open():
         and first.get("owner_ready_packages", [{}])[0].get("open_gate_remains") is True
         and first.get("owner_ready_packages", [{}])[0].get("identity_status") == "match"
         and first.get("required_owner_field_count") == 13
+        and "--owner team-core-or-pcr02-docs-owner" in first.get("focus_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first.get("focus_command", "")
         and "decision_forms" not in parsed
         and "owner_checklists" not in parsed,
@@ -595,6 +634,57 @@ def test_owner_summary_all_open():
             "first": first,
             "has_decision_forms": "decision_forms" in parsed,
             "has_owner_checklists": "owner_checklists" in parsed,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_owner_summary_by_owner():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--owner",
+            "project-owner",
+            "--summary",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    summary = parsed.get("owner_summary", {})
+    summary_rows = summary.get("rows", [])
+    owners = {row.get("owner") for row in parsed.get("rows", [])}
+    worksheet_ids = {row.get("worksheet_id") for row in summary_rows}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("owner") == "project-owner"
+        and parsed.get("row_count") == 2
+        and parsed.get("open_count") == 2
+        and summary.get("row_count") == 2
+        and summary.get("open_count") == 2
+        and summary.get("owner_counts", {}).get("project-owner") == 2
+        and owners == {"project-owner"}
+        and worksheet_ids == {
+            "pcr02-owner-decision-worksheet-005",
+            "pcr02-owner-decision-worksheet-007",
+        }
+        and all("--owner project-owner" in row.get("focus_command", "") for row in summary_rows),
+        "owner-summary-by-owner",
+        "owner summary can filter open gates by exact owner",
+        {
+            "exit_code": result["exit_code"],
+            "owner": parsed.get("owner"),
+            "row_count": parsed.get("row_count"),
+            "open_count": parsed.get("open_count"),
+            "owner_counts": summary.get("owner_counts", {}),
+            "worksheet_ids": sorted(worksheet_ids),
             "stdout_sample": result["stdout"][:1000],
         },
     )
@@ -663,6 +753,7 @@ def test_status_next_owner_gate():
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
     owner_gates = parsed.get("owner_gates", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
+    owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
     validate_forms_command_templates = parsed.get("owner_gates", {}).get("validate_forms_command_templates", [])
     landing_plan_command_templates = parsed.get("owner_gates", {}).get("landing_plan_command_templates", [])
@@ -684,6 +775,7 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_duplicate_count") == 0
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and any("--summary" in str(command) for command in summary_commands)
+        and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
@@ -706,12 +798,14 @@ def test_status_next_owner_gate():
         and "--landing-plan" in next_open.get("focus_landing_plan_command_template", "")
         and "owner-decisions.jsonl" in next_open.get("focus_landing_plan_command_template", "")
         and any("--summary" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
         and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
         and any("--landing-plan" in str(action) for action in next_actions)
         and owner_blocker.get("count") == 7
         and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and not any("owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
@@ -730,6 +824,7 @@ def test_status_next_owner_gate():
             "owner_ready_duplicate_count": owner_gates.get("owner_ready_duplicate_count"),
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
+            "owner_summary_commands": owner_summary_commands,
             "forms_jsonl_commands": forms_jsonl_commands,
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,
@@ -1326,6 +1421,7 @@ def test_regression_manifest_coverage():
         read_error = ""
     required_ids = [
         "baseline-knowledge-check",
+        "governance-goal-path-allowed",
         "status-wrong-bucket",
         "status-noncanonical-only",
         "owner-partial-resolved",
@@ -1338,6 +1434,7 @@ def test_regression_manifest_coverage():
         "owner-form-context",
         "owner-source-identity-context",
         "owner-summary-all-open",
+        "owner-summary-by-owner",
         "owner-next-open-focus",
         "status-next-owner-gate",
         "final-gate-owner-review-blocker",
@@ -1357,19 +1454,20 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "27 个回归场景" in manifest_text,
+        and "29 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "27 个回归场景",
+            "expected_count_text": "29 个回归场景",
         },
     )
 
 for test_fn in [
     test_baseline,
+    test_governance_goal_path_allowed,
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,
@@ -1382,6 +1480,7 @@ for test_fn in [
     test_owner_form_context,
     test_owner_source_identity_context,
     test_owner_summary_all_open,
+    test_owner_summary_by_owner,
     test_owner_next_open_focus,
     test_status_next_owner_gate,
     test_final_gate_owner_review_blocker,

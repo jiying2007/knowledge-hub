@@ -126,3 +126,5 @@
 - Knowledge Hub status owner landing command: `artifacts/manifests/knowledge-hub-status-owner-landing-command-20260620.md`
 - Knowledge Hub status command template split: `artifacts/manifests/knowledge-hub-status-command-template-split-20260620.md`
 - Knowledge Hub owner placeholder quoting: `artifacts/manifests/knowledge-hub-owner-placeholder-quoting-20260620.md`
+- Knowledge Hub final state goal: `docs/goals/knowledge-hub-final-state.md`
+- Knowledge Hub owner dispatch filter: `artifacts/manifests/knowledge-hub-owner-dispatch-filter-20260620.md`

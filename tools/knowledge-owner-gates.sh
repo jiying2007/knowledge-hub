@@ -24,6 +24,7 @@ parser.add_argument("--checklist", action="store_true", help="Print owner-facing
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
+parser.add_argument("--owner", default="", help="Limit output to one exact owner value.")
 parser.add_argument("--worksheet-id", default="", help="Limit output to one owner decision worksheet id.")
 parser.add_argument("--next-open", action="store_true", help="Limit output to the next open owner gate by review_after and worksheet id.")
 parser.add_argument("--status", choices=["all", "open", "resolved"], default="open")
@@ -374,7 +375,8 @@ def make_owner_summary(rows):
                 "owner_ready_packages": ready_items,
                 "focus_command": (
                     "rtk bash tools/knowledge-owner-gates.sh "
-                    f"--source-id {row['source_id']} --worksheet-id {row['id']} --checklist --forms"
+                    f"--source-id {row['source_id']} --owner {shlex_quote(row['owner'])} "
+                    f"--worksheet-id {row['id']} --checklist --forms"
                 ),
             }
         )
@@ -391,6 +393,15 @@ def make_owner_summary(rows):
         "rows": summary_rows,
         "notes_zh": "只读 owner gate 总览；用于人工分派和收口，不生成 owner decision，不写文件，不关闭门禁，不提升 active。",
     }
+
+def shlex_quote(value):
+    text = str(value)
+    if not text:
+        return "''"
+    safe_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@%+=:,./-"
+    if all(char in safe_chars for char in text):
+        return text
+    return "'" + text.replace("'", "'\"'\"'") + "'"
 
 def is_filled(value):
     return _is_filled(value)
@@ -638,6 +649,9 @@ for worksheet_path in worksheet_paths:
         source_path = str(row.get("source_path", ""))
         if args.source_id and source_id != args.source_id:
             continue
+        owner = row.get("owner_required") or row.get("owner_candidate") or ""
+        if args.owner and owner != args.owner:
+            continue
         key = (source_id, source_path)
         resolved = is_resolved(row)
         row_status = "resolved" if resolved else "open"
@@ -649,7 +663,7 @@ for worksheet_path in worksheet_paths:
                 "id": row_id,
                 "source_id": source_id,
                 "source_path": source_path,
-                "owner": row.get("owner_required") or row.get("owner_candidate") or "",
+                "owner": owner,
                 "status": row_status,
                 "worksheet_status": row.get("worksheet_status") or row.get("status") or row.get("default_state") or "",
                 "decision_options": row.get("decision_options", []),
@@ -689,6 +703,7 @@ result = {
     "root": str(root),
     "read_only": True,
     "source_id": args.source_id,
+    "owner": args.owner,
     "worksheet_id": args.worksheet_id,
     "next_open": args.next_open,
     "filter_status": args.status,
@@ -769,6 +784,8 @@ print(f"- owner-ready invalid: {owner_ready_coverage['owner_ready_invalid_count'
 print(f"- owner-ready duplicate: {owner_ready_coverage['owner_ready_duplicate_count']}")
 if args.source_id:
     print(f"- source_id: {args.source_id}")
+if args.owner:
+    print(f"- owner: {args.owner}")
 print(f"- filter: {args.status}")
 for error in errors:
     print(f"- ERROR: {error}")

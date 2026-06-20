@@ -152,7 +152,7 @@ personal
 Domain/path invariants:
 
 - `root` domain path must be `README.md` or `AGENTS.md`.
-- `governance` domain path must live under `governance/`, `registry/`, `indexes/`, `tools/`, `templates/` or `artifacts/manifests/`.
+- `governance` domain path must live under `governance/`, `registry/`, `indexes/`, `tools/`, `templates/`, `docs/goals/` or `artifacts/manifests/`.
 - `projects/<project>` domain path must live under `domains/projects/<project>/` or `artifacts/manifests/`.
 - `embedded` domain path must live under `domains/embedded/` or `artifacts/manifests/`.
 - `patents` domain path must live under `domains/patents/` or `artifacts/manifests/`.

@@ -127,6 +127,7 @@ open_owner_rows = sorted(
 )
 next_owner_gate = {}
 summary_commands = []
+owner_summary_commands = []
 forms_jsonl_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
@@ -141,6 +142,23 @@ if open_owner_rows:
             "--summary",
         ]
         summary_commands.append(" ".join(shlex.quote(str(part)) for part in summary_command))
+    for source_id, owner in sorted({
+        (str(row.get("source_id", "")), str(row.get("owner", "")))
+        for row in open_owner_rows
+        if row.get("source_id") and row.get("owner")
+    }):
+        owner_summary_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--summary",
+        ]
+        owner_summary_commands.append(" ".join(shlex.quote(str(part)) for part in owner_summary_command))
+    for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         forms_jsonl_command = [
             "rtk",
             "bash",
@@ -281,6 +299,11 @@ if open_owner_gate_count:
             "先查看 owner gate 总览以分派全部 open gate；运行："
             f"{summary_commands[0]}。"
         )
+    if owner_summary_commands:
+        next_actions.append(
+            "需要按责任人分派 owner gate 时，运行 owner 过滤总览，例如："
+            f"{owner_summary_commands[0]}。"
+        )
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
@@ -336,6 +359,7 @@ if active_exposure_count:
     })
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
+    owner_commands.extend(owner_summary_commands)
     if next_owner_gate.get("next_open_command"):
         owner_commands.append(next_owner_gate["next_open_command"])
     if next_owner_gate.get("next_open_forms_jsonl_command"):
@@ -401,6 +425,7 @@ result = {
         "owner_ready_invalid": owner_payload.get("owner_ready_invalid", []),
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
         "summary_commands": summary_commands,
+        "owner_summary_commands": owner_summary_commands,
         "forms_jsonl_commands": forms_jsonl_commands,
         "validate_forms_command_templates": validate_forms_command_templates,
         "landing_plan_command_templates": landing_plan_command_templates,

@@ -705,7 +705,7 @@ if not args.sources_only:
         path_text = str(item.get("path", ""))
         if domain == "root" and path_text not in {"README.md", "AGENTS.md"}:
             errors.append(f"items:{item_id} root domain path outside root docs: {path_text}")
-        if domain == "governance" and not path_text.startswith(("governance/", "registry/", "indexes/", "tools/", "templates/", "artifacts/manifests/")):
+        if domain == "governance" and not path_text.startswith(("governance/", "registry/", "indexes/", "tools/", "templates/", "docs/goals/", "artifacts/manifests/")):
             errors.append(f"items:{item_id} governance domain path outside governance control plane: {path_text}")
         if domain.startswith("projects/"):
             project_id = domain.split("/", 1)[1]
