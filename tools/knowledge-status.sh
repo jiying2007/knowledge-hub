@@ -295,6 +295,7 @@ else:
 
 exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
 final_gate_command = "rtk bash tools/knowledge-final-gate.sh --json"
+review_after_command = "rtk bash tools/knowledge-index-plan.sh --section review-date"
 
 next_actions = []
 if knowledge_check["exit_code"] != 0:
@@ -350,7 +351,10 @@ if open_owner_gate_count:
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
 if stale_items:
-    next_actions.append("复核 review_after 已过期的 active/reviewing 条目。")
+    next_actions.append(
+        "复核 review_after 已过期的 active/reviewing 条目；先运行："
+        f"{review_after_command}。"
+    )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
@@ -423,6 +427,7 @@ result = {
         "by_domain": count_by(items, "domain"),
         "stale_review_after_count": len(stale_items),
         "stale_review_after_sample": stale_items[:10],
+        "review_after_command": review_after_command,
     },
     "sources": {
         "registered_count": len(sources),
@@ -489,6 +494,7 @@ print()
 for key, value in result["registry"]["by_status"].items():
     print(f"- status `{key}`: {value}")
 print(f"- stale review_after: {len(stale_items)}")
+print(f"- review_after command: `{review_after_command}`")
 if stale_items:
     for item in stale_items[:10]:
         print(f"  - `{item['id']}` status={item['status']} review_after={item['review_after']} owner={item['owner']}")

@@ -29,3 +29,4 @@
 - `knowledge-hub-status-final-gate-command`: status final gate command evidence is `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.md`; status remains a dashboard and does not replace final gate.
 - `knowledge-hub-final-state-handoff`: final-state handoff evidence is `artifacts/manifests/knowledge-hub-final-state-handoff-20260620.md`; it is recovery context only and does not generate owner decision or completion evidence.
 - `knowledge-hub-final-maintenance-closure`: final maintenance closure evidence is `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.md`; it improves manual/terminal gates but does not generate owner decision or close owner gates.
+- `knowledge-hub-index-recovery-hardening`: index recovery hardening evidence is `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.md`; it improves source/status/decision recovery views but does not generate owner decision or close owner gates.

@@ -20,10 +20,10 @@
 ## 维护规则
 
 - `by-status.md` 必须使用 canonical 行，例如 `- reviewing: <id>`。
-- `by-source.md` 用于从 source id 恢复 migration、reference、artifact-ref、owner gate、source identity 和 coverage 证据。
+- `by-source.md` 用于从 source id 恢复 migration、reference、artifact-ref、owner gate、source identity 和 coverage 证据；不要在索引里重复维护 source registry 字段，人工恢复 owner、review_after、final_disposition、check/no_check_reason 时运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source`。
 - `by-decision.md` 同时记录真实决策、迁移决策和 owner-gated 的 `no owner decision generated` 状态；不得把 owner-ready package 写成已签收决策。
 - `by-project.md` 应能从 project id 找到 current、archive、decisions、validation 和 manifests。
-- `by-topic.md` 只做主题导航，不复制正文。
+- `by-topic.md` 只做主题导航，不复制正文；跨会话、跨项目和跨 source 的恢复优先写清主题入口，不把临时会话 handoff 当 active fact。
 
 ## 检查命令
 

@@ -61,6 +61,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --owner <owner> --id <id> --path domains/projects/<project>/archive/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
+# 复核过期项
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+
 # owner 签收一个 gate
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --checklist --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms-jsonl

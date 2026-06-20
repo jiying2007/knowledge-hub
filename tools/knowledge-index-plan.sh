@@ -156,9 +156,15 @@ for source in sources:
     by_source[source_id] = {
         "role": source.get("role", ""),
         "path": source.get("path", ""),
+        "authority": source.get("authority", ""),
         "status": source.get("status", ""),
         "write_policy": source.get("write_policy", ""),
+        "migration_strategy": source.get("migration_strategy", ""),
+        "owner": source.get("owner", ""),
+        "review_after": source.get("review_after", ""),
+        "final_disposition": source.get("final_disposition", ""),
         "check": source.get("check", ""),
+        "no_check_reason": source.get("no_check_reason", ""),
         "coverage": coverage_by_source.get(source_id, {}),
         "item_refs": item_refs,
         "migration_refs": migration_refs[:10],
@@ -205,8 +211,9 @@ for worksheet_path in worksheet_paths:
                     "worksheet_id": worksheet_id,
                     "source_id": row.get("source_id", ""),
                     "source_path": row.get("source_path", ""),
-                    "status": row.get("status", ""),
-                    "owner": row.get("owner", ""),
+                    "status": row.get("worksheet_status") or row.get("status") or row.get("default_state", ""),
+                    "owner": row.get("owner_required") or row.get("owner_candidate") or row.get("owner", ""),
+                    "review_after": row.get("review_after", ""),
                     "decision_state": "no owner decision generated",
                 }
             )
@@ -318,9 +325,16 @@ def print_source():
         print()
         print(f"### {source_id}")
         print(f"- role: `{info.get('role', '')}`")
+        print(f"- authority: `{info.get('authority', '')}`")
         print(f"- status: `{info.get('status', '')}`")
+        print(f"- owner: `{info.get('owner', '')}`")
+        print(f"- review_after: `{info.get('review_after', '')}`")
         print(f"- write_policy: `{info.get('write_policy', '')}`")
+        print(f"- migration_strategy: `{info.get('migration_strategy', '')}`")
+        print(f"- final_disposition: `{info.get('final_disposition', '')}`")
         print(f"- check: `{info.get('check', '') or '<no-check-in-source-registry>'}`")
+        if info.get("no_check_reason"):
+            print(f"- no_check_reason: {info.get('no_check_reason')}")
         coverage = info.get("coverage", {})
         if coverage:
             print(f"- coverage: `{coverage.get('status', '')}` / `{coverage.get('classification', '')}` / checked_at `{coverage.get('checked_at', '')}`")
@@ -352,7 +366,11 @@ def print_decision():
     print()
     print("### Owner Worksheets")
     for row in by_decision.get("owner_worksheets", []):
-        print(f"- `{row.get('worksheet_id', '')}`: {row.get('source_id', '')}/{row.get('source_path', '')}; {row.get('decision_state', '')}")
+        print(
+            f"- `{row.get('worksheet_id', '')}`: {row.get('source_id', '')}/{row.get('source_path', '')}; "
+            f"status `{row.get('status', '')}`; owner `{row.get('owner', '')}`; "
+            f"review_after `{row.get('review_after', '')}`; {row.get('decision_state', '')}"
+        )
     print()
     print("### Migration Decisions")
     for row in by_decision.get("migration_decisions", [])[:80]:

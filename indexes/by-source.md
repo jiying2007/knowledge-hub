@@ -16,6 +16,17 @@
 | pcr02-module-agent-rules | project-agent-rules-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 | pcr02-project-agent-config | project-agent-config-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 
+## Source Governance Recovery
+
+本索引主表只保留 source id、role 和 path，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check/no_check_reason、coverage 和 migration refs 时，运行：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
+```
+
+`knowledge-index-plan` 只读输出 planned 视图，不写 registry、index、owner decision、memory，也不关闭 owner gate。
+
 ## Source-Specific Review Artifacts
 
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN split targets are tracked by `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.

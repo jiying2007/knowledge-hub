@@ -115,7 +115,17 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
-### 3. 归档一条历史记录
+### 3. 复核过期项
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+```
+
+先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` 和 `registry.review_after_command`。过期项不等于工具失败，但必须由 owner 复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing`，不得自动改 `active`、关闭 owner gate 或提升标准。
+
+### 4. 归档一条历史记录
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --id <id> --path domains/projects/<project>/archive/<file>.md --owner <owner>
@@ -123,7 +133,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain 
 
 复制 `templates/archive-note.md`，正文写清原始来源、归档边界、证据、当前状态和风险；registry item 默认 `status: archived` 或 `reviewing`，不把历史记录写成 active fact。按 `templates/migration-record.md` 追加迁移/归档记录，并同步项目、source、topic 或 decision 索引。
 
-### 4. owner 签收一个 gate
+### 5. owner 签收一个 gate
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms
@@ -135,7 +145,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 
 建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。多 owner 分派时先用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
-### 5. 跑一次终态检查
+### 6. 跑一次终态检查
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json

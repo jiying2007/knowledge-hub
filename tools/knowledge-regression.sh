@@ -1047,14 +1047,16 @@ def test_status_text_owner_summary_commands():
         and "- owner summary commands:" in result["stdout"]
         and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
         and "- owner forms-jsonl commands:" in result["stdout"]
-        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"]
+        and "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
         "status-text-owner-summary-commands",
-        "status text mode exposes by-owner owner summary and forms-jsonl commands",
+        "status text mode exposes owner dispatch and review_after commands",
         {
             "exit_code": result["exit_code"],
             "has_owner_summary_heading": "- owner summary commands:" in result["stdout"],
             "has_project_owner_summary": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"],
             "has_project_owner_forms_jsonl": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+            "has_review_after_command": "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -1743,6 +1745,48 @@ def test_manual_entry_offline_docs():
         },
     )
 
+def test_index_readme_maintenance_coverage():
+    readme_path = root / "indexes" / "README.md"
+    try:
+        readme = readme_path.read_text()
+        read_error = ""
+    except Exception as exc:
+        readme = ""
+        read_error = str(exc)
+    required_fragments = [
+        "registry/items.jsonl",
+        "registry/sources.json",
+        "registry/migrations.jsonl",
+        "indexes/by-owner.md",
+        "indexes/by-review-date.md",
+        "indexes/by-status.md",
+        "indexes/by-project.md",
+        "indexes/by-source.md",
+        "indexes/by-topic.md",
+        "indexes/by-decision.md",
+        "knowledge-index-plan.sh --section all",
+        "knowledge-check.sh --dry-run --json --diagnostics",
+        "manual_validation_pending: true",
+        "不得覆盖人工结论",
+        "自动改 active",
+        "关闭 owner gate",
+        "写 memory",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
+    expect(
+        not read_error and not missing_fragments,
+        "index-readme-maintenance-coverage",
+        "indexes README documents manual maintenance paths and AI safety limits",
+        {
+            "read_error": read_error,
+            "missing_fragments": missing_fragments,
+            "has_source_registry": "registry/sources.json" in readme,
+            "has_core_indexes": all(fragment in readme for fragment in ["indexes/by-owner.md", "indexes/by-review-date.md", "indexes/by-status.md"]),
+            "has_extended_indexes": all(fragment in readme for fragment in ["indexes/by-project.md", "indexes/by-source.md", "indexes/by-topic.md", "indexes/by-decision.md"]),
+            "has_ai_limits": all(fragment in readme for fragment in ["不得覆盖人工结论", "自动改 active", "关闭 owner gate", "写 memory"]),
+        },
+    )
+
 def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
@@ -1765,6 +1809,10 @@ def test_index_plan_extended_sections():
     migration_decisions = decision_index.get("migration_decisions", [])
     pcr02_source = source_index.get("pcr02-project-tools", {})
     source_coverage = pcr02_source.get("coverage", {})
+    first_owner_worksheet = next(
+        (row for row in owner_worksheets if row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"),
+        {},
+    )
 
     expect(
         not parse_errors
@@ -1773,11 +1821,17 @@ def test_index_plan_extended_sections():
         and "pcr02" in project_index
         and project_index.get("pcr02", {}).get("domain") == "domains/projects/pcr02"
         and "pcr02-project-tools" in source_index
+        and pcr02_source.get("owner") == "pcr02-registry-owner"
+        and pcr02_source.get("review_after") == "2026-09-20"
+        and pcr02_source.get("final_disposition") == "mixed-terminal-coverage"
+        and pcr02_source.get("check", "").startswith("rtk bash -lc")
         and bool(source_coverage)
         and source_coverage.get("checked_at") == "2026-06-20"
         and "project-current" in topic_index
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
-        and any(row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001" for row in owner_worksheets)
+        and first_owner_worksheet.get("owner") == "team-core-or-pcr02-docs-owner"
+        and first_owner_worksheet.get("status") == "owner-fill-required"
+        and first_owner_worksheet.get("review_after") == "2026-09-17"
         and any(row.get("decision_state") == "no owner decision generated" for row in owner_worksheets)
         and bool(migration_decisions),
         "index-plan-extended-sections",
@@ -1789,11 +1843,120 @@ def test_index_plan_extended_sections():
             "project_keys_sample": sorted(project_index.keys())[:10],
             "source_has_pcr02_project_tools": "pcr02-project-tools" in source_index,
             "source_coverage_status": source_coverage.get("status", ""),
+            "source_owner": pcr02_source.get("owner", ""),
+            "source_review_after": pcr02_source.get("review_after", ""),
+            "source_final_disposition": pcr02_source.get("final_disposition", ""),
             "topic_keys_sample": sorted(topic_index.keys())[:10],
             "registry_decision_count": len(registry_decisions),
             "owner_worksheet_count": len(owner_worksheets),
+            "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),
         },
+    )
+
+def test_status_source_governance_summary():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    sources = parsed.get("sources", {}) if isinstance(parsed.get("sources"), dict) else {}
+    registry = parsed.get("registry", {}) if isinstance(parsed.get("registry"), dict) else {}
+    owner_gates = parsed.get("owner_gates", {}) if isinstance(parsed.get("owner_gates"), dict) else {}
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and sources.get("registered_count") == 13
+        and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and registry.get("stale_review_after_count") == 0
+        and registry.get("review_after_command") == "rtk bash tools/knowledge-index-plan.sh --section review-date"
+        and owner_gates.get("owner_ready_package_coverage") == "7/7"
+        and parsed.get("final_gate_command") == "rtk bash tools/knowledge-final-gate.sh --json",
+        "status-source-governance-summary",
+        "status JSON exposes source coverage, review_after and final gate recovery summary",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "registered_count": sources.get("registered_count"),
+            "latest_coverage_manifest": sources.get("latest_coverage_manifest"),
+            "stale_review_after_count": registry.get("stale_review_after_count"),
+            "review_after_command": registry.get("review_after_command"),
+            "owner_ready_package_coverage": owner_gates.get("owner_ready_package_coverage"),
+            "final_gate_command": parsed.get("final_gate_command"),
+            "status": parsed.get("status"),
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
+def test_stale_review_after_warning_surface():
+    repo = copy_repo("stale-review-after")
+    item_id = "knowledge-hub-final-maintenance-closure-20260620"
+    path = repo / "registry" / "items.jsonl"
+    lines = path.read_text().splitlines()
+    updated_lines = []
+    mutated = False
+    for line in lines:
+        if not line.strip():
+            updated_lines.append(line)
+            continue
+        row = json.loads(line)
+        if row.get("id") == item_id:
+            row["review_after"] = "2026-01-01"
+            row["status"] = "reviewing"
+            mutated = True
+            updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
+        else:
+            updated_lines.append(line)
+    if not mutated:
+        expect(False, "stale-review-after-warning-surface", "stale review_after is surfaced as warning and status action", {"setup_error": f"missing {item_id}"}, repo)
+        return
+    path.write_text("\n".join(updated_lines) + "\n")
+
+    check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    check_payload = {}
+    status_payload = {}
+    parse_errors = {}
+    try:
+        check_payload = json.loads(check_result["stdout"])
+    except Exception as exc:
+        parse_errors["knowledge_check"] = str(exc)
+    try:
+        status_payload = json.loads(status_result["stdout"])
+    except Exception as exc:
+        parse_errors["knowledge_status"] = str(exc)
+    warnings_text = "\n".join(check_payload.get("warnings", []))
+    registry = status_payload.get("registry", {}) if isinstance(status_payload.get("registry"), dict) else {}
+    stale_sample = registry.get("stale_review_after_sample", [])
+    next_actions_text = "\n".join(status_payload.get("next_actions_zh", []))
+    expect(
+        not parse_errors
+        and check_result["exit_code"] == 0
+        and check_payload.get("status") == "pass"
+        and item_id in warnings_text
+        and "review_after is stale" in warnings_text
+        and status_result["exit_code"] == 0
+        and registry.get("stale_review_after_count", 0) >= 1
+        and any(row.get("id") == item_id for row in stale_sample if isinstance(row, dict))
+        and "review_after" in next_actions_text
+        and "rtk bash tools/knowledge-index-plan.sh --section review-date" in next_actions_text,
+        "stale-review-after-warning-surface",
+        "stale review_after is warning/status surface, not a blocking check failure",
+        {
+            "parse_errors": parse_errors,
+            "knowledge_check_exit": check_result["exit_code"],
+            "knowledge_check_status": check_payload.get("status"),
+            "warning_count": len(check_payload.get("warnings", [])),
+            "warning_sample": check_payload.get("warnings", [])[:5],
+            "knowledge_status_exit": status_result["exit_code"],
+            "status": status_payload.get("status"),
+            "stale_review_after_count": registry.get("stale_review_after_count"),
+            "stale_sample": stale_sample[:3] if isinstance(stale_sample, list) else stale_sample,
+            "next_actions_sample": status_payload.get("next_actions_zh", [])[:5],
+        },
+        repo,
     )
 
 def test_source_manual_entry_guide():
@@ -1888,7 +2051,10 @@ def test_regression_manifest_coverage():
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
+        "index-readme-maintenance-coverage",
         "index-plan-extended-sections",
+        "status-source-governance-summary",
+        "stale-review-after-warning-surface",
         "source-manual-entry-guide",
         "regression-manifest-coverage",
     ]
@@ -1896,14 +2062,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "36 个回归场景" in manifest_text,
+        and "39 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "36 个回归场景",
+            "expected_count_text": "39 个回归场景",
         },
     )
 
@@ -1941,7 +2107,10 @@ for test_fn in [
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
+    test_index_readme_maintenance_coverage,
     test_index_plan_extended_sections,
+    test_status_source_governance_summary,
+    test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
     test_regression_manifest_coverage,
 ]:

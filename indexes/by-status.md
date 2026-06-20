@@ -159,6 +159,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-status-final-gate-command-20260620`
 - reviewing: `knowledge-hub-final-state-handoff-20260620`
 - reviewing: `knowledge-hub-final-maintenance-closure-20260620`
+- reviewing: `knowledge-hub-index-recovery-hardening-20260620`
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
 - reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
@@ -184,6 +185,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-intake-ready: PCR02 owner intake package is ready for human sign-off by `artifacts/manifests/pcr02-owner-intake-package-20260618.jsonl`; all hard gates remain `门禁待补证`.
 - source-identity-match: PCR02 owner-gated source identity preflight matched 7/7 current source SHA256 and size values by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.jsonl`; owner gates remain unresolved.
 - final-maintenance-closure-applied: Knowledge Hub final maintenance closure records final gate diff-check evidence, owner forms target candidates, status text owner commands and offline manual defaults by `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.jsonl`; owner gates remain unresolved.
+- index-recovery-hardening-applied: Knowledge Hub index/status recovery exposes source final-state fields, owner worksheet recovery fields, review_after commands and regression coverage by `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.jsonl`; owner gates remain unresolved.
 - owner-resolution-playbook-ready: PCR02 owner decision landing rules are ready by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.jsonl`; no owner gate is resolved by this playbook alone.
 - owner-resolution-schema-ready: PCR02 owner decision fields, value sets and invalid combinations are ready by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.jsonl`; no owner gate is resolved by this schema alone.
 - index-drift-remediation-applied: Knowledge Hub core index coverage drift was remediated by `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.jsonl`; `knowledge-check` now gates `by-owner`、`by-review-date`、`by-status` coverage.
