@@ -128,6 +128,8 @@ open_owner_rows = sorted(
 next_owner_gate = {}
 summary_commands = []
 forms_jsonl_commands = []
+validate_forms_commands = []
+landing_plan_commands = []
 if open_owner_rows:
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         summary_command = [
@@ -148,6 +150,29 @@ if open_owner_rows:
             "--forms-jsonl",
         ]
         forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in forms_jsonl_command))
+        validation_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--json",
+        ]
+        validate_forms_commands.append(" ".join(shlex.quote(str(part)) for part in validation_command))
+        landing_plan_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--landing-plan",
+            "--json",
+        ]
+        landing_plan_commands.append(" ".join(shlex.quote(str(part)) for part in landing_plan_command))
     first_open = open_owner_rows[0]
     next_open_command = [
         "rtk",
@@ -189,6 +214,31 @@ if open_owner_rows:
         first_open.get("id", ""),
         "--forms-jsonl",
     ]
+    focus_validate_forms_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--validate-forms",
+        "<owner-decisions.jsonl>",
+        "--json",
+    ]
+    focus_landing_plan_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--validate-forms",
+        "<owner-decisions.jsonl>",
+        "--landing-plan",
+        "--json",
+    ]
     next_owner_gate = {
         "worksheet_id": first_open.get("id", ""),
         "source_id": first_open.get("source_id", ""),
@@ -200,6 +250,8 @@ if open_owner_rows:
         "next_open_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in next_open_forms_jsonl_command),
         "focus_command": " ".join(shlex.quote(str(part)) for part in focus_command),
         "focus_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in focus_forms_jsonl_command),
+        "focus_validate_forms_command": " ".join(shlex.quote(str(part)) for part in focus_validate_forms_command),
+        "focus_landing_plan_command": " ".join(shlex.quote(str(part)) for part in focus_landing_plan_command),
     }
 
 if errors:
@@ -240,6 +292,16 @@ if open_owner_gate_count:
                 "需要保存或交给脚本处理纯 JSONL owner 表单时，运行："
                 f"{next_owner_gate['next_open_forms_jsonl_command']}。"
             )
+        if validate_forms_commands:
+            next_actions.append(
+                "owner 填完 JSONL 后，先只读校验："
+                f"{validate_forms_commands[0]}。"
+            )
+        if landing_plan_commands:
+            next_actions.append(
+                "owner 表单校验通过后，生成无写入人工 landing plan："
+                f"{landing_plan_commands[0]}。"
+            )
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
 if stale_items:
@@ -278,6 +340,8 @@ if open_owner_gate_count:
         owner_commands.append(next_owner_gate["next_open_command"])
     if next_owner_gate.get("next_open_forms_jsonl_command"):
         owner_commands.append(next_owner_gate["next_open_forms_jsonl_command"])
+    owner_commands.extend(validate_forms_commands)
+    owner_commands.extend(landing_plan_commands)
     strict_blockers.append({
         "id": "owner-gates-open",
         "severity": "owner-review",
@@ -336,6 +400,8 @@ result = {
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
         "summary_commands": summary_commands,
         "forms_jsonl_commands": forms_jsonl_commands,
+        "validate_forms_commands": validate_forms_commands,
+        "landing_plan_commands": landing_plan_commands,
         "next_open": next_owner_gate,
     },
     "errors": errors,
@@ -394,12 +460,22 @@ if forms_jsonl_commands:
     print("- forms-jsonl commands:")
     for command in forms_jsonl_commands:
         print(f"  - `{command}`")
+if validate_forms_commands:
+    print("- validate-forms commands:")
+    for command in validate_forms_commands:
+        print(f"  - `{command}`")
+if landing_plan_commands:
+    print("- landing plan commands:")
+    for command in landing_plan_commands:
+        print(f"  - `{command}`")
 if next_owner_gate:
     print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
     print(f"- next-open command: `{next_owner_gate['next_open_command']}`")
     print(f"- next-open forms-jsonl command: `{next_owner_gate['next_open_forms_jsonl_command']}`")
     print(f"- focus command: `{next_owner_gate['focus_command']}`")
     print(f"- focus forms-jsonl command: `{next_owner_gate['focus_forms_jsonl_command']}`")
+    print(f"- focus validate-forms command: `{next_owner_gate['focus_validate_forms_command']}`")
+    print(f"- focus landing-plan command: `{next_owner_gate['focus_landing_plan_command']}`")
 print()
 if strict_blockers:
     print("## Strict Blockers")

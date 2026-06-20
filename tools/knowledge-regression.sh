@@ -664,6 +664,8 @@ def test_status_next_owner_gate():
     owner_gates = parsed.get("owner_gates", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
+    validate_forms_commands = parsed.get("owner_gates", {}).get("validate_forms_commands", [])
+    landing_plan_commands = parsed.get("owner_gates", {}).get("landing_plan_commands", [])
     next_actions = parsed.get("next_actions_zh", [])
     strict_blockers = strict_parsed.get("strict_blockers", [])
     owner_blocker = next(
@@ -683,6 +685,8 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and any("--summary" in str(command) for command in summary_commands)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
+        and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_commands)
+        and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_commands)
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
         and "--checklist" in next_open.get("next_open_command", "")
@@ -694,15 +698,26 @@ def test_status_next_owner_gate():
         and "--forms" in next_open.get("focus_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_forms_jsonl_command", "")
         and "--forms-jsonl" in next_open.get("focus_forms_jsonl_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_validate_forms_command", "")
+        and "--validate-forms" in next_open.get("focus_validate_forms_command", "")
+        and "owner-decisions.jsonl" in next_open.get("focus_validate_forms_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_landing_plan_command", "")
+        and "--validate-forms" in next_open.get("focus_landing_plan_command", "")
+        and "--landing-plan" in next_open.get("focus_landing_plan_command", "")
+        and "owner-decisions.jsonl" in next_open.get("focus_landing_plan_command", "")
         and any("--summary" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
+        and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
+        and any("--landing-plan" in str(action) for action in next_actions)
         and owner_blocker.get("count") == 7
         and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", []))
-        and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", [])),
+        and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--landing-plan" in str(command) for command in owner_blocker.get("commands", [])),
         "status-next-owner-gate",
-        "status dashboard exposes owner summary, next owner gate focus and strict blockers",
+        "status dashboard exposes owner summary, next owner gate focus, validation, landing plan and strict blockers",
         {
             "exit_code": result["exit_code"],
             "strict_exit_code": strict_result["exit_code"],
@@ -715,10 +730,14 @@ def test_status_next_owner_gate():
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "forms_jsonl_commands": forms_jsonl_commands,
+            "validate_forms_commands": validate_forms_commands,
+            "landing_plan_commands": landing_plan_commands,
             "next_open_command": next_open.get("next_open_command", ""),
             "next_open_forms_jsonl_command": next_open.get("next_open_forms_jsonl_command", ""),
             "focus_command": next_open.get("focus_command", ""),
             "focus_forms_jsonl_command": next_open.get("focus_forms_jsonl_command", ""),
+            "focus_validate_forms_command": next_open.get("focus_validate_forms_command", ""),
+            "focus_landing_plan_command": next_open.get("focus_landing_plan_command", ""),
             "strict_blockers": strict_blockers,
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
