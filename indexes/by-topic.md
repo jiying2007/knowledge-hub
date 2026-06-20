@@ -119,3 +119,4 @@
 - PCR02 motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - PCR02 DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Knowledge Hub owner-ready coverage status: `artifacts/manifests/knowledge-hub-owner-ready-coverage-status-20260620.md`
+- Knowledge Hub owner landing ready gate: `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.md`

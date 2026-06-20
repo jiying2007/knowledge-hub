@@ -574,9 +574,9 @@ def test_final_gate_owner_review_blocker():
         },
     )
 
-def test_owner_landing_plan_project_index():
+def make_valid_owner_decision_form(repo):
     forms_result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -596,13 +596,7 @@ def test_owner_landing_plan_project_index():
         pass
     forms = parsed_forms.get("decision_forms", [])
     if not forms:
-        expect(
-            False,
-            "owner-landing-plan-project-index",
-            "owner landing plan requires by-project index",
-            {"setup_error": "missing decision form", "stdout_sample": forms_result["stdout"][:1000]},
-        )
-        return
+        return {}, {"setup_error": "missing decision form", "stdout_sample": forms_result["stdout"][:1000]}
     form = forms[0]
     identity = form.get("observed_source_identity", {})
     for key, value in {
@@ -621,6 +615,13 @@ def test_owner_landing_plan_project_index():
         "status_reason": "Regression fixture for landing-plan required files.",
     }.items():
         form[key] = value
+    return form, {}
+
+def test_owner_landing_plan_project_index():
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, "owner-landing-plan-project-index", "owner landing plan requires by-project index", setup_error)
+        return
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-landing-plan-"))
     temp_roots.append(temp_root)
     forms_path = temp_root / "owner-decisions.jsonl"
@@ -647,9 +648,12 @@ def test_owner_landing_plan_project_index():
     except Exception:
         pass
     required_files = parsed.get("landing_plan", {}).get("required_manual_files", [])
+    owner_ready_gate = parsed.get("landing_plan", {}).get("owner_ready_gate", {})
     expect(
         result["exit_code"] == 0
         and parsed.get("landing_plan", {}).get("status") == "planned"
+        and owner_ready_gate.get("status") == "pass"
+        and owner_ready_gate.get("error_count") == 0
         and "indexes/by-project.md" in required_files
         and "indexes/by-status.md" in required_files,
         "owner-landing-plan-project-index",
@@ -657,10 +661,129 @@ def test_owner_landing_plan_project_index():
         {
             "exit_code": result["exit_code"],
             "landing_status": parsed.get("landing_plan", {}).get("status"),
+            "owner_ready_gate": owner_ready_gate,
             "required_manual_files": required_files,
             "stdout_sample": result["stdout"][:1000],
         },
     )
+
+def run_owner_landing_ready_block_fixture(case_id, expected_status, mutate_repo):
+    repo = copy_repo(f"owner-landing-plan-owner-ready-{case_id}")
+    form, setup_error = make_valid_owner_decision_form(repo)
+    if setup_error:
+        expect(
+            False,
+            f"owner-landing-plan-requires-owner-ready-{case_id}",
+            f"owner landing plan blocks {expected_status} owner-ready package state",
+            setup_error,
+            repo,
+        )
+        return
+
+    mutation_error = mutate_repo(repo)
+    if mutation_error:
+        expect(
+            False,
+            f"owner-landing-plan-requires-owner-ready-{case_id}",
+            f"owner landing plan blocks {expected_status} owner-ready package state",
+            mutation_error,
+            repo,
+        )
+        return
+
+    forms_path = repo.parent / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--landing-plan",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    landing_plan = parsed.get("landing_plan", {})
+    owner_ready_gate = landing_plan.get("owner_ready_gate", {})
+    errors = owner_ready_gate.get("errors", [])
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("form_validation", {}).get("status") == "pass"
+        and landing_plan.get("status") == "blocked"
+        and owner_ready_gate.get("status") == "blocked"
+        and owner_ready_gate.get("error_count") == 1
+        and errors
+        and errors[0].get("owner_ready_package_status") == expected_status
+        and not landing_plan.get("steps"),
+        f"owner-landing-plan-requires-owner-ready-{case_id}",
+        f"owner landing plan blocks {expected_status} owner-ready package state",
+        {
+            "exit_code": result["exit_code"],
+            "form_validation_status": parsed.get("form_validation", {}).get("status"),
+            "landing_status": landing_plan.get("status"),
+            "expected_owner_ready_package_status": expected_status,
+            "owner_ready_gate": owner_ready_gate,
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
+    )
+
+def test_owner_landing_plan_requires_owner_ready_package_missing():
+    def mutate(repo):
+        items_path = repo / "registry" / "items.jsonl"
+        lines = items_path.read_text().splitlines()
+        filtered = [
+            line
+            for line in lines
+            if '"id":"pcr02-agents-owner-ready-package-20260620"' not in line
+        ]
+        if len(filtered) == len(lines):
+            return {"setup_error": "missing owner-ready registry fixture line"}
+        items_path.write_text("\n".join(filtered) + "\n")
+        return None
+
+    run_owner_landing_ready_block_fixture("missing", "missing", mutate)
+
+def test_owner_landing_plan_requires_owner_ready_package_invalid():
+    def mutate(repo):
+        package_path = repo / "artifacts" / "manifests" / "pcr02-agents-owner-ready-package-20260620.jsonl"
+        if not package_path.exists():
+            return {"setup_error": "missing owner-ready package jsonl"}
+        rows = [json.loads(line) for line in package_path.read_text().splitlines() if line.strip()]
+        if len(rows) != 1:
+            return {"setup_error": "owner-ready package jsonl should contain one row", "row_count": len(rows)}
+        rows[0]["decision"] = "owner-approved-fixture"
+        package_path.write_text(json.dumps(rows[0], ensure_ascii=False, separators=(",", ":")) + "\n")
+        return None
+
+    run_owner_landing_ready_block_fixture("invalid", "invalid", mutate)
+
+def test_owner_landing_plan_requires_owner_ready_package_duplicate():
+    def mutate(repo):
+        items_path = repo / "registry" / "items.jsonl"
+        lines = items_path.read_text().splitlines()
+        for line in lines:
+            if '"id":"pcr02-agents-owner-ready-package-20260620"' in line:
+                item = json.loads(line)
+                item["id"] = "pcr02-agents-owner-ready-package-duplicate-fixture"
+                item["title"] = "PCR02 AGENTS owner ready package duplicate fixture"
+                lines.append(json.dumps(item, ensure_ascii=False, separators=(",", ":")))
+                items_path.write_text("\n".join(lines) + "\n")
+                return None
+        return {"setup_error": "missing owner-ready registry fixture line"}
+
+    run_owner_landing_ready_block_fixture("duplicate", "duplicate", mutate)
 
 def test_owner_form_source_identity_mismatch():
     forms_result = run_cmd(
@@ -1000,6 +1123,9 @@ def test_regression_manifest_coverage():
         "status-next-owner-gate",
         "final-gate-owner-review-blocker",
         "owner-landing-plan-project-index",
+        "owner-landing-plan-requires-owner-ready-missing",
+        "owner-landing-plan-requires-owner-ready-invalid",
+        "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
         "manual-entry-project-derived-from-domain",
@@ -1012,14 +1138,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "20 个回归场景" in manifest_text,
+        and "23 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "20 个回归场景",
+            "expected_count_text": "23 个回归场景",
         },
     )
 
@@ -1037,6 +1163,9 @@ for test_fn in [
     test_status_next_owner_gate,
     test_final_gate_owner_review_blocker,
     test_owner_landing_plan_project_index,
+    test_owner_landing_plan_requires_owner_ready_package_missing,
+    test_owner_landing_plan_requires_owner_ready_package_invalid,
+    test_owner_landing_plan_requires_owner_ready_package_duplicate,
     test_owner_form_source_identity_mismatch,
     test_manual_entry_project_index_hint,
     test_manual_entry_project_from_domain,

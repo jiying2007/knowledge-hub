@@ -476,11 +476,42 @@ def validate_forms_file(path, rows):
 def make_landing_plan(form_validation, rows):
     open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
     blocked = form_validation is None or form_validation.get("status") != "pass"
+    owner_ready_errors = []
+    if form_validation and form_validation.get("status") == "pass":
+        for form in form_validation.get("forms", []):
+            worksheet_id = str(form.get("worksheet_id", ""))
+            row = open_by_id.get(worksheet_id)
+            if not row:
+                continue
+            ready_status, ready_packages = owner_ready_state(row)
+            if ready_status != "covered":
+                owner_ready_errors.append(
+                    {
+                        "worksheet_id": worksheet_id,
+                        "source_id": row.get("source_id", ""),
+                        "source_path": row.get("source_path", ""),
+                        "owner_ready_package_status": ready_status,
+                        "owner_ready_packages": ready_packages,
+                    }
+                )
+    if owner_ready_errors:
+        blocked = True
+    reason = ""
+    if form_validation is None or form_validation.get("status") != "pass":
+        reason = "form validation must pass before landing plan is usable"
+    elif owner_ready_errors:
+        reason = "owner-ready package strong validation must be covered before landing plan is usable"
     plan = {
         "status": "blocked" if blocked else "planned",
         "read_only": True,
         "source_form": form_validation.get("path", "") if form_validation else "",
-        "reason": "form validation must pass before landing plan is usable" if blocked else "",
+        "reason": reason,
+        "owner_ready_gate": {
+            "status": "blocked" if owner_ready_errors else "pass",
+            "error_count": len(owner_ready_errors),
+            "errors": owner_ready_errors,
+            "notes_zh": "owner-ready package 只表示可交给 owner 签收；landing plan 仍不生成 owner decision、不关闭 gate、不写文件。",
+        },
         "steps": [],
         "required_manual_files": [
             "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
@@ -519,6 +550,8 @@ def make_landing_plan(form_validation, rows):
                 "target_decision": form.get("target_decision", ""),
                 "reviewed_by": form.get("reviewed_by", ""),
                 "reviewed_at": form.get("reviewed_at", ""),
+                "owner_ready_package_status": owner_ready_state(row)[0] if row else "",
+                "owner_ready_packages": owner_ready_state(row)[1] if row else [],
                 "manual_actions_zh": [
                     "把已审 owner decision 追加到 owner decision landing JSONL 制品。",
                     "按 target_decision 更新或新增对应 registry item，状态不得越过 owner 决策允许范围。",
@@ -764,6 +797,10 @@ if landing_plan:
     print(f"- status: {landing_plan['status']}")
     if landing_plan.get("reason"):
         print(f"- reason: {landing_plan['reason']}")
+    owner_ready_gate = landing_plan.get("owner_ready_gate", {})
+    if owner_ready_gate:
+        print(f"- owner_ready_gate: {owner_ready_gate.get('status', '<missing-status>')}")
+        print(f"- owner_ready_gate_errors: {owner_ready_gate.get('error_count', 0)}")
     if landing_plan.get("required_manual_files"):
         print("- required_manual_files:")
         for item in landing_plan["required_manual_files"]:
