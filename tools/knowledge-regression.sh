@@ -232,6 +232,30 @@ def test_pcr02_level2_boundary_manifests():
             "source_id": "pcr02-product-test",
             "required_text": "build-artifact-generated",
         },
+        "pcr02-scratch-archive-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.jsonl",
+            "source_id": "pcr02-project-scratch",
+            "required_text": "historical-session-evidence",
+        },
+        "pcr02-root-artifacts-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.jsonl",
+            "source_id": "pcr02-project-root-artifacts",
+            "required_text": "source-coverage-evidence-drift",
+        },
+        "pcr02-module-agent-rules-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.jsonl",
+            "source_id": "pcr02-module-agent-rules",
+            "required_text": "module-local-owner-gated-control-entry-rule",
+        },
+        "pcr02-agent-config-boundary-20260620": {
+            "md": "artifacts/manifests/pcr02-agent-config-boundary-20260620.md",
+            "jsonl": "artifacts/manifests/pcr02-agent-config-boundary-20260620.jsonl",
+            "source_id": "pcr02-project-agent-config",
+            "required_text": "third-party-dependency-artifact",
+        },
     }
     errors = []
     registry_ids = set()

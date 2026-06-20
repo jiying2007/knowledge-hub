@@ -108,6 +108,10 @@
 - PCR02 tools boundary: `artifacts/manifests/pcr02-tools-boundary-20260620.md`
 - PCR02 knowledge secret/config boundary: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - PCR02 product-test artifact/config/interface boundary: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
+- PCR02 scratch archive boundary: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
+- PCR02 root artifacts boundary: `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`
+- PCR02 module agent rules boundary: `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`
+- PCR02 agent config boundary: `artifacts/manifests/pcr02-agent-config-boundary-20260620.md`
 - Embedded knowledge owner-review gate: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Codex memories auxiliary-only boundary: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`
 - Knowledge Hub status strict blockers: `artifacts/manifests/knowledge-hub-status-strict-blockers-20260620.md`

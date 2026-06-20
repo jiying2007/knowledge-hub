@@ -154,6 +154,10 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
 - reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
+- reviewing: `pcr02-scratch-archive-boundary-20260620`
+- reviewing: `pcr02-root-artifacts-boundary-20260620`
+- reviewing: `pcr02-module-agent-rules-boundary-20260620`
+- reviewing: `pcr02-agent-config-boundary-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -244,6 +248,10 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - pcr02-tools-boundary-applied: PCR02 tools directory is registered as tool/reference/validation boundary by `artifacts/manifests/pcr02-tools-boundary-20260620.jsonl`; memory automation remains owner-gated and report-only.
 - pcr02-knowledge-secret-config-boundary-applied: PCR02 knowledge source env/config, local rules, runbooks, standards-like docs, governance tools and skill assets are registered by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.jsonl`; no secret-like body is copied.
 - pcr02-product-test-boundary-applied: PCR02 product-test Markdown, artifacts, configs, C/C++ references and build residue are classified by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.jsonl`; source code and attachments remain reference-only.
+- pcr02-scratch-archive-boundary-applied: PCR02 scratch session/context/resume material is registered as archive-only by `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.jsonl`; it remains out of active facts and memory.
+- pcr02-root-artifacts-boundary-applied: PCR02 root loose artifacts are registered as mixed artifact/archive/tool/config boundary by `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.jsonl`; historical and current scan counts are kept separate.
+- pcr02-module-agent-rules-boundary-applied: PCR02 AGENTS/local rules are registered as owner-gated project/module-local references by `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.jsonl`; no rule body is promoted.
+- pcr02-agent-config-boundary-applied: PCR02 `.vscode` and `.kilo` agent config are registered as config/artifact/report-only automation boundaries by `artifacts/manifests/pcr02-agent-config-boundary-20260620.jsonl`; no setup, npm, node or script execution is enabled.
 - owner-ready-no-decision: PCR02 `AGENTS.md` has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-001` remains open.
 - owner-ready-no-decision: PCR02 diag metadata has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-002` remains open.
 - owner-ready-no-decision: PCR02 ASAN runbook has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-003` remains open.

@@ -11,7 +11,7 @@
 | baseline-knowledge-check | 当前仓库全量 `knowledge-check` | 通过 |
 | governance-goal-path-allowed | 当前终态目标规格作为 governance item 可解释 | `docs/goals/knowledge-hub-final-state.md` 可由 `knowledge-check --explain` 解释，避免目标 SSOT 路径漂移 |
 | pcr02-level2-source-coverage | PCR02 Level 2 source 同时完成 registry、by-source 和 latest coverage JSONL 覆盖 | 7 个 Level 2 source 均出现在 `registry/sources.json`、`indexes/by-source.md` 和 `knowledge-hub-source-coverage-closeout-20260620.jsonl` |
-| pcr02-level2-boundary-manifests | PCR02 Level 2 高风险源具备具体边界 manifest | `pcr02-project-tools`、`pcr02-project-knowledge`、`pcr02-product-test` 均有 Markdown/JSONL 边界清单、registry item、by-source 和 by-project 索引 |
+| pcr02-level2-boundary-manifests | PCR02 Level 2 source 具备具体边界 manifest | 7 个 PCR02 Level 2 source 均有 Markdown/JSONL 边界清单、registry item、by-source 和 by-project 索引 |
 | status-wrong-bucket | 临时副本把 active item 放入 `- reviewing:` | `knowledge-check` 失败并报告 wrong status bucket |
 | status-noncanonical-only | 临时副本只把 item 写入非 canonical 说明行 | `knowledge-check` 失败并报告 by-status missing item |
 | owner-partial-resolved | 临时副本只填 `owner_decision` 并把 worksheet 状态改为 `owner-approved` | owner gate 仍保持 open，不能 resolved |
@@ -52,7 +52,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；31 个回归场景全部 pass，覆盖 governance goal path explainability、PCR02 Level 2 source coverage、PCR02 Level 2 boundary manifests、status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、owner forms 文本 JSONL 输出、owner forms 纯 JSONL 输出、owner forms 纯 JSONL 互斥保护、owner checklist、owner form 上下文、owner source identity 上下文、owner source identity 过期拒绝、owner summary、owner by-owner summary、owner next-open 聚焦、status next owner gate、final gate owner blocker、owner landing plan、owner-ready missing/invalid/duplicate landing gate、manual entry 防漏、owner 文档可发现性和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；31 个回归场景全部 pass，覆盖 governance goal path explainability、PCR02 Level 2 source coverage、7 个 PCR02 Level 2 source boundary manifests、status 负向 fixture、owner gate 负向 fixture、owner form 聚焦、owner forms 文本 JSONL 输出、owner forms 纯 JSONL 输出、owner forms 纯 JSONL 互斥保护、owner checklist、owner form 上下文、owner source identity 上下文、owner source identity 过期拒绝、owner summary、owner by-owner summary、owner next-open 聚焦、status next owner gate、final gate owner blocker、owner landing plan、owner-ready missing/invalid/duplicate landing gate、manual entry 防漏、owner 文档可发现性和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 

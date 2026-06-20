@@ -131,6 +131,10 @@
 - `pcr02-tools-boundary-20260620`
 - `pcr02-knowledge-secret-config-boundary-20260620`
 - `pcr02-product-test-artifact-config-interface-boundary-20260620`
+- `pcr02-scratch-archive-boundary-20260620`
+- `pcr02-root-artifacts-boundary-20260620`
+- `pcr02-module-agent-rules-boundary-20260620`
+- `pcr02-agent-config-boundary-20260620`
 
 ## pcr02-registry-owner
 

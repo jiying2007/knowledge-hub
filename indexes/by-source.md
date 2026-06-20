@@ -53,7 +53,11 @@
 - `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-product-test`: concrete Markdown, PDF/archive, config, C/C++ reference and build artifact boundaries are tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`.
 - `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-scratch`: concrete session/context/resume archive-only boundary is tracked by `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`.
 - `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-root-artifacts`: concrete root loose artifact/tool/config boundary and historical/current count drift are tracked by `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`.
 - `pcr02-module-agent-rules`: module-local owner-gated rule coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-module-agent-rules`: concrete AGENTS/local rule owner-gated boundary is tracked by `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`.
 - `pcr02-project-agent-config`: config/artifact-ref and report-only automation boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-agent-config`: concrete `.vscode`/`.kilo` config, artifact and report-only automation boundary is tracked by `artifacts/manifests/pcr02-agent-config-boundary-20260620.md`.
 - `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
