@@ -96,7 +96,13 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner>
 ```
 
-最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。涉及迁移、引用或归档时补 `registry/migrations.jsonl`。
+离线、现场或 AI 辅助起草时可追加：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner> --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
+```
+
+最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；涉及迁移、引用或归档时补 `registry/migrations.jsonl`，普通新知识不强制 migration。
 
 复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。最后运行：
 

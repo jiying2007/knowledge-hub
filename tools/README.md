@@ -24,7 +24,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
 - `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
 - `knowledge-artifact-ref-plan.sh`: creates a JSONL artifact reference manifest with source URI, size and sha256 for non-text source files; it does not copy binary content.
-- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, migration, validation steps and copyable manual skeletons without writing files. Supports `--owner <owner>`; defaults owner to `leiwenjun`, derives project from `--domain projects/<project>` when `--project` is omitted, and prints UTC default dates for registry and migration drafts. Use `--source` to print source registry、by-source and source coverage JSONL skeletons without writing files.
+- `knowledge-new.sh`: read-only manual-entry guide; prints template, registry, index, conditional migration, validation steps and copyable manual skeletons without writing files. Supports `--owner <owner>`、`--manual-source-reason <reason>`、`--manual-validation-pending --manual-validation-reason <reason>`、`--generated-by-ai --ai-role <role>`; defaults owner to `leiwenjun`, derives project from `--domain projects/<project>` when `--project` is omitted, and prints UTC default dates plus `summary_zh`、`primary_language`、`review_status`、`evidence_strength` and AI provenance fields for registry drafts. Use `--source` to print source registry、by-source and source coverage JSONL skeletons without writing files.
 - `knowledge-capture.sh`: dry-run candidate capture.
 - `knowledge-promote.sh`: dry-run promotion plan.
 - `knowledge-retire.sh`: dry-run retirement plan.
@@ -47,7 +47,7 @@ Writing requires explicit future implementation and must not be used by unattend
 
 ```bash
 # 新增一条知识
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
@@ -100,7 +100,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 
 | 场景 | 最小落盘文件 | 关键验证 |
 |---|---|---|
-| 新增知识 | 唯一正文、`registry/items.jsonl`、核心索引；涉及迁移/引用/归档时补 `registry/migrations.jsonl` | `knowledge-index-plan --section all`、`knowledge-check --diagnostics`、定向 `knowledge-search` |
+| 新增知识 | 唯一正文、`registry/items.jsonl`、核心索引；人工来源、中文摘要、语言/术语、review/evidence、AI provenance 字段必须清楚；涉及迁移/引用/归档时补 `registry/migrations.jsonl` | `knowledge-index-plan --section all`、`knowledge-check --diagnostics`、定向 `knowledge-search` |
 | 新增 source | `registry/sources.json`、`indexes/by-source.md`、source coverage/source identity manifest | `knowledge-index-plan --section source`、`knowledge-check --diagnostics`、`knowledge-search "<source-id>" --source knowledge-hub --json` |
 | 归档历史 | `domains/projects/<project>/archive/...`、`registry/items.jsonl`、`registry/migrations.jsonl`、相关索引 | `knowledge-check --diagnostics`、`knowledge-search "<keyword>" --domain projects/<project> --kind project-archive --json` |
 | owner signoff | owner 人工填写的临时 JSONL；真正落地文件以 `--landing-plan` 输出为准 | `--validate-forms '<owner-decisions.jsonl>' --json`、`--landing-plan --json` |

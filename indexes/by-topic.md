@@ -150,3 +150,4 @@
 - Knowledge Hub index recovery hardening: `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.md`
 - Knowledge Hub terminal gate resilience: `artifacts/manifests/knowledge-hub-terminal-gate-resilience-20260620.md`
 - Knowledge Hub structured search filters: `artifacts/manifests/knowledge-hub-structured-search-filters-20260620.md`
+- Knowledge Hub manual entry readability fields: `artifacts/manifests/knowledge-hub-manual-entry-readability-fields-20260620.md`

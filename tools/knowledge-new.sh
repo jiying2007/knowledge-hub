@@ -19,15 +19,21 @@ SOURCE_STATUS="registered"
 SOURCE_WRITE_POLICY=""
 SOURCE_CHECK=""
 SOURCE_NO_CHECK_REASON=""
+MANUAL_SOURCE_REASON="manual-entry:knowledge-new.sh"
+MANUAL_VALIDATION_PENDING="false"
+MANUAL_VALIDATION_REASON=""
+GENERATED_BY_AI="false"
+AI_ROLE="none"
 
 usage() {
   cat <<EOF
 Usage:
-  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>]
+  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
   rtk bash tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> [--check <command>] [--no-check-reason <reason>] [--owner <owner>]
 
 Examples:
   rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
+  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
   rtk bash tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
   rtk bash tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --no-check-reason "manual source; classify-first pending coverage"
 
@@ -107,6 +113,26 @@ while [[ $# -gt 0 ]]; do
       OWNER="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
+    --manual-source-reason)
+      MANUAL_SOURCE_REASON="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --manual-validation-pending)
+      MANUAL_VALIDATION_PENDING="true"
+      shift
+      ;;
+    --manual-validation-reason)
+      MANUAL_VALIDATION_REASON="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --generated-by-ai)
+      GENERATED_BY_AI="true"
+      shift
+      ;;
+    --ai-role)
+      AI_ROLE="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
     --id)
       ITEM_ID="$(read_value "$1" "${2:-}")"
       shift 2
@@ -129,6 +155,29 @@ done
 
 if [[ "$KIND" == "source" ]]; then
   SOURCE_MODE="true"
+fi
+
+case "$AI_ROLE" in
+  none|drafted|summarized|translated|rewritten|classified|extracted)
+    ;;
+  *)
+    printf "ERROR --ai-role must be one of: none, drafted, summarized, translated, rewritten, classified, extracted.\n" >&2
+    exit 2
+    ;;
+esac
+
+if [[ "$AI_ROLE" != "none" ]]; then
+  GENERATED_BY_AI="true"
+fi
+
+if [[ "$GENERATED_BY_AI" == "true" && "$AI_ROLE" == "none" ]]; then
+  printf "ERROR --generated-by-ai requires --ai-role <drafted|summarized|translated|rewritten|classified|extracted>.\n" >&2
+  exit 2
+fi
+
+if [[ "$MANUAL_VALIDATION_PENDING" == "true" && -z "$MANUAL_VALIDATION_REASON" ]]; then
+  printf "ERROR --manual-validation-pending requires --manual-validation-reason <reason>.\n" >&2
+  exit 2
 fi
 
 if [[ "$SOURCE_MODE" == "true" ]]; then
@@ -262,7 +311,9 @@ JSON_PATH="$(json_escape "$DISPLAY_PATH")"
 JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
 JSON_OWNER="$(json_escape "$DISPLAY_OWNER")"
 JSON_TITLE="$(json_escape "<中文标题>")"
-JSON_SOURCE_FROM="$(json_escape "manual-entry:knowledge-new.sh")"
+JSON_SOURCE_FROM="$(json_escape "$MANUAL_SOURCE_REASON")"
+JSON_MANUAL_VALIDATION_REASON="$(json_escape "$MANUAL_VALIDATION_REASON")"
+JSON_AI_ROLE="$(json_escape "$AI_ROLE")"
 TODAY="$(date -u +%F)"
 if DEFAULT_REVIEW_AFTER="$(date -u -d '+3 months' +%F 2>/dev/null)"; then
   :
@@ -274,6 +325,12 @@ PROJECT_STEP_5="5. 如需主题入口，在 indexes/by-topic.md 增加可读路�
 if [[ "$DOMAIN" == projects/* ]]; then
   PROJECT_STEP_5="5. 同步 indexes/by-project.md 的项目导航入口；如需主题入口，在 indexes/by-topic.md 增加可读路径引用。"
   printf -v PROJECT_INDEX_DRAFT '\n# indexes/by-project.md\n# 项目域条目：在对应项目段增加目标路径或 manifest 路径。\n- %s: %s\n' "$DISPLAY_PROJECT" "$DISPLAY_PATH"
+fi
+VALIDATION_REFS_JSON='["tools/knowledge-check.sh --dry-run --json"]'
+MANUAL_VALIDATION_BLOCK=""
+if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
+  VALIDATION_REFS_JSON="[\"manual_validation_pending: true\",\"reason: ${JSON_MANUAL_VALIDATION_REASON}\",\"required_followup: rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics\"]"
+  printf -v MANUAL_VALIDATION_BLOCK '\n### 人工待验证说明\n\n```yaml\nmanual_validation_pending: true\nmanual_validation_reason: %s\nrequired_followup: rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics\n```\n' "$MANUAL_VALIDATION_REASON"
 fi
 
 cat <<EOF
@@ -294,6 +351,10 @@ $(usage)
 - owner: ${DISPLAY_OWNER}
 - path: ${TARGET_PATH:-<待填写>}
 - 推荐模板: ${TEMPLATE}
+- manual_source_reason: ${MANUAL_SOURCE_REASON}
+- manual_validation_pending: ${MANUAL_VALIDATION_PENDING}
+- generated_by_ai: ${GENERATED_BY_AI}
+- ai_role: ${AI_ROLE}
 ${PROJECT_WARNING_BLOCK}
 
 ## 最小人工步骤
@@ -303,7 +364,7 @@ ${PROJECT_WARNING_BLOCK}
 3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、tags、validation_refs 已填写。
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 ${PROJECT_STEP_5}
-6. 在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径。
+6. 如涉及迁移、引用或归档，在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径；普通新知识不强制新增 migration。
 7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
 8. 运行只读索引计划和验证：
 
@@ -322,8 +383,9 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"validation_refs":["tools/knowledge-check.sh --dry-run --json"],"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"","ai_generated_at":"","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
+${MANUAL_VALIDATION_BLOCK}
 
 ### 核心索引
 
@@ -339,7 +401,7 @@ ${PROJECT_STEP_5}
 ${PROJECT_INDEX_DRAFT}
 \`\`\`
 
-### registry/migrations.jsonl
+### registry/migrations.jsonl（仅迁移、引用或归档时使用）
 
 \`\`\`json
 {"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"${TODAY}","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}

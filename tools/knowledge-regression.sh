@@ -1745,6 +1745,181 @@ def test_manual_entry_offline_docs():
         },
     )
 
+def test_manual_entry_readability_fields():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--owner",
+            "team-core",
+            "--id",
+            "pcr02-readable-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/readable.md",
+            "--manual-source-reason",
+            "field-debug",
+            "--manual-validation-pending",
+            "--manual-validation-reason",
+            "offline lab note awaiting rtk validation",
+            "--generated-by-ai",
+            "--ai-role",
+            "drafted",
+        ],
+    )
+    required_fragments = [
+        '"from":"field-debug"',
+        '"summary_zh":"<中文 1-3 句摘要>"',
+        '"primary_language":"zh-CN"',
+        '"source_language":"zh-CN"',
+        '"translation_status":"not-required"',
+        '"terminology_status":"pending-review"',
+        '"review_status":"manual-entry-pending-review"',
+        '"evidence_strength":"manual-entry-pending-validation"',
+        '"evidence_refs":[]',
+        '"generated_by_ai":true',
+        '"ai_role":"drafted"',
+        '"human_reviewed_by":""',
+        '"review_basis":""',
+        "manual_validation_pending: true",
+        "offline lab note awaiting rtk validation",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
+    expect(
+        result["exit_code"] == 0 and not missing_fragments,
+        "manual-entry-readability-fields",
+        "manual entry skeleton exposes Chinese readability, evidence and AI provenance fields",
+        {
+            "exit_code": result["exit_code"],
+            "missing_fragments": missing_fragments,
+            "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
+def test_manual_entry_migration_conditional_guide():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--id",
+            "governance-conditional-migration",
+            "--path",
+            "governance/conditional-migration.md",
+        ],
+    )
+    expect(
+        result["exit_code"] == 0
+        and "普通新知识不强制新增 migration" in result["stdout"]
+        and "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"],
+        "manual-entry-migration-conditional-guide",
+        "manual entry guide treats migration record as conditional for ordinary new knowledge",
+        {
+            "exit_code": result["exit_code"],
+            "has_conditional_step": "普通新知识不强制新增 migration" in result["stdout"],
+            "has_conditional_heading": "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"],
+            "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
+def test_manual_entry_template_selection():
+    cases = [
+        ("runbook", "templates/runbook.md"),
+        ("decision", "templates/decision.md"),
+        ("validation", "templates/validation-report.md"),
+        ("project-archive", "templates/archive-note.md"),
+        ("artifact-ref", "templates/artifact-ref.md"),
+        ("audit", "templates/item.md"),
+    ]
+    failures = []
+    for kind, template in cases:
+        result = run_cmd(
+            root,
+            [
+                "rtk",
+                "bash",
+                "tools/knowledge-new.sh",
+                "--kind",
+                kind,
+                "--domain",
+                "governance",
+                "--id",
+                f"governance-template-{kind}",
+                "--path",
+                f"artifacts/manifests/governance-template-{kind}.md",
+            ],
+        )
+        if result["exit_code"] != 0 or f"推荐模板: {template}" not in result["stdout"]:
+            failures.append({"kind": kind, "expected_template": template, "exit_code": result["exit_code"], "stdout_sample": result["stdout"][:800]})
+    expect(
+        not failures,
+        "manual-entry-template-selection",
+        "manual entry guide keeps stable kind-to-template mapping",
+        {
+            "failures": failures,
+            "case_count": len(cases),
+        },
+    )
+
+def test_templates_required_sections():
+    template_paths = [
+        root / "templates" / "item.md",
+        root / "templates" / "runbook.md",
+        root / "templates" / "decision.md",
+    ]
+    required_fields = [
+        "summary_zh:",
+        "review_status:",
+        "primary_language:",
+        "source_language:",
+        "translation_status:",
+        "terminology_status:",
+        "evidence_strength:",
+        "evidence_refs:",
+        "generated_by_ai:",
+        "ai_role:",
+        "human_reviewed_by:",
+        "human_reviewed_at:",
+        "review_basis:",
+    ]
+    required_sections = [
+        "## 适用范围",
+        "## 权威来源",
+        "## 当前结论",
+        "## 风险与限制",
+        "## Review",
+        "| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |",
+    ]
+    missing_by_file = {}
+    for path in template_paths:
+        try:
+            text = path.read_text()
+        except Exception as exc:
+            missing_by_file[str(path.relative_to(root))] = [f"read_error: {exc}"]
+            continue
+        missing = [fragment for fragment in required_fields + required_sections if fragment not in text]
+        if missing:
+            missing_by_file[str(path.relative_to(root))] = missing
+    expect(
+        not missing_by_file,
+        "templates-required-sections",
+        "core templates carry canonical readability fields and long-term evidence sections",
+        {
+            "missing_by_file": missing_by_file,
+            "template_count": len(template_paths),
+        },
+    )
+
 def test_index_readme_maintenance_coverage():
     readme_path = root / "indexes" / "README.md"
     try:
@@ -2113,6 +2288,43 @@ def test_source_manual_entry_guide():
         },
     )
 
+def test_source_manual_entry_guide_check_command():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source-check",
+            "--source-path",
+            "/tmp/example-check",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--check",
+            "rtk bash tools/knowledge-check.sh --dry-run",
+        ],
+    )
+    registry_object_has_check = '"final_disposition":"owner-gated-pending-decision","check":"rtk bash tools/knowledge-check.sh --dry-run"}' in result["stdout"]
+    expect(
+        result["exit_code"] == 0
+        and registry_object_has_check
+        and '"source_id":"example-source-check"' in result["stdout"]
+        and "rtk bash tools/knowledge-index-plan.sh --section source" in result["stdout"],
+        "source-manual-entry-guide-check-command",
+        "source manual entry guide supports stable read-only check commands",
+        {
+            "exit_code": result["exit_code"],
+            "registry_object_has_check": registry_object_has_check,
+            "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
 def test_knowledge_search_structured_filters():
     active_result = run_cmd(
         root,
@@ -2245,11 +2457,16 @@ def test_regression_manifest_coverage():
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
+        "manual-entry-readability-fields",
+        "manual-entry-migration-conditional-guide",
+        "manual-entry-template-selection",
+        "templates-required-sections",
         "index-readme-maintenance-coverage",
         "index-plan-extended-sections",
         "status-source-governance-summary",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
+        "source-manual-entry-guide-check-command",
         "knowledge-search-structured-filters",
         "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
@@ -2258,14 +2475,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "45 个回归场景" in manifest_text,
+        and "50 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "45 个回归场景",
+            "expected_count_text": "50 个回归场景",
         },
     )
 
@@ -2303,6 +2520,10 @@ for test_fn in [
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
+    test_manual_entry_readability_fields,
+    test_manual_entry_migration_conditional_guide,
+    test_manual_entry_template_selection,
+    test_templates_required_sections,
     test_index_readme_maintenance_coverage,
     test_index_plan_extended_sections,
     test_index_plan_topic_schema_health,
@@ -2312,6 +2533,7 @@ for test_fn in [
     test_status_source_governance_summary,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
+    test_source_manual_entry_guide_check_command,
     test_knowledge_search_structured_filters,
     test_knowledge_search_invalid_filters,
     test_regression_manifest_coverage,
