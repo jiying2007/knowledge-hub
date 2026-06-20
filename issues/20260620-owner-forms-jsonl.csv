@@ -1,0 +1,5 @@
+id,task,owner,write_scope,read_scope,depends_on,verify,status,notes,evidence
+KH-001,审查纯 JSONL CLI 契约风险,subagent-cli-audit,NONE,"tools/knowledge-owner-gates.sh; tools/README.md; README.md; artifacts/manifests/*owner*forms*",,"只读审查，无命令强制",done,"不得写文件，不得关闭 owner gate","subagent 019ee2ce-a598-7883-bd73-48fc631d39e6"
+KH-002,审查回归覆盖缺口,subagent-regression-audit,NONE,"tools/knowledge-regression.sh; tools/knowledge-owner-gates.sh; regression helper manifest",,"只读审查，无命令强制",done,"不得写文件，不得生成 owner decision","subagent 019ee2cf-06ac-7563-99a3-f30b28ad24a8"
+KH-003,实现 --forms-jsonl 并补登记,main,"tools/knowledge-owner-gates.sh; tools/knowledge-regression.sh; tools/README.md; artifacts/manifests; registry; indexes","KH-001; KH-002","rtk bash tools/knowledge-regression.sh --json",done,"主 agent 串行写入","artifacts/manifests/knowledge-hub-owner-forms-jsonl-only-20260620.md"
+KH-004,最终验证并提交,main,git,"whole repo",KH-003,"rtk bash tools/knowledge-final-gate.sh --json",done,"final gate 预期仍 needs-owner-review","knowledge-check pass; regression pass 27; final gate needs-owner-review count=7"

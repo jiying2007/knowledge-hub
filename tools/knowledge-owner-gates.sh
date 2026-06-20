@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser(description="Print a read-only owner-gate board
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--summary", action="store_true", help="Print a concise owner-facing summary for open rows.")
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
+parser.add_argument("--forms-jsonl", action="store_true", help="Print only owner decision JSONL skeleton lines for open rows.")
 parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
@@ -29,6 +30,23 @@ parser.add_argument("--status", choices=["all", "open", "resolved"], default="op
 args = parser.parse_args(argv)
 
 errors = []
+
+if args.forms_jsonl:
+    conflicts = []
+    if args.json:
+        conflicts.append("--json")
+    if args.summary:
+        conflicts.append("--summary")
+    if args.forms:
+        conflicts.append("--forms")
+    if args.checklist:
+        conflicts.append("--checklist")
+    if args.validate_forms:
+        conflicts.append("--validate-forms")
+    if args.landing_plan:
+        conflicts.append("--landing-plan")
+    if conflicts:
+        parser.error(f"cannot combine --forms-jsonl with {', '.join(conflicts)}")
 
 if args.next_open and args.worksheet_id:
     errors.append("--next-open cannot be combined with --worksheet-id")
@@ -718,6 +736,18 @@ if args.landing_plan:
     else:
         landing_plan = make_landing_plan(form_validation, rows)
         result["landing_plan"] = landing_plan
+
+if args.forms_jsonl:
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        sys.exit(exit_status)
+    if active_exposure_count:
+        print("ERROR: active exposure exists; owner-gated rows must stay out of active until owner decisions are closed.", file=sys.stderr)
+        sys.exit(exit_status)
+    for form in [make_decision_form(row) for row in rows if row["status"] == "open"]:
+        print(json.dumps(form, ensure_ascii=False, separators=(",", ":")))
+    sys.exit(exit_status)
 
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))

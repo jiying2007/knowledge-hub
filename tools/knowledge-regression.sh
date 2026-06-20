@@ -254,6 +254,146 @@ def test_owner_forms_text_jsonl_output():
         },
     )
 
+def test_owner_forms_jsonl_single_output():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms-jsonl",
+        ],
+    )
+    lines = [line for line in result["stdout"].splitlines() if line.strip()]
+    forms = []
+    parse_errors = []
+    for line in lines:
+        try:
+            forms.append(json.loads(line))
+        except Exception as exc:
+            parse_errors.append(str(exc))
+    first = forms[0] if forms else {}
+    identity = first.get("observed_source_identity", {}) if isinstance(first.get("observed_source_identity"), dict) else {}
+    forbidden_fragments = ["# Knowledge Owner Gates", "## Owner Decision JSONL Skeletons", "```", "## 验证", "decision_forms", "\"rows\""]
+    expect(
+        result["exit_code"] == 0
+        and len(lines) == 1
+        and not parse_errors
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("source_id") == "pcr02-project-docs"
+        and first.get("source_path") == "AGENTS.md"
+        and first.get("status") == "open"
+        and first.get("worksheet_status") == "owner-fill-required"
+        and first.get("owner_decision") == ""
+        and first.get("source_sha256") == ""
+        and first.get("source_size") == ""
+        and identity.get("identity_status") == "match"
+        and identity.get("source_file_exists") is True
+        and "owner_decision" in first.get("required_owner_fields", [])
+        and bool(first.get("allowed_owner_decisions", []))
+        and bool(first.get("must_not", []))
+        and not any(fragment in result["stdout"] for fragment in forbidden_fragments),
+        "owner-forms-jsonl-single-output",
+        "owner forms JSONL-only mode prints one clean JSONL skeleton",
+        {
+            "exit_code": result["exit_code"],
+            "line_count": len(lines),
+            "parse_errors": parse_errors,
+            "worksheet_id": first.get("worksheet_id"),
+            "source_path": first.get("source_path"),
+            "owner_decision": first.get("owner_decision"),
+            "source_sha256": first.get("source_sha256"),
+            "source_size": first.get("source_size"),
+            "identity_status": identity.get("identity_status"),
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:500],
+        },
+    )
+
+def test_owner_forms_jsonl_all_open_output():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--forms-jsonl",
+        ],
+    )
+    lines = [line for line in result["stdout"].splitlines() if line.strip()]
+    forms = []
+    parse_errors = []
+    for line in lines:
+        try:
+            forms.append(json.loads(line))
+        except Exception as exc:
+            parse_errors.append(str(exc))
+    worksheet_ids = {form.get("worksheet_id") for form in forms}
+    identity_statuses = [
+        form.get("observed_source_identity", {}).get("identity_status")
+        if isinstance(form.get("observed_source_identity"), dict)
+        else ""
+        for form in forms
+    ]
+    forbidden_fragments = ["# Knowledge Owner Gates", "## Owner Decision JSONL Skeletons", "```", "## 验证", "Owner Closure Checklists", "Owner Gate Summary"]
+    expect(
+        result["exit_code"] == 0
+        and len(lines) == 7
+        and len(forms) == 7
+        and not parse_errors
+        and len(worksheet_ids) == 7
+        and all(form.get("status") == "open" for form in forms)
+        and all(status == "match" for status in identity_statuses)
+        and all(form.get("owner_decision") == "" for form in forms)
+        and all(form.get("source_sha256") == "" for form in forms)
+        and all(form.get("source_size") == "" for form in forms)
+        and not any(fragment in result["stdout"] for fragment in forbidden_fragments),
+        "owner-forms-jsonl-all-open-output",
+        "owner forms JSONL-only mode prints all seven open skeletons",
+        {
+            "exit_code": result["exit_code"],
+            "line_count": len(lines),
+            "form_count": len(forms),
+            "unique_worksheet_count": len(worksheet_ids),
+            "parse_errors": parse_errors,
+            "identity_statuses": identity_statuses,
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:500],
+        },
+    )
+
+def test_owner_forms_jsonl_conflict_json_mode():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--forms-jsonl",
+            "--json",
+        ],
+    )
+    expect(
+        result["exit_code"] != 0
+        and result["stdout"] == ""
+        and "cannot combine --forms-jsonl with --json" in result["stderr"],
+        "owner-forms-jsonl-conflict-json-mode",
+        "owner forms JSONL-only mode rejects JSON object mode",
+        {
+            "exit_code": result["exit_code"],
+            "stdout_sample": result["stdout"][:500],
+            "stderr_sample": result["stderr"][:1000],
+        },
+    )
+
 def test_owner_checklist_context():
     result = run_cmd(
         root,
@@ -1160,6 +1300,9 @@ def test_regression_manifest_coverage():
         "owner-partial-resolved",
         "owner-single-form",
         "owner-forms-text-jsonl-output",
+        "owner-forms-jsonl-single-output",
+        "owner-forms-jsonl-all-open-output",
+        "owner-forms-jsonl-conflict-json-mode",
         "owner-checklist-context",
         "owner-form-context",
         "owner-source-identity-context",
@@ -1183,14 +1326,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "24 个回归场景" in manifest_text,
+        and "27 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "24 个回归场景",
+            "expected_count_text": "27 个回归场景",
         },
     )
 
@@ -1201,6 +1344,9 @@ for test_fn in [
     test_owner_partial_resolved,
     test_owner_single_form,
     test_owner_forms_text_jsonl_output,
+    test_owner_forms_jsonl_single_output,
+    test_owner_forms_jsonl_all_open_output,
+    test_owner_forms_jsonl_conflict_json_mode,
     test_owner_checklist_context,
     test_owner_form_context,
     test_owner_source_identity_context,
