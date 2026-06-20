@@ -157,6 +157,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-source-registry-final-state-fields-20260620`
 - reviewing: `knowledge-hub-status-owner-forms-jsonl-by-owner-20260620`
 - reviewing: `knowledge-hub-status-final-gate-command-20260620`
+- reviewing: `knowledge-hub-final-state-handoff-20260620`
 - reviewing: `pcr02-tools-boundary-20260620`
 - reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
 - reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
@@ -178,7 +179,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - blocked-pending-owner-review: PCR02 docs `AGENTS.md` and diag command metadata standard remain reference-only at row level by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.jsonl`; registry item remains `reviewing`.
 - governance-closeout-reviewing: PCR02 docs governance is closed at control-plane coverage level by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.jsonl`; owner-gated rows remain not active.
 - needs-owner-resolution: PCR02 owner action board tracks the 7 unresolved gates by `artifacts/manifests/pcr02-owner-action-board-20260618.jsonl`.
-- pass-for-handoff: PCR02 governance handoff is recoverable by `artifacts/manifests/pcr02-governance-handoff-20260618.jsonl`; it does not replace raw evidence.
+- pass-for-handoff: PCR02 governance handoff is recoverable by `artifacts/manifests/pcr02-governance-handoff-20260618.jsonl`; Knowledge Hub final-state handoff is recoverable by `artifacts/manifests/knowledge-hub-final-state-handoff-20260620.jsonl`; neither replaces raw evidence or owner decisions.
 - owner-intake-ready: PCR02 owner intake package is ready for human sign-off by `artifacts/manifests/pcr02-owner-intake-package-20260618.jsonl`; all hard gates remain `门禁待补证`.
 - source-identity-match: PCR02 owner-gated source identity preflight matched 7/7 current source SHA256 and size values by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.jsonl`; owner gates remain unresolved.
 - owner-resolution-playbook-ready: PCR02 owner decision landing rules are ready by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.jsonl`; no owner gate is resolved by this playbook alone.

@@ -27,3 +27,4 @@
 - `knowledge-hub-source-registry-final-state-fields`: source registry final-state field evidence is `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`; source `owner` is a maintenance owner and does not generate owner decision.
 - `knowledge-hub-status-owner-forms-jsonl-by-owner`: status by-owner forms-jsonl command evidence is `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.md`; it only exports blank owner form skeletons and does not generate owner decision.
 - `knowledge-hub-status-final-gate-command`: status final gate command evidence is `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.md`; status remains a dashboard and does not replace final gate.
+- `knowledge-hub-final-state-handoff`: final-state handoff evidence is `artifacts/manifests/knowledge-hub-final-state-handoff-20260620.md`; it is recovery context only and does not generate owner decision or completion evidence.
