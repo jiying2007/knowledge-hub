@@ -142,6 +142,76 @@ def test_governance_goal_path_allowed():
         },
     )
 
+def test_pcr02_level2_source_coverage():
+    expected = {
+        "pcr02-project-tools",
+        "pcr02-project-knowledge",
+        "pcr02-product-test",
+        "pcr02-project-scratch",
+        "pcr02-project-root-artifacts",
+        "pcr02-module-agent-rules",
+        "pcr02-project-agent-config",
+    }
+    sources_path = root / "registry" / "sources.json"
+    by_source_path = root / "indexes" / "by-source.md"
+    coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    source_ids = set()
+    by_source_ids = set()
+    coverage_ids = set()
+    coverage_path = coverage_paths[-1] if coverage_paths else None
+    errors = []
+    try:
+        source_ids = {item.get("id", "") for item in json.loads(sources_path.read_text()).get("sources", [])}
+    except Exception as exc:
+        errors.append(f"sources parse: {exc}")
+    try:
+        in_table = False
+        for line in by_source_path.read_text().splitlines():
+            stripped = line.strip()
+            if not stripped:
+                if in_table:
+                    break
+                continue
+            if not stripped.startswith("|"):
+                continue
+            cells = [cell.strip().strip("`") for cell in stripped.strip("|").split("|")]
+            if len(cells) < 3 or cells[0] in {"Source", "---"}:
+                continue
+            in_table = True
+            by_source_ids.add(cells[0])
+    except Exception as exc:
+        errors.append(f"by-source parse: {exc}")
+    if coverage_path:
+        try:
+            for line in coverage_path.read_text().splitlines():
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                coverage_ids.add(row.get("source_id", ""))
+        except Exception as exc:
+            errors.append(f"coverage parse: {exc}")
+    else:
+        errors.append("missing source coverage closeout jsonl")
+    expect(
+        not errors
+        and coverage_path is not None
+        and coverage_path.name == "knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and expected <= source_ids
+        and expected <= by_source_ids
+        and expected <= coverage_ids,
+        "pcr02-level2-source-coverage",
+        "PCR02 Level 2 sources are registered, indexed and covered",
+        {
+            "errors": errors,
+            "latest_coverage": str(coverage_path.relative_to(root)) if coverage_path else "",
+            "missing_sources": sorted(expected - source_ids),
+            "missing_by_source": sorted(expected - by_source_ids),
+            "missing_coverage": sorted(expected - coverage_ids),
+            "registered_count": len(source_ids),
+            "coverage_count": len(coverage_ids),
+        },
+    )
+
 def test_status_wrong_bucket():
     repo = copy_repo("status-wrong-bucket")
     path = repo / "indexes" / "by-status.md"
@@ -1422,6 +1492,7 @@ def test_regression_manifest_coverage():
     required_ids = [
         "baseline-knowledge-check",
         "governance-goal-path-allowed",
+        "pcr02-level2-source-coverage",
         "status-wrong-bucket",
         "status-noncanonical-only",
         "owner-partial-resolved",
@@ -1454,20 +1525,21 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "29 个回归场景" in manifest_text,
+        and "30 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "29 个回归场景",
+            "expected_count_text": "30 个回归场景",
         },
     )
 
 for test_fn in [
     test_baseline,
     test_governance_goal_path_allowed,
+    test_pcr02_level2_source_coverage,
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,

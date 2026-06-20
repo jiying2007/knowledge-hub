@@ -150,6 +150,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-placeholder-quoting-20260620`
 - reviewing: `knowledge-hub-final-state-goal-20260620`
 - reviewing: `knowledge-hub-owner-dispatch-filter-20260620`
+- reviewing: `knowledge-hub-source-coverage-closeout-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -254,3 +255,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-placeholder-quoting-applied: human-facing Markdown validate-forms command examples quote `<owner-decisions.jsonl>` to avoid shell redirection ambiguity; documented by `artifacts/manifests/knowledge-hub-owner-placeholder-quoting-20260620.jsonl`.
 - final-state-goal-registered: `docs/goals/knowledge-hub-final-state.md` is registered as the Knowledge Hub final-state governance goal and gap-map SSOT; documented by `artifacts/manifests/knowledge-hub-final-state-goal-20260620.jsonl`.
 - owner-dispatch-filter-applied: `tools/knowledge-owner-gates.sh` with `--owner <owner>` and `tools/knowledge-status.sh` owner summary commands support read-only owner gate assignment by responsible owner; documented by `artifacts/manifests/knowledge-hub-owner-dispatch-filter-20260620.jsonl`.
+- source-coverage-closeout-level2-applied: PCR02 Level 2 candidate sources are registered and covered by the latest source coverage matrix; documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl`.

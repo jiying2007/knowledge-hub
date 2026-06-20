@@ -8,6 +8,13 @@
 | codex-archive | codex-governance-source | `/home/leiwenjun/codex/docs/archive` |
 | codex-memories | auxiliary-memory-source | `/home/leiwenjun/.codex/memories` |
 | pcr02-project-docs | project-current-docs-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs` |
+| pcr02-project-tools | project-current-tools-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` |
+| pcr02-project-knowledge | project-current-knowledge-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge` |
+| pcr02-product-test | project-product-test-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test` |
+| pcr02-project-scratch | project-scratch-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` |
+| pcr02-project-root-artifacts | project-root-artifact-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| pcr02-module-agent-rules | project-agent-rules-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| pcr02-project-agent-config | project-agent-config-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 
 ## Source-Specific Review Artifacts
 
@@ -39,4 +46,11 @@
 - `patent-disclosure`: 10 Markdown patent disclosure files were copy-first migrated to `domains/patents/archive/patent-disclosure`; 181 non-text attachments are registered by `artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl` and summarized in `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`.
 - `embedded-knowledge`: remains an external legacy team SSOT pending owner review and source stabilization; source coverage boundary is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
 - `codex-archive`: remains reference-first through Codex archive tools; boundary is tracked by `domains/codex/archive/codex-archive.ref.md` and `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
-- `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
+- `pcr02-project-tools`: tool/diag/memory automation source coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-knowledge`: classify-first, secret-boundary and tool/artifact boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-module-agent-rules`: module-local owner-gated rule coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `pcr02-project-agent-config`: config/artifact-ref and report-only automation boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.

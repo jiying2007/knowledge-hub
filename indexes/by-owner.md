@@ -127,6 +127,7 @@
 - `knowledge-hub-owner-placeholder-quoting-20260620`
 - `knowledge-hub-final-state-goal-20260620`
 - `knowledge-hub-owner-dispatch-filter-20260620`
+- `knowledge-hub-source-coverage-closeout-20260620`
 
 ## pcr02-registry-owner
 

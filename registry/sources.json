@@ -54,6 +54,69 @@
       "status": "registered",
       "write_policy": "externalize-to-knowledge-hub-before-prune",
       "check": ""
+    },
+    {
+      "id": "pcr02-project-tools",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools",
+      "role": "project-current-tools-source",
+      "authority": "legacy-project-current-tools",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools'"
+    },
+    {
+      "id": "pcr02-project-knowledge",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge",
+      "role": "project-current-knowledge-source",
+      "authority": "legacy-project-current-knowledge",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge'"
+    },
+    {
+      "id": "pcr02-product-test",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test",
+      "role": "project-product-test-source",
+      "authority": "legacy-project-product-test",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test'"
+    },
+    {
+      "id": "pcr02-project-scratch",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch",
+      "role": "project-scratch-source",
+      "authority": "legacy-project-scratch",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch'"
+    },
+    {
+      "id": "pcr02-project-root-artifacts",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo",
+      "role": "project-root-artifact-source",
+      "authority": "legacy-project-root-artifacts",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -d /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo'"
+    },
+    {
+      "id": "pcr02-module-agent-rules",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo",
+      "role": "project-agent-rules-source",
+      "authority": "legacy-project-agent-rules",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/cli/AGENTS.md'"
+    },
+    {
+      "id": "pcr02-project-agent-config",
+      "path": "/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo",
+      "role": "project-agent-config-source",
+      "authority": "legacy-project-agent-config",
+      "status": "registered",
+      "write_policy": "do-not-write-through-knowledge-hub",
+      "check": "rtk bash -lc 'test -f /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/.vscode/codex-tasks-sync.sh'"
     }
   ]
 }

@@ -21,6 +21,7 @@
 - Owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - Owner source identity preflight: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
 - Owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
+- Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - Owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`

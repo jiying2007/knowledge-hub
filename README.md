@@ -44,6 +44,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
 rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary
@@ -67,11 +68,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 2. 从 `templates/` 复制合适模板到唯一正文位置。
 3. 同步 `registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md` 和 `registry/migrations.jsonl`。
 4. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all`，对照 registry 派生视图复核核心索引。
-5. 如涉及 owner-gated 内容，先运行 `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id>`，确认 owner、必填证据和 active exposure；需要一次性分派全部 open gate 时加 `--summary`，需要按责任人分派时加 `--owner <owner> --summary`，需要 owner 签收上下文时加 `--checklist`，需要人读说明和可复制 JSONL 表单时加 `--forms`，需要只给脚本或人工保存的纯 JSONL 表单时加 `--forms-jsonl`。
+5. 如新增或调整 source，先运行 `rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown` 做只读盘点；同步 `registry/sources.json`、`indexes/by-source.md` 和最新 `artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl`，确保每个 registered source 都有终态分类、决策、风险、owner 和 checked_at。
+6. 如涉及 owner-gated 内容，先运行 `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id>`，确认 owner、必填证据和 active exposure；需要一次性分派全部 open gate 时加 `--summary`，需要按责任人分派时加 `--owner <owner> --summary`，需要 owner 签收上下文时加 `--checklist`，需要人读说明和可复制 JSONL 表单时加 `--forms`，需要只给脚本或人工保存的纯 JSONL 表单时加 `--forms-jsonl`。
    也可以先运行 `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json`，读取 `owner_gates.summary_commands` 查看全部 open gate，用 `owner_gates.owner_summary_commands` 按责任人分派，用 `owner_gates.forms_jsonl_commands` 导出全部纯 JSONL 空白表单，用 `owner_gates.validate_forms_command_templates` 校验 owner 填好的 JSONL，用 `owner_gates.landing_plan_command_templates` 生成无写入人工 landing plan，再用 `owner_gates.next_open.next_open_command` 聚焦下一条 owner gate；或直接运行 `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms`。
-6. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`；如涉及 owner-gated source，加 `--owner-gates <source-id>`，先看 diagnostics、explain、search 和 owner gate 看板。
-7. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
-8. 涉及门禁、索引或 owner gate 工具变更时，运行 `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`，确认关键负向 fixture 仍会失败。
-9. 终态验收运行 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；它聚合 `knowledge-check`、`knowledge-regression` 和 `knowledge-status --strict`，当前 PCR02 owner gate 未签收时应返回 `needs-owner-review`。
+7. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>`；如涉及 owner-gated source，加 `--owner-gates <source-id>`，先看 diagnostics、explain、search 和 owner gate 看板。
+8. 运行 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json` 作为提交前全仓门禁。
+9. 涉及门禁、索引或 owner gate 工具变更时，运行 `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`，确认关键负向 fixture 仍会失败。
+10. 终态验收运行 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；它聚合 `knowledge-check`、`knowledge-regression` 和 `knowledge-status --strict`，当前 PCR02 owner gate 未签收时应返回 `needs-owner-review`。
 
 人工可以直接按模板新增内容；脚本只是防漏清单，不是唯一入口。

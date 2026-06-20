@@ -13,7 +13,7 @@
 | FSG-001 | cross-session-linking | none | `docs/goals/knowledge-hub-final-state.md` 未登记 | 新会话只能依赖未跟踪目标文档，终态规格不可被 `knowledge-check --explain` 解释 | yes | no | 登记目标规格为 governance item，允许 `docs/goals/` 作为 governance control-plane path | applied |
 | FSG-002 | regression | none | `tools/knowledge-regression.sh` 原本没有 governance goal path 覆盖 | 后续 schema 变更可能再次拒绝目标规格路径 | yes | no | 新增 `governance-goal-path-allowed` 回归 | applied |
 | FSG-003 | owner-review | pcr02-project-docs | `tools/knowledge-final-gate.sh --json` 返回 `needs-owner-review`，blocker 为 `owner-gates-open count=7` | PCR02 owner-gated docs 不能自动迁移或 active | no | yes | 保持 owner gate open，仅继续降低人工签收成本 | pending-human-owner |
-| FSG-004 | source-coverage | pcr02 candidate sources | 目标文档列出 tools、knowledge、app_product_test、scratch、root artifacts、module AGENTS、agent config | Level 2 仍需逐 source coverage | partly | maybe | 后续切片继续 classify-first/source coverage，不改源项目 | pending |
+| FSG-004 | source-coverage | pcr02 candidate sources | `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md` 登记 tools、knowledge、app_product_test、scratch、root artifacts、module AGENTS、agent config | Level 2 source coverage 控制面已闭合；具体正文迁移、artifact-ref 清单和 owner 语义决策仍按 source 分流 | yes | maybe | 登记 7 个 PCR02 Level 2 source、同步 latest coverage JSONL、by-source 和回归 | applied-control-plane |
 
 ## 边界
 
@@ -30,6 +30,7 @@
 | `rtk bash tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-final-state-goal-20260620` | 0 | 目标规格 registry item 可解释，路径 `docs/goals/knowledge-hub-final-state.md` 存在 | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-final-state-goal-20260620` |
 | `rtk bash tools/knowledge-regression.sh --json` | 0 | 29 个回归场景通过，包含 `governance-goal-path-allowed` | `tools/knowledge-regression.sh` | Regression | `knowledge-hub-final-state-goal-20260620` |
 | `rtk bash tools/knowledge-final-gate.sh --json` | expected 1 | 仍返回 `needs-owner-review`，唯一 blocker 是 7 条 owner gate 未签收 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-final-state-goal-20260620` |
+| `rtk bash tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-source-coverage-closeout-20260620` | 0 | PCR02 Level 2 source coverage closeout 可解释，latest coverage JSONL 覆盖 13 个 registered source | `tools/knowledge-check.sh` | Knowledge Hub | `knowledge-hub-source-coverage-closeout-20260620` |
 
 ## 维护
 

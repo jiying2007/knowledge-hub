@@ -98,6 +98,13 @@ ALLOWED_SOURCE_ROLES = {
     "codex-governance-source",
     "auxiliary-memory-source",
     "project-current-docs-source",
+    "project-current-tools-source",
+    "project-current-knowledge-source",
+    "project-product-test-source",
+    "project-scratch-source",
+    "project-root-artifact-source",
+    "project-agent-rules-source",
+    "project-agent-config-source",
 }
 ALLOWED_SOURCE_AUTHORITIES = {
     "legacy-team-ssot",
@@ -106,6 +113,13 @@ ALLOWED_SOURCE_AUTHORITIES = {
     "codex-workflow-history",
     "auxiliary-recall-only",
     "legacy-project-current-docs",
+    "legacy-project-current-tools",
+    "legacy-project-current-knowledge",
+    "legacy-project-product-test",
+    "legacy-project-scratch",
+    "legacy-project-root-artifacts",
+    "legacy-project-agent-rules",
+    "legacy-project-agent-config",
 }
 ALLOWED_SOURCE_STATUSES = {
     "registered",

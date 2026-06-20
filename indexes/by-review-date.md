@@ -151,3 +151,4 @@
 - 2026-09-20: `knowledge-hub-owner-placeholder-quoting-20260620`
 - 2026-09-20: `knowledge-hub-final-state-goal-20260620`
 - 2026-09-20: `knowledge-hub-owner-dispatch-filter-20260620`
+- 2026-09-20: `knowledge-hub-source-coverage-closeout-20260620`
