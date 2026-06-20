@@ -939,6 +939,7 @@ def test_status_next_owner_gate():
     owner_gates = parsed.get("owner_gates", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
+    owner_forms_jsonl_commands = parsed.get("owner_gates", {}).get("owner_forms_jsonl_commands", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
     validate_forms_command_templates = parsed.get("owner_gates", {}).get("validate_forms_command_templates", [])
     landing_plan_command_templates = parsed.get("owner_gates", {}).get("landing_plan_command_templates", [])
@@ -961,6 +962,7 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and any("--summary" in str(command) for command in summary_commands)
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
+        and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_forms_jsonl_commands)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
@@ -984,6 +986,7 @@ def test_status_next_owner_gate():
         and "owner-decisions.jsonl" in next_open.get("focus_landing_plan_command_template", "")
         and any("--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--forms-jsonl" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
         and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
@@ -991,6 +994,7 @@ def test_status_next_owner_gate():
         and owner_blocker.get("count") == 7
         and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and not any("owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
@@ -1010,6 +1014,7 @@ def test_status_next_owner_gate():
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "owner_summary_commands": owner_summary_commands,
+            "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
             "forms_jsonl_commands": forms_jsonl_commands,
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,

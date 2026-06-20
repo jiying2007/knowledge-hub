@@ -127,11 +127,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --forms-jsonl
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --owner <owner> --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --validate-forms '<owner-decisions.jsonl>' --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
-建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
+建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。多 owner 分派时先用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
 ### 5. 跑一次终态检查
 

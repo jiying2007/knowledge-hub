@@ -128,6 +128,7 @@ open_owner_rows = sorted(
 next_owner_gate = {}
 summary_commands = []
 owner_summary_commands = []
+owner_forms_jsonl_commands = []
 forms_jsonl_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
@@ -158,6 +159,17 @@ if open_owner_rows:
             "--summary",
         ]
         owner_summary_commands.append(" ".join(shlex.quote(str(part)) for part in owner_summary_command))
+        owner_forms_jsonl_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--forms-jsonl",
+        ]
+        owner_forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in owner_forms_jsonl_command))
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         forms_jsonl_command = [
             "rtk",
@@ -304,6 +316,11 @@ if open_owner_gate_count:
             "需要按责任人分派 owner gate 时，运行 owner 过滤总览，例如："
             f"{owner_summary_commands[0]}。"
         )
+    if owner_forms_jsonl_commands:
+        next_actions.append(
+            "需要按责任人导出纯 JSONL owner 表单时，运行："
+            f"{owner_forms_jsonl_commands[0]}。"
+        )
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
@@ -360,6 +377,7 @@ if active_exposure_count:
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
     owner_commands.extend(owner_summary_commands)
+    owner_commands.extend(owner_forms_jsonl_commands)
     if next_owner_gate.get("next_open_command"):
         owner_commands.append(next_owner_gate["next_open_command"])
     if next_owner_gate.get("next_open_forms_jsonl_command"):
@@ -426,6 +444,7 @@ result = {
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
         "summary_commands": summary_commands,
         "owner_summary_commands": owner_summary_commands,
+        "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
         "forms_jsonl_commands": forms_jsonl_commands,
         "validate_forms_command_templates": validate_forms_command_templates,
         "landing_plan_command_templates": landing_plan_command_templates,
@@ -486,6 +505,10 @@ if summary_commands:
 if forms_jsonl_commands:
     print("- forms-jsonl commands:")
     for command in forms_jsonl_commands:
+        print(f"  - `{command}`")
+if owner_forms_jsonl_commands:
+    print("- owner forms-jsonl commands:")
+    for command in owner_forms_jsonl_commands:
         print(f"  - `{command}`")
 if validate_forms_command_templates:
     print("- validate-forms command templates:")
