@@ -122,3 +122,4 @@
 - Knowledge Hub owner landing ready gate: `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.md`
 - Knowledge Hub owner forms text JSONL: `artifacts/manifests/knowledge-hub-owner-forms-text-jsonl-20260620.md`
 - Knowledge Hub owner forms JSONL-only: `artifacts/manifests/knowledge-hub-owner-forms-jsonl-only-20260620.md`
+- Knowledge Hub status owner forms JSONL command: `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-command-20260620.md`

@@ -127,6 +127,7 @@ open_owner_rows = sorted(
 )
 next_owner_gate = {}
 summary_commands = []
+forms_jsonl_commands = []
 if open_owner_rows:
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         summary_command = [
@@ -138,6 +139,15 @@ if open_owner_rows:
             "--summary",
         ]
         summary_commands.append(" ".join(shlex.quote(str(part)) for part in summary_command))
+        forms_jsonl_command = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--forms-jsonl",
+        ]
+        forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in forms_jsonl_command))
     first_open = open_owner_rows[0]
     next_open_command = [
         "rtk",
@@ -148,6 +158,15 @@ if open_owner_rows:
         "--next-open",
         "--checklist",
         "--forms",
+    ]
+    next_open_forms_jsonl_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--next-open",
+        "--forms-jsonl",
     ]
     focus_command = [
         "rtk",
@@ -160,6 +179,16 @@ if open_owner_rows:
         "--checklist",
         "--forms",
     ]
+    focus_forms_jsonl_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-owner-gates.sh",
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--forms-jsonl",
+    ]
     next_owner_gate = {
         "worksheet_id": first_open.get("id", ""),
         "source_id": first_open.get("source_id", ""),
@@ -168,7 +197,9 @@ if open_owner_rows:
         "review_after": first_open.get("review_after", ""),
         "selection_order": "review_after, worksheet_id",
         "next_open_command": " ".join(shlex.quote(str(part)) for part in next_open_command),
+        "next_open_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in next_open_forms_jsonl_command),
         "focus_command": " ".join(shlex.quote(str(part)) for part in focus_command),
+        "focus_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in focus_forms_jsonl_command),
     }
 
 if errors:
@@ -204,6 +235,11 @@ if open_owner_gate_count:
             f"{next_owner_gate['worksheet_id']} ({next_owner_gate['source_path']})；运行："
             f"{next_owner_gate['next_open_command']}。"
         )
+        if next_owner_gate.get("next_open_forms_jsonl_command"):
+            next_actions.append(
+                "需要保存或交给脚本处理纯 JSONL owner 表单时，运行："
+                f"{next_owner_gate['next_open_forms_jsonl_command']}。"
+            )
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
 if stale_items:
@@ -240,6 +276,8 @@ if open_owner_gate_count:
     owner_commands = list(summary_commands)
     if next_owner_gate.get("next_open_command"):
         owner_commands.append(next_owner_gate["next_open_command"])
+    if next_owner_gate.get("next_open_forms_jsonl_command"):
+        owner_commands.append(next_owner_gate["next_open_forms_jsonl_command"])
     strict_blockers.append({
         "id": "owner-gates-open",
         "severity": "owner-review",
@@ -297,6 +335,7 @@ result = {
         "owner_ready_invalid": owner_payload.get("owner_ready_invalid", []),
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
         "summary_commands": summary_commands,
+        "forms_jsonl_commands": forms_jsonl_commands,
         "next_open": next_owner_gate,
     },
     "errors": errors,
@@ -351,10 +390,16 @@ if summary_commands:
     print("- summary commands:")
     for command in summary_commands:
         print(f"  - `{command}`")
+if forms_jsonl_commands:
+    print("- forms-jsonl commands:")
+    for command in forms_jsonl_commands:
+        print(f"  - `{command}`")
 if next_owner_gate:
     print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
     print(f"- next-open command: `{next_owner_gate['next_open_command']}`")
+    print(f"- next-open forms-jsonl command: `{next_owner_gate['next_open_forms_jsonl_command']}`")
     print(f"- focus command: `{next_owner_gate['focus_command']}`")
+    print(f"- focus forms-jsonl command: `{next_owner_gate['focus_forms_jsonl_command']}`")
 print()
 if strict_blockers:
     print("## Strict Blockers")

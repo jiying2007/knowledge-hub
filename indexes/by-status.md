@@ -144,6 +144,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-landing-ready-gate-20260620`
 - reviewing: `knowledge-hub-owner-forms-text-jsonl-20260620`
 - reviewing: `knowledge-hub-owner-forms-jsonl-only-20260620`
+- reviewing: `knowledge-hub-status-owner-forms-jsonl-command-20260620`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -242,3 +243,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-landing-ready-gate-applied: `tools/knowledge-owner-gates.sh` now requires owner-ready package strong validation for landing-plan output before emitting manual landing steps; documented by `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.jsonl`.
 - owner-forms-text-jsonl-applied: `tools/knowledge-owner-gates.sh` now prints copyable owner decision JSONL skeleton rows in text mode for `--forms`; documented by `artifacts/manifests/knowledge-hub-owner-forms-text-jsonl-20260620.jsonl`.
 - owner-forms-jsonl-only-applied: `tools/knowledge-owner-gates.sh` supports `--forms-jsonl` to print pure compact owner decision JSONL skeleton rows on stdout with conflict protection against wrapped or human-readable modes; documented by `artifacts/manifests/knowledge-hub-owner-forms-jsonl-only-20260620.jsonl`.
+- status-owner-forms-jsonl-command-applied: `tools/knowledge-status.sh` exposes `owner_gates.forms_jsonl_commands` and next-open forms-jsonl commands in status actions and strict blockers; documented by `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-command-20260620.jsonl`.

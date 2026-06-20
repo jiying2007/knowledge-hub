@@ -121,6 +121,7 @@
 - `knowledge-hub-owner-landing-ready-gate-20260620`
 - `knowledge-hub-owner-forms-text-jsonl-20260620`
 - `knowledge-hub-owner-forms-jsonl-only-20260620`
+- `knowledge-hub-status-owner-forms-jsonl-command-20260620`
 
 ## pcr02-registry-owner
 
