@@ -34,6 +34,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - Latest terminal contract, AI provenance and template sync: `artifacts/manifests/knowledge-hub-terminal-contract-template-sync-20260621.md`.
 - Latest as-of and source coverage selection/health contract: `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
 - Latest final gate regression skip blocker: `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`.
+- Latest manual entry template and source boundary sync: `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`.
 
 ## Source-Specific Review Artifacts
 
@@ -77,21 +78,28 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-tools`: tool/diag/memory automation source coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-tools`: concrete README/AGENTS, diag, runtime diagnostic, memory automation and generated artifact boundaries are tracked by `artifacts/manifests/pcr02-tools-boundary-20260620.md`.
 - `pcr02-project-tools`: source identity for 18 non-generated tool files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
+- `pcr02-project-tools`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-project-knowledge`: classify-first, secret-boundary and tool/artifact boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-knowledge`: concrete env/config, project-local rule, runbook, standards-like doc, governance tool and skill-asset boundaries are tracked by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`.
+- `pcr02-project-knowledge`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-product-test`: concrete Markdown, PDF/archive, config, C/C++ reference and build artifact boundaries are tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`.
 - `pcr02-product-test`: artifact/config/interface source identity for 73 non-generated files is tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`.
+- `pcr02-product-test`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-scratch`: concrete session/context/resume archive-only boundary is tracked by `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`.
 - `pcr02-project-scratch`: source identity for 8 scratch Markdown session/context/resume files is tracked by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`.
+- `pcr02-project-scratch`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-root-artifacts`: concrete root loose artifact/tool/config boundary and historical/current count drift are tracked by `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`.
 - `pcr02-project-root-artifacts`: source identity for 16 current root loose files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
+- `pcr02-project-root-artifacts`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-module-agent-rules`: module-local owner-gated rule coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-module-agent-rules`: concrete AGENTS/local rule owner-gated boundary is tracked by `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`.
 - `pcr02-module-agent-rules`: source identity for 8 current module/project/local AGENTS files is tracked by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`.
+- `pcr02-module-agent-rules`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `pcr02-project-agent-config`: config/artifact-ref and report-only automation boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-agent-config`: concrete `.vscode`/`.kilo` config, artifact and report-only automation boundary is tracked by `artifacts/manifests/pcr02-agent-config-boundary-20260620.md`.
 - `pcr02-project-agent-config`: source identity for 10 `.vscode`/`.kilo` config and package files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
+- `pcr02-project-agent-config`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
 - `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.

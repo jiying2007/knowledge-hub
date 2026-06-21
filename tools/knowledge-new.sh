@@ -334,11 +334,26 @@ case "$KIND" in
   decision)
     TEMPLATE="templates/decision.md"
     ;;
-  validation)
+  validation|validation-report)
     TEMPLATE="templates/validation-report.md"
     ;;
-  project-archive)
+  project-archive|archive-note)
     TEMPLATE="templates/archive-note.md"
+    ;;
+  debug-record)
+    TEMPLATE="templates/debug-record.md"
+    ;;
+  external-source-note|external-source)
+    TEMPLATE="templates/external-source-note.md"
+    ;;
+  owner-decision-worksheet|owner-worksheet)
+    TEMPLATE="templates/owner-decision-worksheet.md"
+    ;;
+  patent-disclosure|patent)
+    TEMPLATE="templates/patent-disclosure.md"
+    ;;
+  migration-record|migration)
+    TEMPLATE="templates/migration-record.md"
     ;;
   artifact-ref)
     TEMPLATE="templates/artifact-ref.md"

@@ -329,3 +329,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - final-gate-regression-skip-blocker-applied: `knowledge-final-gate.sh` 将 regression self-test skip 作为 `knowledge-regression-skipped` blocker，不允许作为终态证据；documented by `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.jsonl`.
 - reviewing: `pcr02-p2-archive-rule-identity-20260621`
 - p2-archive-rule-identity-preflight-applied: PCR02 module-agent-rules 与 scratch 两个 P2 source 的 16 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not；规则文件保持 owner-gated reference，scratch 保持 archive-only；documented by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.jsonl`.
+- reviewing: `knowledge-hub-manual-entry-source-boundary-sync-20260621`
+- manual-entry-source-boundary-sync-applied: 人工新增入口已补齐专用模板映射、README 示例、回归覆盖和 13 个 source 的中文边界入口；documented by `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.jsonl`.
+- reviewing: `pcr02-level2-source-check-execution-snapshot-20260621`
+- level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check 已按 report-only 手动快照执行且 exit_code=0；只证明路径/文件存在，不关闭 owner gate；documented by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.

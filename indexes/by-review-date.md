@@ -191,3 +191,5 @@
 - 2026-09-21: `pcr02-product-test-artifact-config-interface-identity-20260621`
 - 2026-09-21: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
 - 2026-09-21: `pcr02-p2-archive-rule-identity-20260621`
+- 2026-09-21: `knowledge-hub-manual-entry-source-boundary-sync-20260621`
+- 2026-09-21: `pcr02-level2-source-check-execution-snapshot-20260621`

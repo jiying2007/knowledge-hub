@@ -102,6 +102,17 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner>
 ```
 
+常用专用模板入口：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/pcr02 --id <id> --path domains/projects/pcr02/archive/debug/<file>.md --owner <owner>
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind external-source-note --domain codex --id <id> --path artifacts/manifests/<file>.md --owner <owner>
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/pcr02 --id <id> --path artifacts/worksheets/<file>.md --owner <owner>
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind patent-disclosure --domain patents --id <id> --path domains/patents/disclosures/<file>.md --owner <owner>
+```
+
+`owner-decision-worksheet` 只是 owner gate 的人工签核草稿入口，不生成 owner decision、不代签、不关闭 gate。完整映射见 `templates/README.md`。
+
 离线、现场或 AI 辅助起草时可追加：
 
 ```bash

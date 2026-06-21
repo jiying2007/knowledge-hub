@@ -14,17 +14,19 @@
 
 ## 模板清单
 
-- `item.md`：通用知识条目。
-- `runbook.md`：操作手册。
-- `decision.md`：决策记录。
-- `validation-report.md`：验证报告。
-- `owner-decision-worksheet.md`：owner 签核表。
-- `debug-record.md`：排障记录。
-- `external-source-note.md`：外部资料吸收记录。
-- `archive-note.md`：归档说明。
-- `migration-record.md`：迁移记录。
-- `artifact-ref.md`：制品引用。
-- `patent-disclosure.md`：专利披露。
+| kind | 推荐模板 | 用途 |
+|---|---|---|
+| `item` 或未知 kind | `item.md` | 通用知识条目 |
+| `runbook` | `runbook.md` | 操作手册 |
+| `decision` | `decision.md` | 决策记录 |
+| `validation` / `validation-report` | `validation-report.md` | 验证报告 |
+| `owner-decision-worksheet` / `owner-worksheet` | `owner-decision-worksheet.md` | owner 签核草稿入口 |
+| `debug-record` | `debug-record.md` | 排障记录 |
+| `external-source-note` / `external-source` | `external-source-note.md` | 外部资料吸收记录 |
+| `project-archive` / `archive-note` | `archive-note.md` | 归档说明 |
+| `migration-record` / `migration` | `migration-record.md` | 迁移记录 |
+| `artifact-ref` | `artifact-ref.md` | 制品引用 |
+| `patent-disclosure` / `patent` | `patent-disclosure.md` | 专利披露 |
 
 `knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；如涉及迁移、引用或归档，再补 `registry/migrations.jsonl`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
 
