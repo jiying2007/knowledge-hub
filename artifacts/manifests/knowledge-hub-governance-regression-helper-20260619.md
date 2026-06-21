@@ -50,7 +50,7 @@
 | status-source-governance-summary | 当前状态看板 JSON 暴露 source coverage、review_after 和终态恢复命令 | `knowledge-status.sh --json` 必须输出 source 注册数、最新 source coverage manifest、stale review_after 计数、review_after 复核命令、owner-ready package 覆盖率和 final gate 命令 |
 | stale-review-after-warning-surface | 临时副本把一条 reviewing item 的 `review_after` 改到过去 | `knowledge-check` 仍通过但输出 stale warning，`knowledge-status` 暴露 stale count、sample 和 review_after 复核命令，证明过期复核是人工治理提醒而不是阻断错误 |
 | source-manual-entry-guide | 当前人工 source 新增向导输出完整草案 | `knowledge-new.sh --source` 输出 `registry/sources.json` object、`indexes/by-source.md` 主表行和 source coverage JSONL row 草案，并保留 no-check reason |
-| source-manual-entry-guide-check-command | 当前人工 source 新增向导支持稳定只读 check | 传 `--check "rtk ..."` 时 registry source 草稿包含 `check` 字段，并继续保持只读 source/index/coverage 草案 |
+| source-manual-entry-guide-check-command | 当前人工 source 新增向导支持稳定只读 check | 传 `--check "rtk ..."` 时 registry source 草稿和 source coverage JSONL row 草稿均包含 `check` 字段，且不输出 JSON 形式的 `no_check_reason` |
 | knowledge-search-structured-filters | 当前搜索入口支持 registry-backed 结构化过滤 | `knowledge-search.sh` 保持全文搜索兼容，同时按 `--owner`、`--status` 和 `--source-id` 返回带 `item_id/status/owner/source_id` 的 registry item 命中 |
 | knowledge-search-invalid-filters | 当前搜索入口拒绝非法枚举过滤值 | `--status not-a-status` 和 `--kind not-a-kind` 非零退出，并提示允许值，避免无效过滤静默退化为全文搜索 |
 | index-plan-topic-schema-health | 当前 topic 索引规划视图和 `registry/topics.json` 对齐 | `knowledge-index-plan.sh --section topic --json` 输出的 topic id 与 topic registry 完全一致 |

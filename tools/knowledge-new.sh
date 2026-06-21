@@ -202,9 +202,11 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   TODAY_COMPACT="${TODAY//-/}"
   CHECK_FIELD=""
   NO_CHECK_FIELD=",\"no_check_reason\":\"${JSON_SOURCE_NO_CHECK_REASON}\""
+  DISPLAY_SOURCE_NO_CHECK_SUMMARY="${DISPLAY_SOURCE_NO_CHECK_REASON}"
   if [[ -n "$DISPLAY_SOURCE_CHECK" ]]; then
     CHECK_FIELD=",\"check\":\"${JSON_SOURCE_CHECK}\""
     NO_CHECK_FIELD=""
+    DISPLAY_SOURCE_NO_CHECK_SUMMARY="<not-required: check provided>"
   fi
   cat <<EOF
 # Knowledge Hub Source 登记向导
@@ -220,7 +222,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
 - status: ${DISPLAY_SOURCE_STATUS}
 - write_policy: ${DISPLAY_SOURCE_WRITE_POLICY}
 - check: ${DISPLAY_SOURCE_CHECK:-<空>}
-- no_check_reason: ${DISPLAY_SOURCE_NO_CHECK_REASON}
+- no_check_reason: ${DISPLAY_SOURCE_NO_CHECK_SUMMARY}
 - owner: ${OWNER:-leiwenjun}
 
 ## 最小人工步骤
@@ -252,7 +254,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
 ### source coverage JSONL row
 
 \`\`\`json
-{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"registered-pending-classification","classification":"classify-first","decision":"新增 source 已进入 Knowledge Hub 控制面；默认不复制正文、不提升 active。","evidence":"registry/sources.json; indexes/by-source.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}","no_check_reason":"${JSON_SOURCE_NO_CHECK_REASON}","source_identity":{"type":"directory-or-external-source","notes":"目录型 source 可用 manifest/evidence refs 表达 identity；不要强制 hash 整个目录。"}}
+{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"registered-pending-classification","classification":"classify-first","decision":"新增 source 已进入 Knowledge Hub 控制面；默认不复制正文、不提升 active。","evidence":"registry/sources.json; indexes/by-source.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"directory-or-external-source","notes":"目录型 source 可用 manifest/evidence refs 表达 identity；不要强制 hash 整个目录。"}}
 \`\`\`
 
 ## 不要做

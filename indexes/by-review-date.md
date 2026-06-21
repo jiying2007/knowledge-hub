@@ -171,3 +171,4 @@
 - 2026-09-20: `pcr02-root-artifacts-boundary-20260620`
 - 2026-09-20: `pcr02-module-agent-rules-boundary-20260620`
 - 2026-09-20: `pcr02-agent-config-boundary-20260620`
+- 2026-09-21: `knowledge-hub-source-check-coverage-draft-20260621`

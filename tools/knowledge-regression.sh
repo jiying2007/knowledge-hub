@@ -2311,16 +2311,22 @@ def test_source_manual_entry_guide_check_command():
         ],
     )
     registry_object_has_check = '"final_disposition":"owner-gated-pending-decision","check":"rtk bash tools/knowledge-check.sh --dry-run"}' in result["stdout"]
+    coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk bash tools/knowledge-check.sh --dry-run","source_identity"' in result["stdout"]
+    json_no_check_reason_absent = '"no_check_reason":' not in result["stdout"]
     expect(
         result["exit_code"] == 0
         and registry_object_has_check
+        and coverage_row_has_check
+        and json_no_check_reason_absent
         and '"source_id":"example-source-check"' in result["stdout"]
         and "rtk bash tools/knowledge-index-plan.sh --section source" in result["stdout"],
         "source-manual-entry-guide-check-command",
-        "source manual entry guide supports stable read-only check commands",
+        "source manual entry guide uses check fields consistently for registry and coverage drafts",
         {
             "exit_code": result["exit_code"],
             "registry_object_has_check": registry_object_has_check,
+            "coverage_row_has_check": coverage_row_has_check,
+            "json_no_check_reason_absent": json_no_check_reason_absent,
             "stdout_sample": result["stdout"][:1600],
         },
     )
