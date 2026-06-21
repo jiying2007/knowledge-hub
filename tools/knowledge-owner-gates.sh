@@ -24,6 +24,7 @@ parser.add_argument("--checklist", action="store_true", help="Print owner-facing
 parser.add_argument("--evidence-readiness", action="store_true", help="Print read-only evidence readiness and prefill candidates for open rows.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
+parser.add_argument("--landing-audit", action="store_true", help="With --validate-forms, print a read-only manual landing audit for worksheet/registry/index deltas.")
 parser.add_argument("--source-id", default="")
 parser.add_argument("--owner", default="", help="Limit output to one exact owner value.")
 parser.add_argument("--worksheet-id", default="", help="Limit output to one owner decision worksheet id.")
@@ -49,6 +50,8 @@ if args.forms_jsonl:
         conflicts.append("--validate-forms")
     if args.landing_plan:
         conflicts.append("--landing-plan")
+    if args.landing_audit:
+        conflicts.append("--landing-audit")
     if conflicts:
         parser.error(f"cannot combine --forms-jsonl with {', '.join(conflicts)}")
 
@@ -663,6 +666,12 @@ def make_owner_dispatch(rows):
                 )
                 if source_id
                 else "",
+                "landing_audit_command_template": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-audit --json"
+                )
+                if source_id
+                else "",
                 "next_focus_command": (
                     "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
                     f"--source-id {next_row['source_id']} --owner {owner_arg} "
@@ -838,9 +847,8 @@ def validate_forms_file(path, rows):
         "warnings": warnings,
     }
 
-def make_landing_plan(form_validation, rows):
+def owner_ready_landing_errors(form_validation, rows):
     open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
-    blocked = form_validation is None or form_validation.get("status") != "pass"
     owner_ready_errors = []
     if form_validation and form_validation.get("status") == "pass":
         for form in form_validation.get("forms", []):
@@ -859,6 +867,12 @@ def make_landing_plan(form_validation, rows):
                         "owner_ready_packages": ready_packages,
                     }
                 )
+    return owner_ready_errors
+
+def make_landing_plan(form_validation, rows):
+    open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
+    blocked = form_validation is None or form_validation.get("status") != "pass"
+    owner_ready_errors = owner_ready_landing_errors(form_validation, rows)
     if owner_ready_errors:
         blocked = True
     reason = ""
@@ -880,6 +894,7 @@ def make_landing_plan(form_validation, rows):
         "steps": [],
         "required_manual_files": [
             "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
+            "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl",
             "registry/items.jsonl",
             "registry/migrations.jsonl",
             "indexes/by-owner.md",
@@ -931,6 +946,91 @@ def make_landing_plan(form_validation, rows):
             }
         )
     return plan
+
+def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
+    open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
+    forms = form_validation.get("forms", []) if form_validation else []
+    audit_rows = []
+    for form in forms:
+        worksheet_id = str(form.get("worksheet_id", ""))
+        row = open_by_id.get(worksheet_id, {})
+        worksheet_file = row.get("worksheet", "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl")
+        required_fields = []
+        for field in list(row.get("required_owner_fields", [])) + [
+            "owner_decision",
+            "target_decision",
+            "reviewed_by",
+            "reviewed_at",
+            "review_after",
+            "source_status",
+            "evidence_refs",
+            "status_reason",
+        ]:
+            if field not in required_fields:
+                required_fields.append(field)
+        missing_fields = [field for field in required_fields if not is_filled(form.get(field))]
+        row_status = "blocked" if blocked or missing_fields or not row else "ready-for-manual-landing"
+        audit_rows.append(
+            {
+                "worksheet_id": worksheet_id,
+                "source_id": form.get("source_id", ""),
+                "source_path": form.get("source_path", ""),
+                "status": row_status,
+                "worksheet_resolution_status": {
+                    "current_status": row.get("status", "missing-open-row"),
+                    "worksheet_file": worksheet_file,
+                    "must_update_worksheet_row": bool(row),
+                    "required_resolution_state_hint": "设置 worksheet_status/row_status/status/default_state 中至少一个为 resolved、owner-approved、approved 或 closed，并保留完整 owner 字段。",
+                    "required_fields": required_fields,
+                    "missing_fields_in_form": missing_fields,
+                    "notes_zh": "worksheet 是否关闭由 worksheet 行和必填 owner 字段共同决定；landing plan 不会自动改 worksheet 或关闭 gate。",
+                },
+                "expected_manual_deltas": {
+                    "landing_jsonl": "追加已人工签收的 owner decision JSONL；保留 reviewed_by、reviewed_at、source_sha256/source_size、evidence_refs 和 status_reason。",
+                    "worksheet_jsonl": "把对应 worksheet 行更新为已签收状态，并写入同一组 owner decision 字段；不得由工具代签。",
+                    "registry_items": "按 target_decision 更新或新增 registry item，状态不得越过 owner 决策允许范围。",
+                    "registry_migrations": "记录 owner-gated 到目标状态的人工迁移/引用/归档决策。",
+                    "indexes": [
+                        "indexes/by-owner.md",
+                        "indexes/by-project.md",
+                        "indexes/by-review-date.md",
+                        "indexes/by-status.md",
+                        "indexes/by-topic.md",
+                    ],
+                },
+                "post_landing_commands": [
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json",
+                    "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+                    "rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json",
+                    "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+                ],
+                "must_not": [
+                    "不得把本 audit 当作 owner approval",
+                    "不得自动写 worksheet、registry、migration 或 index",
+                    "不得关闭未签收 owner gate",
+                    "不得把 project-specific 内容提升为团队标准",
+                ],
+            }
+        )
+    return {
+        "status": "blocked" if blocked else "ready-for-manual-landing" if audit_rows else "empty",
+        "read_only": True,
+        "row_count": len(audit_rows),
+        "owner_ready_error_count": len(owner_ready_errors),
+        "required_manual_files": [
+            "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
+            "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl",
+            "registry/items.jsonl",
+            "registry/migrations.jsonl",
+            "indexes/by-owner.md",
+            "indexes/by-project.md",
+            "indexes/by-review-date.md",
+            "indexes/by-status.md",
+            "indexes/by-topic.md",
+        ],
+        "rows": audit_rows,
+        "notes_zh": "landing_audit 只描述人工落点和复核命令，避免 owner JSONL 合法但 worksheet 仍 open；不写文件、不生成 owner decision、不关闭 gate。",
+    }
 
 sources_payload = load_json(root / "registry" / "sources.json")
 source_roots = {
@@ -1161,6 +1261,31 @@ if args.landing_plan:
         landing_plan = make_landing_plan(form_validation, rows)
         result["landing_plan"] = landing_plan
 
+landing_audit = None
+if args.landing_audit:
+    if not args.validate_forms:
+        landing_audit = {
+            "status": "blocked",
+            "read_only": True,
+            "reason": "--landing-audit requires --validate-forms <jsonl>",
+            "rows": [],
+        }
+        result["landing_audit"] = landing_audit
+        result_status = "needs-fix"
+        result["status"] = result_status
+        exit_status = 1
+    else:
+        audit_blocked = form_validation is None or form_validation.get("status") != "pass"
+        owner_ready_errors = owner_ready_landing_errors(form_validation, rows)
+        if owner_ready_errors:
+            audit_blocked = True
+        landing_audit = make_landing_audit(form_validation, rows, audit_blocked, owner_ready_errors)
+        result["landing_audit"] = landing_audit
+        if landing_audit.get("status") == "blocked":
+            result_status = "needs-fix"
+            result["status"] = result_status
+            exit_status = 1
+
 if args.forms_jsonl:
     if errors:
         for error in errors:
@@ -1229,15 +1354,15 @@ if args.summary:
     print()
     print("### Owner Dispatch")
     print()
-    print("| owner | route | open | evidence readiness | forms-jsonl | validate | landing plan | next focus |")
-    print("|---|---|---:|---|---|---|---|---|")
+    print("| owner | route | open | evidence readiness | forms-jsonl | validate | landing plan | landing audit | next focus |")
+    print("|---|---|---:|---|---|---|---|---|---|")
     for item in summary["owner_dispatch"]:
         route = item.get("owner_route", {})
         route_text = route.get("routing_owner") or route.get("routing_status") or "<unmapped>"
         print(
             f"| {item['owner']} | {route_text} | {item['open_count']} | "
             f"`{item['evidence_readiness_command']}` | `{item['forms_jsonl_command']}` | `{item['validate_forms_command_template']}` | "
-            f"`{item['landing_plan_command_template']}` | `{item['next_focus_command']}` |"
+            f"`{item['landing_plan_command_template']}` | `{item['landing_audit_command_template']}` | `{item['next_focus_command']}` |"
         )
     print()
     print("| worksheet | source path | owner | identity | owner-ready | required fields | focus command |")
@@ -1296,6 +1421,41 @@ if landing_plan:
         if step.get("worksheet_verification_commands"):
             print("- worksheet_verification_commands:")
             for command in step["worksheet_verification_commands"]:
+                print(f"  - `{command}`")
+
+if landing_audit:
+    print()
+    print("## Owner Decision Landing Audit")
+    print()
+    print("本审计只读列出人工落地后必须核对的 worksheet、registry、migration 和 index 变化；不写文件、不关闭门禁。")
+    print(f"- status: {landing_audit['status']}")
+    print(f"- rows: {landing_audit['row_count']}")
+    print(f"- owner_ready_errors: {landing_audit['owner_ready_error_count']}")
+    if landing_audit.get("required_manual_files"):
+        print("- required_manual_files:")
+        for item in landing_audit["required_manual_files"]:
+            print(f"  - `{item}`")
+    for row in landing_audit.get("rows", []):
+        print()
+        print(f"### {row['worksheet_id']}")
+        print(f"- source_path: `{row['source_path']}`")
+        print(f"- audit_status: {row['status']}")
+        worksheet_resolution = row.get("worksheet_resolution_status", {})
+        print(f"- worksheet_file: `{worksheet_resolution.get('worksheet_file', '')}`")
+        print(f"- must_update_worksheet_row: {worksheet_resolution.get('must_update_worksheet_row', False)}")
+        if worksheet_resolution.get("missing_fields_in_form"):
+            print(f"- missing_fields_in_form: {', '.join(worksheet_resolution['missing_fields_in_form'])}")
+        deltas = row.get("expected_manual_deltas", {})
+        if deltas:
+            print("- expected_manual_deltas:")
+            for key, value in deltas.items():
+                if isinstance(value, list):
+                    print(f"  - {key}: {', '.join(value)}")
+                else:
+                    print(f"  - {key}: {value}")
+        if row.get("post_landing_commands"):
+            print("- post_landing_commands:")
+            for command in row["post_landing_commands"]:
                 print(f"  - `{command}`")
 
 if args.evidence_readiness:

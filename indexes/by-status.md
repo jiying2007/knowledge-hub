@@ -315,3 +315,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - source-selection-owner-warning-applied: `knowledge-check/status/index-plan` 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择 latest coverage，`knowledge-new.sh --source` 对未知 source owner 输出 warning；documented by `artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-evidence-readiness-20260621`
 - owner-evidence-readiness-applied: `knowledge-owner-gates.sh --evidence-readiness` 输出只读 owner 证据准备度，表单带 `read_only_prefill_candidates` 但正式 owner 字段仍需人工填写；documented by `artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.jsonl`.
+- reviewing: `knowledge-hub-owner-landing-audit-manual-index-20260621`
+- owner-landing-audit-manual-index-applied: `knowledge-owner-gates.sh --landing-audit` 输出只读 worksheet/registry/migration/index 人工落地审计，`knowledge-new.sh` 输出 by-source/by-decision 条件索引提示，`knowledge-index-plan.sh --section manifest` 输出 unpaired expected/needs_review 分类；documented by `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.jsonl`.

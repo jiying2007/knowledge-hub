@@ -202,10 +202,12 @@ owner_forms_jsonl_commands = []
 owner_evidence_readiness_commands = []
 owner_validate_forms_command_templates = []
 owner_landing_plan_command_templates = []
+owner_landing_audit_command_templates = []
 forms_jsonl_commands = []
 evidence_readiness_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
+landing_audit_command_templates = []
 if open_owner_rows:
     rows_by_owner = collections.defaultdict(list)
     for row in open_owner_rows:
@@ -300,6 +302,19 @@ if open_owner_rows:
                 "--landing-plan",
                 "--json",
             ]) if source_id else "",
+            "landing_audit_command_template": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--validate-forms",
+                "<owner-decisions.jsonl>",
+                "--landing-audit",
+                "--json",
+            ]) if source_id else "",
             "next_focus_command": shell_command([
                 "rtk",
                 "bash",
@@ -391,6 +406,20 @@ if open_owner_rows:
             "--json",
         ]
         owner_landing_plan_command_templates.append(shell_command(owner_landing_plan_command_template))
+        owner_landing_audit_command_template = [
+            "rtk",
+            "bash",
+            display_tool("knowledge-owner-gates.sh"),
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--landing-audit",
+            "--json",
+        ]
+        owner_landing_audit_command_templates.append(shell_command(owner_landing_audit_command_template))
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         forms_jsonl_command = [
             "rtk",
@@ -434,6 +463,18 @@ if open_owner_rows:
             "--json",
         ]
         landing_plan_command_templates.append(shell_command(landing_plan_command_template))
+        landing_audit_command_template = [
+            "rtk",
+            "bash",
+            display_tool("knowledge-owner-gates.sh"),
+            "--source-id",
+            source_id,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--landing-audit",
+            "--json",
+        ]
+        landing_audit_command_templates.append(shell_command(landing_audit_command_template))
     first_open = open_owner_rows[0]
     next_open_command = [
         "rtk",
@@ -521,6 +562,19 @@ if open_owner_rows:
         "--landing-plan",
         "--json",
     ]
+    focus_landing_audit_command_template = [
+        "rtk",
+        "bash",
+        display_tool("knowledge-owner-gates.sh"),
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--validate-forms",
+        "<owner-decisions.jsonl>",
+        "--landing-audit",
+        "--json",
+    ]
     next_owner_gate = {
         "worksheet_id": first_open.get("id", ""),
         "source_id": first_open.get("source_id", ""),
@@ -537,6 +591,7 @@ if open_owner_rows:
         "focus_evidence_readiness_command": shell_command(focus_evidence_readiness_command),
         "focus_validate_forms_command_template": shell_command(focus_validate_forms_command_template),
         "focus_landing_plan_command_template": shell_command(focus_landing_plan_command_template),
+        "focus_landing_audit_command_template": shell_command(focus_landing_audit_command_template),
     }
 
 owner_gates_failed = owner_gates["exit_code"] != 0
@@ -604,6 +659,11 @@ if open_owner_gate_count:
             "责任人表单校验通过后，按 owner 范围生成无写入 landing plan："
             f"{owner_landing_plan_command_templates[0]}。"
         )
+    if owner_landing_audit_command_templates:
+        next_actions.append(
+            "责任人表单校验通过后，按 owner 范围审计 worksheet、registry、migration 和 index 人工落点："
+            f"{owner_landing_audit_command_templates[0]}。"
+        )
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
@@ -629,6 +689,11 @@ if open_owner_gate_count:
             next_actions.append(
                 "owner 表单校验通过后，生成无写入人工 landing plan："
                 f"{landing_plan_command_templates[0]}。"
+            )
+        if landing_audit_command_templates:
+            next_actions.append(
+                "owner 表单校验通过后，运行人工落点审计，确认 worksheet 不会继续 open："
+                f"{landing_audit_command_templates[0]}。"
             )
     else:
         next_actions.append("继续处理 owner decision worksheet；本状态表示语义决策未闭环，不是工具失败。")
@@ -691,8 +756,10 @@ if open_owner_gate_count:
     owner_command_templates = []
     owner_command_templates.extend(owner_validate_forms_command_templates)
     owner_command_templates.extend(owner_landing_plan_command_templates)
+    owner_command_templates.extend(owner_landing_audit_command_templates)
     owner_command_templates.extend(validate_forms_command_templates)
     owner_command_templates.extend(landing_plan_command_templates)
+    owner_command_templates.extend(landing_audit_command_templates)
     strict_blockers.append({
         "id": "owner-gates-open",
         "severity": "owner-review",
@@ -763,10 +830,12 @@ result = {
         "owner_evidence_readiness_commands": owner_evidence_readiness_commands,
         "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
         "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
+        "owner_landing_audit_command_templates": owner_landing_audit_command_templates,
         "forms_jsonl_commands": forms_jsonl_commands,
         "evidence_readiness_commands": evidence_readiness_commands,
         "validate_forms_command_templates": validate_forms_command_templates,
         "landing_plan_command_templates": landing_plan_command_templates,
+        "landing_audit_command_templates": landing_audit_command_templates,
         "next_open": next_owner_gate,
     },
     "errors": errors,
@@ -843,6 +912,10 @@ if owner_landing_plan_command_templates:
     print("- owner landing plan command templates:")
     for command in owner_landing_plan_command_templates:
         print(f"  - `{command}`")
+if owner_landing_audit_command_templates:
+    print("- owner landing audit command templates:")
+    for command in owner_landing_audit_command_templates:
+        print(f"  - `{command}`")
 if validate_forms_command_templates:
     print("- validate-forms command templates:")
     for command in validate_forms_command_templates:
@@ -850,6 +923,10 @@ if validate_forms_command_templates:
 if landing_plan_command_templates:
     print("- landing plan command templates:")
     for command in landing_plan_command_templates:
+        print(f"  - `{command}`")
+if landing_audit_command_templates:
+    print("- landing audit command templates:")
+    for command in landing_audit_command_templates:
         print(f"  - `{command}`")
 if next_owner_gate:
     print(f"- next open: `{next_owner_gate['worksheet_id']}` ({next_owner_gate['source_path']})")
@@ -859,6 +936,7 @@ if next_owner_gate:
     print(f"- focus forms-jsonl command: `{next_owner_gate['focus_forms_jsonl_command']}`")
     print(f"- focus validate-forms command template: `{next_owner_gate['focus_validate_forms_command_template']}`")
     print(f"- focus landing-plan command template: `{next_owner_gate['focus_landing_plan_command_template']}`")
+    print(f"- focus landing-audit command template: `{next_owner_gate['focus_landing_audit_command_template']}`")
 print()
 if strict_blockers:
     print("## Strict Blockers")

@@ -282,6 +282,36 @@ manifest_md_by_stem = {path.stem: path for path in manifest_md_paths}
 manifest_jsonl_stems = {path.stem for path in manifest_jsonl_paths}
 manifest_md_stems = {path.stem for path in manifest_md_paths}
 manifest_rows = []
+def classify_unpaired_manifest(stem, has_jsonl, has_md):
+    reasons = []
+    status = "needs_review"
+    if "dry-run" in stem:
+        status = "expected"
+        reasons.append("dry-run 制品允许只保留执行明细或 Markdown 摘要之一")
+    if "artifact-ref" in stem:
+        status = "expected"
+        reasons.append("artifact-ref 制品常以 JSONL 作为机器可读引用清单")
+    if "source-inventory" in stem:
+        status = "expected"
+        reasons.append("source inventory 是历史盘点入口，允许 Markdown-only")
+    if "classification" in stem:
+        status = "expected"
+        reasons.append("classification 是历史分类报告，允许 Markdown-only")
+    if "copy-first-applied" in stem:
+        status = "expected"
+        reasons.append("早期 copy-first applied 记录允许 Markdown-only；后续新增治理 manifest 优先成对")
+    if not reasons:
+        reasons.append("未命中已知历史例外，建议人工确认是否缺少 Markdown 或 JSONL 配对文件")
+    return {
+        "stem": stem,
+        "jsonl_path": str((root / "artifacts" / "manifests" / f"{stem}.jsonl").relative_to(root)) if has_jsonl else "",
+        "markdown_path": str((root / "artifacts" / "manifests" / f"{stem}.md").relative_to(root)) if has_md else "",
+        "pairing_status": "jsonl-only" if has_jsonl and not has_md else "markdown-only" if has_md and not has_jsonl else "unknown",
+        "review_status": status,
+        "reasons_zh": reasons,
+        "notes_zh": "只读恢复分类；expected 不代表推荐新增同类单边文件，needs_review 不自动作为硬失败。",
+    }
+
 for manifest_path in manifest_jsonl_paths:
     rows = read_jsonl(manifest_path, str(manifest_path.relative_to(root)))
     first = rows[0] if rows else {}
@@ -330,22 +360,25 @@ for manifest_path in manifest_jsonl_paths:
         }
     )
 unpaired_stems = sorted(manifest_jsonl_stems ^ manifest_md_stems)
+unpaired_classified = [
+    classify_unpaired_manifest(stem, stem in manifest_jsonl_stems, stem in manifest_md_stems)
+    for stem in unpaired_stems
+]
+unpaired_expected = [row for row in unpaired_classified if row["review_status"] == "expected"]
+unpaired_needs_review = [row for row in unpaired_classified if row["review_status"] != "expected"]
 by_manifest = {
     "summary": {
         "jsonl_count": len(manifest_jsonl_paths),
         "markdown_count": len(manifest_md_paths),
         "paired_count": len(manifest_jsonl_stems & manifest_md_stems),
         "unpaired_count": len(unpaired_stems),
+        "unpaired_expected_count": len(unpaired_expected),
+        "unpaired_needs_review_count": len(unpaired_needs_review),
     },
     "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
-    "unpaired": [
-        {
-            "stem": stem,
-            "jsonl_path": str((root / "artifacts" / "manifests" / f"{stem}.jsonl").relative_to(root)) if stem in manifest_jsonl_stems else "",
-            "markdown_path": str((root / "artifacts" / "manifests" / f"{stem}.md").relative_to(root)) if stem in manifest_md_stems else "",
-        }
-        for stem in unpaired_stems
-    ],
+    "unpaired": unpaired_classified,
+    "unpaired_expected": unpaired_expected,
+    "unpaired_needs_review": unpaired_needs_review,
     "rows": manifest_rows,
 }
 
@@ -507,12 +540,19 @@ def print_manifest():
     print(f"- markdown_count: {summary.get('markdown_count', 0)}")
     print(f"- paired_count: {summary.get('paired_count', 0)}")
     print(f"- unpaired_count: {summary.get('unpaired_count', 0)}")
+    print(f"- unpaired_expected_count: {summary.get('unpaired_expected_count', 0)}")
+    print(f"- unpaired_needs_review_count: {summary.get('unpaired_needs_review_count', 0)}")
     unpaired = by_manifest.get("unpaired", [])
     if unpaired:
         print()
         print("### Unpaired")
         for row in unpaired:
-            print(f"- `{row.get('stem', '')}` jsonl=`{row.get('jsonl_path', '')}` markdown=`{row.get('markdown_path', '')}`")
+            reasons = "; ".join(row.get("reasons_zh", []))
+            print(
+                f"- `{row.get('stem', '')}` review_status=`{row.get('review_status', '')}` "
+                f"pairing=`{row.get('pairing_status', '')}` jsonl=`{row.get('jsonl_path', '')}` "
+                f"markdown=`{row.get('markdown_path', '')}` reason={reasons}"
+            )
     print()
     print("### Latest")
     for row in by_manifest.get("latest", []):

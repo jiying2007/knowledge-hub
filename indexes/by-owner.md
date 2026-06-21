@@ -160,6 +160,7 @@
 - `knowledge-hub-manifest-profile-index-plan-20260621`
 - `knowledge-hub-source-selection-owner-warning-20260621`
 - `knowledge-hub-owner-evidence-readiness-20260621`
+- `knowledge-hub-owner-landing-audit-manual-index-20260621`
 
 ## pcr02-registry-owner
 

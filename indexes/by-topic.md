@@ -164,3 +164,4 @@
 - Knowledge Hub manifest recovery, JSONL profile and template readability gate: `artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.md`
 - Knowledge Hub source coverage selection and owner warning: `artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.md`
 - Knowledge Hub owner evidence readiness: `artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.md`
+- Knowledge Hub owner landing audit, manual index and manifest unpaired classification: `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md`

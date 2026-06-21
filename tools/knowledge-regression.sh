@@ -940,6 +940,7 @@ def test_owner_summary_all_open():
         and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in project_owner_dispatch.get("landing_plan_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in project_owner_dispatch.get("landing_audit_command_template", "")
         and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and len(summary_rows) == 7
         and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
@@ -1018,6 +1019,7 @@ def test_owner_summary_by_owner():
         and "--owner project-owner --forms-jsonl" in dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in dispatch.get("validate_forms_command_template", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in dispatch.get("landing_plan_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in dispatch.get("landing_audit_command_template", "")
         and owners == {"project-owner"}
         and worksheet_ids == {
             "pcr02-owner-decision-worksheet-005",
@@ -1114,10 +1116,12 @@ def test_status_next_owner_gate():
     owner_evidence_readiness_commands = parsed.get("owner_gates", {}).get("owner_evidence_readiness_commands", [])
     owner_validate_forms_command_templates = parsed.get("owner_gates", {}).get("owner_validate_forms_command_templates", [])
     owner_landing_plan_command_templates = parsed.get("owner_gates", {}).get("owner_landing_plan_command_templates", [])
+    owner_landing_audit_command_templates = parsed.get("owner_gates", {}).get("owner_landing_audit_command_templates", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
     evidence_readiness_commands = parsed.get("owner_gates", {}).get("evidence_readiness_commands", [])
     validate_forms_command_templates = parsed.get("owner_gates", {}).get("validate_forms_command_templates", [])
     landing_plan_command_templates = parsed.get("owner_gates", {}).get("landing_plan_command_templates", [])
+    landing_audit_command_templates = parsed.get("owner_gates", {}).get("landing_audit_command_templates", [])
     final_gate_command = parsed.get("final_gate_command", "")
     next_actions = parsed.get("next_actions_zh", [])
     strict_blockers = strict_parsed.get("strict_blockers", [])
@@ -1145,6 +1149,7 @@ def test_status_next_owner_gate():
         and "--owner project-owner --evidence-readiness --json" in project_owner_dispatch.get("evidence_readiness_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in project_owner_dispatch.get("landing_plan_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in project_owner_dispatch.get("landing_audit_command_template", "")
         and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and any("--summary" in str(command) for command in summary_commands)
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
@@ -1152,10 +1157,12 @@ def test_status_next_owner_gate():
         and any("--owner project-owner" in str(command) and "--evidence-readiness --json" in str(command) for command in owner_evidence_readiness_commands)
         and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_validate_forms_command_templates)
         and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_landing_plan_command_templates)
+        and any("--owner project-owner" in str(command) and "--landing-audit" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_landing_audit_command_templates)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--evidence-readiness --json" in str(command) for command in evidence_readiness_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
+        and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-audit" in str(command) and "--json" in str(command) for command in landing_audit_command_templates)
         and final_gate_command == expected_final_gate_command
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and next_open.get("owner_route", {}).get("routing_owner") == "pcr02-registry-owner"
@@ -1181,6 +1188,10 @@ def test_status_next_owner_gate():
         and "--validate-forms" in next_open.get("focus_landing_plan_command_template", "")
         and "--landing-plan" in next_open.get("focus_landing_plan_command_template", "")
         and "owner-decisions.jsonl" in next_open.get("focus_landing_plan_command_template", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_landing_audit_command_template", "")
+        and "--validate-forms" in next_open.get("focus_landing_audit_command_template", "")
+        and "--landing-audit" in next_open.get("focus_landing_audit_command_template", "")
+        and "owner-decisions.jsonl" in next_open.get("focus_landing_audit_command_template", "")
         and any("--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
         and any("owner_gates.owner_dispatch[]" in str(action) for action in next_actions)
@@ -1188,12 +1199,14 @@ def test_status_next_owner_gate():
         and any("--owner" in str(action) and "--evidence-readiness" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--validate-forms" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--landing-plan" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--landing-audit" in str(action) for action in next_actions)
         and any("knowledge-final-gate.sh" in str(action) and "--json" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
         and any("--next-open --evidence-readiness --json" in str(action) for action in next_actions)
         and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
         and any("--landing-plan" in str(action) for action in next_actions)
+        and any("--landing-audit" in str(action) for action in next_actions)
         and owner_blocker.get("count") == 7
         and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_blocker.get("commands", []))
@@ -1205,8 +1218,10 @@ def test_status_next_owner_gate():
         and not any("owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
+        and any("--owner project-owner" in str(command) and "--landing-audit" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
-        and any("--landing-plan" in str(command) for command in owner_blocker.get("command_templates", [])),
+        and any("--landing-plan" in str(command) for command in owner_blocker.get("command_templates", []))
+        and any("--landing-audit" in str(command) for command in owner_blocker.get("command_templates", [])),
         "status-next-owner-gate",
         "status dashboard separates executable owner commands from validation and landing templates",
         {
@@ -1226,10 +1241,12 @@ def test_status_next_owner_gate():
             "owner_evidence_readiness_commands": owner_evidence_readiness_commands,
             "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
             "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
+            "owner_landing_audit_command_templates": owner_landing_audit_command_templates,
             "forms_jsonl_commands": forms_jsonl_commands,
             "evidence_readiness_commands": evidence_readiness_commands,
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,
+            "landing_audit_command_templates": landing_audit_command_templates,
             "final_gate_command": final_gate_command,
             "expected_final_gate_command": expected_final_gate_command,
             "next_open_command": next_open.get("next_open_command", ""),
@@ -1240,6 +1257,7 @@ def test_status_next_owner_gate():
             "focus_evidence_readiness_command": next_open.get("focus_evidence_readiness_command", ""),
             "focus_validate_forms_command_template": next_open.get("focus_validate_forms_command_template", ""),
             "focus_landing_plan_command_template": next_open.get("focus_landing_plan_command_template", ""),
+            "focus_landing_audit_command_template": next_open.get("focus_landing_audit_command_template", ""),
             "strict_blockers": strict_blockers,
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
@@ -1259,6 +1277,8 @@ def test_status_text_owner_summary_commands():
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"]
         and "- owner landing plan command templates:" in result["stdout"]
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"]
+        and "- owner landing audit command templates:" in result["stdout"]
+        and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in result["stdout"]
         and "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
         "status-text-owner-summary-commands",
         "status text mode exposes owner dispatch, owner validation templates and review_after commands",
@@ -1269,6 +1289,7 @@ def test_status_text_owner_summary_commands():
             "has_project_owner_forms_jsonl": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
             "has_project_owner_validate_forms": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"],
             "has_project_owner_landing_plan": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"],
+            "has_project_owner_landing_audit": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in result["stdout"],
             "has_review_after_command": "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
@@ -1719,6 +1740,7 @@ def test_owner_landing_plan_project_index():
             "--validate-forms",
             str(forms_path),
             "--landing-plan",
+            "--landing-audit",
             "--json",
         ],
     )
@@ -1728,8 +1750,12 @@ def test_owner_landing_plan_project_index():
     except Exception:
         pass
     required_files = parsed.get("landing_plan", {}).get("required_manual_files", [])
+    landing_audit = parsed.get("landing_audit", {})
     owner_ready_gate = parsed.get("landing_plan", {}).get("owner_ready_gate", {})
     steps = parsed.get("landing_plan", {}).get("steps", [])
+    audit_rows = landing_audit.get("rows", [])
+    first_audit = audit_rows[0] if audit_rows else {}
+    worksheet_resolution = first_audit.get("worksheet_resolution_status", {})
     first_step = steps[0] if steps else {}
     worksheet_cwd = first_step.get("worksheet_verification_cwd", "")
     worksheet_commands = first_step.get("worksheet_verification_commands", [])
@@ -1738,16 +1764,26 @@ def test_owner_landing_plan_project_index():
         and parsed.get("landing_plan", {}).get("status") == "planned"
         and owner_ready_gate.get("status") == "pass"
         and owner_ready_gate.get("error_count") == 0
+        and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in required_files
         and "indexes/by-project.md" in required_files
         and "indexes/by-status.md" in required_files
+        and landing_audit.get("status") == "ready-for-manual-landing"
+        and landing_audit.get("read_only") is True
+        and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in landing_audit.get("required_manual_files", [])
+        and worksheet_resolution.get("must_update_worksheet_row") is True
+        and "owner_decision" in worksheet_resolution.get("required_fields", [])
+        and "reviewed_by" in worksheet_resolution.get("required_fields", [])
+        and first_audit.get("expected_manual_deltas", {}).get("worksheet_jsonl")
+        and any("knowledge-final-gate.sh" in str(command) for command in first_audit.get("post_landing_commands", []))
         and worksheet_cwd.endswith("/xcrz_sigmastar_demo")
         and bool(worksheet_commands)
         and any("knowledge-check.sh" in str(command) for command in worksheet_commands),
         "owner-landing-plan-project-index",
-        "owner landing plan requires by-project index and carries worksheet verification cwd and commands",
+        "owner landing plan requires worksheet/index manual deltas and carries worksheet verification cwd and commands",
         {
             "exit_code": result["exit_code"],
             "landing_status": parsed.get("landing_plan", {}).get("status"),
+            "landing_audit": landing_audit,
             "owner_ready_gate": owner_ready_gate,
             "required_manual_files": required_files,
             "worksheet_verification_cwd": worksheet_cwd,
@@ -2125,14 +2161,20 @@ def test_manual_entry_project_index_hint():
         project_result["exit_code"] == 0
         and governance_result["exit_code"] == 0
         and "indexes/by-project.md" in project_result["stdout"]
+        and "indexes/by-source.md" in project_result["stdout"]
+        and "仅当 source.from / source_id 指向已登记 source 时填写" in project_result["stdout"]
         and "domains/projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
+        and "indexes/by-decision.md" in governance_result["stdout"]
+        and "governance-regression-decision: governance/regression-decision.md" in governance_result["stdout"]
         and "indexes/by-project.md" not in governance_result["stdout"],
         "manual-entry-project-index-hint",
-        "manual project entries mention by-project index only for project domains",
+        "manual entries mention project/source/decision conditional index hints",
         {
             "project_exit_code": project_result["exit_code"],
             "governance_exit_code": governance_result["exit_code"],
             "project_has_by_project": "indexes/by-project.md" in project_result["stdout"],
+            "project_has_by_source": "indexes/by-source.md" in project_result["stdout"],
+            "governance_has_by_decision": "indexes/by-decision.md" in governance_result["stdout"],
             "governance_has_by_project": "indexes/by-project.md" in governance_result["stdout"],
             "project_stdout_sample": project_result["stdout"][:1200],
             "governance_stdout_sample": governance_result["stdout"][:1200],
@@ -2707,6 +2749,7 @@ def test_index_plan_extended_sections():
         except Exception as exc:
             parsed_by_section[section] = {}
             parse_errors[section] = str(exc)
+    manifest_text_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "manifest"])
 
     project_index = parsed_by_section.get("project", {}).get("indexes", {}).get("by_project", {})
     source_index = parsed_by_section.get("source", {}).get("indexes", {}).get("by_source", {})
@@ -2726,6 +2769,9 @@ def test_index_plan_extended_sections():
         {},
     )
     manifest_summary = manifest_index.get("summary", {})
+    manifest_unpaired = manifest_index.get("unpaired", [])
+    manifest_unpaired_expected = manifest_index.get("unpaired_expected", [])
+    manifest_unpaired_needs_review = manifest_index.get("unpaired_needs_review", [])
     latest_manifests = manifest_index.get("latest", [])
     current_owner_route_manifest = next(
         (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-owner-routing-recovery-20260621"),
@@ -2760,6 +2806,19 @@ def test_index_plan_extended_sections():
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
         and manifest_summary.get("jsonl_count", 0) >= 100
         and manifest_summary.get("markdown_count", 0) >= 100
+        and manifest_summary.get("unpaired_count") == 6
+        and manifest_summary.get("unpaired_expected_count") == 6
+        and manifest_summary.get("unpaired_needs_review_count") == 0
+        and len(manifest_unpaired_expected) == 6
+        and len(manifest_unpaired_needs_review) == 0
+        and all(row.get("review_status") == "expected" for row in manifest_unpaired)
+        and all(row.get("pairing_status") in {"jsonl-only", "markdown-only"} for row in manifest_unpaired)
+        and all(row.get("reasons_zh") and row.get("notes_zh") for row in manifest_unpaired)
+        and manifest_text_result["exit_code"] == 0
+        and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
+        and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
+        and "review_status=`expected`" in manifest_text_result["stdout"]
+        and "pairing=`" in manifest_text_result["stdout"]
         and bool(latest_manifests)
         and current_owner_route_manifest.get("paired") is True
         and current_owner_route_manifest.get("evidence_count", 0) >= 1
@@ -2794,6 +2853,8 @@ def test_index_plan_extended_sections():
             "topic_keys_sample": sorted(topic_index.keys())[:10],
             "registry_decision_count": len(registry_decisions),
             "manifest_summary": manifest_summary,
+            "manifest_unpaired": manifest_unpaired,
+            "manifest_text_stdout_sample": manifest_text_result["stdout"][:1200],
             "latest_manifest_count": len(latest_manifests),
             "latest_manifest_ids": latest_manifest_ids[:20],
             "current_owner_route_manifest": current_owner_route_manifest,

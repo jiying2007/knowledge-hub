@@ -395,6 +395,15 @@ if [[ "$DOMAIN" == projects/* ]]; then
   PROJECT_STEP_5="5. 同步 indexes/by-project.md 的项目导航入口；如需主题入口，在 indexes/by-topic.md 增加可读路径引用。"
   printf -v PROJECT_INDEX_DRAFT '\n# indexes/by-project.md\n# 项目域条目：在对应项目段增加目标路径或 manifest 路径。\n- %s: %s\n' "$DISPLAY_PROJECT" "$DISPLAY_PATH"
 fi
+DECISION_INDEX_DRAFT=""
+DECISION_INDEX_STEP=""
+if [[ "$KIND" == "decision" ]]; then
+  DECISION_INDEX_STEP="如 kind=decision，必须同步 indexes/by-decision.md，记录 decision id、owner、状态和证据路径。"
+  printf -v DECISION_INDEX_DRAFT '\n# indexes/by-decision.md\n# 决策类条目：在 registry decision、owner worksheet 或 migration decision 入口登记可恢复路径。\n- %s: %s\n' "$DISPLAY_ID" "$DISPLAY_PATH"
+fi
+SOURCE_INDEX_DRAFT=""
+SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
+printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：仅当 source.from / source_id 指向已登记 source 时填写；未知来源先保持人工复核，不伪造 source_id。\n- <source-id>: `%s`\n' "$DISPLAY_ID"
 VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json"]'
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
@@ -433,9 +442,10 @@ ${PROJECT_WARNING_BLOCK}
 3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、promotion_decision、tags、validation_refs 已填写。\`promotion\` 是当前允许枚举值，\`promotion_decision\` 是提升或不提升的中文决策说明，二者不能混用。
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 ${PROJECT_STEP_5}
-6. 如涉及迁移、引用或归档，在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径；普通新知识不强制新增 migration。
-7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
-8. 运行只读索引计划和验证：
+6. ${SOURCE_INDEX_STEP} ${DECISION_INDEX_STEP}
+7. 如涉及迁移、引用或归档，在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径；普通新知识不强制新增 migration。
+8. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
+9. 运行只读索引计划和验证：
 
    rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json
@@ -468,6 +478,8 @@ ${MANUAL_VALIDATION_BLOCK}
 # indexes/by-status.md
 - reviewing: \`${DISPLAY_ID}\`
 ${PROJECT_INDEX_DRAFT}
+${SOURCE_INDEX_DRAFT}
+${DECISION_INDEX_DRAFT}
 \`\`\`
 
 ### registry/migrations.jsonl（仅迁移、引用或归档时使用）
