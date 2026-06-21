@@ -21,12 +21,33 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Run lightweight Knowledge Hub governance regression fixtures in /tmp.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--keep-temp", action="store_true", help="Keep temporary fixture repositories for inspection.")
+parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for date-sensitive fixture commands.")
 args = parser.parse_args(argv)
 
 results = []
 temp_roots = []
 temp_dir = pathlib.Path(tempfile.gettempdir()).resolve()
 min_tmp_free_bytes = int(os.environ.get("KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES", str(4 * 1024 * 1024)))
+
+def resolve_today():
+    if args.as_of:
+        raw_value = args.as_of
+        source = "arg:--as-of"
+    else:
+        raw_value = os.environ.get("KNOWLEDGE_TODAY", "")
+        source = "env:KNOWLEDGE_TODAY" if raw_value else "system-date"
+    if raw_value:
+        try:
+            return dt.date.fromisoformat(raw_value), source
+        except Exception:
+            parser.error(f"invalid date for {source}: {raw_value}")
+    return dt.datetime.utcnow().date(), source
+
+today, today_source = resolve_today()
+child_env = None
+if today_source != "system-date":
+    child_env = os.environ.copy()
+    child_env["KNOWLEDGE_TODAY"] = today.isoformat()
 
 def run_cmd(repo, command):
     completed = subprocess.run(
@@ -35,6 +56,7 @@ def run_cmd(repo, command):
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=child_env,
     )
     return {
         "command": " ".join(command),
@@ -950,6 +972,9 @@ def test_owner_next_open_focus():
 def test_status_next_owner_gate():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     strict_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
+    expected_final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+    if today_source != "system-date":
+        expected_final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
     parsed = {}
     strict_parsed = {}
     try:
@@ -1006,7 +1031,7 @@ def test_status_next_owner_gate():
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
-        and final_gate_command == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+        and final_gate_command == expected_final_gate_command
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
         and "--checklist" in next_open.get("next_open_command", "")
@@ -1031,7 +1056,7 @@ def test_status_next_owner_gate():
         and any("--owner" in str(action) and "--forms-jsonl" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--validate-forms" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--landing-plan" in str(action) for action in next_actions)
-        and any("knowledge-final-gate.sh --json" in str(action) for action in next_actions)
+        and any("knowledge-final-gate.sh" in str(action) and "--json" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
         and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
@@ -1069,6 +1094,7 @@ def test_status_next_owner_gate():
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,
             "final_gate_command": final_gate_command,
+            "expected_final_gate_command": expected_final_gate_command,
             "next_open_command": next_open.get("next_open_command", ""),
             "next_open_forms_jsonl_command": next_open.get("next_open_forms_jsonl_command", ""),
             "focus_command": next_open.get("focus_command", ""),
@@ -1312,6 +1338,7 @@ def test_final_gate_default_regression_path():
     except Exception:
         pass
     checks = parsed.get("checks", {})
+    regression_command = checks.get("knowledge_regression", {}).get("command", "")
     expect(
         result["exit_code"] == 1
         and parsed.get("final_status") == "needs-owner-review"
@@ -1319,12 +1346,14 @@ def test_final_gate_default_regression_path():
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("result_count", 0) >= 1
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
+        and "knowledge-regression.sh --json --as-of" in regression_command
         and checks.get("git_diff_check", {}).get("status") == "pass",
         "final-gate-default-regression-path",
         "final gate default path executes regression instead of relying on self-test skip",
         {
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
+            "regression_command": regression_command,
             "checks": checks,
             "stdout_sample": result["stdout"][:1200],
             "stderr_sample": result["stderr"][:500],
@@ -2035,22 +2064,22 @@ def test_manual_entry_default_dates():
             "governance/date-defaults.md",
         ],
     )
-    today = dt.datetime.utcnow().date().isoformat()
+    current_today = today.isoformat()
     expect(
         result["exit_code"] == 0
-        and f'"created_at":"{today}"' in result["stdout"]
-        and f'"updated_at":"{today}"' in result["stdout"]
-        and f'"checked_at":"{today}"' in result["stdout"]
+        and f'"created_at":"{current_today}"' in result["stdout"]
+        and f'"updated_at":"{current_today}"' in result["stdout"]
+        and f'"checked_at":"{current_today}"' in result["stdout"]
         and '"review_after":"<YYYY-MM-DD>"' not in result["stdout"]
         and "checked_at\":\"<YYYY-MM-DD>" not in result["stdout"],
         "manual-entry-default-dates",
         "manual entry skeleton fills default ISO dates",
         {
             "exit_code": result["exit_code"],
-            "today": today,
-            "has_created_at": f'"created_at":"{today}"' in result["stdout"],
-            "has_updated_at": f'"updated_at":"{today}"' in result["stdout"],
-            "has_checked_at": f'"checked_at":"{today}"' in result["stdout"],
+            "today": current_today,
+            "has_created_at": f'"created_at":"{current_today}"' in result["stdout"],
+            "has_updated_at": f'"updated_at":"{current_today}"' in result["stdout"],
+            "has_checked_at": f'"checked_at":"{current_today}"' in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -2537,6 +2566,7 @@ def test_index_plan_extended_sections():
 
     project_index = parsed_by_section.get("project", {}).get("indexes", {}).get("by_project", {})
     source_index = parsed_by_section.get("source", {}).get("indexes", {}).get("by_source", {})
+    source_selection = parsed_by_section.get("source", {}).get("source_coverage_selection", {})
     topic_index = parsed_by_section.get("topic", {}).get("indexes", {}).get("by_topic", {})
     decision_index = parsed_by_section.get("decision", {}).get("indexes", {}).get("by_decision", {})
     registry_decisions = decision_index.get("registry_decisions", [])
@@ -2562,6 +2592,9 @@ def test_index_plan_extended_sections():
         and pcr02_source.get("review_after") == "2026-09-20"
         and pcr02_source.get("final_disposition") == "mixed-terminal-coverage"
         and pcr02_source.get("check", "").startswith("rtk bash -lc")
+        and source_selection.get("strategy") == "lexicographic-path-sort-last"
+        and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and source_selection.get("candidate_count", 0) >= 1
         and bool(source_coverage)
         and source_coverage.get("checked_at") == "2026-06-20"
         and bool(source_coverage_decision)
@@ -2582,6 +2615,7 @@ def test_index_plan_extended_sections():
             "project_keys_sample": sorted(project_index.keys())[:10],
             "source_has_pcr02_project_tools": "pcr02-project-tools" in source_index,
             "source_coverage_status": source_coverage.get("status", ""),
+            "source_coverage_selection": source_selection,
             "source_coverage_decision": source_coverage_decision,
             "source_coverage_risk": source_coverage_risk,
             "source_owner": pcr02_source.get("owner", ""),
@@ -2702,38 +2736,151 @@ def test_index_topic_zero_bucket_allowed():
 
 def test_status_source_governance_summary():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    check_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    expected_final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+    if today_source != "system-date":
+        expected_final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
     parsed = {}
+    check_parsed = {}
     parse_error = ""
+    check_parse_error = ""
     try:
         parsed = json.loads(result["stdout"])
     except Exception as exc:
         parse_error = str(exc)
+    try:
+        check_parsed = json.loads(check_result["stdout"])
+    except Exception as exc:
+        check_parse_error = str(exc)
     sources = parsed.get("sources", {}) if isinstance(parsed.get("sources"), dict) else {}
     registry = parsed.get("registry", {}) if isinstance(parsed.get("registry"), dict) else {}
     owner_gates = parsed.get("owner_gates", {}) if isinstance(parsed.get("owner_gates"), dict) else {}
+    check_selection = check_parsed.get("source_coverage_selection", {}) if isinstance(check_parsed, dict) else {}
+    check_health = check_parsed.get("source_coverage_health", {}) if isinstance(check_parsed, dict) else {}
     expect(
         result["exit_code"] == 0
         and not parse_error
+        and check_result["exit_code"] == 0
+        and not check_parse_error
         and sources.get("registered_count") == 13
         and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and sources.get("latest_coverage_selection", {}).get("strategy") == "lexicographic-path-sort-last"
+        and sources.get("latest_coverage_selection", {}).get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and sources.get("latest_coverage_selection", {}).get("candidate_count", 0) >= 1
+        and check_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and check_health.get("registered_source_count") == 13
+        and check_health.get("row_count") == 13
+        and check_health.get("unique_source_count") == 13
+        and check_health.get("missing_source_ids") == []
+        and check_health.get("stale_source_ids") == []
+        and check_health.get("duplicate_source_ids") == []
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
-        and parsed.get("final_gate_command") == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+        and parsed.get("final_gate_command") == expected_final_gate_command,
         "status-source-governance-summary",
         "status JSON exposes source coverage, review_after and final gate recovery summary",
         {
             "exit_code": result["exit_code"],
             "parse_error": parse_error,
+            "check_exit_code": check_result["exit_code"],
+            "check_parse_error": check_parse_error,
             "registered_count": sources.get("registered_count"),
             "latest_coverage_manifest": sources.get("latest_coverage_manifest"),
+            "latest_coverage_selection": sources.get("latest_coverage_selection"),
+            "check_source_coverage_selection": check_selection,
+            "check_source_coverage_health": check_health,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
             "owner_ready_package_coverage": owner_gates.get("owner_ready_package_coverage"),
             "final_gate_command": parsed.get("final_gate_command"),
+            "expected_final_gate_command": expected_final_gate_command,
             "status": parsed.get("status"),
             "stdout_sample": result["stdout"][:1200],
         },
+    )
+
+def test_review_after_as_of_deterministic():
+    repo = copy_repo("review-after-as-of")
+    item_id = "knowledge-hub-final-maintenance-closure-20260620"
+    path = repo / "registry" / "items.jsonl"
+    lines = path.read_text().splitlines()
+    updated_lines = []
+    mutated = False
+    for line in lines:
+        if not line.strip():
+            updated_lines.append(line)
+            continue
+        row = json.loads(line)
+        if row.get("id") == item_id:
+            row["review_after"] = "2026-06-30"
+            row["status"] = "reviewing"
+            mutated = True
+            updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
+        else:
+            updated_lines.append(line)
+    if not mutated:
+        expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", {"setup_error": f"missing {item_id}"}, repo)
+        return
+    path.write_text("\n".join(updated_lines) + "\n")
+
+    past_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-01"])
+    future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
+    past_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-06-01"])
+    future_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-07-01"])
+    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01"])
+    parsed = {}
+    parse_errors = {}
+    for name, result in [
+        ("past_check", past_check),
+        ("future_check", future_check),
+        ("past_status", past_status),
+        ("future_status", future_status),
+        ("final_gate", final_result),
+    ]:
+        try:
+            parsed[name] = json.loads(result["stdout"])
+        except Exception as exc:
+            parse_errors[name] = str(exc)
+    past_warnings = "\n".join(parsed.get("past_check", {}).get("warnings", []))
+    future_warnings = "\n".join(parsed.get("future_check", {}).get("warnings", []))
+    past_registry = parsed.get("past_status", {}).get("registry", {})
+    future_registry = parsed.get("future_status", {}).get("registry", {})
+    past_actions_text = "\n".join(parsed.get("past_status", {}).get("next_actions_zh", []))
+    expect(
+        not parse_errors
+        and past_check["exit_code"] == 0
+        and future_check["exit_code"] == 0
+        and item_id not in past_warnings
+        and item_id in future_warnings
+        and parsed.get("past_check", {}).get("today") == "2026-06-01"
+        and parsed.get("past_check", {}).get("as_of_source") == "arg:--as-of"
+        and parsed.get("past_status", {}).get("today") == "2026-06-01"
+        and parsed.get("past_status", {}).get("as_of_source") == "arg:--as-of"
+        and parsed.get("past_status", {}).get("final_gate_command") == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of 2026-06-01 --json"
+        and "knowledge-final-gate.sh --as-of 2026-06-01 --json" in past_actions_text
+        and not any(row.get("id") == item_id for row in past_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
+        and any(row.get("id") == item_id for row in future_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
+        and parsed.get("final_gate", {}).get("today") == "2026-06-01"
+        and parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status") == "pass",
+        "review-after-as-of-deterministic",
+        "--as-of fixes review_after warning semantics for check/status/final-gate",
+        {
+            "parse_errors": parse_errors,
+            "past_check_exit": past_check["exit_code"],
+            "future_check_exit": future_check["exit_code"],
+            "past_status_exit": past_status["exit_code"],
+            "future_status_exit": future_status["exit_code"],
+            "final_gate_exit": final_result["exit_code"],
+            "past_check_today": parsed.get("past_check", {}).get("today"),
+            "past_status_today": parsed.get("past_status", {}).get("today"),
+            "past_status_final_gate_command": parsed.get("past_status", {}).get("final_gate_command"),
+            "final_gate_today": parsed.get("final_gate", {}).get("today"),
+            "future_warning_sample": parsed.get("future_check", {}).get("warnings", [])[:5],
+            "past_stale_count": past_registry.get("stale_review_after_count"),
+            "future_stale_count": future_registry.get("stale_review_after_count"),
+        },
+        repo,
     )
 
 def test_stale_review_after_warning_surface():
@@ -2839,7 +2986,7 @@ def test_source_manual_entry_guide():
         "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
-    today_compact = dt.datetime.utcnow().date().strftime("%Y%m%d")
+    today_compact = today.strftime("%Y%m%d")
     expect(
         result["exit_code"] == 0
         and not missing_fragments
@@ -3143,6 +3290,7 @@ def test_regression_manifest_coverage():
         "index-decision-registry-subsection-gate",
         "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
+        "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
         "source-manual-entry-guide-check-command",
@@ -3233,6 +3381,7 @@ for test_fn in [
     test_index_decision_registry_gate,
     test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
+    test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
     test_source_manual_entry_guide_check_command,
@@ -3250,6 +3399,8 @@ output = {
     "root": str(root),
     "read_only": True,
     "writes_real_repo": False,
+    "today": today.isoformat(),
+    "as_of_source": today_source,
     "kept_temp": args.keep_temp,
     "result_count": len(results),
     "results": results,

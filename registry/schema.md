@@ -281,6 +281,8 @@ Source/index invariants:
 - if source `check` is empty, source registry must record `no_check_reason`; the latest source coverage manifest should also record or reference the reason.
 - source coverage rows should include `source_id`, `status`, `classification`, `decision`, `risk`, `owner` and `checked_at`.
 - source coverage rows should include `source_identity` or `evidence_refs` when a directory source cannot be represented by one stable file hash.
+- tools that select the latest source coverage manifest should expose `source_coverage_selection` with `pattern`, `strategy`, `candidate_count`, `candidates`, `selected` and `reason_zh`.
+- `knowledge-check --json` should expose `source_coverage_health` with registered、row、unique、missing、stale、duplicate、missing-field and invalid-date summaries so pass results are still auditable.
 - core item indexes `indexes/by-owner.md`, `indexes/by-review-date.md` and canonical status buckets in `indexes/by-status.md` must not duplicate registry item ids.
 
 ## owners.json

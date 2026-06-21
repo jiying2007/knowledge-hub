@@ -60,6 +60,23 @@ json_escape() {
   printf "%s" "$value"
 }
 
+knowledge_today() {
+  local raw="${KNOWLEDGE_TODAY:-}"
+  if [[ -n "$raw" ]]; then
+    if [[ ! "$raw" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      printf "ERROR KNOWLEDGE_TODAY must be YYYY-MM-DD: %s\n" "$raw" >&2
+      exit 2
+    fi
+    if [[ "$(date -u -d "$raw" +%F 2>/dev/null || true)" != "$raw" ]]; then
+      printf "ERROR KNOWLEDGE_TODAY is not a valid date: %s\n" "$raw" >&2
+      exit 2
+    fi
+    printf "%s" "$raw"
+  else
+    date -u +%F
+  fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --source)
@@ -210,7 +227,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   JSON_SOURCE_CHECK="$(json_escape "$DISPLAY_SOURCE_CHECK")"
   JSON_SOURCE_NO_CHECK_REASON="$(json_escape "$DISPLAY_SOURCE_NO_CHECK_REASON")"
   JSON_OWNER="$(json_escape "${OWNER:-leiwenjun}")"
-  TODAY="$(date -u +%F)"
+  TODAY="$(knowledge_today)"
   TODAY_COMPACT="${TODAY//-/}"
   CHECK_FIELD=""
   NO_CHECK_FIELD=",\"no_check_reason\":\"${JSON_SOURCE_NO_CHECK_REASON}\""
@@ -328,7 +345,7 @@ JSON_TITLE="$(json_escape "<中文标题>")"
 JSON_SOURCE_FROM="$(json_escape "$MANUAL_SOURCE_REASON")"
 JSON_MANUAL_VALIDATION_REASON="$(json_escape "$MANUAL_VALIDATION_REASON")"
 JSON_AI_ROLE="$(json_escape "$AI_ROLE")"
-TODAY="$(date -u +%F)"
+TODAY="$(knowledge_today)"
 AI_MODEL_OR_TOOL=""
 AI_GENERATED_AT=""
 if [[ "$GENERATED_BY_AI" == "true" ]]; then
@@ -337,7 +354,7 @@ if [[ "$GENERATED_BY_AI" == "true" ]]; then
 fi
 JSON_AI_MODEL_OR_TOOL="$(json_escape "$AI_MODEL_OR_TOOL")"
 JSON_AI_GENERATED_AT="$(json_escape "$AI_GENERATED_AT")"
-if DEFAULT_REVIEW_AFTER="$(date -u -d '+3 months' +%F 2>/dev/null)"; then
+if DEFAULT_REVIEW_AFTER="$(date -u -d "${TODAY} +3 months" +%F 2>/dev/null)"; then
   :
 else
   DEFAULT_REVIEW_AFTER="$TODAY"

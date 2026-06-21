@@ -18,7 +18,24 @@ argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Run the read-only Knowledge Hub final-state gate.")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for knowledge-check/status review_after checks.")
 args = parser.parse_args(argv)
+
+def resolve_today():
+    if args.as_of:
+        raw_value = args.as_of
+        source = "arg:--as-of"
+    else:
+        raw_value = os.environ.get("KNOWLEDGE_TODAY", "")
+        source = "env:KNOWLEDGE_TODAY" if raw_value else "system-date"
+    if raw_value:
+        try:
+            return dt.date.fromisoformat(raw_value), source
+        except Exception:
+            parser.error(f"invalid date for {source}: {raw_value}")
+    return dt.date.today(), source
+
+today, today_source = resolve_today()
 
 def run_json(command, extra_env=None):
     env = None
@@ -156,19 +173,19 @@ def blocker_gap_type(blocker):
         return str(blocker.get("gap_type", "final-gate"))
     return "final-gate"
 
-knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
-        "command": "rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json",
+        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of {today.isoformat()}",
         "exit_code": 0,
         "payload": {"status": "pass", "result_count": 0, "results": [], "skipped_for_self_test": True},
         "parse_error": "",
         "stderr": "",
     }
 else:
-    knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json"])
-strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
+    knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
+strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
 
 blockers = []
 
@@ -521,6 +538,8 @@ result = {
     "root": str(root),
     "read_only": True,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    "today": today.isoformat(),
+    "as_of_source": today_source,
     "final_status": final_status,
     "automatic_governance": {
         "status": automatic_governance_status,
@@ -557,6 +576,7 @@ result = {
             "parse_error": knowledge_check["parse_error"],
         },
         "knowledge_regression": {
+            "command": knowledge_regression["command"],
             "exit_code": knowledge_regression["exit_code"],
             "status": knowledge_regression["payload"].get("status", "<missing>"),
             "result_count": knowledge_regression["payload"].get("result_count", 0),

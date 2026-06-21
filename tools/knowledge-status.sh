@@ -9,6 +9,7 @@ import argparse
 import collections
 import datetime as dt
 import json
+import os
 import pathlib
 import shlex
 import subprocess
@@ -20,11 +21,27 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Print a read-only Knowledge Hub status dashboard.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
+parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 args = parser.parse_args(argv)
 
-today = dt.date.today()
 errors = []
 DISPLAY_TOOL_ROOT = "~/knowledge-hub/tools"
+
+def resolve_today():
+    if args.as_of:
+        raw_value = args.as_of
+        source = "arg:--as-of"
+    else:
+        raw_value = os.environ.get("KNOWLEDGE_TODAY", "")
+        source = "env:KNOWLEDGE_TODAY" if raw_value else "system-date"
+    if raw_value:
+        try:
+            return dt.date.fromisoformat(raw_value), source
+        except Exception:
+            parser.error(f"invalid date for {source}: {raw_value}")
+    return dt.date.today(), source
+
+today, today_source = resolve_today()
 
 def display_tool(script_name):
     return f"{DISPLAY_TOOL_ROOT}/{script_name}"
@@ -107,7 +124,7 @@ items = load_jsonl(root / "registry" / "items.jsonl")
 migrations = load_jsonl(root / "registry" / "migrations.jsonl")
 sources = load_json(root / "registry" / "sources.json").get("sources", [])
 
-knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 owner_gates = run_json(["rtk", "bash", "tools/knowledge-owner-gates.sh", "--status", "all", "--json"])
 
 stale_items = []
@@ -123,8 +140,20 @@ for item in items:
 
 latest_source_coverage = ""
 coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+coverage_candidates = [
+    str(path.relative_to(root))
+    for path in coverage_paths
+]
+latest_source_coverage_selection = {
+    "strategy": "lexicographic-path-sort-last",
+    "candidate_count": len(coverage_candidates),
+    "candidates": coverage_candidates,
+    "selected": "",
+    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
+}
 if coverage_paths:
     latest_source_coverage = str(coverage_paths[-1].relative_to(root))
+    latest_source_coverage_selection["selected"] = latest_source_coverage
 
 owner_payload = owner_gates["payload"]
 check_payload = knowledge_check["payload"]
@@ -428,7 +457,10 @@ else:
     status = "ok"
 
 exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
-final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+if today_source == "system-date":
+    final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+else:
+    final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 
 next_actions = []
@@ -571,6 +603,7 @@ result = {
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "status": status,
     "today": today.isoformat(),
+    "as_of_source": today_source,
     "knowledge_check": {
         "exit_code": knowledge_check["exit_code"],
         "status": check_payload.get("status", "<missing>"),
@@ -592,6 +625,7 @@ result = {
     "sources": {
         "registered_count": len(sources),
         "latest_coverage_manifest": latest_source_coverage,
+        "latest_coverage_selection": latest_source_coverage_selection,
     },
     "migrations": {
         "record_count": len(migrations),
@@ -745,7 +779,7 @@ print("```bash")
 print("rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json")
 print("rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict")
-print("rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json")
+print(final_gate_command)
 print("```")
 
 sys.exit(exit_code)

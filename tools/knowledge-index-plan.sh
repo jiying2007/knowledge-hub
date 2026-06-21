@@ -123,6 +123,17 @@ for project in projects:
 
 coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
 latest_coverage = coverage_paths[-1] if coverage_paths else None
+source_coverage_selection = {
+    "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
+    "strategy": "lexicographic-path-sort-last",
+    "candidate_count": len(coverage_paths),
+    "candidates": [
+        str(path.relative_to(root))
+        for path in coverage_paths
+    ],
+    "selected": str(latest_coverage.relative_to(root)) if latest_coverage else "",
+    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
+}
 coverage_by_source = {}
 if latest_coverage:
     for row in read_jsonl(latest_coverage, str(latest_coverage.relative_to(root))):
@@ -244,6 +255,7 @@ result = {
     "read_only": True,
     "errors": errors,
     "warnings": warnings,
+    "source_coverage_selection": source_coverage_selection,
     "indexes": {
         "by_owner": dict(sorted(by_owner.items())),
         "by_review_date": dict(sorted(by_review_date.items())),

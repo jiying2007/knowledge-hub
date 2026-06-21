@@ -177,6 +177,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-final-gap-readability-index-20260621`
 - reviewing: `knowledge-hub-owner-dispatch-readability-sync-20260621`
 - reviewing: `knowledge-hub-terminal-contract-template-sync-20260621`
+- reviewing: `knowledge-hub-asof-coverage-contract-20260621`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -305,3 +306,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch` 分派包，README/tools/templates 同步语言/术语状态和 migration `notes_zh` 维护规则，并补齐 regression manifest 自检 ID；documented by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
 - reviewing: `knowledge-hub-status-dispatch-notes-zh-20260621`
 - status-dispatch-notes-zh-applied: `knowledge-status.sh --json` 输出结构化 `owner_gates.owner_dispatch[]`，`knowledge-final-gate.sh --json` 透传 `owner_recovery`，owner landing plan step 带出 `worksheet_verification_cwd`，并由 `knowledge-check` 阻断 2026-06-21 之后缺少 AI provenance 的 registry item；documented by `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
+- asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，`knowledge-check/status/index-plan` 暴露 source coverage selection/health；documented by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.

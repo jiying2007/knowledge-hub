@@ -8,6 +8,7 @@ exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import datetime as dt
 import json
+import os
 import pathlib
 import re
 import sys
@@ -23,12 +24,30 @@ parser.add_argument("--project", default="")
 parser.add_argument("--domain", default="")
 parser.add_argument("--explain", default="", metavar="ITEM_ID")
 parser.add_argument("--diagnostics", action="store_true")
+parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 args = parser.parse_args(argv)
 
 errors = []
 warnings = []
 explain = None
 READABILITY_GATE_START = dt.date(2026, 6, 21)
+
+def resolve_today():
+    if args.as_of:
+        raw_value = args.as_of
+        source = "arg:--as-of"
+    else:
+        raw_value = os.environ.get("KNOWLEDGE_TODAY", "")
+        source = "env:KNOWLEDGE_TODAY" if raw_value else "system-date"
+    if raw_value:
+        try:
+            return dt.date.fromisoformat(raw_value), source
+        except Exception:
+            parser.error(f"invalid date for {source}: {raw_value}")
+    return dt.date.today(), source
+
+today, today_source = resolve_today()
+
 if args.project:
     warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
 if args.domain:
@@ -367,6 +386,25 @@ for source in sources:
     if not path.exists():
         warnings.append(f"sources:{source.get('id')} path missing: {path}")
 
+source_coverage_selection = {
+    "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
+    "strategy": "lexicographic-path-sort-last",
+    "candidate_count": 0,
+    "candidates": [],
+    "selected": "",
+    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
+}
+source_coverage_health = {
+    "registered_source_count": len(source_ids),
+    "row_count": 0,
+    "unique_source_count": 0,
+    "missing_source_ids": [],
+    "stale_source_ids": [],
+    "duplicate_source_ids": [],
+    "missing_required_field_rows": [],
+    "invalid_checked_at_rows": [],
+}
+
 if not args.sources_only:
     for registry_json_path in sorted((root / "registry").glob("*.json")):
         try:
@@ -421,12 +459,22 @@ if not args.sources_only:
                 errors.append(f"index:indexes/by-source.md stale source {indexed_source_id}")
 
     source_coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    source_coverage_selection["candidate_count"] = len(source_coverage_paths)
+    source_coverage_selection["candidates"] = [
+        str(path.relative_to(root))
+        for path in source_coverage_paths
+    ]
     if not source_coverage_paths:
         errors.append("source-coverage: missing knowledge-hub-source-coverage-closeout manifest")
     else:
         source_coverage_path = source_coverage_paths[-1]
+        source_coverage_selection["selected"] = str(source_coverage_path.relative_to(root))
         source_coverage_rows = load_jsonl(source_coverage_path)
+        source_coverage_health["row_count"] = len(source_coverage_rows)
         source_coverage_ids = set()
+        duplicate_source_ids = set()
+        missing_required_field_rows = []
+        invalid_checked_at_rows = []
         for row in source_coverage_rows:
             row_source_id = row.get("source_id")
             row_id = row.get("id", row_source_id or "<unknown>")
@@ -434,17 +482,26 @@ if not args.sources_only:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} row {row_id} missing source_id")
                 continue
             if row_source_id in source_coverage_ids:
+                duplicate_source_ids.add(row_source_id)
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} duplicate source {row_source_id}")
             source_coverage_ids.add(row_source_id)
             for field in ["status", "classification", "decision", "risk", "owner", "checked_at"]:
                 if not row.get(field):
+                    missing_required_field_rows.append({"source_id": row_source_id, "field": field})
                     errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} source {row_source_id} missing {field}")
             checked_at = str(row.get("checked_at", ""))
             if checked_at:
                 try:
                     dt.date.fromisoformat(checked_at)
                 except Exception:
+                    invalid_checked_at_rows.append({"source_id": row_source_id, "checked_at": checked_at})
                     errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} source {row_source_id} invalid checked_at: {checked_at}")
+        source_coverage_health["unique_source_count"] = len(source_coverage_ids)
+        source_coverage_health["missing_source_ids"] = sorted(source_ids - source_coverage_ids)
+        source_coverage_health["stale_source_ids"] = sorted(source_coverage_ids - source_ids)
+        source_coverage_health["duplicate_source_ids"] = sorted(duplicate_source_ids)
+        source_coverage_health["missing_required_field_rows"] = missing_required_field_rows
+        source_coverage_health["invalid_checked_at_rows"] = invalid_checked_at_rows
         for source_id in sorted(source_ids):
             if source_id not in source_coverage_ids:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} missing source {source_id}")
@@ -645,7 +702,6 @@ if not args.sources_only:
 
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
-    today = dt.date.today()
     for item in items:
         item_id = item.get("id")
         if not item_id:
@@ -1069,6 +1125,10 @@ if not args.sources_only:
 result = {
     "status": "pass" if not errors else "fail",
     "root": str(root),
+    "today": today.isoformat(),
+    "as_of_source": today_source,
+    "source_coverage_selection": source_coverage_selection,
+    "source_coverage_health": source_coverage_health,
     "errors": errors,
     "warnings": warnings,
     "dry_run": bool(args.dry_run),
