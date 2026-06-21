@@ -46,6 +46,7 @@
 - Final gap readability and index recovery: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`
 - Owner dispatch and readability sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`
 - Status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`
+- Owner routing recovery: `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`

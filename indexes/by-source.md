@@ -61,6 +61,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner dispatch/readability sync`: owner_dispatch 分派包、中文维护字段和 source scan no-drift evidence are tracked by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
 - `pcr02-project-docs status dispatch/owner recovery sync`: status dashboard owner_dispatch、final gate owner_recovery、owner landing cwd 和 AI provenance gate are tracked by `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`.
 - `knowledge-hub source coverage selection/health`: latest source coverage selection and pass-state coverage health are surfaced by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
+- `pcr02-project-docs owner routing recovery`: owner decision role routing and status/final-gate owner_route recovery are tracked by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.

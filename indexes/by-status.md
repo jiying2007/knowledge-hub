@@ -307,3 +307,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-status-dispatch-notes-zh-20260621`
 - status-dispatch-notes-zh-applied: `knowledge-status.sh --json` 输出结构化 `owner_gates.owner_dispatch[]`，`knowledge-final-gate.sh --json` 透传 `owner_recovery`，owner landing plan step 带出 `worksheet_verification_cwd`，并由 `knowledge-check` 阻断 2026-06-21 之后缺少 AI provenance 的 registry item；documented by `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
 - asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，`knowledge-check/status/index-plan` 暴露 source coverage selection/health；documented by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.
+- reviewing: `knowledge-hub-owner-routing-recovery-20260621`
+- owner-routing-recovery-applied: `registry/owner-routing.json` 登记 owner decision role 的只读分派路由，`knowledge-owner-gates.sh --summary`、`knowledge-status.sh --json` 和 final gate `owner_recovery` 透传 `owner_route`；documented by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.jsonl`.

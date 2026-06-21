@@ -805,7 +805,9 @@ def test_owner_summary_all_open():
     owner_dispatch = summary.get("owner_dispatch", [])
     dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
+    project_owner_route = project_owner_dispatch.get("owner_route", {})
     first = summary_rows[0] if summary_rows else {}
+    first_owner_route = first.get("owner_route", {})
     expect(
         result["exit_code"] == 0
         and parsed.get("row_count") == 7
@@ -822,6 +824,8 @@ def test_owner_summary_all_open():
         and summary.get("source_identity_counts", {}).get("match") == 7
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
+        and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
+        and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
         and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
@@ -829,6 +833,9 @@ def test_owner_summary_all_open():
         and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and len(summary_rows) == 7
         and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first_owner_route.get("decision_owner_role") == "team-core-or-pcr02-docs-owner"
+        and first_owner_route.get("routing_owner") == "pcr02-registry-owner"
+        and first_owner_route.get("no_owner_decision_generated") is True
         and first.get("owner_ready_package_status") == "covered"
         and first.get("owner_ready_package_count") == 1
         and first.get("owner_ready_packages", [{}])[0].get("status") == "valid"
@@ -990,6 +997,7 @@ def test_status_next_owner_gate():
     owner_dispatch = parsed.get("owner_gates", {}).get("owner_dispatch", [])
     dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
+    project_owner_route = project_owner_dispatch.get("owner_route", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
     owner_forms_jsonl_commands = parsed.get("owner_gates", {}).get("owner_forms_jsonl_commands", [])
@@ -1018,6 +1026,8 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
+        and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
+        and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
         and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
@@ -1033,6 +1043,8 @@ def test_status_next_owner_gate():
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
         and final_gate_command == expected_final_gate_command
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and next_open.get("owner_route", {}).get("routing_owner") == "pcr02-registry-owner"
+        and next_open.get("owner_route", {}).get("no_owner_decision_generated") is True
         and "--next-open" in next_open.get("next_open_command", "")
         and "--checklist" in next_open.get("next_open_command", "")
         and "--forms" in next_open.get("next_open_command", "")
@@ -1199,6 +1211,7 @@ def test_final_gate_owner_review_blocker():
     owner_dispatch = owner_recovery.get("owner_dispatch", [])
     dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
+    project_owner_route = project_owner_dispatch.get("owner_route", {})
     next_open_recovery = owner_recovery.get("next_open", {})
     final_state_audit = parsed.get("final_state_audit", {})
     level1 = final_state_audit.get("level1_pcr02_docs", {})
@@ -1229,8 +1242,12 @@ def test_final_gate_owner_review_blocker():
         and owner_recovery.get("active_exposure_count") == 0
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
+        and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
+        and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
         and next_open_recovery.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and next_open_recovery.get("owner_route", {}).get("routing_owner") == "pcr02-registry-owner"
+        and next_open_recovery.get("owner_route", {}).get("no_owner_decision_generated") is True
         and level1.get("status") == "complete-except-owner-review"
         and level1.get("source_id") == "pcr02-project-docs"
         and level1.get("owner_gate_open_count") == 7

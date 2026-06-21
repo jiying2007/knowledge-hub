@@ -76,7 +76,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
 
-`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
+`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
 
 ## 搜索知识
 
@@ -89,7 +89,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-proj
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
 
-全文搜索适合找正文和 manifest；结构化过滤适合按 registry item 的 `owner`、`status`、`kind`、`domain` 和 `source.source_id` 缩小结果。`--source` 表示物理扫描源，`--source-id` 表示 registry item 的来源 source。核心索引搜索适合恢复项目、source、topic、decision 和 status 治理入口。owner decision 的责任 owner 以 worksheet / `knowledge-owner-gates.sh --owner <owner>` 为准，registry item 的 `owner` 仍表示条目维护责任人。
+全文搜索适合找正文和 manifest；结构化过滤适合按 registry item 的 `owner`、`status`、`kind`、`domain` 和 `source.source_id` 缩小结果。`--source` 表示物理扫描源，`--source-id` 表示 registry item 的来源 source。核心索引搜索适合恢复项目、source、topic、decision 和 status 治理入口。owner decision 的责任 owner 以 worksheet / `knowledge-owner-gates.sh --owner <owner>` 为准，registry item 的 `owner` 仍表示条目维护责任人；如果 worksheet owner 是抽象角色，先看 `registry/owner-routing.json` 的 `routing_owner`、`required_real_owner_zh` 和 `escalation_zh`。
 
 ## 人工维护 5 条最短路径
 

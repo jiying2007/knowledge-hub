@@ -160,3 +160,4 @@
 - Knowledge Hub status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`
 - Knowledge Hub terminal contract, AI provenance and template sync: `artifacts/manifests/knowledge-hub-terminal-contract-template-sync-20260621.md`
 - Knowledge Hub as-of and source coverage selection/health contract: `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`
+- Knowledge Hub owner routing recovery: `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`

@@ -182,6 +182,7 @@ def make_decision_form(row):
         "allowed_next_status": row.get("allowed_next_status", []),
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
+        "owner_route": row.get("owner_route", {}),
         "observed_source_identity": row.get("observed_source_identity", {}),
         "source_execution_root": row.get("source_execution_root", ""),
         "verification_cwd": row.get("verification_cwd", ""),
@@ -212,6 +213,7 @@ def make_owner_checklist(row):
         "required_owner_fields": row["required_owner_fields"],
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
+        "owner_route": row.get("owner_route", {}),
         "observed_source_identity": row.get("observed_source_identity", {}),
         "source_execution_root": row.get("source_execution_root", ""),
         "verification_cwd": row.get("verification_cwd", ""),
@@ -405,10 +407,21 @@ def make_owner_dispatch(rows):
             else {}
         )
         owner_arg = shlex_quote(owner)
+        owner_routes = [row.get("owner_route", {}) for row in owner_open_rows if row.get("owner_route")]
+        unique_owner_routes = []
+        seen_routes = set()
+        for route in owner_routes:
+            key = (route.get("decision_owner_role", ""), route.get("source_id", ""))
+            if key in seen_routes:
+                continue
+            seen_routes.add(key)
+            unique_owner_routes.append(route)
         dispatch_rows.append(
             {
                 "owner": owner,
                 "source_id": source_id,
+                "owner_route": unique_owner_routes[0] if len(unique_owner_routes) == 1 else {},
+                "owner_routes": unique_owner_routes,
                 "row_count": len(owner_rows),
                 "open_count": len(owner_open_rows),
                 "resolved_count": sum(1 for row in owner_rows if row["status"] == "resolved"),
@@ -445,7 +458,7 @@ def make_owner_dispatch(rows):
                 )
                 if next_row
                 else "",
-                "notes_zh": "只读 owner 分派包；用于人工领取、导出骨架、校验和生成 no-write landing plan，不生成 owner decision，不关闭 gate。",
+                "notes_zh": "只读 owner 分派包；用于人工领取、导出骨架、校验和生成 no-write landing plan。owner_route 只说明分派路由，不生成 owner decision，不关闭 gate。",
             }
         )
     return dispatch_rows
@@ -467,6 +480,7 @@ def make_owner_summary(rows):
                 "source_id": row["source_id"],
                 "source_path": row["source_path"],
                 "owner": row["owner"],
+                "owner_route": row.get("owner_route", {}),
                 "status": row["status"],
                 "worksheet_status": row["worksheet_status"],
                 "review_after": row["review_after"],
@@ -713,6 +727,42 @@ source_roots = {
     if isinstance(source, dict)
 }
 
+owner_routing_payload = load_json(root / "registry" / "owner-routing.json")
+owner_route_map = {}
+for route in owner_routing_payload.get("routes", []):
+    key = (str(route.get("source_id", "")), str(route.get("decision_owner_role", "")))
+    if key == ("", ""):
+        continue
+    owner_route_map[key] = {
+        "decision_owner_role": str(route.get("decision_owner_role", "")),
+        "source_id": str(route.get("source_id", "")),
+        "routing_status": str(route.get("routing_status", "")),
+        "routing_owner": str(route.get("routing_owner", "")),
+        "candidate_registry_owners": route.get("candidate_registry_owners", []),
+        "required_real_owner_zh": str(route.get("required_real_owner_zh", "")),
+        "escalation_zh": str(route.get("escalation_zh", "")),
+        "must_not": route.get("must_not", []),
+        "notes_zh": str(route.get("notes_zh", "")),
+        "no_owner_decision_generated": True,
+    }
+
+def owner_route_for(source_id, owner_role):
+    route = owner_route_map.get((source_id, owner_role), {})
+    if route:
+        return route
+    return {
+        "decision_owner_role": owner_role,
+        "source_id": source_id,
+        "routing_status": "unmapped",
+        "routing_owner": "",
+        "candidate_registry_owners": [],
+        "required_real_owner_zh": "缺少 owner-routing.json 路由；需要人工补充分派责任人后再签收。",
+        "escalation_zh": "保持 owner gate open，不得代签。",
+        "must_not": ["不得把 unmapped owner role 当作已签收"],
+        "notes_zh": "只读缺省路由；不生成 owner decision，不关闭 gate。",
+        "no_owner_decision_generated": True,
+    }
+
 def source_execution_root(source_id):
     source_root = str(source_roots.get(source_id, "") or "")
     if not source_root:
@@ -803,6 +853,7 @@ for worksheet_path in worksheet_paths:
                 "source_id": source_id,
                 "source_path": source_path,
                 "owner": owner,
+                "owner_route": owner_route_for(source_id, owner),
                 "status": row_status,
                 "worksheet_status": row.get("worksheet_status") or row.get("status") or row.get("default_state") or "",
                 "decision_options": row.get("decision_options", []),
@@ -954,14 +1005,22 @@ if args.summary:
     if summary["owner_counts"]:
         owner_parts = [f"{key}={value}" for key, value in summary["owner_counts"].items()]
         print(f"- owners: {', '.join(owner_parts)}")
+    routed = [
+        f"{item['owner']}=>{item.get('owner_route', {}).get('routing_owner', '<unmapped>') or '<unmapped>'}"
+        for item in summary["owner_dispatch"]
+    ]
+    if routed:
+        print(f"- owner_routes: {', '.join(routed)}")
     print()
     print("### Owner Dispatch")
     print()
-    print("| owner | open | forms-jsonl | validate | landing plan | next focus |")
-    print("|---|---:|---|---|---|---|")
+    print("| owner | route | open | forms-jsonl | validate | landing plan | next focus |")
+    print("|---|---|---:|---|---|---|---|")
     for item in summary["owner_dispatch"]:
+        route = item.get("owner_route", {})
+        route_text = route.get("routing_owner") or route.get("routing_status") or "<unmapped>"
         print(
-            f"| {item['owner']} | {item['open_count']} | "
+            f"| {item['owner']} | {route_text} | {item['open_count']} | "
             f"`{item['forms_jsonl_command']}` | `{item['validate_forms_command_template']}` | "
             f"`{item['landing_plan_command_template']}` | `{item['next_focus_command']}` |"
         )
@@ -1051,6 +1110,13 @@ if args.checklist:
             print(f"- hard_gate_summary: {checklist['hard_gate_summary']}")
         if checklist["hard_gate"]:
             print(f"- hard_gate: {checklist['hard_gate']}")
+        owner_route = checklist.get("owner_route", {})
+        if owner_route:
+            print(f"- owner_route: {owner_route.get('routing_status', '<missing-status>')} via {owner_route.get('routing_owner', '<missing-routing-owner>')}")
+            if owner_route.get("required_real_owner_zh"):
+                print(f"- required_real_owner: {owner_route['required_real_owner_zh']}")
+            if owner_route.get("escalation_zh"):
+                print(f"- escalation: {owner_route['escalation_zh']}")
         source_identity = checklist.get("observed_source_identity", {})
         if source_identity:
             print(
@@ -1075,6 +1141,9 @@ for row in detail_rows:
     print(f"- id: `{row['id']}`")
     print(f"- source_id: `{row['source_id']}`")
     print(f"- owner: {row['owner'] or '<missing-owner>'}")
+    owner_route = row.get("owner_route", {})
+    if owner_route:
+        print(f"- owner_route: {owner_route.get('routing_status', '<missing-status>')} via {owner_route.get('routing_owner', '<missing-routing-owner>')}")
     print(f"- status: {row['status']} ({row['worksheet_status'] or '<missing-worksheet-status>'})")
     print(f"- review_after: {row['review_after'] or '<missing-review_after>'}")
     print(f"- active exposure: {active_marker}")

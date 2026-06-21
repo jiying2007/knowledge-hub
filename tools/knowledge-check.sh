@@ -228,6 +228,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith(("owners:", "projects:", "topics:")),
         ),
         (
+            "owner-routing",
+            "owner decision 角色路由异常",
+            "检查 registry/owner-routing.json，确保每个 open owner worksheet 角色都有只读分派路由，routing_owner 和 candidate_registry_owners 已登记，且不得把 routing_owner 当作 owner decision。",
+            lambda msg: msg.startswith("owner-routing:"),
+        ),
+        (
             "migration-record",
             "migration 记录异常",
             "检查 registry/migrations.jsonl 的 from、to、mode、status、checked_at、notes 和本地目标路径。",
@@ -532,13 +538,17 @@ if not args.sources_only:
         return all(owner_gate_value_filled(row.get(field)) for field in required_fields)
 
     owner_gated_source_paths = {}
+    owner_gate_roles = set()
     owner_gate_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
     for owner_gate_path in owner_gate_paths:
         for row in load_jsonl(owner_gate_path):
             row_source_id = row.get("source_id")
             row_source_path = row.get("source_path")
+            row_owner_role = row.get("owner_required") or row.get("owner_candidate") or ""
             if not row_source_id or not row_source_path:
                 continue
+            if row_owner_role:
+                owner_gate_roles.add((str(row_source_id), str(row_owner_role)))
             if owner_gate_row_resolved(row):
                 continue
             owner_gated_source_paths[(row_source_id, row_source_path)] = owner_gate_path.relative_to(root)
@@ -553,6 +563,45 @@ if not args.sources_only:
         if owner_id in owner_ids:
             errors.append(f"owners:{owner_id} duplicate id")
         owner_ids.add(owner_id)
+
+    owner_routing_doc = load_json(root / "registry" / "owner-routing.json")
+    owner_route_keys = set()
+    allowed_owner_route_statuses = {
+        "mapped-to-registry-owner",
+        "needs-human-assignment",
+        "unmapped",
+        "retired",
+    }
+    for route in owner_routing_doc.get("routes", []):
+        role = str(route.get("decision_owner_role", ""))
+        source_id = str(route.get("source_id", ""))
+        route_id = f"{source_id}:{role}" if source_id or role else "<unknown>"
+        for field in ["decision_owner_role", "source_id", "routing_status", "routing_owner", "required_real_owner_zh", "escalation_zh", "notes_zh"]:
+            if not route.get(field):
+                errors.append(f"owner-routing:{route_id} missing {field}")
+        key = (source_id, role)
+        if key in owner_route_keys:
+            errors.append(f"owner-routing:{route_id} duplicate route")
+        owner_route_keys.add(key)
+        if source_id and source_id not in source_ids:
+            errors.append(f"owner-routing:{route_id} unknown source_id: {source_id}")
+        if route.get("routing_status") and route.get("routing_status") not in allowed_owner_route_statuses:
+            errors.append(f"owner-routing:{route_id} invalid routing_status: {route.get('routing_status')}")
+        routing_owner = route.get("routing_owner")
+        if routing_owner and routing_owner not in owner_ids:
+            errors.append(f"owner-routing:{route_id} unknown routing_owner: {routing_owner}")
+        candidate_registry_owners = route.get("candidate_registry_owners", [])
+        if not isinstance(candidate_registry_owners, list):
+            errors.append(f"owner-routing:{route_id} candidate_registry_owners must be list")
+        else:
+            for candidate_owner in candidate_registry_owners:
+                if candidate_owner not in owner_ids:
+                    errors.append(f"owner-routing:{route_id} unknown candidate_registry_owner: {candidate_owner}")
+        if not isinstance(route.get("must_not", []), list) or not route.get("must_not", []):
+            errors.append(f"owner-routing:{route_id} missing must_not")
+    for source_id, role in sorted(owner_gate_roles):
+        if (source_id, role) not in owner_route_keys:
+            errors.append(f"owner-routing:{source_id}:{role} missing route for owner worksheet role")
 
     project_ids = set()
     projects_doc = load_json(root / "registry" / "projects.json")

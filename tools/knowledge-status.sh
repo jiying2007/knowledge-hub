@@ -200,9 +200,22 @@ if open_owner_rows:
                 str(row.get("id", "")),
             ),
         )[0]
+        owner_routes = []
+        seen_owner_routes = set()
+        for row in owner_rows:
+            route = row.get("owner_route", {})
+            if not route:
+                continue
+            key = json.dumps(route, ensure_ascii=False, sort_keys=True)
+            if key in seen_owner_routes:
+                continue
+            seen_owner_routes.add(key)
+            owner_routes.append(route)
         owner_dispatch.append({
             "owner": owner,
             "source_id": source_id,
+            "owner_route": owner_routes[0] if len(owner_routes) == 1 else {},
+            "owner_routes": owner_routes,
             "row_count": len(owner_rows),
             "open_count": len(owner_rows),
             "worksheet_ids": [str(row.get("id", "")) for row in owner_rows],
@@ -435,6 +448,7 @@ if open_owner_rows:
         "source_id": first_open.get("source_id", ""),
         "source_path": first_open.get("source_path", ""),
         "owner": first_open.get("owner", ""),
+        "owner_route": first_open.get("owner_route", {}),
         "review_after": first_open.get("review_after", ""),
         "selection_order": "review_after, worksheet_id",
         "next_open_command": shell_command(next_open_command),

@@ -298,6 +298,44 @@ Recommended owner fields:
 - `display_name`
 - `default_review_cycle_days`
 
+## owner-routing.json
+
+登记 owner decision worksheet 中抽象签收角色的人工分派路由。它只解决“应该找谁分派/升级”，不生成 owner decision，不替代 `reviewed_by`，不关闭 owner gate。
+
+Required route fields:
+
+- `decision_owner_role`
+- `source_id`
+- `routing_status`
+- `routing_owner`
+- `required_real_owner_zh`
+- `escalation_zh`
+- `notes_zh`
+
+Recommended route fields:
+
+- `candidate_registry_owners`
+- `must_not`
+
+Allowed route `routing_status`:
+
+```text
+mapped-to-registry-owner
+needs-human-assignment
+unmapped
+retired
+```
+
+Owner routing invariants:
+
+- `decision_owner_role` must match an owner role used by owner decision worksheets, such as `owner_required` or `owner_candidate`.
+- `source_id` must be registered in `registry/sources.json`.
+- `routing_owner` is a registered maintenance owner responsible for分派和升级，不是最终 decision owner。
+- `routing_owner` and `candidate_registry_owners[]` must be registered in `registry/owners.json`.
+- Every open owner decision worksheet role should have one route. Missing routes are blocking governance drift, not owner approval.
+- `owner-routing.json` must keep `notes_zh` and `required_real_owner_zh` readable in Chinese.
+- A route must not be used as `reviewed_by` unless the same human owner actually fills and signs the owner decision form.
+
 ## projects.json
 
 登记 registry item 可使用的 project id。每个 `registry/items.jsonl` 条目若使用 `domain=projects/<project>`，则 `<project>` 必须能在这里找到，避免项目 id 拼写漂移或临时项目目录长期残留。

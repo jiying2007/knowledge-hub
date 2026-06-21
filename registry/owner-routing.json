@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "notes_zh": "本文件只登记 owner decision 角色的人工分派路由，不生成 owner decision，不关闭 owner gate，不把 routing_owner 等同于最终签收人。",
+  "routes": [
+    {
+      "decision_owner_role": "team-core-or-pcr02-docs-owner",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "needs-human-assignment",
+      "routing_owner": "pcr02-registry-owner",
+      "candidate_registry_owners": [
+        "team-core",
+        "pcr02-registry-owner"
+      ],
+      "required_real_owner_zh": "需要由 PCR02 docs owner 或 team-core 指定真实签收人。",
+      "escalation_zh": "若无法确认 PCR02 docs owner，先由 pcr02-registry-owner 分派，不得代签 AGENTS.md 规则边界。",
+      "must_not": [
+        "不得把 routing_owner 当作 reviewed_by",
+        "不得把 project-local AGENTS 规则提升为 Knowledge Hub 根规则",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 AGENTS.md 项目本地规则边界签收分派。"
+    },
+    {
+      "decision_owner_role": "pcr02-diag-owner-or-team-core",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "needs-human-assignment",
+      "routing_owner": "pcr02-registry-owner",
+      "candidate_registry_owners": [
+        "team-core",
+        "pcr02-registry-owner"
+      ],
+      "required_real_owner_zh": "需要 PCR02 diag owner 或 team-core 确认 project-only scope 与 gate evidence。",
+      "escalation_zh": "若 diag owner 未明确，先由 pcr02-registry-owner 分派到 team-core 复核；缺 gate evidence 时保持 reference-only。",
+      "must_not": [
+        "不得把 routing_owner 当作 reviewed_by",
+        "不得把 PCR02 diag metadata 直接提升为团队标准",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 diag command metadata owner gate 分派。"
+    },
+    {
+      "decision_owner_role": "team-core",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "mapped-to-registry-owner",
+      "routing_owner": "team-core",
+      "candidate_registry_owners": [
+        "team-core"
+      ],
+      "required_real_owner_zh": "由 team-core 决定 ASAN 拆分边界；团队层内容仍需另行 review。",
+      "escalation_zh": "若 team-core 不确认 team-level candidate，则 ASAN 材料保持 PCR02 project-local 或 reference-only。",
+      "must_not": [
+        "不得把 PCR02 ASAN runbook 整篇复制到团队 active path",
+        "不得把 PCR02 构建/部署路径当跨项目默认",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 ASAN split owner gate 分派。"
+    },
+    {
+      "decision_owner_role": "personal-owner-and-team-review-if-teamized",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "needs-human-assignment",
+      "routing_owner": "pcr02-registry-owner",
+      "candidate_registry_owners": [
+        "pcr02-registry-owner",
+        "team-core"
+      ],
+      "required_real_owner_zh": "需要 personal owner 确认个人边界；若申请团队化，必须另由 team-core 复核 report-only/no-memory-write。",
+      "escalation_zh": "无法确认 personal owner 时保持 personal-local 或 no-migration；团队化只能进入 disabled/report-only 治理候选。",
+      "must_not": [
+        "不得写 ~/.codex/memories",
+        "不得启用自动化",
+        "不得把 personal/local workflow 加入团队 active index",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 memory auto-curation guide owner gate 分派。"
+    },
+    {
+      "decision_owner_role": "project-owner",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "needs-human-assignment",
+      "routing_owner": "pcr02-registry-owner",
+      "candidate_registry_owners": [
+        "pcr02-registry-owner",
+        "team-core"
+      ],
+      "required_real_owner_zh": "需要 PCR02 项目 owner 确认 DVR plan/session archive 的最终状态、分支/提交和验证证据。",
+      "escalation_zh": "无法确认 PCR02 项目 owner 时保持 owner gate open；DVR plan 不得声明 completed，session archive 不得进入 active facts。",
+      "must_not": [
+        "不得使用 local-codex 作为长期 owner",
+        "不得把计划命令当作已通过证据",
+        "不得把 session handoff 或 memory candidates 提升为 active fact",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 DVR plan 和 DVR session archive owner gate 分派。"
+    },
+    {
+      "decision_owner_role": "motor-mcu-or-soc-owner",
+      "source_id": "pcr02-project-docs",
+      "routing_status": "needs-human-assignment",
+      "routing_owner": "pcr02-registry-owner",
+      "candidate_registry_owners": [
+        "pcr02-registry-owner",
+        "team-core"
+      ],
+      "required_real_owner_zh": "需要 Motor MCU 或 SoC owner 确认固件版本、保护参数、波形/协议日志、复测与整机验证证据。",
+      "escalation_zh": "无法确认 Motor MCU/SoC owner 时保持 archive-only 边界，不得提升为 validation-report-candidate。",
+      "must_not": [
+        "不得把推断写成已验证根因",
+        "不得把阶段固件行为写成生产策略",
+        "不得隐藏 open items",
+        "不得关闭 owner gate"
+      ],
+      "notes_zh": "用于 motor MCU debug record owner gate 分派。"
+    }
+  ]
+}
