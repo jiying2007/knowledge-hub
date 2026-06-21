@@ -1984,6 +1984,8 @@ def test_index_plan_extended_sections():
     migration_decisions = decision_index.get("migration_decisions", [])
     pcr02_source = source_index.get("pcr02-project-tools", {})
     source_coverage = pcr02_source.get("coverage", {})
+    source_coverage_decision = source_coverage.get("decision", "")
+    source_coverage_risk = source_coverage.get("risk", "")
     first_owner_worksheet = next(
         (row for row in owner_worksheets if row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"),
         {},
@@ -2002,6 +2004,8 @@ def test_index_plan_extended_sections():
         and pcr02_source.get("check", "").startswith("rtk bash -lc")
         and bool(source_coverage)
         and source_coverage.get("checked_at") == "2026-06-20"
+        and bool(source_coverage_decision)
+        and bool(source_coverage_risk)
         and "project-current" in topic_index
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
         and first_owner_worksheet.get("owner") == "team-core-or-pcr02-docs-owner"
@@ -2018,6 +2022,8 @@ def test_index_plan_extended_sections():
             "project_keys_sample": sorted(project_index.keys())[:10],
             "source_has_pcr02_project_tools": "pcr02-project-tools" in source_index,
             "source_coverage_status": source_coverage.get("status", ""),
+            "source_coverage_decision": source_coverage_decision,
+            "source_coverage_risk": source_coverage_risk,
             "source_owner": pcr02_source.get("owner", ""),
             "source_review_after": pcr02_source.get("review_after", ""),
             "source_final_disposition": pcr02_source.get("final_disposition", ""),
@@ -2331,6 +2337,93 @@ def test_source_manual_entry_guide_check_command():
         },
     )
 
+def test_source_manual_entry_requires_check_or_reason():
+    common_args = [
+        "rtk",
+        "bash",
+        "tools/knowledge-new.sh",
+        "--source",
+        "--source-id",
+        "example-source-required",
+        "--source-path",
+        "/tmp/example-required",
+        "--role",
+        "project-current-docs-source",
+        "--authority",
+        "legacy-project-current-docs",
+        "--write-policy",
+        "read-only-unless-explicitly-approved",
+    ]
+    missing = run_cmd(root, common_args)
+    conflict = run_cmd(
+        root,
+        common_args
+        + [
+            "--check",
+            "rtk bash tools/knowledge-check.sh --dry-run",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    expect(
+        missing["exit_code"] != 0
+        and conflict["exit_code"] != 0
+        and "requires either --check" in missing["stderr"]
+        and "cannot combine --check with --no-check-reason" in conflict["stderr"],
+        "source-manual-entry-requires-check-or-reason",
+        "source manual entry guide requires exactly one check or no-check reason",
+        {
+            "missing_exit_code": missing["exit_code"],
+            "conflict_exit_code": conflict["exit_code"],
+            "missing_stderr": missing["stderr"][:500],
+            "conflict_stderr": conflict["stderr"][:500],
+        },
+    )
+
+def test_source_manual_entry_docs_check_preferred():
+    readme_path = root / "README.md"
+    tools_readme_path = root / "tools" / "README.md"
+    help_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-new.sh", "--help"])
+    try:
+        readme = readme_path.read_text()
+        tools_readme = tools_readme_path.read_text()
+        read_error = ""
+    except Exception as exc:
+        readme = ""
+        tools_readme = ""
+        read_error = str(exc)
+    required_fragments = [
+        '--check "rtk bash tools/knowledge-check.sh --dry-run"',
+        "--no-check-reason",
+        "要求 `--check` 或 `--no-check-reason` 二选一",
+        "优先使用稳定只读",
+        "registry source object 和 source coverage JSONL row 草稿都应记录 `check`",
+        "不再补 JSON 形式的 `no_check_reason`",
+    ]
+    readme_missing = [fragment for fragment in required_fragments if fragment not in readme]
+    tools_readme_missing = [fragment for fragment in required_fragments if fragment not in tools_readme]
+    help_has_check_example = (
+        help_result["exit_code"] == 0
+        and '--check "rtk bash tools/knowledge-check.sh --dry-run"' in help_result["stdout"]
+        and "--no-check-reason" in help_result["stdout"]
+    )
+    expect(
+        not read_error
+        and not readme_missing
+        and not tools_readme_missing
+        and help_has_check_example,
+        "source-manual-entry-docs-check-preferred",
+        "source manual entry docs prefer check commands and preserve no-check fallback",
+        {
+            "read_error": read_error,
+            "readme_missing": readme_missing,
+            "tools_readme_missing": tools_readme_missing,
+            "help_exit_code": help_result["exit_code"],
+            "help_has_check_example": help_has_check_example,
+            "help_stdout_sample": help_result["stdout"][:1000],
+        },
+    )
+
 def test_knowledge_search_structured_filters():
     active_result = run_cmd(
         root,
@@ -2405,18 +2498,23 @@ def test_knowledge_search_structured_filters():
 def test_knowledge_search_invalid_filters():
     bad_status = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--status", "not-a-status"])
     bad_kind = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--kind", "not-a-kind"])
+    bad_limit = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--limit", "0"])
     expect(
         bad_status["exit_code"] != 0
         and bad_kind["exit_code"] != 0
+        and bad_limit["exit_code"] != 0
         and "invalid --status value" in bad_status["stderr"]
-        and "invalid --kind value" in bad_kind["stderr"],
+        and "invalid --kind value" in bad_kind["stderr"]
+        and "--limit must be >= 1" in bad_limit["stderr"],
         "knowledge-search-invalid-filters",
-        "knowledge search rejects invalid enum filters",
+        "knowledge search rejects invalid enum filters and non-positive limits",
         {
             "bad_status_exit_code": bad_status["exit_code"],
             "bad_kind_exit_code": bad_kind["exit_code"],
+            "bad_limit_exit_code": bad_limit["exit_code"],
             "bad_status_stderr": bad_status["stderr"][:500],
             "bad_kind_stderr": bad_kind["stderr"][:500],
+            "bad_limit_stderr": bad_limit["stderr"][:500],
         },
     )
 
@@ -2473,6 +2571,8 @@ def test_regression_manifest_coverage():
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
         "source-manual-entry-guide-check-command",
+        "source-manual-entry-requires-check-or-reason",
+        "source-manual-entry-docs-check-preferred",
         "knowledge-search-structured-filters",
         "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
@@ -2481,14 +2581,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "50 个回归场景" in manifest_text,
+        and "52 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "50 个回归场景",
+            "expected_count_text": "52 个回归场景",
         },
     )
 
@@ -2540,6 +2640,8 @@ for test_fn in [
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
     test_source_manual_entry_guide_check_command,
+    test_source_manual_entry_requires_check_or_reason,
+    test_source_manual_entry_docs_check_preferred,
     test_knowledge_search_structured_filters,
     test_knowledge_search_invalid_filters,
     test_regression_manifest_coverage,

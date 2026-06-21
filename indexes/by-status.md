@@ -171,6 +171,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `pcr02-module-agent-rules-boundary-20260620`
 - reviewing: `pcr02-agent-config-boundary-20260620`
 - reviewing: `knowledge-hub-source-check-coverage-draft-20260621`
+- reviewing: `knowledge-hub-source-check-docs-search-limit-20260621`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -292,3 +293,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - status-owner-forms-jsonl-by-owner-applied: `tools/knowledge-status.sh` exposes by-owner owner decision JSONL skeleton commands in status output and owner blocker commands without generating owner decisions; documented by `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.jsonl`.
 - status-final-gate-command-applied: `tools/knowledge-status.sh` exposes `final_gate_command` so recovery flows can jump from status dashboard to the terminal final gate; documented by `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.jsonl`.
 - source-check-coverage-draft-applied: source 新增向导的 `--source --check` 分支在 registry source object 和 source coverage JSONL row 草稿中一致输出 `check`；documented by `artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.jsonl`.
+- source-check-docs-search-limit-applied: source 新增文档展示 `--check` 优先路径，source 草稿强制 `--check` / `--no-check-reason` 二选一，index-plan source 视图暴露 coverage decision/risk，且 `knowledge-search.sh` 拒绝非正 limit；documented by `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.jsonl`.

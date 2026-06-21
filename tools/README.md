@@ -54,6 +54,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
 
 # 新增一个 source
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --check "rtk bash tools/knowledge-check.sh --dry-run"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -80,7 +81,7 @@ rtk git diff --check
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
-新增 source 时，`registry/sources.json` 的 `owner` 必须是 `registry/owners.json` 中已有的 source registry 维护责任人。优先登记稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 source coverage 或相邻 manifest 写清 no-check reason。
+新增 source 时，`registry/sources.json` 的 `owner` 必须是 `registry/owners.json` 中已有的 source registry 维护责任人。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 source coverage 或相邻 manifest 写清 no-check reason。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
 
 查看 JSON 中的 `automatic_governance.status`、`final_state_audit` 和 `gap_map`：`complete-except-owner-review` 表示自动治理已闭环但仍需人工 owner decision；`final_state_audit` 分层显示 Level 1/2/3 终态摘要；`needs-fix` 表示还有非 owner blocker 需要先修复。`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate。
 

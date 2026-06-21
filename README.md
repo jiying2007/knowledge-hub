@@ -116,12 +116,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --check "rtk bash tools/knowledge-check.sh --dry-run"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
 最小落盘文件：`registry/sources.json`、`indexes/by-source.md`、最新或相邻 source coverage / source identity manifest（例如 `artifacts/manifests/<source-id>-source-coverage-YYYYMMDD.{md,jsonl}` 或全局 closeout manifest），必要时同步 `indexes/by-project.md`、`indexes/by-topic.md`。
 
-人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
+人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source

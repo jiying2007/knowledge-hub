@@ -132,6 +132,7 @@ if latest_coverage:
                 "status": row.get("status", ""),
                 "classification": row.get("classification", ""),
                 "decision": row.get("decision", ""),
+                "risk": row.get("risk", ""),
                 "owner": row.get("owner", ""),
                 "checked_at": row.get("checked_at", ""),
             }
@@ -338,6 +339,8 @@ def print_source():
         coverage = info.get("coverage", {})
         if coverage:
             print(f"- coverage: `{coverage.get('status', '')}` / `{coverage.get('classification', '')}` / checked_at `{coverage.get('checked_at', '')}`")
+            print(f"- coverage decision: {coverage.get('decision', '')}")
+            print(f"- coverage risk: {coverage.get('risk', '')}")
         else:
             print("- coverage: `<missing-latest-coverage-row>`")
         for item_id in info.get("item_refs", []):

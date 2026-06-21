@@ -27,6 +27,9 @@ args = parser.parse_args(argv)
 
 query = args.query.lower()
 
+if args.limit < 1:
+    parser.error("--limit must be >= 1")
+
 allowed_statuses = {"draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"}
 allowed_kinds = {
     "standard",

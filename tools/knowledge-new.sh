@@ -29,12 +29,13 @@ usage() {
   cat <<EOF
 Usage:
   rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
-  rtk bash tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> [--check <command>] [--no-check-reason <reason>] [--owner <owner>]
+  rtk bash tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
 
 Examples:
   rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
   rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
   rtk bash tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
+  rtk bash tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --check "rtk bash tools/knowledge-check.sh --dry-run"
   rtk bash tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --no-check-reason "manual source; classify-first pending coverage"
 
 This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.
@@ -178,6 +179,17 @@ fi
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" && -z "$MANUAL_VALIDATION_REASON" ]]; then
   printf "ERROR --manual-validation-pending requires --manual-validation-reason <reason>.\n" >&2
   exit 2
+fi
+
+if [[ "$SOURCE_MODE" == "true" ]]; then
+  if [[ -z "$SOURCE_CHECK" && -z "$SOURCE_NO_CHECK_REASON" ]]; then
+    printf "ERROR source mode requires either --check <command> or --no-check-reason <reason>.\n" >&2
+    exit 2
+  fi
+  if [[ -n "$SOURCE_CHECK" && -n "$SOURCE_NO_CHECK_REASON" ]]; then
+    printf "ERROR source mode cannot combine --check with --no-check-reason; choose exactly one.\n" >&2
+    exit 2
+  fi
 fi
 
 if [[ "$SOURCE_MODE" == "true" ]]; then

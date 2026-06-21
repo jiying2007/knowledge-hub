@@ -152,3 +152,4 @@
 - Knowledge Hub structured search filters: `artifacts/manifests/knowledge-hub-structured-search-filters-20260620.md`
 - Knowledge Hub manual entry readability fields: `artifacts/manifests/knowledge-hub-manual-entry-readability-fields-20260620.md`
 - Knowledge Hub source check coverage draft: `artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.md`
+- Knowledge Hub source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`
