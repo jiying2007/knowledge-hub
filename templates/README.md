@@ -4,7 +4,7 @@
 
 ## 通用要求
 
-- frontmatter 必须对齐 `registry/schema.md` 的 required fields，并优先使用 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；新模板不再新增 `summary` / `language` 双轨字段。
+- frontmatter 必须对齐 `registry/schema.md` 的 required fields，并优先使用 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs`、`promotion_decision` 和 AI provenance 字段；新模板不再新增 `summary` / `language` 双轨字段。
 - 正文至少写清摘要、适用范围、权威来源、当前结论、验证与证据、风险与限制、Review。
 - 结论、证据、推断、建议分开写。
 - 验证与证据优先使用 `governance/evidence-rules.md` 中的 Evidence Index 表格，记录完整 `rtk ...` 命令、退出码、中文摘要和证据路径。
@@ -26,7 +26,9 @@
 - `artifact-ref.md`：制品引用。
 - `patent-disclosure.md`：专利披露。
 
-`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；如涉及迁移、引用或归档，再补 `registry/migrations.jsonl`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
+`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；如涉及迁移、引用或归档，再补 `registry/migrations.jsonl`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
+
+`promotion` 是 registry 当前允许的枚举值，目前只能为 `none`；`promotion_decision` 是人读决策说明，用于写清“不提升、候选、拒绝、待 owner review”等背景。`promotion_decision` 不能替代 owner decision，也不能绕过 active / team-level promotion 门禁。
 
 离线人工新增条目时，默认使用 `source.type=manual`、`source.from=field-debug / meeting / code-review / lab-test / owner-decision / design-review`、`status=reviewing` 和 `review_status=manual-entry-pending-review`，并在 `validation_refs` 或正文 Evidence Index 中保留 `manual_validation_pending: true`。完成工具复核前不得把条目写成 active fact、owner decision 或 promoted 标准。
 

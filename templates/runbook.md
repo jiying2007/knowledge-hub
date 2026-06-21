@@ -13,6 +13,7 @@ review_after:
 created_at:
 updated_at:
 promotion: none
+promotion_decision: none
 tags: []
 related: []
 validation_refs: []

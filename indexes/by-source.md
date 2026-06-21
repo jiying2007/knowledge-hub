@@ -31,6 +31,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - Latest final gap readability and index hardening: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
 - Latest owner dispatch, readability and source scan sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
 - Latest status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`.
+- Latest terminal contract, AI provenance and template sync: `artifacts/manifests/knowledge-hub-terminal-contract-template-sync-20260621.md`.
 
 ## Source-Specific Review Artifacts
 

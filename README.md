@@ -197,7 +197,7 @@ owner: <owner>
 review_after: <date>
 ```
 
-离线人工新增 registry item 时，默认保持未完成复核，不得直接设为 active 或 promotion。推荐最小字段如下：
+离线人工新增 registry item 时，默认保持未完成复核，不得直接设为 active 或 promotion。`promotion` 当前只允许 `none`；`promotion_decision` 用中文说明“不提升 / 候选 / 拒绝 / 待 owner review”等决策背景，不能拿它替代 owner decision。推荐最小字段如下：
 
 ```json
 {
@@ -207,6 +207,8 @@ review_after: <date>
   },
   "status": "reviewing",
   "review_status": "manual-entry-pending-review",
+  "promotion": "none",
+  "promotion_decision": "none",
   "validation_refs": ["manual_validation_pending: true"]
 }
 ```

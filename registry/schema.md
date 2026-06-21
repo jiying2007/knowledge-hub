@@ -93,6 +93,7 @@ Discoverability and promotion invariants:
 - `tags` must be a non-empty list of non-empty strings.
 - `promotion` must be present.
 - currently allowed item `promotion` value is `none`; future promotion states must be added to schema and `knowledge-check` before use.
+- `promotion_decision` is a human-readable decision note for promotion boundary or non-promotion rationale; it does not replace `promotion`, owner decision, active review or team-level promotion gates.
 
 Allowed `kind`:
 

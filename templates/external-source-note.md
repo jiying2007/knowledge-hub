@@ -13,6 +13,7 @@ review_after:
 created_at:
 updated_at:
 promotion: none
+promotion_decision:
 tags: []
 related: []
 validation_refs: []
@@ -21,10 +22,20 @@ source_language:
 source_license:
 retrieved_at:
 read_status:
+summary_zh:
+primary_language: zh-CN
+translation_status:
+terminology_status:
 review_status:
 evidence_strength:
-promotion_decision:
-language: zh-CN
+evidence_refs: []
+generated_by_ai: false
+ai_role: none
+ai_model_or_tool:
+ai_generated_at:
+human_reviewed_by:
+human_reviewed_at:
+review_basis:
 ---
 
 # 外部资料吸收记录标题

@@ -41,6 +41,8 @@ def run_json(command, extra_env=None):
             payload = json.loads(completed.stdout)
         except Exception as exc:
             parse_error = str(exc)
+    else:
+        parse_error = "empty JSON output"
     return {
         "command": " ".join(command),
         "exit_code": completed.returncode,

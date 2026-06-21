@@ -72,17 +72,21 @@ def run_json(command):
         stderr=subprocess.PIPE,
     )
     payload = {}
+    parse_error = ""
     if completed.stdout.strip():
         try:
             payload = json.loads(completed.stdout)
         except Exception as exc:
+            parse_error = str(exc)
             errors.append(f"cannot parse {' '.join(command)} output: {exc}")
     else:
+        parse_error = "empty JSON output"
         errors.append(f"{' '.join(command)} returned no JSON output")
     return {
         "command": command,
         "exit_code": completed.returncode,
         "payload": payload,
+        "parse_error": parse_error,
         "stderr": completed.stderr.strip(),
     }
 
@@ -412,9 +416,11 @@ if open_owner_rows:
         "focus_landing_plan_command_template": shell_command(focus_landing_plan_command_template),
     }
 
+owner_gates_failed = owner_gates["exit_code"] != 0
+
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or active_exposure_count:
+elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count:
     status = "needs-fix"
 elif open_owner_gate_count:
     status = "needs-owner-review"
@@ -428,6 +434,8 @@ review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh -
 next_actions = []
 if knowledge_check["exit_code"] != 0:
     next_actions.append("先按 knowledge-check diagnostics 的 action_zh 修复阻断错误。")
+if owner_gates_failed:
+    next_actions.append("先修复 knowledge-owner-gates 子命令失败；status dashboard 不能在 owner gate 工具失败时作为终态证据。")
 if active_exposure_count:
     next_actions.append("立即移除 owner-gated active exposure，owner 决策闭环前不得 active。")
 if open_owner_gate_count:
@@ -513,6 +521,18 @@ if knowledge_check["exit_code"] != 0:
         "summary_zh": "knowledge-check 存在阻断错误，必须先按 diagnostics 修复。",
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"],
     })
+if owner_gates_failed:
+    strict_blockers.append({
+        "id": "owner-gates-command-failed",
+        "severity": "blocker",
+        "count": 1,
+        "summary_zh": "knowledge-owner-gates 子命令返回非零，不能把 owner gate 状态当作可信终态证据。",
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json"],
+        "command": shell_command(owner_gates["command"]),
+        "exit_code": owner_gates["exit_code"],
+        "stderr_sample": owner_gates["stderr"][:1000],
+        "parse_error": owner_gates.get("parse_error", ""),
+    })
 if active_exposure_count:
     strict_blockers.append({
         "id": "owner-gated-active-exposure",
@@ -578,7 +598,10 @@ result = {
         "by_status": count_by(migrations, "status"),
     },
     "owner_gates": {
+        "command": shell_command(owner_gates["command"]),
         "exit_code": owner_gates["exit_code"],
+        "stderr_sample": owner_gates["stderr"][:1000],
+        "parse_error": owner_gates.get("parse_error", ""),
         "worksheet_count": owner_payload.get("worksheet_count", 0),
         "row_count": owner_payload.get("row_count", 0),
         "open_count": open_owner_gate_count,

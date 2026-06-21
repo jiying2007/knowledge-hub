@@ -13,13 +13,28 @@ review_after:
 created_at:
 updated_at:
 promotion: none
+promotion_decision: none
 tags: []
 related: []
 validation_refs: []
 artifact_refs: []
 target_version:
 test_environment:
-language: zh-CN
+summary_zh:
+review_status:
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status:
+evidence_strength:
+evidence_refs: []
+generated_by_ai: false
+ai_role: none
+ai_model_or_tool:
+ai_generated_at:
+human_reviewed_by:
+human_reviewed_at:
+review_basis:
 ---
 
 # 验证报告标题

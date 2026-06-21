@@ -1109,6 +1109,48 @@ def test_status_text_owner_summary_commands():
         },
     )
 
+def test_status_owner_gates_exit_code_blocker():
+    repo = copy_repo("status-owner-gates-exit-code-blocker")
+    owner_gates_path = repo / "tools" / "knowledge-owner-gates.sh"
+    owner_gates_path.write_text(
+        "#!/usr/bin/env bash\n"
+        "printf '%s\\n' '{\"schema_version\":1,\"row_count\":0,\"open_count\":0,\"active_exposure_count\":0,\"owner_ready_package_count\":0}'\n"
+        "printf '%s\\n' 'fixture owner-gates failure' >&2\n"
+        "exit 1\n"
+    )
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    blocker = next(
+        (
+            item
+            for item in parsed.get("strict_blockers", [])
+            if item.get("id") == "owner-gates-command-failed"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("status") == "needs-fix"
+        and blocker.get("severity") == "blocker"
+        and blocker.get("exit_code") == 1
+        and "fixture owner-gates failure" in blocker.get("stderr_sample", ""),
+        "status-owner-gates-exit-code-blocker",
+        "status dashboard blocks non-zero owner-gates child command even when JSON is parseable",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "strict_blockers": parsed.get("strict_blockers", []),
+            "owner_gates": parsed.get("owner_gates", {}),
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
+    )
+
 def test_final_gate_owner_review_blocker():
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         expect(
@@ -1212,6 +1254,46 @@ def test_final_gate_owner_review_blocker():
             "gap_map": gap_map,
             "stdout_sample": result["stdout"][:1200],
         },
+    )
+
+def test_final_gate_empty_child_json_blocker():
+    repo = copy_repo("final-gate-empty-child-json-blocker")
+    check_path = repo / "tools" / "knowledge-check.sh"
+    check_path.write_text("#!/usr/bin/env bash\nexit 0\n")
+    result = run_cmd(
+        repo,
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checks = parsed.get("checks", {})
+    blocker = next(
+        (
+            item
+            for item in parsed.get("blockers", [])
+            if item.get("id") == "knowledge-check-unparseable"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-fix"
+        and checks.get("knowledge_check", {}).get("parse_error") == "empty JSON output"
+        and blocker.get("severity") == "blocker",
+        "final-gate-empty-child-json-blocker",
+        "final gate rejects empty child JSON output even when child exits zero",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "checks": checks,
+            "blockers": parsed.get("blockers", []),
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
     )
 
 def test_final_gate_default_regression_path():
@@ -2127,8 +2209,11 @@ def test_manual_entry_readability_fields():
         '"review_status":"manual-entry-pending-review"',
         '"evidence_strength":"manual-entry-pending-validation"',
         '"evidence_refs":[]',
+        '"promotion_decision":"none"',
         '"generated_by_ai":true',
         '"ai_role":"drafted"',
+        '"ai_model_or_tool":"Codex"',
+        '"ai_generated_at":"',
         '"human_reviewed_by":""',
         '"review_basis":""',
         "manual_validation_pending: true",
@@ -2360,6 +2445,7 @@ def test_templates_required_sections():
         "terminology_status:",
         "evidence_strength:",
         "evidence_refs:",
+        "promotion_decision:",
         "generated_by_ai:",
         "ai_role:",
         "human_reviewed_by:",
@@ -3022,7 +3108,9 @@ def test_regression_manifest_coverage():
         "owner-next-open-focus",
         "status-next-owner-gate",
         "status-text-owner-summary-commands",
+        "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
+        "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
         "final-gate-source-final-state-field-gap",
         "final-gap-readability-positive-contracts",
@@ -3043,6 +3131,7 @@ def test_regression_manifest_coverage():
         "manual-entry-offline-docs",
         "manual-entry-readability-fields",
         "governance-audit-readability-gate",
+        "ai-generated-item-provenance-gate",
         "migration-notes-zh-gate",
         "manual-entry-migration-conditional-guide",
         "manual-entry-template-selection",
@@ -3063,18 +3152,28 @@ def test_regression_manifest_coverage():
         "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
     ]
+    actual_ids = [result.get("id", "") for result in results] + ["regression-manifest-coverage"]
     missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
+    missing_from_required = [test_id for test_id in actual_ids if test_id not in required_ids]
+    duplicate_actual_ids = sorted({test_id for test_id in actual_ids if actual_ids.count(test_id) > 1})
+    expected_count_text = f"{len(actual_ids)} 个回归场景"
     expect(
         not read_error
         and not missing_ids
-        and "61 个回归场景" in manifest_text,
+        and not missing_from_required
+        and not duplicate_actual_ids
+        and expected_count_text in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "61 个回归场景",
+            "missing_from_required": missing_from_required,
+            "duplicate_actual_ids": duplicate_actual_ids,
+            "actual_count": len(actual_ids),
+            "required_count": len(required_ids),
+            "expected_count_text": expected_count_text,
         },
     )
 
@@ -3099,7 +3198,9 @@ for test_fn in [
     test_owner_next_open_focus,
     test_status_next_owner_gate,
     test_status_text_owner_summary_commands,
+    test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
+    test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
     test_final_gate_source_final_state_field_gap,
     test_final_gap_readability_positive_contracts,

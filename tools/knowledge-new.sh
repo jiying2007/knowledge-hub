@@ -329,6 +329,14 @@ JSON_SOURCE_FROM="$(json_escape "$MANUAL_SOURCE_REASON")"
 JSON_MANUAL_VALIDATION_REASON="$(json_escape "$MANUAL_VALIDATION_REASON")"
 JSON_AI_ROLE="$(json_escape "$AI_ROLE")"
 TODAY="$(date -u +%F)"
+AI_MODEL_OR_TOOL=""
+AI_GENERATED_AT=""
+if [[ "$GENERATED_BY_AI" == "true" ]]; then
+  AI_MODEL_OR_TOOL="Codex"
+  AI_GENERATED_AT="$TODAY"
+fi
+JSON_AI_MODEL_OR_TOOL="$(json_escape "$AI_MODEL_OR_TOOL")"
+JSON_AI_GENERATED_AT="$(json_escape "$AI_GENERATED_AT")"
 if DEFAULT_REVIEW_AFTER="$(date -u -d '+3 months' +%F 2>/dev/null)"; then
   :
 else
@@ -375,7 +383,7 @@ ${PROJECT_WARNING_BLOCK}
 
 1. 先确认正文唯一位置，避免同一正文维护两份。
 2. 从 ${TEMPLATE} 复制内容到目标路径，正文默认使用简体中文。
-3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、tags、validation_refs 已填写。
+3. 在 registry/items.jsonl 新增一行，字段对齐 registry/schema.md；至少确认 promotion、promotion_decision、tags、validation_refs 已填写。\`promotion\` 是当前允许枚举值，\`promotion_decision\` 是提升或不提升的中文决策说明，二者不能混用。
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 ${PROJECT_STEP_5}
 6. 如涉及迁移、引用或归档，在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径；普通新知识不强制新增 migration。
@@ -397,7 +405,7 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"","ai_generated_at":"","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 ${MANUAL_VALIDATION_BLOCK}
 
