@@ -49,6 +49,50 @@ def resolve_today():
 today, today_source = resolve_today()
 
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+EXPECTED_BOUNDARY_MANIFESTS = {
+    "pcr02-tools-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-tools-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-tools-boundary-20260620.jsonl",
+        "source_id": "pcr02-project-tools",
+        "required_text": "memory-candidate-automation-ref",
+    },
+    "pcr02-knowledge-secret-config-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.jsonl",
+        "source_id": "pcr02-project-knowledge",
+        "required_text": "project-local-standard-candidate",
+    },
+    "pcr02-product-test-artifact-config-interface-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.jsonl",
+        "source_id": "pcr02-product-test",
+        "required_text": "build-artifact-generated",
+    },
+    "pcr02-scratch-archive-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.jsonl",
+        "source_id": "pcr02-project-scratch",
+        "required_text": "historical-session-evidence",
+    },
+    "pcr02-root-artifacts-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.jsonl",
+        "source_id": "pcr02-project-root-artifacts",
+        "required_text": "source-coverage-evidence-drift",
+    },
+    "pcr02-module-agent-rules-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.jsonl",
+        "source_id": "pcr02-module-agent-rules",
+        "required_text": "module-local-owner-gated-control-entry-rule",
+    },
+    "pcr02-agent-config-boundary-20260620": {
+        "md": "artifacts/manifests/pcr02-agent-config-boundary-20260620.md",
+        "jsonl": "artifacts/manifests/pcr02-agent-config-boundary-20260620.jsonl",
+        "source_id": "pcr02-project-agent-config",
+        "required_text": "third-party-dependency-artifact",
+    },
+}
 
 def select_source_coverage_closeout(root):
     paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
@@ -250,6 +294,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("source-coverage:"),
         ),
         (
+            "boundary-health",
+            "PCR02 boundary manifest 内部证据异常",
+            "检查 PCR02 Level 2 boundary manifest、registry item、by-source 和 by-project 索引；该检查只看 Knowledge Hub 内部证据，不读取源项目正文。",
+            lambda msg: msg.startswith("boundary-health:"),
+        ),
+        (
             "owner-gated-active",
             "owner-gated 源路径被提升为 active",
             "检查 owner decision worksheets 和 item owner gate 字段；未完成 owner 决策、目标决策和复核证据前，不要登记为 active。",
@@ -399,6 +449,30 @@ owner_ids_for_sources = {
     for owner in load_json(root / "registry" / "owners.json").get("owners", [])
     if owner.get("id")
 }
+source_check_health = {
+    "mode": "static-registry-only",
+    "executed": False,
+    "registered_source_count": len(sources),
+    "with_check_count": 0,
+    "with_no_check_reason_count": 0,
+    "check_command_count": 0,
+    "no_check_reason_count": 0,
+    "path_exists_count": 0,
+    "missing_check_or_reason_ids": [],
+    "both_check_and_no_check_reason_ids": [],
+    "non_rtk_check_ids": [],
+    "missing_source_path_ids": [],
+    "missing_check_or_reason_source_ids": [],
+    "both_check_and_no_check_reason_source_ids": [],
+    "non_rtk_check_command_source_ids": [],
+    "check_command_source_ids": [],
+    "no_check_reason_source_ids": [],
+    "path_missing_source_ids": [],
+    "rows": [],
+    "report_only_findings": [
+        "source check commands are inspected but not executed by knowledge-check",
+    ],
+}
 source_ids = set()
 for source in sources:
     for field in ["id", "path", "role", "authority", "status", "write_policy", "migration_strategy", "owner", "review_after", "final_disposition"]:
@@ -426,11 +500,57 @@ for source in sources:
             errors.append(f"sources:{source_id} invalid review_after: {source.get('review_after')}")
     if source.get("final_disposition") and source.get("final_disposition") not in ALLOWED_SOURCE_FINAL_DISPOSITIONS:
         errors.append(f"sources:{source_id} invalid final_disposition: {source.get('final_disposition')}")
-    if not str(source.get("check", "")).strip() and not str(source.get("no_check_reason", "")).strip():
-        errors.append(f"sources:{source_id} missing no_check_reason for empty check")
+    check_command = str(source.get("check", "")).strip()
+    no_check_reason = str(source.get("no_check_reason", "")).strip()
     path = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser()
-    if not path.exists():
+    path_exists = path.exists()
+    if check_command:
+        source_check_health["with_check_count"] += 1
+        source_check_health["check_command_count"] += 1
+        source_check_health["check_command_source_ids"].append(source_id)
+        if not check_command.startswith("rtk "):
+            source_check_health["non_rtk_check_ids"].append(source_id)
+            source_check_health["non_rtk_check_command_source_ids"].append(source_id)
+            errors.append(f"sources:{source_id} check must start with rtk")
+    if no_check_reason:
+        source_check_health["with_no_check_reason_count"] += 1
+        source_check_health["no_check_reason_count"] += 1
+        source_check_health["no_check_reason_source_ids"].append(source_id)
+    if not check_command and not no_check_reason:
+        source_check_health["missing_check_or_reason_ids"].append(source_id)
+        source_check_health["missing_check_or_reason_source_ids"].append(source_id)
+        errors.append(f"sources:{source_id} missing no_check_reason for empty check")
+    if check_command and no_check_reason:
+        source_check_health["both_check_and_no_check_reason_ids"].append(source_id)
+        source_check_health["both_check_and_no_check_reason_source_ids"].append(source_id)
+        errors.append(f"sources:{source_id} has both check and no_check_reason")
+    if path_exists:
+        source_check_health["path_exists_count"] += 1
+    else:
+        source_check_health["missing_source_path_ids"].append(source_id)
+        source_check_health["path_missing_source_ids"].append(source_id)
         warnings.append(f"sources:{source.get('id')} path missing: {path}")
+    source_check_health["rows"].append({
+        "source_id": source_id,
+        "has_check": bool(check_command),
+        "has_no_check_reason": bool(no_check_reason),
+        "check_contract_status": "ok" if check_command or no_check_reason else "missing-check-or-no-check-reason",
+        "execution_status": "not-run",
+        "path_exists": path_exists,
+        "check_command": check_command,
+        "no_check_reason": no_check_reason,
+    })
+source_check_health["check_command_source_ids"] = sorted(source_check_health["check_command_source_ids"])
+source_check_health["no_check_reason_source_ids"] = sorted(source_check_health["no_check_reason_source_ids"])
+source_check_health["missing_check_or_reason_source_ids"] = sorted(source_check_health["missing_check_or_reason_source_ids"])
+source_check_health["both_check_and_no_check_reason_source_ids"] = sorted(source_check_health["both_check_and_no_check_reason_source_ids"])
+source_check_health["non_rtk_check_command_source_ids"] = sorted(source_check_health["non_rtk_check_command_source_ids"])
+source_check_health["path_missing_source_ids"] = sorted(source_check_health["path_missing_source_ids"])
+source_check_health["missing_check_or_reason_ids"] = sorted(source_check_health["missing_check_or_reason_ids"])
+source_check_health["both_check_and_no_check_reason_ids"] = sorted(source_check_health["both_check_and_no_check_reason_ids"])
+source_check_health["non_rtk_check_ids"] = sorted(source_check_health["non_rtk_check_ids"])
+source_check_health["missing_source_path_ids"] = sorted(source_check_health["missing_source_path_ids"])
+source_check_health["rows"] = sorted(source_check_health["rows"], key=lambda row: row["source_id"])
 
 source_coverage_selection = {
     "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
@@ -453,6 +573,38 @@ source_coverage_health = {
     "duplicate_source_ids": [],
     "missing_required_field_rows": [],
     "invalid_checked_at_rows": [],
+}
+boundary_health = {
+    "schema_version": 1,
+    "status": "not-run",
+    "mode": "read-only-internal-evidence",
+    "scope": "pcr02-level2-boundary-manifests",
+    "source_project_read": False,
+    "owner_gate_mutation": False,
+    "memory_write": False,
+    "expected_source_ids": sorted({spec["source_id"] for spec in EXPECTED_BOUNDARY_MANIFESTS.values()}),
+    "latest_source_coverage_manifest": "",
+    "expected_boundary_count": len(EXPECTED_BOUNDARY_MANIFESTS),
+    "jsonl_manifest_count": 0,
+    "md_manifest_count": 0,
+    "row_count": 0,
+    "source_ids": [],
+    "missing_manifest_ids": [],
+    "missing_jsonl_paths": [],
+    "missing_md_paths": [],
+    "missing_registry_item_ids": [],
+    "missing_by_source_refs": [],
+    "missing_by_project_refs": [],
+    "source_id_mismatch_rows": [],
+    "missing_required_field_rows": [],
+    "invalid_checked_at_rows": [],
+    "required_text_missing": [],
+    "summary": {},
+    "hard_failures": [],
+    "warnings": [],
+    "report_only_findings": [
+        "boundary health checks Knowledge Hub manifest/registry/index evidence only and does not read PCR02 source bodies",
+    ],
 }
 
 if not args.sources_only:
@@ -514,6 +666,7 @@ if not args.sources_only:
             "source-coverage: ignored non-date closeout candidates: "
             + ", ".join(source_coverage_selection.get("ignored_non_date_candidates", []))
         )
+    source_coverage_ids = set()
     if not source_coverage_selection.get("candidates"):
         errors.append("source-coverage: missing knowledge-hub-source-coverage-closeout manifest")
     elif source_coverage_path is None:
@@ -521,7 +674,6 @@ if not args.sources_only:
     else:
         source_coverage_rows = load_jsonl(source_coverage_path)
         source_coverage_health["row_count"] = len(source_coverage_rows)
-        source_coverage_ids = set()
         duplicate_source_ids = set()
         missing_required_field_rows = []
         invalid_checked_at_rows = []
@@ -558,6 +710,115 @@ if not args.sources_only:
         for covered_source_id in sorted(source_coverage_ids):
             if covered_source_id not in source_ids:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} stale source {covered_source_id}")
+    boundary_health["latest_source_coverage_manifest"] = source_coverage_selection.get("selected", "")
+
+    boundary_registry_ids = set()
+    try:
+        for row in load_jsonl(root / "registry" / "items.jsonl"):
+            if row.get("id"):
+                boundary_registry_ids.add(str(row.get("id")))
+    except Exception:
+        pass
+    by_source_text = ""
+    by_project_text = ""
+    try:
+        by_source_text = (root / "indexes" / "by-source.md").read_text()
+    except Exception as exc:
+        errors.append(f"boundary-health:indexes/by-source.md unreadable: {exc}")
+    try:
+        by_project_text = (root / "indexes" / "by-project.md").read_text()
+    except Exception as exc:
+        errors.append(f"boundary-health:indexes/by-project.md unreadable: {exc}")
+    boundary_source_ids = set()
+    for item_id, spec in EXPECTED_BOUNDARY_MANIFESTS.items():
+        md_rel = spec["md"]
+        jsonl_rel = spec["jsonl"]
+        md_path = root / md_rel
+        jsonl_path = root / jsonl_rel
+        if not md_path.exists():
+            boundary_health["missing_md_paths"].append(md_rel)
+            boundary_health["missing_manifest_ids"].append(item_id)
+            errors.append(f"boundary-health:{item_id} missing markdown {md_rel}")
+        else:
+            boundary_health["md_manifest_count"] += 1
+            try:
+                md_text = md_path.read_text()
+            except Exception as exc:
+                md_text = ""
+                errors.append(f"boundary-health:{md_rel} unreadable: {exc}")
+            if spec["required_text"] not in md_text:
+                boundary_health["required_text_missing"].append({"id": item_id, "text": spec["required_text"]})
+                errors.append(f"boundary-health:{item_id} missing required text {spec['required_text']}")
+        if not jsonl_path.exists():
+            boundary_health["missing_jsonl_paths"].append(jsonl_rel)
+            if item_id not in boundary_health["missing_manifest_ids"]:
+                boundary_health["missing_manifest_ids"].append(item_id)
+            errors.append(f"boundary-health:{item_id} missing jsonl {jsonl_rel}")
+            continue
+        boundary_health["jsonl_manifest_count"] += 1
+        rows = load_jsonl(jsonl_path)
+        boundary_health["row_count"] += len(rows)
+        for row_index, row in enumerate(rows, 1):
+            row_id = str(row.get("id", f"{item_id}:{row_index}"))
+            row_source_id = str(row.get("source_id", ""))
+            if row_source_id:
+                boundary_source_ids.add(row_source_id)
+            if row_source_id != spec["source_id"]:
+                boundary_health["source_id_mismatch_rows"].append({
+                    "manifest_id": item_id,
+                    "row_id": row_id,
+                    "expected_source_id": spec["source_id"],
+                    "actual_source_id": row_source_id,
+                })
+                errors.append(f"boundary-health:{item_id} row {row_id} source_id mismatch: {row_source_id}")
+            for field in ["id", "source_id", "source_path", "classification", "decision", "status", "owner", "risk", "checked_at"]:
+                if not row.get(field):
+                    boundary_health["missing_required_field_rows"].append({
+                        "manifest_id": item_id,
+                        "row_id": row_id,
+                        "field": field,
+                    })
+                    errors.append(f"boundary-health:{item_id} row {row_id} missing {field}")
+            checked_at = str(row.get("checked_at", ""))
+            if checked_at:
+                try:
+                    dt.date.fromisoformat(checked_at)
+                except Exception:
+                    boundary_health["invalid_checked_at_rows"].append({
+                        "manifest_id": item_id,
+                        "row_id": row_id,
+                        "checked_at": checked_at,
+                    })
+                    errors.append(f"boundary-health:{item_id} row {row_id} invalid checked_at: {checked_at}")
+        if item_id not in boundary_registry_ids:
+            boundary_health["missing_registry_item_ids"].append(item_id)
+            errors.append(f"boundary-health:{item_id} missing registry item")
+        if md_rel not in by_source_text:
+            boundary_health["missing_by_source_refs"].append(md_rel)
+            errors.append(f"boundary-health:{item_id} missing by-source ref {md_rel}")
+        if md_rel not in by_project_text:
+            boundary_health["missing_by_project_refs"].append(md_rel)
+            errors.append(f"boundary-health:{item_id} missing by-project ref {md_rel}")
+    boundary_health["source_ids"] = sorted(boundary_source_ids)
+    boundary_health["missing_manifest_ids"] = sorted(set(boundary_health["missing_manifest_ids"]))
+    boundary_health["missing_jsonl_paths"] = sorted(boundary_health["missing_jsonl_paths"])
+    boundary_health["missing_md_paths"] = sorted(boundary_health["missing_md_paths"])
+    boundary_health["missing_registry_item_ids"] = sorted(boundary_health["missing_registry_item_ids"])
+    boundary_health["missing_by_source_refs"] = sorted(boundary_health["missing_by_source_refs"])
+    boundary_health["missing_by_project_refs"] = sorted(boundary_health["missing_by_project_refs"])
+    boundary_health["hard_failures"] = [message for message in errors if message.startswith("boundary-health:")]
+    boundary_health["warnings"] = [message for message in warnings if message.startswith("boundary-health:")]
+    boundary_health["status"] = "fail" if boundary_health["hard_failures"] else "pass"
+    boundary_expected_sources = set(boundary_health["expected_source_ids"])
+    boundary_health["summary"] = {
+        "expected_manifest_count": boundary_health["expected_boundary_count"],
+        "present_md_manifest_count": boundary_health["md_manifest_count"],
+        "present_jsonl_manifest_count": boundary_health["jsonl_manifest_count"],
+        "registered_item_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_registry_item_ids"]),
+        "source_coverage_count": len(boundary_expected_sources & source_coverage_ids),
+        "by_source_reference_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_by_source_refs"]),
+        "by_project_reference_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_by_project_refs"]),
+    }
 
     def owner_gate_value_filled(value):
         if value is None:
@@ -1280,6 +1541,8 @@ result = {
     "as_of_source": today_source,
     "source_coverage_selection": source_coverage_selection,
     "source_coverage_health": source_coverage_health,
+    "source_check_health": source_check_health,
+    "boundary_health": boundary_health,
     "errors": errors,
     "warnings": warnings,
     "dry_run": bool(args.dry_run),

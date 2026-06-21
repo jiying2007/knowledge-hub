@@ -185,3 +185,4 @@
 - 2026-09-21: `knowledge-hub-source-selection-owner-warning-20260621`
 - 2026-09-21: `knowledge-hub-owner-evidence-readiness-20260621`
 - 2026-09-21: `knowledge-hub-owner-landing-audit-manual-index-20260621`
+- 2026-09-21: `knowledge-hub-source-boundary-health-20260621`

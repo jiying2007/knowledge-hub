@@ -137,6 +137,7 @@ def diagnostic_gap_type(category_ids):
         "source-index": "index",
         "decision-index": "index",
         "source-coverage": "source-coverage",
+        "boundary-health": "source-coverage",
         "source-registry": "registry",
         "owner-project-topic-registry": "registry",
         "registry-parse": "registry",
@@ -328,6 +329,9 @@ core_checks_pass = (
     and knowledge_regression["exit_code"] == 0
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})
+check_source_check_health = knowledge_check["payload"].get("source_check_health", {})
+check_boundary_health = knowledge_check["payload"].get("boundary_health", {})
 source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
 source_registry_ids = {
     str(source.get("id", ""))
@@ -476,10 +480,20 @@ level1_status = (
     and bool(pcr02_docs_coverage)
     else "needs-fix"
 )
-level2_status = "complete" if not missing_level2_sources and not missing_level2_coverage else "needs-fix"
+level2_status = (
+    "complete"
+    if not missing_level2_sources
+    and not missing_level2_coverage
+    and check_boundary_health.get("status") == "pass"
+    else "needs-fix"
+)
 level3_status = (
     "complete"
-    if source_registry_ids and not missing_registered_coverage and not missing_source_final_state_fields
+    if source_registry_ids
+    and not missing_registered_coverage
+    and not missing_source_final_state_fields
+    and not check_source_check_health.get("missing_check_or_reason_ids", [])
+    and not check_source_check_health.get("non_rtk_check_ids", [])
     else "needs-fix"
 )
 final_state_audit = {
@@ -506,6 +520,15 @@ final_state_audit = {
         "covered_count": len(pcr02_level2_source_ids - set(missing_level2_coverage)),
         "missing_source_ids": missing_level2_sources,
         "missing_coverage_ids": missing_level2_coverage,
+        "boundary_health": {
+            "status": check_boundary_health.get("status", ""),
+            "mode": check_boundary_health.get("mode", ""),
+            "summary": check_boundary_health.get("summary", {}),
+            "hard_failure_count": len(check_boundary_health.get("hard_failures", [])),
+            "source_project_read": bool(check_boundary_health.get("source_project_read", True)),
+            "owner_gate_mutation": bool(check_boundary_health.get("owner_gate_mutation", True)),
+            "memory_write": bool(check_boundary_health.get("memory_write", True)),
+        },
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
@@ -520,6 +543,17 @@ final_state_audit = {
         "latest_coverage_manifest": latest_coverage_manifest,
         "missing_coverage_ids": missing_registered_coverage,
         "missing_final_state_fields": missing_source_final_state_fields,
+        "source_coverage_health": check_source_coverage_health,
+        "source_check_health": {
+            "mode": check_source_check_health.get("mode", ""),
+            "executed": bool(check_source_check_health.get("executed", True)),
+            "registered_source_count": check_source_check_health.get("registered_source_count", 0),
+            "with_check_count": check_source_check_health.get("with_check_count", 0),
+            "with_no_check_reason_count": check_source_check_health.get("with_no_check_reason_count", 0),
+            "missing_check_or_reason_ids": check_source_check_health.get("missing_check_or_reason_ids", []),
+            "non_rtk_check_ids": check_source_check_health.get("non_rtk_check_ids", []),
+            "missing_source_path_ids": check_source_check_health.get("missing_source_path_ids", []),
+        },
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
@@ -574,6 +608,16 @@ result = {
             "error_count": len(knowledge_check["payload"].get("errors", [])),
             "warning_count": len(knowledge_check["payload"].get("warnings", [])),
             "parse_error": knowledge_check["parse_error"],
+            "source_check_health": {
+                "with_check_count": check_source_check_health.get("with_check_count", 0),
+                "with_no_check_reason_count": check_source_check_health.get("with_no_check_reason_count", 0),
+                "missing_check_or_reason_ids": check_source_check_health.get("missing_check_or_reason_ids", []),
+                "non_rtk_check_ids": check_source_check_health.get("non_rtk_check_ids", []),
+            },
+            "boundary_health": {
+                "status": check_boundary_health.get("status", ""),
+                "hard_failure_count": len(check_boundary_health.get("hard_failures", [])),
+            },
         },
         "knowledge_regression": {
             "command": knowledge_regression["command"],

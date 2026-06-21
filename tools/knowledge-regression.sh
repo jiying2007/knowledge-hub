@@ -349,6 +349,66 @@ def test_pcr02_level2_boundary_manifests():
         },
     )
 
+def test_boundary_health_internal_evidence():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    boundary_health = parsed.get("boundary_health", {}) if isinstance(parsed, dict) else {}
+
+    repo = copy_repo("boundary-health-source-id-mismatch")
+    boundary_path = repo / "artifacts" / "manifests" / "pcr02-tools-boundary-20260620.jsonl"
+    rows = [json.loads(line) for line in boundary_path.read_text().splitlines() if line.strip()]
+    if rows:
+        rows[0]["source_id"] = "pcr02-wrong-source"
+    boundary_path.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n")
+    bad_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    bad_parsed = {}
+    bad_parse_error = ""
+    try:
+        bad_parsed = json.loads(bad_result["stdout"])
+    except Exception as exc:
+        bad_parse_error = str(exc)
+    bad_boundary_health = bad_parsed.get("boundary_health", {}) if isinstance(bad_parsed, dict) else {}
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and boundary_health.get("status") == "pass"
+        and boundary_health.get("mode") == "read-only-internal-evidence"
+        and boundary_health.get("scope") == "pcr02-level2-boundary-manifests"
+        and boundary_health.get("source_project_read") is False
+        and boundary_health.get("owner_gate_mutation") is False
+        and boundary_health.get("memory_write") is False
+        and boundary_health.get("expected_boundary_count") == 7
+        and boundary_health.get("jsonl_manifest_count") == 7
+        and boundary_health.get("md_manifest_count") == 7
+        and boundary_health.get("row_count") == 78
+        and boundary_health.get("summary", {}).get("registered_item_count") == 7
+        and boundary_health.get("summary", {}).get("source_coverage_count") == 7
+        and boundary_health.get("summary", {}).get("by_source_reference_count") == 7
+        and boundary_health.get("summary", {}).get("by_project_reference_count") == 7
+        and boundary_health.get("hard_failures") == []
+        and bad_result["exit_code"] != 0
+        and not bad_parse_error
+        and bad_boundary_health.get("status") == "fail"
+        and bad_boundary_health.get("source_id_mismatch_rows")
+        and any("boundary-health:" in str(error) for error in bad_parsed.get("errors", [])),
+        "boundary-health-internal-evidence",
+        "boundary health is a read-only internal evidence gate for PCR02 Level 2 manifests",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "boundary_health": boundary_health,
+            "bad_exit_code": bad_result["exit_code"],
+            "bad_parse_error": bad_parse_error,
+            "bad_boundary_health": bad_boundary_health,
+            "bad_errors": bad_parsed.get("errors", [])[:5],
+        },
+    )
+
 def test_status_wrong_bucket():
     repo = copy_repo("status-wrong-bucket")
     path = repo / "indexes" / "by-status.md"
@@ -1365,6 +1425,8 @@ def test_final_gate_owner_review_blocker():
     level1 = final_state_audit.get("level1_pcr02_docs", {})
     level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
     level3 = final_state_audit.get("level3_registered_sources", {})
+    level2_boundary_health = level2.get("boundary_health", {})
+    level3_source_check_health = level3.get("source_check_health", {})
     gap_map = parsed.get("gap_map", [])
     owner_blocker = next(
         (blocker for blocker in blockers if blocker.get("id") == "owner-gates-open"),
@@ -1408,15 +1470,28 @@ def test_final_gate_owner_review_blocker():
         and level2.get("covered_count") == 7
         and level2.get("missing_source_ids") == []
         and level2.get("missing_coverage_ids") == []
+        and level2_boundary_health.get("status") == "pass"
+        and level2_boundary_health.get("mode") == "read-only-internal-evidence"
+        and level2_boundary_health.get("summary", {}).get("registered_item_count") == 7
+        and level2_boundary_health.get("source_project_read") is False
+        and level2_boundary_health.get("owner_gate_mutation") is False
+        and level2_boundary_health.get("memory_write") is False
         and "registry/sources.json" in level2.get("evidence_refs", [])
         and level3.get("status") == "complete"
         and level3.get("registered_count") == level3.get("covered_count")
         and level3.get("registered_count") == 13
         and level3.get("missing_coverage_ids") == []
         and level3.get("missing_final_state_fields") == []
+        and level3_source_check_health.get("executed") is False
+        and level3_source_check_health.get("with_check_count") == 9
+        and level3_source_check_health.get("with_no_check_reason_count") == 4
+        and level3_source_check_health.get("missing_check_or_reason_ids") == []
+        and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
+        and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
+        and checks.get("knowledge_check", {}).get("boundary_health", {}).get("status") == "pass"
         and checks.get("git_diff_check", {}).get("status") == "pass"
         and checks.get("git_diff_check", {}).get("exit_code") == 0
         and checks.get("git_diff_check", {}).get("command") == "rtk git diff --check"
@@ -3064,6 +3139,10 @@ def test_status_source_governance_summary():
     owner_gates = parsed.get("owner_gates", {}) if isinstance(parsed.get("owner_gates"), dict) else {}
     check_selection = check_parsed.get("source_coverage_selection", {}) if isinstance(check_parsed, dict) else {}
     check_health = check_parsed.get("source_coverage_health", {}) if isinstance(check_parsed, dict) else {}
+    check_source_check_health = check_parsed.get("source_check_health", {}) if isinstance(check_parsed, dict) else {}
+    check_boundary_health = check_parsed.get("boundary_health", {}) if isinstance(check_parsed, dict) else {}
+    status_source_check_health = sources.get("source_check_health", {}) if isinstance(sources.get("source_check_health"), dict) else {}
+    status_boundary_health = sources.get("boundary_health", {}) if isinstance(sources.get("boundary_health"), dict) else {}
     expect(
         result["exit_code"] == 0
         and not parse_error
@@ -3083,6 +3162,16 @@ def test_status_source_governance_summary():
         and check_health.get("missing_source_ids") == []
         and check_health.get("stale_source_ids") == []
         and check_health.get("duplicate_source_ids") == []
+        and check_source_check_health.get("with_check_count") == 9
+        and check_source_check_health.get("with_no_check_reason_count") == 4
+        and check_source_check_health.get("missing_check_or_reason_ids") == []
+        and check_source_check_health.get("non_rtk_check_ids") == []
+        and check_boundary_health.get("status") == "pass"
+        and check_boundary_health.get("summary", {}).get("source_coverage_count") == 7
+        and status_source_check_health.get("with_check_count") == 9
+        and status_source_check_health.get("executed") is False
+        and status_boundary_health.get("status") == "pass"
+        and status_boundary_health.get("source_project_read") is False
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
@@ -3099,6 +3188,10 @@ def test_status_source_governance_summary():
             "latest_coverage_selection": sources.get("latest_coverage_selection"),
             "check_source_coverage_selection": check_selection,
             "check_source_coverage_health": check_health,
+            "check_source_check_health": check_source_check_health,
+            "check_boundary_health": check_boundary_health,
+            "status_source_check_health": status_source_check_health,
+            "status_boundary_health": status_boundary_health,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
             "owner_ready_package_coverage": owner_gates.get("owner_ready_package_coverage"),
@@ -3106,6 +3199,62 @@ def test_status_source_governance_summary():
             "expected_final_gate_command": expected_final_gate_command,
             "status": parsed.get("status"),
             "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
+def test_source_check_health_contract():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    source_check_health = parsed.get("source_check_health", {}) if isinstance(parsed, dict) else {}
+
+    repo = copy_repo("source-check-health-non-rtk")
+    sources_path = repo / "registry" / "sources.json"
+    sources_doc = json.loads(sources_path.read_text())
+    for source in sources_doc.get("sources", []):
+        if source.get("id") == "pcr02-project-tools":
+            source["check"] = str(source.get("check", "")).replace("rtk ", "bash ", 1)
+            break
+    sources_path.write_text(json.dumps(sources_doc, ensure_ascii=False, indent=2) + "\n")
+    bad_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    bad_parsed = {}
+    bad_parse_error = ""
+    try:
+        bad_parsed = json.loads(bad_result["stdout"])
+    except Exception as exc:
+        bad_parse_error = str(exc)
+    bad_source_check_health = bad_parsed.get("source_check_health", {}) if isinstance(bad_parsed, dict) else {}
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and source_check_health.get("mode") == "static-registry-only"
+        and source_check_health.get("executed") is False
+        and source_check_health.get("registered_source_count") == 13
+        and source_check_health.get("with_check_count") == 9
+        and source_check_health.get("with_no_check_reason_count") == 4
+        and source_check_health.get("missing_check_or_reason_ids") == []
+        and source_check_health.get("non_rtk_check_ids") == []
+        and source_check_health.get("missing_source_path_ids") == []
+        and len(source_check_health.get("rows", [])) == 13
+        and all(row.get("execution_status") == "not-run" for row in source_check_health.get("rows", []))
+        and bad_result["exit_code"] != 0
+        and not bad_parse_error
+        and "pcr02-project-tools" in bad_source_check_health.get("non_rtk_check_ids", [])
+        and any("check must start with rtk" in str(error) for error in bad_parsed.get("errors", [])),
+        "source-check-health-contract",
+        "source check health statically validates check/no-check contracts without executing commands",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "source_check_health": source_check_health,
+            "bad_exit_code": bad_result["exit_code"],
+            "bad_parse_error": bad_parse_error,
+            "bad_source_check_health": bad_source_check_health,
+            "bad_errors": bad_parsed.get("errors", [])[:5],
         },
     )
 
@@ -3652,6 +3801,7 @@ def test_regression_manifest_coverage():
         "governance-goal-path-allowed",
         "pcr02-level2-source-coverage",
         "pcr02-level2-boundary-manifests",
+        "boundary-health-internal-evidence",
         "status-wrong-bucket",
         "status-noncanonical-only",
         "owner-partial-resolved",
@@ -3707,6 +3857,7 @@ def test_regression_manifest_coverage():
         "index-decision-registry-subsection-gate",
         "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
+        "source-check-health-contract",
         "source-coverage-date-filename-selection",
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
@@ -3749,6 +3900,7 @@ for test_fn in [
     test_governance_goal_path_allowed,
     test_pcr02_level2_source_coverage,
     test_pcr02_level2_boundary_manifests,
+    test_boundary_health_internal_evidence,
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,
@@ -3804,6 +3956,7 @@ for test_fn in [
     test_index_decision_registry_gate,
     test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
+    test_source_check_health_contract,
     test_source_coverage_date_filename_selection,
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,

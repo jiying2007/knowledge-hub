@@ -800,6 +800,9 @@ result = {
         "registered_count": len(sources),
         "latest_coverage_manifest": latest_source_coverage,
         "latest_coverage_selection": latest_source_coverage_selection,
+        "source_coverage_health": check_payload.get("source_coverage_health", {}),
+        "source_check_health": check_payload.get("source_check_health", {}),
+        "boundary_health": check_payload.get("boundary_health", {}),
     },
     "migrations": {
         "record_count": len(migrations),

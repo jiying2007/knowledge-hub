@@ -63,6 +63,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `knowledge-hub source coverage selection/health`: latest source coverage selection and pass-state coverage health are surfaced by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
 - `pcr02-project-docs owner routing recovery`: owner decision role routing and status/final-gate owner_route recovery are tracked by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`.
 - `pcr02-project-docs owner landing audit and manual index recovery`: owner landing audit、worksheet/manual index 落点和 manifest unpaired 分类 are tracked by `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md`.
+- `pcr02-project-docs source check and boundary health`: source check/no-check 静态契约和 PCR02 Level 2 boundary 内部证据链 are tracked by `artifacts/manifests/knowledge-hub-source-boundary-health-20260621.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.
