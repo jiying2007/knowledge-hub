@@ -112,6 +112,48 @@ def regression_environment_failure(result):
     ]
     return any(marker in haystack for marker in markers)
 
+def diagnostic_gap_type(category_ids):
+    category_to_gap_type = {
+        "core-index": "index",
+        "source-index": "index",
+        "decision-index": "index",
+        "source-coverage": "source-coverage",
+        "source-registry": "registry",
+        "owner-project-topic-registry": "registry",
+        "registry-parse": "registry",
+        "migration-record": "migration-record",
+        "item-source-ref": "registry",
+        "item-boundary": "registry",
+        "template-schema": "manifest",
+        "manual-entry": "tooling",
+        "validation-ref": "tooling",
+    }
+    mapped = {
+        category_to_gap_type.get(str(category_id), "final-gate")
+        for category_id in category_ids
+    }
+    if len(mapped) == 1:
+        return next(iter(mapped))
+    if not mapped:
+        return "final-gate"
+    return "final-gate"
+
+def blocker_gap_type(blocker):
+    blocker_id = str(blocker.get("id", "") or "")
+    if blocker_id == "owner-gates-open":
+        return "owner-review"
+    if blocker.get("severity") == "environment":
+        return "environment"
+    if blocker_id.startswith("knowledge-regression"):
+        return "regression"
+    if blocker_id.startswith("git-diff"):
+        return "tooling"
+    if blocker_id.startswith("knowledge-status"):
+        return "tooling"
+    if blocker_id.startswith("knowledge-check"):
+        return str(blocker.get("gap_type", "final-gate"))
+    return "final-gate"
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
@@ -137,10 +179,17 @@ if knowledge_check["parse_error"]:
     })
 elif knowledge_check["exit_code"] != 0:
     check_payload = knowledge_check["payload"]
+    diagnostic_category_ids = [
+        category.get("id", "")
+        for category in check_payload.get("diagnostics", {}).get("categories", [])
+        if isinstance(category, dict)
+    ]
     blockers.append({
         "id": "knowledge-check-failed",
         "severity": "blocker",
         "count": len(check_payload.get("errors", [])),
+        "diagnostic_categories": diagnostic_category_ids,
+        "gap_type": diagnostic_gap_type(diagnostic_category_ids),
         "summary_zh": "knowledge-check 未通过，必须先修复全仓一致性错误。",
         "command": knowledge_check["command"],
     })
@@ -217,9 +266,10 @@ def blocker_to_gap(blocker):
     blocker_id = str(blocker.get("id", "") or "<missing>")
     is_owner_gate = blocker_id == "owner-gates-open"
     is_environment = blocker.get("severity") == "environment"
+    gap_type = blocker_gap_type(blocker)
     return {
         "gap_id": blocker_id,
-        "gap_type": "owner-review" if is_owner_gate else "environment" if is_environment else "final-gate",
+        "gap_type": gap_type,
         "source_id": "pcr02-project-docs" if is_owner_gate else "",
         "source_root": "registry/status/final-gate",
         "evidence": blocker.get("summary_zh", ""),
@@ -250,7 +300,6 @@ def blocker_to_gap(blocker):
         "status": "open",
     }
 
-gap_map = [blocker_to_gap(blocker) for blocker in blockers]
 only_owner_review_blockers = bool(blockers) and all(item.get("severity") == "owner-review" for item in blockers)
 core_checks_pass = (
     not knowledge_check["parse_error"]
@@ -318,6 +367,87 @@ pcr02_docs_coverage = next(
 missing_level2_sources = sorted(pcr02_level2_source_ids - source_registry_ids)
 missing_level2_coverage = sorted(pcr02_level2_source_ids - covered_source_ids)
 missing_registered_coverage = sorted(source_registry_ids - covered_source_ids)
+
+def make_source_audit_gaps():
+    source_gaps = []
+    for source_id in missing_level2_sources:
+        source_gaps.append({
+            "gap_id": f"level2-source-missing:{source_id}",
+            "gap_type": "registry",
+            "source_id": source_id,
+            "source_root": "registry/sources.json",
+            "evidence": f"PCR02 Level 2 source {source_id} is missing from registry/sources.json.",
+            "current_impact": "PCR02 候选 source 不能从 source registry 恢复，Level 2 source coverage 不完整。",
+            "codex_auto_can_complete": True,
+            "requires_owner_decision": False,
+            "fix_action": "补 registry/sources.json source object，并同步 by-source、source coverage manifest 和 registry/index 证据。",
+            "write_scope": "registry/sources.json、indexes/by-source.md、artifacts/manifests/*source-coverage*.jsonl 和对应 manifest/registry/index。",
+            "validation_commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --sources-only --json",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+            "status": "open",
+        })
+    for source_id in missing_level2_coverage:
+        source_gaps.append({
+            "gap_id": f"level2-source-coverage-missing:{source_id}",
+            "gap_type": "source-coverage",
+            "source_id": source_id,
+            "source_root": latest_coverage_manifest,
+            "evidence": f"PCR02 Level 2 source {source_id} is missing from latest source coverage manifest.",
+            "current_impact": "PCR02 候选 source 已登记但缺少终态 classification/decision/risk 证据。",
+            "codex_auto_can_complete": True,
+            "requires_owner_decision": False,
+            "fix_action": "在最新 source coverage JSONL 中补 source row，写清 classification、decision、risk、owner 和 checked_at。",
+            "write_scope": "artifacts/manifests/*source-coverage*.jsonl、相关 manifest/registry/index。",
+            "validation_commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+            "status": "open",
+        })
+    for source_id in missing_registered_coverage:
+        source_gaps.append({
+            "gap_id": f"registered-source-coverage-missing:{source_id}",
+            "gap_type": "source-coverage",
+            "source_id": source_id,
+            "source_root": latest_coverage_manifest,
+            "evidence": f"Registered source {source_id} is missing from latest source coverage manifest.",
+            "current_impact": "registered source 无法证明终态 disposition，Level 3 source audit 不完整。",
+            "codex_auto_can_complete": True,
+            "requires_owner_decision": False,
+            "fix_action": "为 registered source 补 source coverage row，并同步 source/project/topic 索引锚点。",
+            "write_scope": "artifacts/manifests/*source-coverage*.jsonl、indexes/by-source.md、必要 registry/migration/index。",
+            "validation_commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+            "status": "open",
+        })
+    for missing in missing_source_final_state_fields:
+        source_id = str(missing.get("source_id", ""))
+        field = str(missing.get("field", ""))
+        source_gaps.append({
+            "gap_id": f"source-final-state-field-missing:{source_id}:{field}",
+            "gap_type": "registry",
+            "source_id": source_id,
+            "field": field,
+            "source_root": "registry/sources.json",
+            "evidence": f"registry/sources.json source {source_id} missing final-state field {field}.",
+            "current_impact": "source registry 不能独立说明 owner、review_after、migration_strategy、final_disposition 或 check/no-check 边界。",
+            "codex_auto_can_complete": True,
+            "requires_owner_decision": False,
+            "fix_action": "补齐 source registry final-state 字段；没有稳定 check 时写 no_check_reason。",
+            "write_scope": "registry/sources.json、registry/schema.md 如需说明、对应 manifest/registry/index。",
+            "validation_commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --sources-only --json",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+            "status": "open",
+        })
+    return source_gaps
+
+gap_map = [blocker_to_gap(blocker) for blocker in blockers] + make_source_audit_gaps()
 level1_status = (
     "complete-except-owner-review"
     if core_checks_pass

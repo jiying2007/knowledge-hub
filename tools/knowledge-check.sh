@@ -28,6 +28,7 @@ args = parser.parse_args(argv)
 errors = []
 warnings = []
 explain = None
+READABILITY_GATE_START = dt.date(2026, 6, 21)
 if args.project:
     warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
 if args.domain:
@@ -565,10 +566,15 @@ if not args.sources_only:
                 if migration.get(field) in ("", None, []):
                     errors.append(f"migrations:{migration_id} empty {field}")
         checked_at = str(migration.get("checked_at", ""))
+        checked_date = None
         try:
-            dt.date.fromisoformat(checked_at)
+            checked_date = dt.date.fromisoformat(checked_at)
         except Exception:
             errors.append(f"migrations:{migration_id} invalid checked_at: {checked_at}")
+        if checked_date and checked_date >= READABILITY_GATE_START and not is_bootstrap_empty:
+            notes_zh = str(migration.get("notes_zh", "")).strip()
+            if not notes_zh:
+                errors.append(f"migrations:{migration_id} missing notes_zh for post-2026-06-21 readability gate")
         target_refs = [part.strip() for part in re.split(r"\s*;\s*", str(migration.get("to", ""))) if part.strip()]
         for target_ref in target_refs:
             target_path = pathlib.Path(target_ref)
@@ -675,6 +681,11 @@ if not args.sources_only:
                 errors.append(
                     f"items:{item_id} updated_at before created_at: {item.get('updated_at')} < {item.get('created_at')}"
                 )
+        if item_dates.get("created_at") and item_dates["created_at"] >= READABILITY_GATE_START:
+            if item.get("domain") == "governance" and item.get("kind") == "audit":
+                for field in ["summary_zh", "primary_language", "source_language", "translation_status", "terminology_status"]:
+                    if not str(item.get(field, "")).strip():
+                        errors.append(f"items:{item_id} missing {field} for post-2026-06-21 governance audit readability gate")
         if item.get("owner") and item.get("owner") not in owner_ids:
             errors.append(f"items:{item_id} owner not registered: {item.get('owner')}")
         validation_refs = item.get("validation_refs")

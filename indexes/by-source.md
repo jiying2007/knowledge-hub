@@ -27,6 +27,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 
 `knowledge-index-plan` 只读输出 planned 视图，不写 registry、index、owner decision、memory，也不关闭 owner gate。
 
+- Latest source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`.
+- Latest final gap readability and index hardening: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
+
 ## Source-Specific Review Artifacts
 
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN split targets are tracked by `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.
@@ -48,7 +51,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
 - `pcr02-project-docs owner-gated source identity`: current source SHA256/size preflight is tracked by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`.
 - `pcr02-project-docs owner form source identity validation`: owner decision form validation rejects stale source SHA256/size by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`.
+- `pcr02-project-docs owner target and landing validation`: owner form target decision, guardrail and worksheet verification commands are tracked by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`.
 - `pcr02-project-docs owner-ready command stability`: owner-ready package and terminal status commands use cwd-stable `~/knowledge-hub/tools` entrypoints by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`.
+- `pcr02-project-docs final gap/readability recovery`: terminal typed gap, governance readability gate and latest index anchor are tracked by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.

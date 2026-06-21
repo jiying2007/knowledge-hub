@@ -331,10 +331,12 @@ Required migration fields:
 - `status`
 - `checked_at`
 - `notes`
+- `notes_zh` for rows checked on or after 2026-06-21
 
 Migration invariants:
 
 - `checked_at` must use ISO date format: `YYYY-MM-DD`.
+- Rows checked on or after 2026-06-21 must include `notes_zh` so migration history remains readable for Chinese maintainers.
 - `to` must reference an existing Knowledge Hub local path, such as `artifacts/`, `domains/`, `registry/`, `indexes/`, `governance/`, `tools/` or `templates/`.
 - `to` must be relative, not absolute.
 - Multiple `to` references may be separated by semicolons.

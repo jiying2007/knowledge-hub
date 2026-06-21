@@ -386,6 +386,7 @@ gap_type 可取：
 - AGENTS
 - tooling
 - regression
+- environment
 - final-gate
 - source-identity
 - duplicate-body

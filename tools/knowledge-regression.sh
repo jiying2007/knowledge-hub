@@ -1204,6 +1204,156 @@ def test_final_gate_default_regression_path():
         },
     )
 
+def test_final_gate_source_final_state_field_gap():
+    repo = copy_repo("final-gate-source-field-gap")
+    sources_path = repo / "registry" / "sources.json"
+    data = json.loads(sources_path.read_text())
+    target_found = False
+    for source in data.get("sources", []):
+        if source.get("id") == "pcr02-project-tools":
+            source.pop("final_disposition", None)
+            target_found = True
+            break
+    if not target_found:
+        expect(
+            False,
+            "final-gate-source-final-state-field-gap",
+            "final gate exposes typed source final-state field gaps",
+            {"setup_error": "pcr02-project-tools source fixture not found"},
+            repo,
+        )
+        return
+    sources_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    run_cmd(repo, ["rtk", "git", "init"])
+    result = run_cmd(
+        repo,
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    gap_map = parsed.get("gap_map", [])
+    typed_gap = next(
+        (
+            gap
+            for gap in gap_map
+            if gap.get("gap_id") == "source-final-state-field-missing:pcr02-project-tools:final_disposition"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-fix"
+        and typed_gap.get("gap_type") == "registry"
+        and typed_gap.get("source_id") == "pcr02-project-tools"
+        and typed_gap.get("field") == "final_disposition"
+        and typed_gap.get("codex_auto_can_complete") is True
+        and typed_gap.get("requires_owner_decision") is False,
+        "final-gate-source-final-state-field-gap",
+        "final gate exposes typed source final-state field gaps",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "gap_map": gap_map,
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
+    )
+
+def test_final_gap_readability_positive_contracts():
+    check_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    final_result = run_cmd(
+        root,
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+    )
+    check_parsed = {}
+    final_parsed = {}
+    try:
+        check_parsed = json.loads(check_result["stdout"])
+    except Exception:
+        pass
+    try:
+        final_parsed = json.loads(final_result["stdout"])
+    except Exception:
+        pass
+    items_path = root / "registry" / "items.jsonl"
+    migrations_path = root / "registry" / "migrations.jsonl"
+    sources_path = root / "registry" / "sources.json"
+    readability_fields = [
+        "summary_zh",
+        "primary_language",
+        "source_language",
+        "translation_status",
+        "terminology_status",
+    ]
+    missing_readability_fields = []
+    missing_notes_zh = []
+    missing_source_fields = []
+    try:
+        for row in [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]:
+            created_at = str(row.get("created_at", ""))
+            if (
+                created_at >= "2026-06-21"
+                and row.get("domain") == "governance"
+                and row.get("kind") == "audit"
+            ):
+                for field in readability_fields:
+                    if not str(row.get(field, "")).strip():
+                        missing_readability_fields.append(f"{row.get('id')}:{field}")
+    except Exception as exc:
+        missing_readability_fields.append(f"parse-error:{exc}")
+    try:
+        for row in [json.loads(line) for line in migrations_path.read_text().splitlines() if line.strip()]:
+            if str(row.get("checked_at", "")) >= "2026-06-21" and not str(row.get("notes_zh", "")).strip():
+                missing_notes_zh.append(str(row.get("mode", row.get("to", "<unknown>"))))
+    except Exception as exc:
+        missing_notes_zh.append(f"parse-error:{exc}")
+    try:
+        source_required_fields = ["owner", "review_after", "migration_strategy", "final_disposition"]
+        source_data = json.loads(sources_path.read_text())
+        for source in source_data.get("sources", []):
+            source_id = str(source.get("id", ""))
+            for field in source_required_fields:
+                if not str(source.get(field, "")).strip():
+                    missing_source_fields.append(f"{source_id}:{field}")
+            if not str(source.get("check", "")).strip() and not str(source.get("no_check_reason", "")).strip():
+                missing_source_fields.append(f"{source_id}:check_or_no_check_reason")
+    except Exception as exc:
+        missing_source_fields.append(f"parse-error:{exc}")
+    gap_map = final_parsed.get("gap_map", [])
+    non_owner_gaps = [
+        gap
+        for gap in gap_map
+        if gap.get("requires_owner_decision") is not True
+        and gap.get("gap_type") not in {"owner-review"}
+    ]
+    expect(
+        check_result["exit_code"] == 0
+        and check_parsed.get("status") == "pass"
+        and final_result["exit_code"] == 1
+        and final_parsed.get("final_status") == "needs-owner-review"
+        and not missing_readability_fields
+        and not missing_notes_zh
+        and not missing_source_fields
+        and not non_owner_gaps,
+        "final-gap-readability-positive-contracts",
+        "current repository satisfies final gap and readability positive contracts except owner review",
+        {
+            "knowledge_check_exit_code": check_result["exit_code"],
+            "knowledge_check_status": check_parsed.get("status"),
+            "final_gate_exit_code": final_result["exit_code"],
+            "final_status": final_parsed.get("final_status"),
+            "missing_readability_fields": missing_readability_fields,
+            "missing_notes_zh": missing_notes_zh,
+            "missing_source_fields": missing_source_fields,
+            "non_owner_gaps": non_owner_gaps,
+            "final_stdout_sample": final_result["stdout"][:1200],
+        },
+    )
+
 def make_valid_owner_decision_form(repo):
     forms_result = run_cmd(
         repo,
@@ -1946,6 +2096,90 @@ def test_manual_entry_readability_fields():
             "missing_fragments": missing_fragments,
             "stdout_sample": result["stdout"][:1600],
         },
+    )
+
+def test_governance_audit_readability_gate():
+    repo = copy_repo("governance-audit-readability-gate")
+    items_path = repo / "registry" / "items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]
+    target_found = False
+    for row in rows:
+        if row.get("id") == "knowledge-hub-owner-ready-command-stability-20260621":
+            row.pop("summary_zh", None)
+            target_found = True
+            break
+    if not target_found:
+        expect(
+            False,
+            "governance-audit-readability-gate",
+            "knowledge-check requires Chinese readability fields for new governance audits",
+            {"setup_error": "governance audit fixture not found"},
+            repo,
+        )
+        return
+    items_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("status") == "fail"
+        and any("missing summary_zh for post-2026-06-21 governance audit readability gate" in error for error in errors),
+        "governance-audit-readability-gate",
+        "knowledge-check requires Chinese readability fields for new governance audits",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
+    )
+
+def test_migration_notes_zh_gate():
+    repo = copy_repo("migration-notes-zh-gate")
+    migrations_path = repo / "registry" / "migrations.jsonl"
+    rows = [json.loads(line) for line in migrations_path.read_text().splitlines() if line.strip()]
+    target_found = False
+    for row in rows:
+        if row.get("mode") == "owner-ready-command-stability":
+            row.pop("notes_zh", None)
+            target_found = True
+            break
+    if not target_found:
+        expect(
+            False,
+            "migration-notes-zh-gate",
+            "knowledge-check requires notes_zh for new migration records",
+            {"setup_error": "migration fixture not found"},
+            repo,
+        )
+        return
+    migrations_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("status") == "fail"
+        and any("missing notes_zh for post-2026-06-21 readability gate" in error for error in errors),
+        "migration-notes-zh-gate",
+        "knowledge-check requires notes_zh for new migration records",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
     )
 
 def test_manual_entry_migration_conditional_guide():
@@ -2697,6 +2931,8 @@ def test_regression_manifest_coverage():
         "status-text-owner-summary-commands",
         "final-gate-owner-review-blocker",
         "final-gate-default-regression-path",
+        "final-gate-source-final-state-field-gap",
+        "final-gap-readability-positive-contracts",
         "owner-landing-plan-project-index",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
@@ -2713,6 +2949,8 @@ def test_regression_manifest_coverage():
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "manual-entry-readability-fields",
+        "governance-audit-readability-gate",
+        "migration-notes-zh-gate",
         "manual-entry-migration-conditional-guide",
         "manual-entry-template-selection",
         "templates-required-sections",
@@ -2732,14 +2970,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "56 个回归场景" in manifest_text,
+        and "60 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "56 个回归场景",
+            "expected_count_text": "60 个回归场景",
         },
     )
 
@@ -2766,6 +3004,8 @@ for test_fn in [
     test_status_text_owner_summary_commands,
     test_final_gate_owner_review_blocker,
     test_final_gate_default_regression_path,
+    test_final_gate_source_final_state_field_gap,
+    test_final_gap_readability_positive_contracts,
     test_owner_landing_plan_project_index,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
@@ -2782,6 +3022,8 @@ for test_fn in [
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_manual_entry_readability_fields,
+    test_governance_audit_readability_gate,
+    test_migration_notes_zh_gate,
     test_manual_entry_migration_conditional_guide,
     test_manual_entry_template_selection,
     test_templates_required_sections,

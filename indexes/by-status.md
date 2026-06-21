@@ -174,6 +174,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-source-check-docs-search-limit-20260621`
 - reviewing: `knowledge-hub-owner-target-landing-validation-20260621`
 - reviewing: `knowledge-hub-owner-ready-command-stability-20260621`
+- reviewing: `knowledge-hub-final-gap-readability-index-20260621`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -297,3 +298,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - source-check-coverage-draft-applied: source 新增向导的 `--source --check` 分支在 registry source object 和 source coverage JSONL row 草稿中一致输出 `check`；documented by `artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.jsonl`.
 - source-check-docs-search-limit-applied: source 新增文档展示 `--check` 优先路径，source 草稿强制 `--check` / `--no-check-reason` 二选一，index-plan source 视图暴露 coverage decision/risk，且 `knowledge-search.sh` 拒绝非正 limit；documented by `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.jsonl`.
 - owner-target-landing-validation-applied: owner 表单校验拒绝 `target_decision` 越过 worksheet `target_candidates`，landing plan step 带出 `worksheet_verification_commands`；documented by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.jsonl`.
+- owner-ready-command-stability-applied: PCR02 owner-ready package、owner gate/status/final gate 人工命令统一为 cwd-stable `rtk bash ~/knowledge-hub/tools/...` 入口，并用负向回归阻断 repo-relative owner-ready 命令；documented by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
+- final-gap-readability-index-applied: final gate typed gap map、environment gap 词表、2026-06-21 后 governance audit / migration 中文可读性门禁和 PCR02/source governance 恢复锚点已压实；documented by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
