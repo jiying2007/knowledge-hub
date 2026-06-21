@@ -962,6 +962,9 @@ def test_status_next_owner_gate():
         pass
     next_open = parsed.get("owner_gates", {}).get("next_open", {})
     owner_gates = parsed.get("owner_gates", {})
+    owner_dispatch = parsed.get("owner_gates", {}).get("owner_dispatch", [])
+    dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
+    project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
     owner_forms_jsonl_commands = parsed.get("owner_gates", {}).get("owner_forms_jsonl_commands", [])
@@ -988,6 +991,13 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_invalid_count") == 0
         and owner_gates.get("owner_ready_duplicate_count") == 0
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
+        and len(owner_dispatch) == 6
+        and project_owner_dispatch.get("open_count") == 2
+        and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
+        and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in project_owner_dispatch.get("landing_plan_command_template", "")
+        and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and any("--summary" in str(command) for command in summary_commands)
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
         and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_forms_jsonl_commands)
@@ -1017,6 +1027,7 @@ def test_status_next_owner_gate():
         and "owner-decisions.jsonl" in next_open.get("focus_landing_plan_command_template", "")
         and any("--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
+        and any("owner_gates.owner_dispatch[]" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--forms-jsonl" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--validate-forms" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--landing-plan" in str(action) for action in next_actions)
@@ -1047,6 +1058,7 @@ def test_status_next_owner_gate():
             "owner_ready_missing_count": owner_gates.get("owner_ready_missing_count"),
             "owner_ready_invalid_count": owner_gates.get("owner_ready_invalid_count"),
             "owner_ready_duplicate_count": owner_gates.get("owner_ready_duplicate_count"),
+            "owner_dispatch": owner_dispatch,
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "owner_summary_commands": owner_summary_commands,
@@ -1115,6 +1127,11 @@ def test_final_gate_owner_review_blocker():
     checks = parsed.get("checks", {})
     blockers = parsed.get("blockers", [])
     automatic_governance = parsed.get("automatic_governance", {})
+    owner_recovery = parsed.get("owner_recovery", {})
+    owner_dispatch = owner_recovery.get("owner_dispatch", [])
+    dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
+    project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
+    next_open_recovery = owner_recovery.get("next_open", {})
     final_state_audit = parsed.get("final_state_audit", {})
     level1 = final_state_audit.get("level1_pcr02_docs", {})
     level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
@@ -1139,6 +1156,13 @@ def test_final_gate_owner_review_blocker():
         and automatic_governance.get("owner_ready_package_coverage") == "7/7"
         and automatic_governance.get("active_exposure_count") == 0
         and automatic_governance.get("no_owner_decision_generated") is True
+        and owner_recovery.get("open_count") == 7
+        and owner_recovery.get("owner_ready_package_coverage") == "7/7"
+        and owner_recovery.get("active_exposure_count") == 0
+        and len(owner_dispatch) == 6
+        and project_owner_dispatch.get("open_count") == 2
+        and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
+        and next_open_recovery.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and level1.get("status") == "complete-except-owner-review"
         and level1.get("source_id") == "pcr02-project-docs"
         and level1.get("owner_gate_open_count") == 7
@@ -1181,6 +1205,7 @@ def test_final_gate_owner_review_blocker():
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
             "automatic_governance": automatic_governance,
+            "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,
             "checks": checks,
             "blockers": blockers,
@@ -1451,6 +1476,7 @@ def test_owner_landing_plan_project_index():
     owner_ready_gate = parsed.get("landing_plan", {}).get("owner_ready_gate", {})
     steps = parsed.get("landing_plan", {}).get("steps", [])
     first_step = steps[0] if steps else {}
+    worksheet_cwd = first_step.get("worksheet_verification_cwd", "")
     worksheet_commands = first_step.get("worksheet_verification_commands", [])
     expect(
         result["exit_code"] == 0
@@ -1459,15 +1485,17 @@ def test_owner_landing_plan_project_index():
         and owner_ready_gate.get("error_count") == 0
         and "indexes/by-project.md" in required_files
         and "indexes/by-status.md" in required_files
+        and worksheet_cwd.endswith("/xcrz_sigmastar_demo")
         and bool(worksheet_commands)
         and any("knowledge-check.sh" in str(command) for command in worksheet_commands),
         "owner-landing-plan-project-index",
-        "owner landing plan requires by-project index and carries worksheet verification commands",
+        "owner landing plan requires by-project index and carries worksheet verification cwd and commands",
         {
             "exit_code": result["exit_code"],
             "landing_status": parsed.get("landing_plan", {}).get("status"),
             "owner_ready_gate": owner_ready_gate,
             "required_manual_files": required_files,
+            "worksheet_verification_cwd": worksheet_cwd,
             "worksheet_verification_commands": worksheet_commands,
             "stdout_sample": result["stdout"][:1000],
         },
@@ -2160,6 +2188,49 @@ def test_governance_audit_readability_gate():
         repo,
     )
 
+def test_ai_generated_item_provenance_gate():
+    repo = copy_repo("ai-generated-item-provenance-gate")
+    items_path = repo / "registry" / "items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]
+    target_found = False
+    for row in rows:
+        if row.get("id") == "knowledge-hub-owner-ready-command-stability-20260621":
+            row.pop("ai_model_or_tool", None)
+            row.pop("ai_generated_at", None)
+            target_found = True
+            break
+    if not target_found:
+        expect(
+            False,
+            "ai-generated-item-provenance-gate",
+            "knowledge-check requires AI provenance fields for new AI generated items",
+            {"setup_error": "ai generated item fixture not found"},
+            repo,
+        )
+        return
+    items_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("status") == "fail"
+        and any("ai-generated item missing provenance fields" in error for error in errors),
+        "ai-generated-item-provenance-gate",
+        "knowledge-check requires AI provenance fields for new AI generated items",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
+    )
+
 def test_migration_notes_zh_gate():
     repo = copy_repo("migration-notes-zh-gate")
     migrations_path = repo / "registry" / "migrations.jsonl"
@@ -2222,13 +2293,15 @@ def test_manual_entry_migration_conditional_guide():
     expect(
         result["exit_code"] == 0
         and "普通新知识不强制新增 migration" in result["stdout"]
-        and "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"],
+        and "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"]
+        and '"notes_zh":"人工新增条目已按唯一正文' in result["stdout"],
         "manual-entry-migration-conditional-guide",
-        "manual entry guide treats migration record as conditional for ordinary new knowledge",
+        "manual entry guide treats migration record as conditional and includes notes_zh when used",
         {
             "exit_code": result["exit_code"],
             "has_conditional_step": "普通新知识不强制新增 migration" in result["stdout"],
             "has_conditional_heading": "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"],
+            "has_notes_zh": '"notes_zh":"人工新增条目已按唯一正文' in result["stdout"],
             "stdout_sample": result["stdout"][:1600],
         },
     )
@@ -2994,14 +3067,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "60 个回归场景" in manifest_text,
+        and "61 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "60 个回归场景",
+            "expected_count_text": "61 个回归场景",
         },
     )
 
@@ -3047,6 +3120,7 @@ for test_fn in [
     test_manual_entry_offline_docs,
     test_manual_entry_readability_fields,
     test_governance_audit_readability_gate,
+    test_ai_generated_item_provenance_gate,
     test_migration_notes_zh_gate,
     test_manual_entry_migration_conditional_guide,
     test_manual_entry_template_selection,

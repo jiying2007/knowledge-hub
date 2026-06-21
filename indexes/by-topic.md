@@ -157,3 +157,4 @@
 - Knowledge Hub owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
 - Knowledge Hub final gap readability index: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`
 - Knowledge Hub owner dispatch readability sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`
+- Knowledge Hub status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`

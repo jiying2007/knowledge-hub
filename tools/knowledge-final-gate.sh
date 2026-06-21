@@ -506,7 +506,11 @@ final_state_audit = {
             latest_coverage_manifest,
             "tools/knowledge-check.sh --dry-run --json --diagnostics",
         ],
-        "summary_zh": "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖，且 source registry 终态字段已补齐。",
+        "summary_zh": (
+            "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖，且 source registry 终态字段已补齐。"
+            if level3_status == "complete"
+            else "registered source coverage 或 source registry 终态字段仍有缺口，需按 missing_* 字段修复。"
+        ),
     },
 }
 
@@ -532,6 +536,14 @@ result = {
             if automatic_governance_status == "complete"
             else "仍存在非 owner 的自动治理缺口，需要先修复。"
         ),
+    },
+    "owner_recovery": {
+        "open_count": int(owner_payload.get("open_count", 0) or 0),
+        "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
+        "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
+        "owner_dispatch": owner_payload.get("owner_dispatch", []),
+        "next_open": owner_payload.get("next_open", {}),
+        "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
     "final_state_audit": final_state_audit,
     "checks": {

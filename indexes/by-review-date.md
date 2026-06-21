@@ -177,3 +177,4 @@
 - 2026-09-21: `knowledge-hub-owner-ready-command-stability-20260621`
 - 2026-09-21: `knowledge-hub-final-gap-readability-index-20260621`
 - 2026-09-21: `knowledge-hub-owner-dispatch-readability-sync-20260621`
+- 2026-09-21: `knowledge-hub-status-dispatch-notes-zh-20260621`

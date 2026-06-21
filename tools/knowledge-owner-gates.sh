@@ -183,6 +183,9 @@ def make_decision_form(row):
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
         "observed_source_identity": row.get("observed_source_identity", {}),
+        "source_execution_root": row.get("source_execution_root", ""),
+        "verification_cwd": row.get("verification_cwd", ""),
+        "verification_commands": row.get("verification_commands", []),
         "allowed_owner_decisions": row["decision_options"],
         "target_candidates": row.get("target_candidates", []),
         "required_owner_fields": row["required_owner_fields"],
@@ -210,8 +213,11 @@ def make_owner_checklist(row):
         "hard_gate_summary": row.get("hard_gate_summary", ""),
         "hard_gate": row.get("hard_gate", ""),
         "observed_source_identity": row.get("observed_source_identity", {}),
+        "source_execution_root": row.get("source_execution_root", ""),
+        "verification_cwd": row.get("verification_cwd", ""),
+        "verification_commands": row.get("verification_commands", []),
         "must_not": row["must_not"],
-        "notes_zh": "本清单只把 owner intake 与 worksheet 合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
+        "notes_zh": "本清单只把 owner intake、worksheet 和执行目录提示合并到一个只读视图；不能替代 owner 决策，不能关闭门禁。",
     }
 
 def _row_ref(row):
@@ -685,6 +691,7 @@ def make_landing_plan(form_validation, rows):
                 "reviewed_at": form.get("reviewed_at", ""),
                 "owner_ready_package_status": owner_ready_state(row)[0] if row else "",
                 "owner_ready_packages": owner_ready_state(row)[1] if row else [],
+                "worksheet_verification_cwd": row.get("verification_cwd", ""),
                 "worksheet_verification_commands": row.get("verification_commands", []),
                 "manual_actions_zh": [
                     "把已审 owner decision 追加到 owner decision landing JSONL 制品。",
@@ -705,6 +712,31 @@ source_roots = {
     for source in sources_payload.get("sources", [])
     if isinstance(source, dict)
 }
+
+def source_execution_root(source_id):
+    source_root = str(source_roots.get(source_id, "") or "")
+    if not source_root:
+        return ""
+    path = pathlib.Path(source_root).expanduser()
+    if source_id == "pcr02-project-docs" and path.name == "docs":
+        return str(path.parent)
+    return str(path)
+
+def effective_verification_commands(row, source_id):
+    commands = list(row.get("verification_commands", []))
+    execution_root = source_execution_root(source_id)
+    required_fields = set(row.get("required_owner_fields", []))
+    if execution_root and (
+        "commit_branch_dirty_state_evidence" in required_fields
+        or "final_branch_commit_or_tag_refs" in required_fields
+    ):
+        git_status_command = f"rtk git -C {execution_root} status --short --branch"
+        git_head_command = f"rtk git -C {execution_root} rev-parse HEAD"
+        if git_status_command not in commands:
+            commands.append(git_status_command)
+        if git_head_command not in commands:
+            commands.append(git_head_command)
+    return commands
 
 items = load_jsonl(root / "registry" / "items.jsonl")
 items_by_source_path = {}
@@ -764,6 +796,7 @@ for worksheet_path in worksheet_paths:
         if args.status != "all" and row_status != args.status:
             continue
         intake = intake_by_worksheet.get(row_id) or intake_by_source_path.get(source_path, {})
+        execution_root = source_execution_root(source_id)
         rows.append(
             {
                 "id": row_id,
@@ -780,7 +813,9 @@ for worksheet_path in worksheet_paths:
                 "worksheet": str(worksheet_path.relative_to(root)),
                 "registry_items": items_by_source_path.get(key, []),
                 "active_registry_items": active_by_source_path.get(key, []),
-                "verification_commands": row.get("verification_commands", []),
+                "source_execution_root": execution_root,
+                "verification_cwd": execution_root,
+                "verification_commands": effective_verification_commands(row, source_id),
                 "owner_question_zh": intake.get("owner_question_zh", ""),
                 "default_state": intake.get("default_state", ""),
                 "allowed_next_status": intake.get("allowed_next_status", []),

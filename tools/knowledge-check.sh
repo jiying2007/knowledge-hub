@@ -817,6 +817,16 @@ if not args.sources_only:
                 errors.append(
                     f"items:{item_id} ai-generated active item missing human review fields: {','.join(missing_review)}"
                 )
+        if item.get("generated_by_ai") is True and str(item.get("created_at", "")) >= "2026-06-21":
+            missing_provenance = [
+                field
+                for field in ["ai_role", "ai_model_or_tool", "ai_generated_at"]
+                if not item.get(field)
+            ]
+            if missing_provenance:
+                errors.append(
+                    f"items:{item_id} ai-generated item missing provenance fields: {','.join(missing_provenance)}"
+                )
 
     def expand_range_ids(text, path):
         expanded = set()

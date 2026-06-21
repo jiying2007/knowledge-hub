@@ -355,4 +355,5 @@ Migration invariants:
 - Human-readable title, summary, conclusion, risk and review notes should be Chinese by default.
 - AI generated or AI transformed content must not become `active` without human review evidence.
 - AI generated `active` items must provide `human_reviewed_by`, `human_reviewed_at`, and `review_basis`.
+- AI generated registry items created on or after 2026-06-21 must provide `ai_role`, `ai_model_or_tool`, and `ai_generated_at`, even when they remain `reviewing`.
 - External-source derived items must record source metadata, read status and promotion decision before promotion.

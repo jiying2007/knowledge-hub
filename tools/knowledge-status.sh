@@ -140,6 +140,7 @@ open_owner_rows = sorted(
     ),
 )
 next_owner_gate = {}
+owner_dispatch = []
 summary_commands = []
 owner_summary_commands = []
 owner_forms_jsonl_commands = []
@@ -149,6 +150,90 @@ forms_jsonl_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
 if open_owner_rows:
+    rows_by_owner = collections.defaultdict(list)
+    for row in open_owner_rows:
+        rows_by_owner[str(row.get("owner", "") or "<missing-owner>")].append(row)
+    for owner, owner_rows in sorted(rows_by_owner.items()):
+        source_ids = sorted({
+            str(row.get("source_id", ""))
+            for row in owner_rows
+            if row.get("source_id")
+        })
+        source_id = source_ids[0] if len(source_ids) == 1 else ""
+        next_owner_row = sorted(
+            owner_rows,
+            key=lambda row: (
+                str(row.get("review_after", "") or "9999-12-31"),
+                str(row.get("id", "")),
+            ),
+        )[0]
+        owner_dispatch.append({
+            "owner": owner,
+            "source_id": source_id,
+            "row_count": len(owner_rows),
+            "open_count": len(owner_rows),
+            "worksheet_ids": [str(row.get("id", "")) for row in owner_rows],
+            "source_paths": [str(row.get("source_path", "")) for row in owner_rows],
+            "summary_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--summary",
+            ]) if source_id else "",
+            "forms_jsonl_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--forms-jsonl",
+            ]) if source_id else "",
+            "validate_forms_command_template": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--validate-forms",
+                "<owner-decisions.jsonl>",
+                "--json",
+            ]) if source_id else "",
+            "landing_plan_command_template": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--validate-forms",
+                "<owner-decisions.jsonl>",
+                "--landing-plan",
+                "--json",
+            ]) if source_id else "",
+            "next_focus_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                str(next_owner_row.get("source_id", "")),
+                "--owner",
+                owner,
+                "--worksheet-id",
+                str(next_owner_row.get("id", "")),
+                "--checklist",
+                "--forms",
+            ]),
+            "notes_zh": "status dashboard 只读 owner 分派摘要；用于跨会话恢复 owner 领取、表单导出、校验和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
+        })
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         summary_command = [
             "rtk",
@@ -362,7 +447,7 @@ if open_owner_gate_count:
         )
     if owner_summary_commands:
         next_actions.append(
-            "需要按责任人分派 owner gate 时，运行 owner 过滤总览，例如："
+            "需要按责任人分派 owner gate 时，先读取 JSON 中的 `owner_gates.owner_dispatch[]`，或运行 owner 过滤总览，例如："
             f"{owner_summary_commands[0]}。"
         )
     if owner_forms_jsonl_commands:
@@ -507,6 +592,7 @@ result = {
         "owner_ready_missing": owner_payload.get("owner_ready_missing", []),
         "owner_ready_invalid": owner_payload.get("owner_ready_invalid", []),
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
+        "owner_dispatch": owner_dispatch,
         "summary_commands": summary_commands,
         "owner_summary_commands": owner_summary_commands,
         "owner_forms_jsonl_commands": owner_forms_jsonl_commands,

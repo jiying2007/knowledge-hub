@@ -418,7 +418,7 @@ ${PROJECT_INDEX_DRAFT}
 ### registry/migrations.jsonl（仅迁移、引用或归档时使用）
 
 \`\`\`json
-{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"${TODAY}","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written."}
+{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"${TODAY}","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written.","notes_zh":"人工新增条目已按唯一正文、registry item、核心索引和验证证据登记；未修改源项目、未启用自动化、未提升 active、未写 memory。"}
 \`\`\`
 
 ### Evidence Index
