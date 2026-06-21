@@ -174,3 +174,4 @@
 - Knowledge Hub manual entry and source boundary sync: `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`
 - PCR02 Level 2 source check execution snapshot: `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`
 - Knowledge Hub manual recovery and boundary hardening: `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`
+- Knowledge Hub owner automation and template hardening: `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.md`

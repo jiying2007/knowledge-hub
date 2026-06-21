@@ -170,6 +170,7 @@
 - `knowledge-hub-manual-entry-source-boundary-sync-20260621`
 - `pcr02-level2-source-check-execution-snapshot-20260621`
 - `knowledge-hub-manual-recovery-boundary-hardening-20260621`
+- `knowledge-hub-owner-automation-template-hardening-20260621`
 
 ## pcr02-registry-owner
 

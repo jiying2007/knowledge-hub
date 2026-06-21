@@ -815,6 +815,18 @@ def validate_forms_file(path, rows):
         for field in ["target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
             if not is_filled(form.get(field)):
                 form_errors.append(f"{prefix}: missing required review field {field}")
+        owner_route = row.get("owner_route", {})
+        routing_status = str(owner_route.get("routing_status", ""))
+        routing_owner = str(owner_route.get("routing_owner", ""))
+        reviewed_by = str(form.get("reviewed_by", ""))
+        if (
+            routing_status == "needs-human-assignment"
+            and routing_owner
+            and reviewed_by == routing_owner
+        ):
+            form_errors.append(
+                f"{prefix}: reviewed_by must be a real owner, not routing_owner {routing_owner!r} for {worksheet_id}"
+            )
         if is_filled(form.get("reviewed_at")):
             validate_date(form.get("reviewed_at"), f"{prefix}: reviewed_at", form_errors)
         if is_filled(form.get("review_after")):

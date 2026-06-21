@@ -1,7 +1,7 @@
 ---
 id:
 title:
-kind: decision
+kind: owner-decision-worksheet
 domain:
 path:
 scope:
@@ -32,12 +32,22 @@ ai_generated_at:
 human_reviewed_by:
 human_reviewed_at:
 review_basis:
+worksheet_id:
+source_id:
+source_path:
 decision_owner:
-decision_status:
+decision_status: owner-fill-required
 decision_date:
+owner_question:
+target_candidates: []
+required_owner_fields: []
+must_not: []
+verification_cwd:
 ---
 
 # Owner 签核表标题
+
+> 本表是人工 owner decision 的工作表，不是已签收结论。不得把本表当成 owner decision，不得代填 `reviewed_by`，不得关闭 owner gate。
 
 ## 背景
 
@@ -46,6 +56,16 @@ decision_date:
 ## 待签核问题
 
 用一句话写清要确认的状态、范围或提升动作。
+
+## 工作表字段
+
+- `worksheet_id`：对应 owner gate 的工作表 ID。
+- `source_id` / `source_path`：被签收的来源，不代表可直接复制正文。
+- `owner_question`：owner 需要回答的核心问题。
+- `target_candidates`：允许的目标位置或处理方式；不得手写候选外目标。
+- `required_owner_fields`：正式 owner JSONL 必填字段。
+- `must_not`：签收也不能越过的硬边界。
+- `verification_cwd`：相对验证命令的执行目录。
 
 ## 候选结论
 
@@ -63,7 +83,28 @@ decision_date:
 
 ## Owner 决策
 
-可选状态：`approved-active`、`approved-reviewing`、`archive-only`、`superseded`、`rejected`、`blocked`。
+本段只记录候选，不代表已签收。正式 owner JSONL 至少需要填写：
+
+- `owner_decision`
+- `target_decision`
+- `reviewed_by`
+- `reviewed_at`
+- `review_after`
+- `source_status`
+- `source_sha256`
+- `source_size`
+- `evidence_refs`
+- `status_reason`
+
+从 owner gate 导出和校验：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --worksheet-id <worksheet-id> --forms-jsonl
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --worksheet-id <worksheet-id> --validate-forms '<owner-decisions.jsonl>' --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --worksheet-id <worksheet-id> --validate-forms '<owner-decisions.jsonl>' --landing-audit --json
+```
+
+`routing_owner` 只负责分派，不等于真实 `reviewed_by`；AI、脚本和 Codex 不得代签。
 
 ## 生效条件
 

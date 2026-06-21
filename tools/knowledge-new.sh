@@ -471,7 +471,7 @@ if [[ "$KIND" == "decision" ]]; then
 fi
 SOURCE_INDEX_DRAFT=""
 SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
-printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：仅当 source.from / source_id 指向已登记 source 时填写；未知来源先保持人工复核，不伪造 source_id。\n- <source-id>: `%s`\n' "$DISPLAY_ID"
+printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：当前人工新增入口没有接收已登记 source_id；未知来源不要同步 by-source，也不要复制 `<source-id>` 占位行。\n# 后续确认 source_id 已存在于 registry/sources.json 后，再按真实 source_id 追加：\n# - <真实-source-id>: `%s`\n' "$DISPLAY_ID"
 VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json"]'
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then

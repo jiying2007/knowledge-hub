@@ -335,3 +335,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check 已按 report-only 手动快照执行且 exit_code=0；只证明路径/文件存在，不关闭 owner gate；documented by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.
 - reviewing: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
 - manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线待验证模板和 PCR02 source/project 边界可读性已压实；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.
+- reviewing: `knowledge-hub-owner-automation-template-hardening-20260621`
+- owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签 reviewed_by，maintenance-run 执行 report-only/no-memory 硬门禁，未知人工 source 不输出危险 by-source 占位；documented by `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.

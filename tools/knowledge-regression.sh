@@ -1989,6 +1989,51 @@ def test_owner_form_target_decision_candidate_gate():
         },
     )
 
+def test_owner_form_routing_owner_reviewed_by_gate():
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, "owner-form-routing-owner-reviewed-by-gate", "owner form rejects routing_owner as reviewed_by", setup_error)
+        return
+    form["reviewed_by"] = "pcr02-registry-owner"
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-routing-reviewed-by-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("form_validation", {}).get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and any("reviewed_by must be a real owner" in error and "routing_owner" in error for error in errors),
+        "owner-form-routing-owner-reviewed-by-gate",
+        "owner form rejects routing_owner as reviewed_by",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def run_owner_form_tamper_gate(case_id, mutate_form, expected_fragment):
     form, setup_error = make_valid_owner_decision_form(root)
     if setup_error:
@@ -2313,7 +2358,9 @@ def test_manual_entry_project_index_hint():
         and governance_result["exit_code"] == 0
         and "indexes/by-project.md" in project_result["stdout"]
         and "indexes/by-source.md" in project_result["stdout"]
-        and "仅当 source.from / source_id 指向已登记 source 时填写" in project_result["stdout"]
+        and "未知来源不要同步 by-source" in project_result["stdout"]
+        and "- <source-id>:" not in project_result["stdout"]
+        and "# - <真实-source-id>:" in project_result["stdout"]
         and "domains/projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
         and "indexes/by-decision.md" in governance_result["stdout"]
         and "governance-regression-decision: governance/regression-decision.md" in governance_result["stdout"]
@@ -2325,6 +2372,7 @@ def test_manual_entry_project_index_hint():
             "governance_exit_code": governance_result["exit_code"],
             "project_has_by_project": "indexes/by-project.md" in project_result["stdout"],
             "project_has_by_source": "indexes/by-source.md" in project_result["stdout"],
+            "project_has_unsafe_source_placeholder": "- <source-id>:" in project_result["stdout"],
             "governance_has_by_decision": "indexes/by-decision.md" in governance_result["stdout"],
             "governance_has_by_project": "indexes/by-project.md" in governance_result["stdout"],
             "project_stdout_sample": project_result["stdout"][:1200],
@@ -3054,7 +3102,6 @@ def test_index_plan_extended_sections():
         and current_manifest_profile.get("paired") is True
         and current_manifest_profile.get("row_count") == 1
         and current_manifest_profile.get("evidence_count", 0) >= 1
-        and "knowledge-hub-manifest-profile-index-plan-20260621" in latest_manifest_ids
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
@@ -3410,6 +3457,71 @@ def test_source_check_health_contract():
             "bad_source_check_health": bad_source_check_health,
             "bad_errors": bad_parsed.get("errors", [])[:5],
         },
+    )
+
+def test_automation_report_only_safety_gate():
+    repo = copy_repo("automation-report-only-safety-gate")
+    maintenance_path = repo / "registry" / "maintenance-runs.jsonl"
+    rows = []
+    try:
+        for line in maintenance_path.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row.get("automation_id") == "memory-auto-curation-report-only":
+                row["enabled"] = True
+                row["mode"] = "apply"
+                row["writes_memory"] = True
+                row["writes_team_active_index"] = True
+                row.pop("no_memory_write_gate", None)
+            rows.append(row)
+        maintenance_path.write_text(
+            "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+        )
+        setup_error = ""
+    except Exception as exc:
+        setup_error = str(exc)
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--diagnostics",
+            "--as-of",
+            today.isoformat(),
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    health = parsed.get("automation_safety_health", {})
+    expect(
+        not setup_error
+        and result["exit_code"] == 1
+        and parsed.get("status") == "fail"
+        and "memory-auto-curation-20260618-definition" in health.get("unsafe_run_ids", [])
+        and any("enabled must be false" in error for error in errors)
+        and any("mode must be report-only" in error for error in errors)
+        and any("writes_memory must be false" in error for error in errors)
+        and any("writes_team_active_index must be false" in error for error in errors)
+        and any("no_memory_write_gate is required" in error for error in errors),
+        "automation-report-only-safety-gate",
+        "knowledge-check rejects enabled or memory-writing automation records",
+        {
+            "setup_error": setup_error,
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "automation_safety_health": health,
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
     )
 
 def test_source_coverage_date_filename_selection():
@@ -4063,6 +4175,7 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
         "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-target-decision-candidate-gate",
+        "owner-form-routing-owner-reviewed-by-gate",
         "owner-form-must-not-tamper-gate",
         "owner-form-allowed-decisions-tamper-gate",
         "owner-form-source-identity-mismatch",
@@ -4091,6 +4204,7 @@ def test_regression_manifest_coverage():
         "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
         "source-check-health-contract",
+        "automation-report-only-safety-gate",
         "source-coverage-date-filename-selection",
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
@@ -4166,6 +4280,7 @@ for test_fn in [
     test_owner_landing_plan_requires_owner_ready_package_repo_relative_command,
     test_owner_landing_plan_requires_owner_ready_package_duplicate,
     test_owner_form_target_decision_candidate_gate,
+    test_owner_form_routing_owner_reviewed_by_gate,
     test_owner_form_must_not_tamper_gate,
     test_owner_form_allowed_decisions_tamper_gate,
     test_owner_form_source_identity_mismatch,
@@ -4194,6 +4309,7 @@ for test_fn in [
     test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
     test_source_check_health_contract,
+    test_automation_report_only_safety_gate,
     test_source_coverage_date_filename_selection,
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,

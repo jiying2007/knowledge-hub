@@ -294,6 +294,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("source-coverage:"),
         ),
         (
+            "automation-boundary",
+            "自动化 report-only / no-memory 边界异常",
+            "检查 registry/maintenance-runs.jsonl 中 enabled、mode、writes_memory、writes_team_active_index 和 no_memory_write_gate 字段；自动化默认只能 report-only。",
+            lambda msg: msg.startswith("maintenance-runs:"),
+        ),
+        (
             "boundary-health",
             "PCR02 boundary manifest 内部证据异常",
             "检查 PCR02 Level 2 boundary manifest、registry item、by-source 和 by-project 索引；该检查只看 Knowledge Hub 内部证据，不读取源项目正文。",
@@ -551,6 +557,61 @@ source_check_health["both_check_and_no_check_reason_ids"] = sorted(source_check_
 source_check_health["non_rtk_check_ids"] = sorted(source_check_health["non_rtk_check_ids"])
 source_check_health["missing_source_path_ids"] = sorted(source_check_health["missing_source_path_ids"])
 source_check_health["rows"] = sorted(source_check_health["rows"], key=lambda row: row["source_id"])
+
+automation_safety_health = {
+    "mode": "registry-maintenance-runs",
+    "record_count": 0,
+    "checked_count": 0,
+    "unsafe_run_ids": [],
+    "missing_guard_run_ids": [],
+    "rows": [],
+}
+for run in load_jsonl(root / "registry" / "maintenance-runs.jsonl"):
+    run_id = str(run.get("run_id", "<unknown>"))
+    automation_safety_health["record_count"] += 1
+    if "automation_id" not in run:
+        automation_safety_health["rows"].append({
+            "run_id": run_id,
+            "automation_id": "",
+            "check_status": "not-automation-record",
+        })
+        continue
+    automation_safety_health["checked_count"] += 1
+    enabled = run.get("enabled")
+    mode = str(run.get("mode", ""))
+    writes_memory = run.get("writes_memory")
+    writes_team_active_index = run.get("writes_team_active_index")
+    no_memory_write_gate = str(run.get("no_memory_write_gate", "")).strip()
+    row_errors = []
+    if enabled is not False:
+        row_errors.append("enabled must be false")
+    if mode != "report-only":
+        row_errors.append("mode must be report-only")
+    if writes_memory is not False:
+        row_errors.append("writes_memory must be false")
+    if writes_team_active_index is not False:
+        row_errors.append("writes_team_active_index must be false")
+    if not no_memory_write_gate:
+        row_errors.append("no_memory_write_gate is required")
+    if row_errors:
+        automation_safety_health["unsafe_run_ids"].append(run_id)
+        if "no_memory_write_gate is required" in row_errors:
+            automation_safety_health["missing_guard_run_ids"].append(run_id)
+        for row_error in row_errors:
+            errors.append(f"maintenance-runs:{run_id} {row_error}")
+    automation_safety_health["rows"].append({
+        "run_id": run_id,
+        "automation_id": str(run.get("automation_id", "")),
+        "enabled": enabled,
+        "mode": mode,
+        "writes_memory": writes_memory,
+        "writes_team_active_index": writes_team_active_index,
+        "has_no_memory_write_gate": bool(no_memory_write_gate),
+        "check_status": "pass" if not row_errors else "fail",
+        "errors": row_errors,
+    })
+automation_safety_health["unsafe_run_ids"] = sorted(automation_safety_health["unsafe_run_ids"])
+automation_safety_health["missing_guard_run_ids"] = sorted(automation_safety_health["missing_guard_run_ids"])
 
 source_coverage_selection = {
     "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
@@ -1542,6 +1603,7 @@ result = {
     "source_coverage_selection": source_coverage_selection,
     "source_coverage_health": source_coverage_health,
     "source_check_health": source_check_health,
+    "automation_safety_health": automation_safety_health,
     "boundary_health": boundary_health,
     "errors": errors,
     "warnings": warnings,
