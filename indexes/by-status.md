@@ -321,3 +321,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - source-boundary-health-applied: `knowledge-check/status/final-gate` 输出只读 `source_check_health` 和 `boundary_health`，静态审计 source check/no-check 契约和 PCR02 Level 2 boundary 内部证据链；documented by `artifacts/manifests/knowledge-hub-source-boundary-health-20260621.jsonl`.
 - reviewing: `pcr02-product-test-artifact-config-interface-identity-20260621`
 - product-test-identity-preflight-applied: PCR02 product-test 73 个非生成物文件的 source_path、uri、size、sha256 和引用模式已只读登记，`.git/**` 与 `.o/.d` 保持排除边界；documented by `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl`.
+- reviewing: `pcr02-p1-source-identity-20260621`
+- p1-source-identity-preflight-applied: PCR02 agent-config、tools、root-artifacts 三个 P1 source 的 44 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not，并排除依赖树、缓存和子 source；documented by `artifacts/manifests/pcr02-p1-source-identity-20260621.jsonl`.
+- reviewing: `knowledge-hub-owner-landing-index-completeness-20260621`
+- owner-landing-index-completeness-applied: `knowledge-owner-gates.sh --landing-plan/--landing-audit` 显式输出 by-source 与 by-decision 人工索引落点，并由回归断言；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.jsonl`.

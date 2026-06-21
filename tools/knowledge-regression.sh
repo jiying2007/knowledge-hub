@@ -1841,14 +1841,20 @@ def test_owner_landing_plan_project_index():
         and owner_ready_gate.get("error_count") == 0
         and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in required_files
         and "indexes/by-project.md" in required_files
+        and "indexes/by-source.md" in required_files
         and "indexes/by-status.md" in required_files
+        and "indexes/by-decision.md" in required_files
         and landing_audit.get("status") == "ready-for-manual-landing"
         and landing_audit.get("read_only") is True
         and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in landing_audit.get("required_manual_files", [])
+        and "indexes/by-source.md" in landing_audit.get("required_manual_files", [])
+        and "indexes/by-decision.md" in landing_audit.get("required_manual_files", [])
         and worksheet_resolution.get("must_update_worksheet_row") is True
         and "owner_decision" in worksheet_resolution.get("required_fields", [])
         and "reviewed_by" in worksheet_resolution.get("required_fields", [])
         and first_audit.get("expected_manual_deltas", {}).get("worksheet_jsonl")
+        and "indexes/by-source.md" in first_audit.get("expected_manual_deltas", {}).get("indexes", [])
+        and "indexes/by-decision.md" in first_audit.get("expected_manual_deltas", {}).get("indexes", [])
         and any("knowledge-final-gate.sh" in str(command) for command in first_audit.get("post_landing_commands", []))
         and worksheet_cwd.endswith("/xcrz_sigmastar_demo")
         and bool(worksheet_commands)

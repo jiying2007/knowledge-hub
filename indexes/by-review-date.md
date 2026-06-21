@@ -178,6 +178,8 @@
 - 2026-09-21: `knowledge-hub-final-gap-readability-index-20260621`
 - 2026-09-21: `knowledge-hub-owner-dispatch-readability-sync-20260621`
 - 2026-09-21: `knowledge-hub-status-dispatch-notes-zh-20260621`
+- 2026-09-21: `pcr02-p1-source-identity-20260621`
+- 2026-09-21: `knowledge-hub-owner-landing-index-completeness-20260621`
 - 2026-09-21: `knowledge-hub-terminal-contract-template-sync-20260621`
 - 2026-09-21: `knowledge-hub-asof-coverage-contract-20260621`
 - 2026-09-21: `knowledge-hub-owner-routing-recovery-20260621`
