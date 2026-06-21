@@ -29,6 +29,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 
 - Latest source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`.
 - Latest final gap readability and index hardening: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
+- Latest owner dispatch, readability and source scan sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
 
 ## Source-Specific Review Artifacts
 
@@ -54,6 +55,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner target and landing validation`: owner form target decision, guardrail and worksheet verification commands are tracked by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`.
 - `pcr02-project-docs owner-ready command stability`: owner-ready package and terminal status commands use cwd-stable `~/knowledge-hub/tools` entrypoints by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`.
 - `pcr02-project-docs final gap/readability recovery`: terminal typed gap, governance readability gate and latest index anchor are tracked by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
+- `pcr02-project-docs owner dispatch/readability sync`: owner_dispatch 分派包、中文维护字段和 source scan no-drift evidence are tracked by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.

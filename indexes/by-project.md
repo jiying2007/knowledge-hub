@@ -44,6 +44,7 @@
 - Owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
 - Source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`
 - Final gap readability and index recovery: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`
+- Owner dispatch and readability sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`

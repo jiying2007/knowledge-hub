@@ -399,6 +399,8 @@ gap_type 可取：
 - artifact-boundary
 - secret-boundary
 
+其中 `source-coverage`、`owner-review`、`registry`、`migration-record`、`index`、`manifest`、`tooling`、`regression`、`environment` 和 `final-gate` 已由 `knowledge-check`、`knowledge-regression`、`knowledge-status` 或 `knowledge-final-gate` 直接暴露。`duplicate-body`、`cross-session-linking`、`cross-project-linking`、`automation-boundary`、`memory-boundary`、`manual-maintenance`、`Chinese-readability`、`artifact-boundary`、`secret-boundary` 等类型通常先通过专项 manifest、README、registry、index、owner-ready package 或定向回归证明；只有出现可执行诊断或门禁失败时才进入 terminal `gap_map`，避免把已记录边界误报成阻断。
+
 原则：
 
 - 可自动完成的 gap 不要停在建议，必须落地。

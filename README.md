@@ -105,7 +105,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> 
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner> --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
 ```
 
-最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；涉及迁移、引用或归档时补 `registry/migrations.jsonl`，普通新知识不强制 migration。
+最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；涉及迁移、引用或归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须包含 `notes_zh`，普通新知识不强制 migration。
 
 复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。最后运行：
 
@@ -119,7 +119,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<id-or-keyword>" --json
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --check "rtk bash tools/knowledge-check.sh --dry-run"
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
@@ -153,13 +153,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --d
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --summary
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --owner <owner> --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --validate-forms '<owner-decisions.jsonl>' --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
-建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。多 owner 分派时先用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；landing plan 的每个 step 会带出 `worksheet_verification_commands`，人工落地后按这些命令或等价证据复核。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
+建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地。多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；landing plan 的每个 step 会带出 `worksheet_verification_commands`，人工落地后按这些命令或等价证据复核。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
 ### 5. 跑一次终态检查
 

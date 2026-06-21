@@ -780,6 +780,9 @@ def test_owner_summary_all_open():
         pass
     summary = parsed.get("owner_summary", {})
     summary_rows = summary.get("rows", [])
+    owner_dispatch = summary.get("owner_dispatch", [])
+    dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
+    project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
     first = summary_rows[0] if summary_rows else {}
     expect(
         result["exit_code"] == 0
@@ -795,6 +798,13 @@ def test_owner_summary_all_open():
         and summary.get("owner_ready_duplicate_count") == 0
         and summary.get("owner_ready_package_coverage") == "7/7"
         and summary.get("source_identity_counts", {}).get("match") == 7
+        and len(owner_dispatch) == 6
+        and project_owner_dispatch.get("open_count") == 2
+        and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
+        and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in project_owner_dispatch.get("landing_plan_command_template", "")
+        and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and len(summary_rows) == 7
         and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and first.get("owner_ready_package_status") == "covered"
@@ -821,6 +831,7 @@ def test_owner_summary_all_open():
             "owner_ready_invalid_count": summary.get("owner_ready_invalid_count"),
             "owner_ready_duplicate_count": summary.get("owner_ready_duplicate_count"),
             "identity_counts": summary.get("source_identity_counts", {}),
+            "owner_dispatch": owner_dispatch,
             "first": first,
             "has_decision_forms": "decision_forms" in parsed,
             "has_owner_checklists": "owner_checklists" in parsed,
@@ -850,6 +861,8 @@ def test_owner_summary_by_owner():
         pass
     summary = parsed.get("owner_summary", {})
     summary_rows = summary.get("rows", [])
+    owner_dispatch = summary.get("owner_dispatch", [])
+    dispatch = owner_dispatch[0] if owner_dispatch else {}
     owners = {row.get("owner") for row in parsed.get("rows", [])}
     worksheet_ids = {row.get("worksheet_id") for row in summary_rows}
     expect(
@@ -860,6 +873,12 @@ def test_owner_summary_by_owner():
         and summary.get("row_count") == 2
         and summary.get("open_count") == 2
         and summary.get("owner_counts", {}).get("project-owner") == 2
+        and len(owner_dispatch) == 1
+        and dispatch.get("owner") == "project-owner"
+        and dispatch.get("open_count") == 2
+        and "--owner project-owner --forms-jsonl" in dispatch.get("forms_jsonl_command", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in dispatch.get("validate_forms_command_template", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in dispatch.get("landing_plan_command_template", "")
         and owners == {"project-owner"}
         and worksheet_ids == {
             "pcr02-owner-decision-worksheet-005",
@@ -874,6 +893,7 @@ def test_owner_summary_by_owner():
             "row_count": parsed.get("row_count"),
             "open_count": parsed.get("open_count"),
             "owner_counts": summary.get("owner_counts", {}),
+            "owner_dispatch": owner_dispatch,
             "worksheet_ids": sorted(worksheet_ids),
             "stdout_sample": result["stdout"][:1000],
         },
@@ -2657,7 +2677,7 @@ def test_source_manual_entry_guide():
         '"no_check_reason":"classify-first pending source coverage"',
         '"migration_strategy":"classify-first"',
         '"final_disposition":"owner-gated-pending-decision"',
-        "rtk bash tools/knowledge-index-plan.sh --section source",
+        "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
     today_compact = dt.datetime.utcnow().date().strftime("%Y%m%d")
@@ -2694,11 +2714,11 @@ def test_source_manual_entry_guide_check_command():
             "--write-policy",
             "read-only-unless-explicitly-approved",
             "--check",
-            "rtk bash tools/knowledge-check.sh --dry-run",
+            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
         ],
     )
-    registry_object_has_check = '"final_disposition":"owner-gated-pending-decision","check":"rtk bash tools/knowledge-check.sh --dry-run"}' in result["stdout"]
-    coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk bash tools/knowledge-check.sh --dry-run","source_identity"' in result["stdout"]
+    registry_object_has_check = '"final_disposition":"owner-gated-pending-decision","check":"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"}' in result["stdout"]
+    coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run","source_identity"' in result["stdout"]
     json_no_check_reason_absent = '"no_check_reason":' not in result["stdout"]
     expect(
         result["exit_code"] == 0
@@ -2706,7 +2726,7 @@ def test_source_manual_entry_guide_check_command():
         and coverage_row_has_check
         and json_no_check_reason_absent
         and '"source_id":"example-source-check"' in result["stdout"]
-        and "rtk bash tools/knowledge-index-plan.sh --section source" in result["stdout"],
+        and "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source" in result["stdout"],
         "source-manual-entry-guide-check-command",
         "source manual entry guide uses check fields consistently for registry and coverage drafts",
         {
@@ -2741,7 +2761,7 @@ def test_source_manual_entry_requires_check_or_reason():
         common_args
         + [
             "--check",
-            "rtk bash tools/knowledge-check.sh --dry-run",
+            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
@@ -2774,7 +2794,7 @@ def test_source_manual_entry_docs_check_preferred():
         tools_readme = ""
         read_error = str(exc)
     required_fragments = [
-        '--check "rtk bash tools/knowledge-check.sh --dry-run"',
+        '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"',
         "--no-check-reason",
         "要求 `--check` 或 `--no-check-reason` 二选一",
         "优先使用稳定只读",
@@ -2785,7 +2805,7 @@ def test_source_manual_entry_docs_check_preferred():
     tools_readme_missing = [fragment for fragment in required_fragments if fragment not in tools_readme]
     help_has_check_example = (
         help_result["exit_code"] == 0
-        and '--check "rtk bash tools/knowledge-check.sh --dry-run"' in help_result["stdout"]
+        and '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"' in help_result["stdout"]
         and "--no-check-reason" in help_result["stdout"]
     )
     expect(
@@ -2956,6 +2976,10 @@ def test_regression_manifest_coverage():
         "templates-required-sections",
         "index-readme-maintenance-coverage",
         "index-plan-extended-sections",
+        "index-plan-topic-schema-health",
+        "index-plan-decision-registry-health",
+        "index-decision-registry-subsection-gate",
+        "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",

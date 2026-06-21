@@ -378,6 +378,72 @@ def make_owner_ready_coverage(rows):
     coverage["owner_ready_package_coverage"] = f"{coverage['owner_ready_package_count']}/{len(rows)}"
     return coverage
 
+def make_owner_dispatch(rows):
+    dispatch_rows = []
+    rows_by_owner = {}
+    for row in rows:
+        owner = row.get("owner", "") or "<missing-owner>"
+        rows_by_owner.setdefault(owner, []).append(row)
+    for owner, owner_rows in sorted(rows_by_owner.items()):
+        owner_open_rows = [row for row in owner_rows if row["status"] == "open"]
+        source_id = owner_open_rows[0]["source_id"] if owner_open_rows else (owner_rows[0]["source_id"] if owner_rows else "")
+        next_row = (
+            sorted(
+                owner_open_rows,
+                key=lambda row: (
+                    str(row.get("review_after", "") or "9999-12-31"),
+                    str(row.get("id", "")),
+                ),
+            )[0]
+            if owner_open_rows
+            else {}
+        )
+        owner_arg = shlex_quote(owner)
+        dispatch_rows.append(
+            {
+                "owner": owner,
+                "source_id": source_id,
+                "row_count": len(owner_rows),
+                "open_count": len(owner_open_rows),
+                "resolved_count": sum(1 for row in owner_rows if row["status"] == "resolved"),
+                "worksheet_ids": [row["id"] for row in owner_open_rows],
+                "source_paths": [row["source_path"] for row in owner_open_rows],
+                "summary_command": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --summary"
+                )
+                if source_id
+                else "",
+                "forms_jsonl_command": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --forms-jsonl"
+                )
+                if source_id
+                else "",
+                "validate_forms_command_template": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --json"
+                )
+                if source_id
+                else "",
+                "landing_plan_command_template": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-plan --json"
+                )
+                if source_id
+                else "",
+                "next_focus_command": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {next_row['source_id']} --owner {owner_arg} "
+                    f"--worksheet-id {next_row['id']} --checklist --forms"
+                )
+                if next_row
+                else "",
+                "notes_zh": "只读 owner 分派包；用于人工领取、导出骨架、校验和生成 no-write landing plan，不生成 owner decision，不关闭 gate。",
+            }
+        )
+    return dispatch_rows
+
 def make_owner_summary(rows):
     summary_rows = []
     source_identity_counts = {}
@@ -422,6 +488,7 @@ def make_owner_summary(rows):
         **owner_ready_coverage,
         "source_identity_counts": dict(sorted(source_identity_counts.items())),
         "owner_counts": dict(sorted(owner_counts.items())),
+        "owner_dispatch": make_owner_dispatch(rows),
         "rows": summary_rows,
         "notes_zh": "只读 owner gate 总览；用于人工分派和收口，不生成 owner decision，不写文件，不关闭门禁，不提升 active。",
     }
@@ -852,6 +919,17 @@ if args.summary:
     if summary["owner_counts"]:
         owner_parts = [f"{key}={value}" for key, value in summary["owner_counts"].items()]
         print(f"- owners: {', '.join(owner_parts)}")
+    print()
+    print("### Owner Dispatch")
+    print()
+    print("| owner | open | forms-jsonl | validate | landing plan | next focus |")
+    print("|---|---:|---|---|---|---|")
+    for item in summary["owner_dispatch"]:
+        print(
+            f"| {item['owner']} | {item['open_count']} | "
+            f"`{item['forms_jsonl_command']}` | `{item['validate_forms_command_template']}` | "
+            f"`{item['landing_plan_command_template']}` | `{item['next_focus_command']}` |"
+        )
     print()
     print("| worksheet | source path | owner | identity | owner-ready | required fields | focus command |")
     print("|---|---|---|---|---|---:|---|")

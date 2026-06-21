@@ -152,6 +152,7 @@
 - `knowledge-hub-owner-target-landing-validation-20260621`
 - `knowledge-hub-owner-ready-command-stability-20260621`
 - `knowledge-hub-final-gap-readability-index-20260621`
+- `knowledge-hub-owner-dispatch-readability-sync-20260621`
 
 ## pcr02-registry-owner
 

@@ -175,6 +175,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-owner-target-landing-validation-20260621`
 - reviewing: `knowledge-hub-owner-ready-command-stability-20260621`
 - reviewing: `knowledge-hub-final-gap-readability-index-20260621`
+- reviewing: `knowledge-hub-owner-dispatch-readability-sync-20260621`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`
@@ -300,3 +301,4 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-target-landing-validation-applied: owner 表单校验拒绝 `target_decision` 越过 worksheet `target_candidates`，landing plan step 带出 `worksheet_verification_commands`；documented by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.jsonl`.
 - owner-ready-command-stability-applied: PCR02 owner-ready package、owner gate/status/final gate 人工命令统一为 cwd-stable `rtk bash ~/knowledge-hub/tools/...` 入口，并用负向回归阻断 repo-relative owner-ready 命令；documented by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
 - final-gap-readability-index-applied: final gate typed gap map、environment gap 词表、2026-06-21 后 governance audit / migration 中文可读性门禁和 PCR02/source governance 恢复锚点已压实；documented by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
+- owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch` 分派包，README/tools/templates 同步语言/术语状态和 migration `notes_zh` 维护规则，并补齐 regression manifest 自检 ID；documented by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.

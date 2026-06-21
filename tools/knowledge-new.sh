@@ -28,15 +28,15 @@ AI_ROLE="none"
 usage() {
   cat <<EOF
 Usage:
-  rtk bash tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
-  rtk bash tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
 
 Examples:
-  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
-  rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
-  rtk bash tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
-  rtk bash tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --check "rtk bash tools/knowledge-check.sh --dry-run"
-  rtk bash tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --no-check-reason "manual source; classify-first pending coverage"
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --no-check-reason "manual source; classify-first pending coverage"
 
 This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.
 EOF
@@ -246,8 +246,8 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
 5. 如果 source 涉及项目，同步 indexes/by-project.md；涉及主题时同步 indexes/by-topic.md；涉及 owner gate 时补 owner-ready package 或 worksheet。
 6. 运行：
 
-   rtk bash tools/knowledge-index-plan.sh --section source
-   rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
+   rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
+   rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 ## 可复制草稿
 
@@ -340,11 +340,11 @@ if [[ "$DOMAIN" == projects/* ]]; then
   PROJECT_STEP_5="5. 同步 indexes/by-project.md 的项目导航入口；如需主题入口，在 indexes/by-topic.md 增加可读路径引用。"
   printf -v PROJECT_INDEX_DRAFT '\n# indexes/by-project.md\n# 项目域条目：在对应项目段增加目标路径或 manifest 路径。\n- %s: %s\n' "$DISPLAY_PROJECT" "$DISPLAY_PATH"
 fi
-VALIDATION_REFS_JSON='["tools/knowledge-check.sh --dry-run --json"]'
+VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json"]'
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
-  VALIDATION_REFS_JSON="[\"manual_validation_pending: true\",\"reason: ${JSON_MANUAL_VALIDATION_REASON}\",\"required_followup: rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics\"]"
-  printf -v MANUAL_VALIDATION_BLOCK '\n### 人工待验证说明\n\n```yaml\nmanual_validation_pending: true\nmanual_validation_reason: %s\nrequired_followup: rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics\n```\n' "$MANUAL_VALIDATION_REASON"
+  VALIDATION_REFS_JSON="[\"manual_validation_pending: true\",\"reason: ${JSON_MANUAL_VALIDATION_REASON}\",\"required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\"]"
+  printf -v MANUAL_VALIDATION_BLOCK '\n### 人工待验证说明\n\n```yaml\nmanual_validation_pending: true\nmanual_validation_reason: %s\nrequired_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\n```\n' "$MANUAL_VALIDATION_REASON"
 fi
 
 cat <<EOF
@@ -382,11 +382,11 @@ ${PROJECT_STEP_5}
 7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
 8. 运行只读索引计划和验证：
 
-   rtk bash tools/knowledge-index-plan.sh --section all
-   rtk bash tools/knowledge-check.sh --dry-run --json
-   rtk bash tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
-   rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
-   rtk bash tools/knowledge-search.sh "${ITEM_ID:-<id>}" --json
+   rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
+   rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json
+   rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
+   rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+   rtk bash ~/knowledge-hub/tools/knowledge-search.sh "${ITEM_ID:-<id>}" --json
 
 ## 可复制草稿
 
@@ -426,7 +426,7 @@ ${PROJECT_INDEX_DRAFT}
 \`\`\`md
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | --- | --- | --- | --- | --- |
-| \`rtk bash tools/knowledge-check.sh --dry-run --json\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
+| \`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
 \`\`\`
 
 ## 不要做

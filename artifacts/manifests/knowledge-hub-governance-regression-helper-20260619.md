@@ -23,8 +23,8 @@
 | owner-checklist-context | 当前仓库按单个 `worksheet_id` 输出 owner closure checklist | checklist 合并 intake 中文问题、硬门禁和 worksheet 必填字段 |
 | owner-form-context | 当前仓库按单个 `worksheet_id` 输出 owner decision form | form 自带 owner 中文问题、默认状态、允许状态和硬门禁只读上下文 |
 | owner-source-identity-context | 当前 owner decision form 输出只读源文件身份提示 | form 自带当前源文件 observed sha256/size 和 match 状态，但不自动填充 owner 必填的 `source_sha256/source_size` |
-| owner-summary-all-open | 当前 owner gate helper 输出全部 open gate 摘要 | `--summary` 输出 7 条 open gate、owner 分布、source identity 计数和聚焦命令，但不输出 forms/checklists |
-| owner-summary-by-owner | 当前 owner gate helper 按 owner 输出 open gate 摘要 | `--owner project-owner --summary` 只输出 project-owner 名下 2 条 open gate，并保留只读分派命令 |
+| owner-summary-all-open | 当前 owner gate helper 输出全部 open gate 摘要 | `--summary` 输出 7 条 open gate、owner 分布、owner_dispatch 分派包、source identity 计数和聚焦命令，但不输出 forms/checklists |
+| owner-summary-by-owner | 当前 owner gate helper 按 owner 输出 open gate 摘要 | `--owner project-owner --summary` 只输出 project-owner 名下 2 条 open gate，并保留该 owner 的只读 forms-jsonl、validate、landing-plan 和 next focus 分派命令 |
 | owner-next-open-focus | 当前 owner gate helper 自动聚焦下一条 open worksheet | `--next-open --checklist --forms` 只输出下一条 open gate 的 checklist 和 form，不需要人工复制 worksheet id |
 | status-next-owner-gate | 当前状态看板输出下一条 owner gate 聚焦命令 | JSON 中存在 `owner_gates.next_open.next_open_command` 和 `focus_command`；`next_actions_zh` 使用 `--next-open --checklist --forms`，兼容字段仍指向 `pcr02-owner-decision-worksheet-001` |
 | status-text-owner-summary-commands | 当前状态看板文本输出暴露 owner 分派摘要命令 | 文本模式同时输出 all-open/by-owner summary commands、forms-jsonl commands 和 review_after 复核命令，人工分派不必切到 JSON 才能发现 owner summary 入口 |
