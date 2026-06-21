@@ -24,6 +24,20 @@ args = parser.parse_args(argv)
 
 today = dt.date.today()
 errors = []
+DISPLAY_TOOL_ROOT = "~/knowledge-hub/tools"
+
+def display_tool(script_name):
+    return f"{DISPLAY_TOOL_ROOT}/{script_name}"
+
+def shell_command(parts):
+    quoted = []
+    for part in parts:
+        text = str(part)
+        if text.startswith("~/"):
+            quoted.append(text)
+        else:
+            quoted.append(shlex.quote(text))
+    return " ".join(quoted)
 
 def load_json(path):
     try:
@@ -139,12 +153,12 @@ if open_owner_rows:
         summary_command = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--summary",
         ]
-        summary_commands.append(" ".join(shlex.quote(str(part)) for part in summary_command))
+        summary_commands.append(shell_command(summary_command))
     for source_id, owner in sorted({
         (str(row.get("source_id", "")), str(row.get("owner", "")))
         for row in open_owner_rows
@@ -153,29 +167,29 @@ if open_owner_rows:
         owner_summary_command = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--owner",
             owner,
             "--summary",
         ]
-        owner_summary_commands.append(" ".join(shlex.quote(str(part)) for part in owner_summary_command))
+        owner_summary_commands.append(shell_command(owner_summary_command))
         owner_forms_jsonl_command = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--owner",
             owner,
             "--forms-jsonl",
         ]
-        owner_forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in owner_forms_jsonl_command))
+        owner_forms_jsonl_commands.append(shell_command(owner_forms_jsonl_command))
         owner_validate_forms_command_template = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--owner",
@@ -184,13 +198,11 @@ if open_owner_rows:
             "<owner-decisions.jsonl>",
             "--json",
         ]
-        owner_validate_forms_command_templates.append(
-            " ".join(shlex.quote(str(part)) for part in owner_validate_forms_command_template)
-        )
+        owner_validate_forms_command_templates.append(shell_command(owner_validate_forms_command_template))
         owner_landing_plan_command_template = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--owner",
@@ -200,34 +212,32 @@ if open_owner_rows:
             "--landing-plan",
             "--json",
         ]
-        owner_landing_plan_command_templates.append(
-            " ".join(shlex.quote(str(part)) for part in owner_landing_plan_command_template)
-        )
+        owner_landing_plan_command_templates.append(shell_command(owner_landing_plan_command_template))
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         forms_jsonl_command = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--forms-jsonl",
         ]
-        forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in forms_jsonl_command))
+        forms_jsonl_commands.append(shell_command(forms_jsonl_command))
         validation_command_template = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--validate-forms",
             "<owner-decisions.jsonl>",
             "--json",
         ]
-        validate_forms_command_templates.append(" ".join(shlex.quote(str(part)) for part in validation_command_template))
+        validate_forms_command_templates.append(shell_command(validation_command_template))
         landing_plan_command_template = [
             "rtk",
             "bash",
-            "tools/knowledge-owner-gates.sh",
+            display_tool("knowledge-owner-gates.sh"),
             "--source-id",
             source_id,
             "--validate-forms",
@@ -235,12 +245,12 @@ if open_owner_rows:
             "--landing-plan",
             "--json",
         ]
-        landing_plan_command_templates.append(" ".join(shlex.quote(str(part)) for part in landing_plan_command_template))
+        landing_plan_command_templates.append(shell_command(landing_plan_command_template))
     first_open = open_owner_rows[0]
     next_open_command = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--next-open",
@@ -250,7 +260,7 @@ if open_owner_rows:
     next_open_forms_jsonl_command = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--next-open",
@@ -259,7 +269,7 @@ if open_owner_rows:
     focus_command = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--worksheet-id",
@@ -270,7 +280,7 @@ if open_owner_rows:
     focus_forms_jsonl_command = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--worksheet-id",
@@ -280,7 +290,7 @@ if open_owner_rows:
     focus_validate_forms_command_template = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--worksheet-id",
@@ -292,7 +302,7 @@ if open_owner_rows:
     focus_landing_plan_command_template = [
         "rtk",
         "bash",
-        "tools/knowledge-owner-gates.sh",
+        display_tool("knowledge-owner-gates.sh"),
         "--source-id",
         first_open.get("source_id", ""),
         "--worksheet-id",
@@ -309,12 +319,12 @@ if open_owner_rows:
         "owner": first_open.get("owner", ""),
         "review_after": first_open.get("review_after", ""),
         "selection_order": "review_after, worksheet_id",
-        "next_open_command": " ".join(shlex.quote(str(part)) for part in next_open_command),
-        "next_open_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in next_open_forms_jsonl_command),
-        "focus_command": " ".join(shlex.quote(str(part)) for part in focus_command),
-        "focus_forms_jsonl_command": " ".join(shlex.quote(str(part)) for part in focus_forms_jsonl_command),
-        "focus_validate_forms_command_template": " ".join(shlex.quote(str(part)) for part in focus_validate_forms_command_template),
-        "focus_landing_plan_command_template": " ".join(shlex.quote(str(part)) for part in focus_landing_plan_command_template),
+        "next_open_command": shell_command(next_open_command),
+        "next_open_forms_jsonl_command": shell_command(next_open_forms_jsonl_command),
+        "focus_command": shell_command(focus_command),
+        "focus_forms_jsonl_command": shell_command(focus_forms_jsonl_command),
+        "focus_validate_forms_command_template": shell_command(focus_validate_forms_command_template),
+        "focus_landing_plan_command_template": shell_command(focus_landing_plan_command_template),
     }
 
 if errors:
@@ -327,8 +337,8 @@ else:
     status = "ok"
 
 exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
-final_gate_command = "rtk bash tools/knowledge-final-gate.sh --json"
-review_after_command = "rtk bash tools/knowledge-index-plan.sh --section review-date"
+final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
+review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 
 next_actions = []
 if knowledge_check["exit_code"] != 0:
@@ -408,7 +418,7 @@ if errors:
         "severity": "blocker",
         "count": len(errors),
         "summary_zh": "status dashboard 自身读取或解析失败，不能作为终态证据。",
-        "commands": ["rtk bash tools/knowledge-status.sh --json"],
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json"],
     })
 if knowledge_check["exit_code"] != 0:
     strict_blockers.append({
@@ -416,7 +426,7 @@ if knowledge_check["exit_code"] != 0:
         "severity": "blocker",
         "count": len(check_payload.get("errors", [])),
         "summary_zh": "knowledge-check 存在阻断错误，必须先按 diagnostics 修复。",
-        "commands": ["rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics"],
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"],
     })
 if active_exposure_count:
     strict_blockers.append({
@@ -424,7 +434,7 @@ if active_exposure_count:
         "severity": "blocker",
         "count": active_exposure_count,
         "summary_zh": "存在 unresolved owner-gated 内容暴露为 active，必须先移除 active exposure。",
-        "commands": ["rtk bash tools/knowledge-owner-gates.sh --status all --json"],
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json"],
     })
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
@@ -623,10 +633,10 @@ print()
 print("## 复核命令")
 print()
 print("```bash")
-print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
-print("rtk bash tools/knowledge-owner-gates.sh --status all --json")
-print("rtk bash tools/knowledge-status.sh --strict")
-print("rtk bash tools/knowledge-final-gate.sh --json")
+print("rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics")
+print("rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json")
+print("rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict")
+print("rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json")
 print("```")
 
 sys.exit(exit_code)

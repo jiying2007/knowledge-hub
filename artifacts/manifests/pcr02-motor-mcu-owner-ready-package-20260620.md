@@ -125,13 +125,13 @@ owner decision JSONL 必须填写：
 1. Owner 填写 JSONL 后，先只读校验：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
 ```
 
 2. 校验通过后，生成只读落地计划：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
 3. 只按 landing plan 手工更新 Knowledge Hub，不修改源项目 docs，不把 inference 写成 fact，不关闭 open items。
@@ -139,21 +139,21 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validat
 4. 手工落地后至少运行：
 
 ```bash
-rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash tools/knowledge-regression.sh --json
-rtk bash tools/knowledge-final-gate.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
 ## Evidence Index
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | ---: | --- | --- | --- | --- |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-006 --checklist --forms` | 0 | 单条 checklist 和 form 可生成；`open_count=1`，`resolved_count=0`，`active_exposure_count=0`；source identity 为 match；owner fields 保持空白。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-006 --forms --json` | 0 | JSON form 聚焦 worksheet-006；`owner_decision` 为空，allowed decisions 与 worksheet 一致；`open_count=1`，`resolved_count=0`，`active_exposure_count=0`。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | `status=pass`，`errors=[]`，`warnings=[]`。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-motor-mcu-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --explain pcr02-motor-mcu-owner-ready-package-20260620` | 0 | registry item 存在，artifact path 存在，owner/review-date/status core indexes 均命中。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-motor-mcu-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 20 个回归场景通过，`kept_temp=false`。 | `tools/knowledge-regression.sh` | Regression | `pcr02-motor-mcu-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 预期返回 `needs-owner-review`；knowledge-check 与 regression 均 pass；全仓 final gate 阻塞项为 7 个 open owner gates，其中 worksheet-006 仍 open；这是 owner-review 语义门禁，不是工具失败。 | `tools/knowledge-final-gate.sh` | Final gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-006 --checklist --forms` | 0 | 单条 checklist 和 form 可生成；`open_count=1`，`resolved_count=0`，`active_exposure_count=0`；source identity 为 match；owner fields 保持空白。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-006 --forms --json` | 0 | JSON form 聚焦 worksheet-006；`owner_decision` 为空，allowed decisions 与 worksheet 一致；`open_count=1`，`resolved_count=0`，`active_exposure_count=0`。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | `status=pass`，`errors=[]`，`warnings=[]`。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain pcr02-motor-mcu-owner-ready-package-20260620` | 0 | registry item 存在，artifact path 存在，owner/review-date/status core indexes 均命中。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json` | 0 | 20 个回归场景通过，`kept_temp=false`。 | `tools/knowledge-regression.sh` | Regression | `pcr02-motor-mcu-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 1 | 预期返回 `needs-owner-review`；knowledge-check 与 regression 均 pass；全仓 final gate 阻塞项为 7 个 open owner gates，其中 worksheet-006 仍 open；这是 owner-review 语义门禁，不是工具失败。 | `tools/knowledge-final-gate.sh` | Final gate | `pcr02-motor-mcu-owner-ready-package-20260620` |
 
 ## 非目标
 

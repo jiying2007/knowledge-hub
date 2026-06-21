@@ -173,6 +173,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - reviewing: `knowledge-hub-source-check-coverage-draft-20260621`
 - reviewing: `knowledge-hub-source-check-docs-search-limit-20260621`
 - reviewing: `knowledge-hub-owner-target-landing-validation-20260621`
+- reviewing: `knowledge-hub-owner-ready-command-stability-20260621`
 - archived: `migrated-pcr02-docs-copyfirst-014`
 - archived: `migrated-pcr02-docs-copyfirst-015`
 - archived: `migrated-pcr02-docs-copyfirst-016`

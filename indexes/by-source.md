@@ -48,6 +48,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
 - `pcr02-project-docs owner-gated source identity`: current source SHA256/size preflight is tracked by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`.
 - `pcr02-project-docs owner form source identity validation`: owner decision form validation rejects stale source SHA256/size by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`.
+- `pcr02-project-docs owner-ready command stability`: owner-ready package and terminal status commands use cwd-stable `~/knowledge-hub/tools` entrypoints by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`.
 - `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
 - `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
 - `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.

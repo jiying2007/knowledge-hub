@@ -116,7 +116,7 @@ knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-ru
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
-        "command": "rtk bash tools/knowledge-regression.sh --json",
+        "command": "rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json",
         "exit_code": 0,
         "payload": {"status": "pass", "result_count": 0, "results": [], "skipped_for_self_test": True},
         "parse_error": "",
@@ -491,9 +491,9 @@ print()
 print("## 复核命令")
 print()
 print("```bash")
-print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
-print("rtk bash tools/knowledge-regression.sh --json")
-print("rtk bash tools/knowledge-status.sh --strict --json")
+print("rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics")
+print("rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json")
+print("rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json")
 print("```")
 
 sys.exit(exit_code)

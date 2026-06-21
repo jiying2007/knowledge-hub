@@ -40,6 +40,7 @@
 - DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
 - Motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
+- Owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
 - Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`

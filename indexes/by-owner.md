@@ -150,6 +150,7 @@
 - `knowledge-hub-source-check-coverage-draft-20260621`
 - `knowledge-hub-source-check-docs-search-limit-20260621`
 - `knowledge-hub-owner-target-landing-validation-20260621`
+- `knowledge-hub-owner-ready-command-stability-20260621`
 
 ## pcr02-registry-owner
 

@@ -125,13 +125,13 @@ owner decision JSONL 必须填写：
 1. Owner 填写 JSONL 后，先只读校验：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --json
 ```
 
 2. 校验通过后，生成只读落地计划：
 
 ```bash
-rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
 ```
 
 3. 只按 landing plan 手工更新 Knowledge Hub，不修改源项目 docs，不启用自动化，不写 memory。
@@ -139,21 +139,21 @@ rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validat
 4. 手工落地后至少运行：
 
 ```bash
-rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash tools/knowledge-regression.sh --json
-rtk bash tools/knowledge-final-gate.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
 ## Evidence Index
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | ---: | --- | --- | --- | --- |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-004 --checklist --forms` | 0 | 单条 checklist 和 form 可生成；source identity 为 match；owner fields 保持空白。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-004 --forms --json` | 0 | JSON form 聚焦 worksheet-004；`owner_decision` 为空，allowed decisions 与 worksheet 一致。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 全仓一致性通过，0 errors、0 warnings。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --explain pcr02-memory-auto-curation-owner-ready-package-20260620` | 0 | registry 条目存在，核心索引引用均为 ok。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 20 个 governance regression 场景通过，`kept_temp=false`。 | `tools/knowledge-regression.sh` | Regression | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
-| `rtk bash tools/knowledge-final-gate.sh --json` | 1 expected | 预期仍为 `needs-owner-review`；`knowledge_check` 和 `knowledge_regression` 通过，唯一 blocker 是 7 个 owner gates open。 | `tools/knowledge-final-gate.sh` | Final gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-004 --checklist --forms` | 0 | 单条 checklist 和 form 可生成；source identity 为 match；owner fields 保持空白。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-004 --forms --json` | 0 | JSON form 聚焦 worksheet-004；`owner_decision` 为空，allowed decisions 与 worksheet 一致。 | `tools/knowledge-owner-gates.sh` | Owner gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 全仓一致性通过，0 errors、0 warnings。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain pcr02-memory-auto-curation-owner-ready-package-20260620` | 0 | registry 条目存在，核心索引引用均为 ok。 | `tools/knowledge-check.sh` | Knowledge Hub | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json` | 0 | 20 个 governance regression 场景通过，`kept_temp=false`。 | `tools/knowledge-regression.sh` | Regression | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 1 expected | 预期仍为 `needs-owner-review`；`knowledge_check` 和 `knowledge_regression` 通过，唯一 blocker 是 7 个 owner gates open。 | `tools/knowledge-final-gate.sh` | Final gate | `pcr02-memory-auto-curation-owner-ready-package-20260620` |
 
 ## 非目标
 

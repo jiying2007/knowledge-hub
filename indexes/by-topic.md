@@ -154,3 +154,4 @@
 - Knowledge Hub source check coverage draft: `artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.md`
 - Knowledge Hub source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`
 - Knowledge Hub owner target and landing validation: `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`
+- Knowledge Hub owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`

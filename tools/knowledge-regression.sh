@@ -976,7 +976,7 @@ def test_status_next_owner_gate():
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
-        and final_gate_command == "rtk bash tools/knowledge-final-gate.sh --json"
+        and final_gate_command == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
         and next_open.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and "--next-open" in next_open.get("next_open_command", "")
         and "--checklist" in next_open.get("next_open_command", "")
@@ -1055,24 +1055,24 @@ def test_status_text_owner_summary_commands():
     expect(
         result["exit_code"] == 0
         and "- owner summary commands:" in result["stdout"]
-        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
+        and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
         and "- owner forms-jsonl commands:" in result["stdout"]
-        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"]
+        and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"]
         and "- owner validate-forms command templates:" in result["stdout"]
-        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"]
+        and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"]
         and "- owner landing plan command templates:" in result["stdout"]
-        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"]
-        and "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
+        and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"]
+        and "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
         "status-text-owner-summary-commands",
         "status text mode exposes owner dispatch, owner validation templates and review_after commands",
         {
             "exit_code": result["exit_code"],
             "has_owner_summary_heading": "- owner summary commands:" in result["stdout"],
-            "has_project_owner_summary": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"],
-            "has_project_owner_forms_jsonl": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
-            "has_project_owner_validate_forms": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"],
-            "has_project_owner_landing_plan": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"],
-            "has_review_after_command": "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
+            "has_project_owner_summary": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"],
+            "has_project_owner_forms_jsonl": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+            "has_project_owner_validate_forms": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"],
+            "has_project_owner_landing_plan": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"],
+            "has_review_after_command": "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -1515,6 +1515,20 @@ def test_owner_landing_plan_requires_owner_ready_package_invalid():
         return None
 
     run_owner_landing_ready_block_fixture("invalid", "invalid", mutate)
+
+def test_owner_landing_plan_requires_owner_ready_package_repo_relative_command():
+    def mutate(repo):
+        package_path = repo / "artifacts" / "manifests" / "pcr02-agents-owner-ready-package-20260620.md"
+        if not package_path.exists():
+            return {"setup_error": "missing owner-ready package markdown"}
+        text = package_path.read_text()
+        stable_command = "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh"
+        if stable_command not in text:
+            return {"setup_error": "stable owner-ready command fixture missing"}
+        package_path.write_text(text.replace(stable_command, "rtk bash tools/knowledge-owner-gates.sh", 1))
+        return None
+
+    run_owner_landing_ready_block_fixture("repo-relative-command", "invalid", mutate)
 
 def test_owner_landing_plan_requires_owner_ready_package_duplicate():
     def mutate(repo):
@@ -2290,9 +2304,9 @@ def test_status_source_governance_summary():
         and sources.get("registered_count") == 13
         and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
         and registry.get("stale_review_after_count") == 0
-        and registry.get("review_after_command") == "rtk bash tools/knowledge-index-plan.sh --section review-date"
+        and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
-        and parsed.get("final_gate_command") == "rtk bash tools/knowledge-final-gate.sh --json",
+        and parsed.get("final_gate_command") == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
         "status-source-governance-summary",
         "status JSON exposes source coverage, review_after and final gate recovery summary",
         {
@@ -2360,7 +2374,7 @@ def test_stale_review_after_warning_surface():
         and registry.get("stale_review_after_count", 0) >= 1
         and any(row.get("id") == item_id for row in stale_sample if isinstance(row, dict))
         and "review_after" in next_actions_text
-        and "rtk bash tools/knowledge-index-plan.sh --section review-date" in next_actions_text,
+        and "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date" in next_actions_text,
         "stale-review-after-warning-surface",
         "stale review_after is warning/status surface, not a blocking check failure",
         {
@@ -2686,6 +2700,7 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-project-index",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
+        "owner-landing-plan-requires-owner-ready-repo-relative-command",
         "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-target-decision-candidate-gate",
         "owner-form-must-not-tamper-gate",
@@ -2717,14 +2732,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "55 个回归场景" in manifest_text,
+        and "56 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "55 个回归场景",
+            "expected_count_text": "56 个回归场景",
         },
     )
 
@@ -2754,6 +2769,7 @@ for test_fn in [
     test_owner_landing_plan_project_index,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
+    test_owner_landing_plan_requires_owner_ready_package_repo_relative_command,
     test_owner_landing_plan_requires_owner_ready_package_duplicate,
     test_owner_form_target_decision_candidate_gate,
     test_owner_form_must_not_tamper_gate,

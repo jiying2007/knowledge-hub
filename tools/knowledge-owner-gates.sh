@@ -272,11 +272,36 @@ def inspect_owner_ready_item(row, item):
     check("artifact_markdown_exists", md_path.is_file(), "owner-ready package markdown must exist")
     check("artifact_jsonl_exists", jsonl_path.is_file(), "owner-ready package jsonl must exist")
 
+    md_text = ""
+    if md_path.is_file():
+        try:
+            md_text = md_path.read_text()
+        except Exception as exc:
+            errors_local.append(f"cannot read {_display_path(md_path)}: {exc}")
+    check(
+        "package_markdown_commands_cwd_stable",
+        "rtk bash tools/" not in md_text,
+        "owner-ready package markdown must use ~/knowledge-hub/tools commands instead of rtk bash tools/...",
+    )
+
     package_rows, package_errors = _read_jsonl_local(jsonl_path)
     errors_local.extend(package_errors)
     check("package_jsonl_single_row", len(package_rows) == 1, "owner-ready package jsonl must contain exactly one row")
     package = package_rows[0] if len(package_rows) == 1 else {}
     identity = package.get("observed_source_identity", {}) if isinstance(package.get("observed_source_identity"), dict) else {}
+    evidence_refs = package.get("evidence_refs", [])
+    evidence_ref_commands_are_stable = True
+    if not isinstance(evidence_refs, list):
+        evidence_ref_commands_are_stable = False
+    else:
+        for ref in evidence_refs:
+            if not isinstance(ref, str):
+                evidence_ref_commands_are_stable = False
+                break
+            stripped = ref.strip()
+            if stripped.startswith("tools/") or "rtk bash tools/" in stripped:
+                evidence_ref_commands_are_stable = False
+                break
     check("package_classification_match", package.get("classification") == "single-owner-ready-package", "package classification must be single-owner-ready-package")
     check("package_worksheet_id_match", package.get("worksheet_id") == row["id"], "package worksheet_id must match worksheet")
     check("package_source_id_match", package.get("source_id") == row["source_id"], "package source_id must match worksheet")
@@ -285,6 +310,11 @@ def inspect_owner_ready_item(row, item):
     check("package_status_reviewing", package.get("status") == "reviewing", "package status must be reviewing")
     check("package_open_gate_remains", package.get("open_gate_remains") is True, "package open_gate_remains must be true")
     check("package_identity_match", identity.get("status") == "match", "package observed_source_identity.status must be match")
+    check(
+        "package_evidence_refs_cwd_stable",
+        evidence_ref_commands_are_stable,
+        "owner-ready package evidence_refs must use stable rtk bash ~/knowledge-hub/tools commands or non-command artifact refs",
+    )
 
     return {
         "id": item.get("id", ""),
@@ -376,7 +406,7 @@ def make_owner_summary(rows):
                 "owner_ready_package_count": len(ready_items),
                 "owner_ready_packages": ready_items,
                 "focus_command": (
-                    "rtk bash tools/knowledge-owner-gates.sh "
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
                     f"--source-id {row['source_id']} --owner {shlex_quote(row['owner'])} "
                     f"--worksheet-id {row['id']} --checklist --forms"
                 ),
@@ -560,9 +590,9 @@ def make_landing_plan(form_validation, rows):
             "indexes/by-topic.md",
         ],
         "verification_commands": [
-            "rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics",
-            "rtk bash tools/knowledge-owner-gates.sh --status all --json",
-            "rtk bash tools/knowledge-status.sh --strict --json",
+            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+            "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json",
+            "rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json",
         ],
         "must_not": [
             "do not treat this plan as owner approval",
@@ -970,7 +1000,7 @@ print()
 print("## 验证")
 print()
 print("```bash")
-print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
+print("rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("```")
 
 sys.exit(exit_status)
