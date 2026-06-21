@@ -183,3 +183,4 @@
 - 2026-09-21: `knowledge-hub-owner-routing-recovery-20260621`
 - 2026-09-21: `knowledge-hub-manifest-profile-index-plan-20260621`
 - 2026-09-21: `knowledge-hub-source-selection-owner-warning-20260621`
+- 2026-09-21: `knowledge-hub-owner-evidence-readiness-20260621`

@@ -313,3 +313,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - manifest-profile-index-plan-applied: `knowledge-index-plan.sh --section manifest` 输出只读 manifest 恢复视图，`knowledge-check.sh` 对 2026-06-21 后治理 manifest JSONL 执行轻量 profile gate，并对长期模板执行可读性字段 gate；documented by `artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.jsonl`.
 - reviewing: `knowledge-hub-source-selection-owner-warning-20260621`
 - source-selection-owner-warning-applied: `knowledge-check/status/index-plan` 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择 latest coverage，`knowledge-new.sh --source` 对未知 source owner 输出 warning；documented by `artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.
+- reviewing: `knowledge-hub-owner-evidence-readiness-20260621`
+- owner-evidence-readiness-applied: `knowledge-owner-gates.sh --evidence-readiness` 输出只读 owner 证据准备度，表单带 `read_only_prefill_candidates` 但正式 owner 字段仍需人工填写；documented by `artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.jsonl`.

@@ -782,6 +782,116 @@ def test_owner_source_identity_context():
         },
     )
 
+def test_owner_prefill_candidates_manual_fields():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    forms = parsed.get("decision_forms", [])
+    first = forms[0] if forms else {}
+    identity = first.get("observed_source_identity", {})
+    prefill = first.get("read_only_prefill_candidates", {})
+    field_readiness = prefill.get("field_readiness", [])
+    readiness_by_field = {item.get("field"): item for item in field_readiness if isinstance(item, dict)}
+    expect(
+        result["exit_code"] == 0
+        and len(forms) == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("owner_decision") == ""
+        and first.get("target_decision") == ""
+        and first.get("reviewed_by") == ""
+        and first.get("reviewed_at") == ""
+        and first.get("source_sha256") == ""
+        and first.get("source_size") == ""
+        and first.get("evidence_refs") == []
+        and prefill.get("read_only") is True
+        and prefill.get("no_owner_decision_generated") is True
+        and prefill.get("source_sha256_candidate") == identity.get("observed_sha256")
+        and prefill.get("source_size_candidate") == identity.get("observed_size")
+        and bool(prefill.get("evidence_ref_candidates", []))
+        and "owner_decision" in prefill.get("formal_owner_fields_remain_manual", [])
+        and readiness_by_field.get("owner_decision", {}).get("readiness") == "enum-choice-required"
+        and readiness_by_field.get("source_sha256", {}).get("readiness") == "copy-from-source-identity"
+        and readiness_by_field.get("evidence_refs", {}).get("readiness") == "owner-ready-evidence-ref-candidate",
+        "owner-prefill-candidates-manual-fields",
+        "owner form exposes read-only prefill candidates without filling owner fields",
+        {
+            "exit_code": result["exit_code"],
+            "form_count": len(forms),
+            "owner_decision": first.get("owner_decision"),
+            "target_decision": first.get("target_decision"),
+            "source_sha256_field": first.get("source_sha256"),
+            "source_size_field": first.get("source_size"),
+            "prefill": prefill,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
+def test_owner_evidence_readiness():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--evidence-readiness",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    readiness = parsed.get("evidence_readiness", {})
+    rows = readiness.get("rows", [])
+    first = rows[0] if rows else {}
+    prefill = first.get("read_only_prefill_candidates", {})
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 1
+        and readiness.get("status") == "ready-for-owner-review"
+        and readiness.get("row_count") == 1
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first.get("readiness_status") == "ready-for-owner-review-owner-input-required"
+        and first.get("source_identity_status") == "match"
+        and first.get("owner_ready_package_status") == "covered"
+        and "source_sha256" in first.get("mechanical_known_fields", [])
+        and "source_size" in first.get("mechanical_known_fields", [])
+        and "owner_decision" in first.get("owner_answer_required_fields", [])
+        and bool(first.get("owner_ready_evidence_refs", []))
+        and bool(first.get("safe_command_candidates", []))
+        and prefill.get("no_owner_decision_generated") is True,
+        "owner-evidence-readiness",
+        "owner gate helper emits read-only evidence readiness for one worksheet",
+        {
+            "exit_code": result["exit_code"],
+            "readiness_status": readiness.get("status"),
+            "row_count": readiness.get("row_count"),
+            "first": first,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_owner_summary_all_open():
     result = run_cmd(
         root,
@@ -1001,9 +1111,11 @@ def test_status_next_owner_gate():
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
     owner_forms_jsonl_commands = parsed.get("owner_gates", {}).get("owner_forms_jsonl_commands", [])
+    owner_evidence_readiness_commands = parsed.get("owner_gates", {}).get("owner_evidence_readiness_commands", [])
     owner_validate_forms_command_templates = parsed.get("owner_gates", {}).get("owner_validate_forms_command_templates", [])
     owner_landing_plan_command_templates = parsed.get("owner_gates", {}).get("owner_landing_plan_command_templates", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
+    evidence_readiness_commands = parsed.get("owner_gates", {}).get("evidence_readiness_commands", [])
     validate_forms_command_templates = parsed.get("owner_gates", {}).get("validate_forms_command_templates", [])
     landing_plan_command_templates = parsed.get("owner_gates", {}).get("landing_plan_command_templates", [])
     final_gate_command = parsed.get("final_gate_command", "")
@@ -1030,15 +1142,18 @@ def test_status_next_owner_gate():
         and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
         and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
+        and "--owner project-owner --evidence-readiness --json" in project_owner_dispatch.get("evidence_readiness_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in project_owner_dispatch.get("landing_plan_command_template", "")
         and "--owner project-owner --worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in project_owner_dispatch.get("next_focus_command", "")
         and any("--summary" in str(command) for command in summary_commands)
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
         and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_forms_jsonl_commands)
+        and any("--owner project-owner" in str(command) and "--evidence-readiness --json" in str(command) for command in owner_evidence_readiness_commands)
         and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_validate_forms_command_templates)
         and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_landing_plan_command_templates)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
+        and any("--evidence-readiness --json" in str(command) for command in evidence_readiness_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
         and final_gate_command == expected_final_gate_command
@@ -1050,11 +1165,15 @@ def test_status_next_owner_gate():
         and "--forms" in next_open.get("next_open_command", "")
         and "--next-open" in next_open.get("next_open_forms_jsonl_command", "")
         and "--forms-jsonl" in next_open.get("next_open_forms_jsonl_command", "")
+        and "--next-open" in next_open.get("next_open_evidence_readiness_command", "")
+        and "--evidence-readiness" in next_open.get("next_open_evidence_readiness_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_command", "")
         and "--checklist" in next_open.get("focus_command", "")
         and "--forms" in next_open.get("focus_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_forms_jsonl_command", "")
         and "--forms-jsonl" in next_open.get("focus_forms_jsonl_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_evidence_readiness_command", "")
+        and "--evidence-readiness" in next_open.get("focus_evidence_readiness_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001" in next_open.get("focus_validate_forms_command_template", "")
         and "--validate-forms" in next_open.get("focus_validate_forms_command_template", "")
         and "owner-decisions.jsonl" in next_open.get("focus_validate_forms_command_template", "")
@@ -1066,19 +1185,23 @@ def test_status_next_owner_gate():
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
         and any("owner_gates.owner_dispatch[]" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--forms-jsonl" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--evidence-readiness" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--validate-forms" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--landing-plan" in str(action) for action in next_actions)
         and any("knowledge-final-gate.sh" in str(action) and "--json" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
+        and any("--next-open --evidence-readiness --json" in str(action) for action in next_actions)
         and any("--validate-forms" in str(action) and "owner-decisions.jsonl" in str(action) for action in next_actions)
         and any("--landing-plan" in str(action) for action in next_actions)
         and owner_blocker.get("count") == 7
         and any("--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--owner project-owner" in str(command) and "--evidence-readiness --json" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--next-open --evidence-readiness --json" in str(command) for command in owner_blocker.get("commands", []))
         and not any("owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
@@ -1100,17 +1223,21 @@ def test_status_next_owner_gate():
             "summary_commands": summary_commands,
             "owner_summary_commands": owner_summary_commands,
             "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
+            "owner_evidence_readiness_commands": owner_evidence_readiness_commands,
             "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
             "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
             "forms_jsonl_commands": forms_jsonl_commands,
+            "evidence_readiness_commands": evidence_readiness_commands,
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,
             "final_gate_command": final_gate_command,
             "expected_final_gate_command": expected_final_gate_command,
             "next_open_command": next_open.get("next_open_command", ""),
             "next_open_forms_jsonl_command": next_open.get("next_open_forms_jsonl_command", ""),
+            "next_open_evidence_readiness_command": next_open.get("next_open_evidence_readiness_command", ""),
             "focus_command": next_open.get("focus_command", ""),
             "focus_forms_jsonl_command": next_open.get("focus_forms_jsonl_command", ""),
+            "focus_evidence_readiness_command": next_open.get("focus_evidence_readiness_command", ""),
             "focus_validate_forms_command_template": next_open.get("focus_validate_forms_command_template", ""),
             "focus_landing_plan_command_template": next_open.get("focus_landing_plan_command_template", ""),
             "strict_blockers": strict_blockers,
@@ -3475,6 +3602,8 @@ def test_regression_manifest_coverage():
         "owner-checklist-context",
         "owner-form-context",
         "owner-source-identity-context",
+        "owner-prefill-candidates-manual-fields",
+        "owner-evidence-readiness",
         "owner-summary-all-open",
         "owner-summary-by-owner",
         "owner-next-open-focus",
@@ -3570,6 +3699,8 @@ for test_fn in [
     test_owner_checklist_context,
     test_owner_form_context,
     test_owner_source_identity_context,
+    test_owner_prefill_candidates_manual_fields,
+    test_owner_evidence_readiness,
     test_owner_summary_all_open,
     test_owner_summary_by_owner,
     test_owner_next_open_focus,

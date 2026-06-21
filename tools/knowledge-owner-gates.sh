@@ -21,6 +21,7 @@ parser.add_argument("--summary", action="store_true", help="Print a concise owne
 parser.add_argument("--forms", action="store_true", help="Print copyable owner decision JSONL skeletons for open rows.")
 parser.add_argument("--forms-jsonl", action="store_true", help="Print only owner decision JSONL skeleton lines for open rows.")
 parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
+parser.add_argument("--evidence-readiness", action="store_true", help="Print read-only evidence readiness and prefill candidates for open rows.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--source-id", default="")
@@ -42,6 +43,8 @@ if args.forms_jsonl:
         conflicts.append("--forms")
     if args.checklist:
         conflicts.append("--checklist")
+    if args.evidence_readiness:
+        conflicts.append("--evidence-readiness")
     if args.validate_forms:
         conflicts.append("--validate-forms")
     if args.landing_plan:
@@ -184,6 +187,7 @@ def make_decision_form(row):
         "hard_gate": row.get("hard_gate", ""),
         "owner_route": row.get("owner_route", {}),
         "observed_source_identity": row.get("observed_source_identity", {}),
+        "read_only_prefill_candidates": make_read_only_prefill_candidates(row),
         "source_execution_root": row.get("source_execution_root", ""),
         "verification_cwd": row.get("verification_cwd", ""),
         "verification_commands": row.get("verification_commands", []),
@@ -332,6 +336,7 @@ def inspect_owner_ready_item(row, item):
         "decision": package.get("decision", ""),
         "open_gate_remains": package.get("open_gate_remains", None),
         "identity_status": identity.get("status", ""),
+        "package_evidence_refs": evidence_refs if isinstance(evidence_refs, list) else [],
         "status": "valid" if not errors_local else "invalid",
         "coverage_checks": checks,
         "errors": errors_local,
@@ -355,6 +360,207 @@ def owner_ready_state(row):
     if len(valid_packages) == 1:
         return "covered", packages
     return "invalid", packages
+
+def owner_ready_evidence_refs(row):
+    refs = []
+    for item in owner_ready_items(row):
+        for ref in item.get("package_evidence_refs", []):
+            if ref not in refs:
+                refs.append(ref)
+    return refs
+
+def _is_evidence_field(field):
+    field_text = str(field)
+    return (
+        field_text == "evidence_refs"
+        or field_text == "gate_evidence"
+        or field_text.endswith("_evidence")
+        or field_text.endswith("_evidence_refs")
+        or "evidence" in field_text
+    )
+
+def _classify_evidence_command(command):
+    text = str(command).strip()
+    if not text:
+        return {
+            "command": text,
+            "bucket": "empty",
+            "notes_zh": "空命令不能作为证据候选。",
+        }
+    stable_prefixes = [
+        "rtk bash ~/knowledge-hub/tools/",
+        "rtk bash tools/knowledge-",
+        "rtk git -C ~/knowledge-hub ",
+        "rtk git -C /home/leiwenjun/knowledge-hub ",
+    ]
+    if any(text.startswith(prefix) for prefix in stable_prefixes):
+        return {
+            "command": text,
+            "bucket": "safe-command-candidate",
+            "notes_zh": "Knowledge Hub 只读或本仓状态命令；仍需人工运行并引用输出，不自动写入表单。",
+        }
+    return {
+        "command": text,
+        "bucket": "project-command-needs-owner-or-lab-run",
+        "notes_zh": "项目侧、构建、硬件、分支状态或上下文相关命令；需要 owner 或实验环境人工运行后再引用。",
+    }
+
+def _field_readiness(field, row, evidence_refs):
+    identity = row.get("observed_source_identity", {}) if isinstance(row.get("observed_source_identity"), dict) else {}
+    identity_matches = identity.get("identity_status") == "match"
+    if field == "source_sha256":
+        return {
+            "field": field,
+            "readiness": "copy-from-source-identity" if identity_matches else "source-identity-not-ready",
+            "candidate": identity.get("observed_sha256", "") if identity_matches else "",
+            "notes_zh": "候选值只来自 observed_source_identity；正式 source_sha256 字段仍必须由 owner 人工复制和签收。",
+        }
+    if field == "source_size":
+        return {
+            "field": field,
+            "readiness": "copy-from-source-identity" if identity_matches else "source-identity-not-ready",
+            "candidate": identity.get("observed_size", "") if identity_matches else "",
+            "notes_zh": "候选值只来自 observed_source_identity；正式 source_size 字段仍必须由 owner 人工复制和签收。",
+        }
+    if field == "review_after":
+        return {
+            "field": field,
+            "readiness": "copy-from-worksheet",
+            "candidate": row.get("review_after", ""),
+            "notes_zh": "候选值来自 worksheet 排期；owner 可按实际复核周期调整。",
+        }
+    if field == "owner_decision":
+        return {
+            "field": field,
+            "readiness": "enum-choice-required",
+            "candidate": row.get("decision_options", []),
+            "notes_zh": "必须由真实 owner 从 allowed_owner_decisions 中选择，工具不代选。",
+        }
+    if field == "target_decision":
+        return {
+            "field": field,
+            "readiness": "enum-choice-required",
+            "candidate": row.get("target_candidates", []),
+            "notes_zh": "必须由真实 owner 从 target_candidates 中选择，不能写到候选目标之外。",
+        }
+    if _is_evidence_field(field):
+        return {
+            "field": field,
+            "readiness": "owner-ready-evidence-ref-candidate" if evidence_refs else "command-evidence-required",
+            "candidate": evidence_refs,
+            "notes_zh": "owner-ready package 的 evidence_refs 只是引用候选；owner 仍需确认是否足以支撑该字段。",
+        }
+    return {
+        "field": field,
+        "readiness": "owner-input-required",
+        "candidate": "",
+        "notes_zh": "需要真实 owner 填写或确认；工具不自动推断。",
+    }
+
+def make_read_only_prefill_candidates(row):
+    evidence_refs = owner_ready_evidence_refs(row)
+    identity = row.get("observed_source_identity", {}) if isinstance(row.get("observed_source_identity"), dict) else {}
+    identity_matches = identity.get("identity_status") == "match"
+    field_readiness = [
+        _field_readiness(field, row, evidence_refs)
+        for field in row.get("required_owner_fields", [])
+    ]
+    return {
+        "read_only": True,
+        "no_owner_decision_generated": True,
+        "formal_owner_fields_remain_manual": [
+            "owner_decision",
+            "target_decision",
+            "reviewed_by",
+            "reviewed_at",
+            "source_sha256",
+            "source_size",
+            "evidence_refs",
+            "status_reason",
+        ],
+        "source_sha256_candidate": identity.get("observed_sha256", "") if identity_matches else "",
+        "source_size_candidate": identity.get("observed_size", "") if identity_matches else "",
+        "review_after_candidate": row.get("review_after", ""),
+        "evidence_ref_candidates": evidence_refs,
+        "field_readiness": field_readiness,
+        "notes_zh": "这些值只用于减少 owner 查找成本，不写入正式字段、不代表签收、不关闭 owner gate。",
+    }
+
+def make_evidence_readiness(rows):
+    readiness_rows = []
+    status_counts = {}
+    for row in rows:
+        evidence_refs = owner_ready_evidence_refs(row)
+        field_readiness = [
+            _field_readiness(field, row, evidence_refs)
+            for field in row.get("required_owner_fields", [])
+        ]
+        mechanical_known_fields = [
+            item["field"]
+            for item in field_readiness
+            if item["readiness"] in {"copy-from-source-identity", "copy-from-worksheet"}
+        ]
+        owner_answer_required_fields = [
+            item["field"]
+            for item in field_readiness
+            if item["readiness"] in {"owner-input-required", "enum-choice-required"}
+        ]
+        command_evidence_required_fields = [
+            item["field"]
+            for item in field_readiness
+            if item["readiness"] == "command-evidence-required"
+        ]
+        command_candidates = [_classify_evidence_command(command) for command in row.get("verification_commands", [])]
+        safe_command_candidates = [item for item in command_candidates if item["bucket"] == "safe-command-candidate"]
+        project_command_candidates = [
+            item for item in command_candidates
+            if item["bucket"] == "project-command-needs-owner-or-lab-run"
+        ]
+        source_identity_status = row.get("observed_source_identity", {}).get("identity_status", "unavailable")
+        owner_ready_status, owner_ready_packages = owner_ready_state(row)
+        if row.get("active_registry_items"):
+            readiness_status = "blocked-active-exposure"
+        elif source_identity_status != "match":
+            readiness_status = "blocked-source-identity"
+        elif owner_ready_status != "covered":
+            readiness_status = "blocked-owner-ready-package"
+        else:
+            readiness_status = "ready-for-owner-review-owner-input-required"
+        status_counts[readiness_status] = status_counts.get(readiness_status, 0) + 1
+        readiness_rows.append(
+            {
+                "worksheet_id": row["id"],
+                "source_id": row["source_id"],
+                "source_path": row["source_path"],
+                "owner": row["owner"],
+                "owner_route": row.get("owner_route", {}),
+                "status": row["status"],
+                "readiness_status": readiness_status,
+                "source_identity_status": source_identity_status,
+                "owner_ready_package_status": owner_ready_status,
+                "owner_ready_packages": owner_ready_packages,
+                "mechanical_known_fields": mechanical_known_fields,
+                "owner_answer_required_fields": owner_answer_required_fields,
+                "command_evidence_required_fields": command_evidence_required_fields,
+                "owner_ready_evidence_refs": evidence_refs,
+                "safe_command_candidates": safe_command_candidates,
+                "project_command_candidates": project_command_candidates,
+                "field_readiness": field_readiness,
+                "read_only_prefill_candidates": make_read_only_prefill_candidates(row),
+                "notes_zh": "只读证据准备度；帮助 owner 找候选值和命令，不生成 owner decision，不写文件，不关闭 gate。",
+            }
+        )
+    return {
+        "status": "ready-for-owner-review" if rows and all(
+            row["readiness_status"] == "ready-for-owner-review-owner-input-required"
+            for row in readiness_rows
+        ) else "needs-attention" if rows else "empty",
+        "read_only": True,
+        "row_count": len(readiness_rows),
+        "status_counts": dict(sorted(status_counts.items())),
+        "rows": readiness_rows,
+        "notes_zh": "evidence readiness 只汇总候选证据和人工动作，不自动填 owner 字段、不关闭 gate、不提升 active。",
+    }
 
 def make_owner_ready_coverage(rows):
     coverage = {
@@ -436,6 +642,12 @@ def make_owner_dispatch(rows):
                 "forms_jsonl_command": (
                     "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
                     f"--source-id {source_id} --owner {owner_arg} --forms-jsonl"
+                )
+                if source_id
+                else "",
+                "evidence_readiness_command": (
+                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                    f"--source-id {source_id} --owner {owner_arg} --evidence-readiness --json"
                 )
                 if source_id
                 else "",
@@ -917,6 +1129,9 @@ if args.summary:
 if args.forms:
     result["decision_forms"] = [make_decision_form(row) for row in rows if row["status"] == "open"]
 
+if args.evidence_readiness:
+    result["evidence_readiness"] = make_evidence_readiness([row for row in rows if row["status"] == "open"])
+
 if args.checklist:
     result["owner_checklists"] = [make_owner_checklist(row) for row in rows if row["status"] == "open"]
 
@@ -1014,14 +1229,14 @@ if args.summary:
     print()
     print("### Owner Dispatch")
     print()
-    print("| owner | route | open | forms-jsonl | validate | landing plan | next focus |")
-    print("|---|---|---:|---|---|---|---|")
+    print("| owner | route | open | evidence readiness | forms-jsonl | validate | landing plan | next focus |")
+    print("|---|---|---:|---|---|---|---|---|")
     for item in summary["owner_dispatch"]:
         route = item.get("owner_route", {})
         route_text = route.get("routing_owner") or route.get("routing_status") or "<unmapped>"
         print(
             f"| {item['owner']} | {route_text} | {item['open_count']} | "
-            f"`{item['forms_jsonl_command']}` | `{item['validate_forms_command_template']}` | "
+            f"`{item['evidence_readiness_command']}` | `{item['forms_jsonl_command']}` | `{item['validate_forms_command_template']}` | "
             f"`{item['landing_plan_command_template']}` | `{item['next_focus_command']}` |"
         )
     print()
@@ -1082,6 +1297,44 @@ if landing_plan:
             print("- worksheet_verification_commands:")
             for command in step["worksheet_verification_commands"]:
                 print(f"  - `{command}`")
+
+if args.evidence_readiness:
+    readiness = make_evidence_readiness([row for row in rows if row["status"] == "open"])
+    print()
+    print("## Owner Evidence Readiness")
+    print()
+    print("本视图只读展示 owner 签收前的候选证据和值，不写正式字段、不关闭门禁。")
+    print(f"- status: {readiness['status']}")
+    print(f"- rows: {readiness['row_count']}")
+    if readiness["status_counts"]:
+        parts = [f"{key}={value}" for key, value in readiness["status_counts"].items()]
+        print(f"- status_counts: {', '.join(parts)}")
+    for item in readiness["rows"]:
+        print()
+        print(f"### {item['worksheet_id']}")
+        print(f"- source_path: `{item['source_path']}`")
+        print(f"- owner: {item['owner'] or '<missing-owner>'}")
+        print(f"- readiness_status: {item['readiness_status']}")
+        print(f"- source_identity_status: {item['source_identity_status']}")
+        print(f"- owner_ready_package_status: {item['owner_ready_package_status']}")
+        if item["mechanical_known_fields"]:
+            print(f"- mechanical_known_fields: {', '.join(item['mechanical_known_fields'])}")
+        if item["owner_answer_required_fields"]:
+            print(f"- owner_answer_required_fields: {', '.join(item['owner_answer_required_fields'])}")
+        if item["command_evidence_required_fields"]:
+            print(f"- command_evidence_required_fields: {', '.join(item['command_evidence_required_fields'])}")
+        if item["owner_ready_evidence_refs"]:
+            print("- owner_ready_evidence_refs:")
+            for ref in item["owner_ready_evidence_refs"]:
+                print(f"  - `{ref}`")
+        if item["safe_command_candidates"]:
+            print("- safe_command_candidates:")
+            for command in item["safe_command_candidates"]:
+                print(f"  - `{command['command']}`")
+        if item["project_command_candidates"]:
+            print("- project_command_candidates:")
+            for command in item["project_command_candidates"]:
+                print(f"  - `{command['command']}`")
 
 if args.forms:
     print()

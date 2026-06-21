@@ -199,9 +199,11 @@ owner_dispatch = []
 summary_commands = []
 owner_summary_commands = []
 owner_forms_jsonl_commands = []
+owner_evidence_readiness_commands = []
 owner_validate_forms_command_templates = []
 owner_landing_plan_command_templates = []
 forms_jsonl_commands = []
+evidence_readiness_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
 if open_owner_rows:
@@ -261,6 +263,17 @@ if open_owner_rows:
                 "--owner",
                 owner,
                 "--forms-jsonl",
+            ]) if source_id else "",
+            "evidence_readiness_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--evidence-readiness",
+                "--json",
             ]) if source_id else "",
             "validate_forms_command_template": shell_command([
                 "rtk",
@@ -339,6 +352,18 @@ if open_owner_rows:
             "--forms-jsonl",
         ]
         owner_forms_jsonl_commands.append(shell_command(owner_forms_jsonl_command))
+        owner_evidence_readiness_command = [
+            "rtk",
+            "bash",
+            display_tool("knowledge-owner-gates.sh"),
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--evidence-readiness",
+            "--json",
+        ]
+        owner_evidence_readiness_commands.append(shell_command(owner_evidence_readiness_command))
         owner_validate_forms_command_template = [
             "rtk",
             "bash",
@@ -376,6 +401,16 @@ if open_owner_rows:
             "--forms-jsonl",
         ]
         forms_jsonl_commands.append(shell_command(forms_jsonl_command))
+        evidence_readiness_command = [
+            "rtk",
+            "bash",
+            display_tool("knowledge-owner-gates.sh"),
+            "--source-id",
+            source_id,
+            "--evidence-readiness",
+            "--json",
+        ]
+        evidence_readiness_commands.append(shell_command(evidence_readiness_command))
         validation_command_template = [
             "rtk",
             "bash",
@@ -419,6 +454,16 @@ if open_owner_rows:
         "--next-open",
         "--forms-jsonl",
     ]
+    next_open_evidence_readiness_command = [
+        "rtk",
+        "bash",
+        display_tool("knowledge-owner-gates.sh"),
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--next-open",
+        "--evidence-readiness",
+        "--json",
+    ]
     focus_command = [
         "rtk",
         "bash",
@@ -439,6 +484,17 @@ if open_owner_rows:
         "--worksheet-id",
         first_open.get("id", ""),
         "--forms-jsonl",
+    ]
+    focus_evidence_readiness_command = [
+        "rtk",
+        "bash",
+        display_tool("knowledge-owner-gates.sh"),
+        "--source-id",
+        first_open.get("source_id", ""),
+        "--worksheet-id",
+        first_open.get("id", ""),
+        "--evidence-readiness",
+        "--json",
     ]
     focus_validate_forms_command_template = [
         "rtk",
@@ -475,8 +531,10 @@ if open_owner_rows:
         "selection_order": "review_after, worksheet_id",
         "next_open_command": shell_command(next_open_command),
         "next_open_forms_jsonl_command": shell_command(next_open_forms_jsonl_command),
+        "next_open_evidence_readiness_command": shell_command(next_open_evidence_readiness_command),
         "focus_command": shell_command(focus_command),
         "focus_forms_jsonl_command": shell_command(focus_forms_jsonl_command),
+        "focus_evidence_readiness_command": shell_command(focus_evidence_readiness_command),
         "focus_validate_forms_command_template": shell_command(focus_validate_forms_command_template),
         "focus_landing_plan_command_template": shell_command(focus_landing_plan_command_template),
     }
@@ -531,6 +589,11 @@ if open_owner_gate_count:
             "需要按责任人导出纯 JSONL owner 表单时，运行："
             f"{owner_forms_jsonl_commands[0]}。"
         )
+    if owner_evidence_readiness_commands:
+        next_actions.append(
+            "需要按责任人查看只读证据准备度和候选值时，运行："
+            f"{owner_evidence_readiness_commands[0]}。"
+        )
     if owner_validate_forms_command_templates:
         next_actions.append(
             "责任人填完 JSONL 后，按 owner 范围先只读校验："
@@ -551,6 +614,11 @@ if open_owner_gate_count:
             next_actions.append(
                 "需要保存或交给脚本处理纯 JSONL owner 表单时，运行："
                 f"{next_owner_gate['next_open_forms_jsonl_command']}。"
+            )
+        if next_owner_gate.get("next_open_evidence_readiness_command"):
+            next_actions.append(
+                "需要先查看下一条 owner gate 的证据准备度时，运行："
+                f"{next_owner_gate['next_open_evidence_readiness_command']}。"
             )
         if validate_forms_command_templates:
             next_actions.append(
@@ -613,10 +681,13 @@ if open_owner_gate_count:
     owner_commands = list(summary_commands)
     owner_commands.extend(owner_summary_commands)
     owner_commands.extend(owner_forms_jsonl_commands)
+    owner_commands.extend(owner_evidence_readiness_commands)
     if next_owner_gate.get("next_open_command"):
         owner_commands.append(next_owner_gate["next_open_command"])
     if next_owner_gate.get("next_open_forms_jsonl_command"):
         owner_commands.append(next_owner_gate["next_open_forms_jsonl_command"])
+    if next_owner_gate.get("next_open_evidence_readiness_command"):
+        owner_commands.append(next_owner_gate["next_open_evidence_readiness_command"])
     owner_command_templates = []
     owner_command_templates.extend(owner_validate_forms_command_templates)
     owner_command_templates.extend(owner_landing_plan_command_templates)
@@ -689,9 +760,11 @@ result = {
         "summary_commands": summary_commands,
         "owner_summary_commands": owner_summary_commands,
         "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
+        "owner_evidence_readiness_commands": owner_evidence_readiness_commands,
         "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
         "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
         "forms_jsonl_commands": forms_jsonl_commands,
+        "evidence_readiness_commands": evidence_readiness_commands,
         "validate_forms_command_templates": validate_forms_command_templates,
         "landing_plan_command_templates": landing_plan_command_templates,
         "next_open": next_owner_gate,
