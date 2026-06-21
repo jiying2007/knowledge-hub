@@ -73,10 +73,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
 
-`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
+`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，不需要维护 100+ 个 manifest 的人工索引。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
 
 ## 搜索知识
 

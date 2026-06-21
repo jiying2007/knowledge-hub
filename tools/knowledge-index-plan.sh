@@ -9,13 +9,14 @@ import argparse
 import collections
 import json
 import pathlib
+import re
 import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only plan for core Knowledge Hub indexes from registry files.")
-parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision"], default="all")
+parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest"], default="all")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
 
@@ -89,6 +90,12 @@ by_decision = {
     "registry_decisions": [],
     "owner_worksheets": [],
     "migration_decisions": [],
+}
+by_manifest = {
+    "summary": {},
+    "latest": [],
+    "unpaired": [],
+    "rows": [],
 }
 
 for item in items:
@@ -242,6 +249,79 @@ for row in migrations:
             }
         )
 
+manifest_jsonl_paths = sorted((root / "artifacts" / "manifests").glob("*.jsonl"))
+manifest_md_paths = sorted((root / "artifacts" / "manifests").glob("*.md"))
+manifest_md_by_stem = {path.stem: path for path in manifest_md_paths}
+manifest_jsonl_stems = {path.stem for path in manifest_jsonl_paths}
+manifest_md_stems = {path.stem for path in manifest_md_paths}
+manifest_rows = []
+for manifest_path in manifest_jsonl_paths:
+    rows = read_jsonl(manifest_path, str(manifest_path.relative_to(root)))
+    first = rows[0] if rows else {}
+    stem = manifest_path.stem
+    md_path = manifest_md_by_stem.get(stem)
+    filename_date_match = re.search(r"(20\d{2})(\d{2})(\d{2})", manifest_path.name)
+    filename_date = ""
+    if filename_date_match:
+        filename_date = "-".join(filename_date_match.groups())
+    date_value = (
+        filename_date
+        or first.get("checked_at")
+        or first.get("created_at")
+        or first.get("updated_at")
+        or first.get("review_after")
+        or ""
+    )
+    evidence_value = (
+        first.get("evidence")
+        or first.get("evidence_refs")
+        or first.get("validation_refs")
+        or first.get("verification_commands")
+        or first.get("source_refs")
+        or []
+    )
+    if not isinstance(evidence_value, list):
+        evidence_count = 1 if evidence_value else 0
+    else:
+        evidence_count = len(evidence_value)
+    manifest_rows.append(
+        {
+            "id": first.get("id", stem),
+            "path": str(manifest_path.relative_to(root)),
+            "markdown_path": str(md_path.relative_to(root)) if md_path else "",
+            "paired": bool(md_path),
+            "row_count": len(rows),
+            "status": first.get("status", ""),
+            "date": date_value,
+            "source_id": first.get("source_id", ""),
+            "owner": first.get("owner", ""),
+            "classification": first.get("classification", ""),
+            "mode": first.get("mode", ""),
+            "decision": first.get("decision", ""),
+            "summary_zh": first.get("summary_zh") or first.get("notes_zh") or first.get("notes", ""),
+            "evidence_count": evidence_count,
+        }
+    )
+unpaired_stems = sorted(manifest_jsonl_stems ^ manifest_md_stems)
+by_manifest = {
+    "summary": {
+        "jsonl_count": len(manifest_jsonl_paths),
+        "markdown_count": len(manifest_md_paths),
+        "paired_count": len(manifest_jsonl_stems & manifest_md_stems),
+        "unpaired_count": len(unpaired_stems),
+    },
+    "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
+    "unpaired": [
+        {
+            "stem": stem,
+            "jsonl_path": str((root / "artifacts" / "manifests" / f"{stem}.jsonl").relative_to(root)) if stem in manifest_jsonl_stems else "",
+            "markdown_path": str((root / "artifacts" / "manifests" / f"{stem}.md").relative_to(root)) if stem in manifest_md_stems else "",
+        }
+        for stem in unpaired_stems
+    ],
+    "rows": manifest_rows,
+}
+
 status_order = ["active", "reviewing", "archived"]
 
 result = {
@@ -264,6 +344,7 @@ result = {
         "by_source": by_source,
         "by_topic": by_topic,
         "by_decision": by_decision,
+        "by_manifest": by_manifest,
     },
 }
 
@@ -391,6 +472,29 @@ def print_decision():
     for row in by_decision.get("migration_decisions", [])[:80]:
         print(f"- `{row.get('mode', '')}`: {row.get('status', '')}; checked_at `{row.get('checked_at', '')}`")
 
+def print_manifest():
+    print()
+    print("## By Manifest")
+    summary = by_manifest.get("summary", {})
+    print(f"- jsonl_count: {summary.get('jsonl_count', 0)}")
+    print(f"- markdown_count: {summary.get('markdown_count', 0)}")
+    print(f"- paired_count: {summary.get('paired_count', 0)}")
+    print(f"- unpaired_count: {summary.get('unpaired_count', 0)}")
+    unpaired = by_manifest.get("unpaired", [])
+    if unpaired:
+        print()
+        print("### Unpaired")
+        for row in unpaired:
+            print(f"- `{row.get('stem', '')}` jsonl=`{row.get('jsonl_path', '')}` markdown=`{row.get('markdown_path', '')}`")
+    print()
+    print("### Latest")
+    for row in by_manifest.get("latest", []):
+        print(
+            f"- `{row.get('path', '')}` status=`{row.get('status', '')}` "
+            f"date=`{row.get('date', '')}` rows={row.get('row_count', 0)} "
+            f"paired={row.get('paired', False)} evidence={row.get('evidence_count', 0)}"
+        )
+
 if args.section in {"all", "owner"}:
     print_owner()
 if args.section in {"all", "review-date"}:
@@ -405,6 +509,8 @@ if args.section in {"all", "topic"}:
     print_topic()
 if args.section in {"all", "decision"}:
     print_decision()
+if args.section in {"all", "manifest"}:
+    print_manifest()
 
 print()
 print("## 验证")

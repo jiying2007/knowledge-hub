@@ -2572,7 +2572,7 @@ def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
     parse_errors = {}
-    for section in ["project", "source", "topic", "decision"]:
+    for section in ["project", "source", "topic", "decision", "manifest"]:
         result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", section, "--json"])
         section_results[section] = result
         try:
@@ -2586,6 +2586,7 @@ def test_index_plan_extended_sections():
     source_selection = parsed_by_section.get("source", {}).get("source_coverage_selection", {})
     topic_index = parsed_by_section.get("topic", {}).get("indexes", {}).get("by_topic", {})
     decision_index = parsed_by_section.get("decision", {}).get("indexes", {}).get("by_decision", {})
+    manifest_index = parsed_by_section.get("manifest", {}).get("indexes", {}).get("by_manifest", {})
     registry_decisions = decision_index.get("registry_decisions", [])
     owner_worksheets = decision_index.get("owner_worksheets", [])
     migration_decisions = decision_index.get("migration_decisions", [])
@@ -2597,6 +2598,17 @@ def test_index_plan_extended_sections():
         (row for row in owner_worksheets if row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"),
         {},
     )
+    manifest_summary = manifest_index.get("summary", {})
+    latest_manifests = manifest_index.get("latest", [])
+    current_owner_route_manifest = next(
+        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-owner-routing-recovery-20260621"),
+        {},
+    )
+    current_manifest_profile = next(
+        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-manifest-profile-index-plan-20260621"),
+        {},
+    )
+    latest_manifest_ids = [row.get("id") for row in latest_manifests]
 
     expect(
         not parse_errors
@@ -2618,13 +2630,26 @@ def test_index_plan_extended_sections():
         and bool(source_coverage_risk)
         and "project-current" in topic_index
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
+        and manifest_summary.get("jsonl_count", 0) >= 100
+        and manifest_summary.get("markdown_count", 0) >= 100
+        and bool(latest_manifests)
+        and current_owner_route_manifest.get("paired") is True
+        and current_owner_route_manifest.get("evidence_count", 0) >= 1
+        and current_manifest_profile.get("paired") is True
+        and current_manifest_profile.get("row_count") == 1
+        and current_manifest_profile.get("evidence_count", 0) >= 1
+        and "knowledge-hub-manifest-profile-index-plan-20260621" in latest_manifest_ids
+        and (
+            "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
+            or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
+        )
         and first_owner_worksheet.get("owner") == "team-core-or-pcr02-docs-owner"
         and first_owner_worksheet.get("status") == "owner-fill-required"
         and first_owner_worksheet.get("review_after") == "2026-09-17"
         and any(row.get("decision_state") == "no owner decision generated" for row in owner_worksheets)
         and bool(migration_decisions),
         "index-plan-extended-sections",
-        "index planner covers project/source/topic/decision sections",
+        "index planner covers project/source/topic/decision/manifest sections",
         {
             "exit_codes": {section: result["exit_code"] for section, result in section_results.items()},
             "parse_errors": parse_errors,
@@ -2640,9 +2665,85 @@ def test_index_plan_extended_sections():
             "source_final_disposition": pcr02_source.get("final_disposition", ""),
             "topic_keys_sample": sorted(topic_index.keys())[:10],
             "registry_decision_count": len(registry_decisions),
+            "manifest_summary": manifest_summary,
+            "latest_manifest_count": len(latest_manifests),
+            "latest_manifest_ids": latest_manifest_ids[:20],
+            "current_owner_route_manifest": current_owner_route_manifest,
+            "current_manifest_profile": current_manifest_profile,
             "owner_worksheet_count": len(owner_worksheets),
             "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),
+        },
+    )
+
+def test_manifest_jsonl_profile_gate():
+    repo = copy_repo("manifest-jsonl-profile-gate")
+    manifest_path = repo / "artifacts" / "manifests" / "knowledge-hub-manifest-profile-index-plan-20260621.jsonl"
+    rows = []
+    try:
+        for line in manifest_path.read_text().splitlines():
+            if not line.strip():
+                continue
+            rows.append(json.loads(line))
+        rows[0].pop("summary_zh", None)
+        rows[0].pop("notes_zh", None)
+        rows[0].pop("evidence", None)
+        rows[0].pop("evidence_refs", None)
+        rows[0].pop("validation_refs", None)
+        rows[0].pop("verification_commands", None)
+        rows[0].pop("source_refs", None)
+        manifest_path.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n")
+        setup_error = ""
+    except Exception as exc:
+        setup_error = str(exc)
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    expect(
+        not setup_error
+        and result["exit_code"] != 0
+        and any("manifest-profile:knowledge-hub-manifest-profile-index-plan-20260621 missing summary_zh or notes_zh" in error for error in errors)
+        and any("manifest-profile:knowledge-hub-manifest-profile-index-plan-20260621 missing evidence field" in error for error in errors),
+        "manifest-jsonl-profile-gate",
+        "knowledge-check requires lightweight profile fields for new governance manifest JSONL rows",
+        {
+            "setup_error": setup_error,
+            "exit_code": result["exit_code"],
+            "errors": errors[:10],
+        },
+    )
+
+def test_template_readability_field_gate():
+    repo = copy_repo("template-readability-field-gate")
+    template_path = repo / "templates" / "runbook.md"
+    try:
+        text = template_path.read_text()
+        text = "\n".join(line for line in text.splitlines() if not line.startswith("summary_zh:"))
+        template_path.write_text(text + "\n")
+        setup_error = ""
+    except Exception as exc:
+        setup_error = str(exc)
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("errors", [])
+    expect(
+        not setup_error
+        and result["exit_code"] != 0
+        and any("template:templates/runbook.md missing readability field summary_zh" in error for error in errors),
+        "template-readability-field-gate",
+        "knowledge-check requires long-term readability fields in maintained templates",
+        {
+            "setup_error": setup_error,
+            "exit_code": result["exit_code"],
+            "errors": errors[:10],
         },
     )
 
@@ -3302,6 +3403,8 @@ def test_regression_manifest_coverage():
         "templates-required-sections",
         "index-readme-maintenance-coverage",
         "index-plan-extended-sections",
+        "manifest-jsonl-profile-gate",
+        "template-readability-field-gate",
         "index-plan-topic-schema-health",
         "index-plan-decision-registry-health",
         "index-decision-registry-subsection-gate",
@@ -3393,6 +3496,8 @@ for test_fn in [
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
     test_index_plan_extended_sections,
+    test_manifest_jsonl_profile_gate,
+    test_template_readability_field_gate,
     test_index_plan_topic_schema_health,
     test_index_plan_decision_registry_health,
     test_index_decision_registry_gate,

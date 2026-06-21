@@ -181,3 +181,4 @@
 - 2026-09-21: `knowledge-hub-terminal-contract-template-sync-20260621`
 - 2026-09-21: `knowledge-hub-asof-coverage-contract-20260621`
 - 2026-09-21: `knowledge-hub-owner-routing-recovery-20260621`
+- 2026-09-21: `knowledge-hub-manifest-profile-index-plan-20260621`

@@ -25,11 +25,13 @@
 - `by-decision.md` 同时记录真实决策、迁移决策和 owner-gated 的 `no owner decision generated` 状态；不得把 owner-ready package 写成已签收决策。
 - `by-project.md` 应能从 project id 找到 current、archive、decisions、validation 和 manifests。
 - `by-topic.md` 只做主题导航，不复制正文；跨会话、跨项目和跨 source 的恢复优先写清主题入口，不把临时会话 handoff 当 active fact。
+- `artifacts/manifests/` 不维护完整人工索引；恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数时运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json`，只在确有长期导航价值时把摘要登记到 registry/index。
 
 ## 检查命令
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 

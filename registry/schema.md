@@ -383,6 +383,27 @@ Migration invariants:
 - Multiple `to` references may be separated by semicolons.
 - The bootstrap placeholder may use empty `from` and `to` only when `mode=none` and `status=bootstrap-empty`.
 
+## artifacts/manifests JSONL lightweight contract
+
+`artifacts/manifests/*.jsonl` 是治理证据、迁移清单、source coverage、artifact-ref、owner worksheet 和回归记录的结构化制品。它不是 `registry/items.jsonl`，不得强行套用完整 item schema。
+
+新增或 2026-06-21 及之后的 `knowledge-hub-*.jsonl` governance manifest 至少保持：
+
+- `id`
+- `status`
+- 日期证据：`checked_at`、`created_at`、`updated_at`、`review_after` 或文件名中的 `YYYYMMDD`
+- 中文可读说明：`summary_zh` 或 `notes_zh`
+- 证据字段：`evidence`、`evidence_refs`、`validation_refs`、`verification_commands` 或 `source_refs`
+- 边界字段：`boundaries`、`must_not`、`non_goals`、`rollback_policy` 或 `risk`
+
+Manifest profile invariants:
+
+- 2026-06-21 之前的历史 manifest 不反向强制改写。
+- copy-first、artifact-ref、owner worksheet、owner form 和 source coverage 清单按各自类型字段保持兼容，不为美化字段而改变语义。
+- source coverage row 继续遵守 source coverage 字段要求。
+- owner worksheet/form 结构门禁不得生成 owner decision，不得关闭 owner gate。
+- 机器清单可以保留英文 key，但 `summary_zh`、`notes_zh`、`decision`、`risk` 或相邻 Markdown 必须给中文维护者足够上下文。
+
 ## Safety invariants
 
 - `active` and `reviewing` items must have `owner` and `review_after`.

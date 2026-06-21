@@ -246,6 +246,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("template:"),
         ),
         (
+            "manifest-jsonl-profile",
+            "manifest JSONL 轻量契约异常",
+            "检查 2026-06-21 及之后的 Knowledge Hub governance manifest JSONL，补齐 id、status、中文说明、证据和边界字段；历史 manifest 不做反向强制改写。",
+            lambda msg: msg.startswith("manifest-profile:"),
+        ),
+        (
             "manual-entry",
             "人工新增入口过期",
             "同步 tools/knowledge-new.sh 和 templates/README.md 中当前 registry/index/migration 门禁提示。",
@@ -696,6 +702,43 @@ if not args.sources_only:
             elif not (root / target_path).exists():
                 errors.append(f"migrations:{migration_id} missing local target: {target_ref}")
 
+    manifest_profile_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-*-20260621.jsonl"))
+    manifest_evidence_fields = ["evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"]
+    manifest_boundary_fields = ["boundaries", "must_not", "non_goals", "rollback_policy", "risk"]
+    for manifest_path in manifest_profile_paths:
+        rel_manifest = manifest_path.relative_to(root)
+        filename_has_date = bool(re.search(r"20\d{6}", manifest_path.name))
+        rows = load_jsonl(manifest_path)
+        for row_index, row in enumerate(rows, 1):
+            row_id = str(row.get("id", "")).strip()
+            label = row_id or f"{rel_manifest}:{row_index}"
+            if not row_id:
+                errors.append(f"manifest-profile:{label} missing id")
+            if not str(row.get("status", "")).strip():
+                errors.append(f"manifest-profile:{label} missing status")
+            if not (filename_has_date or str(row.get("checked_at", "")).strip() or str(row.get("created_at", "")).strip() or str(row.get("updated_at", "")).strip() or str(row.get("review_after", "")).strip()):
+                errors.append(f"manifest-profile:{label} missing date field")
+            if not (str(row.get("summary_zh", "")).strip() or str(row.get("notes_zh", "")).strip()):
+                errors.append(f"manifest-profile:{label} missing summary_zh or notes_zh")
+            has_evidence = False
+            for field in manifest_evidence_fields:
+                value = row.get(field)
+                if isinstance(value, list) and value:
+                    has_evidence = True
+                elif isinstance(value, str) and value.strip():
+                    has_evidence = True
+            if not has_evidence:
+                errors.append(f"manifest-profile:{label} missing evidence field")
+            has_boundary = False
+            for field in manifest_boundary_fields:
+                value = row.get(field)
+                if isinstance(value, list) and value:
+                    has_boundary = True
+                elif isinstance(value, str) and value.strip():
+                    has_boundary = True
+            if not has_boundary:
+                errors.append(f"manifest-profile:{label} missing boundary field")
+
     template_required_fields = [
         "id",
         "title",
@@ -713,6 +756,24 @@ if not args.sources_only:
         "promotion",
         "tags",
     ]
+    template_readability_fields = [
+        "summary_zh",
+        "review_status",
+        "primary_language",
+        "source_language",
+        "translation_status",
+        "terminology_status",
+        "evidence_strength",
+        "evidence_refs",
+        "promotion_decision",
+        "generated_by_ai",
+        "ai_role",
+        "ai_model_or_tool",
+        "ai_generated_at",
+        "human_reviewed_by",
+        "human_reviewed_at",
+        "review_basis",
+    ]
     template_skip = {"README.md", "migration-record.md"}
     for template_path in sorted((root / "templates").glob("*.md")):
         rel_template = template_path.relative_to(root)
@@ -722,6 +783,9 @@ if not args.sources_only:
         for field in template_required_fields:
             if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
                 errors.append(f"template:{rel_template} missing {field}")
+        for field in template_readability_fields:
+            if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
+                errors.append(f"template:{rel_template} missing readability field {field}")
         if template_path.name == "artifact-ref.md":
             for field in ["uri", "size", "sha256"]:
                 if not re.search(rf"^{re.escape(field)}:", template_text, re.MULTILINE):
