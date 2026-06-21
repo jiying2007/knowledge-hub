@@ -189,3 +189,5 @@
 - 2026-09-21: `knowledge-hub-owner-landing-audit-manual-index-20260621`
 - 2026-09-21: `knowledge-hub-source-boundary-health-20260621`
 - 2026-09-21: `pcr02-product-test-artifact-config-interface-identity-20260621`
+- 2026-09-21: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
+- 2026-09-21: `pcr02-p2-archive-rule-identity-20260621`

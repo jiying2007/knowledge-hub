@@ -169,3 +169,5 @@
 - PCR02 product-test artifact/config/interface identity: `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`
 - PCR02 P1 source identity for agent-config, tools and root artifacts: `artifacts/manifests/pcr02-p1-source-identity-20260621.md`
 - Knowledge Hub owner landing index completeness: `artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.md`
+- Knowledge Hub final gate regression skip blocker: `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`
+- PCR02 P2 archive/rule identity for module-agent-rules and scratch: `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`

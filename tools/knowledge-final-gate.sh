@@ -240,6 +240,13 @@ elif knowledge_regression["parse_error"]:
         "summary_zh": "knowledge-regression JSON 输出无法解析，不能作为终态证据。",
         "command": knowledge_regression["command"],
     })
+elif knowledge_regression["payload"].get("skipped_for_self_test") is True:
+    blockers.append({
+        "id": "knowledge-regression-skipped",
+        "severity": "blocker",
+        "summary_zh": "knowledge-regression 被自测跳过标记短路，不能作为终态证据；请在无 KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION 的环境中重跑 final gate。",
+        "command": knowledge_regression["command"],
+    })
 elif knowledge_regression["exit_code"] != 0:
     regression_payload = knowledge_regression["payload"]
     failed = [
@@ -327,6 +334,7 @@ core_checks_pass = (
     and git_diff_check["exit_code"] == 0
     and not knowledge_regression["parse_error"]
     and knowledge_regression["exit_code"] == 0
+    and knowledge_regression["payload"].get("skipped_for_self_test") is not True
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
 check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})

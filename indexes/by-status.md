@@ -325,3 +325,7 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - p1-source-identity-preflight-applied: PCR02 agent-config、tools、root-artifacts 三个 P1 source 的 44 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not，并排除依赖树、缓存和子 source；documented by `artifacts/manifests/pcr02-p1-source-identity-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-landing-index-completeness-20260621`
 - owner-landing-index-completeness-applied: `knowledge-owner-gates.sh --landing-plan/--landing-audit` 显式输出 by-source 与 by-decision 人工索引落点，并由回归断言；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.jsonl`.
+- reviewing: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
+- final-gate-regression-skip-blocker-applied: `knowledge-final-gate.sh` 将 regression self-test skip 作为 `knowledge-regression-skipped` blocker，不允许作为终态证据；documented by `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.jsonl`.
+- reviewing: `pcr02-p2-archive-rule-identity-20260621`
+- p2-archive-rule-identity-preflight-applied: PCR02 module-agent-rules 与 scratch 两个 P2 source 的 16 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not；规则文件保持 owner-gated reference，scratch 保持 archive-only；documented by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.jsonl`.

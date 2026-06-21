@@ -1406,7 +1406,7 @@ def test_final_gate_owner_review_blocker():
             {"skipped_in_inner_final_gate": True},
         )
         return
-    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
     parsed = {}
     try:
         parsed = json.loads(result["stdout"])
@@ -1497,7 +1497,7 @@ def test_final_gate_owner_review_blocker():
         and checks.get("git_diff_check", {}).get("command") == "rtk git diff --check"
         and checks.get("knowledge_regression", {}).get("status") == "pass"
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
-        and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
+        and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
         and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
         and owner_blocker.get("count") == 7
@@ -1522,13 +1522,67 @@ def test_final_gate_owner_review_blocker():
         },
     )
 
+def test_final_gate_skip_regression_blocker():
+    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    checks = parsed.get("checks", {})
+    blocker = next(
+        (
+            item
+            for item in parsed.get("blockers", [])
+            if item.get("id") == "knowledge-regression-skipped"
+        ),
+        {},
+    )
+    gap = next(
+        (
+            item
+            for item in parsed.get("gap_map", [])
+            if item.get("gap_id") == "knowledge-regression-skipped"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-fix"
+        and parsed.get("automatic_governance", {}).get("status") == "needs-fix"
+        and parsed.get("automatic_governance", {}).get("core_checks_pass") is False
+        and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
+        and blocker.get("severity") == "blocker"
+        and gap.get("gap_type") == "regression"
+        and gap.get("codex_auto_can_complete") is True,
+        "final-gate-skip-regression-blocker",
+        "final gate rejects regression self-test skip as terminal completion evidence",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "automatic_governance": parsed.get("automatic_governance", {}),
+            "checks": checks,
+            "blockers": parsed.get("blockers", []),
+            "gap_map": parsed.get("gap_map", []),
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_final_gate_empty_child_json_blocker():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-empty-child-json-blocker",
+            "final gate empty child JSON fixture is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
     repo = copy_repo("final-gate-empty-child-json-blocker")
     check_path = repo / "tools" / "knowledge-check.sh"
     check_path.write_text("#!/usr/bin/env bash\nexit 0\n")
     result = run_cmd(
         repo,
-        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     parsed = {}
     try:
@@ -1601,6 +1655,14 @@ def test_final_gate_default_regression_path():
     )
 
 def test_final_gate_source_final_state_field_gap():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-source-final-state-field-gap",
+            "final gate source final-state fixture is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
     repo = copy_repo("final-gate-source-field-gap")
     sources_path = repo / "registry" / "sources.json"
     data = json.loads(sources_path.read_text())
@@ -1623,7 +1685,7 @@ def test_final_gate_source_final_state_field_gap():
     run_cmd(repo, ["rtk", "git", "init"])
     result = run_cmd(
         repo,
-        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     parsed = {}
     try:
@@ -1660,10 +1722,18 @@ def test_final_gate_source_final_state_field_gap():
     )
 
 def test_final_gap_readability_positive_contracts():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gap-readability-positive-contracts",
+            "final gap readability contract is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
     check_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     final_result = run_cmd(
         root,
-        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     check_parsed = {}
     final_parsed = {}
@@ -3330,6 +3400,14 @@ def test_source_coverage_date_filename_selection():
     )
 
 def test_review_after_as_of_deterministic():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "review-after-as-of-deterministic",
+            "review-after as-of fixture is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
     repo = copy_repo("review-after-as-of")
     item_id = "knowledge-hub-final-maintenance-closure-20260620"
     path = repo / "registry" / "items.jsonl"
@@ -3357,7 +3435,7 @@ def test_review_after_as_of_deterministic():
     future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
     past_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-06-01"])
     future_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-07-01"])
-    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01"])
+    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01"])
     parsed = {}
     parse_errors = {}
     for name, result in [
@@ -3828,6 +3906,7 @@ def test_regression_manifest_coverage():
         "status-text-owner-summary-commands",
         "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
+        "final-gate-skip-regression-blocker",
         "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
         "final-gate-source-final-state-field-gap",
@@ -3927,6 +4006,7 @@ for test_fn in [
     test_status_text_owner_summary_commands,
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
+    test_final_gate_skip_regression_blocker,
     test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
     test_final_gate_source_final_state_field_gap,

@@ -165,6 +165,8 @@
 - `pcr02-product-test-artifact-config-interface-identity-20260621`
 - `pcr02-p1-source-identity-20260621`
 - `knowledge-hub-owner-landing-index-completeness-20260621`
+- `knowledge-hub-final-gate-regression-skip-blocker-20260621`
+- `pcr02-p2-archive-rule-identity-20260621`
 
 ## pcr02-registry-owner
 
