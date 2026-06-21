@@ -26,6 +26,7 @@
 - Tools boundary: `artifacts/manifests/pcr02-tools-boundary-20260620.md`
 - Knowledge secret/config boundary: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - Product-test artifact/config/interface boundary: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
+- Product-test artifact/config/interface identity: `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`
 - Scratch archive boundary: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
 - Root artifacts boundary: `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`
 - Module agent rules boundary: `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`

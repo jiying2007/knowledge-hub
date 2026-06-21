@@ -79,6 +79,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-knowledge`: concrete env/config, project-local rule, runbook, standards-like doc, governance tool and skill-asset boundaries are tracked by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`.
 - `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-product-test`: concrete Markdown, PDF/archive, config, C/C++ reference and build artifact boundaries are tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`.
+- `pcr02-product-test`: artifact/config/interface source identity for 73 non-generated files is tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`.
 - `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
 - `pcr02-project-scratch`: concrete session/context/resume archive-only boundary is tracked by `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`.
 - `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.

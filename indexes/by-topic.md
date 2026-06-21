@@ -166,3 +166,4 @@
 - Knowledge Hub owner evidence readiness: `artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.md`
 - Knowledge Hub owner landing audit, manual index and manifest unpaired classification: `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md`
 - Knowledge Hub source check and boundary health: `artifacts/manifests/knowledge-hub-source-boundary-health-20260621.md`
+- PCR02 product-test artifact/config/interface identity: `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`

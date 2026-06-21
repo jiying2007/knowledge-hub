@@ -162,6 +162,7 @@
 - `knowledge-hub-owner-evidence-readiness-20260621`
 - `knowledge-hub-owner-landing-audit-manual-index-20260621`
 - `knowledge-hub-source-boundary-health-20260621`
+- `pcr02-product-test-artifact-config-interface-identity-20260621`
 
 ## pcr02-registry-owner
 
