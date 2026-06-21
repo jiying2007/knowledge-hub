@@ -173,3 +173,4 @@
 - PCR02 P2 archive/rule identity for module-agent-rules and scratch: `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`
 - Knowledge Hub manual entry and source boundary sync: `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`
 - PCR02 Level 2 source check execution snapshot: `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`
+- Knowledge Hub manual recovery and boundary hardening: `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`

@@ -10,7 +10,7 @@
 
 - 先分类，再落盘；先 registry，再提升。
 - 正文只维护一份；其他位置使用索引、引用或迁移记录。
-- 自动化默认 `report-only`，不得自动删除、发布、提交、提升或写 memory。
+- 自动化默认 `report-only`，不得自动删除、发布、提交、提升、生成 owner decision、关闭 owner gate 或写 memory。
 - `~/.codex/memories` 只能作为辅助召回，不能作为规则或事实的唯一来源。
 - 文档、资料、索引、manifest、worksheet 和其他文本类产物默认使用简体中文，必要的命令、路径、协议字段、API 名称、代码标识和英文原文引用可保留英文。
 - 所有长期保留文本应优先保证可读性：标题清楚、段落短、列表有边界、结论/证据/风险/下一步分开写；外文或机器生成材料进入知识库时，应补中文摘要或中文说明，避免只留下难检索的原始文本。
@@ -34,6 +34,7 @@
 - 禁止把 raw logs、core、SDK 压缩包、release binary 写入文本知识层。
 - 禁止把 token、private key、password、cookie 或运行时 secret 写入任何正文或 registry。
 - 禁止在未验证来源、owner、状态和 review 周期前声明知识条目 active。
+- 禁止由 Codex 或自动化代签 owner decision、代填 `reviewed_by`，或把 owner-ready / landing-plan 产物当成已关闭 gate。
 
 ## 5. 最小验证
 

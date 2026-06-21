@@ -333,3 +333,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - manual-entry-source-boundary-sync-applied: 人工新增入口已补齐专用模板映射、README 示例、回归覆盖和 13 个 source 的中文边界入口；documented by `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.jsonl`.
 - reviewing: `pcr02-level2-source-check-execution-snapshot-20260621`
 - level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check 已按 report-only 手动快照执行且 exit_code=0；只证明路径/文件存在，不关闭 owner gate；documented by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.
+- reviewing: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
+- manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线待验证模板和 PCR02 source/project 边界可读性已压实；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.

@@ -80,6 +80,18 @@ affected_version:
 
 说明复现前后对比、命令和通过/失败判据。
 
+### 离线待验证（可选）
+
+仅在现场或离线排障先记录、后补验证时保留此块；未验证内容必须留在假设、风险或后续动作中。
+
+```yaml
+manual_validation_pending: true
+manual_validation_reason:
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+owner:
+review_after:
+```
+
 ## 后续动作
 
 说明是否提升为 runbook、validation、decision，或仅归档。

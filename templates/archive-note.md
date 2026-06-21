@@ -61,6 +61,18 @@ review_basis:
 - result_summary：
 - artifact_refs：
 
+### 离线待验证（可选）
+
+仅在归档记录先落盘、验证命令稍后补跑时保留此块；归档状态不得因此升级为 active fact。
+
+```yaml
+manual_validation_pending: true
+manual_validation_reason:
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+owner:
+review_after:
+```
+
 ## 当前状态
 
 说明是否仍可参考、是否被替代、是否需要 owner 复核。

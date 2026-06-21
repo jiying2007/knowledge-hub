@@ -16,6 +16,21 @@
 | pcr02-module-agent-rules | project-agent-rules-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 | pcr02-project-agent-config | project-agent-config-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 
+## PCR02 Source 边界速查
+
+下表是 `registry/sources.json` 的人工可读摘要，只用于快速恢复 PCR02 source 的 owner、复核时间和最终治理边界；权威字段仍以 registry 为准。
+
+| Source | Owner | Review After | Final Disposition | Boundary |
+| --- | --- | --- | --- | --- |
+| pcr02-project-docs | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | copy/reference/artifact/owner-gated 混合覆盖；7 个 owner gate 不得代签关闭 |
+| pcr02-project-tools | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | tool/diag/memory automation 只做 reference/report-only 边界，不写源项目 |
+| pcr02-project-knowledge | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | classify-first、secret/config/tool-ref 边界，不提升 active |
+| pcr02-product-test | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | artifact/config/interface 只做身份和引用登记，不复制大附件或构建物 |
+| pcr02-project-scratch | pcr02-registry-owner | 2026-09-20 | archive-only-registered | scratch/session/resume archive-only，不写 memory，不进 active facts |
+| pcr02-project-root-artifacts | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | root loose artifact/tool/config 边界，排除子 source 和生成物 |
+| pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | owner-gated-pending-decision | module/local AGENTS 规则保持 owner-gated reference，不升级全局规则 |
+| pcr02-project-agent-config | pcr02-registry-owner | 2026-09-20 | artifact-ref-registered | `.vscode`/`.kilo` 配置和 report-only 自动化只做 artifact/config ref |
+
 ## Source Governance Recovery
 
 本索引主表只保留 source id、role 和 path，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check/no_check_reason、coverage 和 migration refs 时，运行：
@@ -35,6 +50,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - Latest as-of and source coverage selection/health contract: `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
 - Latest final gate regression skip blocker: `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`.
 - Latest manual entry template and source boundary sync: `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`.
+- Latest manual/offline recovery and PCR02 readable boundary sync: `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`.
 
 ## Source-Specific Review Artifacts
 

@@ -63,6 +63,18 @@ review_basis:
 - cwd：
 - scope：
 
+### 离线待验证（可选）
+
+仅在验证报告先记录、命令证据稍后补跑时保留此块；结论应写“不可判定”或“待验证”，不得写通过。
+
+```yaml
+manual_validation_pending: true
+manual_validation_reason:
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+owner:
+review_after:
+```
+
 ## 结果矩阵
 
 | case | 期望 | 实际 | 状态 | 证据 |

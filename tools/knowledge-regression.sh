@@ -2597,6 +2597,73 @@ def test_manual_entry_readability_fields():
         },
     )
 
+def test_manual_entry_archive_default_status():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "project-archive",
+            "--domain",
+            "projects/pcr02",
+            "--owner",
+            "team-core",
+            "--id",
+            "pcr02-archive-status-default",
+            "--path",
+            "domains/projects/pcr02/archive/status-default.md",
+        ],
+    )
+    required_fragments = [
+        "- 推荐 registry status: archived",
+        '"status":"archived"',
+        "- archived: `pcr02-archive-status-default`",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
+    expect(
+        result["exit_code"] == 0 and not missing_fragments,
+        "manual-entry-archive-default-status",
+        "project archive manual entry guide defaults registry and status index drafts to archived",
+        {
+            "exit_code": result["exit_code"],
+            "missing_fragments": missing_fragments,
+            "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
+def test_offline_validation_template_placeholders():
+    template_names = [
+        "item.md",
+        "archive-note.md",
+        "debug-record.md",
+        "external-source-note.md",
+        "validation-report.md",
+    ]
+    missing = {}
+    for name in template_names:
+        text = (root / "templates" / name).read_text()
+        required = [
+            "manual_validation_pending: true",
+            "manual_validation_reason:",
+            "required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+            "owner:",
+            "review_after:",
+        ]
+        gaps = [fragment for fragment in required if fragment not in text]
+        if gaps:
+            missing[name] = gaps
+    expect(
+        not missing,
+        "offline-validation-template-placeholders",
+        "high-frequency templates carry optional manual_validation_pending placeholders for offline maintenance",
+        {
+            "missing": missing,
+            "template_count": len(template_names),
+        },
+    )
+
 def test_governance_audit_readability_gate():
     repo = copy_repo("governance-audit-readability-gate")
     items_path = repo / "registry" / "items.jsonl"
@@ -3619,6 +3686,74 @@ def test_source_manual_entry_guide():
         },
     )
 
+def test_source_manual_entry_enum_guide():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source-enum",
+            "--source-path",
+            "/tmp/example-enum",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    invalid = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "bad-source-enum",
+            "--source-path",
+            "/tmp/bad-enum",
+            "--role",
+            "bad-role",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    required_fragments = [
+        "## 枚举速查",
+        "role: team-knowledge-source",
+        "authority: legacy-team-ssot",
+        "write_policy: do-not-write-through-knowledge-hub",
+        "final_disposition 常用值",
+        "脚本会对已传入的 role、authority、status 和 write_policy 做预校验",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
+    expect(
+        result["exit_code"] == 0
+        and not missing_fragments
+        and invalid["exit_code"] != 0
+        and "source role value is not allowed" in invalid["stderr"],
+        "source-manual-entry-enum-guide",
+        "source manual entry guide prints source enum quick reference and rejects invalid provided enums",
+        {
+            "exit_code": result["exit_code"],
+            "missing_fragments": missing_fragments,
+            "invalid_exit_code": invalid["exit_code"],
+            "invalid_stderr": invalid["stderr"][:500],
+            "stdout_sample": result["stdout"][:1800],
+        },
+    )
+
 def test_source_manual_entry_guide_check_command():
     result = run_cmd(
         root,
@@ -3938,6 +4073,8 @@ def test_regression_manifest_coverage():
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "manual-entry-readability-fields",
+        "manual-entry-archive-default-status",
+        "offline-validation-template-placeholders",
         "governance-audit-readability-gate",
         "ai-generated-item-provenance-gate",
         "migration-notes-zh-gate",
@@ -3958,6 +4095,7 @@ def test_regression_manifest_coverage():
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
+        "source-manual-entry-enum-guide",
         "source-manual-entry-guide-check-command",
         "source-manual-entry-unknown-owner-warning",
         "source-manual-entry-requires-check-or-reason",
@@ -4038,6 +4176,8 @@ for test_fn in [
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_manual_entry_readability_fields,
+    test_manual_entry_archive_default_status,
+    test_offline_validation_template_placeholders,
     test_governance_audit_readability_gate,
     test_ai_generated_item_provenance_gate,
     test_migration_notes_zh_gate,
@@ -4058,6 +4198,7 @@ for test_fn in [
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
+    test_source_manual_entry_enum_guide,
     test_source_manual_entry_guide_check_command,
     test_source_manual_entry_unknown_owner_warning,
     test_source_manual_entry_requires_check_or_reason,

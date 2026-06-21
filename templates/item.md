@@ -71,6 +71,18 @@ review_basis:
 - scope：
 - artifact_refs：
 
+### 离线待验证（可选）
+
+仅在无法立即运行 `rtk` 验证时保留此块；验证完成后删除或改写为正式证据。
+
+```yaml
+manual_validation_pending: true
+manual_validation_reason:
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+owner:
+review_after:
+```
+
 ## 风险与限制
 
 说明未验证点、过期条件、敏感信息边界和回退方式。

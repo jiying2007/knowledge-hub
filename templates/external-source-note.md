@@ -67,6 +67,18 @@ review_basis:
 
 可选值：`official`、`direct-command`、`direct-log`、`human-review`、`external-reference`、`inference`。
 
+### 离线待验证（可选）
+
+仅在资料已摘录但来源、许可或验证命令待补时保留此块；补齐前不得提升为 active 规则。
+
+```yaml
+manual_validation_pending: true
+manual_validation_reason:
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+owner:
+review_after:
+```
+
 ## 吸收决策
 
 可选值：`adopt`、`adapt`、`reject`、`archive-only`。

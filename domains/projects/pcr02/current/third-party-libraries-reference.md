@@ -14,6 +14,8 @@ validation_refs: [libs/3rdparty, build/app_3rdparty.mk, pcr02/pcr02.mk]
 
 # PCR02 第三方库引用基线
 
+> 项目边界：本文是 PCR02 迁移副本中的项目本地基线，只适用于 `domains/projects/pcr02/` 及对应 PCR02 source。它不是团队级 third-party 标准，不进入 `domains/embedded/standards/`；跨项目复用前必须另行 owner review，并拆出通用依赖治理证据。
+
 ## 1. 目的
 
 统一记录仓库内第三方依赖目录和主要链接场景，避免“代码已引用但文档缺失”。

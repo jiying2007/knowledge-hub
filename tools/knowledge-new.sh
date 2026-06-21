@@ -209,6 +209,42 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   fi
 fi
 
+validate_source_enum() {
+  local field="$1"
+  local value="$2"
+  case "$field" in
+    role)
+      case "$value" in
+        team-knowledge-source|project-archive-source|patent-source|codex-governance-source|auxiliary-memory-source|project-current-docs-source|project-current-tools-source|project-current-knowledge-source|project-product-test-source|project-scratch-source|project-root-artifact-source|project-agent-rules-source|project-agent-config-source) return 0 ;;
+      esac
+      ;;
+    authority)
+      case "$value" in
+        legacy-team-ssot|legacy-project-history|patent-materials|codex-workflow-history|auxiliary-recall-only|legacy-project-current-docs|legacy-project-current-tools|legacy-project-current-knowledge|legacy-project-product-test|legacy-project-scratch|legacy-project-root-artifacts|legacy-project-agent-rules|legacy-project-agent-config) return 0 ;;
+      esac
+      ;;
+    status)
+      case "$value" in
+        registered|deprecated|retired) return 0 ;;
+      esac
+      ;;
+    write_policy)
+      case "$value" in
+        do-not-write-through-knowledge-hub|copy-first-migration-only|do-not-mix-with-engineering-knowledge|use-codex-archive-tools|read-only-unless-explicitly-approved|externalize-to-knowledge-hub-before-prune) return 0 ;;
+      esac
+      ;;
+  esac
+  printf "ERROR source %s value is not allowed by registry/schema.md: %s\n" "$field" "$value" >&2
+  exit 2
+}
+
+if [[ "$SOURCE_MODE" == "true" ]]; then
+  [[ -n "$SOURCE_ROLE" ]] && validate_source_enum "role" "$SOURCE_ROLE"
+  [[ -n "$SOURCE_AUTHORITY" ]] && validate_source_enum "authority" "$SOURCE_AUTHORITY"
+  [[ -n "$SOURCE_STATUS" ]] && validate_source_enum "status" "$SOURCE_STATUS"
+  [[ -n "$SOURCE_WRITE_POLICY" ]] && validate_source_enum "write_policy" "$SOURCE_WRITE_POLICY"
+fi
+
 if [[ "$SOURCE_MODE" == "true" ]]; then
   DISPLAY_SOURCE_ID="${SOURCE_ID:-${ITEM_ID:-<source-id>}}"
   DISPLAY_SOURCE_PATH="${SOURCE_PATH:-${TARGET_PATH:-<source-root>}}"
@@ -296,6 +332,16 @@ ${SOURCE_OWNER_WARNING_LINE}
    rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
+## 枚举速查
+
+- role: team-knowledge-source / project-archive-source / patent-source / codex-governance-source / auxiliary-memory-source / project-current-docs-source / project-current-tools-source / project-current-knowledge-source / project-product-test-source / project-scratch-source / project-root-artifact-source / project-agent-rules-source / project-agent-config-source
+- authority: legacy-team-ssot / legacy-project-history / patent-materials / codex-workflow-history / auxiliary-recall-only / legacy-project-current-docs / legacy-project-current-tools / legacy-project-current-knowledge / legacy-project-product-test / legacy-project-scratch / legacy-project-root-artifacts / legacy-project-agent-rules / legacy-project-agent-config
+- status: registered / deprecated / retired
+- write_policy: do-not-write-through-knowledge-hub / copy-first-migration-only / do-not-mix-with-engineering-knowledge / use-codex-archive-tools / read-only-unless-explicitly-approved / externalize-to-knowledge-hub-before-prune
+- final_disposition 常用值: fully-migrated / copy-first-migrated / reference-first-registered / artifact-ref-registered / archive-only-registered / owner-gated-pending-decision / no-migration-with-reason / auxiliary-recall-only / external-tool-owned / mixed-terminal-coverage
+
+脚本会对已传入的 role、authority、status 和 write_policy 做预校验；final_disposition 仍需落盘前按 \`registry/schema.md\` 人工确认。
+
 ## 可复制草稿
 
 ### registry/sources.json object
@@ -362,6 +408,13 @@ case "$KIND" in
     TEMPLATE="templates/item.md"
     ;;
 esac
+
+DRAFT_STATUS="reviewing"
+STATUS_INDEX_BUCKET="reviewing"
+if [[ "$KIND" == "project-archive" || "$KIND" == "archive-note" ]]; then
+  DRAFT_STATUS="archived"
+  STATUS_INDEX_BUCKET="archived"
+fi
 
 DISPLAY_ID="${ITEM_ID:-<id>}"
 DISPLAY_KIND="${KIND:-<kind>}"
@@ -444,6 +497,7 @@ $(usage)
 - owner: ${DISPLAY_OWNER}
 - path: ${TARGET_PATH:-<待填写>}
 - 推荐模板: ${TEMPLATE}
+- 推荐 registry status: ${DRAFT_STATUS}
 - manual_source_reason: ${MANUAL_SOURCE_REASON}
 - manual_validation_pending: ${MANUAL_VALIDATION_PENDING}
 - generated_by_ai: ${GENERATED_BY_AI}
@@ -477,7 +531,7 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"reviewing","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"${DRAFT_STATUS}","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 ${MANUAL_VALIDATION_BLOCK}
 
@@ -491,7 +545,8 @@ ${MANUAL_VALIDATION_BLOCK}
 - ${DEFAULT_REVIEW_AFTER}: \`${DISPLAY_ID}\`
 
 # indexes/by-status.md
-- reviewing: \`${DISPLAY_ID}\`
+- ${STATUS_INDEX_BUCKET}: \`${DISPLAY_ID}\`
+# 状态提示：默认非归档条目使用 - reviewing: \`<id>\`；project-archive / archive-note 使用 - archived: \`<id>\`。
 ${PROJECT_INDEX_DRAFT}
 ${SOURCE_INDEX_DRAFT}
 ${DECISION_INDEX_DRAFT}

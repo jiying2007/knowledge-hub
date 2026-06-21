@@ -103,6 +103,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 搜索和恢复入口：
 
 ```bash
+rtk git rev-parse --short HEAD
+rtk git status --branch --short
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/pcr02 --kind project-current --status reviewing --json
@@ -110,6 +112,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-proj
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
 
+先用 git 命令固定 HEAD、分支和工作区状态，再运行 status/final gate 或结构化搜索，避免把旧 handoff、旧 manifest 或外部脏工作区当成当前事实。
 结构化过滤只对能关联到 `registry/items.jsonl` 的本仓登记条目生效；使用 `--owner`、`--status`、`--kind`、`--domain` 或 `--source-id` 时，未登记普通文件会被排除，避免把外部原始文件误当治理条目。JSON 输出保留旧的 `query/count/results` 字段，并在命中 registry item 时附带 `item_id/title/kind/domain/status/owner/source_id/review_after/tags`。
 
 | 场景 | 最小落盘文件 | 关键验证 |
