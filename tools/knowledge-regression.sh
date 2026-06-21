@@ -945,6 +945,8 @@ def test_status_next_owner_gate():
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
     owner_forms_jsonl_commands = parsed.get("owner_gates", {}).get("owner_forms_jsonl_commands", [])
+    owner_validate_forms_command_templates = parsed.get("owner_gates", {}).get("owner_validate_forms_command_templates", [])
+    owner_landing_plan_command_templates = parsed.get("owner_gates", {}).get("owner_landing_plan_command_templates", [])
     forms_jsonl_commands = parsed.get("owner_gates", {}).get("forms_jsonl_commands", [])
     validate_forms_command_templates = parsed.get("owner_gates", {}).get("validate_forms_command_templates", [])
     landing_plan_command_templates = parsed.get("owner_gates", {}).get("landing_plan_command_templates", [])
@@ -969,6 +971,8 @@ def test_status_next_owner_gate():
         and any("--summary" in str(command) for command in summary_commands)
         and any("--owner project-owner" in str(command) and "--summary" in str(command) for command in owner_summary_commands)
         and any("--owner project-owner" in str(command) and "--forms-jsonl" in str(command) for command in owner_forms_jsonl_commands)
+        and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_validate_forms_command_templates)
+        and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_landing_plan_command_templates)
         and any("--forms-jsonl" in str(command) for command in forms_jsonl_commands)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--json" in str(command) for command in validate_forms_command_templates)
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) and "--landing-plan" in str(command) and "--json" in str(command) for command in landing_plan_command_templates)
@@ -994,6 +998,8 @@ def test_status_next_owner_gate():
         and any("--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--forms-jsonl" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--validate-forms" in str(action) for action in next_actions)
+        and any("--owner" in str(action) and "--landing-plan" in str(action) for action in next_actions)
         and any("knowledge-final-gate.sh --json" in str(action) for action in next_actions)
         and any("--next-open --checklist --forms" in str(action) for action in next_actions)
         and any("--next-open --forms-jsonl" in str(action) for action in next_actions)
@@ -1006,6 +1012,8 @@ def test_status_next_owner_gate():
         and any("--next-open --checklist --forms" in str(command) for command in owner_blocker.get("commands", []))
         and any("--next-open --forms-jsonl" in str(command) for command in owner_blocker.get("commands", []))
         and not any("owner-decisions.jsonl" in str(command) for command in owner_blocker.get("commands", []))
+        and any("--owner project-owner" in str(command) and "--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
+        and any("--owner project-owner" in str(command) and "--landing-plan" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--landing-plan" in str(command) for command in owner_blocker.get("command_templates", [])),
         "status-next-owner-gate",
@@ -1023,6 +1031,8 @@ def test_status_next_owner_gate():
             "summary_commands": summary_commands,
             "owner_summary_commands": owner_summary_commands,
             "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
+            "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
+            "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
             "forms_jsonl_commands": forms_jsonl_commands,
             "validate_forms_command_templates": validate_forms_command_templates,
             "landing_plan_command_templates": landing_plan_command_templates,
@@ -1048,14 +1058,20 @@ def test_status_text_owner_summary_commands():
         and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
         and "- owner forms-jsonl commands:" in result["stdout"]
         and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"]
+        and "- owner validate-forms command templates:" in result["stdout"]
+        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"]
+        and "- owner landing plan command templates:" in result["stdout"]
+        and "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"]
         and "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
         "status-text-owner-summary-commands",
-        "status text mode exposes owner dispatch and review_after commands",
+        "status text mode exposes owner dispatch, owner validation templates and review_after commands",
         {
             "exit_code": result["exit_code"],
             "has_owner_summary_heading": "- owner summary commands:" in result["stdout"],
             "has_project_owner_summary": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"],
             "has_project_owner_forms_jsonl": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl" in result["stdout"],
+            "has_project_owner_validate_forms": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in result["stdout"],
+            "has_project_owner_landing_plan": "rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"],
             "has_review_after_command": "- review_after command: `rtk bash tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
@@ -1215,7 +1231,7 @@ def make_valid_owner_decision_form(repo):
     identity = form.get("observed_source_identity", {})
     for key, value in {
         "owner_decision": form.get("allowed_owner_decisions", ["project-local-rule"])[0],
-        "target_decision": "project-local-rule",
+        "target_decision": form.get("target_candidates", ["project-local-rule"])[0],
         "reviewed_by": "regression-fixture-owner",
         "reviewed_at": "2026-06-19",
         "review_after": "2026-09-19",
@@ -1263,22 +1279,139 @@ def test_owner_landing_plan_project_index():
         pass
     required_files = parsed.get("landing_plan", {}).get("required_manual_files", [])
     owner_ready_gate = parsed.get("landing_plan", {}).get("owner_ready_gate", {})
+    steps = parsed.get("landing_plan", {}).get("steps", [])
+    first_step = steps[0] if steps else {}
+    worksheet_commands = first_step.get("worksheet_verification_commands", [])
     expect(
         result["exit_code"] == 0
         and parsed.get("landing_plan", {}).get("status") == "planned"
         and owner_ready_gate.get("status") == "pass"
         and owner_ready_gate.get("error_count") == 0
         and "indexes/by-project.md" in required_files
-        and "indexes/by-status.md" in required_files,
+        and "indexes/by-status.md" in required_files
+        and bool(worksheet_commands)
+        and any("knowledge-check.sh" in str(command) for command in worksheet_commands),
         "owner-landing-plan-project-index",
-        "owner landing plan requires by-project index",
+        "owner landing plan requires by-project index and carries worksheet verification commands",
         {
             "exit_code": result["exit_code"],
             "landing_status": parsed.get("landing_plan", {}).get("status"),
             "owner_ready_gate": owner_ready_gate,
             "required_manual_files": required_files,
+            "worksheet_verification_commands": worksheet_commands,
             "stdout_sample": result["stdout"][:1000],
         },
+    )
+
+def test_owner_form_target_decision_candidate_gate():
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, "owner-form-target-decision-candidate-gate", "owner form rejects target decisions outside worksheet candidates", setup_error)
+        return
+    form["target_decision"] = "domains/embedded/standards/invalid-owner-target.md"
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-target-decision-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("form_validation", {}).get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and any("target_decision" in error and "target candidates" in error for error in errors),
+        "owner-form-target-decision-candidate-gate",
+        "owner form rejects target decisions outside worksheet candidates",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": errors,
+            "target_candidates": form.get("target_candidates", []),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def run_owner_form_tamper_gate(case_id, mutate_form, expected_fragment):
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, case_id, "owner form rejects worksheet guardrail tampering", setup_error)
+        return
+    mutate_form(form)
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{case_id}-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("form_validation", {}).get("errors", [])
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and any(expected_fragment in error for error in errors),
+        case_id,
+        "owner form rejects worksheet guardrail tampering",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": errors,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_owner_form_must_not_tamper_gate():
+    def mutate(form):
+        form["must_not"] = list(form.get("must_not", [])) + ["fixture-invalid-extra-guardrail"]
+
+    run_owner_form_tamper_gate(
+        "owner-form-must-not-tamper-gate",
+        mutate,
+        "must_not differs from worksheet guardrails",
+    )
+
+def test_owner_form_allowed_decisions_tamper_gate():
+    def mutate(form):
+        form["allowed_owner_decisions"] = list(form.get("allowed_owner_decisions", [])) + ["fixture-invalid-decision"]
+
+    run_owner_form_tamper_gate(
+        "owner-form-allowed-decisions-tamper-gate",
+        mutate,
+        "allowed_owner_decisions differs from worksheet decision options",
     )
 
 def run_owner_landing_ready_block_fixture(case_id, expected_status, mutate_repo):
@@ -1432,7 +1565,7 @@ def test_owner_form_source_identity_mismatch():
     identity = form.get("observed_source_identity", {})
     for key, value in {
         "owner_decision": form.get("allowed_owner_decisions", ["project-local-rule"])[0],
-        "target_decision": "project-local-rule",
+        "target_decision": form.get("target_candidates", ["project-local-rule"])[0],
         "reviewed_by": "regression-fixture-owner",
         "reviewed_at": "2026-06-19",
         "review_after": "2026-09-19",
@@ -2554,6 +2687,9 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
         "owner-landing-plan-requires-owner-ready-duplicate",
+        "owner-form-target-decision-candidate-gate",
+        "owner-form-must-not-tamper-gate",
+        "owner-form-allowed-decisions-tamper-gate",
         "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
         "manual-entry-project-derived-from-domain",
@@ -2581,14 +2717,14 @@ def test_regression_manifest_coverage():
     expect(
         not read_error
         and not missing_ids
-        and "52 个回归场景" in manifest_text,
+        and "55 个回归场景" in manifest_text,
         "regression-manifest-coverage",
         "regression helper manifest covers current regression ids",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
-            "expected_count_text": "52 个回归场景",
+            "expected_count_text": "55 个回归场景",
         },
     )
 
@@ -2619,6 +2755,9 @@ for test_fn in [
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
     test_owner_landing_plan_requires_owner_ready_package_duplicate,
+    test_owner_form_target_decision_candidate_gate,
+    test_owner_form_must_not_tamper_gate,
+    test_owner_form_allowed_decisions_tamper_gate,
     test_owner_form_source_identity_mismatch,
     test_manual_entry_project_index_hint,
     test_manual_entry_project_from_domain,

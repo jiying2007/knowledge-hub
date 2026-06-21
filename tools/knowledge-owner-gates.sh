@@ -466,6 +466,11 @@ def validate_forms_file(path, rows):
             form_errors.append(
                 f"{prefix}: owner_decision {owner_decision!r} is not in allowed decisions {row['decision_options']}"
             )
+        target_decision = form.get("target_decision", "")
+        if is_filled(target_decision) and row.get("target_candidates") and target_decision not in row["target_candidates"]:
+            form_errors.append(
+                f"{prefix}: target_decision {target_decision!r} is not in target candidates {row['target_candidates']}"
+            )
         for field in row["required_owner_fields"]:
             if not is_filled(form.get(field)):
                 form_errors.append(f"{prefix}: missing required field {field}")
@@ -488,9 +493,9 @@ def validate_forms_file(path, rows):
             if observed_size and str(form.get("source_size", "")) != observed_size:
                 form_errors.append(f"{prefix}: source_size does not match observed source identity for {worksheet_id}")
         if "must_not" in form and form.get("must_not") != row["must_not"]:
-            warnings.append(f"{prefix}: must_not differs from worksheet; verify owner did not edit guardrails")
+            form_errors.append(f"{prefix}: must_not differs from worksheet guardrails")
         if "allowed_owner_decisions" in form and form.get("allowed_owner_decisions") != row["decision_options"]:
-            warnings.append(f"{prefix}: allowed_owner_decisions differs from worksheet; verify owner did not edit enum")
+            form_errors.append(f"{prefix}: allowed_owner_decisions differs from worksheet decision options")
     status = "pass" if not form_errors else "fail"
     return {
         "status": status,
@@ -583,11 +588,13 @@ def make_landing_plan(form_validation, rows):
                 "reviewed_at": form.get("reviewed_at", ""),
                 "owner_ready_package_status": owner_ready_state(row)[0] if row else "",
                 "owner_ready_packages": owner_ready_state(row)[1] if row else [],
+                "worksheet_verification_commands": row.get("verification_commands", []),
                 "manual_actions_zh": [
                     "把已审 owner decision 追加到 owner decision landing JSONL 制品。",
                     "按 target_decision 更新或新增对应 registry item，状态不得越过 owner 决策允许范围。",
                     "同步 registry/migrations.jsonl，记录从 owner-gated 到目标状态的人工迁移决策。",
                     "同步 by-project、by-status、by-owner、by-review-date 和 by-topic 索引。",
+                    "按 worksheet_verification_commands 复核项目侧或 Knowledge Hub 侧证据；无法运行的命令必须记录原因。",
                     "运行 verification_commands 中的命令；strict gate 只有所有 owner gates 闭环后才会返回 0。",
                 ],
                 "guardrails": row.get("must_not", []),
@@ -676,6 +683,7 @@ for worksheet_path in worksheet_paths:
                 "worksheet": str(worksheet_path.relative_to(root)),
                 "registry_items": items_by_source_path.get(key, []),
                 "active_registry_items": active_by_source_path.get(key, []),
+                "verification_commands": row.get("verification_commands", []),
                 "owner_question_zh": intake.get("owner_question_zh", ""),
                 "default_state": intake.get("default_state", ""),
                 "allowed_next_status": intake.get("allowed_next_status", []),
@@ -868,6 +876,10 @@ if landing_plan:
         print("- manual_actions:")
         for action in step["manual_actions_zh"]:
             print(f"  - {action}")
+        if step.get("worksheet_verification_commands"):
+            print("- worksheet_verification_commands:")
+            for command in step["worksheet_verification_commands"]:
+                print(f"  - `{command}`")
 
 if args.forms:
     print()

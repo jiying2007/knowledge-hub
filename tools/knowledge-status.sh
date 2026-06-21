@@ -129,6 +129,8 @@ next_owner_gate = {}
 summary_commands = []
 owner_summary_commands = []
 owner_forms_jsonl_commands = []
+owner_validate_forms_command_templates = []
+owner_landing_plan_command_templates = []
 forms_jsonl_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
@@ -170,6 +172,37 @@ if open_owner_rows:
             "--forms-jsonl",
         ]
         owner_forms_jsonl_commands.append(" ".join(shlex.quote(str(part)) for part in owner_forms_jsonl_command))
+        owner_validate_forms_command_template = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--json",
+        ]
+        owner_validate_forms_command_templates.append(
+            " ".join(shlex.quote(str(part)) for part in owner_validate_forms_command_template)
+        )
+        owner_landing_plan_command_template = [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            source_id,
+            "--owner",
+            owner,
+            "--validate-forms",
+            "<owner-decisions.jsonl>",
+            "--landing-plan",
+            "--json",
+        ]
+        owner_landing_plan_command_templates.append(
+            " ".join(shlex.quote(str(part)) for part in owner_landing_plan_command_template)
+        )
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         forms_jsonl_command = [
             "rtk",
@@ -327,6 +360,16 @@ if open_owner_gate_count:
             "需要按责任人导出纯 JSONL owner 表单时，运行："
             f"{owner_forms_jsonl_commands[0]}。"
         )
+    if owner_validate_forms_command_templates:
+        next_actions.append(
+            "责任人填完 JSONL 后，按 owner 范围先只读校验："
+            f"{owner_validate_forms_command_templates[0]}。"
+        )
+    if owner_landing_plan_command_templates:
+        next_actions.append(
+            "责任人表单校验通过后，按 owner 范围生成无写入 landing plan："
+            f"{owner_landing_plan_command_templates[0]}。"
+        )
     if next_owner_gate:
         next_actions.append(
             "继续处理 owner decision worksheet；下一条是 "
@@ -392,6 +435,8 @@ if open_owner_gate_count:
     if next_owner_gate.get("next_open_forms_jsonl_command"):
         owner_commands.append(next_owner_gate["next_open_forms_jsonl_command"])
     owner_command_templates = []
+    owner_command_templates.extend(owner_validate_forms_command_templates)
+    owner_command_templates.extend(owner_landing_plan_command_templates)
     owner_command_templates.extend(validate_forms_command_templates)
     owner_command_templates.extend(landing_plan_command_templates)
     strict_blockers.append({
@@ -455,6 +500,8 @@ result = {
         "summary_commands": summary_commands,
         "owner_summary_commands": owner_summary_commands,
         "owner_forms_jsonl_commands": owner_forms_jsonl_commands,
+        "owner_validate_forms_command_templates": owner_validate_forms_command_templates,
+        "owner_landing_plan_command_templates": owner_landing_plan_command_templates,
         "forms_jsonl_commands": forms_jsonl_commands,
         "validate_forms_command_templates": validate_forms_command_templates,
         "landing_plan_command_templates": landing_plan_command_templates,
@@ -525,6 +572,14 @@ if forms_jsonl_commands:
 if owner_forms_jsonl_commands:
     print("- owner forms-jsonl commands:")
     for command in owner_forms_jsonl_commands:
+        print(f"  - `{command}`")
+if owner_validate_forms_command_templates:
+    print("- owner validate-forms command templates:")
+    for command in owner_validate_forms_command_templates:
+        print(f"  - `{command}`")
+if owner_landing_plan_command_templates:
+    print("- owner landing plan command templates:")
+    for command in owner_landing_plan_command_templates:
         print(f"  - `{command}`")
 if validate_forms_command_templates:
     print("- validate-forms command templates:")

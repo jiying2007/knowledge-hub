@@ -149,6 +149,7 @@
 - `pcr02-agent-config-boundary-20260620`
 - `knowledge-hub-source-check-coverage-draft-20260621`
 - `knowledge-hub-source-check-docs-search-limit-20260621`
+- `knowledge-hub-owner-target-landing-validation-20260621`
 
 ## pcr02-registry-owner
 
