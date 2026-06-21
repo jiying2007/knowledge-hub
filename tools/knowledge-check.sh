@@ -48,6 +48,40 @@ def resolve_today():
 
 today, today_source = resolve_today()
 
+SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+
+def select_source_coverage_closeout(root):
+    paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    dated = []
+    ignored = []
+    for path in paths:
+        relative = str(path.relative_to(root))
+        match = SOURCE_COVERAGE_RE.match(path.name)
+        if not match:
+            ignored.append(relative)
+            continue
+        date_text = match.group(1)
+        try:
+            dt.datetime.strptime(date_text, "%Y%m%d").date()
+        except Exception:
+            ignored.append(relative)
+            continue
+        dated.append((date_text, relative, path))
+    dated.sort(key=lambda row: (row[0], row[1]))
+    selection = {
+        "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
+        "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
+        "strategy": "filename-yyyymmdd-sort-last",
+        "candidate_count": len(paths),
+        "candidates": [str(path.relative_to(root)) for path in paths],
+        "dated_candidate_count": len(dated),
+        "dated_candidates": [row[1] for row in dated],
+        "ignored_non_date_candidates": ignored,
+        "selected": dated[-1][1] if dated else "",
+        "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略并作为 warning 暴露，避免 future/latest 等文件名被静默选中。",
+    }
+    return selection, dated[-1][2] if dated else None
+
 if args.project:
     warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
 if args.domain:
@@ -400,11 +434,15 @@ for source in sources:
 
 source_coverage_selection = {
     "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
-    "strategy": "lexicographic-path-sort-last",
+    "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
+    "strategy": "filename-yyyymmdd-sort-last",
     "candidate_count": 0,
     "candidates": [],
+    "dated_candidate_count": 0,
+    "dated_candidates": [],
+    "ignored_non_date_candidates": [],
     "selected": "",
-    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
+    "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略并作为 warning 暴露，避免 future/latest 等文件名被静默选中。",
 }
 source_coverage_health = {
     "registered_source_count": len(source_ids),
@@ -470,17 +508,17 @@ if not args.sources_only:
             if indexed_source_id not in source_ids:
                 errors.append(f"index:indexes/by-source.md stale source {indexed_source_id}")
 
-    source_coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
-    source_coverage_selection["candidate_count"] = len(source_coverage_paths)
-    source_coverage_selection["candidates"] = [
-        str(path.relative_to(root))
-        for path in source_coverage_paths
-    ]
-    if not source_coverage_paths:
+    source_coverage_selection, source_coverage_path = select_source_coverage_closeout(root)
+    if source_coverage_selection.get("ignored_non_date_candidates"):
+        warnings.append(
+            "source-coverage: ignored non-date closeout candidates: "
+            + ", ".join(source_coverage_selection.get("ignored_non_date_candidates", []))
+        )
+    if not source_coverage_selection.get("candidates"):
         errors.append("source-coverage: missing knowledge-hub-source-coverage-closeout manifest")
+    elif source_coverage_path is None:
+        errors.append("source-coverage: missing dated knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl manifest")
     else:
-        source_coverage_path = source_coverage_paths[-1]
-        source_coverage_selection["selected"] = str(source_coverage_path.relative_to(root))
         source_coverage_rows = load_jsonl(source_coverage_path)
         source_coverage_health["row_count"] = len(source_coverage_rows)
         source_coverage_ids = set()

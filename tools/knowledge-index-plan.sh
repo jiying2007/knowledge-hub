@@ -7,6 +7,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import collections
+import datetime as dt
 import json
 import pathlib
 import re
@@ -34,6 +35,39 @@ decisions = []
 migrations = []
 errors = []
 warnings = []
+SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+
+def select_source_coverage_closeout(root):
+    paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    dated = []
+    ignored = []
+    for path in paths:
+        relative = str(path.relative_to(root))
+        match = SOURCE_COVERAGE_RE.match(path.name)
+        if not match:
+            ignored.append(relative)
+            continue
+        date_text = match.group(1)
+        try:
+            dt.datetime.strptime(date_text, "%Y%m%d").date()
+        except Exception:
+            ignored.append(relative)
+            continue
+        dated.append((date_text, relative, path))
+    dated.sort(key=lambda row: (row[0], row[1]))
+    selection = {
+        "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
+        "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
+        "strategy": "filename-yyyymmdd-sort-last",
+        "candidate_count": len(paths),
+        "candidates": [str(path.relative_to(root)) for path in paths],
+        "dated_candidate_count": len(dated),
+        "dated_candidates": [row[1] for row in dated],
+        "ignored_non_date_candidates": ignored,
+        "selected": dated[-1][1] if dated else "",
+        "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略并作为 warning 暴露，避免 future/latest 等文件名被静默选中。",
+    }
+    return selection, dated[-1][2] if dated else None
 
 try:
     for line_no, line in enumerate(items_path.read_text().splitlines(), 1):
@@ -128,19 +162,12 @@ for project in projects:
         "items": [item_id for item_id in project_items if item_id],
     }
 
-coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
-latest_coverage = coverage_paths[-1] if coverage_paths else None
-source_coverage_selection = {
-    "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
-    "strategy": "lexicographic-path-sort-last",
-    "candidate_count": len(coverage_paths),
-    "candidates": [
-        str(path.relative_to(root))
-        for path in coverage_paths
-    ],
-    "selected": str(latest_coverage.relative_to(root)) if latest_coverage else "",
-    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
-}
+source_coverage_selection, latest_coverage = select_source_coverage_closeout(root)
+if source_coverage_selection.get("ignored_non_date_candidates"):
+    warnings.append(
+        "ignored non-date source coverage closeout candidates: "
+        + ", ".join(source_coverage_selection.get("ignored_non_date_candidates", []))
+    )
 coverage_by_source = {}
 if latest_coverage:
     for row in read_jsonl(latest_coverage, str(latest_coverage.relative_to(root))):
@@ -155,7 +182,7 @@ if latest_coverage:
                 "checked_at": row.get("checked_at", ""),
             }
 else:
-    warnings.append("missing knowledge-hub-source-coverage-closeout-*.jsonl")
+    warnings.append("missing dated knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl")
 
 for source in sources:
     source_id = str(source.get("id", ""))

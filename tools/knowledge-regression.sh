@@ -2621,9 +2621,10 @@ def test_index_plan_extended_sections():
         and pcr02_source.get("review_after") == "2026-09-20"
         and pcr02_source.get("final_disposition") == "mixed-terminal-coverage"
         and pcr02_source.get("check", "").startswith("rtk bash -lc")
-        and source_selection.get("strategy") == "lexicographic-path-sort-last"
+        and source_selection.get("strategy") == "filename-yyyymmdd-sort-last"
         and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
         and source_selection.get("candidate_count", 0) >= 1
+        and source_selection.get("dated_candidate_count", 0) >= 1
         and bool(source_coverage)
         and source_coverage.get("checked_at") == "2026-06-20"
         and bool(source_coverage_decision)
@@ -2882,10 +2883,12 @@ def test_status_source_governance_summary():
         and not check_parse_error
         and sources.get("registered_count") == 13
         and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
-        and sources.get("latest_coverage_selection", {}).get("strategy") == "lexicographic-path-sort-last"
+        and sources.get("latest_coverage_selection", {}).get("strategy") == "filename-yyyymmdd-sort-last"
         and sources.get("latest_coverage_selection", {}).get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
         and sources.get("latest_coverage_selection", {}).get("candidate_count", 0) >= 1
+        and sources.get("latest_coverage_selection", {}).get("dated_candidate_count", 0) >= 1
         and check_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and check_selection.get("strategy") == "filename-yyyymmdd-sort-last"
         and check_health.get("registered_source_count") == 13
         and check_health.get("row_count") == 13
         and check_health.get("unique_source_count") == 13
@@ -2916,6 +2919,71 @@ def test_status_source_governance_summary():
             "status": parsed.get("status"),
             "stdout_sample": result["stdout"][:1200],
         },
+    )
+
+def test_source_coverage_date_filename_selection():
+    repo = copy_repo("source-coverage-date-filename-selection")
+    bad_candidate = repo / "artifacts" / "manifests" / "knowledge-hub-source-coverage-closeout-latest.jsonl"
+    bad_candidate.write_text(
+        '{"id":"fixture-bad-latest","source_id":"fixture-stale","status":"bad","classification":"bad","decision":"bad","risk":"bad","owner":"bad","checked_at":"2026-06-21"}\n'
+    )
+    check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    index_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
+    parse_errors = []
+    parsed = {}
+    status_parsed = {}
+    index_parsed = {}
+    for label, result, target in [
+        ("check", check_result, "parsed"),
+        ("status", status_result, "status_parsed"),
+        ("index", index_result, "index_parsed"),
+    ]:
+        try:
+            value = json.loads(result["stdout"])
+        except Exception as exc:
+            parse_errors.append(f"{label}: {exc}")
+            value = {}
+        if target == "parsed":
+            parsed = value
+        elif target == "status_parsed":
+            status_parsed = value
+        else:
+            index_parsed = value
+    expected_selected = "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+    expected_ignored = "artifacts/manifests/knowledge-hub-source-coverage-closeout-latest.jsonl"
+    check_selection = parsed.get("source_coverage_selection", {}) if isinstance(parsed, dict) else {}
+    status_selection = (
+        status_parsed.get("sources", {}).get("latest_coverage_selection", {})
+        if isinstance(status_parsed.get("sources", {}), dict)
+        else {}
+    )
+    index_selection = index_parsed.get("source_coverage_selection", {}) if isinstance(index_parsed, dict) else {}
+    expect(
+        check_result["exit_code"] == 0
+        and status_result["exit_code"] == 0
+        and index_result["exit_code"] == 0
+        and not parse_errors
+        and check_selection.get("selected") == expected_selected
+        and status_selection.get("selected") == expected_selected
+        and index_selection.get("selected") == expected_selected
+        and expected_ignored in check_selection.get("ignored_non_date_candidates", [])
+        and expected_ignored in status_selection.get("ignored_non_date_candidates", [])
+        and expected_ignored in index_selection.get("ignored_non_date_candidates", [])
+        and any(expected_ignored in warning for warning in parsed.get("warnings", [])),
+        "source-coverage-date-filename-selection",
+        "source coverage latest selection ignores non-YYYYMMDD closeout candidates",
+        {
+            "check_exit_code": check_result["exit_code"],
+            "status_exit_code": status_result["exit_code"],
+            "index_exit_code": index_result["exit_code"],
+            "parse_errors": parse_errors,
+            "check_selection": check_selection,
+            "status_selection": status_selection,
+            "index_selection": index_selection,
+            "check_warnings": parsed.get("warnings", []),
+        },
+        repo,
     )
 
 def test_review_after_as_of_deterministic():
@@ -3159,6 +3227,45 @@ def test_source_manual_entry_guide_check_command():
             "coverage_row_has_check": coverage_row_has_check,
             "json_no_check_reason_absent": json_no_check_reason_absent,
             "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
+def test_source_manual_entry_unknown_owner_warning():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source-owner-warning",
+            "--source-path",
+            "/tmp/example-owner-warning",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--check",
+            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+            "--owner",
+            "unknown-source-owner",
+        ],
+    )
+    expect(
+        result["exit_code"] == 0
+        and "- owner_registry_status: unknown-owner" in result["stdout"]
+        and "owner_warning_zh" in result["stdout"]
+        and "registry/owners.json" in result["stdout"]
+        and '"owner":"unknown-source-owner"' in result["stdout"],
+        "source-manual-entry-unknown-owner-warning",
+        "source manual entry guide warns when source registry owner is not registered",
+        {
+            "exit_code": result["exit_code"],
+            "stdout_sample": result["stdout"][:1600],
+            "stderr_sample": result["stderr"][:500],
         },
     )
 
@@ -3410,10 +3517,12 @@ def test_regression_manifest_coverage():
         "index-decision-registry-subsection-gate",
         "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
+        "source-coverage-date-filename-selection",
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
         "source-manual-entry-guide",
         "source-manual-entry-guide-check-command",
+        "source-manual-entry-unknown-owner-warning",
         "source-manual-entry-requires-check-or-reason",
         "source-manual-entry-docs-check-preferred",
         "knowledge-search-structured-filters",
@@ -3503,10 +3612,12 @@ for test_fn in [
     test_index_decision_registry_gate,
     test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
+    test_source_coverage_date_filename_selection,
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,
     test_source_manual_entry_guide,
     test_source_manual_entry_guide_check_command,
+    test_source_manual_entry_unknown_owner_warning,
     test_source_manual_entry_requires_check_or_reason,
     test_source_manual_entry_docs_check_preferred,
     test_knowledge_search_structured_filters,

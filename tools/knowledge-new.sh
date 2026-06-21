@@ -229,6 +229,34 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   JSON_OWNER="$(json_escape "${OWNER:-leiwenjun}")"
   TODAY="$(knowledge_today)"
   TODAY_COMPACT="${TODAY//-/}"
+  SOURCE_OWNER_REGISTRY_STATUS="unchecked"
+  SOURCE_OWNER_WARNING_LINE=""
+  if [[ -f "$ROOT/registry/owners.json" ]]; then
+    if rtk python3 - "$ROOT/registry/owners.json" "${OWNER:-leiwenjun}" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+owner = sys.argv[2]
+data = json.loads(path.read_text())
+owner_ids = {
+    str(row.get("id", ""))
+    for row in data.get("owners", [])
+    if isinstance(row, dict)
+}
+sys.exit(0 if owner in owner_ids else 1)
+PY
+    then
+      SOURCE_OWNER_REGISTRY_STATUS="registered"
+    else
+      SOURCE_OWNER_REGISTRY_STATUS="unknown-owner"
+      SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: source registry owner 未在 registry/owners.json 登记；落盘前请先补 owner registry，或改用已登记 owner。"
+    fi
+  else
+    SOURCE_OWNER_REGISTRY_STATUS="owners-registry-missing"
+    SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: registry/owners.json 不存在；落盘前请先恢复 owner registry。"
+  fi
   CHECK_FIELD=""
   NO_CHECK_FIELD=",\"no_check_reason\":\"${JSON_SOURCE_NO_CHECK_REASON}\""
   DISPLAY_SOURCE_NO_CHECK_SUMMARY="${DISPLAY_SOURCE_NO_CHECK_REASON}"
@@ -253,6 +281,8 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
 - check: ${DISPLAY_SOURCE_CHECK:-<空>}
 - no_check_reason: ${DISPLAY_SOURCE_NO_CHECK_SUMMARY}
 - owner: ${OWNER:-leiwenjun}
+- owner_registry_status: ${SOURCE_OWNER_REGISTRY_STATUS}
+${SOURCE_OWNER_WARNING_LINE}
 
 ## 最小人工步骤
 

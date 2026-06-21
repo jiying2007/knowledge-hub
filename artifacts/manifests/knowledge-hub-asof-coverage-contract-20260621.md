@@ -31,8 +31,8 @@
 
 ### Source coverage 可观测性契约
 
-- latest source coverage manifest 当前策略仍是 `lexicographic-path-sort-last`，即按 `artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl` 路径字典序排序后取最后一个。
-- `knowledge-status.sh --json`、`knowledge-check.sh --json` 和 `knowledge-index-plan.sh --section source --json` 必须暴露 selection metadata：`pattern`、`strategy`、`candidate_count`、`candidates`、`selected`、`reason_zh`。
+- latest source coverage manifest 当前策略是 `filename-yyyymmdd-sort-last`，即只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 日期候选中选择最新；`latest`、`current` 等非日期候选必须忽略并暴露到 selection metadata。
+- `knowledge-status.sh --json`、`knowledge-check.sh --json` 和 `knowledge-index-plan.sh --section source --json` 必须暴露 selection metadata：`pattern`、`required_filename`、`strategy`、`candidate_count`、`candidates`、`dated_candidate_count`、`dated_candidates`、`ignored_non_date_candidates`、`selected`、`reason_zh`。
 - `knowledge-check.sh --json` 必须在 pass 状态下也暴露 `source_coverage_health`，包括 registered source 数、coverage row 数、唯一 source 数、missing/stale/duplicate source、缺字段行和非法 `checked_at` 行。
 - selection/health 只是可审计摘要，不替代 source coverage JSONL row，不替代 owner decision，也不代表 active fact。
 
@@ -42,6 +42,7 @@
 | --- | --- | --- |
 | `review-after-as-of-deterministic` | positive/negative mixed fixture | 临时副本固定 item `review_after=2026-06-30` 后，`--as-of 2026-06-01` 不产生 stale，`--as-of 2026-07-01` 产生 stale，并且 status/final-gate 保留固定日期。 |
 | `status-source-governance-summary` | positive contract | status JSON 暴露 latest coverage selection；check JSON 暴露 source coverage selection/health，且 13 个 registered source 全部覆盖、无缺失、无重复、无 stale。 |
+| `source-coverage-date-filename-selection` | negative fixture | 临时副本新增 `knowledge-hub-source-coverage-closeout-latest.jsonl` 后，check/status/index-plan 仍选择最新日期 closeout，并把非日期候选列入 ignored metadata。 |
 | `index-plan-extended-sections` | positive contract | source index-plan JSON 暴露 source coverage selection，且 `pcr02-project-tools` coverage decision/risk 来源可追溯。 |
 | `final-gate-default-regression-path` | positive contract | final gate 默认路径真实执行 regression，并在 checks 中记录带 `--as-of` 的 regression 子命令。 |
 

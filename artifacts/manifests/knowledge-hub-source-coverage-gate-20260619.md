@@ -14,7 +14,7 @@
 
 ## 决策
 
-- 默认使用按文件名排序后的最新 `artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl`。
+- 默认只从 `artifacts/manifests/knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 日期候选中选择最新 closeout；非日期候选会被忽略并在 selection metadata 中暴露。
 - coverage source 集合必须与 `registry/sources.json` source id 集合一致。
 - coverage 行必须包含可读的终态分类、决策和风险字段。
 - `checked_at` 必须是 ISO 日期。

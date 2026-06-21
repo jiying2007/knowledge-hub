@@ -311,3 +311,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-routing-recovery-applied: `registry/owner-routing.json` 登记 owner decision role 的只读分派路由，`knowledge-owner-gates.sh --summary`、`knowledge-status.sh --json` 和 final gate `owner_recovery` 透传 `owner_route`；documented by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.jsonl`.
 - reviewing: `knowledge-hub-manifest-profile-index-plan-20260621`
 - manifest-profile-index-plan-applied: `knowledge-index-plan.sh --section manifest` 输出只读 manifest 恢复视图，`knowledge-check.sh` 对 2026-06-21 后治理 manifest JSONL 执行轻量 profile gate，并对长期模板执行可读性字段 gate；documented by `artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.jsonl`.
+- reviewing: `knowledge-hub-source-selection-owner-warning-20260621`
+- source-selection-owner-warning-applied: `knowledge-check/status/index-plan` 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择 latest coverage，`knowledge-new.sh --source` 对未知 source owner 输出 warning；documented by `artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.

@@ -11,6 +11,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import re
 import shlex
 import subprocess
 import sys
@@ -42,6 +43,7 @@ def resolve_today():
     return dt.date.today(), source
 
 today, today_source = resolve_today()
+SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
 
 def display_tool(script_name):
     return f"{DISPLAY_TOOL_ROOT}/{script_name}"
@@ -78,6 +80,38 @@ def load_jsonl(path):
         except Exception as exc:
             errors.append(f"{path.relative_to(root)}:{line_no}: invalid jsonl: {exc}")
     return rows
+
+def select_source_coverage_closeout(root):
+    paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
+    dated = []
+    ignored = []
+    for path in paths:
+        relative = str(path.relative_to(root))
+        match = SOURCE_COVERAGE_RE.match(path.name)
+        if not match:
+            ignored.append(relative)
+            continue
+        date_text = match.group(1)
+        try:
+            dt.datetime.strptime(date_text, "%Y%m%d").date()
+        except Exception:
+            ignored.append(relative)
+            continue
+        dated.append((date_text, relative, path))
+    dated.sort(key=lambda row: (row[0], row[1]))
+    selection = {
+        "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
+        "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
+        "strategy": "filename-yyyymmdd-sort-last",
+        "candidate_count": len(paths),
+        "candidates": [str(path.relative_to(root)) for path in paths],
+        "dated_candidate_count": len(dated),
+        "dated_candidates": [row[1] for row in dated],
+        "ignored_non_date_candidates": ignored,
+        "selected": dated[-1][1] if dated else "",
+        "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略，避免 future/latest 等文件名被静默选中。",
+    }
+    return selection, dated[-1][2] if dated else None
 
 def run_json(command):
     completed = subprocess.run(
@@ -139,21 +173,9 @@ for item in items:
         })
 
 latest_source_coverage = ""
-coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
-coverage_candidates = [
-    str(path.relative_to(root))
-    for path in coverage_paths
-]
-latest_source_coverage_selection = {
-    "strategy": "lexicographic-path-sort-last",
-    "candidate_count": len(coverage_candidates),
-    "candidates": coverage_candidates,
-    "selected": "",
-    "reason_zh": "按文件名路径字典序排序后选择最后一个 closeout JSONL；文件名必须携带 YYYYMMDD 日期以保持可审查。",
-}
-if coverage_paths:
-    latest_source_coverage = str(coverage_paths[-1].relative_to(root))
-    latest_source_coverage_selection["selected"] = latest_source_coverage
+latest_source_coverage_selection, latest_source_coverage_path = select_source_coverage_closeout(root)
+if latest_source_coverage_path:
+    latest_source_coverage = str(latest_source_coverage_path.relative_to(root))
 
 owner_payload = owner_gates["payload"]
 check_payload = knowledge_check["payload"]
