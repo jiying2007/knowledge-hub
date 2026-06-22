@@ -1063,6 +1063,7 @@ def test_owner_summary_by_owner():
     summary_rows = summary.get("rows", [])
     owner_dispatch = summary.get("owner_dispatch", [])
     dispatch = owner_dispatch[0] if owner_dispatch else {}
+    handoff_packet = dispatch.get("suggested_owner_packet", {})
     owners = {row.get("owner") for row in parsed.get("rows", [])}
     worksheet_ids = {row.get("worksheet_id") for row in summary_rows}
     expect(
@@ -1076,6 +1077,12 @@ def test_owner_summary_by_owner():
         and len(owner_dispatch) == 1
         and dispatch.get("owner") == "project-owner"
         and dispatch.get("open_count") == 2
+        and handoff_packet.get("status") == "ready-for-owner-review"
+        and handoff_packet.get("read_only") is True
+        and handoff_packet.get("suggested_local_owner_decisions_path") == "artifacts/manifests/pcr02-project-docs-project-owner-owner-decisions-YYYYMMDD.local.jsonl"
+        and len(handoff_packet.get("recommended_sequence", [])) == 6
+        and any(step.get("step") == "3-export-forms" and "--forms-jsonl" in step.get("command", "") for step in handoff_packet.get("recommended_sequence", []))
+        and any("不得由工具或 AI 代签 owner decision" in rule for rule in handoff_packet.get("must_not", []))
         and "--owner project-owner --forms-jsonl" in dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in dispatch.get("validate_forms_command_template", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in dispatch.get("landing_plan_command_template", "")
@@ -1095,6 +1102,7 @@ def test_owner_summary_by_owner():
             "open_count": parsed.get("open_count"),
             "owner_counts": summary.get("owner_counts", {}),
             "owner_dispatch": owner_dispatch,
+            "handoff_packet": handoff_packet,
             "worksheet_ids": sorted(worksheet_ids),
             "stdout_sample": result["stdout"][:1000],
         },
@@ -1169,6 +1177,7 @@ def test_status_next_owner_gate():
     owner_dispatch = parsed.get("owner_gates", {}).get("owner_dispatch", [])
     dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
+    project_owner_handoff_packet = project_owner_dispatch.get("suggested_owner_packet", {})
     project_owner_route = project_owner_dispatch.get("owner_route", {})
     summary_commands = parsed.get("owner_gates", {}).get("summary_commands", [])
     owner_summary_commands = parsed.get("owner_gates", {}).get("owner_summary_commands", [])
@@ -1202,6 +1211,11 @@ def test_status_next_owner_gate():
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
+        and project_owner_handoff_packet.get("status") == "ready-for-owner-review"
+        and project_owner_handoff_packet.get("read_only") is True
+        and project_owner_handoff_packet.get("suggested_local_owner_decisions_path") == "artifacts/manifests/pcr02-project-docs-project-owner-owner-decisions-YYYYMMDD.local.jsonl"
+        and len(project_owner_handoff_packet.get("recommended_sequence", [])) == 6
+        and any(step.get("step") == "4-validate-filled-forms" and "owner-decisions.jsonl" in step.get("command_template", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
         and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
         and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
@@ -1294,6 +1308,7 @@ def test_status_next_owner_gate():
             "owner_ready_invalid_count": owner_gates.get("owner_ready_invalid_count"),
             "owner_ready_duplicate_count": owner_gates.get("owner_ready_duplicate_count"),
             "owner_dispatch": owner_dispatch,
+            "project_owner_handoff_packet": project_owner_handoff_packet,
             "worksheet_id": next_open.get("worksheet_id"),
             "summary_commands": summary_commands,
             "owner_summary_commands": owner_summary_commands,
@@ -1427,6 +1442,7 @@ def test_final_gate_owner_review_blocker():
     level3 = final_state_audit.get("level3_registered_sources", {})
     level2_boundary_health = level2.get("boundary_health", {})
     level3_source_check_health = level3.get("source_check_health", {})
+    level3_source_coverage_selection = level3.get("source_coverage_selection", {})
     gap_map = parsed.get("gap_map", [])
     owner_blocker = next(
         (blocker for blocker in blockers if blocker.get("id") == "owner-gates-open"),
@@ -1480,6 +1496,7 @@ def test_final_gate_owner_review_blocker():
         and level3.get("status") == "complete"
         and level3.get("registered_count") == level3.get("covered_count")
         and level3.get("registered_count") == 13
+        and level3_source_coverage_selection.get("selected") == level3.get("latest_coverage_manifest")
         and level3.get("missing_coverage_ids") == []
         and level3.get("missing_final_state_fields") == []
         and level3_source_check_health.get("executed") is False
@@ -1515,6 +1532,7 @@ def test_final_gate_owner_review_blocker():
             "automatic_governance": automatic_governance,
             "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,
+            "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
             "blockers": blockers,
             "gap_map": gap_map,
@@ -1721,6 +1739,54 @@ def test_final_gate_source_final_state_field_gap():
         repo,
     )
 
+def test_final_gate_strict_status_nonowner_blocker():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-strict-status-nonowner-blocker",
+            "final gate strict status non-owner blocker fixture is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
+    repo = copy_repo("final-gate-strict-status-nonowner-blocker")
+    status_path = repo / "tools" / "knowledge-status.sh"
+    status_path.write_text(
+        "#!/usr/bin/env bash\n"
+        "printf '%s\\n' '{\"schema_version\":1,\"status\":\"needs-fix\",\"strict\":true,\"knowledge_check\":{\"exit_code\":0,\"status\":\"pass\"},\"owner_gates\":{\"open_count\":7,\"owner_ready_package_coverage\":\"7/7\",\"active_exposure_count\":0},\"sources\":{\"latest_coverage_manifest\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl\",\"latest_coverage_selection\":{\"selected\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl\"}},\"strict_blockers\":[{\"id\":\"owner-gates-command-failed\",\"severity\":\"blocker\",\"count\":1,\"summary_zh\":\"fixture non-owner blocker\"}]}'\n"
+        "exit 1\n"
+    )
+    result = run_cmd(
+        repo,
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    blockers = parsed.get("blockers", [])
+    blocker = next((item for item in blockers if item.get("id") == "owner-gates-command-failed"), {})
+    owner_gap = next((item for item in parsed.get("gap_map", []) if item.get("gap_type") == "owner-review"), {})
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-fix"
+        and parsed.get("automatic_governance", {}).get("status") == "needs-fix"
+        and parsed.get("automatic_governance", {}).get("only_owner_review_blockers") is False
+        and blocker.get("severity") == "blocker"
+        and owner_gap == {},
+        "final-gate-strict-status-nonowner-blocker",
+        "final gate keeps parseable strict non-owner blockers as needs-fix",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "automatic_governance": parsed.get("automatic_governance", {}),
+            "blockers": blockers,
+            "gap_map": parsed.get("gap_map", []),
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
+    )
+
 def test_final_gap_readability_positive_contracts():
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         expect(
@@ -1910,6 +1976,7 @@ def test_owner_landing_plan_project_index():
         and owner_ready_gate.get("status") == "pass"
         and owner_ready_gate.get("error_count") == 0
         and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in required_files
+        and "artifacts/manifests/*owner-decision-worksheets-*.jsonl" not in required_files
         and "indexes/by-project.md" in required_files
         and "indexes/by-source.md" in required_files
         and "indexes/by-status.md" in required_files
@@ -1917,6 +1984,7 @@ def test_owner_landing_plan_project_index():
         and landing_audit.get("status") == "ready-for-manual-landing"
         and landing_audit.get("read_only") is True
         and "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl" in landing_audit.get("required_manual_files", [])
+        and "artifacts/manifests/*owner-decision-worksheets-*.jsonl" not in landing_audit.get("required_manual_files", [])
         and "indexes/by-source.md" in landing_audit.get("required_manual_files", [])
         and "indexes/by-decision.md" in landing_audit.get("required_manual_files", [])
         and worksheet_resolution.get("must_update_worksheet_row") is True
@@ -3533,14 +3601,17 @@ def test_source_coverage_date_filename_selection():
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     index_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
+    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
     parse_errors = []
     parsed = {}
     status_parsed = {}
     index_parsed = {}
+    final_parsed = {}
     for label, result, target in [
         ("check", check_result, "parsed"),
         ("status", status_result, "status_parsed"),
         ("index", index_result, "index_parsed"),
+        ("final", final_result, "final_parsed"),
     ]:
         try:
             value = json.loads(result["stdout"])
@@ -3551,8 +3622,10 @@ def test_source_coverage_date_filename_selection():
             parsed = value
         elif target == "status_parsed":
             status_parsed = value
-        else:
+        elif target == "index_parsed":
             index_parsed = value
+        else:
+            final_parsed = value
     expected_selected = "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
     expected_ignored = "artifacts/manifests/knowledge-hub-source-coverage-closeout-latest.jsonl"
     check_selection = parsed.get("source_coverage_selection", {}) if isinstance(parsed, dict) else {}
@@ -3562,17 +3635,25 @@ def test_source_coverage_date_filename_selection():
         else {}
     )
     index_selection = index_parsed.get("source_coverage_selection", {}) if isinstance(index_parsed, dict) else {}
+    final_selection = (
+        final_parsed.get("final_state_audit", {}).get("level3_registered_sources", {}).get("source_coverage_selection", {})
+        if isinstance(final_parsed.get("final_state_audit", {}), dict)
+        else {}
+    )
     expect(
         check_result["exit_code"] == 0
         and status_result["exit_code"] == 0
         and index_result["exit_code"] == 0
+        and final_result["exit_code"] == 1
         and not parse_errors
         and check_selection.get("selected") == expected_selected
         and status_selection.get("selected") == expected_selected
         and index_selection.get("selected") == expected_selected
+        and final_selection.get("selected") == expected_selected
         and expected_ignored in check_selection.get("ignored_non_date_candidates", [])
         and expected_ignored in status_selection.get("ignored_non_date_candidates", [])
         and expected_ignored in index_selection.get("ignored_non_date_candidates", [])
+        and expected_ignored in final_selection.get("ignored_non_date_candidates", [])
         and any(expected_ignored in warning for warning in parsed.get("warnings", [])),
         "source-coverage-date-filename-selection",
         "source coverage latest selection ignores non-YYYYMMDD closeout candidates",
@@ -3580,10 +3661,12 @@ def test_source_coverage_date_filename_selection():
             "check_exit_code": check_result["exit_code"],
             "status_exit_code": status_result["exit_code"],
             "index_exit_code": index_result["exit_code"],
+            "final_exit_code": final_result["exit_code"],
             "parse_errors": parse_errors,
             "check_selection": check_selection,
             "status_selection": status_selection,
             "index_selection": index_selection,
+            "final_selection": final_selection,
             "check_warnings": parsed.get("warnings", []),
         },
         repo,
@@ -4234,6 +4317,7 @@ def test_regression_manifest_coverage():
         "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
         "final-gate-source-final-state-field-gap",
+        "final-gate-strict-status-nonowner-blocker",
         "final-gap-readability-positive-contracts",
         "owner-landing-plan-project-index",
         "owner-landing-plan-requires-owner-ready-missing",
@@ -4340,6 +4424,7 @@ for test_fn in [
     test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
     test_final_gate_source_final_state_field_gap,
+    test_final_gate_strict_status_nonowner_blocker,
     test_final_gap_readability_positive_contracts,
     test_owner_landing_plan_project_index,
     test_owner_landing_plan_requires_owner_ready_package_missing,

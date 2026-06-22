@@ -10,7 +10,7 @@
 ## Required Fields
 
 ```json
-{"from":"old/path.md","to":"new/path.md","mode":"copy-first","status":"planned","checked_at":"","notes":""}
+{"from":"old/path.md","to":"new/path.md","mode":"copy-first","status":"planned","checked_at":"","notes_zh":""}
 ```
 
 ## Stop Conditions

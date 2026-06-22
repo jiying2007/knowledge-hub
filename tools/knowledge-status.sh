@@ -208,6 +208,73 @@ evidence_readiness_commands = []
 validate_forms_command_templates = []
 landing_plan_command_templates = []
 landing_audit_command_templates = []
+def safe_slug(value):
+    text = str(value).strip().lower()
+    chars = []
+    for char in text:
+        if char.isalnum() or char in {"-", "_"}:
+            chars.append(char)
+        else:
+            chars.append("-")
+    slug = "".join(chars).strip("-")
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+    return slug or "owner"
+
+def make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_row):
+    local_path = (
+        f"artifacts/manifests/{source_id}-{safe_slug(owner)}-owner-decisions-YYYYMMDD.local.jsonl"
+        if source_id
+        else "artifacts/manifests/<source-id>-<owner>-owner-decisions-YYYYMMDD.local.jsonl"
+    )
+    base = ["rtk", "bash", display_tool("knowledge-owner-gates.sh")]
+    summary = shell_command(base + ["--source-id", source_id, "--owner", owner, "--summary"]) if source_id else ""
+    readiness = shell_command(base + ["--source-id", source_id, "--owner", owner, "--evidence-readiness", "--json"]) if source_id else ""
+    forms = shell_command(base + ["--source-id", source_id, "--owner", owner, "--forms-jsonl"]) if source_id else ""
+    validate = shell_command(base + ["--source-id", source_id, "--owner", owner, "--validate-forms", "<owner-decisions.jsonl>", "--json"]) if source_id else ""
+    landing_plan = shell_command(base + ["--source-id", source_id, "--owner", owner, "--validate-forms", "<owner-decisions.jsonl>", "--landing-plan", "--json"]) if source_id else ""
+    landing_audit = shell_command(base + ["--source-id", source_id, "--owner", owner, "--validate-forms", "<owner-decisions.jsonl>", "--landing-audit", "--json"]) if source_id else ""
+    required_fields = []
+    must_not = []
+    for row in owner_rows:
+        for field in row.get("required_owner_fields", []):
+            if field not in required_fields:
+                required_fields.append(field)
+        for rule in row.get("must_not", []):
+            if rule not in must_not:
+                must_not.append(rule)
+    return {
+        "status": "ready-for-owner-review" if owner_rows else "empty",
+        "read_only": True,
+        "owner": owner,
+        "source_id": source_id,
+        "open_count": len(owner_rows),
+        "worksheet_ids": [str(row.get("id", "")) for row in owner_rows],
+        "next_worksheet_id": str(next_owner_row.get("id", "")) if next_owner_row else "",
+        "suggested_local_owner_decisions_path": local_path,
+        "manual_owner_fields": required_fields,
+        "recommended_sequence": [
+            {"step": "1-review-summary", "command": summary},
+            {"step": "2-check-evidence-readiness", "command": readiness},
+            {"step": "3-export-forms", "command": forms, "output_path_hint": local_path},
+            {"step": "4-validate-filled-forms", "command_template": validate, "replace_placeholder_with": local_path},
+            {"step": "5-plan-manual-landing", "command_template": landing_plan, "replace_placeholder_with": local_path},
+            {"step": "6-audit-manual-landing", "command_template": landing_audit, "replace_placeholder_with": local_path},
+        ],
+        "must_not": [
+            "不得把 routing_owner 当 reviewed_by",
+            "不得由工具或 AI 代签 owner decision",
+            "不得关闭未签收 owner gate",
+            "不得把 owner-ready package 当作已批准决策",
+        ] + [rule for rule in must_not if rule not in {
+            "不得把 routing_owner 当 reviewed_by",
+            "不得由工具或 AI 代签 owner decision",
+            "不得关闭未签收 owner gate",
+            "不得把 owner-ready package 当作已批准决策",
+        }],
+        "notes_zh": "只读 owner handoff 包；用于跨会话恢复人工领取顺序，不生成、不保存、不应用 owner decision。",
+    }
+
 if open_owner_rows:
     rows_by_owner = collections.defaultdict(list)
     for row in open_owner_rows:
@@ -328,6 +395,7 @@ if open_owner_rows:
                 "--checklist",
                 "--forms",
             ]),
+            "suggested_owner_packet": make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_row),
             "notes_zh": "status dashboard 只读 owner 分派摘要；用于跨会话恢复 owner 领取、表单导出、校验和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
         })
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):

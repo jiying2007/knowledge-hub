@@ -595,6 +595,98 @@ def make_owner_ready_coverage(rows):
     coverage["owner_ready_package_coverage"] = f"{coverage['owner_ready_package_count']}/{len(rows)}"
     return coverage
 
+def _safe_slug(value):
+    text = str(value).strip().lower()
+    chars = []
+    for char in text:
+        if char.isalnum() or char in {"-", "_"}:
+            chars.append(char)
+        else:
+            chars.append("-")
+    slug = "".join(chars).strip("-")
+    while "--" in slug:
+        slug = slug.replace("--", "-")
+    return slug or "owner"
+
+def make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, commands):
+    owner_ready_statuses = {}
+    required_fields = []
+    must_not = []
+    for row in owner_open_rows:
+        status, _packages = owner_ready_state(row)
+        owner_ready_statuses[status] = owner_ready_statuses.get(status, 0) + 1
+        for field in row.get("required_owner_fields", []):
+            if field not in required_fields:
+                required_fields.append(field)
+        for rule in row.get("must_not", []):
+            if rule not in must_not:
+                must_not.append(rule)
+    local_path = (
+        f"artifacts/manifests/{source_id}-{_safe_slug(owner)}-owner-decisions-YYYYMMDD.local.jsonl"
+        if source_id
+        else "artifacts/manifests/<source-id>-<owner>-owner-decisions-YYYYMMDD.local.jsonl"
+    )
+    return {
+        "status": "ready-for-owner-review" if owner_open_rows else "empty",
+        "read_only": True,
+        "owner": owner,
+        "source_id": source_id,
+        "open_count": len(owner_open_rows),
+        "worksheet_ids": [row["id"] for row in owner_open_rows],
+        "next_worksheet_id": next_row.get("id", "") if next_row else "",
+        "suggested_local_owner_decisions_path": local_path,
+        "owner_ready_status_counts": dict(sorted(owner_ready_statuses.items())),
+        "manual_owner_fields": required_fields,
+        "recommended_sequence": [
+            {
+                "step": "1-review-summary",
+                "command": commands.get("summary_command", ""),
+                "notes_zh": "先确认 owner 角色、open worksheet、source path 和 owner_route；这一步不生成 owner decision。",
+            },
+            {
+                "step": "2-check-evidence-readiness",
+                "command": commands.get("evidence_readiness_command", ""),
+                "notes_zh": "只读查看 source identity、owner-ready evidence ref 候选和仍需人工回答的字段。",
+            },
+            {
+                "step": "3-export-forms",
+                "command": commands.get("forms_jsonl_command", ""),
+                "output_path_hint": local_path,
+                "notes_zh": "owner 可把骨架复制到本地临时 JSONL 后手工填写；工具不写该文件。",
+            },
+            {
+                "step": "4-validate-filled-forms",
+                "command_template": commands.get("validate_forms_command_template", ""),
+                "replace_placeholder_with": local_path,
+                "notes_zh": "只读校验 owner 填写结果；不通过时不得进入 landing plan。",
+            },
+            {
+                "step": "5-plan-manual-landing",
+                "command_template": commands.get("landing_plan_command_template", ""),
+                "replace_placeholder_with": local_path,
+                "notes_zh": "生成 no-write 人工落地计划；仍不写 registry、worksheet、migration 或 index。",
+            },
+            {
+                "step": "6-audit-manual-landing",
+                "command_template": commands.get("landing_audit_command_template", ""),
+                "replace_placeholder_with": local_path,
+                "notes_zh": "人工落地后复核 worksheet、registry、migration 和 index 是否同步；不能把 audit 当 owner approval。",
+            },
+        ],
+        "must_not": [
+            "不得把 routing_owner 当 reviewed_by",
+            "不得由工具或 AI 代签 owner decision",
+            "不得关闭未签收 owner gate",
+            "不得把 owner-ready package 当作已批准决策",
+        ] + [rule for rule in must_not if rule not in {
+            "不得把 routing_owner 当 reviewed_by",
+            "不得由工具或 AI 代签 owner decision",
+            "不得关闭未签收 owner gate",
+            "不得把 owner-ready package 当作已批准决策",
+        }],
+        "notes_zh": "只读 owner handoff 包；把已有命令排成可交给 owner 的顺序，不生成、不保存、不应用 owner decision。",
+    }
+
 def make_owner_dispatch(rows):
     dispatch_rows = []
     rows_by_owner = {}
@@ -625,6 +717,44 @@ def make_owner_dispatch(rows):
                 continue
             seen_routes.add(key)
             unique_owner_routes.append(route)
+        commands = {
+            "summary_command": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --summary"
+            )
+            if source_id
+            else "",
+            "forms_jsonl_command": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --forms-jsonl"
+            )
+            if source_id
+            else "",
+            "evidence_readiness_command": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --evidence-readiness --json"
+            )
+            if source_id
+            else "",
+            "validate_forms_command_template": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --json"
+            )
+            if source_id
+            else "",
+            "landing_plan_command_template": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-plan --json"
+            )
+            if source_id
+            else "",
+            "landing_audit_command_template": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-audit --json"
+            )
+            if source_id
+            else "",
+        }
         dispatch_rows.append(
             {
                 "owner": owner,
@@ -636,42 +766,7 @@ def make_owner_dispatch(rows):
                 "resolved_count": sum(1 for row in owner_rows if row["status"] == "resolved"),
                 "worksheet_ids": [row["id"] for row in owner_open_rows],
                 "source_paths": [row["source_path"] for row in owner_open_rows],
-                "summary_command": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --summary"
-                )
-                if source_id
-                else "",
-                "forms_jsonl_command": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --forms-jsonl"
-                )
-                if source_id
-                else "",
-                "evidence_readiness_command": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --evidence-readiness --json"
-                )
-                if source_id
-                else "",
-                "validate_forms_command_template": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --json"
-                )
-                if source_id
-                else "",
-                "landing_plan_command_template": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-plan --json"
-                )
-                if source_id
-                else "",
-                "landing_audit_command_template": (
-                    "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
-                    f"--source-id {source_id} --owner {owner_arg} --validate-forms '<owner-decisions.jsonl>' --landing-audit --json"
-                )
-                if source_id
-                else "",
+                **commands,
                 "next_focus_command": (
                     "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
                     f"--source-id {next_row['source_id']} --owner {owner_arg} "
@@ -679,6 +774,7 @@ def make_owner_dispatch(rows):
                 )
                 if next_row
                 else "",
+                "suggested_owner_packet": make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, commands),
                 "notes_zh": "只读 owner 分派包；用于人工领取、导出骨架、校验和生成 no-write landing plan。owner_route 只说明分派路由，不生成 owner decision，不关闭 gate。",
             }
         )
@@ -881,6 +977,31 @@ def owner_ready_landing_errors(form_validation, rows):
                 )
     return owner_ready_errors
 
+def required_manual_files_for_forms(form_validation, rows):
+    open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
+    worksheet_files = []
+    if form_validation:
+        for form in form_validation.get("forms", []):
+            row = open_by_id.get(str(form.get("worksheet_id", "")))
+            worksheet = str(row.get("worksheet", "")) if row else ""
+            if worksheet and worksheet not in worksheet_files:
+                worksheet_files.append(worksheet)
+    if not worksheet_files:
+        worksheet_files = ["artifacts/manifests/*owner-decision-worksheets-*.jsonl"]
+    return [
+        "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
+        *sorted(worksheet_files),
+        "registry/items.jsonl",
+        "registry/migrations.jsonl",
+        "indexes/by-owner.md",
+        "indexes/by-project.md",
+        "indexes/by-review-date.md",
+        "indexes/by-source.md",
+        "indexes/by-status.md",
+        "indexes/by-topic.md",
+        "indexes/by-decision.md",
+    ]
+
 def make_landing_plan(form_validation, rows):
     open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
     blocked = form_validation is None or form_validation.get("status") != "pass"
@@ -904,19 +1025,7 @@ def make_landing_plan(form_validation, rows):
             "notes_zh": "owner-ready package 只表示可交给 owner 签收；landing plan 仍不生成 owner decision、不关闭 gate、不写文件。",
         },
         "steps": [],
-        "required_manual_files": [
-            "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
-            "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl",
-            "registry/items.jsonl",
-            "registry/migrations.jsonl",
-            "indexes/by-owner.md",
-            "indexes/by-project.md",
-            "indexes/by-review-date.md",
-            "indexes/by-source.md",
-            "indexes/by-status.md",
-            "indexes/by-topic.md",
-            "indexes/by-decision.md",
-        ],
+        "required_manual_files": required_manual_files_for_forms(form_validation, rows),
         "verification_commands": [
             "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
             "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json",
@@ -1033,19 +1142,7 @@ def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
         "read_only": True,
         "row_count": len(audit_rows),
         "owner_ready_error_count": len(owner_ready_errors),
-        "required_manual_files": [
-            "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
-            "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl",
-            "registry/items.jsonl",
-            "registry/migrations.jsonl",
-            "indexes/by-owner.md",
-            "indexes/by-project.md",
-            "indexes/by-review-date.md",
-            "indexes/by-source.md",
-            "indexes/by-status.md",
-            "indexes/by-topic.md",
-            "indexes/by-decision.md",
-        ],
+        "required_manual_files": required_manual_files_for_forms(form_validation, rows),
         "rows": audit_rows,
         "notes_zh": "landing_audit 只描述人工落点和复核命令，避免 owner JSONL 合法但 worksheet 仍 open；不写文件、不生成 owner decision、不关闭 gate。",
     }

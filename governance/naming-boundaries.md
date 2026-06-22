@@ -27,7 +27,7 @@
 以下内容默认中文：
 
 - `title`
-- `summary`
+- `summary_zh` / `title_zh`
 - 正文标题和小节标题。
 - 结论、证据摘要、风险、下一步。
 - 迁移说明、review 说明、owner worksheet。
@@ -52,6 +52,7 @@
 ## 兼容规则
 
 - 现有 PCR02 文档中的 `doc_type`、`knowledge_type`、`maturity` 可以作为兼容字段保留。
+- `summary` 等旧字段只作为历史兼容；新条目优先使用 `summary_zh`、`title_zh` 和中文摘要正文。
 - 新模板优先使用 `kind`、`status`、`scope`、`visibility`。
 - 兼容字段不得与 registry 字段冲突；冲突时以 registry 为准。
 

@@ -339,3 +339,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签 reviewed_by，maintenance-run 执行 report-only/no-memory 硬门禁，未知人工 source 不输出危险 by-source 占位；documented by `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.
 - reviewing: `knowledge-hub-source-review-template-entry-hardening-20260622`
 - source-review-template-entry-hardening-applied: source review_after 过期作为 warning/status surface 暴露，README/tools 四层低复杂度入口和模板字段填写矩阵已补齐；documented by `artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
+- owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读 `suggested_owner_packet`，owner landing worksheet 文件动态收集，final gate 暴露 source coverage selection，并用非 owner blocker 负向回归证明终态分类边界；documented by `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.

@@ -44,6 +44,8 @@
 | 终态检查 | 判断是否只剩 owner 语义门禁或存在工具/索引/registry 漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 不把 `needs-owner-review` 当工具失败，不跳过 regression 证明 terminal 状态 |
 | 高级写入计划 | copy-first、artifact-ref、promote、retire 等需要 reviewed manifest 的操作 | `rtk bash ~/knowledge-hub/tools/knowledge-copy-first.sh ... --dry-run`；`rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target <target> --dry-run` | 不启用无人值守写入，不绕过 owner、rollback、hash 和验证命令 |
 
+首屏只负责选入口：字段规范以 `templates/README.md` 的字段填写矩阵为准，索引同步以 `indexes/README.md` 为准，工具语义以 `tools/README.md` 为准。新增知识时先用 `knowledge-new.sh` 生成只读草稿，再按模板字段矩阵和索引最小同步补齐；不要在 README 复制出另一套字段权威。
+
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
@@ -91,7 +93,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 ```
 
 `rtk git rev-parse --short HEAD` 和 `rtk git status --branch --short` 先固定当前基线、分支和工作区状态，防止新线程把旧 handoff 当成当前事实。
-`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
+`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`owner_gates.owner_dispatch[].suggested_owner_packet` 是只读 owner handoff 包，会把 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit 排成建议顺序，并给出本地临时 owner JSONL 路径；它不生成、不保存、不应用 owner decision。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate，便于新线程直接恢复人工分派。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
 
 ## 搜索知识
 

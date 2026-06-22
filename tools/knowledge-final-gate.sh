@@ -176,7 +176,27 @@ def blocker_gap_type(blocker):
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
-if os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
+if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+    knowledge_regression = {
+        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of {today.isoformat()}",
+        "exit_code": 0,
+        "payload": {
+            "status": "pass",
+            "result_count": 1,
+            "results": [
+                {
+                    "id": "inner-final-gate-regression-stub",
+                    "status": "pass",
+                    "summary": "inner final-gate regression recursion guard",
+                }
+            ],
+            "skipped_for_self_test": False,
+            "inner_final_gate_regression_stub": True,
+        },
+        "parse_error": "",
+        "stderr": "",
+    }
+elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
         "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of {today.isoformat()}",
         "exit_code": 0,
@@ -338,6 +358,7 @@ core_checks_pass = (
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
 check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})
+check_source_coverage_selection = knowledge_check["payload"].get("source_coverage_selection", {})
 check_source_check_health = knowledge_check["payload"].get("source_check_health", {})
 check_boundary_health = knowledge_check["payload"].get("boundary_health", {})
 source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
@@ -367,6 +388,7 @@ for source in source_registry:
     if not str(source.get("check", "")).strip() and not str(source.get("no_check_reason", "")).strip():
         missing_source_final_state_fields.append({"source_id": source_id, "field": "no_check_reason"})
 latest_coverage_manifest = str(strict_payload.get("sources", {}).get("latest_coverage_manifest", ""))
+strict_source_coverage_selection = strict_payload.get("sources", {}).get("latest_coverage_selection", {})
 source_coverage_rows = load_jsonl(root / latest_coverage_manifest) if latest_coverage_manifest else []
 covered_source_ids = {
     str(row.get("source_id", ""))
@@ -549,6 +571,8 @@ final_state_audit = {
         "registered_count": len(source_registry_ids),
         "covered_count": len(source_registry_ids & covered_source_ids),
         "latest_coverage_manifest": latest_coverage_manifest,
+        "source_coverage_selection": strict_source_coverage_selection or check_source_coverage_selection,
+        "check_source_coverage_selection": check_source_coverage_selection,
         "missing_coverage_ids": missing_registered_coverage,
         "missing_final_state_fields": missing_source_final_state_fields,
         "source_coverage_health": check_source_coverage_health,

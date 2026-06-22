@@ -35,6 +35,8 @@ review_basis:
 worksheet_id:
 source_id:
 source_path:
+owner_required:
+owner_candidate:
 decision_owner:
 decision_status: owner-fill-required
 decision_date:
@@ -62,6 +64,8 @@ verification_cwd:
 
 - `worksheet_id`：对应 owner gate 的工作表 ID。
 - `source_id` / `source_path`：被签收的来源，不代表可直接复制正文。
+- `owner_required` / `owner_candidate`：工具路由使用的 owner role 字段；必须与 `registry/owner-routing.json` 的 `decision_owner_role` 对齐。
+- `decision_owner`：可保留为人读别名或兼容字段，不能替代 `owner_required` / `owner_candidate`。
 - `owner_question`：owner 需要回答的核心问题。
 - `target_candidates`：允许的目标位置或处理方式；不得手写候选外目标。
 - `required_owner_fields`：正式 owner JSONL 必填字段。
