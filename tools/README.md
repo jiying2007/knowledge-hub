@@ -15,7 +15,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 | 层级 | 使用场景 | 稳定入口 | 边界 |
 |---|---|---|---|
 | 日常路径 | 人工新增、检索、索引计划和全仓检查 | `knowledge-new.sh`、`knowledge-search.sh`、`knowledge-index-plan.sh`、`knowledge-check.sh --dry-run --json --diagnostics` | 只输出草稿或检查结果，不自动落盘、不伪造 source/owner/evidence |
-| owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
+| owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --owner-inbox`、`--forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
 | 终态检查 | 证明自动治理是否闭环，区分 `needs-owner-review` 和 `needs-fix` | `knowledge-final-gate.sh --json` | 必须包含 regression、diff check、strict status；不能只看单个 status pass |
 | 高级写入计划 | copy-first、artifact-ref、capture、promote、retire 等需要 reviewed manifest 的流程 | 对应工具默认 dry-run；`--apply` 只允许人工在证据齐备后触发 | 自动化不得删除、发布、提升 active、关闭 owner gate、写 memory 或改源项目 |
 
@@ -35,11 +35,12 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
   - 不会做什么：不生成或应用 owner decision；`--strict` 只作为 blocker dashboard；terminal gate 仍以 `knowledge-final-gate.sh --json` 为准。`strict_blockers[].commands` 可直接执行，`strict_blockers[].command_templates` 需要替换 `<owner-decisions.jsonl>`。
 - `knowledge-final-gate.sh`: 仓库只读终态门禁。
   - 用途：聚合 `knowledge-check --diagnostics`、`knowledge-regression --json`、`rtk git diff --check` 和 `knowledge-status --strict --json`，防止 terminal validation 漏掉回归漂移、空 JSON、whitespace 或 conflict marker。
-  - 主要输出：JSON 包含 `today`、`as_of_source`、`automatic_governance`、`owner_recovery`、`final_state_audit`、`evidence_index` 和 `gap_map`；`owner_recovery.next_open_queue[]` 会透传 status dashboard 的下一批 open worksheet；`evidence_index` 逐条记录命令证据；纯 owner-review 终态还会包含 `owner-blocker-provenance`。
+  - 主要输出：JSON 包含 `today`、`as_of_source`、`automatic_governance`、`owner_recovery`、`final_state_audit`、`source_check_runtime`、`highest_priority_rules_audit`、`evidence_index` 和 `gap_map`；`owner_recovery.next_open_queue[]` 会透传 status dashboard 的下一批 open worksheet；`source_check_runtime` 当前执行一次 PCR02 Level 2 report-only 路径存在性检查；`highest_priority_rules_audit` 用 10 条高优先级规则说明哪些规则已由运行证据覆盖、哪些只能过程审计；`evidence_index` 逐条记录命令证据；纯 owner-review 终态还会包含 `owner-blocker-provenance`。
   - 不会做什么：所有 gate 达到 terminal-ok 前仍会返回非零；回归子命令只在 `/tmp` 创建并清理临时 fixture，不修改 Knowledge Hub、registry、index 或源项目 docs。
 - `knowledge-doctor.sh`: 只读维护辅助入口；运行 `knowledge-check --diagnostics`，可选输出 `--explain <item-id>`、搜索结果和 `--owner-gates <source-id>` 看板，不写文件。
 - `knowledge-index-plan.sh`: 只读核心索引规划入口；输出由 registry 派生的 `by-owner`、`by-review-date`、`by-status`、`by-project`、`by-source`、`by-topic`、`by-decision` 和 `manifest` 恢复视图，不写文件。JSON 输出包含 `source_coverage_selection`，用于追溯 `by_source[*].coverage` 来自哪个 latest closeout manifest；如 latest source coverage 里同一 `source_id` 重复，`duplicate_source_ids` 和 warnings 会显式暴露，并保留第一行作为恢复视图。`--section manifest` 用于恢复 manifest 最新项、Markdown/JSONL 配对、行数、证据计数和 unpaired 分类；latest 只按文件名 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。历史 unpaired 会标记为 `expected` 或 `needs_review`，这是 report-only 恢复视图，不会自动作为硬失败。
 - `knowledge-owner-gates.sh`: 只读 owner gate 看板。它输出 unresolved worksheet、必填 owner 字段、active exposure、owner route 和 source identity；`--summary` 会给出 owner 分布、`owner_dispatch[]` 和 `suggested_owner_packet`，后者把 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit 排成 owner handoff 顺序。`--forms-jsonl` 只打印骨架，`--validate-forms <jsonl>` 只校验人工回填，`--landing-plan` 和 `--landing-audit` 只输出 no-write 人工落地计划与审计。`read_only_prefill_candidates` 只给候选值；正式 owner 字段仍需真实 owner 填写。`owner_route` 只来自 `registry/owner-routing.json`，不生成 owner decision，也不能替代 `reviewed_by`。
+- `knowledge-owner-gates.sh --owner-inbox`: 单屏 owner 待办入口。它按 worksheet 汇总 owner 中文问题、路由、字段分组、只读候选、owner-ready package、verification commands 和 validate/landing 模板，适合从 `owner_recovery.next_open_queue[]` 之后给真实 owner 使用；它不生成 owner decision，不写本地 JSONL，不关闭 gate。
 - `knowledge-regression.sh`: 只读回归 fixture 入口；把仓库复制到 `/tmp`，只修改临时副本，用于验证 status bucket mismatch、partial owner resolution 等关键负向门禁。默认每个场景后清理临时 fixture，内部异常会记录结构化失败细节；`--json` 模式输出 JSON，支持 `--as-of YYYY-MM-DD` / `KNOWLEDGE_TODAY` 固定日期敏感命令，并使用 `KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES` 做低空间预检。
 - `knowledge-inventory.sh`: 只读 source inventory；列出已登记 source 的 owner、路径、状态、复核日期和维护字段。
 - `knowledge-copy-first-plan.sh`: 为已登记 source 生成经审查的 JSONL copy-first manifest；只在 `artifacts/manifests/` 下写 manifest。
@@ -100,6 +101,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 # owner 签收一个 gate
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --checklist --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --evidence-readiness --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json
@@ -118,7 +120,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 新增 source 时，`registry/sources.json` 的 `owner` 必须是 `registry/owners.json` 中已有的 source registry 维护责任人。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 source coverage 或相邻 manifest 写清 no-check reason。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
 
-查看 JSON 中的 `automatic_governance.status`、`owner_recovery`、`final_state_audit`、`evidence_index` 和 `gap_map`：`complete-except-owner-review` 表示自动治理已闭环但仍需人工 owner decision，只有 final gate 为 `needs-owner-review` 且唯一 gap 是 `owner-gates-open` 时才成立；`owner_recovery.next_open_queue[]` 可恢复下一批 open worksheet 的并行领取顺序，`owner_recovery.owner_dispatch[]` 和 `owner_recovery.next_open` 可继续按 owner 或单条 worksheet 恢复人工分派；`final_state_audit` 分层显示 Level 1/2/3 终态摘要；`evidence_index` 记录本次终态 gate 采信的每条命令证据；`needs-fix` 表示还有非 owner blocker 需要先修复。`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate。
+查看 JSON 中的 `automatic_governance.status`、`owner_recovery`、`final_state_audit`、`source_check_runtime`、`highest_priority_rules_audit`、`evidence_index` 和 `gap_map`：`complete-except-owner-review` 表示自动治理已闭环但仍需人工 owner decision，只有 final gate 为 `needs-owner-review` 且唯一 gap 是 `owner-gates-open` 时才成立；`owner_recovery.next_open_queue[]` 可恢复下一批 open worksheet 的并行领取顺序，`owner_recovery.owner_dispatch[]` 和 `owner_recovery.next_open` 可继续按 owner 或单条 worksheet 恢复人工分派；`final_state_audit` 分层显示 Level 1/2/3 终态摘要；`source_check_runtime` 是当前 report-only source availability 证据；`highest_priority_rules_audit` 显示 rtk、apply_patch、no-memory-write、no-source-modification、report-only 等高优先级规则的证据边界；`evidence_index` 记录本次终态 gate 采信的每条命令证据；`needs-fix` 表示还有非 owner blocker 需要先修复。`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate。
 
 失败后按这个顺序恢复：
 
@@ -167,6 +169,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --checklist
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms-jsonl

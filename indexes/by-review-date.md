@@ -206,3 +206,4 @@
 - 2026-09-22: `knowledge-hub-source-check-snapshot-evidence-readability-20260622`
 - 2026-09-22: `knowledge-hub-review-after-near-due-snapshot-20260622`
 - 2026-09-22: `knowledge-hub-report-only-maintenance-tools-20260622`
+- 2026-09-22: `knowledge-hub-owner-inbox-final-gate-audit-20260622`

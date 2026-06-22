@@ -22,6 +22,7 @@ parser.add_argument("--forms", action="store_true", help="Print copyable owner d
 parser.add_argument("--forms-jsonl", action="store_true", help="Print only owner decision JSONL skeleton lines for open rows.")
 parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
 parser.add_argument("--evidence-readiness", action="store_true", help="Print read-only evidence readiness and prefill candidates for open rows.")
+parser.add_argument("--owner-inbox", action="store_true", help="Print a compact owner-facing inbox with grouped fields, routing and validation commands.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--landing-audit", action="store_true", help="With --validate-forms, print a read-only manual landing audit for worksheet/registry/index deltas.")
@@ -46,6 +47,8 @@ if args.forms_jsonl:
         conflicts.append("--checklist")
     if args.evidence_readiness:
         conflicts.append("--evidence-readiness")
+    if args.owner_inbox:
+        conflicts.append("--owner-inbox")
     if args.validate_forms:
         conflicts.append("--validate-forms")
     if args.landing_plan:
@@ -563,6 +566,131 @@ def make_evidence_readiness(rows):
         "status_counts": dict(sorted(status_counts.items())),
         "rows": readiness_rows,
         "notes_zh": "evidence readiness 只汇总候选证据和人工动作，不自动填 owner 字段、不关闭 gate、不提升 active。",
+    }
+
+def group_owner_required_fields(row):
+    manual_fields = []
+    copyable_candidate_fields = []
+    evidence_fields = []
+    verification_fields = []
+    automation_boundary_fields = []
+    other_manual_fields = []
+    copyable_names = {"source_sha256", "source_size", "review_after"}
+    automation_names = {
+        "automation_enabled",
+        "writes_memory",
+        "writes_team_active_index",
+        "no_memory_write_gate",
+        "not_active_source",
+        "contains_memory_candidates",
+    }
+    verification_markers = ("verification", "test", "validation", "command", "branch", "commit", "tag")
+    core_manual = {"owner_decision", "target_decision", "reviewed_by", "reviewed_at", "source_status", "status_reason"}
+    for field in row.get("required_owner_fields", []):
+        field_text = str(field)
+        if field_text in core_manual:
+            manual_fields.append(field_text)
+        elif field_text in copyable_names:
+            copyable_candidate_fields.append(field_text)
+        elif _is_evidence_field(field_text):
+            evidence_fields.append(field_text)
+        elif field_text in automation_names:
+            automation_boundary_fields.append(field_text)
+        elif any(marker in field_text for marker in verification_markers):
+            verification_fields.append(field_text)
+        else:
+            other_manual_fields.append(field_text)
+    return {
+        "manual_decision_fields": manual_fields,
+        "other_manual_owner_fields": other_manual_fields,
+        "copyable_candidate_fields": copyable_candidate_fields,
+        "evidence_fields": evidence_fields,
+        "verification_context_fields": verification_fields,
+        "automation_boundary_fields": automation_boundary_fields,
+        "field_count": len(row.get("required_owner_fields", [])),
+        "notes_zh": "字段分组只降低 owner 复核成本；manual 字段必须由真实 owner 填写，copyable 候选也必须人工签收后才可落地。",
+    }
+
+def make_owner_inbox(rows):
+    inbox_rows = []
+    owner_counts = {}
+    for row in rows:
+        if row["status"] != "open":
+            continue
+        owner = row.get("owner", "") or "<missing-owner>"
+        owner_counts[owner] = owner_counts.get(owner, 0) + 1
+        ready_status, ready_packages = owner_ready_state(row)
+        owner_arg = shlex_quote(owner)
+        source_id = row["source_id"]
+        worksheet_id = row["id"]
+        inbox_rows.append(
+            {
+                "worksheet_id": worksheet_id,
+                "source_id": source_id,
+                "source_path": row["source_path"],
+                "owner": owner,
+                "review_after": row.get("review_after", ""),
+                "owner_question_zh": row.get("owner_question_zh", ""),
+                "allowed_owner_decisions": row.get("decision_options", []),
+                "target_candidates": row.get("target_candidates", []),
+                "owner_route": row.get("owner_route", {}),
+                "required_field_groups": group_owner_required_fields(row),
+                "read_only_prefill_candidates": make_read_only_prefill_candidates(row),
+                "observed_source_identity": row.get("observed_source_identity", {}),
+                "owner_ready_package_status": ready_status,
+                "owner_ready_package_ids": [item.get("id", "") for item in ready_packages if item.get("id")],
+                "owner_ready_package_paths": [item.get("path", "") for item in ready_packages if item.get("path")],
+                "verification_cwd": row.get("verification_cwd", ""),
+                "verification_commands": row.get("verification_commands", []),
+                "commands": {
+                    "focus_command": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --checklist --forms"
+                    ),
+                    "forms_jsonl_command": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --forms-jsonl"
+                    ),
+                    "evidence_readiness_command": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --evidence-readiness --json"
+                    ),
+                    "validate_forms_command_template": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --validate-forms '<owner-decisions.jsonl>' --json"
+                    ),
+                    "landing_plan_command_template": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --validate-forms '<owner-decisions.jsonl>' --landing-plan --json"
+                    ),
+                    "landing_audit_command_template": (
+                        "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                        f"--source-id {source_id} --owner {owner_arg} --worksheet-id {worksheet_id} --validate-forms '<owner-decisions.jsonl>' --landing-audit --json"
+                    ),
+                },
+                "must_not": [
+                    "不得把 routing_owner 当 reviewed_by",
+                    "不得由工具或 AI 代签 owner decision",
+                    "不得把 owner-ready package 当成已批准决策",
+                    "不得关闭未签收 owner gate",
+                    "不得把 project-specific 内容提升到 domains/embedded/standards/",
+                    "不得修改 PCR02 源项目 docs",
+                    "不得写 ~/.codex/memories",
+                ],
+                "notes_zh": "单条 owner inbox 只做人工复核入口；命令和候选字段均为只读上下文，不生成、不保存、不应用 owner decision。",
+            }
+        )
+    return {
+        "status": "ready-for-owner-review" if inbox_rows else "empty",
+        "read_only": True,
+        "report_only": True,
+        "no_owner_decision_generated": True,
+        "no_owner_gate_closed": True,
+        "routing_owner_is_not_reviewed_by": True,
+        "row_count": len(inbox_rows),
+        "owner_counts": dict(sorted(owner_counts.items())),
+        "rows": inbox_rows,
+        "notes_zh": "owner inbox 是单屏人工复核队列；只汇总 owner 问题、路由、字段分组、候选证据和校验命令，不写文件、不关闭 gate、不提升 active。",
     }
 
 def make_owner_ready_coverage(rows):
@@ -1347,6 +1475,9 @@ if args.forms:
 if args.evidence_readiness:
     result["evidence_readiness"] = make_evidence_readiness([row for row in rows if row["status"] == "open"])
 
+if args.owner_inbox:
+    result["owner_inbox"] = make_owner_inbox([row for row in rows if row["status"] == "open"])
+
 if args.checklist:
     result["owner_checklists"] = [make_owner_checklist(row) for row in rows if row["status"] == "open"]
 
@@ -1488,6 +1619,36 @@ if args.summary:
             f"{item['owner'] or '<missing-owner>'} | {item['source_identity_status']} | "
             f"{item['owner_ready_package_status']} | {item['required_owner_field_count']} | `{item['focus_command']}` |"
         )
+
+if args.owner_inbox:
+    inbox = make_owner_inbox([row for row in rows if row["status"] == "open"])
+    print()
+    print("## Owner Inbox")
+    print()
+    print("本视图只读汇总 owner 待办，不生成 owner decision，不写文件，不关闭 gate。")
+    print(f"- inbox_status: {inbox['status']}")
+    print(f"- rows: {inbox['row_count']}")
+    if inbox["owner_counts"]:
+        owner_parts = [f"{key}={value}" for key, value in inbox["owner_counts"].items()]
+        print(f"- owners: {', '.join(owner_parts)}")
+    print()
+    print("| worksheet | owner | route | source path | fields | owner-ready | focus |")
+    print("|---|---|---|---|---:|---|---|")
+    for item in inbox["rows"]:
+        route = item.get("owner_route", {})
+        route_text = route.get("routing_owner") or route.get("routing_status") or "<unmapped>"
+        fields = item.get("required_field_groups", {}).get("field_count", 0)
+        print(
+            f"| `{item['worksheet_id']}` | {item['owner']} | {route_text} | "
+            f"`{item['source_path']}` | {fields} | {item['owner_ready_package_status']} | "
+            f"`{item['commands']['focus_command']}` |"
+        )
+    print()
+    print("### 使用边界")
+    print()
+    print("- routing_owner 只是分派提示，不能填入 reviewed_by。")
+    print("- source_sha256/source_size/review_after 只是候选值，必须由真实 owner 人工签收。")
+    print("- validate / landing plan / landing audit 都是只读命令；人工落地前不得关闭 owner gate。")
 
 if form_validation:
     print()

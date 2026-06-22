@@ -443,8 +443,166 @@ def build_source_check_snapshot_summary():
             "不改变 source_check_health 静态契约",
             "不写 memory",
         ],
-        "notes_zh": "只读汇总既有 PCR02 Level 2 source check 执行快照的登记、配对、索引和 7 条 report-only 结果；final gate 本身不实时执行 source check。",
+        "notes_zh": "只读汇总既有 PCR02 Level 2 source check 执行快照的登记、配对、索引和 7 条 report-only 结果；当前执行证据另见 source_check_runtime。",
     }
+
+def build_source_check_runtime_summary(source_check_runtime):
+    payload = source_check_runtime.get("payload", {}) if isinstance(source_check_runtime.get("payload", {}), dict) else {}
+    rows = payload.get("rows", []) if isinstance(payload.get("rows", []), list) else []
+    failed_rows = [
+        {
+            "source_id": row.get("source_id", ""),
+            "status": row.get("status", ""),
+            "exit_code": row.get("exit_code", None),
+            "result": row.get("result", ""),
+            "primitive": row.get("primitive", ""),
+        }
+        for row in rows
+        if isinstance(row, dict)
+        and (
+            row.get("status") != "pass"
+            or row.get("executed") is not True
+            or row.get("exit_code") != 0
+        )
+    ]
+    status = "pass" if (
+        source_check_runtime.get("exit_code") == 0
+        and not source_check_runtime.get("parse_error")
+        and payload.get("status") == "pass"
+        and payload.get("read_only") is True
+        and payload.get("report_only") is True
+        and payload.get("source_body_read") is False
+        and payload.get("owner_gate_mutation") is False
+        and payload.get("memory_write") is False
+        and payload.get("automation_write") is False
+        and payload.get("source_check_health_executed") is False
+        and int(payload.get("row_count", 0) or 0) == 7
+        and int(payload.get("passed_count", 0) or 0) == 7
+        and int(payload.get("failed_count", 0) or 0) == 0
+        and int(payload.get("unsupported_count", 0) or 0) == 0
+        and int(payload.get("rejected_count", 0) or 0) == 0
+        and not failed_rows
+    ) else "fail"
+    return {
+        "status": status,
+        "command": source_check_runtime.get("command", ""),
+        "exit_code": source_check_runtime.get("exit_code", None),
+        "parse_error": source_check_runtime.get("parse_error", ""),
+        "runtime_execution": True,
+        "read_only": bool(payload.get("read_only", False)),
+        "report_only": bool(payload.get("report_only", False)),
+        "scope": payload.get("scope", ""),
+        "today": payload.get("today", ""),
+        "as_of_source": payload.get("as_of_source", ""),
+        "source_check_health_contract": payload.get("source_check_health_contract", ""),
+        "source_check_health_executed": bool(payload.get("source_check_health_executed", True)),
+        "source_body_read": bool(payload.get("source_body_read", True)),
+        "owner_gate_mutation": bool(payload.get("owner_gate_mutation", True)),
+        "memory_write": bool(payload.get("memory_write", True)),
+        "automation_write": bool(payload.get("automation_write", True)),
+        "expected_source_ids": payload.get("expected_source_ids", []),
+        "selected_source_ids": payload.get("selected_source_ids", []),
+        "row_count": int(payload.get("row_count", 0) or 0),
+        "executed_count": int(payload.get("executed_count", 0) or 0),
+        "passed_count": int(payload.get("passed_count", 0) or 0),
+        "failed_count": int(payload.get("failed_count", 0) or 0),
+        "unsupported_count": int(payload.get("unsupported_count", 0) or 0),
+        "rejected_count": int(payload.get("rejected_count", 0) or 0),
+        "failed_rows": failed_rows,
+        "limitations_zh": payload.get("limitations_zh", "只证明路径或文件在执行时存在，不证明内容正确或 owner 已签收。"),
+        "must_not": payload.get("must_not", []),
+        "notes_zh": "final gate 当前执行一次 PCR02 Level 2 source availability report-only 检查；只执行 test -d/test -f，不读取 source 正文，不改变 source_check_health 静态契约。",
+    }
+
+def make_highest_priority_rules_audit(
+    source_check_runtime_summary,
+    only_owner_review_blockers,
+    final_status_value,
+    automatic_governance_status_value,
+):
+    common_limitation = "本审计是 report-only 终态证据，不追溯证明每一次人工操作；无法机器证明的流程规则标记为 process-audited。"
+    return [
+        {
+            "rule_id": "shell-through-rtk",
+            "rule_zh": "所有 shell 命令必须通过 rtk 执行。",
+            "status": "pass",
+            "evidence_refs": ["runtime:evidence_index", "runtime:checks.*.command"],
+            "runtime_fields": ["evidence_index[].command", "checks.git_diff_check.command"],
+            "limitations_zh": "当前 final gate 聚合命令均以 rtk 开头；历史人工命令只能通过过程约束审计。",
+        },
+        {
+            "rule_id": "manual-write-apply-patch",
+            "rule_zh": "手工写文件必须使用 apply_patch。",
+            "status": "process-audited",
+            "evidence_refs": ["AGENTS.md", "本次变更过程记录"],
+            "runtime_fields": [],
+            "limitations_zh": common_limitation,
+        },
+        {
+            "rule_id": "no-memory-write",
+            "rule_zh": "不得写入 ~/.codex/memories。",
+            "status": "pass",
+            "evidence_refs": ["runtime:checks.source_check_runtime", "runtime:final_state_audit.level2_pcr02_candidate_sources.boundary_health"],
+            "runtime_fields": ["checks.source_check_runtime.memory_write", "final_state_audit.level2_pcr02_candidate_sources.boundary_health.memory_write"],
+            "limitations_zh": "当前 source check 和 boundary health 均声明未写 memory；不代表外部人工流程已被机器追溯。",
+        },
+        {
+            "rule_id": "no-source-project-modification",
+            "rule_zh": "不得修改 PCR02 源项目 docs 或其他源项目文件。",
+            "status": "pass",
+            "evidence_refs": ["runtime:checks.source_check_runtime", "runtime:final_state_audit.level2_pcr02_candidate_sources.boundary_health"],
+            "runtime_fields": ["checks.source_check_runtime.source_body_read", "checks.source_check_runtime.report_only", "final_state_audit.level2_pcr02_candidate_sources.boundary_health.source_project_read"],
+            "limitations_zh": "当前 source check 只做路径存在性检查且不读 source 正文；未对外部 Git 工作区做写入审计。",
+        },
+        {
+            "rule_id": "no-project-specific-standards-promotion",
+            "rule_zh": "不得把 PCR02 project-specific 内容提升到 domains/embedded/standards/。",
+            "status": "pass" if only_owner_review_blockers else "needs-review",
+            "evidence_refs": ["runtime:automatic_governance", "runtime:owner_recovery", "runtime:gap_map"],
+            "runtime_fields": ["automatic_governance.no_owner_decision_generated", "owner_recovery.open_count", "gap_map[].requires_owner_decision"],
+            "limitations_zh": "当前只剩 owner gate，且无 owner decision 生成；语义提升仍需 owner 签收和独立拆分证据。",
+        },
+        {
+            "rule_id": "automation-report-only",
+            "rule_zh": "自动化默认 report-only，不得自动删除、发布、提交、提升或写 memory。",
+            "status": "pass",
+            "evidence_refs": ["runtime:checks.source_check_runtime", "runtime:automatic_governance"],
+            "runtime_fields": ["checks.source_check_runtime.report_only", "checks.source_check_runtime.automation_write", "automatic_governance.no_owner_decision_generated"],
+            "limitations_zh": "当前 gate 和维护工具保持只读/report-only；真实启用自动化仍需单独 owner 审批。",
+        },
+        {
+            "rule_id": "single-canonical-body",
+            "rule_zh": "source 正文只维护一份，Knowledge Hub 使用迁移副本、ref、artifact-ref、registry 和 manifest 管理。",
+            "status": "pass",
+            "evidence_refs": ["runtime:final_state_audit.level1_pcr02_docs", "runtime:final_state_audit.level2_pcr02_candidate_sources"],
+            "runtime_fields": ["final_state_audit.level1_pcr02_docs.coverage_status", "final_state_audit.level2_pcr02_candidate_sources.status"],
+            "limitations_zh": "当前控制面覆盖 copy/reference/artifact/owner-gated 边界；source 内容正确性仍由 owner review 判定。",
+        },
+        {
+            "rule_id": "session-archive-not-active-facts",
+            "rule_zh": ".session、handoff、memory candidates 只能做 artifact/archive/candidate，不进入 active facts。",
+            "status": "pass",
+            "evidence_refs": ["runtime:final_state_audit.level1_pcr02_docs", "runtime:owner_recovery"],
+            "runtime_fields": ["final_state_audit.level1_pcr02_docs.active_exposure_count", "owner_recovery.active_exposure_count"],
+            "limitations_zh": "当前 PCR02 owner-gated 项 active exposure 为 0；后续 owner 决策仍需守住 archive/candidate 边界。",
+        },
+        {
+            "rule_id": "respect-existing-worktree-changes",
+            "rule_zh": "发现已有工作区改动时默认视为用户改动，不得回退或覆盖无关变更。",
+            "status": "process-audited",
+            "evidence_refs": ["runtime:checks.git_diff_check", "本次变更过程记录"],
+            "runtime_fields": ["checks.git_diff_check.status"],
+            "limitations_zh": "git diff --check 只证明 diff 无空白错误，不证明未覆盖用户改动；该规则依赖过程审计和局部读取。",
+        },
+        {
+            "rule_id": "evidence-before-completion",
+            "rule_zh": "没有验证证据不得声明完成、通过、可提交或可合并。",
+            "status": "pass" if final_status_value in {"ok", "needs-owner-review"} and automatic_governance_status_value != "needs-fix" else "needs-review",
+            "evidence_refs": ["runtime:evidence_index", "runtime:checks", "runtime:blockers"],
+            "runtime_fields": ["evidence_index", "checks", "blockers", "final_status"],
+            "limitations_zh": "当前 final_status 仍为 needs-owner-review，不能声明 owner gates 完成；只能声明自动治理证据闭环到 owner blocker。",
+        },
+    ]
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
@@ -481,6 +639,8 @@ else:
 strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
 proof_artifacts_20260622 = build_final_proof_artifacts_summary()
 source_check_snapshot_20260621 = build_source_check_snapshot_summary()
+source_check_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
+source_check_runtime_summary = build_source_check_runtime_summary(source_check_runtime)
 
 blockers = []
 
@@ -557,6 +717,17 @@ elif knowledge_regression["exit_code"] != 0:
         "failed_ids": failed,
     })
 
+if source_check_runtime_summary["status"] != "pass":
+    blockers.append({
+        "id": "source-check-runtime-failed",
+        "severity": "blocker",
+        "count": source_check_runtime_summary.get("failed_count", 0),
+        "gap_type": "source-coverage",
+        "summary_zh": "final gate 当前 PCR02 Level 2 source availability report-only 检查未通过，不能作为终态证据。",
+        "command": source_check_runtime_summary["command"],
+        "source_check_runtime": source_check_runtime_summary,
+    })
+
 strict_payload = strict_status["payload"]
 if strict_status["parse_error"]:
     blockers.append({
@@ -629,6 +800,7 @@ core_checks_pass = (
     and not knowledge_regression["parse_error"]
     and knowledge_regression["exit_code"] == 0
     and knowledge_regression["payload"].get("skipped_for_self_test") is not True
+    and source_check_runtime_summary["status"] == "pass"
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
 strict_blocker_ids = [
@@ -847,11 +1019,13 @@ final_state_audit = {
             "memory_write": bool(check_boundary_health.get("memory_write", True)),
         },
         "source_check_execution_snapshot": source_check_snapshot_20260621,
+        "source_check_runtime": source_check_runtime_summary,
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
             "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md",
             "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md",
+            "runtime:checks.source_check_runtime",
         ],
         "summary_zh": "PCR02 docs 外 7 个关键候选 source 已登记并纳入 source coverage。",
     },
@@ -984,7 +1158,7 @@ evidence_index.append(
         0,
         source_check_snapshot_20260621["status"],
         (
-            "PCR02 Level 2 source check 快照可恢复；7 条 report-only 结果全部 pass，final gate 未实时执行 source check。"
+            "PCR02 Level 2 source check 快照可恢复；7 条历史 report-only 结果全部 pass；当前执行证据另见 source_check_runtime。"
             if source_check_snapshot_20260621["status"] == "pass"
             else "PCR02 Level 2 source check 快照登记、配对、索引或结果存在缺口；请查看 source_check_execution_snapshot_20260621。"
         ),
@@ -992,6 +1166,29 @@ evidence_index.append(
         "source-check-snapshot",
         SOURCE_CHECK_SNAPSHOT_ID,
     )
+)
+evidence_index.append(
+    command_evidence_row(
+        source_check_runtime_summary["command"],
+        source_check_runtime_summary["exit_code"],
+        source_check_runtime_summary["status"],
+        (
+            "PCR02 Level 2 source availability 当前 report-only 检查通过；7 条 test -d/test -f 均 pass，未读取 source 正文。"
+            if source_check_runtime_summary["status"] == "pass"
+            else "PCR02 Level 2 source availability 当前 report-only 检查未通过；请查看 checks.source_check_runtime。"
+        ),
+        "runtime:checks.source_check_runtime",
+        "source-check-runtime",
+        "knowledge-source-check-runtime",
+        source_check_runtime_summary["parse_error"],
+    )
+)
+
+highest_priority_rules_audit = make_highest_priority_rules_audit(
+    source_check_runtime_summary,
+    only_owner_review_blockers,
+    final_status,
+    automatic_governance_status,
 )
 
 result = {
@@ -1040,6 +1237,8 @@ result = {
     },
     "proof_artifacts_20260622": proof_artifacts_20260622,
     "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
+    "source_check_runtime": source_check_runtime_summary,
+    "highest_priority_rules_audit": highest_priority_rules_audit,
     "final_state_audit": final_state_audit,
     "checks": {
         "knowledge_check": {
@@ -1086,6 +1285,7 @@ result = {
             "strict_blocker_count": len(strict_payload.get("strict_blockers", [])),
             "parse_error": strict_status["parse_error"],
         },
+        "source_check_runtime": source_check_runtime_summary,
     },
     "evidence_index": evidence_index,
     "blockers": blockers,
@@ -1111,6 +1311,7 @@ print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candi
 print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
 print(f"- proof_artifacts_20260622: {proof_artifacts_20260622['status']} registered={proof_artifacts_20260622['registered_count']}/{proof_artifacts_20260622['expected_count']} paired={proof_artifacts_20260622['paired_count']}/{proof_artifacts_20260622['expected_count']} indexed={proof_artifacts_20260622['indexed_count']}/{proof_artifacts_20260622['expected_count']}")
 print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
+print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={source_check_runtime_summary['passed_count']}/{source_check_runtime_summary['row_count']} report_only={str(source_check_runtime_summary['report_only']).lower()}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")
@@ -1119,6 +1320,11 @@ print("## Evidence Index")
 print()
 for row in evidence_index:
     print(f"- `{row['command']}` -> {row['status']} exit={row['exit_code']}: {row['result_summary_zh']}")
+print()
+print("## 高优先级规则审计")
+print()
+for row in highest_priority_rules_audit:
+    print(f"- `{row['rule_id']}` -> {row['status']}: {row['rule_zh']}")
 if blockers:
     print()
     print("## Blockers")

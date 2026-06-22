@@ -359,3 +359,5 @@
 - review-after-near-due-snapshot-applied: 30 天 review_after 预警快照覆盖 2026-07-16 到 2026-07-18 的 32 个首批复核项；仅作人工提醒，不自动改日期、不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.jsonl`.
 - reviewing: `knowledge-hub-report-only-maintenance-tools-20260622`
 - report-only-maintenance-tools-registered: 登记 `knowledge-review-after.sh` 与 `knowledge-source-check.sh` 两个 report-only 维护入口；证据：`artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.jsonl`.
+- reviewing: `knowledge-hub-owner-inbox-final-gate-audit-20260622`
+- owner-inbox-final-gate-audit-applied: 新增 owner-inbox 单屏人工复核入口，并让 final gate 输出当前 source-check 运行证据和高优先级规则审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.jsonl`.

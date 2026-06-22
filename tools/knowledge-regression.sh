@@ -953,6 +953,79 @@ def test_owner_evidence_readiness():
         },
     )
 
+def test_owner_inbox_contract():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--owner",
+            "project-owner",
+            "--owner-inbox",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    inbox = parsed.get("owner_inbox", {})
+    rows = inbox.get("rows", [])
+    first = rows[0] if rows else {}
+    commands = first.get("commands", {})
+    groups = first.get("required_field_groups", {})
+    prefill = first.get("read_only_prefill_candidates", {})
+    route = first.get("owner_route", {})
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("row_count") == 2
+        and parsed.get("open_count") == 2
+        and inbox.get("status") == "ready-for-owner-review"
+        and inbox.get("read_only") is True
+        and inbox.get("report_only") is True
+        and inbox.get("no_owner_decision_generated") is True
+        and inbox.get("no_owner_gate_closed") is True
+        and inbox.get("routing_owner_is_not_reviewed_by") is True
+        and inbox.get("row_count") == 2
+        and inbox.get("owner_counts", {}).get("project-owner") == 2
+        and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-005"
+        and first.get("owner") == "project-owner"
+        and route.get("routing_owner") == "pcr02-registry-owner"
+        and route.get("no_owner_decision_generated") is True
+        and groups.get("field_count", 0) >= 10
+        and "owner_decision" in groups.get("manual_decision_fields", [])
+        and "target_decision" in groups.get("manual_decision_fields", [])
+        and "source_sha256" in groups.get("copyable_candidate_fields", [])
+        and "source_size" in groups.get("copyable_candidate_fields", [])
+        and bool(groups.get("evidence_fields", []))
+        and first.get("owner_ready_package_status") == "covered"
+        and bool(first.get("owner_ready_package_ids", []))
+        and prefill.get("read_only") is True
+        and prefill.get("no_owner_decision_generated") is True
+        and bool(prefill.get("source_sha256_candidate", ""))
+        and "--worksheet-id pcr02-owner-decision-worksheet-005 --checklist --forms" in commands.get("focus_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-005 --forms-jsonl" in commands.get("forms_jsonl_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-005 --evidence-readiness --json" in commands.get("evidence_readiness_command", "")
+        and "owner-decisions.jsonl" in commands.get("validate_forms_command_template", "")
+        and "owner-decisions.jsonl" in commands.get("landing_plan_command_template", "")
+        and "owner-decisions.jsonl" in commands.get("landing_audit_command_template", "")
+        and any("不得把 routing_owner 当 reviewed_by" in item for item in first.get("must_not", [])),
+        "owner-inbox-contract",
+        "owner gate helper emits compact read-only owner inbox with grouped fields and safe commands",
+        {
+            "exit_code": result["exit_code"],
+            "row_count": parsed.get("row_count"),
+            "open_count": parsed.get("open_count"),
+            "inbox": inbox,
+            "first": first,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_owner_summary_all_open():
     result = run_cmd(
         root,
@@ -1546,6 +1619,9 @@ def test_final_gate_owner_review_blocker():
     final_state_audit = parsed.get("final_state_audit", {})
     proof_artifacts = parsed.get("proof_artifacts_20260622", {})
     source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
+    source_check_runtime = parsed.get("source_check_runtime", {})
+    highest_priority_rules_audit = parsed.get("highest_priority_rules_audit", [])
+    rules_by_id = {row.get("rule_id"): row for row in highest_priority_rules_audit}
     evidence_index = parsed.get("evidence_index", [])
     evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
     level1 = final_state_audit.get("level1_pcr02_docs", {})
@@ -1554,6 +1630,7 @@ def test_final_gate_owner_review_blocker():
     proof_rows = proof_artifacts.get("rows", [])
     level2_boundary_health = level2.get("boundary_health", {})
     level2_source_check_snapshot = level2.get("source_check_execution_snapshot", {})
+    level2_source_check_runtime = level2.get("source_check_runtime", {})
     level3_source_check_health = level3.get("source_check_health", {})
     level3_source_coverage_selection = level3.get("source_coverage_selection", {})
     gap_map = parsed.get("gap_map", [])
@@ -1632,8 +1709,21 @@ def test_final_gate_owner_review_blocker():
         and level2_source_check_snapshot.get("passed_count") == 7
         and level2_source_check_snapshot.get("missing_source_ids") == []
         and level2_source_check_snapshot.get("failed_rows") == []
+        and level2_source_check_runtime.get("status") == "pass"
+        and level2_source_check_runtime.get("runtime_execution") is True
+        and level2_source_check_runtime.get("read_only") is True
+        and level2_source_check_runtime.get("report_only") is True
+        and level2_source_check_runtime.get("source_body_read") is False
+        and level2_source_check_runtime.get("owner_gate_mutation") is False
+        and level2_source_check_runtime.get("memory_write") is False
+        and level2_source_check_runtime.get("automation_write") is False
+        and level2_source_check_runtime.get("source_check_health_executed") is False
+        and level2_source_check_runtime.get("row_count") == 7
+        and level2_source_check_runtime.get("passed_count") == 7
+        and level2_source_check_runtime.get("failed_count") == 0
         and "registry/sources.json" in level2.get("evidence_refs", [])
         and "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md" in level2.get("evidence_refs", [])
+        and "runtime:checks.source_check_runtime" in level2.get("evidence_refs", [])
         and level3.get("status") == "complete"
         and level3.get("registered_count") == level3.get("covered_count")
         and level3.get("registered_count") == 13
@@ -1676,6 +1766,24 @@ def test_final_gate_owner_review_blocker():
         and source_check_snapshot.get("missing_source_ids") == []
         and source_check_snapshot.get("unexpected_source_ids") == []
         and source_check_snapshot.get("failed_rows") == []
+        and source_check_runtime.get("status") == "pass"
+        and source_check_runtime.get("command") == "rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of 2026-06-22"
+        and source_check_runtime.get("runtime_execution") is True
+        and source_check_runtime.get("read_only") is True
+        and source_check_runtime.get("report_only") is True
+        and source_check_runtime.get("scope") == "pcr02-level2"
+        and source_check_runtime.get("source_check_health_contract") == "static-registry-only"
+        and source_check_runtime.get("source_check_health_executed") is False
+        and source_check_runtime.get("source_body_read") is False
+        and source_check_runtime.get("owner_gate_mutation") is False
+        and source_check_runtime.get("memory_write") is False
+        and source_check_runtime.get("automation_write") is False
+        and source_check_runtime.get("row_count") == 7
+        and source_check_runtime.get("passed_count") == 7
+        and source_check_runtime.get("failed_count") == 0
+        and source_check_runtime.get("unsupported_count") == 0
+        and source_check_runtime.get("rejected_count") == 0
+        and source_check_runtime.get("failed_rows") == []
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
@@ -1688,7 +1796,9 @@ def test_final_gate_owner_review_blocker():
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
         and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
-        and len(evidence_index) == 6
+        and checks.get("source_check_runtime", {}).get("status") == "pass"
+        and checks.get("source_check_runtime", {}).get("row_count") == 7
+        and len(evidence_index) == 7
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
         and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
@@ -1698,6 +1808,19 @@ def test_final_gate_owner_review_blocker():
         and evidence_by_artifact.get("owner-blocker-provenance", {}).get("evidence_path") == "runtime:automatic_governance.owner_blocker_source"
         and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("status") == "pass"
         and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("layer") == "source-check-snapshot"
+        and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("status") == "pass"
+        and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("layer") == "source-check-runtime"
+        and len(highest_priority_rules_audit) == 10
+        and rules_by_id.get("shell-through-rtk", {}).get("status") == "pass"
+        and rules_by_id.get("manual-write-apply-patch", {}).get("status") == "process-audited"
+        and rules_by_id.get("no-memory-write", {}).get("status") == "pass"
+        and rules_by_id.get("no-source-project-modification", {}).get("status") == "pass"
+        and rules_by_id.get("no-project-specific-standards-promotion", {}).get("status") == "pass"
+        and rules_by_id.get("automation-report-only", {}).get("status") == "pass"
+        and rules_by_id.get("single-canonical-body", {}).get("status") == "pass"
+        and rules_by_id.get("session-archive-not-active-facts", {}).get("status") == "pass"
+        and rules_by_id.get("respect-existing-worktree-changes", {}).get("status") == "process-audited"
+        and rules_by_id.get("evidence-before-completion", {}).get("status") == "pass"
         and owner_blocker.get("count") == 7
         and len(gap_map) == 1
         and owner_gap.get("gap_type") == "owner-review"
@@ -1715,6 +1838,8 @@ def test_final_gate_owner_review_blocker():
             "final_state_audit": final_state_audit,
             "proof_artifacts_20260622": proof_artifacts,
             "source_check_execution_snapshot_20260621": source_check_snapshot,
+            "source_check_runtime": source_check_runtime,
+            "highest_priority_rules_audit": highest_priority_rules_audit,
             "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
             "evidence_index": evidence_index,
@@ -5019,6 +5144,7 @@ def test_regression_manifest_coverage():
         "owner-source-identity-context",
         "owner-prefill-candidates-manual-fields",
         "owner-evidence-readiness",
+        "owner-inbox-contract",
         "owner-summary-all-open",
         "owner-summary-by-owner",
         "owner-next-open-focus",
@@ -5179,6 +5305,7 @@ for test_fn in [
     test_owner_source_identity_context,
     test_owner_prefill_candidates_manual_fields,
     test_owner_evidence_readiness,
+    test_owner_inbox_contract,
     test_owner_summary_all_open,
     test_owner_summary_by_owner,
     test_owner_next_open_focus,

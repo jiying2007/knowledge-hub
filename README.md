@@ -40,7 +40,7 @@
 | 层级 | 何时使用 | 入口命令 | 禁止事项 |
 |---|---|---|---|
 | 日常路径 | 新增、检索、复核普通知识条目 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh ...`；`rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<keyword>" --json`；`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 不伪造 source id、owner、hash、验证结果或 active 状态 |
-| owner gate | 处理 PCR02 owner-gated worksheet 和人工签收材料 | `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --checklist --forms` | 不代签 `reviewed_by`，不把 `routing_owner` 当真实 reviewer，不关闭 gate |
+| owner gate | 处理 PCR02 owner-gated worksheet 和人工签收材料 | `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json` | 不代签 `reviewed_by`，不把 `routing_owner` 当真实 reviewer，不关闭 gate |
 | 终态检查 | 判断是否只剩 owner 语义门禁或存在工具/索引/registry 漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 不把 `needs-owner-review` 当工具失败，不跳过 regression 证明 terminal 状态 |
 | 高级写入计划 | copy-first、artifact-ref、promote、retire 等需要 reviewed manifest 的操作 | `rtk bash ~/knowledge-hub/tools/knowledge-copy-first.sh ... --dry-run`；`rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target <target> --dry-run` | 不启用无人值守写入，不绕过 owner、rollback、hash 和验证命令 |
 
@@ -69,6 +69,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --evidence-readiness --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json
@@ -107,7 +108,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 
 - 状态恢复：`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、`owner_gates.next_open_queue[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。
 - owner 分派：`owner_gates.owner_dispatch[].suggested_owner_packet` 是只读 owner handoff 包，会把 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit 排成建议顺序，并给出本地临时 owner JSONL 路径；它不生成、不保存、不应用 owner decision。`owner_gates.next_open_queue[]` 按 `review_after, worksheet_id` 输出 open worksheet 的下一批领取顺序，其中可执行命令只包含 checklist/forms、forms-jsonl 和 evidence-readiness，validate/landing 只作为人工回填后的模板。
-- 终态门禁：`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁。它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]`、下一条 open gate 和 `next_open_queue[]`；`evidence_index` 会记录命令、退出码、状态、中文摘要、runtime evidence path 和 related artifact；`automatic_governance.owner_blocker_source` 会说明 owner gate 数量来自 strict status 的哪个字段。
+- 终态门禁：`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check`、strict status 和当前 PCR02 Level 2 report-only source-check，并判断是否只剩 owner 语义门禁。它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]`、下一条 open gate 和 `next_open_queue[]`；`source_check_runtime` 会记录当前 7 条 allowlist 路径存在性检查；`highest_priority_rules_audit` 会列出 10 条高优先级规则的证据和不可机器证明边界；`evidence_index` 会记录命令、退出码、状态、中文摘要、runtime evidence path 和 related artifact；`automatic_governance.owner_blocker_source` 会说明 owner gate 数量来自 strict status 的哪个字段。
 - source 与 boundary：`final_state_audit.level1_pcr02_docs` 会暴露 `expected_owner_gate_count`、worksheet 行数和 owner-ready 数量来源，避免把 7 个 open gate 当成脚本魔法常量。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`sources.source_recovery_rows[]` 会把 source registry 终态、review_after、final_disposition、check/no-check 和 latest coverage decision 合成一行；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。
 - 索引恢复：`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。manifest latest 只按文件名里的 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。`knowledge-index-plan.sh --section source --json` 若发现 latest source coverage 中同一 `source_id` 重复，会在 `source_coverage_selection.duplicate_source_ids` 和 warnings 中暴露，并保留第一行作为恢复视图。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
 
@@ -212,6 +213,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --d
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --next-open --checklist --forms
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --summary
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --owner <owner> --owner-inbox --json
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --owner <owner> --forms-jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --owner <owner> --evidence-readiness --json
