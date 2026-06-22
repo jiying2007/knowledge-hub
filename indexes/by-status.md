@@ -1,10 +1,10 @@
 # By Status
 
-Core status buckets are manually maintained and guarded by `knowledge-check`.
+核心 status bucket 由人工维护，并由 `knowledge-check` 做一致性门禁。
 
-Use `rtk bash tools/knowledge-index-plan.sh --section status` for a read-only registry-derived view before editing.
+编辑前先运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status` 查看只读 registry 派生视图。
 
-Canonical buckets may use multiple lines with the same `- active:`、`- reviewing:` or `- archived:` prefix. Prefer one short canonical line per item instead of extending legacy long lines.
+规范 bucket 可以使用多行相同的 `- active:`、`- reviewing:` 或 `- archived:` 前缀；优先为每个条目保留一条短行，避免继续扩展历史长行。
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
@@ -347,3 +347,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - recovery-search-manual-hardening-applied: manifest latest 文件名日期恢复、source coverage duplicate source_id warning、结构化搜索排除未登记 raw file、人工新增 diagnostics 默认验证和 source status coverage 同步已由 85 个回归场景覆盖；documented by `artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-proof-maintenance-hardening-20260622`
 - final-proof-maintenance-hardening-applied: final gate Level 1 owner gate 来源字段、status source recovery rows、regression helper 表格结构自检和 governance/template 验证命令稳定入口已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-owner-queue-command-hardening-20260622`
+- owner-queue-command-hardening-applied: status dashboard 的 owner_gates.next_open_queue[]、owner 队列命令边界和治理文档稳定命令示例已压实；documented by `artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.

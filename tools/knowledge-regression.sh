@@ -1199,6 +1199,17 @@ def test_status_next_owner_gate():
         (blocker for blocker in strict_blockers if blocker.get("id") == "owner-gates-open"),
         {},
     )
+    next_open_queue = owner_gates.get("next_open_queue", [])
+    first_queue_row = next_open_queue[0] if next_open_queue else {}
+    second_queue_row = next_open_queue[1] if len(next_open_queue) > 1 else {}
+    queue_executable_commands = []
+    for row in next_open_queue:
+        for field in ["focus_command", "forms_jsonl_command", "evidence_readiness_command"]:
+            queue_executable_commands.append(str(row.get(field, "")))
+    queue_template_commands = []
+    for row in next_open_queue:
+        for field in ["validate_forms_command_template", "landing_plan_command_template", "landing_audit_command_template"]:
+            queue_template_commands.append(str(row.get(field, "")))
     expect(
         result["exit_code"] == 0
         and strict_result["exit_code"] == 1
@@ -1273,6 +1284,24 @@ def test_status_next_owner_gate():
         and "--validate-forms" in next_open.get("focus_landing_audit_command_template", "")
         and "--landing-audit" in next_open.get("focus_landing_audit_command_template", "")
         and "owner-decisions.jsonl" in next_open.get("focus_landing_audit_command_template", "")
+        and owner_gates.get("next_open_queue_count") == 7
+        and owner_gates.get("next_open_queue_selection_order") == "review_after, worksheet_id"
+        and len(next_open_queue) == 7
+        and first_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first_queue_row.get("source_path") == "AGENTS.md"
+        and first_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and "pcr02-agents-owner-ready-package-20260620" in first_queue_row.get("owner_ready_package_ids", [])
+        and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first_queue_row.get("focus_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001 --forms-jsonl" in first_queue_row.get("forms_jsonl_command", "")
+        and "--worksheet-id pcr02-owner-decision-worksheet-001 --evidence-readiness --json" in first_queue_row.get("evidence_readiness_command", "")
+        and "owner-decisions.jsonl" in first_queue_row.get("validate_forms_command_template", "")
+        and second_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-002"
+        and second_queue_row.get("source_path") == "standards/diag-command-metadata-standard.md"
+        and second_queue_row.get("owner") == "pcr02-diag-owner-or-team-core"
+        and second_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and not any("owner-decisions.jsonl" in command for command in queue_executable_commands)
+        and any("owner-decisions.jsonl" in command and "--landing-plan" in command for command in queue_template_commands)
+        and any("owner-decisions.jsonl" in command and "--landing-audit" in command for command in queue_template_commands)
         and any("--summary" in str(action) for action in next_actions)
         and any("--owner" in str(action) and "--summary" in str(action) for action in next_actions)
         and any("owner_gates.owner_dispatch[]" in str(action) for action in next_actions)
@@ -1341,11 +1370,67 @@ def test_status_next_owner_gate():
             "focus_validate_forms_command_template": next_open.get("focus_validate_forms_command_template", ""),
             "focus_landing_plan_command_template": next_open.get("focus_landing_plan_command_template", ""),
             "focus_landing_audit_command_template": next_open.get("focus_landing_audit_command_template", ""),
+            "next_open_queue_count": owner_gates.get("next_open_queue_count"),
+            "next_open_queue": next_open_queue,
             "owner_blocker_source": owner_blocker_source,
             "strict_blockers": strict_blockers,
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
             "strict_stdout_sample": strict_result["stdout"][:1000],
+        },
+    )
+
+def test_stable_governance_command_examples():
+    scan_paths = [
+        "README.md",
+        "tools/README.md",
+        "templates/README.md",
+        "governance",
+        "indexes",
+    ]
+    banned_patterns = [
+        ("repo-relative-tool-command", "rtk bash tools/"),
+        ("short-knowledge-check-command", "`knowledge-check --dry-run"),
+        ("bare-knowledge-check-command", "knowledge-check --dry-run --json --diagnostics"),
+        ("weak-validation-ref", 'validation_refs":["tools/knowledge-check.sh --dry-run'),
+    ]
+    findings = []
+    for relative in scan_paths:
+        path = root / relative
+        paths = [path]
+        if path.is_dir():
+            paths = sorted(child for child in path.rglob("*") if child.is_file())
+        for file_path in paths:
+            try:
+                text = file_path.read_text()
+            except Exception as exc:
+                findings.append({
+                    "file": str(file_path.relative_to(root)),
+                    "pattern_id": "read-error",
+                    "line": 0,
+                    "sample": str(exc),
+                })
+                continue
+            for line_no, line in enumerate(text.splitlines(), 1):
+                for pattern_id, needle in banned_patterns:
+                    if needle not in line:
+                        continue
+                    if needle == "knowledge-check --dry-run --json --diagnostics" and "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics" in line:
+                        continue
+                    findings.append({
+                        "file": str(file_path.relative_to(root)),
+                        "pattern_id": pattern_id,
+                        "line": line_no,
+                        "sample": line.strip()[:240],
+                    })
+    expect(
+        not findings,
+        "stable-governance-command-examples",
+        "governance docs and templates use cwd-stable rtk command examples",
+        {
+            "scan_paths": scan_paths,
+            "banned_patterns": [row[0] for row in banned_patterns],
+            "findings": findings,
         },
     )
 
@@ -4669,6 +4754,7 @@ def test_regression_manifest_coverage():
         "knowledge-search-structured-filters",
         "knowledge-search-structured-filters-exclude-unregistered-raw",
         "knowledge-search-invalid-filters",
+        "stable-governance-command-examples",
         "regression-manifest-coverage",
     ]
     def parse_coverage_rows(text):
@@ -4824,6 +4910,7 @@ for test_fn in [
     test_knowledge_search_structured_filters,
     test_knowledge_search_structured_filters_exclude_unregistered_raw,
     test_knowledge_search_invalid_filters,
+    test_stable_governance_command_examples,
     test_regression_manifest_coverage,
 ]:
     run_test(test_fn)

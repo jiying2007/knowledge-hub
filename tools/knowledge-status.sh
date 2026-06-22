@@ -195,6 +195,7 @@ open_owner_rows = sorted(
     ),
 )
 next_owner_gate = {}
+next_open_queue = []
 owner_dispatch = []
 summary_commands = []
 owner_summary_commands = []
@@ -275,7 +276,41 @@ def make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_ro
         "notes_zh": "只读 owner handoff 包；用于跨会话恢复人工领取顺序，不生成、不保存、不应用 owner decision。",
     }
 
+def make_next_open_queue_entry(row):
+    source_id = str(row.get("source_id", ""))
+    worksheet_id = str(row.get("id", ""))
+    base = [
+        "rtk",
+        "bash",
+        display_tool("knowledge-owner-gates.sh"),
+        "--source-id",
+        source_id,
+        "--worksheet-id",
+        worksheet_id,
+    ]
+    registry_items = row.get("registry_items", []) if isinstance(row.get("registry_items", []), list) else []
+    return {
+        "worksheet_id": worksheet_id,
+        "source_id": source_id,
+        "source_path": str(row.get("source_path", "")),
+        "owner": str(row.get("owner", "")),
+        "owner_route": row.get("owner_route", {}),
+        "review_after": str(row.get("review_after", "")),
+        "owner_question_zh": str(row.get("owner_question_zh", "")),
+        "owner_ready_package_status": "ready-package-present" if registry_items else "missing-owner-ready-package",
+        "owner_ready_package_ids": [str(item.get("id", "")) for item in registry_items if isinstance(item, dict)],
+        "selection_order": "review_after, worksheet_id",
+        "focus_command": shell_command(base + ["--checklist", "--forms"]),
+        "forms_jsonl_command": shell_command(base + ["--forms-jsonl"]),
+        "evidence_readiness_command": shell_command(base + ["--evidence-readiness", "--json"]),
+        "validate_forms_command_template": shell_command(base + ["--validate-forms", "<owner-decisions.jsonl>", "--json"]),
+        "landing_plan_command_template": shell_command(base + ["--validate-forms", "<owner-decisions.jsonl>", "--landing-plan", "--json"]),
+        "landing_audit_command_template": shell_command(base + ["--validate-forms", "<owner-decisions.jsonl>", "--landing-audit", "--json"]),
+        "notes_zh": "只读下一批 owner gate 恢复队列；按 review_after 和 worksheet_id 排序，不生成 owner decision，不关闭 gate。",
+    }
+
 if open_owner_rows:
+    next_open_queue = [make_next_open_queue_entry(row) for row in open_owner_rows]
     rows_by_owner = collections.defaultdict(list)
     for row in open_owner_rows:
         rows_by_owner[str(row.get("owner", "") or "<missing-owner>")].append(row)
@@ -983,6 +1018,9 @@ result = {
         "landing_plan_command_templates": landing_plan_command_templates,
         "landing_audit_command_templates": landing_audit_command_templates,
         "next_open": next_owner_gate,
+        "next_open_queue": next_open_queue,
+        "next_open_queue_count": len(next_open_queue),
+        "next_open_queue_selection_order": "review_after, worksheet_id",
     },
     "errors": errors,
     "strict_blockers": strict_blockers,
@@ -1094,6 +1132,13 @@ if next_owner_gate:
     print(f"- focus validate-forms command template: `{next_owner_gate['focus_validate_forms_command_template']}`")
     print(f"- focus landing-plan command template: `{next_owner_gate['focus_landing_plan_command_template']}`")
     print(f"- focus landing-audit command template: `{next_owner_gate['focus_landing_audit_command_template']}`")
+if next_open_queue:
+    print(f"- next open queue: {len(next_open_queue)} item(s), order=`review_after, worksheet_id`")
+    for row in next_open_queue:
+        print(f"  - `{row['worksheet_id']}` ({row['source_path']}) owner=`{row['owner']}` ready=`{row['owner_ready_package_status']}`")
+        print(f"    - focus: `{row['focus_command']}`")
+        print(f"    - forms-jsonl: `{row['forms_jsonl_command']}`")
+        print(f"    - evidence-readiness: `{row['evidence_readiness_command']}`")
 print()
 if strict_blockers:
     print("## Strict Blockers")
