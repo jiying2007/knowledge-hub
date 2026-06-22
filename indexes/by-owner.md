@@ -183,6 +183,7 @@
 - `knowledge-hub-review-after-near-due-snapshot-20260622`
 - `knowledge-hub-report-only-maintenance-tools-20260622`
 - `knowledge-hub-owner-inbox-final-gate-audit-20260622`
+- `knowledge-hub-manual-source-kind-contract-20260622`
 
 ## pcr02-registry-owner
 

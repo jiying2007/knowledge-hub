@@ -41,17 +41,31 @@ allowed_kinds = {
     "validation",
     "audit",
     "patent",
+    "debug-record",
+    "external-source-note",
+    "owner-decision-worksheet",
+    "migration-record",
+    "patent-disclosure",
     "codex-session",
     "codex-workflow",
     "personal-note",
     "artifact-ref",
 }
+kind_aliases = {
+    "validation-report": "validation",
+    "archive-note": "project-archive",
+    "external-source": "external-source-note",
+    "owner-worksheet": "owner-decision-worksheet",
+    "migration": "migration-record",
+}
+normalized_kinds = [kind_aliases.get(kind, kind) for kind in args.kind]
 invalid_statuses = sorted(set(args.status) - allowed_statuses)
-invalid_kinds = sorted(set(args.kind) - allowed_kinds)
+invalid_kinds = sorted(kind for kind in set(args.kind) if kind_aliases.get(kind, kind) not in allowed_kinds)
 if invalid_statuses:
     parser.error(f"invalid --status value(s): {', '.join(invalid_statuses)}; allowed: {', '.join(sorted(allowed_statuses))}")
 if invalid_kinds:
-    parser.error(f"invalid --kind value(s): {', '.join(invalid_kinds)}; allowed: {', '.join(sorted(allowed_kinds))}")
+    allowed_kind_values = sorted(allowed_kinds | set(kind_aliases))
+    parser.error(f"invalid --kind value(s): {', '.join(invalid_kinds)}; allowed: {', '.join(allowed_kind_values)}")
 
 def load_registry_items():
     path = root / "registry" / "items.jsonl"
@@ -88,7 +102,7 @@ def item_matches_filters(item):
         return False
     if args.status and item.get("status", "") not in args.status:
         return False
-    if args.kind and item.get("kind", "") not in args.kind:
+    if normalized_kinds and item.get("kind", "") not in normalized_kinds:
         return False
     if args.domain and not any(item.get("domain", "").startswith(prefix) for prefix in args.domain):
         return False
@@ -172,6 +186,7 @@ if args.json:
         "owner": args.owner,
         "status": args.status,
         "kind": args.kind,
+        "kind_normalized": normalized_kinds,
         "domain": args.domain,
         "source_id": args.source_id,
     }

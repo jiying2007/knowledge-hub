@@ -19,6 +19,8 @@ SOURCE_STATUS="registered"
 SOURCE_WRITE_POLICY=""
 SOURCE_CHECK=""
 SOURCE_NO_CHECK_REASON=""
+ITEM_SOURCE_ID=""
+ITEM_SOURCE_PATH=""
 MANUAL_SOURCE_REASON="manual-entry:knowledge-new.sh"
 MANUAL_VALIDATION_PENDING="false"
 MANUAL_VALIDATION_REASON=""
@@ -28,11 +30,12 @@ AI_ROLE="none"
 usage() {
   cat <<EOF
 Usage:
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--item-source-id <source-id>] [--item-source-path <source-path>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
 
 Examples:
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --item-source-id pcr02-project-docs --item-source-path runbooks/example.md
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"
@@ -89,6 +92,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --source-path)
       SOURCE_PATH="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --item-source-id)
+      ITEM_SOURCE_ID="$(read_value "$1" "${2:-}")"
+      shift 2
+      ;;
+    --item-source-path)
+      ITEM_SOURCE_PATH="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --role)
@@ -199,6 +210,10 @@ if [[ "$MANUAL_VALIDATION_PENDING" == "true" && -z "$MANUAL_VALIDATION_REASON" ]
 fi
 
 if [[ "$SOURCE_MODE" == "true" ]]; then
+  if [[ -n "$ITEM_SOURCE_ID" || -n "$ITEM_SOURCE_PATH" ]]; then
+    printf "ERROR source mode cannot combine --item-source-id/--item-source-path; those options are for normal registry items.\n" >&2
+    exit 2
+  fi
   if [[ -z "$SOURCE_CHECK" && -z "$SOURCE_NO_CHECK_REASON" ]]; then
     printf "ERROR source mode requires either --check <command> or --no-check-reason <reason>.\n" >&2
     exit 2
@@ -375,6 +390,37 @@ EOF
   exit 0
 fi
 
+if [[ -n "$ITEM_SOURCE_PATH" && -z "$ITEM_SOURCE_ID" ]]; then
+  printf "ERROR --item-source-path requires --item-source-id <registered-source-id>.\n" >&2
+  exit 2
+fi
+
+if [[ -n "$ITEM_SOURCE_ID" ]]; then
+  if [[ ! -f "$ROOT/registry/sources.json" ]]; then
+    printf "ERROR registry/sources.json is missing; cannot validate --item-source-id %s.\n" "$ITEM_SOURCE_ID" >&2
+    exit 2
+  fi
+  if ! rtk python3 - "$ROOT/registry/sources.json" "$ITEM_SOURCE_ID" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+source_id = sys.argv[2]
+data = json.loads(path.read_text())
+source_ids = {
+    str(row.get("id", ""))
+    for row in data.get("sources", [])
+    if isinstance(row, dict)
+}
+sys.exit(0 if source_id in source_ids else 1)
+PY
+  then
+    printf "ERROR --item-source-id is not registered in registry/sources.json: %s\n" "$ITEM_SOURCE_ID" >&2
+    exit 2
+  fi
+fi
+
 case "$KIND" in
   runbook)
     TEMPLATE="templates/runbook.md"
@@ -411,15 +457,35 @@ case "$KIND" in
     ;;
 esac
 
+REGISTRY_KIND="${KIND:-<kind>}"
+case "$KIND" in
+  validation-report)
+    REGISTRY_KIND="validation"
+    ;;
+  archive-note)
+    REGISTRY_KIND="project-archive"
+    ;;
+  external-source)
+    REGISTRY_KIND="external-source-note"
+    ;;
+  owner-worksheet)
+    REGISTRY_KIND="owner-decision-worksheet"
+    ;;
+  migration)
+    REGISTRY_KIND="migration-record"
+    ;;
+esac
+
 DRAFT_STATUS="reviewing"
 STATUS_INDEX_BUCKET="reviewing"
-if [[ "$KIND" == "project-archive" || "$KIND" == "archive-note" ]]; then
+if [[ "$REGISTRY_KIND" == "project-archive" ]]; then
   DRAFT_STATUS="archived"
   STATUS_INDEX_BUCKET="archived"
 fi
 
 DISPLAY_ID="${ITEM_ID:-<id>}"
-DISPLAY_KIND="${KIND:-<kind>}"
+DISPLAY_INPUT_KIND="${KIND:-<kind>}"
+DISPLAY_KIND="$REGISTRY_KIND"
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_PATH="${TARGET_PATH:-<path>}"
 DISPLAY_OWNER="${OWNER:-leiwenjun}"
@@ -443,6 +509,8 @@ JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
 JSON_OWNER="$(json_escape "$DISPLAY_OWNER")"
 JSON_TITLE="$(json_escape "<中文标题>")"
 JSON_SOURCE_FROM="$(json_escape "$MANUAL_SOURCE_REASON")"
+JSON_ITEM_SOURCE_ID="$(json_escape "$ITEM_SOURCE_ID")"
+JSON_ITEM_SOURCE_PATH="$(json_escape "$ITEM_SOURCE_PATH")"
 JSON_MANUAL_VALIDATION_REASON="$(json_escape "$MANUAL_VALIDATION_REASON")"
 JSON_AI_ROLE="$(json_escape "$AI_ROLE")"
 TODAY="$(knowledge_today)"
@@ -473,7 +541,19 @@ if [[ "$KIND" == "decision" ]]; then
 fi
 SOURCE_INDEX_DRAFT=""
 SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
-printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：当前人工新增入口没有接收已登记 source_id；未知来源不要同步 by-source，也不要复制 `<source-id>` 占位行。\n# 后续确认 source_id 已存在于 registry/sources.json 后，再按真实 source_id 追加：\n# - <真实-source-id>: `%s`\n' "$DISPLAY_ID"
+printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：本次未提供 --item-source-id；未知来源不要同步 by-source，也不要复制 `<source-id>` 占位行。\n# 后续确认 source_id 已存在于 registry/sources.json 后，再按真实 source_id 追加，或重新运行 --item-source-id 生成草稿：\n# - <真实-source-id>: `%s`\n' "$DISPLAY_ID"
+SOURCE_OBJECT_JSON="{\"type\":\"manual\",\"from\":\"${JSON_SOURCE_FROM}\"}"
+SOURCE_SEARCH_COMMAND="rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"${ITEM_ID:-<id>}\" --json"
+if [[ -n "$ITEM_SOURCE_ID" ]]; then
+  SOURCE_INDEX_STEP="已提供 --item-source-id，必须同步 indexes/by-source.md，并确认该 source 仍处于 registry/sources.json 管理范围。"
+  printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 已登记 source 条目：按真实 source_id 增加可恢复引用，不复制 source 正文。\n- %s: `%s`\n' "$ITEM_SOURCE_ID" "$DISPLAY_ID"
+  SOURCE_SEARCH_COMMAND="rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"${ITEM_ID:-<id>}\" --source-id ${ITEM_SOURCE_ID} --json"
+  if [[ -n "$ITEM_SOURCE_PATH" ]]; then
+    SOURCE_OBJECT_JSON="{\"type\":\"registered\",\"source_id\":\"${JSON_ITEM_SOURCE_ID}\",\"source_path\":\"${JSON_ITEM_SOURCE_PATH}\",\"from\":\"${JSON_SOURCE_FROM}\"}"
+  else
+    SOURCE_OBJECT_JSON="{\"type\":\"registered\",\"source_id\":\"${JSON_ITEM_SOURCE_ID}\",\"from\":\"${JSON_SOURCE_FROM}\"}"
+  fi
+fi
 VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"]'
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
@@ -493,11 +573,14 @@ $(usage)
 ## 输入摘要
 
 - id: ${ITEM_ID:-<待填写>}
-- kind: ${KIND:-<待填写>}
+- input_kind: ${DISPLAY_INPUT_KIND}
+- registry_kind: ${DISPLAY_KIND}
 - domain: ${DOMAIN:-<待填写>}
 - project: ${PROJECT:-<可选>}
 - owner: ${DISPLAY_OWNER}
 - path: ${TARGET_PATH:-<待填写>}
+- item_source_id: ${ITEM_SOURCE_ID:-<未指定>}
+- item_source_path: ${ITEM_SOURCE_PATH:-<未指定>}
 - 推荐模板: ${TEMPLATE}
 - 推荐 registry status: ${DRAFT_STATUS}
 - manual_source_reason: ${MANUAL_SOURCE_REASON}
@@ -522,7 +605,7 @@ ${PROJECT_STEP_5}
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain ${DISPLAY_ID}
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-   rtk bash ~/knowledge-hub/tools/knowledge-search.sh "${ITEM_ID:-<id>}" --json
+   ${SOURCE_SEARCH_COMMAND}
 
 ## 可复制草稿
 
@@ -533,7 +616,7 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"${DRAFT_STATUS}","owner":"${JSON_OWNER}","source":{"type":"manual","from":"${JSON_SOURCE_FROM}"},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"${DRAFT_STATUS}","owner":"${JSON_OWNER}","source":${SOURCE_OBJECT_JSON},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 ${MANUAL_VALIDATION_BLOCK}
 
@@ -548,7 +631,7 @@ ${MANUAL_VALIDATION_BLOCK}
 
 # indexes/by-status.md
 - ${STATUS_INDEX_BUCKET}: \`${DISPLAY_ID}\`
-# 状态提示：默认非归档条目使用 - reviewing: \`<id>\`；project-archive / archive-note 使用 - archived: \`<id>\`。
+# 状态提示：默认非归档条目使用 - reviewing: \`<id>\`；registry kind 为 project-archive 时使用 - archived: \`<id>\`。
 ${PROJECT_INDEX_DRAFT}
 ${SOURCE_INDEX_DRAFT}
 ${DECISION_INDEX_DRAFT}

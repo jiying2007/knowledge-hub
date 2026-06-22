@@ -2761,6 +2761,68 @@ def test_manual_entry_project_index_hint():
         },
     )
 
+def test_manual_entry_registered_source_binding():
+    bound_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--owner",
+            "team-core",
+            "--id",
+            "pcr02-source-bound-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/source-bound.md",
+            "--item-source-id",
+            "pcr02-project-docs",
+            "--item-source-path",
+            "runbooks/source-bound.md",
+        ],
+    )
+    unknown_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "projects/pcr02",
+            "--id",
+            "pcr02-unknown-source-runbook",
+            "--path",
+            "domains/projects/pcr02/current/runbooks/unknown-source.md",
+            "--item-source-id",
+            "not-registered-source",
+        ],
+    )
+    expect(
+        bound_result["exit_code"] == 0
+        and '"source":{"type":"registered","source_id":"pcr02-project-docs","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"]
+        and "- pcr02-project-docs: `pcr02-source-bound-runbook`" in bound_result["stdout"]
+        and 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id pcr02-project-docs --json' in bound_result["stdout"]
+        and "未知来源不要同步 by-source" not in bound_result["stdout"]
+        and unknown_result["exit_code"] != 0
+        and "--item-source-id is not registered" in unknown_result["stderr"],
+        "manual-entry-registered-source-binding",
+        "manual entry guide can bind a normal item to a registered source without forging unknown source ids",
+        {
+            "bound_exit_code": bound_result["exit_code"],
+            "unknown_exit_code": unknown_result["exit_code"],
+            "has_registered_source_json": '"source":{"type":"registered","source_id":"pcr02-project-docs","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"],
+            "has_by_source_draft": "- pcr02-project-docs: `pcr02-source-bound-runbook`" in bound_result["stdout"],
+            "has_source_search_command": 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id pcr02-project-docs --json' in bound_result["stdout"],
+            "unknown_stderr": unknown_result["stderr"][:500],
+            "bound_stdout_sample": bound_result["stdout"][:1600],
+        },
+    )
+
 def test_manual_entry_project_from_domain():
     derived_result = run_cmd(
         root,
@@ -3288,26 +3350,26 @@ def test_manual_entry_migration_conditional_guide():
 
 def test_manual_entry_template_selection():
     cases = [
-        ("runbook", "templates/runbook.md"),
-        ("decision", "templates/decision.md"),
-        ("validation", "templates/validation-report.md"),
-        ("validation-report", "templates/validation-report.md"),
-        ("project-archive", "templates/archive-note.md"),
-        ("archive-note", "templates/archive-note.md"),
-        ("debug-record", "templates/debug-record.md"),
-        ("external-source-note", "templates/external-source-note.md"),
-        ("external-source", "templates/external-source-note.md"),
-        ("owner-decision-worksheet", "templates/owner-decision-worksheet.md"),
-        ("owner-worksheet", "templates/owner-decision-worksheet.md"),
-        ("patent-disclosure", "templates/patent-disclosure.md"),
-        ("patent", "templates/patent-disclosure.md"),
-        ("migration-record", "templates/migration-record.md"),
-        ("migration", "templates/migration-record.md"),
-        ("artifact-ref", "templates/artifact-ref.md"),
-        ("audit", "templates/item.md"),
+        ("runbook", "templates/runbook.md", "runbook"),
+        ("decision", "templates/decision.md", "decision"),
+        ("validation", "templates/validation-report.md", "validation"),
+        ("validation-report", "templates/validation-report.md", "validation"),
+        ("project-archive", "templates/archive-note.md", "project-archive"),
+        ("archive-note", "templates/archive-note.md", "project-archive"),
+        ("debug-record", "templates/debug-record.md", "debug-record"),
+        ("external-source-note", "templates/external-source-note.md", "external-source-note"),
+        ("external-source", "templates/external-source-note.md", "external-source-note"),
+        ("owner-decision-worksheet", "templates/owner-decision-worksheet.md", "owner-decision-worksheet"),
+        ("owner-worksheet", "templates/owner-decision-worksheet.md", "owner-decision-worksheet"),
+        ("patent-disclosure", "templates/patent-disclosure.md", "patent-disclosure"),
+        ("patent", "templates/patent-disclosure.md", "patent"),
+        ("migration-record", "templates/migration-record.md", "migration-record"),
+        ("migration", "templates/migration-record.md", "migration-record"),
+        ("artifact-ref", "templates/artifact-ref.md", "artifact-ref"),
+        ("audit", "templates/item.md", "audit"),
     ]
     failures = []
-    for kind, template in cases:
+    for kind, template, registry_kind in cases:
         result = run_cmd(
             root,
             [
@@ -3324,12 +3386,25 @@ def test_manual_entry_template_selection():
                 f"artifacts/manifests/governance-template-{kind}.md",
             ],
         )
-        if result["exit_code"] != 0 or f"推荐模板: {template}" not in result["stdout"]:
-            failures.append({"kind": kind, "expected_template": template, "exit_code": result["exit_code"], "stdout_sample": result["stdout"][:800]})
+        if (
+            result["exit_code"] != 0
+            or f"推荐模板: {template}" not in result["stdout"]
+            or f"- registry_kind: {registry_kind}" not in result["stdout"]
+            or f'"kind":"{registry_kind}"' not in result["stdout"]
+        ):
+            failures.append(
+                {
+                    "kind": kind,
+                    "expected_template": template,
+                    "expected_registry_kind": registry_kind,
+                    "exit_code": result["exit_code"],
+                    "stdout_sample": result["stdout"][:1000],
+                }
+            )
     expect(
         not failures,
         "manual-entry-template-selection",
-        "manual entry guide keeps stable kind-to-template mapping",
+        "manual entry guide keeps stable kind-to-template and registry-kind mapping",
         {
             "failures": failures,
             "case_count": len(cases),
@@ -5093,6 +5168,46 @@ def test_knowledge_search_structured_filters_exclude_unregistered_raw():
         repo,
     )
 
+def test_knowledge_search_kind_alias_filters():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            "prog_tool",
+            "--kind",
+            "validation-report",
+            "--json",
+            "--limit",
+            "5",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    results = parsed.get("results", []) if isinstance(parsed, dict) else []
+    expect(
+        not parse_error
+        and result["exit_code"] == 0
+        and parsed.get("filters", {}).get("kind") == ["validation-report"]
+        and parsed.get("filters", {}).get("kind_normalized") == ["validation"]
+        and results
+        and all(row.get("kind") == "validation" for row in results),
+        "knowledge-search-kind-alias-filters",
+        "knowledge search normalizes template kind aliases to registry kind filters",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "filters": parsed.get("filters") if isinstance(parsed, dict) else {},
+            "count": parsed.get("count") if isinstance(parsed, dict) else None,
+            "first_result": results[0] if results else {},
+        },
+    )
+
 def test_knowledge_search_invalid_filters():
     bad_status = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--status", "not-a-status"])
     bad_kind = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--kind", "not-a-kind"])
@@ -5169,6 +5284,7 @@ def test_regression_manifest_coverage():
         "owner-form-allowed-decisions-tamper-gate",
         "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
+        "manual-entry-registered-source-binding",
         "manual-entry-project-derived-from-domain",
         "manual-entry-default-dates",
         "manual-entry-owner-override",
@@ -5214,6 +5330,7 @@ def test_regression_manifest_coverage():
         "source-manual-entry-docs-check-preferred",
         "knowledge-search-structured-filters",
         "knowledge-search-structured-filters-exclude-unregistered-raw",
+        "knowledge-search-kind-alias-filters",
         "knowledge-search-invalid-filters",
         "stable-governance-command-examples",
         "regression-manifest-coverage",
@@ -5330,6 +5447,7 @@ for test_fn in [
     test_owner_form_allowed_decisions_tamper_gate,
     test_owner_form_source_identity_mismatch,
     test_manual_entry_project_index_hint,
+    test_manual_entry_registered_source_binding,
     test_manual_entry_project_from_domain,
     test_manual_entry_default_dates,
     test_manual_entry_owner_override,
@@ -5375,6 +5493,7 @@ for test_fn in [
     test_source_manual_entry_docs_check_preferred,
     test_knowledge_search_structured_filters,
     test_knowledge_search_structured_filters_exclude_unregistered_raw,
+    test_knowledge_search_kind_alias_filters,
     test_knowledge_search_invalid_filters,
     test_stable_governance_command_examples,
     test_regression_manifest_coverage,

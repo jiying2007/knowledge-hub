@@ -107,6 +107,11 @@ project-archive
 validation
 audit
 patent
+debug-record
+external-source-note
+owner-decision-worksheet
+migration-record
+patent-disclosure
 codex-session
 codex-workflow
 personal-note

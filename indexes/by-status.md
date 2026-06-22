@@ -361,3 +361,5 @@
 - report-only-maintenance-tools-registered: 登记 `knowledge-review-after.sh` 与 `knowledge-source-check.sh` 两个 report-only 维护入口；证据：`artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-inbox-final-gate-audit-20260622`
 - owner-inbox-final-gate-audit-applied: 新增 owner-inbox 单屏人工复核入口，并让 final gate 输出当前 source-check 运行证据和高优先级规则审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.jsonl`.
+- reviewing: `knowledge-hub-manual-source-kind-contract-20260622`
+- manual-source-kind-contract-applied: 人工新增条目的 source 绑定和 registry/search kind 契约已压实，并补齐 93 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.jsonl`.

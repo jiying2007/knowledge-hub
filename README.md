@@ -132,6 +132,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner>
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner> --item-source-id <source-id> --item-source-path <source-relative-path>
 ```
 
 常用专用模板入口：
@@ -154,7 +155,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> 
 最小落盘按 5 组核对：
 
 - 必须落盘：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`。
-- 按条件同步：涉及项目、source、主题或决策时，再同步对应索引。若 `source.from` 或后续人工 `source_id` 指向 `registry/sources.json` 中的已登记 source，同步 `indexes/by-source.md`；未知来源保持 manual source reason 或 no-source reason，不伪造 source id。
+- 按条件同步：涉及项目、source、主题或决策时，再同步对应索引。若已知来源已经登记在 `registry/sources.json`，优先用 `--item-source-id` 生成 `source.source_id` 和 `indexes/by-source.md` 草稿；未知来源保持 manual source reason 或 no-source reason，不伪造 source id。
 - 决策边界：若 `kind=decision`，或内容承载真实 registry/migration/owner decision 入口，同步 `indexes/by-decision.md`；owner-ready package 不能写成已签收 owner decision。
 - registry 必填：registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；2026-06-21 及之后 `generated_by_ai=true` 的 registry item 必须填写 `ai_role`、`ai_model_or_tool` 和 `ai_generated_at`。
 - migration 触发：涉及迁移、引用或归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须包含 `notes_zh`；普通新知识不强制 migration。
