@@ -1,5 +1,25 @@
 # By Topic
 
+## 优先恢复主题速查
+
+- migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
+- PCR02: `domains/projects/pcr02`; `indexes/by-project.md`
+- tools: `artifacts/manifests/pcr02-tools-boundary-20260620.md`; `tools/`
+- knowledge: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
+- product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
+- scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
+- diag: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`; `domains/projects/pcr02/current/runbooks/diag-usage-guide.md`
+- ASAN: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
+- memory auto-curation: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`; `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
+- DVR: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`; `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
+- motor MCU: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
+- governance: `governance/`; `artifacts/manifests`
+- automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
+- regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
+- patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
+- Codex archive: `domains/codex/archive/codex-archive.ref.md`; `registry/sources.json`
+
 - 嵌入式团队标准：`domains/embedded/standards`
 - 嵌入式 runbook：`domains/embedded/runbooks`
 - 项目当前事实：`domains/projects/*/current`
@@ -191,3 +211,4 @@
 - Knowledge Hub offline maintenance and manifest profile hardening: `artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.md`
 - Knowledge Hub final proof runtime recovery hardening: `artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.md`
 - Knowledge Hub owner target and manifest recovery hardening: `artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.md`
+- Knowledge Hub review_after topic and owner hardening: `artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.md`

@@ -395,7 +395,6 @@ def _classify_evidence_command(command):
         }
     stable_prefixes = [
         "rtk bash ~/knowledge-hub/tools/",
-        "rtk bash tools/knowledge-",
         "rtk git -C ~/knowledge-hub ",
         "rtk git -C /home/leiwenjun/knowledge-hub ",
     ]
@@ -1170,6 +1169,8 @@ def validate_forms_file(path, rows):
             add_form_error("must-not-tampered", f"{prefix}: must_not differs from worksheet guardrails", worksheet_id=worksheet_id, field="must_not", actual=form.get("must_not", ""), expected=row["must_not"], line_no=index, action_zh="请恢复 worksheet 原始 guardrails；owner 表单不得修改 must_not。")
         if "allowed_owner_decisions" in form and form.get("allowed_owner_decisions") != row["decision_options"]:
             add_form_error("allowed-decisions-tampered", f"{prefix}: allowed_owner_decisions differs from worksheet decision options", worksheet_id=worksheet_id, field="allowed_owner_decisions", actual=form.get("allowed_owner_decisions", ""), expected=row["decision_options"], line_no=index, action_zh="请恢复 worksheet 原始 decision options；owner 表单不得修改 allowed_owner_decisions。")
+        if "target_candidates" in form and form.get("target_candidates") != row["target_candidates"]:
+            add_form_error("target-candidates-tampered", f"{prefix}: target_candidates differs from worksheet target candidates", worksheet_id=worksheet_id, field="target_candidates", actual=form.get("target_candidates", ""), expected=row["target_candidates"], line_no=index, action_zh="请恢复 worksheet 原始 target candidates；owner 表单不得修改 target_candidates。")
     status = "pass" if not form_errors else "fail"
     return {
         "status": status,

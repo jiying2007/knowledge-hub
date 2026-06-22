@@ -369,3 +369,5 @@
 - final-proof-runtime-recovery-hardening-applied: 终态 proof 主制品契约扩展到 10 项，source-check runtime 失败 blocker、manifest 恢复视图和 owner 表单 diagnostics 已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
 - owner-target-manifest-recovery-hardening-applied: owner 表单新增保守 decision/target 成对兼容门禁，manifest 文本恢复视图显示 profile_health、summary_source 和 evidence_source；证据：`artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-review-after-topic-owner-hardening-20260622`
+- review-after-topic-owner-hardening-applied: review_after 分组报告、by-topic 优先恢复速查、owner form target_candidates 防篡改和合法终止组合回归已压实；证据：`artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.jsonl`.

@@ -927,6 +927,7 @@ def test_owner_evidence_readiness():
     rows = readiness.get("rows", [])
     first = rows[0] if rows else {}
     prefill = first.get("read_only_prefill_candidates", {})
+    safe_commands = [item.get("command", "") for item in first.get("safe_command_candidates", [])]
     expect(
         result["exit_code"] == 0
         and parsed.get("row_count") == 1
@@ -941,6 +942,7 @@ def test_owner_evidence_readiness():
         and "owner_decision" in first.get("owner_answer_required_fields", [])
         and bool(first.get("owner_ready_evidence_refs", []))
         and bool(first.get("safe_command_candidates", []))
+        and not any(str(command).startswith("rtk bash tools/") for command in safe_commands)
         and prefill.get("no_owner_decision_generated") is True,
         "owner-evidence-readiness",
         "owner gate helper emits read-only evidence readiness for one worksheet",
@@ -948,6 +950,7 @@ def test_owner_evidence_readiness():
             "exit_code": result["exit_code"],
             "readiness_status": readiness.get("status"),
             "row_count": readiness.get("row_count"),
+            "safe_commands": safe_commands,
             "first": first,
             "stdout_sample": result["stdout"][:1200],
         },
@@ -2485,6 +2488,71 @@ def test_owner_form_decision_target_pair_gate():
         "owner_decision 'project-local-rule' is not compatible",
     )
 
+def run_owner_decision_target_pair_positive(case_id, owner_decision, target_decision):
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", setup_error)
+        return
+    if owner_decision not in form.get("allowed_owner_decisions", []):
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])})
+        return
+    if target_decision not in form.get("target_candidates", []):
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])})
+        return
+    form["owner_decision"] = owner_decision
+    form["target_decision"] = target_decision
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{case_id}-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("form_validation", {}).get("status") == "pass"
+        and parsed.get("form_validation", {}).get("error_count") == 0,
+        case_id,
+        "owner form accepts compatible owner_decision and target_decision pairs",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": parsed.get("form_validation", {}).get("errors", []),
+            "owner_decision": owner_decision,
+            "target_decision": target_decision,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_owner_form_decision_target_pair_positive_gate():
+    run_owner_decision_target_pair_positive(
+        "owner-form-decision-target-pair-positive-reference-only",
+        "reference-only",
+        "reference-only",
+    )
+    run_owner_decision_target_pair_positive(
+        "owner-form-decision-target-pair-positive-no-migration",
+        "no-migration",
+        "no-migration",
+    )
+
 def test_owner_form_routing_owner_reviewed_by_gate():
     form, setup_error = make_valid_owner_decision_form(root)
     if setup_error:
@@ -2593,6 +2661,16 @@ def test_owner_form_allowed_decisions_tamper_gate():
         "owner-form-allowed-decisions-tamper-gate",
         mutate,
         "allowed_owner_decisions differs from worksheet decision options",
+    )
+
+def test_owner_form_target_candidates_tamper_gate():
+    def mutate(form):
+        form["target_candidates"] = list(form.get("target_candidates", [])) + ["domains/projects/pcr02/current/invalid-target-candidate-fixture.md"]
+
+    run_owner_form_tamper_gate(
+        "owner-form-target-candidates-tamper-gate",
+        mutate,
+        "target_candidates differs from worksheet target candidates",
     )
 
 def run_owner_landing_ready_block_fixture(case_id, expected_status, mutate_repo):
@@ -4512,6 +4590,7 @@ def test_review_after_near_due_json_contract():
     except Exception as exc:
         parse_error = str(exc)
     counts = parsed.get("counts", {}) if isinstance(parsed.get("counts"), dict) else {}
+    groups = parsed.get("groups", {}) if isinstance(parsed.get("groups"), dict) else {}
     rows = parsed.get("rows", []) if isinstance(parsed.get("rows"), list) else []
     archived_rows = [row for row in rows if row.get("status") == "archived"]
     expect(
@@ -4528,7 +4607,17 @@ def test_review_after_near_due_json_contract():
         and counts.get("near_due_sources") == 0
         and counts.get("owner_gate_open_count") == 7
         and counts.get("detail_row_count") == 32
+        and counts.get("missing_source_id_count") == 9
+        and groups.get("grouping_contract_version") == 1
+        and groups.get("by_owner", {}).get("team-core", {}).get("count") == 23
+        and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 9
+        and groups.get("by_status", {}).get("reviewing", {}).get("count") == 26
+        and groups.get("by_status", {}).get("archived", {}).get("count") == 6
+        and groups.get("by_domain", {}).get("projects/pcr02", {}).get("count") == 31
+        and groups.get("by_source_id", {}).get("pcr02-project-docs", {}).get("count") == 23
+        and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 9
         and len(archived_rows) >= 1
+        and all("source_status" in row for row in rows)
         and any("archive-only" in str(row.get("suggested_action_zh", "")) for row in archived_rows)
         and "不得把 near-due warning 当作 blocking error" in parsed.get("must_not", []),
         "review-after-near-due-json-contract",
@@ -4538,6 +4627,7 @@ def test_review_after_near_due_json_contract():
             "parse_error": parse_error,
             "status": parsed.get("status"),
             "counts": counts,
+            "groups": groups,
             "archived_row_count": len(archived_rows),
             "stderr_sample": result["stderr"][:500],
         },
@@ -5549,9 +5639,12 @@ def test_regression_manifest_coverage():
         "owner-form-decision-target-pair-reference-only-project-path",
         "owner-form-decision-target-pair-no-migration-project-path",
         "owner-form-decision-target-pair-project-rule-reference-only",
+        "owner-form-decision-target-pair-positive-reference-only",
+        "owner-form-decision-target-pair-positive-no-migration",
         "owner-form-routing-owner-reviewed-by-gate",
         "owner-form-must-not-tamper-gate",
         "owner-form-allowed-decisions-tamper-gate",
+        "owner-form-target-candidates-tamper-gate",
         "owner-form-source-identity-mismatch",
         "manual-entry-project-index-hint",
         "manual-entry-registered-source-binding",
@@ -5715,9 +5808,11 @@ for test_fn in [
     test_owner_landing_plan_requires_owner_ready_package_duplicate,
     test_owner_form_target_decision_candidate_gate,
     test_owner_form_decision_target_pair_gate,
+    test_owner_form_decision_target_pair_positive_gate,
     test_owner_form_routing_owner_reviewed_by_gate,
     test_owner_form_must_not_tamper_gate,
     test_owner_form_allowed_decisions_tamper_gate,
+    test_owner_form_target_candidates_tamper_gate,
     test_owner_form_source_identity_mismatch,
     test_manual_entry_project_index_hint,
     test_manual_entry_registered_source_binding,

@@ -93,6 +93,8 @@ for item in items:
     review_date = parse_date(item.get("review_after", ""), f"items:{item_id}")
     if not review_date:
         continue
+    source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
+    source_id = str(source.get("source_id", ""))
     days = (review_date - today).days
     detail = {
         "row_type": "stale_item" if review_date < today else "near_due_item",
@@ -101,6 +103,8 @@ for item in items:
         "owner": item.get("owner", ""),
         "status": item.get("status", ""),
         "domain": item.get("domain", ""),
+        "source_id": source_id,
+        "source_status": "present" if source_id else "missing",
         "path": item.get("path", ""),
         "review_after": review_date.isoformat(),
         "days_until_review": days,
@@ -167,6 +171,59 @@ if args.include_sources:
 if args.include_owner_gates:
     detail_rows.extend(sorted(open_owner_gates, key=lambda row: (row.get("review_after", ""), row.get("worksheet_id", ""))))
 
+item_review_rows = sorted(stale_items + near_due_items, key=lambda row: (row["review_after"], row["item_id"]))
+
+def group_item_rows(rows, field, missing_value=""):
+    grouped = {}
+    for row in rows:
+        raw_key = str(row.get(field, ""))
+        key = raw_key if raw_key else missing_value
+        if not key:
+            key = "<missing>"
+        entry = grouped.setdefault(
+            key,
+            {
+                "count": 0,
+                "item_ids": [],
+                "first_review_after": "",
+                "latest_review_after": "",
+                "suggested_action_zh": "",
+            },
+        )
+        entry["count"] += 1
+        entry["item_ids"].append(row.get("item_id", ""))
+        review_after = str(row.get("review_after", ""))
+        if not entry["first_review_after"] or review_after < entry["first_review_after"]:
+            entry["first_review_after"] = review_after
+        if not entry["latest_review_after"] or review_after > entry["latest_review_after"]:
+            entry["latest_review_after"] = review_after
+    for key, entry in grouped.items():
+        if field == "owner":
+            entry["suggested_action_zh"] = "按 owner 分派人工复核；只确认 current validity、证据和下一次 review_after，不自动改状态。"
+        elif field == "source_id":
+            if key == "<missing-source-id>":
+                entry["suggested_action_zh"] = "这些条目缺少 source_id 绑定；只作为人工补强提示，不由工具自动补写。"
+            else:
+                entry["suggested_action_zh"] = "按 source_id 复核迁移来源、validation_refs 和 source coverage 是否仍有效。"
+        elif field == "status":
+            if key == "archived":
+                entry["suggested_action_zh"] = "复核 archive-only 边界和证据，不把历史材料提升为 active fact。"
+            else:
+                entry["suggested_action_zh"] = "复核 reviewing 条目的 owner、适用范围、证据和下一次 review_after。"
+        elif field == "domain":
+            entry["suggested_action_zh"] = "按 domain 分派维护；项目域不得自动提升到团队标准。"
+        entry["item_ids"] = sorted(entry["item_ids"])
+    return dict(sorted(grouped.items(), key=lambda kv: (-kv[1]["count"], kv[0])))
+
+groups = {
+    "grouping_contract_version": 1,
+    "by_owner": group_item_rows(item_review_rows, "owner", "<missing-owner>"),
+    "by_status": group_item_rows(item_review_rows, "status", "<missing-status>"),
+    "by_domain": group_item_rows(item_review_rows, "domain", "<missing-domain>"),
+    "by_source_id": group_item_rows(item_review_rows, "source_id", "<missing-source-id>"),
+    "notes_zh": "分组只用于人工复核分派，不自动修改 review_after、status、source_id 或 owner。",
+}
+
 status = "fail" if errors else "report-only"
 output = {
     "schema_version": 1,
@@ -191,7 +248,9 @@ output = {
         "near_due_sources": len(near_due_sources),
         "owner_gate_open_count": len(open_owner_gates),
         "detail_row_count": len(detail_rows),
+        "missing_source_id_count": sum(1 for row in item_review_rows if not row.get("source_id")),
     },
+    "groups": groups,
     "rows": detail_rows,
     "errors": errors,
     "limitations_zh": "review_after 报告只用于人工维护排期，不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
@@ -217,6 +276,25 @@ else:
     print(f"- stale sources: {len(stale_sources)}")
     print(f"- near-due sources: {len(near_due_sources)}")
     print(f"- open owner gates: {len(open_owner_gates)}")
+    print(f"- missing source_id items: {output['counts']['missing_source_id_count']}")
+    print()
+    print("## 人工复核分组")
+    for title, key in [
+        ("按 owner", "by_owner"),
+        ("按 source_id", "by_source_id"),
+        ("按 status", "by_status"),
+        ("按 domain", "by_domain"),
+    ]:
+        print()
+        print(f"### {title}")
+        for name, group in groups[key].items():
+            print(
+                f"- {name}: count={group.get('count', 0)} "
+                f"first={group.get('first_review_after', '')} latest={group.get('latest_review_after', '')}"
+            )
+            print(f"  - action: {group.get('suggested_action_zh', '')}")
+    print()
+    print("## 明细")
     for row in detail_rows:
         row_id = row.get("item_id") or row.get("source_id") or row.get("worksheet_id")
         print(f"- {row.get('row_type')}: {row_id} review_after={row.get('review_after')}")
