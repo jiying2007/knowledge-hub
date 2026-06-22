@@ -186,6 +186,141 @@ def command_evidence_row(command, exit_code, status, result_summary_zh, evidence
         "parse_error": parse_error,
     }
 
+FINAL_PROOF_ARTIFACT_IDS = [
+    "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
+    "knowledge-hub-final-gate-evidence-recovery-20260622",
+    "knowledge-hub-recovery-search-manual-hardening-20260622",
+    "knowledge-hub-final-proof-maintenance-hardening-20260622",
+    "knowledge-hub-owner-queue-command-hardening-20260622",
+]
+FINAL_PROOF_INDEX_PATHS = [
+    "indexes/by-owner.md",
+    "indexes/by-status.md",
+    "indexes/by-review-date.md",
+    "indexes/by-topic.md",
+]
+
+def build_final_proof_artifacts_summary():
+    items_by_id = {
+        str(row.get("id", "")): row
+        for row in load_jsonl(root / "registry" / "items.jsonl")
+        if row.get("id")
+    }
+    try:
+        migration_text = (root / "registry" / "migrations.jsonl").read_text()
+    except Exception:
+        migration_text = ""
+    index_texts = {}
+    for relative in FINAL_PROOF_INDEX_PATHS:
+        try:
+            index_texts[relative] = (root / relative).read_text()
+        except Exception:
+            index_texts[relative] = ""
+
+    rows = []
+    missing_registry = []
+    missing_md = []
+    missing_jsonl = []
+    missing_migration = []
+    missing_indexes = {}
+    registered_count = 0
+    paired_count = 0
+    migration_covered_count = 0
+    indexed_count = 0
+
+    for artifact_id in FINAL_PROOF_ARTIFACT_IDS:
+        item = items_by_id.get(artifact_id, {})
+        registered = bool(item)
+        if registered:
+            registered_count += 1
+        else:
+            missing_registry.append(artifact_id)
+
+        md_relative = str(item.get("path", "")) if item else ""
+        jsonl_relative = str(pathlib.Path(md_relative).with_suffix(".jsonl")) if md_relative else ""
+        md_exists = bool(md_relative and (root / md_relative).is_file())
+        jsonl_exists = bool(jsonl_relative and (root / jsonl_relative).is_file())
+        if not md_exists:
+            missing_md.append({"id": artifact_id, "path": md_relative})
+        if not jsonl_exists:
+            missing_jsonl.append({"id": artifact_id, "path": jsonl_relative})
+        if md_exists and jsonl_exists:
+            paired_count += 1
+
+        migration_md_ref = bool(md_relative and md_relative in migration_text)
+        migration_jsonl_ref = bool(jsonl_relative and jsonl_relative in migration_text)
+        if migration_md_ref and migration_jsonl_ref:
+            migration_covered_count += 1
+        else:
+            missing_migration.append({
+                "id": artifact_id,
+                "md_path": md_relative,
+                "jsonl_path": jsonl_relative,
+                "missing_md_ref": not migration_md_ref,
+                "missing_jsonl_ref": not migration_jsonl_ref,
+            })
+
+        indexes_present = []
+        per_artifact_missing_indexes = []
+        for relative, text in index_texts.items():
+            if artifact_id in text or (md_relative and md_relative in text) or (jsonl_relative and jsonl_relative in text):
+                indexes_present.append(relative)
+            else:
+                per_artifact_missing_indexes.append(relative)
+        if per_artifact_missing_indexes:
+            missing_indexes[artifact_id] = per_artifact_missing_indexes
+        else:
+            indexed_count += 1
+
+        rows.append({
+            "id": artifact_id,
+            "registry_present": registered,
+            "md_path": md_relative,
+            "md_exists": md_exists,
+            "jsonl_path": jsonl_relative,
+            "jsonl_exists": jsonl_exists,
+            "migration_md_ref": migration_md_ref,
+            "migration_jsonl_ref": migration_jsonl_ref,
+            "indexes_present": indexes_present,
+            "missing_indexes": per_artifact_missing_indexes,
+            "status": (
+                "pass"
+                if registered and md_exists and jsonl_exists and migration_md_ref and migration_jsonl_ref and not per_artifact_missing_indexes
+                else "fail"
+            ),
+        })
+
+    status = (
+        "pass"
+        if registered_count == len(FINAL_PROOF_ARTIFACT_IDS)
+        and paired_count == len(FINAL_PROOF_ARTIFACT_IDS)
+        and migration_covered_count == len(FINAL_PROOF_ARTIFACT_IDS)
+        and indexed_count == len(FINAL_PROOF_ARTIFACT_IDS)
+        and not missing_registry
+        and not missing_md
+        and not missing_jsonl
+        and not missing_migration
+        and not missing_indexes
+        else "fail"
+    )
+    return {
+        "status": status,
+        "expected_ids": FINAL_PROOF_ARTIFACT_IDS,
+        "expected_count": len(FINAL_PROOF_ARTIFACT_IDS),
+        "registered_count": registered_count,
+        "paired_count": paired_count,
+        "migration_covered_count": migration_covered_count,
+        "indexed_count": indexed_count,
+        "required_indexes": FINAL_PROOF_INDEX_PATHS,
+        "missing_registry": missing_registry,
+        "missing_md": missing_md,
+        "missing_jsonl": missing_jsonl,
+        "missing_migration": missing_migration,
+        "missing_indexes": missing_indexes,
+        "rows": rows,
+        "notes_zh": "只读汇总 2026-06-22 终态 proof 主制品在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
+    }
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
@@ -219,6 +354,7 @@ elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
 else:
     knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
 strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+proof_artifacts_20260622 = build_final_proof_artifacts_summary()
 
 blockers = []
 
@@ -759,6 +895,7 @@ result = {
         "next_open_queue_selection_order": str(owner_payload.get("next_open_queue_selection_order", "")),
         "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
+    "proof_artifacts_20260622": proof_artifacts_20260622,
     "final_state_audit": final_state_audit,
     "checks": {
         "knowledge_check": {
@@ -828,6 +965,7 @@ print(f"- automatic_governance: {result['automatic_governance']['status']}")
 print(f"- level1_pcr02_docs: {final_state_audit['level1_pcr02_docs']['status']}")
 print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candidate_sources']['status']}")
 print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
+print(f"- proof_artifacts_20260622: {proof_artifacts_20260622['status']} registered={proof_artifacts_20260622['registered_count']}/{proof_artifacts_20260622['expected_count']} paired={proof_artifacts_20260622['paired_count']}/{proof_artifacts_20260622['expected_count']} indexed={proof_artifacts_20260622['indexed_count']}/{proof_artifacts_20260622['expected_count']}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")

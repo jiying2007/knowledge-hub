@@ -46,16 +46,16 @@
 
 ## Evidence Index
 
-| Command | Exit Code | Result Summary | Evidence Path |
-|---|---:|---|---|
-| `rtk bash -n tools/knowledge-check.sh` | 0 | 语法检查通过，source/boundary health 路径可解析 | `tools/knowledge-check.sh` |
-| `rtk bash -n tools/knowledge-status.sh` | 0 | 语法检查通过，status source health 透传路径可解析 | `tools/knowledge-status.sh` |
-| `rtk bash -n tools/knowledge-final-gate.sh` | 0 | 语法检查通过，final-state audit source/boundary 字段可解析 | `tools/knowledge-final-gate.sh` |
-| `rtk bash -n tools/knowledge-regression.sh` | 0 | 语法检查通过，新增正负向回归场景可解析 | `tools/knowledge-regression.sh` |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | `source_check_health` 与 `boundary_health` 均为 pass | `tools/knowledge-check.sh` |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | regression 覆盖 72 个场景，新增 source check 和 boundary 场景通过 | `tools/knowledge-regression.sh` |
-| `rtk git diff --check` | 0 | 未发现 whitespace 或 conflict marker 漂移 | git diff check |
-| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 终态 gate 预期停在 `needs-owner-review`；工具、registry、source/boundary health 和 regression 均通过 | `tools/knowledge-final-gate.sh` |
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+|---|---:|---|---|---|---|
+| `rtk bash -n tools/knowledge-check.sh` | 0 | 语法检查通过，source/boundary health 路径可解析 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash -n tools/knowledge-status.sh` | 0 | 语法检查通过，status source health 透传路径可解析 | `tools/knowledge-status.sh` | Tool | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash -n tools/knowledge-final-gate.sh` | 0 | 语法检查通过，final-state audit source/boundary 字段可解析 | `tools/knowledge-final-gate.sh` | Tool | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash -n tools/knowledge-regression.sh` | 0 | 语法检查通过，新增正负向回归场景可解析 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | `source_check_health` 与 `boundary_health` 均为 pass | `tools/knowledge-check.sh` | Gate | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | regression 覆盖 72 个场景，新增 source check 和 boundary 场景通过 | `tools/knowledge-regression.sh` | Regression | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk git diff --check` | 0 | 未发现 whitespace 或 conflict marker 漂移 | git diff check | Git | `knowledge-hub-source-boundary-health-20260621` |
+| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 终态 gate 预期停在 `needs-owner-review`；工具、registry、source/boundary health 和 regression 均通过 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-source-boundary-health-20260621` |
 
 ## 后续
 

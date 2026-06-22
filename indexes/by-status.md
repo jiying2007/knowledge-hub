@@ -351,3 +351,5 @@
 - owner-queue-command-hardening-applied: status dashboard 的 owner_gates.next_open_queue[]、owner 队列命令边界和治理文档稳定命令示例已压实；documented by `artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
 - final-recovery-discoverability-hardening-applied: final gate owner_recovery.next_open_queue[]、终态 proof 主制品可发现性、tools README 中文说明和旧 Evidence Index 表头已压实；documented by `artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-proof-summary-readability-hardening-20260622`
+- final-proof-summary-readability-hardening-applied: final gate 的 proof_artifacts_20260622 摘要、owner-review blocker 回归断言、剩余 tools README 中文说明和三份旧 Evidence Index 六列表头已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.jsonl`.

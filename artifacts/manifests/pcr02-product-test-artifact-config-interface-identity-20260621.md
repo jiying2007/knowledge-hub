@@ -37,13 +37,13 @@
 
 ## Evidence Index
 
-| Command | Exit Code | Result Summary | Evidence Path |
-|---|---:|---|---|
-| `rtk bash tools/knowledge-status.sh --json` | 0 | 当前状态为 `needs-owner-review`，`source_check_health` 无缺口，`boundary_health=pass` | `tools/knowledge-status.sh` |
-| `rtk bash -lc 'base=.../app_product_test; find "$base" -path "$base/.git" -prune -o -maxdepth 4 -type f -printf "%P\t%s\n" | sort'` | 0 | 排除 `.git/**` 后列出 127 个源文件身份候选 | `pcr02-product-test` source |
-| `rtk bash -lc '... awk ...'` | 0 | 统计 4 Markdown、2 PDF、2 archive、7 config、54 source、54 generated、4 other | `pcr02-product-test` source |
-| `rtk bash -lc '... sha256/size identity generator ...'` | 0 | 为 73 个非生成物文件生成 source identity JSONL 草案 | `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl` |
-| subagent `pcr02-product-test identity` | 0 | 建议落地 reference-only / owner-gated 身份清单，保持 owner gate 不变 | subagent read-only review |
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+|---|---:|---|---|---|---|
+| `rtk bash tools/knowledge-status.sh --json` | 0 | 当前状态为 `needs-owner-review`，`source_check_health` 无缺口，`boundary_health=pass` | `tools/knowledge-status.sh` | Status | `pcr02-product-test-artifact-config-interface-identity-20260621` |
+| `rtk bash -lc 'base=.../app_product_test; find "$base" -path "$base/.git" -prune -o -maxdepth 4 -type f -printf "%P\t%s\n" | sort'` | 0 | 排除 `.git/**` 后列出 127 个源文件身份候选 | `pcr02-product-test` source | Source Identity | `pcr02-product-test-artifact-config-interface-identity-20260621` |
+| `rtk bash -lc '... awk ...'` | 0 | 统计 4 Markdown、2 PDF、2 archive、7 config、54 source、54 generated、4 other | `pcr02-product-test` source | Source Identity | `pcr02-product-test-artifact-config-interface-identity-20260621` |
+| `rtk bash -lc '... sha256/size identity generator ...'` | 0 | 为 73 个非生成物文件生成 source identity JSONL 草案 | `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl` | Source Identity | `pcr02-product-test-artifact-config-interface-identity-20260621` |
+| subagent `pcr02-product-test identity` | 0 | 建议落地 reference-only / owner-gated 身份清单，保持 owner gate 不变 | subagent read-only review | Subagent Review | `pcr02-product-test-artifact-config-interface-identity-20260621` |
 
 ## 未决项
 

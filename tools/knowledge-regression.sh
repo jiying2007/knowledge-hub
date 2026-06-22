@@ -1539,11 +1539,13 @@ def test_final_gate_owner_review_blocker():
         for field in ["focus_command", "forms_jsonl_command", "evidence_readiness_command"]:
             recovery_queue_executable_commands.append(str(row.get(field, "")))
     final_state_audit = parsed.get("final_state_audit", {})
+    proof_artifacts = parsed.get("proof_artifacts_20260622", {})
     evidence_index = parsed.get("evidence_index", [])
     evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
     level1 = final_state_audit.get("level1_pcr02_docs", {})
     level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
     level3 = final_state_audit.get("level3_registered_sources", {})
+    proof_rows = proof_artifacts.get("rows", [])
     level2_boundary_health = level2.get("boundary_health", {})
     level3_source_check_health = level3.get("source_check_health", {})
     level3_source_coverage_selection = level3.get("source_coverage_selection", {})
@@ -1629,6 +1631,19 @@ def test_final_gate_owner_review_blocker():
         and level3_source_check_health.get("missing_check_or_reason_ids") == []
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
+        and proof_artifacts.get("status") == "pass"
+        and proof_artifacts.get("expected_count") == 5
+        and proof_artifacts.get("registered_count") == 5
+        and proof_artifacts.get("paired_count") == 5
+        and proof_artifacts.get("migration_covered_count") == 5
+        and proof_artifacts.get("indexed_count") == 5
+        and proof_artifacts.get("missing_registry") == []
+        and proof_artifacts.get("missing_md") == []
+        and proof_artifacts.get("missing_jsonl") == []
+        and proof_artifacts.get("missing_migration") == []
+        and proof_artifacts.get("missing_indexes") == {}
+        and len(proof_rows) == 5
+        and all(row.get("status") == "pass" for row in proof_rows)
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
@@ -1664,6 +1679,7 @@ def test_final_gate_owner_review_blocker():
             "automatic_governance": automatic_governance,
             "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,
+            "proof_artifacts_20260622": proof_artifacts,
             "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
             "evidence_index": evidence_index,

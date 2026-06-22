@@ -202,3 +202,4 @@
 - 2026-09-22: `knowledge-hub-final-proof-maintenance-hardening-20260622`
 - 2026-09-22: `knowledge-hub-owner-queue-command-hardening-20260622`
 - 2026-09-22: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
+- 2026-09-22: `knowledge-hub-final-proof-summary-readability-hardening-20260622`

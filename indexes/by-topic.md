@@ -182,3 +182,4 @@
 - Knowledge Hub final proof and maintenance hardening: `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.md`
 - Knowledge Hub owner queue and command hardening: `artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.md`
 - Knowledge Hub final recovery discoverability hardening: `artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.md`
+- Knowledge Hub final proof summary and readability hardening: `artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.md`

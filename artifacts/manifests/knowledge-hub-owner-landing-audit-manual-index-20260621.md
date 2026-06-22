@@ -29,17 +29,17 @@
 
 ## Evidence Index
 
-| Command | Exit Code | Result Summary | Evidence Path |
-|---|---:|---|---|
-| `rtk bash -n tools/knowledge-owner-gates.sh` | 0 | 语法检查通过，新增 landing audit 参数和输出路径可解析 | `tools/knowledge-owner-gates.sh` |
-| `rtk bash -n tools/knowledge-status.sh` | 0 | 语法检查通过，status landing audit 模板可解析 | `tools/knowledge-status.sh` |
-| `rtk bash -n tools/knowledge-index-plan.sh` | 0 | 语法检查通过，manifest unpaired 分类路径可解析 | `tools/knowledge-index-plan.sh` |
-| `rtk bash -n tools/knowledge-new.sh` | 0 | 语法检查通过，条件索引提示路径可解析 | `tools/knowledge-new.sh` |
-| `rtk bash -n tools/knowledge-regression.sh` | 0 | 语法检查通过，回归断言可解析 | `tools/knowledge-regression.sh` |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | 0 | owner dispatch 输出 landing audit 命令模板 | `tools/knowledge-owner-gates.sh` |
-| `rtk bash tools/knowledge-status.sh --json` | 0 | status dashboard 输出 owner/source/next-open landing audit 恢复模板 | `tools/knowledge-status.sh` |
-| `rtk bash tools/knowledge-index-plan.sh --section manifest --json` | 0 | manifest 视图输出 unpaired expected / needs_review 只读分类 | `tools/knowledge-index-plan.sh` |
-| `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id governance-regression-decision --path governance/regression-decision.md` | 0 | 人工新增向导输出 by-source 条件提示和 by-decision 决策索引提示 | `tools/knowledge-new.sh` |
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+|---|---:|---|---|---|---|
+| `rtk bash -n tools/knowledge-owner-gates.sh` | 0 | 语法检查通过，新增 landing audit 参数和输出路径可解析 | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash -n tools/knowledge-status.sh` | 0 | 语法检查通过，status landing audit 模板可解析 | `tools/knowledge-status.sh` | Tool | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash -n tools/knowledge-index-plan.sh` | 0 | 语法检查通过，manifest unpaired 分类路径可解析 | `tools/knowledge-index-plan.sh` | Tool | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash -n tools/knowledge-new.sh` | 0 | 语法检查通过，条件索引提示路径可解析 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash -n tools/knowledge-regression.sh` | 0 | 语法检查通过，回归断言可解析 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | 0 | owner dispatch 输出 landing audit 命令模板 | `tools/knowledge-owner-gates.sh` | Owner Gate | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash tools/knowledge-status.sh --json` | 0 | status dashboard 输出 owner/source/next-open landing audit 恢复模板 | `tools/knowledge-status.sh` | Status | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash tools/knowledge-index-plan.sh --section manifest --json` | 0 | manifest 视图输出 unpaired expected / needs_review 只读分类 | `tools/knowledge-index-plan.sh` | Index Plan | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
+| `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id governance-regression-decision --path governance/regression-decision.md` | 0 | 人工新增向导输出 by-source 条件提示和 by-decision 决策索引提示 | `tools/knowledge-new.sh` | Manual Entry | `knowledge-hub-owner-landing-audit-manual-index-20260621` |
 
 ## 后续
 

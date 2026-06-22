@@ -31,14 +31,14 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-index-plan.sh`: 只读核心索引规划入口；输出由 registry 派生的 `by-owner`、`by-review-date`、`by-status`、`by-project`、`by-source`、`by-topic`、`by-decision` 和 `manifest` 恢复视图，不写文件。JSON 输出包含 `source_coverage_selection`，用于追溯 `by_source[*].coverage` 来自哪个 latest closeout manifest；如 latest source coverage 里同一 `source_id` 重复，`duplicate_source_ids` 和 warnings 会显式暴露，并保留第一行作为恢复视图。`--section manifest` 用于恢复 manifest 最新项、Markdown/JSONL 配对、行数、证据计数和 unpaired 分类；latest 只按文件名 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。历史 unpaired 会标记为 `expected` 或 `needs_review`，这是 report-only 恢复视图，不会自动作为硬失败。
 - `knowledge-owner-gates.sh`: 只读 owner gate 看板。它输出 unresolved worksheet、必填 owner 字段、active exposure、owner route 和 source identity；`--summary` 会给出 owner 分布、`owner_dispatch[]` 和 `suggested_owner_packet`，后者把 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit 排成 owner handoff 顺序。`--forms-jsonl` 只打印骨架，`--validate-forms <jsonl>` 只校验人工回填，`--landing-plan` 和 `--landing-audit` 只输出 no-write 人工落地计划与审计。`read_only_prefill_candidates` 只给候选值；正式 owner 字段仍需真实 owner 填写。`owner_route` 只来自 `registry/owner-routing.json`，不生成 owner decision，也不能替代 `reviewed_by`。
 - `knowledge-regression.sh`: 只读回归 fixture 入口；把仓库复制到 `/tmp`，只修改临时副本，用于验证 status bucket mismatch、partial owner resolution 等关键负向门禁。默认每个场景后清理临时 fixture，内部异常会记录结构化失败细节；`--json` 模式输出 JSON，支持 `--as-of YYYY-MM-DD` / `KNOWLEDGE_TODAY` 固定日期敏感命令，并使用 `KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES` 做低空间预检。
-- `knowledge-inventory.sh`: read-only inventory for registered sources.
-- `knowledge-copy-first-plan.sh`: creates a reviewed JSONL copy-first manifest for a registered source; writes only the manifest under `artifacts/manifests/`.
-- `knowledge-copy-first.sh`: reviewed copy-first migration from a JSONL manifest; dry-run by default.
-- `knowledge-artifact-ref-plan.sh`: creates a JSONL artifact reference manifest with source URI, size and sha256 for non-text source files; it does not copy binary content.
+- `knowledge-inventory.sh`: 只读 source inventory；列出已登记 source 的 owner、路径、状态、复核日期和维护字段。
+- `knowledge-copy-first-plan.sh`: 为已登记 source 生成经审查的 JSONL copy-first manifest；只在 `artifacts/manifests/` 下写 manifest。
+- `knowledge-copy-first.sh`: 按 JSONL manifest 执行 copy-first 迁移；默认 dry-run，需显式确认后才会复制已批准正文。
+- `knowledge-artifact-ref-plan.sh`: 为非文本 source 文件生成 artifact 引用 manifest，记录 source URI、size 和 sha256；不复制二进制内容。
 - `knowledge-new.sh`: 只读人工新增向导。它只打印模板、registry 草稿、索引提示、条件 migration 草稿、验证步骤和可复制骨架，不写文件。支持 `--owner <owner>`、`--manual-source-reason <reason>`、`--manual-validation-pending --manual-validation-reason <reason>`、`--generated-by-ai --ai-role <role>`；默认 owner 为 `leiwenjun`，可从 `--domain projects/<project>` 推导 project，并支持 `KNOWLEDGE_TODAY=YYYY-MM-DD` 固定草稿日期。草稿默认包含 `summary_zh`、语言/术语、review/evidence 和 AI provenance 字段；默认 `validation_refs` 与 Evidence Index 使用 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`。普通条目只提示条件索引：已登记 source 才同步 `indexes/by-source.md`，decision 类条目才同步 `indexes/by-decision.md`，未知 source 不伪造 source id。`--source` 只打印 source registry、by-source 和 source coverage JSONL 骨架；未知 owner 只输出中文 warning，不替代正式 owner gate；coverage row 的 `status` 跟随 `--source-status` 输出为 `<status>-pending-classification`。
-- `knowledge-capture.sh`: dry-run candidate capture.
-- `knowledge-promote.sh`: dry-run promotion plan.
-- `knowledge-retire.sh`: dry-run retirement plan.
+- `knowledge-capture.sh`: dry-run 候选捕获入口；只输出待审查候选，不写 active 知识。
+- `knowledge-promote.sh`: dry-run 提升计划入口；只输出提升前检查和人工步骤，不自动提升。
+- `knowledge-retire.sh`: dry-run 退役计划入口；只输出退役影响和人工步骤，不自动删除或移动正文。
 
 写入必须走显式 reviewed manifest、dry-run、owner、rollback 和验证证据；无人值守自动化不得使用写入入口。
 
