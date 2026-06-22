@@ -51,4 +51,4 @@ Knowledge Hub 的命令和工具必须保守、可复查、可回滚。用户和
 
 - owner：`leiwenjun`
 - review_after：`2026-09-18`
-- validation_refs：`tools/knowledge-check.sh --dry-run`
+- validation_refs：`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`

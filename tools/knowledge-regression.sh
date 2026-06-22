@@ -1490,7 +1490,14 @@ def test_final_gate_owner_review_blocker():
         and next_open_recovery.get("owner_route", {}).get("no_owner_decision_generated") is True
         and level1.get("status") == "complete-except-owner-review"
         and level1.get("source_id") == "pcr02-project-docs"
+        and level1.get("expected_owner_gate_count") == 7
+        and "pcr02-owner-decision-worksheets-20260618.jsonl" in level1.get("expected_owner_gate_count_source", "")
+        and level1.get("worksheet_count") == 1
+        and level1.get("worksheet_row_count") == 7
         and level1.get("owner_gate_open_count") == 7
+        and level1.get("owner_gate_count_matches_expected") is True
+        and level1.get("owner_ready_package_count") == 7
+        and level1.get("owner_ready_expected_count") == 7
         and level1.get("owner_ready_package_coverage") == "7/7"
         and level1.get("active_exposure_count") == 0
         and level1.get("no_owner_decision_generated") is True
@@ -3521,6 +3528,14 @@ def test_status_source_governance_summary():
     check_boundary_health = check_parsed.get("boundary_health", {}) if isinstance(check_parsed, dict) else {}
     status_source_check_health = sources.get("source_check_health", {}) if isinstance(sources.get("source_check_health"), dict) else {}
     status_boundary_health = sources.get("boundary_health", {}) if isinstance(sources.get("boundary_health"), dict) else {}
+    source_recovery_rows = sources.get("source_recovery_rows", []) if isinstance(sources.get("source_recovery_rows"), list) else []
+    source_recovery_by_id = {
+        row.get("source_id"): row
+        for row in source_recovery_rows
+        if isinstance(row, dict)
+    }
+    pcr02_docs_recovery = source_recovery_by_id.get("pcr02-project-docs", {})
+    pcr02_tools_recovery = source_recovery_by_id.get("pcr02-project-tools", {})
     expect(
         result["exit_code"] == 0
         and not parse_error
@@ -3550,6 +3565,15 @@ def test_status_source_governance_summary():
         and status_source_check_health.get("executed") is False
         and status_boundary_health.get("status") == "pass"
         and status_boundary_health.get("source_project_read") is False
+        and len(source_recovery_rows) == 13
+        and pcr02_docs_recovery.get("final_disposition") == "mixed-terminal-coverage"
+        and pcr02_docs_recovery.get("coverage_status") == "covered-control-plane"
+        and "owner-gated" in pcr02_docs_recovery.get("coverage_classification", "")
+        and "owner" in pcr02_docs_recovery.get("coverage_decision", "")
+        and pcr02_docs_recovery.get("has_no_check_reason") is True
+        and pcr02_tools_recovery.get("check_contract_status") == "ok"
+        and pcr02_tools_recovery.get("has_check") is True
+        and pcr02_tools_recovery.get("coverage_status") == "registered-reference-tool-boundary"
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
@@ -3572,6 +3596,9 @@ def test_status_source_governance_summary():
             "status_boundary_health": status_boundary_health,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
+            "source_recovery_row_count": len(source_recovery_rows),
+            "pcr02_docs_recovery": pcr02_docs_recovery,
+            "pcr02_tools_recovery": pcr02_tools_recovery,
             "owner_ready_package_coverage": owner_gates.get("owner_ready_package_coverage"),
             "final_gate_command": parsed.get("final_gate_command"),
             "expected_final_gate_command": expected_final_gate_command,
@@ -4644,27 +4671,70 @@ def test_regression_manifest_coverage():
         "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
     ]
+    def parse_coverage_rows(text):
+        rows = {}
+        duplicate_rows = []
+        in_table = False
+        for line in text.splitlines():
+            if line.strip() == "## 覆盖范围":
+                in_table = True
+                continue
+            if in_table and line.startswith("## "):
+                break
+            if not in_table or not line.startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) < 3 or cells[0] in {"ID", "---"} or set(cells[0]) <= {"-"}:
+                continue
+            row_id = cells[0]
+            if row_id in rows:
+                duplicate_rows.append(row_id)
+            rows[row_id] = {
+                "scenario": cells[1] if len(cells) > 1 else "",
+                "expected": cells[2] if len(cells) > 2 else "",
+            }
+        return rows, sorted(set(duplicate_rows))
+
     actual_ids = [result.get("id", "") for result in results] + ["regression-manifest-coverage"]
+    coverage_rows, duplicate_manifest_rows = parse_coverage_rows(manifest_text)
     missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
     missing_from_required = [test_id for test_id in actual_ids if test_id not in required_ids]
+    missing_table_rows = [test_id for test_id in actual_ids if test_id not in coverage_rows]
+    table_rows_without_scenario = [
+        test_id for test_id in actual_ids
+        if test_id in coverage_rows and not coverage_rows[test_id].get("scenario", "")
+    ]
+    table_rows_without_expected = [
+        test_id for test_id in actual_ids
+        if test_id in coverage_rows and not coverage_rows[test_id].get("expected", "")
+    ]
     duplicate_actual_ids = sorted({test_id for test_id in actual_ids if actual_ids.count(test_id) > 1})
     expected_count_text = f"{len(actual_ids)} 个回归场景"
     expect(
         not read_error
         and not missing_ids
         and not missing_from_required
+        and not missing_table_rows
+        and not duplicate_manifest_rows
+        and not table_rows_without_scenario
+        and not table_rows_without_expected
         and not duplicate_actual_ids
         and expected_count_text in manifest_text,
         "regression-manifest-coverage",
-        "regression helper manifest covers current regression ids",
+        "regression helper manifest covers current regression ids with structured table rows",
         {
             "manifest": str(manifest_path.relative_to(root)),
             "read_error": read_error,
             "missing_ids": missing_ids,
             "missing_from_required": missing_from_required,
+            "missing_table_rows": missing_table_rows,
+            "duplicate_manifest_rows": duplicate_manifest_rows,
+            "table_rows_without_scenario": table_rows_without_scenario,
+            "table_rows_without_expected": table_rows_without_expected,
             "duplicate_actual_ids": duplicate_actual_ids,
             "actual_count": len(actual_ids),
             "required_count": len(required_ids),
+            "manifest_table_count": len(coverage_rows),
             "expected_count_text": expected_count_text,
         },
     )

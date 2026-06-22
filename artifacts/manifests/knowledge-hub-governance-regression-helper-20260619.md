@@ -57,6 +57,8 @@
 | manual-entry-offline-docs | 当前 README 和模板说明离线人工默认字段与迁移条件 | README 明确 `manual_validation_pending: true`、`source.type=manual`、`status=reviewing`、`review_status=manual-entry-pending-review`；模板说明 `registry/migrations.jsonl` 只在迁移、引用或归档时补齐 |
 | manual-entry-validation-diagnostics-default | 当前人工新增向导默认使用 diagnostics 验证命令 | registry 草稿 `validation_refs` 和 Evidence Index 默认使用 `knowledge-check --dry-run --json --diagnostics`，离线 follow-up 不退化为普通 check |
 | manual-entry-readability-fields | 当前人工新增向导输出中文长期资产字段 | registry 草稿包含 `summary_zh`、`primary_language`、`review_status`、`evidence_strength`、AI provenance 和人工待验证原因 |
+| manual-entry-archive-default-status | 当前人工新增归档类条目默认使用 archived 状态 | `knowledge-new.sh --kind project-archive` 输出 registry 草稿时使用 `status=archived`，避免历史归档被误写成 active/reviewing 当前事实 |
+| offline-validation-template-placeholders | 当前离线待验证模板保留人工复核占位 | README / indexes / templates 的离线片段包含 `manual_validation_pending`、原因、required follow-up 和 `review_after`，避免离线补录缺少后续验证路径 |
 | governance-audit-readability-gate | 临时副本移除 2026-06-21 governance audit registry item 的 `summary_zh` | `knowledge-check` 必须失败，避免新增治理 audit 缺少中文摘要和语言字段 |
 | ai-generated-item-provenance-gate | 临时副本移除 2026-06-21 AI-generated registry item 的 `ai_model_or_tool` 和 `ai_generated_at` | `knowledge-check` 必须失败，避免 AI 生成条目缺少可追溯模型/工具和生成时间 |
 | migration-notes-zh-gate | 临时副本移除 2026-06-21 migration row 的 `notes_zh` | `knowledge-check` 必须失败，避免新增 migration 只保留英文 notes 而无法被中文维护者快速理解 |
@@ -77,6 +79,7 @@
 | stale-review-after-warning-surface | 临时副本把一条 reviewing item 的 `review_after` 改到过去 | `knowledge-check` 仍通过但输出 stale warning，`knowledge-status` 暴露 stale count、sample 和 review_after 复核命令，证明过期复核是人工治理提醒而不是阻断错误 |
 | source-review-after-stale-surface | 临时副本把一条 registered source 的 `review_after` 改到过去 | `knowledge-check` 仍通过但输出 source stale warning，`knowledge-status.sources` 暴露 stale count、sample 和 source 复核命令，证明 source 过期复核是人工治理提醒而不是阻断错误 |
 | source-manual-entry-guide | 当前人工 source 新增向导输出完整草案 | `knowledge-new.sh --source` 输出 `registry/sources.json` object、`indexes/by-source.md` 主表行和 source coverage JSONL row 草案，并保留 no-check reason |
+| source-manual-entry-enum-guide | 当前人工 source 新增向导输出枚举速查并拒绝非法枚举 | `knowledge-new.sh --source` 输出 role/authority/status/write_policy/final_disposition 常用值；传入非法枚举必须非零退出，避免生成 schema 不接受的 source 草稿 |
 | source-manual-entry-guide-check-command | 当前人工 source 新增向导支持稳定只读 check | 传 `--check "rtk ..."` 时 registry source 草稿和 source coverage JSONL row 草稿均包含 `check` 字段，且不输出 JSON 形式的 `no_check_reason` |
 | source-manual-entry-status-coverage-sync | 当前人工 source 新增向导让 coverage row 跟随 `--source-status` | `--source-status retired/deprecated` 时，registry source object 保留对应状态，coverage row 输出 `retired-pending-classification` / `deprecated-pending-classification`，不得固定写 registered |
 | source-manual-entry-unknown-owner-warning | 当前人工 source 新增向导对未知 owner 给出预警 | `knowledge-new.sh --source --owner <unknown>` 保持 exit 0 输出草稿，但显示 `owner_registry_status=unknown-owner` 和中文 warning，提醒落盘前补 owner registry |
@@ -89,7 +92,7 @@
 | index-plan-decision-registry-health | 当前 decision 索引规划视图覆盖 registry decisions | `knowledge-index-plan.sh --section decision --json` 的 registry decision id 与 `registry/decisions.jsonl` 完全一致且不重复 |
 | index-decision-registry-subsection-gate | 当前 `by-decision` 强门禁只锁 registry decision 覆盖 | 移除 registry decision 的索引引用会触发 `knowledge-check`，但不把 owner worksheet / migration decision 当作 registry decision 强约束 |
 | index-topic-zero-bucket-allowed | 当前 topic 规划允许空 topic | 空 topic 作为健康数据保留，不作为硬失败 |
-| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 包含当前全部回归场景和所有当前测试 ID；自检会用实际已执行 result id 反查 required 清单，避免漏登 ID 但仍因总数文本通过 |
+| regression-manifest-coverage | 当前回归 helper manifest 覆盖所有回归 ID | manifest 覆盖范围表必须为每个实际回归 ID 提供唯一行，且“场景”和“预期”列非空；自检会用实际已执行 result id 反查 required 清单，避免漏登 ID 或只在正文里随意出现 ID |
 
 ## 决策
 

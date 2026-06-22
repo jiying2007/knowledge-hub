@@ -682,6 +682,42 @@ review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh -
 source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
 source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health", {}), dict) else {}
 source_stale_review_after_ids = set(source_check_health.get("stale_review_after_ids", []) or [])
+source_check_rows = {
+    str(row.get("source_id", "")): row
+    for row in source_check_health.get("rows", [])
+    if isinstance(row, dict)
+}
+source_coverage_rows = load_jsonl(latest_source_coverage_path) if latest_source_coverage_path else []
+source_coverage_by_id = {
+    str(row.get("source_id", "")): row
+    for row in source_coverage_rows
+    if isinstance(row, dict)
+}
+source_recovery_rows = []
+for source in sorted(sources, key=lambda row: str(row.get("id", ""))):
+    source_id = str(source.get("id", ""))
+    check_row = source_check_rows.get(source_id, {})
+    coverage_row = source_coverage_by_id.get(source_id, {})
+    source_recovery_rows.append({
+        "source_id": source_id,
+        "status": str(source.get("status", "")),
+        "owner": str(source.get("owner", "")),
+        "review_after": str(source.get("review_after", "")),
+        "review_after_stale": bool(check_row.get("review_after_stale", source_id in source_stale_review_after_ids)),
+        "final_disposition": str(source.get("final_disposition", "")),
+        "migration_strategy": str(source.get("migration_strategy", "")),
+        "check_contract_status": str(check_row.get("check_contract_status", "")),
+        "has_check": bool(check_row.get("has_check", bool(source.get("check", "")))),
+        "has_no_check_reason": bool(check_row.get("has_no_check_reason", bool(source.get("no_check_reason", "")))),
+        "check": str(source.get("check", "")),
+        "no_check_reason": str(source.get("no_check_reason", "")),
+        "coverage_status": str(coverage_row.get("status", "")),
+        "coverage_classification": str(coverage_row.get("classification", "")),
+        "coverage_decision": str(coverage_row.get("decision", "")),
+        "coverage_risk": str(coverage_row.get("risk", "")),
+        "coverage_checked_at": str(coverage_row.get("checked_at", "")),
+        "coverage_owner": str(coverage_row.get("owner", "")),
+    })
 stale_sources = sorted(
     [
         {
@@ -905,6 +941,7 @@ result = {
         "latest_coverage_selection": latest_source_coverage_selection,
         "source_coverage_health": check_payload.get("source_coverage_health", {}),
         "source_check_health": source_check_health,
+        "source_recovery_rows": source_recovery_rows,
         "stale_review_after_count": len(stale_sources),
         "stale_review_after_sample": stale_sources[:10],
         "review_after_command": source_review_after_command,

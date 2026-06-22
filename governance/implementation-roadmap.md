@@ -9,7 +9,7 @@
 验收：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 ## Phase 1: Source Registration

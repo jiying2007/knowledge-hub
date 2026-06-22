@@ -179,3 +179,4 @@
 - Knowledge Hub owner handoff and final gate hardening: `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.md`
 - Knowledge Hub final gate evidence recovery: `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.md`
 - Knowledge Hub recovery, search and manual-entry hardening: `artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.md`
+- Knowledge Hub final proof and maintenance hardening: `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.md`

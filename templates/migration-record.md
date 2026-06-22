@@ -32,7 +32,7 @@
 
 ```bash
 rtk jq -c . registry/migrations.jsonl
-rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 ## 常见错误

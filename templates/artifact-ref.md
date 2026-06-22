@@ -66,7 +66,7 @@ review_basis:
 ```bash
 rtk sha256sum <source-path>
 rtk wc -c <source-path>
-rtk bash tools/knowledge-check.sh --dry-run --json
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 ## 风险与限制

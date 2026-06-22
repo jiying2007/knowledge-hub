@@ -345,3 +345,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - final-gate-evidence-recovery-applied: `knowledge-final-gate.sh --json` 输出命令级 `evidence_index` 和 owner-blocker provenance，README/tools/indexes 补终态失败恢复路径与 source coverage latest 恢复规则；documented by `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.
 - reviewing: `knowledge-hub-recovery-search-manual-hardening-20260622`
 - recovery-search-manual-hardening-applied: manifest latest 文件名日期恢复、source coverage duplicate source_id warning、结构化搜索排除未登记 raw file、人工新增 diagnostics 默认验证和 source status coverage 同步已由 85 个回归场景覆盖；documented by `artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-proof-maintenance-hardening-20260622`
+- final-proof-maintenance-hardening-applied: final gate Level 1 owner gate 来源字段、status source recovery rows、regression helper 表格结构自检和 governance/template 验证命令稳定入口已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
