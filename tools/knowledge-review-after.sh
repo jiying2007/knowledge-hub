@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+exec rtk python3 - "$ROOT" "$@" <<'PY'
+import argparse
+import datetime as dt
+import json
+import os
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1]).resolve()
+argv = sys.argv[2:]
+
+parser = argparse.ArgumentParser(description="Print a report-only review_after stale and near-due report.")
+parser.add_argument("--json", action="store_true")
+parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
+parser.add_argument("--window-days", type=int, default=30, help="Near-due window for registry items.")
+parser.add_argument("--source-window-days", type=int, default=30, help="Near-due window for registered sources.")
+parser.add_argument("--include-sources", action="store_true", help="Include near-due source detail rows.")
+parser.add_argument("--include-owner-gates", action="store_true", help="Include open owner gate detail rows.")
+args = parser.parse_args(argv)
+
+if args.window_days < 0:
+    parser.error("--window-days must be >= 0")
+if args.source_window_days < 0:
+    parser.error("--source-window-days must be >= 0")
+
+def resolve_today():
+    if args.as_of:
+        raw_value = args.as_of
+        source = "arg:--as-of"
+    else:
+        raw_value = os.environ.get("KNOWLEDGE_TODAY", "")
+        source = "env:KNOWLEDGE_TODAY" if raw_value else "system-date"
+    if raw_value:
+        try:
+            return dt.date.fromisoformat(raw_value), source
+        except Exception:
+            parser.error(f"invalid date for {source}: {raw_value}")
+    return dt.date.today(), source
+
+today, today_source = resolve_today()
+item_window_end = today + dt.timedelta(days=args.window_days)
+source_window_end = today + dt.timedelta(days=args.source_window_days)
+
+errors = []
+
+def read_jsonl(path):
+    rows = []
+    try:
+        for line_no, line in enumerate(path.read_text().splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                errors.append(f"{path.relative_to(root)}:{line_no}: {exc}")
+    except Exception as exc:
+        errors.append(f"cannot read {path.relative_to(root)}: {exc}")
+    return rows
+
+def parse_date(value, label):
+    if not value:
+        return None
+    try:
+        return dt.date.fromisoformat(str(value))
+    except Exception:
+        errors.append(f"{label} invalid review_after: {value}")
+        return None
+
+items = read_jsonl(root / "registry" / "items.jsonl")
+
+try:
+    sources_payload = json.loads((root / "registry" / "sources.json").read_text())
+    sources = sources_payload.get("sources", [])
+    if not isinstance(sources, list):
+        errors.append("registry/sources.json field sources is not a list")
+        sources = []
+except Exception as exc:
+    errors.append(f"cannot read registry/sources.json: {exc}")
+    sources = []
+
+owner_gate_rows = read_jsonl(root / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl")
+
+stale_items = []
+near_due_items = []
+for item in items:
+    item_id = str(item.get("id", ""))
+    review_date = parse_date(item.get("review_after", ""), f"items:{item_id}")
+    if not review_date:
+        continue
+    days = (review_date - today).days
+    detail = {
+        "row_type": "stale_item" if review_date < today else "near_due_item",
+        "entity_type": "item",
+        "item_id": item_id,
+        "owner": item.get("owner", ""),
+        "status": item.get("status", ""),
+        "domain": item.get("domain", ""),
+        "path": item.get("path", ""),
+        "review_after": review_date.isoformat(),
+        "days_until_review": days,
+        "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {item_window_end.isoformat()}",
+        "suggested_action_zh": "人工复核 archive-only 边界、owner、source 和 validation_refs 是否仍有效。" if item.get("status") == "archived" else "人工复核 owner、source、validation_refs 和 status 是否仍有效。",
+    }
+    if review_date < today:
+        stale_items.append(detail)
+    elif review_date <= item_window_end:
+        near_due_items.append(detail)
+
+stale_sources = []
+near_due_sources = []
+for source in sources:
+    source_id = str(source.get("id", ""))
+    review_date = parse_date(source.get("review_after", ""), f"sources:{source_id}")
+    if not review_date:
+        continue
+    days = (review_date - today).days
+    detail = {
+        "row_type": "stale_source" if review_date < today else "near_due_source",
+        "entity_type": "source",
+        "source_id": source_id,
+        "owner": source.get("owner", ""),
+        "status": source.get("status", ""),
+        "path": source.get("path", ""),
+        "review_after": review_date.isoformat(),
+        "days_until_review": days,
+        "final_disposition": source.get("final_disposition", ""),
+        "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {source_window_end.isoformat()}",
+        "suggested_action_zh": "人工复核 source 覆盖、check/no-check、owner 和 final_disposition 是否仍有效。",
+    }
+    if review_date < today:
+        stale_sources.append(detail)
+    elif review_date <= source_window_end:
+        near_due_sources.append(detail)
+
+open_owner_gates = []
+for row in owner_gate_rows:
+    status = str(row.get("status", ""))
+    worksheet_status = str(row.get("worksheet_status", ""))
+    if status in {"resolved", "owner-approved", "closed"} or worksheet_status not in {"owner-fill-required", "open", "blocked-pending-owner-review"}:
+        continue
+    review_date = parse_date(row.get("review_after", ""), f"owner-gate:{row.get('id', row.get('worksheet_id', 'unknown'))}")
+    open_owner_gates.append(
+        {
+            "row_type": "open_owner_gate",
+            "entity_type": "owner_gate",
+            "worksheet_id": row.get("worksheet_id", row.get("id", "")),
+            "source_id": row.get("source_id", ""),
+            "source_path": row.get("source_path", ""),
+            "owner": row.get("owner_required", row.get("owner", "")),
+            "status": status,
+            "worksheet_status": worksheet_status,
+            "review_after": review_date.isoformat() if review_date else "",
+            "days_until_review": (review_date - today).days if review_date else None,
+            "suggested_action_zh": "仅提示真实 owner 人工签收；不得由 AI 代签、关闭 gate 或提升 active。",
+        }
+    )
+
+detail_rows = sorted(stale_items + near_due_items, key=lambda row: (row["review_after"], row["item_id"]))
+if args.include_sources:
+    detail_rows.extend(sorted(stale_sources + near_due_sources, key=lambda row: (row["review_after"], row["source_id"])))
+if args.include_owner_gates:
+    detail_rows.extend(sorted(open_owner_gates, key=lambda row: (row.get("review_after", ""), row.get("worksheet_id", ""))))
+
+status = "fail" if errors else "report-only"
+output = {
+    "schema_version": 1,
+    "status": status,
+    "root": str(root),
+    "read_only": True,
+    "report_only": True,
+    "today": today.isoformat(),
+    "as_of_source": today_source,
+    "item_window_days": args.window_days,
+    "item_window_end": item_window_end.isoformat(),
+    "source_window_days": args.source_window_days,
+    "source_window_end": source_window_end.isoformat(),
+    "include_sources": args.include_sources,
+    "include_owner_gates": args.include_owner_gates,
+    "counts": {
+        "items_total": len(items),
+        "stale_items": len(stale_items),
+        "near_due_items": len(near_due_items),
+        "sources_total": len(sources),
+        "stale_sources": len(stale_sources),
+        "near_due_sources": len(near_due_sources),
+        "owner_gate_open_count": len(open_owner_gates),
+        "detail_row_count": len(detail_rows),
+    },
+    "rows": detail_rows,
+    "errors": errors,
+    "limitations_zh": "review_after 报告只用于人工维护排期，不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
+    "must_not": [
+        "不得自动修改 review_after",
+        "不得把 near-due warning 当作 blocking error",
+        "不得关闭 owner gate",
+        "不得生成 owner decision",
+        "不得写 memory",
+    ],
+}
+
+if args.json:
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+else:
+    print("# Knowledge review_after Report")
+    print()
+    print(f"- status: {status}")
+    print(f"- as_of: {today.isoformat()}")
+    print(f"- item window: {args.window_days} days, until {item_window_end.isoformat()}")
+    print(f"- stale items: {len(stale_items)}")
+    print(f"- near-due items: {len(near_due_items)}")
+    print(f"- stale sources: {len(stale_sources)}")
+    print(f"- near-due sources: {len(near_due_sources)}")
+    print(f"- open owner gates: {len(open_owner_gates)}")
+    for row in detail_rows:
+        row_id = row.get("item_id") or row.get("source_id") or row.get("worksheet_id")
+        print(f"- {row.get('row_type')}: {row_id} review_after={row.get('review_after')}")
+    if errors:
+        print()
+        for error in errors:
+            print(f"ERROR {error}")
+
+sys.exit(1 if errors else 0)
+PY

@@ -357,3 +357,5 @@
 - source-check-snapshot-evidence-readability-applied: status/final gate 输出 PCR02 Level 2 source check 快照只读摘要，核心 source/decision/status 索引中文化；证据：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.jsonl`.
 - reviewing: `knowledge-hub-review-after-near-due-snapshot-20260622`
 - review-after-near-due-snapshot-applied: 30 天 review_after 预警快照覆盖 2026-07-16 到 2026-07-18 的 32 个首批复核项；仅作人工提醒，不自动改日期、不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.jsonl`.
+- reviewing: `knowledge-hub-report-only-maintenance-tools-20260622`
+- report-only-maintenance-tools-registered: 登记 `knowledge-review-after.sh` 与 `knowledge-source-check.sh` 两个 report-only 维护入口；证据：`artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.jsonl`.

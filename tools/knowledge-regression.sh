@@ -1449,9 +1449,12 @@ def test_status_text_owner_summary_commands():
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"]
         and "- owner landing audit command templates:" in result["stdout"]
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in result["stdout"]
-        and "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
+        and "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"]
+        and "- review_after near-due command: `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of " in result["stdout"]
+        and " --window-days 30 --json`" in result["stdout"]
+        and "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of " in result["stdout"],
         "status-text-owner-summary-commands",
-        "status text mode exposes owner dispatch, owner validation templates and review_after commands",
+        "status text mode exposes owner dispatch, owner validation templates, review_after and source-check report commands",
         {
             "exit_code": result["exit_code"],
             "has_owner_summary_heading": "- owner summary commands:" in result["stdout"],
@@ -1461,6 +1464,8 @@ def test_status_text_owner_summary_commands():
             "has_project_owner_landing_plan": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json" in result["stdout"],
             "has_project_owner_landing_audit": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in result["stdout"],
             "has_review_after_command": "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
+            "has_review_after_near_due_command": "- review_after near-due command: `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of " in result["stdout"],
+            "has_source_check_report_command": "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of " in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -3843,6 +3848,8 @@ def test_status_source_governance_summary():
         and pcr02_tools_recovery.get("coverage_status") == "registered-reference-tool-boundary"
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
+        and registry.get("review_after_near_due_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
+        and sources.get("source_check_report_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of {today.isoformat()} --json"
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
         and parsed.get("final_gate_command") == expected_final_gate_command,
         "status-source-governance-summary",
@@ -3864,6 +3871,8 @@ def test_status_source_governance_summary():
             "status_boundary_health": status_boundary_health,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
+            "review_after_near_due_command": registry.get("review_after_near_due_command"),
+            "source_check_report_command": sources.get("source_check_report_command"),
             "source_recovery_row_count": len(source_recovery_rows),
             "pcr02_docs_recovery": pcr02_docs_recovery,
             "pcr02_tools_recovery": pcr02_tools_recovery,
@@ -3928,6 +3937,145 @@ def test_source_check_health_contract():
             "bad_parse_error": bad_parse_error,
             "bad_source_check_health": bad_source_check_health,
             "bad_errors": bad_parsed.get("errors", [])[:5],
+        },
+    )
+
+def test_source_check_report_only_helper():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
+    check_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    check_parsed = {}
+    parse_error = ""
+    check_parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    try:
+        check_parsed = json.loads(check_result["stdout"])
+    except Exception as exc:
+        check_parse_error = str(exc)
+    source_check_health = check_parsed.get("source_check_health", {}) if isinstance(check_parsed, dict) else {}
+    rows = parsed.get("rows", []) if isinstance(parsed.get("rows"), list) else []
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "pass"
+        and parsed.get("read_only") is True
+        and parsed.get("report_only") is True
+        and parsed.get("scope") == "pcr02-level2"
+        and parsed.get("source_check_health_contract") == "static-registry-only"
+        and parsed.get("source_check_health_executed") is False
+        and parsed.get("source_body_read") is False
+        and parsed.get("owner_gate_mutation") is False
+        and parsed.get("memory_write") is False
+        and parsed.get("row_count") == 7
+        and parsed.get("executed_count") == 7
+        and parsed.get("passed_count") == 7
+        and parsed.get("failed_count") == 0
+        and parsed.get("unsupported_count") == 0
+        and parsed.get("rejected_count") == 0
+        and all(row.get("executed") is True and row.get("exit_code") == 0 for row in rows)
+        and check_result["exit_code"] == 0
+        and not check_parse_error
+        and source_check_health.get("mode") == "static-registry-only"
+        and source_check_health.get("executed") is False,
+        "source-check-report-only-helper",
+        "source check helper executes only allowlisted PCR02 Level 2 availability checks",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "status": parsed.get("status"),
+            "row_count": parsed.get("row_count"),
+            "executed_count": parsed.get("executed_count"),
+            "passed_count": parsed.get("passed_count"),
+            "failed_count": parsed.get("failed_count"),
+            "unsupported_count": parsed.get("unsupported_count"),
+            "rejected_count": parsed.get("rejected_count"),
+            "check_exit_code": check_result["exit_code"],
+            "check_parse_error": check_parse_error,
+            "source_check_health": source_check_health,
+        },
+    )
+
+def test_source_check_rejects_unsafe_runtime_command():
+    repo = copy_repo("source-check-rejects-unsafe-runtime-command")
+    sources_path = repo / "registry" / "sources.json"
+    try:
+        payload = json.loads(sources_path.read_text())
+        for source in payload.get("sources", []):
+            if source.get("id") == "pcr02-project-tools":
+                source["check"] = "rtk bash -lc 'test -d /tmp && echo unsafe'"
+                break
+        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    except Exception as exc:
+        expect(False, "source-check-rejects-unsafe-runtime-command", "source check helper rejects shell control payloads", {"setup_error": str(exc)}, repo)
+        return
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--source-id", "pcr02-project-tools", "--json", "--as-of", today.isoformat()])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    first = parsed.get("rows", [{}])[0] if parsed.get("rows") else {}
+    expect(
+        result["exit_code"] == 1
+        and not parse_error
+        and parsed.get("status") == "fail"
+        and parsed.get("row_count") == 1
+        and parsed.get("executed_count") == 0
+        and first.get("result") in {"unsupported-runtime-check", "rejected-runtime-check"}
+        and first.get("executed") is False,
+        "source-check-rejects-unsafe-runtime-command",
+        "source check helper rejects shell control payloads",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "status": parsed.get("status"),
+            "first_row": first,
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
+    )
+
+def test_review_after_near_due_json_contract():
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    counts = parsed.get("counts", {}) if isinstance(parsed.get("counts"), dict) else {}
+    rows = parsed.get("rows", []) if isinstance(parsed.get("rows"), list) else []
+    archived_rows = [row for row in rows if row.get("status") == "archived"]
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "report-only"
+        and parsed.get("read_only") is True
+        and parsed.get("report_only") is True
+        and parsed.get("today") == "2026-06-22"
+        and parsed.get("item_window_end") == "2026-07-22"
+        and counts.get("stale_items") == 0
+        and counts.get("near_due_items") == 32
+        and counts.get("stale_sources") == 0
+        and counts.get("near_due_sources") == 0
+        and counts.get("owner_gate_open_count") == 7
+        and counts.get("detail_row_count") == 32
+        and len(archived_rows) >= 1
+        and any("archive-only" in str(row.get("suggested_action_zh", "")) for row in archived_rows)
+        and "不得把 near-due warning 当作 blocking error" in parsed.get("must_not", []),
+        "review-after-near-due-json-contract",
+        "review_after helper reports 30-day near-due items without creating a blocking gate",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "status": parsed.get("status"),
+            "counts": counts,
+            "archived_row_count": len(archived_rows),
+            "stderr_sample": result["stderr"][:500],
         },
     )
 
@@ -4922,6 +5070,9 @@ def test_regression_manifest_coverage():
         "index-topic-zero-bucket-allowed",
         "status-source-governance-summary",
         "source-check-health-contract",
+        "source-check-report-only-helper",
+        "source-check-rejects-unsafe-runtime-command",
+        "review-after-near-due-json-contract",
         "automation-report-only-safety-gate",
         "source-coverage-date-filename-selection",
         "source-coverage-duplicate-source-id-warning",
@@ -5079,6 +5230,9 @@ for test_fn in [
     test_index_topic_zero_bucket_allowed,
     test_status_source_governance_summary,
     test_source_check_health_contract,
+    test_source_check_report_only_helper,
+    test_source_check_rejects_unsafe_runtime_command,
+    test_review_after_near_due_json_contract,
     test_automation_report_only_safety_gate,
     test_source_coverage_date_filename_selection,
     test_source_coverage_duplicate_source_id_warning,

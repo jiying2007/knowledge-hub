@@ -242,16 +242,18 @@ JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治�
 
 ## 常用辅助路径
 
-### 复核过期项
+### 复核过期和即将到期项
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-06-22 --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
+rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of 2026-06-22 --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
-先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` / `registry.review_after_command`，以及 `sources.stale_review_after_count` / `sources.review_after_command`。过期项不等于工具失败，但必须由 owner 或 source registry 维护人复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing` 或 source 现有 final disposition，不得自动改 `active`、关闭 owner gate 或提升标准。
+先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` / `registry.review_after_command` / `registry.review_after_near_due_command`，以及 `sources.stale_review_after_count` / `sources.review_after_command` / `sources.source_check_report_command`。`knowledge-review-after.sh` 只生成过期和 30 天内到期的人工维护报告；`knowledge-source-check.sh` 只对 PCR02 Level 2 allowlist 做 report-only 路径存在性检查。过期项和 near-due 项都不等于工具失败，但必须由 owner 或 source registry 维护人复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing` 或 source 现有 final disposition，不得自动改 `active`、关闭 owner gate 或提升标准。
 
 ## 离线人工维护
 

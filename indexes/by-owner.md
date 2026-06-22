@@ -181,6 +181,7 @@
 - `knowledge-hub-final-proof-summary-readability-hardening-20260622`
 - `knowledge-hub-source-check-snapshot-evidence-readability-20260622`
 - `knowledge-hub-review-after-near-due-snapshot-20260622`
+- `knowledge-hub-report-only-maintenance-tools-20260622`
 
 ## pcr02-registry-owner
 

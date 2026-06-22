@@ -185,3 +185,4 @@
 - Knowledge Hub final proof summary and readability hardening: `artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.md`
 - Knowledge Hub source check snapshot evidence and readability hardening: `artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`
 - Knowledge Hub review_after near-due snapshot: `artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.md`
+- Knowledge Hub report-only maintenance tools: `artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.md`

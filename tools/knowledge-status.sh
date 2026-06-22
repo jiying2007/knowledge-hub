@@ -792,6 +792,8 @@ else:
     final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
+review_after_near_due_command = f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
+source_check_report_command = f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of {today.isoformat()} --json"
 source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health", {}), dict) else {}
 source_check_execution_snapshot = build_source_check_snapshot_summary()
 source_stale_review_after_ids = set(source_check_health.get("stale_review_after_ids", []) or [])
@@ -1047,6 +1049,7 @@ result = {
         "stale_review_after_count": len(stale_items),
         "stale_review_after_sample": stale_items[:10],
         "review_after_command": review_after_command,
+        "review_after_near_due_command": review_after_near_due_command,
     },
     "sources": {
         "registered_count": len(sources),
@@ -1059,6 +1062,7 @@ result = {
         "stale_review_after_count": len(stale_sources),
         "stale_review_after_sample": stale_sources[:10],
         "review_after_command": source_review_after_command,
+        "source_check_report_command": source_check_report_command,
         "boundary_health": check_payload.get("boundary_health", {}),
     },
     "migrations": {
@@ -1136,6 +1140,7 @@ for key, value in result["registry"]["by_status"].items():
     print(f"- status `{key}`: {value}")
 print(f"- stale review_after: {len(stale_items)}")
 print(f"- review_after command: `{review_after_command}`")
+print(f"- review_after near-due command: `{review_after_near_due_command}`")
 if stale_items:
     for item in stale_items[:10]:
         print(f"  - `{item['id']}` status={item['status']} review_after={item['review_after']} owner={item['owner']}")
@@ -1144,6 +1149,7 @@ print("## Sources")
 print()
 print(f"- stale source review_after: {len(stale_sources)}")
 print(f"- source review_after command: `{source_review_after_command}`")
+print(f"- source check report command: `{source_check_report_command}`")
 if stale_sources:
     for source in stale_sources[:10]:
         print(
