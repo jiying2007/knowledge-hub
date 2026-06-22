@@ -796,6 +796,17 @@ if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
 strict_blockers = []
+owner_blocker_source = {
+    "status_source": "knowledge-status --strict",
+    "strict_blocker_ids": ["owner-gates-open"] if open_owner_gate_count else [],
+    "owner_gate_open_count_field": "owner_gates.open_count",
+    "owner_ready_package_coverage_field": "owner_gates.owner_ready_package_coverage",
+    "active_exposure_count_field": "owner_gates.active_exposure_count",
+    "open_count": open_owner_gate_count,
+    "owner_ready_package_coverage": owner_ready_package_coverage,
+    "active_exposure_count": active_exposure_count,
+    "notes_zh": "owner gate 数量、owner-ready 覆盖和 active exposure 均来自本 status 输出的 owner_gates；本结构只解释 blocker 来源，不生成 owner decision，不关闭 gate。",
+}
 if errors:
     strict_blockers.append({
         "id": "status-dashboard-errors",
@@ -855,6 +866,7 @@ if open_owner_gate_count:
         "severity": "owner-review",
         "count": open_owner_gate_count,
         "summary_zh": "仍有 owner decision worksheet 未签收；这是语义门禁，不是工具失败。",
+        "owner_blocker_source": owner_blocker_source,
         "commands": owner_commands,
         "command_templates": owner_command_templates,
     })
@@ -868,6 +880,7 @@ result = {
     "status": status,
     "today": today.isoformat(),
     "as_of_source": today_source,
+    "owner_blocker_source": owner_blocker_source,
     "knowledge_check": {
         "exit_code": knowledge_check["exit_code"],
         "status": check_payload.get("status", "<missing>"),

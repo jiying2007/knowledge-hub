@@ -341,3 +341,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - source-review-template-entry-hardening-applied: source review_after 过期作为 warning/status surface 暴露，README/tools 四层低复杂度入口和模板字段填写矩阵已补齐；documented by `artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
 - owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读 `suggested_owner_packet`，owner landing worksheet 文件动态收集，final gate 暴露 source coverage selection，并用非 owner blocker 负向回归证明终态分类边界；documented by `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-gate-evidence-recovery-20260622`
+- final-gate-evidence-recovery-applied: `knowledge-final-gate.sh --json` 输出命令级 `evidence_index` 和 owner-blocker provenance，README/tools/indexes 补终态失败恢复路径与 source coverage latest 恢复规则；documented by `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.

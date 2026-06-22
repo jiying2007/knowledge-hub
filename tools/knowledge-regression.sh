@@ -1193,6 +1193,7 @@ def test_status_next_owner_gate():
     landing_audit_command_templates = parsed.get("owner_gates", {}).get("landing_audit_command_templates", [])
     final_gate_command = parsed.get("final_gate_command", "")
     next_actions = parsed.get("next_actions_zh", [])
+    owner_blocker_source = strict_parsed.get("owner_blocker_source", {})
     strict_blockers = strict_parsed.get("strict_blockers", [])
     owner_blocker = next(
         (blocker for blocker in strict_blockers if blocker.get("id") == "owner-gates-open"),
@@ -1204,6 +1205,12 @@ def test_status_next_owner_gate():
         and parsed.get("status") == "needs-owner-review"
         and strict_parsed.get("strict") is True
         and strict_parsed.get("status") == "needs-owner-review"
+        and owner_blocker_source.get("status_source") == "knowledge-status --strict"
+        and "owner-gates-open" in owner_blocker_source.get("strict_blocker_ids", [])
+        and owner_blocker_source.get("owner_gate_open_count_field") == "owner_gates.open_count"
+        and owner_blocker_source.get("open_count") == 7
+        and owner_blocker_source.get("owner_ready_package_coverage") == "7/7"
+        and owner_blocker_source.get("active_exposure_count") == 0
         and owner_gates.get("owner_ready_package_count") == 7
         and owner_gates.get("owner_ready_missing_count") == 0
         and owner_gates.get("owner_ready_invalid_count") == 0
@@ -1295,7 +1302,8 @@ def test_status_next_owner_gate():
         and any("--owner project-owner" in str(command) and "--landing-audit" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--validate-forms" in str(command) and "owner-decisions.jsonl" in str(command) for command in owner_blocker.get("command_templates", []))
         and any("--landing-plan" in str(command) for command in owner_blocker.get("command_templates", []))
-        and any("--landing-audit" in str(command) for command in owner_blocker.get("command_templates", [])),
+        and any("--landing-audit" in str(command) for command in owner_blocker.get("command_templates", []))
+        and owner_blocker.get("owner_blocker_source", {}).get("open_count") == 7,
         "status-next-owner-gate",
         "status dashboard separates executable owner commands from validation and landing templates",
         {
@@ -1333,6 +1341,7 @@ def test_status_next_owner_gate():
             "focus_validate_forms_command_template": next_open.get("focus_validate_forms_command_template", ""),
             "focus_landing_plan_command_template": next_open.get("focus_landing_plan_command_template", ""),
             "focus_landing_audit_command_template": next_open.get("focus_landing_audit_command_template", ""),
+            "owner_blocker_source": owner_blocker_source,
             "strict_blockers": strict_blockers,
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
@@ -1437,6 +1446,8 @@ def test_final_gate_owner_review_blocker():
     project_owner_route = project_owner_dispatch.get("owner_route", {})
     next_open_recovery = owner_recovery.get("next_open", {})
     final_state_audit = parsed.get("final_state_audit", {})
+    evidence_index = parsed.get("evidence_index", [])
+    evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
     level1 = final_state_audit.get("level1_pcr02_docs", {})
     level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
     level3 = final_state_audit.get("level3_registered_sources", {})
@@ -1463,6 +1474,9 @@ def test_final_gate_owner_review_blocker():
         and automatic_governance.get("owner_ready_package_coverage") == "7/7"
         and automatic_governance.get("active_exposure_count") == 0
         and automatic_governance.get("no_owner_decision_generated") is True
+        and automatic_governance.get("owner_blocker_source", {}).get("status_source") == "knowledge-status --strict"
+        and "owner-gates-open" in automatic_governance.get("owner_blocker_source", {}).get("strict_blocker_ids", [])
+        and automatic_governance.get("owner_blocker_source", {}).get("owner_gate_open_count_field") == "owner_gates.open_count"
         and owner_recovery.get("open_count") == 7
         and owner_recovery.get("owner_ready_package_coverage") == "7/7"
         and owner_recovery.get("active_exposure_count") == 0
@@ -1517,6 +1531,14 @@ def test_final_gate_owner_review_blocker():
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
         and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
+        and len(evidence_index) == 5
+        and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
+        and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
+        and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
+        and evidence_by_artifact.get("knowledge-status", {}).get("status") == "owner-review"
+        and evidence_by_artifact.get("knowledge-status", {}).get("evidence_path") == "runtime:checks.knowledge_status_strict"
+        and evidence_by_artifact.get("owner-blocker-provenance", {}).get("status") == "owner-review"
+        and evidence_by_artifact.get("owner-blocker-provenance", {}).get("evidence_path") == "runtime:automatic_governance.owner_blocker_source"
         and owner_blocker.get("count") == 7
         and len(gap_map) == 1
         and owner_gap.get("gap_type") == "owner-review"
@@ -1534,6 +1556,7 @@ def test_final_gate_owner_review_blocker():
             "final_state_audit": final_state_audit,
             "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
+            "evidence_index": evidence_index,
             "blockers": blockers,
             "gap_map": gap_map,
             "stdout_sample": result["stdout"][:1200],
@@ -1548,6 +1571,8 @@ def test_final_gate_skip_regression_blocker():
     except Exception:
         pass
     checks = parsed.get("checks", {})
+    evidence_index = parsed.get("evidence_index", [])
+    evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
     blocker = next(
         (
             item
@@ -1570,6 +1595,7 @@ def test_final_gate_skip_regression_blocker():
         and parsed.get("automatic_governance", {}).get("status") == "needs-fix"
         and parsed.get("automatic_governance", {}).get("core_checks_pass") is False
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is True
+        and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "skipped"
         and blocker.get("severity") == "blocker"
         and gap.get("gap_type") == "regression"
         and gap.get("codex_auto_can_complete") is True,
@@ -1580,6 +1606,7 @@ def test_final_gate_skip_regression_blocker():
             "final_status": parsed.get("final_status"),
             "automatic_governance": parsed.get("automatic_governance", {}),
             "checks": checks,
+            "evidence_index": evidence_index,
             "blockers": parsed.get("blockers", []),
             "gap_map": parsed.get("gap_map", []),
             "stdout_sample": result["stdout"][:1200],

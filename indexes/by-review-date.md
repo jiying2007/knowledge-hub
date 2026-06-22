@@ -197,3 +197,4 @@
 - 2026-09-21: `knowledge-hub-owner-automation-template-hardening-20260621`
 - 2026-09-22: `knowledge-hub-source-review-template-entry-hardening-20260622`
 - 2026-09-22: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
+- 2026-09-22: `knowledge-hub-final-gate-evidence-recovery-20260622`

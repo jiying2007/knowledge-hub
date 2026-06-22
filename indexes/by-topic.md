@@ -177,3 +177,4 @@
 - Knowledge Hub owner automation and template hardening: `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.md`
 - Knowledge Hub source review, template and entry hardening: `artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.md`
 - Knowledge Hub owner handoff and final gate hardening: `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.md`
+- Knowledge Hub final gate evidence recovery: `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.md`

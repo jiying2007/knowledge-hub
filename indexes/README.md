@@ -22,6 +22,7 @@
 - `by-status.md` 必须使用 canonical 行，例如 `- reviewing: <id>`。
 - `by-owner.md` 按 registry 维护 owner 聚合，不等同于 owner decision 的最终签收人；owner decision 分派先看 `knowledge-owner-gates.sh --summary` 的 `owner_route`，再看 `registry/owner-routing.json`。
 - `by-source.md` 用于从 source id 恢复 migration、reference、artifact-ref、owner gate、source identity 和 coverage 证据；不要在索引里重复维护 source registry 字段，人工恢复 owner、review_after、final_disposition、check/no_check_reason 时运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source`。
+- 恢复 source coverage 时先运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json`，查看 `source_coverage_selection.selected`；只有 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 形式的 dated closeout 能成为 latest，非日期 `latest` 文件只作为 ignored metadata，不得当作当前状态。
 - `by-decision.md` 同时记录真实决策、迁移决策和 owner-gated 的 `no owner decision generated` 状态；不得把 owner-ready package 写成已签收决策。
 - `by-project.md` 应能从 project id 找到 current、archive、decisions、validation 和 manifests。
 - `by-topic.md` 只做主题导航，不复制正文；跨会话、跨项目和跨 source 的恢复优先写清主题入口，不把临时会话 handoff 当 active fact。

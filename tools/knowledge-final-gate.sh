@@ -174,6 +174,18 @@ def blocker_gap_type(blocker):
         return str(blocker.get("gap_type", "final-gate"))
     return "final-gate"
 
+def command_evidence_row(command, exit_code, status, result_summary_zh, evidence_path, layer, related_artifact, parse_error=""):
+    return {
+        "command": command,
+        "exit_code": exit_code,
+        "status": status,
+        "result_summary_zh": result_summary_zh,
+        "evidence_path": evidence_path,
+        "layer": layer,
+        "related_artifact": related_artifact,
+        "parse_error": parse_error,
+    }
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
@@ -357,6 +369,12 @@ core_checks_pass = (
     and knowledge_regression["payload"].get("skipped_for_self_test") is not True
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+strict_blocker_ids = [
+    str(blocker.get("id", ""))
+    for blocker in strict_payload.get("strict_blockers", [])
+    if isinstance(blocker, dict) and blocker.get("id")
+]
+status_owner_blocker_source = strict_payload.get("owner_blocker_source", {})
 check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})
 check_source_coverage_selection = knowledge_check["payload"].get("source_coverage_selection", {})
 check_source_check_health = knowledge_check["payload"].get("source_check_health", {})
@@ -599,6 +617,97 @@ final_state_audit = {
     },
 }
 
+evidence_index = [
+    command_evidence_row(
+        knowledge_check["command"],
+        knowledge_check["exit_code"],
+        "pass" if not knowledge_check["parse_error"] and knowledge_check["exit_code"] == 0 else "fail",
+        (
+            f"knowledge-check 通过；errors={len(knowledge_check['payload'].get('errors', []))}，warnings={len(knowledge_check['payload'].get('warnings', []))}。"
+            if not knowledge_check["parse_error"] and knowledge_check["exit_code"] == 0
+            else "knowledge-check 未能提供可采信的通过证据；请查看 blockers 和 diagnostics。"
+        ),
+        "runtime:checks.knowledge_check",
+        "final-gate",
+        "knowledge-check",
+        knowledge_check["parse_error"],
+    ),
+    command_evidence_row(
+        knowledge_regression["command"],
+        knowledge_regression["exit_code"],
+        (
+            "skipped"
+            if knowledge_regression["payload"].get("skipped_for_self_test") is True
+            else "pass"
+            if not knowledge_regression["parse_error"] and knowledge_regression["exit_code"] == 0
+            else "fail"
+        ),
+        (
+            "knowledge-regression 通过；result_count="
+            f"{knowledge_regression['payload'].get('result_count', 0)}。"
+            if not knowledge_regression["parse_error"] and knowledge_regression["exit_code"] == 0 and knowledge_regression["payload"].get("skipped_for_self_test") is not True
+            else "knowledge-regression 被 self-test skip 短路，不能作为终态通过证据。"
+            if knowledge_regression["payload"].get("skipped_for_self_test") is True
+            else "knowledge-regression 未能提供可采信的通过证据。"
+        ),
+        "runtime:checks.knowledge_regression",
+        "final-gate",
+        "knowledge-regression",
+        knowledge_regression["parse_error"],
+    ),
+    command_evidence_row(
+        git_diff_check["command"],
+        git_diff_check["exit_code"],
+        "pass" if git_diff_check["exit_code"] == 0 else "fail",
+        (
+            "git diff --check 通过；当前 diff 无空白错误。"
+            if git_diff_check["exit_code"] == 0
+            else "git diff --check 未通过；当前 diff 存在空白或补丁格式问题。"
+        ),
+        "runtime:checks.git_diff_check",
+        "final-gate",
+        "git-diff-check",
+    ),
+    command_evidence_row(
+        strict_status["command"],
+        strict_status["exit_code"],
+        (
+            "owner-review"
+            if only_owner_review_blockers
+            else "pass"
+            if not strict_status["parse_error"] and strict_status["exit_code"] == 0
+            else "fail"
+        ),
+        (
+            "knowledge-status --strict 仅剩 owner-gates-open；这是人工 owner decision blocker，不是工具失败。"
+            if only_owner_review_blockers
+            else "knowledge-status --strict 通过。"
+            if not strict_status["parse_error"] and strict_status["exit_code"] == 0
+            else "knowledge-status --strict 存在非 owner blocker 或 JSON 解析问题。"
+        ),
+        "runtime:checks.knowledge_status_strict",
+        "final-gate",
+        "knowledge-status",
+        strict_status["parse_error"],
+    ),
+]
+if status_owner_blocker_source:
+    evidence_index.append(
+        command_evidence_row(
+            "runtime:automatic_governance.owner_blocker_source",
+            0,
+            "owner-review" if only_owner_review_blockers else "not-applicable",
+            (
+                "owner blocker provenance 已由 knowledge-status --strict 提供；owner gate 数量、owner-ready 覆盖和 active exposure 可追溯到 owner_gates 字段。"
+                if only_owner_review_blockers
+                else "当前终态不是纯 owner-review blocker；owner blocker provenance 仅作为辅助上下文。"
+            ),
+            "runtime:automatic_governance.owner_blocker_source",
+            "final-gate",
+            "owner-blocker-provenance",
+        )
+    )
+
 result = {
     "schema_version": 1,
     "root": str(root),
@@ -616,6 +725,14 @@ result = {
         "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
         "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
         "no_owner_decision_generated": only_owner_review_blockers,
+        "owner_blocker_source": status_owner_blocker_source or {
+            "status_source": "knowledge-status --strict",
+            "strict_blocker_ids": strict_blocker_ids,
+            "owner_gate_open_count_field": "owner_gates.open_count",
+            "owner_ready_package_coverage_field": "owner_gates.owner_ready_package_coverage",
+            "active_exposure_count_field": "owner_gates.active_exposure_count",
+            "notes_zh": "owner gate 数量、owner-ready 覆盖和 active exposure 均来自 strict status 的 owner_gates；final gate 不自行关闭或生成 owner decision。",
+        },
         "summary_zh": (
             "Codex 自动治理已闭环；剩余事项是人工 owner decision，不能由 Codex 代签。"
             if automatic_governance_status == "complete-except-owner-review"
@@ -657,6 +774,7 @@ result = {
             "status": knowledge_regression["payload"].get("status", "<missing>"),
             "result_count": knowledge_regression["payload"].get("result_count", 0),
             "skipped_for_self_test": bool(knowledge_regression["payload"].get("skipped_for_self_test", False)),
+            "inner_final_gate_regression_stub": bool(knowledge_regression["payload"].get("inner_final_gate_regression_stub", False)),
             "failed_ids": [
                 item.get("id", "")
                 for item in knowledge_regression["payload"].get("results", [])
@@ -678,6 +796,7 @@ result = {
             "parse_error": strict_status["parse_error"],
         },
     },
+    "evidence_index": evidence_index,
     "blockers": blockers,
     "gap_map": gap_map,
     "next_actions_zh": strict_payload.get("next_actions_zh", []) if strict_payload else [],
@@ -702,6 +821,11 @@ print(f"- level3_registered_sources: {final_state_audit['level3_registered_sourc
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")
+print()
+print("## Evidence Index")
+print()
+for row in evidence_index:
+    print(f"- `{row['command']}` -> {row['status']} exit={row['exit_code']}: {row['result_summary_zh']}")
 if blockers:
     print()
     print("## Blockers")
