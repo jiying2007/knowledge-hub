@@ -10,6 +10,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -1530,6 +1531,13 @@ def test_final_gate_owner_review_blocker():
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
     project_owner_route = project_owner_dispatch.get("owner_route", {})
     next_open_recovery = owner_recovery.get("next_open", {})
+    owner_recovery_queue = owner_recovery.get("next_open_queue", [])
+    first_recovery_queue_row = owner_recovery_queue[0] if owner_recovery_queue else {}
+    second_recovery_queue_row = owner_recovery_queue[1] if len(owner_recovery_queue) > 1 else {}
+    recovery_queue_executable_commands = []
+    for row in owner_recovery_queue:
+        for field in ["focus_command", "forms_jsonl_command", "evidence_readiness_command"]:
+            recovery_queue_executable_commands.append(str(row.get(field, "")))
     final_state_audit = parsed.get("final_state_audit", {})
     evidence_index = parsed.get("evidence_index", [])
     evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
@@ -1573,6 +1581,16 @@ def test_final_gate_owner_review_blocker():
         and next_open_recovery.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and next_open_recovery.get("owner_route", {}).get("routing_owner") == "pcr02-registry-owner"
         and next_open_recovery.get("owner_route", {}).get("no_owner_decision_generated") is True
+        and owner_recovery.get("next_open_queue_count") == 7
+        and owner_recovery.get("next_open_queue_selection_order") == "review_after, worksheet_id"
+        and len(owner_recovery_queue) == 7
+        and first_recovery_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and first_recovery_queue_row.get("source_path") == "AGENTS.md"
+        and first_recovery_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and second_recovery_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-002"
+        and second_recovery_queue_row.get("source_path") == "standards/diag-command-metadata-standard.md"
+        and second_recovery_queue_row.get("owner") == "pcr02-diag-owner-or-team-core"
+        and not any("owner-decisions.jsonl" in command for command in recovery_queue_executable_commands)
         and level1.get("status") == "complete-except-owner-review"
         and level1.get("source_id") == "pcr02-project-docs"
         and level1.get("expected_owner_gate_count") == 7
@@ -3234,6 +3252,110 @@ def test_index_readme_maintenance_coverage():
         },
     )
 
+def test_final_proof_artifact_discoverability():
+    required_ids = [
+        "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
+        "knowledge-hub-final-gate-evidence-recovery-20260622",
+        "knowledge-hub-recovery-search-manual-hardening-20260622",
+        "knowledge-hub-final-proof-maintenance-hardening-20260622",
+        "knowledge-hub-owner-queue-command-hardening-20260622",
+    ]
+    errors = []
+    items_by_id = {}
+    try:
+        for line in (root / "registry" / "items.jsonl").read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            items_by_id[str(row.get("id", ""))] = row
+    except Exception as exc:
+        errors.append(f"registry/items.jsonl read/parse failed: {exc}")
+    migration_text = ""
+    try:
+        migration_text = (root / "registry" / "migrations.jsonl").read_text()
+    except Exception as exc:
+        errors.append(f"registry/migrations.jsonl read failed: {exc}")
+    index_texts = {}
+    for relative in [
+        "indexes/by-owner.md",
+        "indexes/by-status.md",
+        "indexes/by-review-date.md",
+        "indexes/by-topic.md",
+    ]:
+        try:
+            index_texts[relative] = (root / relative).read_text()
+        except Exception as exc:
+            index_texts[relative] = ""
+            errors.append(f"{relative} read failed: {exc}")
+    missing_registry = []
+    missing_md = []
+    missing_jsonl = []
+    missing_migration_md = []
+    missing_migration_jsonl = []
+    missing_indexes = {}
+    missing_documented_by_paths = []
+    missing_topic_paths = []
+    for item_id in required_ids:
+        row = items_by_id.get(item_id)
+        if not row:
+            missing_registry.append(item_id)
+            continue
+        path_text = str(row.get("path", ""))
+        md_path = root / path_text
+        jsonl_path = md_path.with_suffix(".jsonl")
+        if not path_text or not md_path.is_file():
+            missing_md.append({"id": item_id, "path": path_text})
+        if not jsonl_path.is_file():
+            missing_jsonl.append({"id": item_id, "path": str(jsonl_path.relative_to(root))})
+        md_relative = str(md_path.relative_to(root)) if path_text else ""
+        jsonl_relative = str(jsonl_path.relative_to(root)) if path_text else ""
+        if md_relative and md_relative not in migration_text:
+            missing_migration_md.append({"id": item_id, "path": md_relative})
+        if jsonl_relative and jsonl_relative not in migration_text:
+            missing_migration_jsonl.append({"id": item_id, "path": jsonl_relative})
+        per_index_missing = []
+        for relative, text in index_texts.items():
+            if item_id in text or (md_relative and md_relative in text) or (jsonl_relative and jsonl_relative in text):
+                continue
+            per_index_missing.append(relative)
+        if per_index_missing:
+            missing_indexes[item_id] = per_index_missing
+    by_status = index_texts.get("indexes/by-status.md", "")
+    for match in re.finditer(r"documented by `([^`]+)`", by_status):
+        candidate = match.group(1)
+        if not (root / candidate).exists():
+            missing_documented_by_paths.append(candidate)
+    by_topic = index_texts.get("indexes/by-topic.md", "")
+    for match in re.finditer(r"`([^`]+\.md)`", by_topic):
+        candidate = match.group(1)
+        if candidate.startswith("artifacts/manifests/") and not (root / candidate).exists():
+            missing_topic_paths.append(candidate)
+    expect(
+        not errors
+        and not missing_registry
+        and not missing_md
+        and not missing_jsonl
+        and not missing_migration_md
+        and not missing_migration_jsonl
+        and not missing_indexes
+        and not missing_documented_by_paths
+        and not missing_topic_paths,
+        "final-proof-artifact-discoverability",
+        "final proof artifacts are discoverable from registry, migration and core indexes",
+        {
+            "required_ids": required_ids,
+            "errors": errors,
+            "missing_registry": missing_registry,
+            "missing_md": missing_md,
+            "missing_jsonl": missing_jsonl,
+            "missing_migration_md": missing_migration_md,
+            "missing_migration_jsonl": missing_migration_jsonl,
+            "missing_indexes": missing_indexes,
+            "missing_documented_by_paths": sorted(set(missing_documented_by_paths)),
+            "missing_topic_paths": sorted(set(missing_topic_paths)),
+        },
+    )
+
 def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
@@ -4728,6 +4850,7 @@ def test_regression_manifest_coverage():
         "manual-entry-template-selection",
         "templates-required-sections",
         "index-readme-maintenance-coverage",
+        "final-proof-artifact-discoverability",
         "index-plan-extended-sections",
         "manifest-latest-filename-date-only",
         "manifest-jsonl-profile-gate",
@@ -4884,6 +5007,7 @@ for test_fn in [
     test_manual_entry_template_selection,
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
+    test_final_proof_artifact_discoverability,
     test_index_plan_extended_sections,
     test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,

@@ -349,3 +349,5 @@
 - final-proof-maintenance-hardening-applied: final gate Level 1 owner gate 来源字段、status source recovery rows、regression helper 表格结构自检和 governance/template 验证命令稳定入口已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-queue-command-hardening-20260622`
 - owner-queue-command-hardening-applied: status dashboard 的 owner_gates.next_open_queue[]、owner 队列命令边界和治理文档稳定命令示例已压实；documented by `artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
+- final-recovery-discoverability-hardening-applied: final gate owner_recovery.next_open_queue[]、终态 proof 主制品可发现性、tools README 中文说明和旧 Evidence Index 表头已压实；documented by `artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.jsonl`.

@@ -31,17 +31,17 @@
 
 ## Evidence Index
 
-| Command | Exit | Result | Notes |
-| --- | ---: | --- | --- |
-| `rtk bash -n tools/knowledge-owner-gates.sh` | 0 | 通过 | shell/python wrapper 语法检查通过 |
-| `rtk bash -n tools/knowledge-status.sh` | 0 | 通过 | status wrapper 语法检查通过 |
-| `rtk bash -n tools/knowledge-check.sh` | 0 | 通过 | check wrapper 语法检查通过 |
-| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | 0 | 通过 | `project-owner` route 为 `pcr02-registry-owner`，`no_owner_decision_generated=true` |
-| `rtk bash tools/knowledge-status.sh --json` | 0 | 通过 | `owner_gates.owner_dispatch[].owner_route` 和 `next_open.owner_route` 已透传 |
-| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过 | `status=pass`，0 errors，0 warnings，owner-routing 自检通过 |
-| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过 | `result_count=64`，无失败，owner route 回归断言通过 |
-| `rtk git diff --check` | 0 | 通过 | 当前 diff 无空白或补丁格式问题 |
-| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 预期负结果 | `final_status=needs-owner-review`，`automatic_governance=complete-except-owner-review`，唯一 blocker/gap 为 `owner-gates-open`，owner open count 仍为 7 |
+| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
+|---|---:|---|---|---|---|
+| `rtk bash -n tools/knowledge-owner-gates.sh` | 0 | 通过；owner gate shell/python wrapper 语法检查通过。 | `tools/knowledge-owner-gates.sh` | Tool | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash -n tools/knowledge-status.sh` | 0 | 通过；status wrapper 语法检查通过。 | `tools/knowledge-status.sh` | Tool | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash -n tools/knowledge-check.sh` | 0 | 通过；check wrapper 语法检查通过。 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | 0 | 通过；`project-owner` route 为 `pcr02-registry-owner`，`no_owner_decision_generated=true`。 | `tools/knowledge-owner-gates.sh` | Owner Gate | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash tools/knowledge-status.sh --json` | 0 | 通过；`owner_gates.owner_dispatch[].owner_route` 和 `next_open.owner_route` 已透传。 | `tools/knowledge-status.sh` | Status | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；`status=pass`，0 errors，0 warnings，owner-routing 自检通过。 | `tools/knowledge-check.sh` | Gate | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；`result_count=64`，无失败，owner route 回归断言通过。 | `tools/knowledge-regression.sh` | Regression | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk git diff --check` | 0 | 通过；当前 diff 无空白或补丁格式问题。 | `git diff --check` | Git | `knowledge-hub-owner-routing-recovery-20260621` |
+| `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 预期负结果；`final_status=needs-owner-review`，`automatic_governance=complete-except-owner-review`，唯一 blocker/gap 为 `owner-gates-open`，owner open count 仍为 7。 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-owner-routing-recovery-20260621` |
 
 ## 下一步
 
