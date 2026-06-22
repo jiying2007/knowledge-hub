@@ -1737,17 +1737,17 @@ def test_final_gate_owner_review_blocker():
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and proof_artifacts.get("status") == "pass"
-        and proof_artifacts.get("expected_count") == 5
-        and proof_artifacts.get("registered_count") == 5
-        and proof_artifacts.get("paired_count") == 5
-        and proof_artifacts.get("migration_covered_count") == 5
-        and proof_artifacts.get("indexed_count") == 5
+        and proof_artifacts.get("expected_count") == 10
+        and proof_artifacts.get("registered_count") == 10
+        and proof_artifacts.get("paired_count") == 10
+        and proof_artifacts.get("migration_covered_count") == 10
+        and proof_artifacts.get("indexed_count") == 10
         and proof_artifacts.get("missing_registry") == []
         and proof_artifacts.get("missing_md") == []
         and proof_artifacts.get("missing_jsonl") == []
         and proof_artifacts.get("missing_migration") == []
         and proof_artifacts.get("missing_indexes") == {}
-        and len(proof_rows) == 5
+        and len(proof_rows) == 10
         and all(row.get("status") == "pass" for row in proof_rows)
         and source_check_snapshot.get("status") == "pass"
         and source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
@@ -2355,16 +2355,30 @@ def test_owner_form_target_decision_candidate_gate():
     except Exception:
         pass
     errors = parsed.get("form_validation", {}).get("errors", [])
+    diagnostics = parsed.get("form_validation", {}).get("diagnostics", [])
+    target_diagnostic = next(
+        (
+            row for row in diagnostics
+            if row.get("code") == "target-decision-not-candidate"
+            and row.get("field") == "target_decision"
+        ),
+        {},
+    )
     expect(
         result["exit_code"] == 1
         and parsed.get("form_validation", {}).get("status") == "fail"
-        and any("target_decision" in error and "target candidates" in error for error in errors),
+        and any("target_decision" in error and "target candidates" in error for error in errors)
+        and target_diagnostic.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and target_diagnostic.get("actual") == "domains/embedded/standards/invalid-owner-target.md"
+        and target_diagnostic.get("expected") == form.get("target_candidates", [])
+        and "重新填写" in target_diagnostic.get("action_zh", ""),
         "owner-form-target-decision-candidate-gate",
         "owner form rejects target decisions outside worksheet candidates",
         {
             "exit_code": result["exit_code"],
             "validation_status": parsed.get("form_validation", {}).get("status"),
             "errors": errors,
+            "diagnostics": diagnostics,
             "target_candidates": form.get("target_candidates", []),
             "stdout_sample": result["stdout"][:1000],
         },
@@ -3541,6 +3555,11 @@ def test_final_proof_artifact_discoverability():
         "knowledge-hub-recovery-search-manual-hardening-20260622",
         "knowledge-hub-final-proof-maintenance-hardening-20260622",
         "knowledge-hub-owner-queue-command-hardening-20260622",
+        "knowledge-hub-final-recovery-discoverability-hardening-20260622",
+        "knowledge-hub-final-proof-summary-readability-hardening-20260622",
+        "knowledge-hub-source-check-snapshot-evidence-readability-20260622",
+        "knowledge-hub-report-only-maintenance-tools-20260622",
+        "knowledge-hub-owner-inbox-final-gate-audit-20260622",
     ]
     errors = []
     items_by_id = {}
@@ -3682,6 +3701,11 @@ def test_index_plan_extended_sections():
         (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-manifest-profile-index-plan-20260621"),
         {},
     )
+    current_runtime_recovery_profile = next(
+        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-final-proof-runtime-recovery-hardening-20260622"),
+        {},
+    )
+    manifest_profile_health = manifest_summary.get("profile_health", {})
     latest_manifest_ids = [row.get("id") for row in latest_manifests]
 
     expect(
@@ -3709,6 +3733,8 @@ def test_index_plan_extended_sections():
         and manifest_summary.get("markdown_count", 0) >= 100
         and manifest_summary.get("latest_strategy") == "filename-date-only"
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
+        and manifest_profile_health.get("pass", 0) >= 1
+        and manifest_profile_health.get("legacy-missing-profile", 0) >= 1
         and manifest_summary.get("unpaired_count") == 6
         and manifest_summary.get("unpaired_expected_count") == 6
         and manifest_summary.get("unpaired_needs_review_count") == 0
@@ -3730,6 +3756,16 @@ def test_index_plan_extended_sections():
         and current_manifest_profile.get("paired") is True
         and current_manifest_profile.get("row_count") == 1
         and current_manifest_profile.get("evidence_count", 0) >= 1
+        and current_manifest_profile.get("derived_evidence_count") == current_manifest_profile.get("evidence_count")
+        and current_manifest_profile.get("derived_summary_zh") == current_manifest_profile.get("summary_zh")
+        and current_manifest_profile.get("summary_source") in {"summary_zh", "notes_zh", "notes"}
+        and current_manifest_profile.get("evidence_source") in {"evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"}
+        and current_manifest_profile.get("profile_health") in {"pass", "missing-boundary", "legacy-missing-profile"}
+        and current_runtime_recovery_profile.get("paired") is True
+        and current_runtime_recovery_profile.get("derived_summary_zh") == current_runtime_recovery_profile.get("summary_zh")
+        and current_runtime_recovery_profile.get("summary_source") == "summary_zh"
+        and current_runtime_recovery_profile.get("evidence_source") == "evidence_refs"
+        and current_runtime_recovery_profile.get("profile_health") == "pass"
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
@@ -3757,12 +3793,14 @@ def test_index_plan_extended_sections():
             "topic_keys_sample": sorted(topic_index.keys())[:10],
             "registry_decision_count": len(registry_decisions),
             "manifest_summary": manifest_summary,
+            "manifest_profile_health": manifest_profile_health,
             "manifest_unpaired": manifest_unpaired,
             "manifest_text_stdout_sample": manifest_text_result["stdout"][:1200],
             "latest_manifest_count": len(latest_manifests),
             "latest_manifest_ids": latest_manifest_ids[:20],
             "current_owner_route_manifest": current_owner_route_manifest,
             "current_manifest_profile": current_manifest_profile,
+            "current_runtime_recovery_profile": current_runtime_recovery_profile,
             "owner_worksheet_count": len(owner_worksheets),
             "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),
@@ -4271,6 +4309,87 @@ def test_source_check_rejects_unsafe_runtime_command():
             "parse_error": parse_error,
             "status": parsed.get("status"),
             "first_row": first,
+            "stderr_sample": result["stderr"][:500],
+        },
+        repo,
+    )
+
+def test_final_gate_source_check_runtime_failed_blocker():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-source-check-runtime-failed-blocker",
+            "final gate blocks failed source-check runtime evidence",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
+    repo = copy_repo("final-gate-source-check-runtime-failed-blocker")
+    sources_path = repo / "registry" / "sources.json"
+    missing_suffix = "__kh_missing_source_check_fixture__"
+    try:
+        payload = json.loads(sources_path.read_text())
+        updated = False
+        for source in payload.get("sources", []):
+            if source.get("id") == "pcr02-project-tools":
+                source_path = str(source.get("path", "")).rstrip("/")
+                source["check"] = f"rtk bash -lc 'test -d {source_path}/{missing_suffix}'"
+                updated = True
+                break
+        if not updated:
+            raise RuntimeError("pcr02-project-tools source not found")
+        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    except Exception as exc:
+        expect(False, "final-gate-source-check-runtime-failed-blocker", "final gate blocks failed source-check runtime evidence", {"setup_error": str(exc)}, repo)
+        return
+
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "-lc",
+            "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-22",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    blockers = parsed.get("blockers", [])
+    blocker = next((row for row in blockers if row.get("id") == "source-check-runtime-failed"), {})
+    source_check_runtime = parsed.get("source_check_runtime", {})
+    checks_source_check_runtime = parsed.get("checks", {}).get("source_check_runtime", {})
+    gap_map = parsed.get("gap_map", [])
+    source_gap = next((row for row in gap_map if row.get("gap_id") == "source-check-runtime-failed"), {})
+    expect(
+        result["exit_code"] == 1
+        and not parse_error
+        and parsed.get("final_status") == "needs-fix"
+        and blocker.get("severity") == "blocker"
+        and blocker.get("gap_type") == "source-coverage"
+        and source_gap.get("gap_type") == "source-coverage"
+        and source_check_runtime.get("status") == "fail"
+        and source_check_runtime.get("runtime_execution") is True
+        and source_check_runtime.get("read_only") is True
+        and source_check_runtime.get("report_only") is True
+        and source_check_runtime.get("source_body_read") is False
+        and source_check_runtime.get("owner_gate_mutation") is False
+        and source_check_runtime.get("memory_write") is False
+        and source_check_runtime.get("failed_count") == 1
+        and checks_source_check_runtime.get("status") == "fail",
+        "final-gate-source-check-runtime-failed-blocker",
+        "final gate blocks failed source-check runtime evidence",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "final_status": parsed.get("final_status"),
+            "blocker": blocker,
+            "source_gap": source_gap,
+            "source_check_runtime": source_check_runtime,
+            "checks_source_check_runtime": checks_source_check_runtime,
+            "stdout_sample": result["stdout"][:1200],
             "stderr_sample": result["stderr"][:500],
         },
         repo,
@@ -5355,6 +5474,7 @@ def test_regression_manifest_coverage():
         "source-check-health-contract",
         "source-check-report-only-helper",
         "source-check-rejects-unsafe-runtime-command",
+        "final-gate-source-check-runtime-failed-blocker",
         "review-after-near-due-json-contract",
         "automation-report-only-safety-gate",
         "source-coverage-date-filename-selection",
@@ -5519,6 +5639,7 @@ for test_fn in [
     test_source_check_health_contract,
     test_source_check_report_only_helper,
     test_source_check_rejects_unsafe_runtime_command,
+    test_final_gate_source_check_runtime_failed_blocker,
     test_review_after_near_due_json_contract,
     test_automation_report_only_safety_gate,
     test_source_coverage_date_filename_selection,

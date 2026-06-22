@@ -982,15 +982,60 @@ def validate_date(value, label, errors_out):
 
 def validate_forms_file(path, rows):
     form_errors = []
+    diagnostics = []
     warnings = []
     forms = []
+    def add_form_error(code, message, worksheet_id="", field="", actual="", expected="", action_zh="", line_no=None):
+        form_errors.append(message)
+        diagnostics.append(
+            {
+                "code": code,
+                "severity": "error",
+                "worksheet_id": worksheet_id,
+                "field": field,
+                "actual": actual,
+                "expected": expected,
+                "line_no": line_no,
+                "message_zh": message,
+                "action_zh": action_zh or "请按 owner worksheet 重新填写该字段后再运行 validate-forms。",
+            }
+        )
+    def date_error_message(prefix, field, value):
+        return f"{prefix}: {field} invalid date: {value}"
+    def add_invalid_date(prefix, worksheet_id, field, value, line_no):
+        add_form_error(
+            "invalid-date",
+            date_error_message(prefix, field, value),
+            worksheet_id=worksheet_id,
+            field=field,
+            actual=str(value),
+            expected="YYYY-MM-DD",
+            line_no=line_no,
+            action_zh="请使用 YYYY-MM-DD 格式填写日期字段。",
+        )
+    def is_valid_date(value):
+        try:
+            parts = str(value).split("-")
+            if len(parts) != 3 or any(not part.isdigit() for part in parts):
+                raise ValueError("not YYYY-MM-DD")
+            year, month, day = (int(part) for part in parts)
+            dt.date(year, month, day)
+            return True
+        except Exception:
+            return False
     if not path.exists():
-        form_errors.append(f"{path}: missing owner decision forms file")
+        add_form_error(
+            "forms-file-missing",
+            f"{path}: missing owner decision forms file",
+            field="path",
+            expected="existing-jsonl-file",
+            action_zh="请先由人工 owner 提供 owner decision JSONL 文件。",
+        )
     else:
         try:
             lines = path.read_text().splitlines()
         except Exception as exc:
-            form_errors.append(f"{path}: cannot read owner decision forms file: {exc}")
+            add_form_error("forms-file-unreadable", f"{path}: cannot read owner decision forms file: {exc}", field="path", actual=str(path), expected="readable-jsonl-file")
             lines = []
         for line_no, line in enumerate(lines, 1):
             if not line.strip():
@@ -998,47 +1043,59 @@ def validate_forms_file(path, rows):
             try:
                 forms.append(json.loads(line))
             except Exception as exc:
-                form_errors.append(f"{path}:{line_no}: invalid jsonl: {exc}")
+                add_form_error("invalid-jsonl", f"{path}:{line_no}: invalid jsonl: {exc}", field="jsonl", actual=line[:200], expected="valid-json-object", line_no=line_no, action_zh="请修复该行 JSON 语法后再运行 validate-forms。")
     if not forms:
-        form_errors.append(f"{path}: no owner decision forms found")
+        add_form_error("forms-empty", f"{path}: no owner decision forms found", field="jsonl", expected="at-least-one-owner-decision-form")
     open_by_id = {row["id"]: row for row in rows if row["status"] == "open"}
     seen = set()
     for index, form in enumerate(forms, 1):
         prefix = f"{path}:{index}"
         worksheet_id = str(form.get("worksheet_id", ""))
         if not worksheet_id:
-            form_errors.append(f"{prefix}: missing worksheet_id")
+            add_form_error("missing-worksheet-id", f"{prefix}: missing worksheet_id", field="worksheet_id", expected="open-owner-gate-worksheet-id", line_no=index)
             continue
         if worksheet_id in seen:
-            form_errors.append(f"{prefix}: duplicate worksheet_id {worksheet_id}")
+            add_form_error("duplicate-worksheet-id", f"{prefix}: duplicate worksheet_id {worksheet_id}", worksheet_id=worksheet_id, field="worksheet_id", actual=worksheet_id, expected="unique-owner-gate-worksheet-id", line_no=index)
             continue
         seen.add(worksheet_id)
         row = open_by_id.get(worksheet_id)
         if not row:
-            form_errors.append(f"{prefix}: worksheet_id {worksheet_id} does not match an open owner gate row")
+            add_form_error("worksheet-not-open", f"{prefix}: worksheet_id {worksheet_id} does not match an open owner gate row", worksheet_id=worksheet_id, field="worksheet_id", actual=worksheet_id, expected="open-owner-gate-row", line_no=index)
             continue
         if form.get("source_id") != row["source_id"]:
-            form_errors.append(f"{prefix}: source_id mismatch for {worksheet_id}")
+            add_form_error("source-id-mismatch", f"{prefix}: source_id mismatch for {worksheet_id}", worksheet_id=worksheet_id, field="source_id", actual=str(form.get("source_id", "")), expected=row["source_id"], line_no=index)
         if form.get("source_path") != row["source_path"]:
-            form_errors.append(f"{prefix}: source_path mismatch for {worksheet_id}")
+            add_form_error("source-path-mismatch", f"{prefix}: source_path mismatch for {worksheet_id}", worksheet_id=worksheet_id, field="source_path", actual=str(form.get("source_path", "")), expected=row["source_path"], line_no=index)
         owner_decision = form.get("owner_decision", "")
         if not is_filled(owner_decision):
-            form_errors.append(f"{prefix}: missing owner_decision")
+            add_form_error("missing-owner-decision", f"{prefix}: missing owner_decision", worksheet_id=worksheet_id, field="owner_decision", expected="one-of-decision_options", line_no=index)
         elif row["decision_options"] and owner_decision not in row["decision_options"]:
-            form_errors.append(
-                f"{prefix}: owner_decision {owner_decision!r} is not in allowed decisions {row['decision_options']}"
+            add_form_error(
+                "owner-decision-not-allowed",
+                f"{prefix}: owner_decision {owner_decision!r} is not in allowed decisions {row['decision_options']}",
+                worksheet_id=worksheet_id,
+                field="owner_decision",
+                actual=str(owner_decision),
+                expected=row["decision_options"],
+                line_no=index,
             )
         target_decision = form.get("target_decision", "")
         if is_filled(target_decision) and row.get("target_candidates") and target_decision not in row["target_candidates"]:
-            form_errors.append(
-                f"{prefix}: target_decision {target_decision!r} is not in target candidates {row['target_candidates']}"
+            add_form_error(
+                "target-decision-not-candidate",
+                f"{prefix}: target_decision {target_decision!r} is not in target candidates {row['target_candidates']}",
+                worksheet_id=worksheet_id,
+                field="target_decision",
+                actual=str(target_decision),
+                expected=row["target_candidates"],
+                line_no=index,
             )
         for field in row["required_owner_fields"]:
             if not is_filled(form.get(field)):
-                form_errors.append(f"{prefix}: missing required field {field}")
+                add_form_error("missing-required-owner-field", f"{prefix}: missing required field {field}", worksheet_id=worksheet_id, field=field, expected="filled-owner-field", line_no=index)
         for field in ["target_decision", "reviewed_by", "reviewed_at", "review_after", "source_status", "evidence_refs", "status_reason"]:
             if not is_filled(form.get(field)):
-                form_errors.append(f"{prefix}: missing required review field {field}")
+                add_form_error("missing-required-review-field", f"{prefix}: missing required review field {field}", worksheet_id=worksheet_id, field=field, expected="filled-review-field", line_no=index)
         owner_route = row.get("owner_route", {})
         routing_status = str(owner_route.get("routing_status", ""))
         routing_owner = str(owner_route.get("routing_owner", ""))
@@ -1048,28 +1105,37 @@ def validate_forms_file(path, rows):
             and routing_owner
             and reviewed_by == routing_owner
         ):
-            form_errors.append(
-                f"{prefix}: reviewed_by must be a real owner, not routing_owner {routing_owner!r} for {worksheet_id}"
+            add_form_error(
+                "reviewed-by-routing-owner",
+                f"{prefix}: reviewed_by must be a real owner, not routing_owner {routing_owner!r} for {worksheet_id}",
+                worksheet_id=worksheet_id,
+                field="reviewed_by",
+                actual=reviewed_by,
+                expected="real-human-owner",
+                line_no=index,
+                action_zh="reviewed_by 必须由真实人工 owner 填写，不能使用路由占位 owner。",
             )
         if is_filled(form.get("reviewed_at")):
-            validate_date(form.get("reviewed_at"), f"{prefix}: reviewed_at", form_errors)
+            if not is_valid_date(form.get("reviewed_at")):
+                add_invalid_date(prefix, worksheet_id, "reviewed_at", form.get("reviewed_at"), index)
         if is_filled(form.get("review_after")):
-            validate_date(form.get("review_after"), f"{prefix}: review_after", form_errors)
+            if not is_valid_date(form.get("review_after")):
+                add_invalid_date(prefix, worksheet_id, "review_after", form.get("review_after"), index)
         identity = row.get("observed_source_identity", {})
         identity_status = str(identity.get("identity_status", "unavailable"))
         if identity_status != "match":
-            form_errors.append(f"{prefix}: observed source identity is {identity_status}, expected match before owner landing")
+            add_form_error("source-identity-not-match", f"{prefix}: observed source identity is {identity_status}, expected match before owner landing", worksheet_id=worksheet_id, field="observed_source_identity", actual=identity_status, expected="match", line_no=index)
         else:
             observed_sha256 = str(identity.get("observed_sha256", ""))
             observed_size = str(identity.get("observed_size", ""))
             if observed_sha256 and str(form.get("source_sha256", "")) != observed_sha256:
-                form_errors.append(f"{prefix}: source_sha256 does not match observed source identity for {worksheet_id}")
+                add_form_error("source-sha256-mismatch", f"{prefix}: source_sha256 does not match observed source identity for {worksheet_id}", worksheet_id=worksheet_id, field="source_sha256", actual=str(form.get("source_sha256", "")), expected=observed_sha256, line_no=index)
             if observed_size and str(form.get("source_size", "")) != observed_size:
-                form_errors.append(f"{prefix}: source_size does not match observed source identity for {worksheet_id}")
+                add_form_error("source-size-mismatch", f"{prefix}: source_size does not match observed source identity for {worksheet_id}", worksheet_id=worksheet_id, field="source_size", actual=str(form.get("source_size", "")), expected=observed_size, line_no=index)
         if "must_not" in form and form.get("must_not") != row["must_not"]:
-            form_errors.append(f"{prefix}: must_not differs from worksheet guardrails")
+            add_form_error("must-not-tampered", f"{prefix}: must_not differs from worksheet guardrails", worksheet_id=worksheet_id, field="must_not", actual=form.get("must_not", ""), expected=row["must_not"], line_no=index, action_zh="请恢复 worksheet 原始 guardrails；owner 表单不得修改 must_not。")
         if "allowed_owner_decisions" in form and form.get("allowed_owner_decisions") != row["decision_options"]:
-            form_errors.append(f"{prefix}: allowed_owner_decisions differs from worksheet decision options")
+            add_form_error("allowed-decisions-tampered", f"{prefix}: allowed_owner_decisions differs from worksheet decision options", worksheet_id=worksheet_id, field="allowed_owner_decisions", actual=form.get("allowed_owner_decisions", ""), expected=row["decision_options"], line_no=index, action_zh="请恢复 worksheet 原始 decision options；owner 表单不得修改 allowed_owner_decisions。")
     status = "pass" if not form_errors else "fail"
     return {
         "status": status,
@@ -1081,6 +1147,7 @@ def validate_forms_file(path, rows):
         "warning_count": len(warnings),
         "errors": form_errors,
         "warnings": warnings,
+        "diagnostics": diagnostics,
     }
 
 def owner_ready_landing_errors(form_validation, rows):

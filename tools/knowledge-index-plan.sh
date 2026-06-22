@@ -302,6 +302,36 @@ manifest_md_by_stem = {path.stem: path for path in manifest_md_paths}
 manifest_jsonl_stems = {path.stem for path in manifest_jsonl_paths}
 manifest_md_stems = {path.stem for path in manifest_md_paths}
 manifest_rows = []
+manifest_profile_health_counts = {}
+
+def first_present_field(row, fields):
+    for field in fields:
+        value = row.get(field)
+        if isinstance(value, list):
+            if value:
+                return field, value
+        elif value:
+            return field, value
+    return "missing", ""
+
+def manifest_profile_health(manifest_path, first, date_value, summary_source, evidence_source, evidence_count):
+    path_name = manifest_path.name
+    in_current_profile = path_name.startswith("knowledge-hub-") and date_value >= "2026-06-21"
+    if not in_current_profile:
+        mode = str(first.get("mode", "") or "")
+        classification = str(first.get("classification", "") or "")
+        review_status = str(first.get("review_status", "") or "")
+        if "reference" in mode or "reference" in classification or "reference" in review_status:
+            return "reference-only"
+        return "legacy-missing-profile"
+    if summary_source == "missing":
+        return "missing-summary"
+    if evidence_source == "missing" or evidence_count == 0:
+        return "missing-evidence"
+    if not isinstance(first.get("boundaries"), dict):
+        return "missing-boundary"
+    return "pass"
+
 def classify_unpaired_manifest(stem, has_jsonl, has_md):
     reasons = []
     status = "needs_review"
@@ -343,18 +373,24 @@ for manifest_path in manifest_jsonl_paths:
         filename_date = "-".join(filename_date_match.groups())
     row_date_value = first.get("checked_at") or first.get("created_at") or first.get("updated_at") or first.get("review_after") or ""
     date_value = filename_date
-    evidence_value = (
-        first.get("evidence")
-        or first.get("evidence_refs")
-        or first.get("validation_refs")
-        or first.get("verification_commands")
-        or first.get("source_refs")
-        or []
+    summary_source, summary_value = first_present_field(first, ["summary_zh", "notes_zh", "notes"])
+    evidence_source, evidence_value = first_present_field(
+        first,
+        ["evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"],
     )
     if not isinstance(evidence_value, list):
         evidence_count = 1 if evidence_value else 0
     else:
         evidence_count = len(evidence_value)
+    profile_health = manifest_profile_health(
+        manifest_path,
+        first,
+        date_value,
+        summary_source,
+        evidence_source,
+        evidence_count,
+    )
+    manifest_profile_health_counts[profile_health] = manifest_profile_health_counts.get(profile_health, 0) + 1
     manifest_rows.append(
         {
             "id": first.get("id", stem),
@@ -371,8 +407,13 @@ for manifest_path in manifest_jsonl_paths:
             "classification": first.get("classification", ""),
             "mode": first.get("mode", ""),
             "decision": first.get("decision", ""),
-            "summary_zh": first.get("summary_zh") or first.get("notes_zh") or first.get("notes", ""),
+            "summary_zh": summary_value,
+            "derived_summary_zh": summary_value,
+            "summary_source": summary_source,
             "evidence_count": evidence_count,
+            "derived_evidence_count": evidence_count,
+            "evidence_source": evidence_source,
+            "profile_health": profile_health,
         }
     )
 unpaired_stems = sorted(manifest_jsonl_stems ^ manifest_md_stems)
@@ -392,6 +433,8 @@ by_manifest = {
         "unpaired_needs_review_count": len(unpaired_needs_review),
         "latest_strategy": "filename-date-only",
         "latest_strategy_zh": "latest 只按 manifest 文件名中的 YYYYMMDD 排序；JSONL row 内 checked_at/created_at/updated_at/review_after 仅作为 row_date 辅助字段，不参与 latest 排序。",
+        "profile_health": dict(sorted(manifest_profile_health_counts.items())),
+        "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；legacy/reference 类旧制品不作为硬失败；missing-* 仅提示人工补强方向。",
     },
     "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
     "unpaired": unpaired_classified,

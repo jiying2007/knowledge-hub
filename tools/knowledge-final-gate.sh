@@ -159,6 +159,9 @@ def diagnostic_gap_type(category_ids):
     return "final-gate"
 
 def blocker_gap_type(blocker):
+    explicit_gap_type = str(blocker.get("gap_type", "") or "")
+    if explicit_gap_type:
+        return explicit_gap_type
     blocker_id = str(blocker.get("id", "") or "")
     if blocker_id == "owner-gates-open":
         return "owner-review"
@@ -192,6 +195,11 @@ FINAL_PROOF_ARTIFACT_IDS = [
     "knowledge-hub-recovery-search-manual-hardening-20260622",
     "knowledge-hub-final-proof-maintenance-hardening-20260622",
     "knowledge-hub-owner-queue-command-hardening-20260622",
+    "knowledge-hub-final-recovery-discoverability-hardening-20260622",
+    "knowledge-hub-final-proof-summary-readability-hardening-20260622",
+    "knowledge-hub-source-check-snapshot-evidence-readability-20260622",
+    "knowledge-hub-report-only-maintenance-tools-20260622",
+    "knowledge-hub-owner-inbox-final-gate-audit-20260622",
 ]
 FINAL_PROOF_INDEX_PATHS = [
     "indexes/by-owner.md",

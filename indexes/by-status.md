@@ -365,3 +365,5 @@
 - manual-source-kind-contract-applied: 人工新增条目的 source 绑定和 registry/search kind 契约已压实，并补齐 93 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.jsonl`.
 - reviewing: `knowledge-hub-offline-manifest-profile-hardening-20260622`
 - offline-manifest-profile-hardening-applied: 离线人工维护 fallback、source 默认复核周期和 2026-06-21 及之后 manifest profile gate 已压实，并补齐 94 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
+- final-proof-runtime-recovery-hardening-applied: 终态 proof 主制品契约扩展到 10 项，source-check runtime 失败 blocker、manifest 恢复视图和 owner 表单 diagnostics 已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.jsonl`.
