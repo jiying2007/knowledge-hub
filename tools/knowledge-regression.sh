@@ -1366,7 +1366,8 @@ def test_status_next_owner_gate():
         and len(next_open_queue) == 7
         and first_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and first_queue_row.get("source_path") == "AGENTS.md"
-        and first_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and first_queue_row.get("owner_ready_package_status") == "covered"
+        and first_queue_row.get("owner_ready_package_count") == 1
         and "pcr02-agents-owner-ready-package-20260620" in first_queue_row.get("owner_ready_package_ids", [])
         and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first_queue_row.get("focus_command", "")
         and "--worksheet-id pcr02-owner-decision-worksheet-001 --forms-jsonl" in first_queue_row.get("forms_jsonl_command", "")
@@ -1375,7 +1376,8 @@ def test_status_next_owner_gate():
         and second_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-002"
         and second_queue_row.get("source_path") == "standards/diag-command-metadata-standard.md"
         and second_queue_row.get("owner") == "pcr02-diag-owner-or-team-core"
-        and second_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and second_queue_row.get("owner_ready_package_status") == "covered"
+        and second_queue_row.get("owner_ready_package_count") == 1
         and not any("owner-decisions.jsonl" in command for command in queue_executable_commands)
         and any("owner-decisions.jsonl" in command and "--landing-plan" in command for command in queue_template_commands)
         and any("owner-decisions.jsonl" in command and "--landing-audit" in command for command in queue_template_commands)
@@ -1675,7 +1677,8 @@ def test_final_gate_owner_review_blocker():
         and len(owner_recovery_queue) == 7
         and first_recovery_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and first_recovery_queue_row.get("source_path") == "AGENTS.md"
-        and first_recovery_queue_row.get("owner_ready_package_status") == "ready-package-present"
+        and first_recovery_queue_row.get("owner_ready_package_status") == "covered"
+        and first_recovery_queue_row.get("owner_ready_package_count") == 1
         and second_recovery_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-002"
         and second_recovery_queue_row.get("source_path") == "standards/diag-command-metadata-standard.md"
         and second_recovery_queue_row.get("owner") == "pcr02-diag-owner-or-team-core"
@@ -1740,17 +1743,20 @@ def test_final_gate_owner_review_blocker():
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and proof_artifacts.get("status") == "pass"
-        and proof_artifacts.get("expected_count") == 10
-        and proof_artifacts.get("registered_count") == 10
-        and proof_artifacts.get("paired_count") == 10
-        and proof_artifacts.get("migration_covered_count") == 10
-        and proof_artifacts.get("indexed_count") == 10
+        and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-20260622"
+        and proof_artifacts.get("expected_count") == proof_artifacts.get("dynamic_count")
+        and proof_artifacts.get("dynamic_count", 0) >= 17
+        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in proof_artifacts.get("expected_ids", [])
+        and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
+        and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
+        and proof_artifacts.get("migration_covered_count") == proof_artifacts.get("expected_count")
+        and proof_artifacts.get("indexed_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("missing_registry") == []
         and proof_artifacts.get("missing_md") == []
         and proof_artifacts.get("missing_jsonl") == []
         and proof_artifacts.get("missing_migration") == []
         and proof_artifacts.get("missing_indexes") == {}
-        and len(proof_rows) == 10
+        and len(proof_rows) == proof_artifacts.get("expected_count")
         and all(row.get("status") == "pass" for row in proof_rows)
         and source_check_snapshot.get("status") == "pass"
         and source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
@@ -3731,7 +3737,7 @@ def test_index_readme_maintenance_coverage():
     )
 
 def test_final_proof_artifact_discoverability():
-    required_ids = [
+    seed_ids = [
         "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
         "knowledge-hub-final-gate-evidence-recovery-20260622",
         "knowledge-hub-recovery-search-manual-hardening-20260622",
@@ -3778,6 +3784,27 @@ def test_final_proof_artifact_discoverability():
     missing_indexes = {}
     missing_documented_by_paths = []
     missing_topic_paths = []
+    dynamic_ids = []
+    for item_id, row in items_by_id.items():
+        tags = row.get("tags", [])
+        if not isinstance(tags, list):
+            tags = []
+        path_text = str(row.get("path", ""))
+        review_status = str(row.get("review_status", ""))
+        if (
+            row.get("domain") == "governance"
+            and row.get("kind") == "audit"
+            and (row.get("created_at") == "2026-06-22" or row.get("updated_at") == "2026-06-22")
+            and "governance" in tags
+            and path_text.startswith("artifacts/manifests/knowledge-hub-")
+            and path_text.endswith("-20260622.md")
+            and (review_status.endswith("-applied") or review_status.endswith("-registered"))
+        ):
+            dynamic_ids.append(item_id)
+    required_ids = []
+    for item_id in seed_ids + dynamic_ids:
+        if item_id not in required_ids:
+            required_ids.append(item_id)
     for item_id in required_ids:
         row = items_by_id.get(item_id)
         if not row:
@@ -3815,6 +3842,10 @@ def test_final_proof_artifact_discoverability():
             missing_topic_paths.append(candidate)
     expect(
         not errors
+        and len(dynamic_ids) >= 17
+        and len(required_ids) == len(dynamic_ids)
+        and set(seed_ids) <= set(required_ids)
+        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in required_ids
         and not missing_registry
         and not missing_md
         and not missing_jsonl
@@ -3827,6 +3858,10 @@ def test_final_proof_artifact_discoverability():
         "final proof artifacts are discoverable from registry, migration and core indexes",
         {
             "required_ids": required_ids,
+            "seed_ids": seed_ids,
+            "dynamic_ids": dynamic_ids,
+            "required_count": len(required_ids),
+            "dynamic_count": len(dynamic_ids),
             "errors": errors,
             "missing_registry": missing_registry,
             "missing_md": missing_md,
@@ -4583,20 +4618,33 @@ def test_final_gate_source_check_runtime_failed_blocker():
 
 def test_review_after_near_due_json_contract():
     result = run_cmd(root, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30"])
+    owner_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30", "--include-owner-gates"])
     parsed = {}
+    owner_parsed = {}
     parse_error = ""
+    owner_parse_error = ""
     try:
         parsed = json.loads(result["stdout"])
     except Exception as exc:
         parse_error = str(exc)
+    try:
+        owner_parsed = json.loads(owner_result["stdout"])
+    except Exception as exc:
+        owner_parse_error = str(exc)
     counts = parsed.get("counts", {}) if isinstance(parsed.get("counts"), dict) else {}
     groups = parsed.get("groups", {}) if isinstance(parsed.get("groups"), dict) else {}
     rows = parsed.get("rows", []) if isinstance(parsed.get("rows"), list) else []
+    owner_counts = owner_parsed.get("counts", {}) if isinstance(owner_parsed.get("counts"), dict) else {}
+    owner_rows = owner_parsed.get("rows", []) if isinstance(owner_parsed.get("rows"), list) else []
+    owner_gate_rows = [row for row in owner_rows if row.get("row_type") == "open_owner_gate"]
     archived_rows = [row for row in rows if row.get("status") == "archived"]
     expect(
         result["exit_code"] == 0
+        and owner_result["exit_code"] == 0
         and not parse_error
+        and not owner_parse_error
         and parsed.get("status") == "report-only"
+        and owner_parsed.get("status") == "report-only"
         and parsed.get("read_only") is True
         and parsed.get("report_only") is True
         and parsed.get("today") == "2026-06-22"
@@ -4608,6 +4656,10 @@ def test_review_after_near_due_json_contract():
         and counts.get("owner_gate_open_count") == 7
         and counts.get("detail_row_count") == 32
         and counts.get("missing_source_id_count") == 9
+        and owner_counts.get("owner_gate_open_count") == 7
+        and owner_counts.get("detail_row_count") == 39
+        and len(owner_gate_rows) == 7
+        and all(row.get("worksheet_file", "").endswith("owner-decision-worksheets-20260618.jsonl") for row in owner_gate_rows)
         and groups.get("grouping_contract_version") == 1
         and groups.get("by_owner", {}).get("team-core", {}).get("count") == 23
         and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 9
@@ -4624,12 +4676,17 @@ def test_review_after_near_due_json_contract():
         "review_after helper reports 30-day near-due items without creating a blocking gate",
         {
             "exit_code": result["exit_code"],
+            "owner_exit_code": owner_result["exit_code"],
             "parse_error": parse_error,
+            "owner_parse_error": owner_parse_error,
             "status": parsed.get("status"),
             "counts": counts,
+            "owner_counts": owner_counts,
             "groups": groups,
             "archived_row_count": len(archived_rows),
+            "owner_gate_row_count": len(owner_gate_rows),
             "stderr_sample": result["stderr"][:500],
+            "owner_stderr_sample": owner_result["stderr"][:500],
         },
     )
 

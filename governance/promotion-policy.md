@@ -1,13 +1,13 @@
-# Promotion Policy
+# 提升策略（Promotion Policy）
 
-## Promotion Levels
+## 提升层级（Promotion Levels）
 
 ```text
 personal -> project-current -> project-archive -> embedded-runbook -> embedded-standard
 codex-session -> codex-workflow -> skill/workflow/AGENTS candidate
 ```
 
-## Requirements
+## 必填条件（Requirements）
 
 - 明确复用场景。
 - 有来源路径。
@@ -17,7 +17,7 @@ codex-session -> codex-workflow -> skill/workflow/AGENTS candidate
 - 已通过 secret scan。
 - 只提炼稳定结论，不复制整篇历史材料。
 
-## Rejection Reasons
+## 拒绝原因（Rejection Reasons）
 
 - 只有一次性上下文。
 - 未验证。

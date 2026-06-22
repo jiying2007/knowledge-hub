@@ -1,6 +1,6 @@
-# Automation Policy
+# 自动化策略（Automation Policy）
 
-## Default
+## 默认策略（Default）
 
 所有 Knowledge Hub 自动化默认：
 
@@ -9,7 +9,7 @@
 - `sandbox=read-only`
 - `approval_policy=manual`
 
-## Allowed
+## 允许事项（Allowed）
 
 - 只读扫描。
 - 生成报告。
@@ -20,7 +20,7 @@
 - 检查疑似 secret。
 - 记录 automation run summary。
 
-## Forbidden
+## 禁止事项（Forbidden）
 
 - 删除文件。
 - 写入 `~/.codex/memories`。
@@ -31,7 +31,7 @@
 - 发送消息或提交表单。
 - 使用 `knowledge-* --apply`。
 
-## Human Approval Required
+## 需要人工审批（Human Approval Required）
 
 - `knowledge-capture --apply`
 - `knowledge-promote --apply`

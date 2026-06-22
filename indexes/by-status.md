@@ -371,3 +371,5 @@
 - owner-target-manifest-recovery-hardening-applied: owner 表单新增保守 decision/target 成对兼容门禁，manifest 文本恢复视图显示 profile_health、summary_source 和 evidence_source；证据：`artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-review-after-topic-owner-hardening-20260622`
 - review-after-topic-owner-hardening-applied: review_after 分组报告、by-topic 优先恢复速查、owner form target_candidates 防篡改和合法终止组合回归已压实；证据：`artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-owner-status-review-proof-hardening-20260622`
+- owner-status-review-proof-hardening-applied: owner queue 覆盖状态、review_after worksheet 恢复和 final proof 动态发现已压实；证据：`artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.jsonl`.

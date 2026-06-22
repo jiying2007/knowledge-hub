@@ -366,6 +366,17 @@ def make_next_open_queue_entry(row):
         worksheet_id,
     ]
     registry_items = row.get("registry_items", []) if isinstance(row.get("registry_items", []), list) else []
+    owner_ready_packages = row.get("owner_ready_packages", []) if isinstance(row.get("owner_ready_packages", []), list) else []
+    owner_ready_package_status = str(row.get("owner_ready_package_status", "")) or (
+        "covered" if owner_ready_packages or registry_items else "missing"
+    )
+    owner_ready_package_ids = [
+        str(item.get("id", ""))
+        for item in owner_ready_packages
+        if isinstance(item, dict) and item.get("id")
+    ]
+    if not owner_ready_package_ids:
+        owner_ready_package_ids = [str(item.get("id", "")) for item in registry_items if isinstance(item, dict)]
     return {
         "worksheet_id": worksheet_id,
         "source_id": source_id,
@@ -374,8 +385,9 @@ def make_next_open_queue_entry(row):
         "owner_route": row.get("owner_route", {}),
         "review_after": str(row.get("review_after", "")),
         "owner_question_zh": str(row.get("owner_question_zh", "")),
-        "owner_ready_package_status": "ready-package-present" if registry_items else "missing-owner-ready-package",
-        "owner_ready_package_ids": [str(item.get("id", "")) for item in registry_items if isinstance(item, dict)],
+        "owner_ready_package_status": owner_ready_package_status,
+        "owner_ready_package_ids": owner_ready_package_ids,
+        "owner_ready_package_count": len(owner_ready_packages) if owner_ready_packages else len(registry_items),
         "selection_order": "review_after, worksheet_id",
         "focus_command": shell_command(base + ["--checklist", "--forms"]),
         "forms_jsonl_command": shell_command(base + ["--forms-jsonl"]),

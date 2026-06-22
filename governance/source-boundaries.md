@@ -1,8 +1,8 @@
-# Source Boundaries
+# Source 边界（Source Boundaries）
 
 本文件是 Knowledge Hub source 边界的人读入口，用于快速判断“能不能迁移、能不能引用、能不能提升、需要谁复核”。字段权威以 `registry/sources.json` 为准，检索导航以 `indexes/by-source.md` 为准；本文件不重复维护 owner、review_after、check 等完整 registry 字段。
 
-## 当前 Registered Sources
+## 当前已登记 Sources（Registered Sources）
 
 截至 2026-06-21，Knowledge Hub 控制面登记 13 个 source。登记 source 只代表治理覆盖、检索入口和后续分类路径已经建立，不代表正文已迁移、owner 已签收或内容已成为 active fact。
 
@@ -29,7 +29,7 @@
 
 PCR02 project-specific 内容默认留在 `domains/projects/pcr02/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
 
-## Boundary Decisions
+## 边界决策（Boundary Decisions）
 
 - team knowledge 不接收项目 lifecycle 目录正文。
 - engineering archive 不保存当前项目活文档正文。
@@ -40,7 +40,7 @@ PCR02 project-specific 内容默认留在 `domains/projects/pcr02/` 或 source/a
 - source 正文只维护一份；Knowledge Hub 使用迁移副本、ref、artifact-ref、registry 和 manifest 管理。
 - source check 的默认门禁是 registry 静态契约审计；外部 source check 只允许显式 report-only 快照，不自动执行、不自动修复。
 
-## Must Not
+## 禁止事项（Must Not）
 
 - 不修改 PCR02 源项目任何文件。
 - 不复制脚本、源码、日志、patch、bin、PDF、zip/tgz 或 `.env` 正文到文本知识层。

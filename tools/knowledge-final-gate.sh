@@ -189,7 +189,7 @@ def command_evidence_row(command, exit_code, status, result_summary_zh, evidence
         "parse_error": parse_error,
     }
 
-FINAL_PROOF_ARTIFACT_IDS = [
+FINAL_PROOF_SEED_ARTIFACT_IDS = [
     "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
     "knowledge-hub-final-gate-evidence-recovery-20260622",
     "knowledge-hub-recovery-search-manual-hardening-20260622",
@@ -201,6 +201,8 @@ FINAL_PROOF_ARTIFACT_IDS = [
     "knowledge-hub-report-only-maintenance-tools-20260622",
     "knowledge-hub-owner-inbox-final-gate-audit-20260622",
 ]
+FINAL_PROOF_SELECTOR_DATE = "2026-06-22"
+FINAL_PROOF_SELECTOR_TAG = "governance"
 FINAL_PROOF_INDEX_PATHS = [
     "indexes/by-owner.md",
     "indexes/by-status.md",
@@ -227,12 +229,48 @@ SOURCE_CHECK_SNAPSHOT_INDEX_PATHS = [
     "indexes/by-decision.md",
 ]
 
+def final_proof_dynamic_candidate(row):
+    tags = row.get("tags", [])
+    if not isinstance(tags, list):
+        tags = []
+    path_text = str(row.get("path", "") or "")
+    review_status = str(row.get("review_status", "") or "")
+    return (
+        str(row.get("domain", "") or "") == "governance"
+        and str(row.get("kind", "") or "") == "audit"
+        and (
+            str(row.get("created_at", "") or "") == FINAL_PROOF_SELECTOR_DATE
+            or str(row.get("updated_at", "") or "") == FINAL_PROOF_SELECTOR_DATE
+        )
+        and FINAL_PROOF_SELECTOR_TAG in tags
+        and path_text.startswith("artifacts/manifests/knowledge-hub-")
+        and path_text.endswith(f"-{FINAL_PROOF_SELECTOR_DATE.replace('-', '')}.md")
+        and (review_status.endswith("-applied") or review_status.endswith("-registered"))
+    )
+
+def select_final_proof_artifact_ids(items_rows):
+    dynamic_ids = [
+        str(row.get("id", ""))
+        for row in items_rows
+        if row.get("id") and final_proof_dynamic_candidate(row)
+    ]
+    selected = []
+    for artifact_id in FINAL_PROOF_SEED_ARTIFACT_IDS + dynamic_ids:
+        if artifact_id and artifact_id not in selected:
+            selected.append(artifact_id)
+    return selected, dynamic_ids
+
 def build_final_proof_artifacts_summary():
-    items_by_id = {
-        str(row.get("id", "")): row
+    item_rows = [
+        row
         for row in load_jsonl(root / "registry" / "items.jsonl")
         if row.get("id")
+    ]
+    items_by_id = {
+        str(row.get("id", "")): row
+        for row in item_rows
     }
+    expected_ids, dynamic_ids = select_final_proof_artifact_ids(item_rows)
     try:
         migration_text = (root / "registry" / "migrations.jsonl").read_text()
     except Exception:
@@ -255,7 +293,7 @@ def build_final_proof_artifacts_summary():
     migration_covered_count = 0
     indexed_count = 0
 
-    for artifact_id in FINAL_PROOF_ARTIFACT_IDS:
+    for artifact_id in expected_ids:
         item = items_by_id.get(artifact_id, {})
         registered = bool(item)
         if registered:
@@ -319,10 +357,10 @@ def build_final_proof_artifacts_summary():
 
     status = (
         "pass"
-        if registered_count == len(FINAL_PROOF_ARTIFACT_IDS)
-        and paired_count == len(FINAL_PROOF_ARTIFACT_IDS)
-        and migration_covered_count == len(FINAL_PROOF_ARTIFACT_IDS)
-        and indexed_count == len(FINAL_PROOF_ARTIFACT_IDS)
+        if registered_count == len(expected_ids)
+        and paired_count == len(expected_ids)
+        and migration_covered_count == len(expected_ids)
+        and indexed_count == len(expected_ids)
         and not missing_registry
         and not missing_md
         and not missing_jsonl
@@ -332,8 +370,22 @@ def build_final_proof_artifacts_summary():
     )
     return {
         "status": status,
-        "expected_ids": FINAL_PROOF_ARTIFACT_IDS,
-        "expected_count": len(FINAL_PROOF_ARTIFACT_IDS),
+        "selection_mode": "seed-plus-dynamic-governance-20260622",
+        "seed_ids": FINAL_PROOF_SEED_ARTIFACT_IDS,
+        "dynamic_ids": dynamic_ids,
+        "dynamic_count": len(dynamic_ids),
+        "dynamic_selector": {
+            "domain": "governance",
+            "kind": "audit",
+            "date_field": "created_at or updated_at",
+            "date": FINAL_PROOF_SELECTOR_DATE,
+            "required_tag": FINAL_PROOF_SELECTOR_TAG,
+            "path_prefix": "artifacts/manifests/knowledge-hub-",
+            "path_suffix": f"-{FINAL_PROOF_SELECTOR_DATE.replace('-', '')}.md",
+            "review_status_suffixes": ["-applied", "-registered"],
+        },
+        "expected_ids": expected_ids,
+        "expected_count": len(expected_ids),
         "registered_count": registered_count,
         "paired_count": paired_count,
         "migration_covered_count": migration_covered_count,

@@ -212,3 +212,4 @@
 - Knowledge Hub final proof runtime recovery hardening: `artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.md`
 - Knowledge Hub owner target and manifest recovery hardening: `artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.md`
 - Knowledge Hub review_after topic and owner hardening: `artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.md`
+- Knowledge Hub owner status, review_after and final proof hardening: `artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.md`

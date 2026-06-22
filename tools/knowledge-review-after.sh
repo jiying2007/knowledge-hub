@@ -84,7 +84,16 @@ except Exception as exc:
     errors.append(f"cannot read registry/sources.json: {exc}")
     sources = []
 
-owner_gate_rows = read_jsonl(root / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl")
+worksheet_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
+if not worksheet_paths:
+    errors.append("missing artifacts/manifests/*owner-decision-worksheets-*.jsonl")
+owner_gate_rows = []
+for worksheet_path in worksheet_paths:
+    for row in read_jsonl(worksheet_path):
+        if isinstance(row, dict):
+            row = dict(row)
+            row["worksheet_file"] = str(worksheet_path.relative_to(root))
+            owner_gate_rows.append(row)
 
 stale_items = []
 near_due_items = []
@@ -154,6 +163,7 @@ for row in owner_gate_rows:
             "row_type": "open_owner_gate",
             "entity_type": "owner_gate",
             "worksheet_id": row.get("worksheet_id", row.get("id", "")),
+            "worksheet_file": row.get("worksheet_file", ""),
             "source_id": row.get("source_id", ""),
             "source_path": row.get("source_path", ""),
             "owner": row.get("owner_required", row.get("owner", "")),

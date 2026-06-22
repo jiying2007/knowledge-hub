@@ -212,3 +212,4 @@
 - 2026-09-22: `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
 - 2026-09-22: `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
 - 2026-09-22: `knowledge-hub-review-after-topic-owner-hardening-20260622`
+- 2026-09-22: `knowledge-hub-owner-status-review-proof-hardening-20260622`
