@@ -1622,6 +1622,10 @@ def test_final_gate_owner_review_blocker():
         for field in ["focus_command", "forms_jsonl_command", "evidence_readiness_command"]:
             recovery_queue_executable_commands.append(str(row.get(field, "")))
     final_state_audit = parsed.get("final_state_audit", {})
+    maintenance_entry_audit = parsed.get("maintenance_entry_audit", {})
+    maintenance_entries = maintenance_entry_audit.get("entries", [])
+    maintenance_entry_ids = [row.get("entry_id") for row in maintenance_entries]
+    linking_audit = parsed.get("linking_audit", {})
     proof_artifacts = parsed.get("proof_artifacts_20260622", {})
     source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
     source_check_runtime = parsed.get("source_check_runtime", {})
@@ -1795,6 +1799,36 @@ def test_final_gate_owner_review_blocker():
         and source_check_runtime.get("unsupported_count") == 0
         and source_check_runtime.get("rejected_count") == 0
         and source_check_runtime.get("failed_rows") == []
+        and maintenance_entry_audit.get("status") == "pass"
+        and maintenance_entry_audit.get("expected_entry_count") == 8
+        and maintenance_entry_audit.get("passed_entry_count") == 8
+        and maintenance_entry_audit.get("missing_entry_ids") == []
+        and maintenance_entry_ids == [
+            "manual-knowledge-entry",
+            "source-coverage-entry",
+            "manual-review-entry",
+            "manual-search-entry",
+            "owner-signoff-entry",
+            "automation-boundary-entry",
+            "quality-gate-entry",
+            "chinese-readability-entry",
+        ]
+        and all(row.get("evidence_refs") for row in maintenance_entries)
+        and all(row.get("limitations_zh") for row in maintenance_entries)
+        and linking_audit.get("status") == "pass"
+        and linking_audit.get("read_only") is True
+        and linking_audit.get("source_body_read") is False
+        and linking_audit.get("owner_gate_mutation") is False
+        and linking_audit.get("cross_session", {}).get("status") == "pass"
+        and linking_audit.get("cross_session", {}).get("missing") == []
+        and linking_audit.get("cross_project", {}).get("status") == "pass"
+        and linking_audit.get("cross_project", {}).get("registered_source_count") == 13
+        and linking_audit.get("cross_project", {}).get("pcr02_level2_source_ids_present") is True
+        and linking_audit.get("cross_project", {}).get("provenance_fields_present") is True
+        and linking_audit.get("cross_project", {}).get("project_specific_not_team_promoted") is True
+        and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
+        and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
+        and "runtime:index_plan.indexes.by_decision" in linking_audit.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
@@ -1809,7 +1843,10 @@ def test_final_gate_owner_review_blocker():
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
         and checks.get("source_check_runtime", {}).get("status") == "pass"
         and checks.get("source_check_runtime", {}).get("row_count") == 7
-        and len(evidence_index) == 7
+        and checks.get("index_plan_linking", {}).get("status") == "planned"
+        and checks.get("index_plan_linking", {}).get("exit_code") == 0
+        and checks.get("index_plan_linking", {}).get("linking_audit_status") == "pass"
+        and len(evidence_index) == 9
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
         and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
@@ -1821,6 +1858,10 @@ def test_final_gate_owner_review_blocker():
         and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("layer") == "source-check-snapshot"
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("layer") == "source-check-runtime"
+        and evidence_by_artifact.get("maintenance-entry-audit", {}).get("status") == "pass"
+        and evidence_by_artifact.get("maintenance-entry-audit", {}).get("evidence_path") == "runtime:maintenance_entry_audit"
+        and evidence_by_artifact.get("linking-audit", {}).get("status") == "pass"
+        and evidence_by_artifact.get("linking-audit", {}).get("evidence_path") == "runtime:linking_audit"
         and len(highest_priority_rules_audit) == 10
         and rules_by_id.get("shell-through-rtk", {}).get("status") == "pass"
         and rules_by_id.get("manual-write-apply-patch", {}).get("status") == "process-audited"
@@ -1850,6 +1891,8 @@ def test_final_gate_owner_review_blocker():
             "proof_artifacts_20260622": proof_artifacts,
             "source_check_execution_snapshot_20260621": source_check_snapshot,
             "source_check_runtime": source_check_runtime,
+            "maintenance_entry_audit": maintenance_entry_audit,
+            "linking_audit": linking_audit,
             "highest_priority_rules_audit": highest_priority_rules_audit,
             "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
@@ -4024,7 +4067,7 @@ def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
     parse_errors = {}
-    for section in ["project", "source", "topic", "decision", "manifest"]:
+    for section in ["project", "source", "topic", "decision", "manifest", "linking"]:
         result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", section, "--json"])
         section_results[section] = result
         try:
@@ -4040,6 +4083,7 @@ def test_index_plan_extended_sections():
     topic_index = parsed_by_section.get("topic", {}).get("indexes", {}).get("by_topic", {})
     decision_index = parsed_by_section.get("decision", {}).get("indexes", {}).get("by_decision", {})
     manifest_index = parsed_by_section.get("manifest", {}).get("indexes", {}).get("by_manifest", {})
+    linking_audit = parsed_by_section.get("linking", {}).get("linking_audit", {})
     registry_decisions = decision_index.get("registry_decisions", [])
     owner_worksheets = decision_index.get("owner_worksheets", [])
     migration_decisions = decision_index.get("migration_decisions", [])
@@ -4133,6 +4177,15 @@ def test_index_plan_extended_sections():
         and current_runtime_recovery_profile.get("summary_source") == "summary_zh"
         and current_runtime_recovery_profile.get("evidence_source") == "evidence_refs"
         and current_runtime_recovery_profile.get("profile_health") == "pass"
+        and linking_audit.get("status") == "pass"
+        and linking_audit.get("read_only") is True
+        and linking_audit.get("source_body_read") is False
+        and linking_audit.get("owner_gate_mutation") is False
+        and linking_audit.get("cross_session", {}).get("status") == "pass"
+        and linking_audit.get("cross_project", {}).get("status") == "pass"
+        and linking_audit.get("cross_project", {}).get("registered_source_count") == 13
+        and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
+        and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
@@ -4168,6 +4221,7 @@ def test_index_plan_extended_sections():
             "current_owner_route_manifest": current_owner_route_manifest,
             "current_manifest_profile": current_manifest_profile,
             "current_runtime_recovery_profile": current_runtime_recovery_profile,
+            "linking_audit": linking_audit,
             "owner_worksheet_count": len(owner_worksheets),
             "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),

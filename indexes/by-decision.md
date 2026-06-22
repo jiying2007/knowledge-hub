@@ -37,6 +37,7 @@
 - `knowledge-hub-manifest-profile-index-plan`: manifest 恢复视图、governance JSONL profile 和模板可读性 gate；证据：`artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.md`。
 - `knowledge-hub-source-selection-owner-warning`: source coverage selector 和 source owner warning；证据：`artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.md`；只强化维护工具。
 - `knowledge-hub-final-gate-regression-skip-blocker`: final gate regression skip blocker；证据：`artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`；self-test skip 必须产生 blocker。
+- `knowledge-hub-maintenance-linking-audit`: final gate 维护入口与关联恢复审计；证据：`artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.md`；不生成 owner decision，不关闭 owner gate。
 - `knowledge-hub-manual-entry-source-boundary-sync`: manual-entry 模板映射和 source 边界可读性；证据：`artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`；worksheet 仍是草稿入口。
 - `pcr02-level2-source-check-execution-snapshot`: PCR02 Level 2 source check 执行快照；证据：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`；exit_code=0 只证明路径/文件存在。
 - `knowledge-hub-source-check-snapshot-evidence-readability`: status/final gate 快照摘要和核心索引可读性硬化；证据：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`；不实时执行 source check。

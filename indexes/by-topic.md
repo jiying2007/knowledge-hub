@@ -214,3 +214,4 @@
 - Knowledge Hub review_after topic and owner hardening: `artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.md`
 - Knowledge Hub owner status, review_after and final proof hardening: `artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.md`
 - Knowledge Hub proof 与搜索运行时加固: `artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.md`
+- Knowledge Hub 维护入口与关联恢复审计加固: `artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.md`

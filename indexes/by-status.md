@@ -375,3 +375,5 @@
 - owner-status-review-proof-hardening-applied: owner queue 覆盖状态、review_after worksheet 恢复和 final proof 动态发现已压实；证据：`artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-proof-search-runtime-hardening-20260622`
 - proof-search-runtime-hardening-applied: final proof as-of 日期选择和 registry metadata-only 搜索 fallback 已压实，回归覆盖扩展到 103 项；证据：`artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-maintenance-linking-audit-hardening-20260622`
+- maintenance-linking-audit-hardening-applied: final gate 顶层 maintenance_entry_audit 与 linking_audit 已压实，index-plan 新增 linking 恢复视图；证据：`artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.jsonl`.

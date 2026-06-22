@@ -17,7 +17,7 @@ root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only plan for core Knowledge Hub indexes from registry files.")
-parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest"], default="all")
+parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking"], default="all")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
 
@@ -443,6 +443,145 @@ by_manifest = {
     "rows": manifest_rows,
 }
 
+def read_relative_text(relative_path):
+    path = root / relative_path
+    try:
+        return path.read_text()
+    except Exception as exc:
+        warnings.append(f"cannot read {relative_path}: {exc}")
+        return ""
+
+def build_linking_audit():
+    required_level2_sources = {
+        "pcr02-project-tools",
+        "pcr02-project-knowledge",
+        "pcr02-product-test",
+        "pcr02-project-scratch",
+        "pcr02-project-root-artifacts",
+        "pcr02-module-agent-rules",
+        "pcr02-project-agent-config",
+    }
+    required_topics = {"project-current", "project-archive"}
+    required_index_anchors = {
+        "by_project": {
+            "path": "indexes/by-project.md",
+            "anchors": ["domains/projects/pcr02", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
+        },
+        "by_source": {
+            "path": "indexes/by-source.md",
+            "anchors": ["pcr02-project-docs", "pcr02-project-tools", "pcr02-level2-source-check-execution-snapshot-20260621.md"],
+        },
+        "by_topic": {
+            "path": "indexes/by-topic.md",
+            "anchors": ["PCR02", "Knowledge Hub final gate", "knowledge-hub-proof-search-runtime-hardening-20260622.md"],
+        },
+        "by_decision": {
+            "path": "indexes/by-decision.md",
+            "anchors": ["pcr02-owner-decision-worksheet-001", "pcr02-owner-decision-worksheet-007", "该包不生成 owner decision"],
+        },
+    }
+
+    missing_cross_session = []
+    pcr02_project = by_project.get("pcr02", {})
+    source_ids = set(by_source.keys())
+    topic_ids = set(by_topic.keys())
+    owner_worksheets = by_decision.get("owner_worksheets", [])
+    registry_decisions = by_decision.get("registry_decisions", [])
+    migration_decisions = by_decision.get("migration_decisions", [])
+
+    cross_session_checks = {
+        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "domains/projects/pcr02",
+        "source_recoverable": "pcr02-project-docs" in source_ids and required_level2_sources.issubset(source_ids),
+        "topic_recoverable": required_topics.issubset(topic_ids),
+        "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions) and bool(migration_decisions),
+        "handoff_recoverable": any("pcr02-governance-handoff" in item_id for item_id in pcr02_project.get("items", [])),
+    }
+    for check_id, passed in cross_session_checks.items():
+        if not passed:
+            missing_cross_session.append(check_id)
+
+    missing_cross_project = []
+    pcr02_sources = {source_id: by_source.get(source_id, {}) for source_id in {"pcr02-project-docs"} | required_level2_sources}
+    pcr02_sources_with_provenance = []
+    for source_id, source in pcr02_sources.items():
+        has_check_or_reason = bool(str(source.get("check", "")).strip() or str(source.get("no_check_reason", "")).strip())
+        has_provenance = all(str(source.get(field, "")).strip() for field in ["path", "owner", "review_after", "migration_strategy", "final_disposition"]) and has_check_or_reason
+        if has_provenance:
+            pcr02_sources_with_provenance.append(source_id)
+        else:
+            missing_cross_project.append(f"source-provenance:{source_id}")
+    project_specific_not_team_promoted = not any(
+        str(item.get("path", "")).startswith("domains/embedded/standards/")
+        and str((item.get("source") or {}).get("source_id", "")) == "pcr02-project-docs"
+        for item in items
+        if isinstance(item.get("source", {}), dict)
+    )
+    if not project_specific_not_team_promoted:
+        missing_cross_project.append("project-specific-promoted-to-team-standards")
+
+    markdown_missing = []
+    markdown_index_recovery = {}
+    for index_id, spec in required_index_anchors.items():
+        text = read_relative_text(spec["path"])
+        missing_anchors = [anchor for anchor in spec["anchors"] if anchor not in text]
+        markdown_index_recovery[index_id] = {
+            "status": "pass" if not missing_anchors else "fail",
+            "path": spec["path"],
+            "required_anchors": spec["anchors"],
+            "missing_anchors": missing_anchors,
+        }
+        for anchor in missing_anchors:
+            markdown_missing.append({"index": index_id, "path": spec["path"], "anchor": anchor})
+
+    cross_session_status = "pass" if not missing_cross_session else "fail"
+    cross_project_status = "pass" if not missing_cross_project else "fail"
+    markdown_status = "pass" if not markdown_missing else "fail"
+    status = "pass" if cross_session_status == "pass" and cross_project_status == "pass" and markdown_status == "pass" else "fail"
+    return {
+        "contract_version": 1,
+        "status": status,
+        "read_only": True,
+        "source_body_read": False,
+        "owner_gate_mutation": False,
+        "commands": {
+            "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json",
+            "status": "runtime:knowledge-status --strict payload",
+            "search_contract": "runtime:knowledge-regression search result ids",
+        },
+        "cross_session": {
+            "status": cross_session_status,
+            **cross_session_checks,
+            "missing": missing_cross_session,
+        },
+        "cross_project": {
+            "status": cross_project_status,
+            "pcr02_project_present": bool(pcr02_project),
+            "registered_source_count": len(by_source),
+            "pcr02_level2_source_ids_present": required_level2_sources.issubset(source_ids),
+            "required_topic_ids_present": required_topics.issubset(topic_ids),
+            "decision_refs_present": len(owner_worksheets) >= 7 and bool(registry_decisions) and bool(migration_decisions),
+            "provenance_fields_present": len(pcr02_sources_with_provenance) == len(pcr02_sources),
+            "project_specific_not_team_promoted": project_specific_not_team_promoted,
+            "missing": missing_cross_project,
+        },
+        "markdown_index_recovery": {
+            "status": markdown_status,
+            "indexes": markdown_index_recovery,
+            "missing_anchors": markdown_missing,
+        },
+        "evidence_refs": [
+            "runtime:status.sources.source_recovery_rows",
+            "runtime:index_plan.indexes.by_project",
+            "runtime:index_plan.indexes.by_source",
+            "runtime:index_plan.indexes.by_topic",
+            "runtime:index_plan.indexes.by_decision",
+            "runtime:checks.knowledge_regression",
+        ],
+        "limitations_zh": "只证明 registry/index/search 恢复链路；不证明 owner decision 已签收，不读取 PCR02 源项目正文。",
+    }
+
+linking_audit = build_linking_audit()
+
 status_order = ["active", "reviewing", "archived"]
 
 result = {
@@ -466,7 +605,9 @@ result = {
         "by_topic": by_topic,
         "by_decision": by_decision,
         "by_manifest": by_manifest,
+        "linking_audit": linking_audit,
     },
+    "linking_audit": linking_audit,
 }
 
 if args.json:
@@ -630,7 +771,26 @@ def print_manifest():
             f"paired={row.get('paired', False)} evidence={row.get('evidence_count', 0)} "
             f"profile_health=`{row.get('profile_health', '')}` "
             f"summary_source=`{row.get('summary_source', '')}` evidence_source=`{row.get('evidence_source', '')}`"
-        )
+            )
+
+def print_linking():
+    print()
+    print("## Linking Audit")
+    print(f"- status: `{linking_audit.get('status', '')}`")
+    print(f"- read_only: `{linking_audit.get('read_only', False)}`")
+    print(f"- source_body_read: `{linking_audit.get('source_body_read', True)}`")
+    print(f"- owner_gate_mutation: `{linking_audit.get('owner_gate_mutation', True)}`")
+    cross_session = linking_audit.get("cross_session", {})
+    cross_project = linking_audit.get("cross_project", {})
+    markdown = linking_audit.get("markdown_index_recovery", {})
+    print(f"- cross_session: `{cross_session.get('status', '')}` missing={cross_session.get('missing', [])}")
+    print(f"- cross_project: `{cross_project.get('status', '')}` missing={cross_project.get('missing', [])}")
+    print(f"- markdown_index_recovery: `{markdown.get('status', '')}`")
+    missing_anchors = markdown.get("missing_anchors", [])
+    if missing_anchors:
+        print("- missing_anchors:")
+        for row in missing_anchors:
+            print(f"  - `{row.get('path', '')}` missing `{row.get('anchor', '')}`")
 
 if args.section in {"all", "owner"}:
     print_owner()
@@ -648,6 +808,8 @@ if args.section in {"all", "decision"}:
     print_decision()
 if args.section in {"all", "manifest"}:
     print_manifest()
+if args.section in {"all", "linking"}:
+    print_linking()
 
 print()
 print("## 验证")

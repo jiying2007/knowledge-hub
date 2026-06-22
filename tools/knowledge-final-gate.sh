@@ -667,6 +667,189 @@ def make_highest_priority_rules_audit(
         },
     ]
 
+def text_contains_all(relative_path, snippets):
+    path = root / relative_path
+    try:
+        text = path.read_text()
+    except Exception:
+        return False, list(snippets)
+    missing = [snippet for snippet in snippets if snippet not in text]
+    return not missing, missing
+
+def build_maintenance_entry_audit():
+    entry_specs = [
+        {
+            "entry_id": "manual-knowledge-entry",
+            "goal_item": 1,
+            "evidence_checks": [
+                ("README.md", ["人工维护 5 条最短路径", "新增一条知识", "knowledge-new.sh"]),
+                ("tools/README.md", ["新增一条知识", "knowledge-new.sh", "knowledge-check.sh --dry-run --json --diagnostics"]),
+                ("templates/README.md", ["新增 Knowledge Hub 条目", "默认简体中文"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-new.sh ...",
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+            ],
+        },
+        {
+            "entry_id": "source-coverage-entry",
+            "goal_item": 2,
+            "evidence_checks": [
+                ("README.md", ["新增一个 source", "knowledge-index-plan.sh --section source", "knowledge-search.sh \"<source-id>\" --source knowledge-hub --json"]),
+                ("tools/README.md", ["新增一个 source", "source coverage", "knowledge-index-plan.sh --section source"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source",
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+            ],
+        },
+        {
+            "entry_id": "manual-review-entry",
+            "goal_item": 3,
+            "evidence_checks": [
+                ("README.md", ["复核过期和即将到期项", "knowledge-review-after.sh", "review_after"]),
+                ("tools/README.md", ["复核过期项", "knowledge-review-after.sh", "near-due"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-06-22 --window-days 30 --json",
+                "rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of 2026-06-22 --json",
+            ],
+        },
+        {
+            "entry_id": "manual-search-entry",
+            "goal_item": 4,
+            "evidence_checks": [
+                ("README.md", ["knowledge-search.sh \"ASAN\" --json --limit 10", "--source-id pcr02-project-docs"]),
+                ("tools/README.md", ["knowledge-search.sh", "结构化过滤", "--source-id"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"ASAN\" --json --limit 10",
+                "rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"diag\" --source-id pcr02-project-docs --json",
+            ],
+        },
+        {
+            "entry_id": "owner-signoff-entry",
+            "goal_item": 5,
+            "evidence_checks": [
+                ("README.md", ["owner 签收一个 gate", "validate-forms", "landing-plan"]),
+                ("tools/README.md", ["owner 签收一个 gate", "不生成 owner decision", "不关闭 gate"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl",
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json",
+            ],
+        },
+        {
+            "entry_id": "automation-boundary-entry",
+            "goal_item": 6,
+            "evidence_checks": [
+                ("README.md", ["report-only", "不得自动改 `active`、关闭 owner gate 或提升标准"]),
+                ("tools/README.md", ["report-only", "不会自动删除、发布、提升 active、关闭 owner gate、写 memory 或修改源项目"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --json",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+        },
+        {
+            "entry_id": "quality-gate-entry",
+            "goal_item": 7,
+            "evidence_checks": [
+                ("README.md", ["跑一次终态检查", "knowledge-final-gate.sh --json", "evidence_index"]),
+                ("tools/README.md", ["knowledge-final-gate.sh", "terminal gate", "evidence_index"]),
+            ],
+            "commands": [
+                "rtk git diff --check",
+                "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+            ],
+        },
+        {
+            "entry_id": "chinese-readability-entry",
+            "goal_item": 8,
+            "evidence_checks": [
+                ("README.md", ["中文长期资产规范", "默认简体中文", "可复核"]),
+                ("templates/README.md", ["默认简体中文", "中文摘要", "Evidence Index"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+            ],
+        },
+    ]
+    entries = []
+    missing_entry_ids = []
+    for spec in entry_specs:
+        evidence_refs = []
+        missing_evidence = []
+        for relative_path, snippets in spec["evidence_checks"]:
+            evidence_refs.append(relative_path)
+            passed, missing = text_contains_all(relative_path, snippets)
+            if not passed:
+                for snippet in missing:
+                    missing_evidence.append({"path": relative_path, "snippet": snippet})
+        status = "pass" if not missing_evidence else "fail"
+        if status != "pass":
+            missing_entry_ids.append(spec["entry_id"])
+        entries.append({
+            "entry_id": spec["entry_id"],
+            "goal_item": spec["goal_item"],
+            "status": status,
+            "evidence_refs": sorted(set(evidence_refs)),
+            "commands": spec["commands"],
+            "missing_evidence": missing_evidence,
+            "limitations_zh": "证明入口存在、边界清楚且可恢复，不代表人工已实际完成该类维护动作。",
+        })
+    passed_count = sum(1 for entry in entries if entry["status"] == "pass")
+    return {
+        "contract_version": 1,
+        "status": "pass" if passed_count == len(entries) else "fail",
+        "goal_ref": "docs/goals/knowledge-hub-final-state.md#七、长期维护能力",
+        "expected_entry_count": len(entries),
+        "passed_entry_count": passed_count,
+        "missing_entry_ids": missing_entry_ids,
+        "entries": entries,
+        "summary_zh": (
+            "第七节 8 类长期维护入口均有文档、工具或回归证据。"
+            if passed_count == len(entries)
+            else "第七节长期维护入口存在缺口，请按 missing_entry_ids 和 missing_evidence 补齐。"
+        ),
+    }
+
+def build_linking_audit_summary(index_plan_linking):
+    payload = index_plan_linking.get("payload", {})
+    audit = payload.get("linking_audit", {}) if isinstance(payload, dict) else {}
+    if not isinstance(audit, dict):
+        audit = {}
+    if index_plan_linking.get("parse_error"):
+        return {
+            "contract_version": 1,
+            "status": "fail",
+            "read_only": True,
+            "source_body_read": False,
+            "owner_gate_mutation": False,
+            "command": index_plan_linking.get("command", ""),
+            "exit_code": index_plan_linking.get("exit_code", None),
+            "parse_error": index_plan_linking.get("parse_error", ""),
+            "missing": ["index-plan-linking-json"],
+            "limitations_zh": "无法解析 linking audit JSON；未读取 PCR02 源项目正文，未关闭 owner gate。",
+        }
+    if index_plan_linking.get("exit_code") != 0:
+        audit.setdefault("contract_version", 1)
+        audit["status"] = "fail"
+        audit["command"] = index_plan_linking.get("command", "")
+        audit["exit_code"] = index_plan_linking.get("exit_code", None)
+        audit["parse_error"] = index_plan_linking.get("parse_error", "")
+        audit.setdefault("limitations_zh", "只证明 registry/index/search 恢复链路；不证明 owner decision 已签收，不读取 PCR02 源项目正文。")
+        return audit
+    audit.setdefault("contract_version", 1)
+    audit.setdefault("status", "fail")
+    audit.setdefault("read_only", True)
+    audit.setdefault("source_body_read", False)
+    audit.setdefault("owner_gate_mutation", False)
+    audit["command"] = index_plan_linking.get("command", "")
+    audit["exit_code"] = index_plan_linking.get("exit_code", None)
+    audit["parse_error"] = index_plan_linking.get("parse_error", "")
+    return audit
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
@@ -704,6 +887,9 @@ proof_artifacts_20260622 = build_final_proof_artifacts_summary(today.isoformat()
 source_check_snapshot_20260621 = build_source_check_snapshot_summary()
 source_check_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
 source_check_runtime_summary = build_source_check_runtime_summary(source_check_runtime)
+index_plan_linking = run_json(["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "linking", "--json"])
+linking_audit = build_linking_audit_summary(index_plan_linking)
+maintenance_entry_audit = build_maintenance_entry_audit()
 
 blockers = []
 
@@ -789,6 +975,27 @@ if source_check_runtime_summary["status"] != "pass":
         "summary_zh": "final gate 当前 PCR02 Level 2 source availability report-only 检查未通过，不能作为终态证据。",
         "command": source_check_runtime_summary["command"],
         "source_check_runtime": source_check_runtime_summary,
+    })
+
+if maintenance_entry_audit["status"] != "pass":
+    blockers.append({
+        "id": "maintenance-entry-audit-missing",
+        "severity": "blocker",
+        "gap_type": "manual-maintenance",
+        "count": len(maintenance_entry_audit.get("missing_entry_ids", [])),
+        "summary_zh": "第七节长期维护入口审计未通过，不能证明中文开发人员长期维护路径完整。",
+        "command": "runtime:maintenance_entry_audit",
+        "missing_entry_ids": maintenance_entry_audit.get("missing_entry_ids", []),
+    })
+
+if linking_audit.get("status") != "pass":
+    blockers.append({
+        "id": "linking-audit-failed",
+        "severity": "blocker",
+        "gap_type": "cross-session-linking",
+        "summary_zh": "跨会话、项目、source、topic、decision 恢复链路审计未通过。",
+        "command": linking_audit.get("command", index_plan_linking.get("command", "")),
+        "linking_audit": linking_audit,
     })
 
 strict_payload = strict_status["payload"]
@@ -1246,6 +1453,37 @@ evidence_index.append(
         source_check_runtime_summary["parse_error"],
     )
 )
+evidence_index.append(
+    command_evidence_row(
+        "runtime:maintenance_entry_audit",
+        0,
+        maintenance_entry_audit["status"],
+        (
+            "第七节 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。"
+            if maintenance_entry_audit["status"] == "pass"
+            else "第七节长期维护入口存在缺口；请查看 maintenance_entry_audit.missing_entry_ids。"
+        ),
+        "runtime:maintenance_entry_audit",
+        "maintenance-entry-audit",
+        "maintenance-entry-audit",
+    )
+)
+evidence_index.append(
+    command_evidence_row(
+        index_plan_linking["command"],
+        index_plan_linking["exit_code"],
+        linking_audit.get("status", "fail"),
+        (
+            "跨会话、项目、source、topic、decision 和 Markdown index 恢复链路可机器证明；未读取 PCR02 源项目正文。"
+            if linking_audit.get("status") == "pass"
+            else "关联恢复链路存在缺口；请查看 linking_audit.cross_session/cross_project/markdown_index_recovery。"
+        ),
+        "runtime:linking_audit",
+        "linking-audit",
+        "linking-audit",
+        index_plan_linking["parse_error"],
+    )
+)
 
 highest_priority_rules_audit = make_highest_priority_rules_audit(
     source_check_runtime_summary,
@@ -1301,6 +1539,8 @@ result = {
     "proof_artifacts_20260622": proof_artifacts_20260622,
     "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
     "source_check_runtime": source_check_runtime_summary,
+    "maintenance_entry_audit": maintenance_entry_audit,
+    "linking_audit": linking_audit,
     "highest_priority_rules_audit": highest_priority_rules_audit,
     "final_state_audit": final_state_audit,
     "checks": {
@@ -1349,6 +1589,13 @@ result = {
             "parse_error": strict_status["parse_error"],
         },
         "source_check_runtime": source_check_runtime_summary,
+        "index_plan_linking": {
+            "command": index_plan_linking["command"],
+            "exit_code": index_plan_linking["exit_code"],
+            "status": index_plan_linking["payload"].get("status", "<missing>") if isinstance(index_plan_linking["payload"], dict) else "<missing>",
+            "parse_error": index_plan_linking["parse_error"],
+            "linking_audit_status": linking_audit.get("status", "fail"),
+        },
     },
     "evidence_index": evidence_index,
     "blockers": blockers,
@@ -1372,6 +1619,8 @@ print(f"- automatic_governance: {result['automatic_governance']['status']}")
 print(f"- level1_pcr02_docs: {final_state_audit['level1_pcr02_docs']['status']}")
 print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candidate_sources']['status']}")
 print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
+print(f"- maintenance_entry_audit: {maintenance_entry_audit['status']} {maintenance_entry_audit['passed_entry_count']}/{maintenance_entry_audit['expected_entry_count']}")
+print(f"- linking_audit: {linking_audit.get('status', 'fail')}")
 print(f"- proof_artifacts_20260622: {proof_artifacts_20260622['status']} registered={proof_artifacts_20260622['registered_count']}/{proof_artifacts_20260622['expected_count']} paired={proof_artifacts_20260622['paired_count']}/{proof_artifacts_20260622['expected_count']} indexed={proof_artifacts_20260622['indexed_count']}/{proof_artifacts_20260622['expected_count']}")
 print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
 print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={source_check_runtime_summary['passed_count']}/{source_check_runtime_summary['row_count']} report_only={str(source_check_runtime_summary['report_only']).lower()}")
