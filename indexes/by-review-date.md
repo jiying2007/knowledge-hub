@@ -195,3 +195,4 @@
 - 2026-09-21: `pcr02-level2-source-check-execution-snapshot-20260621`
 - 2026-09-21: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
 - 2026-09-21: `knowledge-hub-owner-automation-template-hardening-20260621`
+- 2026-09-22: `knowledge-hub-source-review-template-entry-hardening-20260622`

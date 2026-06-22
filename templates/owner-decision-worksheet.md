@@ -48,6 +48,7 @@ verification_cwd:
 # Owner 签核表标题
 
 > 本表是人工 owner decision 的工作表，不是已签收结论。不得把本表当成 owner decision，不得代填 `reviewed_by`，不得关闭 owner gate。
+> 填写前先按 `templates/README.md` 的“字段填写矩阵”核对：只读候选值可以预填，真实 `owner_decision`、`target_decision`、`reviewed_by`、`reviewed_at` 和签收证据只能由真实 owner 提供。
 
 ## 背景
 

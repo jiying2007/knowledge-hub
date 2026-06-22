@@ -337,3 +337,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线待验证模板和 PCR02 source/project 边界可读性已压实；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-automation-template-hardening-20260621`
 - owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签 reviewed_by，maintenance-run 执行 report-only/no-memory 硬门禁，未知人工 source 不输出危险 by-source 占位；documented by `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.
+- reviewing: `knowledge-hub-source-review-template-entry-hardening-20260622`
+- source-review-template-entry-hardening-applied: source review_after 过期作为 warning/status surface 暴露，README/tools 四层低复杂度入口和模板字段填写矩阵已补齐；documented by `artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.

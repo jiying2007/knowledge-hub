@@ -468,12 +468,14 @@ source_check_health = {
     "both_check_and_no_check_reason_ids": [],
     "non_rtk_check_ids": [],
     "missing_source_path_ids": [],
+    "stale_review_after_ids": [],
     "missing_check_or_reason_source_ids": [],
     "both_check_and_no_check_reason_source_ids": [],
     "non_rtk_check_command_source_ids": [],
     "check_command_source_ids": [],
     "no_check_reason_source_ids": [],
     "path_missing_source_ids": [],
+    "stale_review_after_source_ids": [],
     "rows": [],
     "report_only_findings": [
         "source check commands are inspected but not executed by knowledge-check",
@@ -501,7 +503,11 @@ for source in sources:
         errors.append(f"sources:{source_id} unknown owner: {source.get('owner')}")
     if source.get("review_after"):
         try:
-            dt.date.fromisoformat(str(source.get("review_after")))
+            source_review_after = dt.date.fromisoformat(str(source.get("review_after")))
+            if source_review_after < today:
+                source_check_health["stale_review_after_ids"].append(source_id)
+                source_check_health["stale_review_after_source_ids"].append(source_id)
+                warnings.append(f"sources:{source_id} review_after is stale: {source.get('review_after')}")
         except Exception:
             errors.append(f"sources:{source_id} invalid review_after: {source.get('review_after')}")
     if source.get("final_disposition") and source.get("final_disposition") not in ALLOWED_SOURCE_FINAL_DISPOSITIONS:
@@ -545,6 +551,8 @@ for source in sources:
         "path_exists": path_exists,
         "check_command": check_command,
         "no_check_reason": no_check_reason,
+        "review_after": str(source.get("review_after", "")),
+        "review_after_stale": source_id in source_check_health["stale_review_after_ids"],
     })
 source_check_health["check_command_source_ids"] = sorted(source_check_health["check_command_source_ids"])
 source_check_health["no_check_reason_source_ids"] = sorted(source_check_health["no_check_reason_source_ids"])
@@ -556,6 +564,8 @@ source_check_health["missing_check_or_reason_ids"] = sorted(source_check_health[
 source_check_health["both_check_and_no_check_reason_ids"] = sorted(source_check_health["both_check_and_no_check_reason_ids"])
 source_check_health["non_rtk_check_ids"] = sorted(source_check_health["non_rtk_check_ids"])
 source_check_health["missing_source_path_ids"] = sorted(source_check_health["missing_source_path_ids"])
+source_check_health["stale_review_after_ids"] = sorted(source_check_health["stale_review_after_ids"])
+source_check_health["stale_review_after_source_ids"] = sorted(source_check_health["stale_review_after_source_ids"])
 source_check_health["rows"] = sorted(source_check_health["rows"], key=lambda row: row["source_id"])
 
 automation_safety_health = {

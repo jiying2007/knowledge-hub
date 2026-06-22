@@ -611,6 +611,23 @@ if today_source == "system-date":
 else:
     final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
+source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
+source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health", {}), dict) else {}
+source_stale_review_after_ids = set(source_check_health.get("stale_review_after_ids", []) or [])
+stale_sources = sorted(
+    [
+        {
+            "id": str(source.get("id", "")),
+            "status": str(source.get("status", "")),
+            "review_after": str(source.get("review_after", "")),
+            "owner": str(source.get("owner", "")),
+            "final_disposition": str(source.get("final_disposition", "")),
+        }
+        for source in sources
+        if source.get("id") in source_stale_review_after_ids
+    ],
+    key=lambda row: (row["review_after"], row["id"]),
+)
 
 next_actions = []
 if knowledge_check["exit_code"] != 0:
@@ -701,6 +718,11 @@ if stale_items:
     next_actions.append(
         "复核 review_after 已过期的 active/reviewing 条目；先运行："
         f"{review_after_command}。"
+    )
+if stale_sources:
+    next_actions.append(
+        "复核 review_after 已过期的 registered source；先运行："
+        f"{source_review_after_command}。"
     )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
@@ -801,7 +823,10 @@ result = {
         "latest_coverage_manifest": latest_source_coverage,
         "latest_coverage_selection": latest_source_coverage_selection,
         "source_coverage_health": check_payload.get("source_coverage_health", {}),
-        "source_check_health": check_payload.get("source_check_health", {}),
+        "source_check_health": source_check_health,
+        "stale_review_after_count": len(stale_sources),
+        "stale_review_after_sample": stale_sources[:10],
+        "review_after_command": source_review_after_command,
         "boundary_health": check_payload.get("boundary_health", {}),
     },
     "migrations": {
@@ -879,6 +904,17 @@ print(f"- review_after command: `{review_after_command}`")
 if stale_items:
     for item in stale_items[:10]:
         print(f"  - `{item['id']}` status={item['status']} review_after={item['review_after']} owner={item['owner']}")
+print()
+print("## Sources")
+print()
+print(f"- stale source review_after: {len(stale_sources)}")
+print(f"- source review_after command: `{source_review_after_command}`")
+if stale_sources:
+    for source in stale_sources[:10]:
+        print(
+            f"  - `{source['id']}` status={source['status']} "
+            f"review_after={source['review_after']} owner={source['owner']}"
+        )
 print()
 print("## Owner Gates")
 print()

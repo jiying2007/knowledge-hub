@@ -3749,6 +3749,72 @@ def test_stale_review_after_warning_surface():
         repo,
     )
 
+def test_source_review_after_stale_surface():
+    repo = copy_repo("source-review-after-stale")
+    source_id = "pcr02-project-tools"
+    path = repo / "registry" / "sources.json"
+    try:
+        sources_doc = json.loads(path.read_text())
+        mutated = False
+        for source in sources_doc.get("sources", []):
+            if source.get("id") == source_id:
+                source["review_after"] = "2026-01-01"
+                mutated = True
+                break
+        path.write_text(json.dumps(sources_doc, ensure_ascii=False, indent=2) + "\n")
+        setup_error = "" if mutated else f"missing {source_id}"
+    except Exception as exc:
+        setup_error = str(exc)
+    if setup_error:
+        expect(False, "source-review-after-stale-surface", "stale source review_after is surfaced as warning and status action", {"setup_error": setup_error}, repo)
+        return
+
+    check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    check_payload = {}
+    status_payload = {}
+    parse_errors = {}
+    try:
+        check_payload = json.loads(check_result["stdout"])
+    except Exception as exc:
+        parse_errors["knowledge_check"] = str(exc)
+    try:
+        status_payload = json.loads(status_result["stdout"])
+    except Exception as exc:
+        parse_errors["knowledge_status"] = str(exc)
+    warnings_text = "\n".join(check_payload.get("warnings", []))
+    source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health"), dict) else {}
+    sources_status = status_payload.get("sources", {}) if isinstance(status_payload.get("sources"), dict) else {}
+    stale_sample = sources_status.get("stale_review_after_sample", [])
+    next_actions_text = "\n".join(status_payload.get("next_actions_zh", []))
+    expect(
+        not parse_errors
+        and check_result["exit_code"] == 0
+        and check_payload.get("status") == "pass"
+        and f"sources:{source_id}" in warnings_text
+        and "review_after is stale" in warnings_text
+        and source_id in source_check_health.get("stale_review_after_ids", [])
+        and status_result["exit_code"] == 0
+        and sources_status.get("stale_review_after_count", 0) >= 1
+        and any(row.get("id") == source_id for row in stale_sample if isinstance(row, dict))
+        and sources_status.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
+        and "registered source" in next_actions_text
+        and "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source" in next_actions_text,
+        "source-review-after-stale-surface",
+        "stale source review_after is warning/status surface, not a blocking check failure",
+        {
+            "parse_errors": parse_errors,
+            "knowledge_check_exit": check_result["exit_code"],
+            "knowledge_check_status": check_payload.get("status"),
+            "warning_sample": check_payload.get("warnings", [])[:5],
+            "source_check_health": source_check_health,
+            "knowledge_status_exit": status_result["exit_code"],
+            "sources_status": sources_status,
+            "next_actions_sample": status_payload.get("next_actions_zh", [])[:8],
+        },
+        repo,
+    )
+
 def test_source_manual_entry_guide():
     result = run_cmd(
         root,
@@ -4208,6 +4274,7 @@ def test_regression_manifest_coverage():
         "source-coverage-date-filename-selection",
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
+        "source-review-after-stale-surface",
         "source-manual-entry-guide",
         "source-manual-entry-enum-guide",
         "source-manual-entry-guide-check-command",
@@ -4313,6 +4380,7 @@ for test_fn in [
     test_source_coverage_date_filename_selection,
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,
+    test_source_review_after_stale_surface,
     test_source_manual_entry_guide,
     test_source_manual_entry_enum_guide,
     test_source_manual_entry_guide_check_command,

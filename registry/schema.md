@@ -275,6 +275,7 @@ Source/index invariants:
 - source `owner` is the maintenance owner for registry/source governance; it is not an owner decision or owner sign-off.
 - source `owner` must be registered in `registry/owners.json`.
 - source `review_after` must use ISO date format: `YYYY-MM-DD`.
+- stale source `review_after` is a warning/status surface, not a blocking error; `knowledge-check --json` should expose the source id in `source_check_health.stale_review_after_ids`, and `knowledge-status --json` should expose `sources.stale_review_after_count` and `sources.stale_review_after_sample`.
 - source `migration_strategy` must explain how the source enters Knowledge Hub control-plane governance without implying copied正文 or active promotion.
 - source `final_disposition` must use the allowed enum and describe control-plane disposition, not owner approval.
 - source `check`, when present, records a read-only validation command or inventory command.

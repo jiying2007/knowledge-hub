@@ -35,6 +35,15 @@
 
 下面的 `pcr02-project-docs` 是 owner-gated source-id 示例；维护其他 source 时替换为对应 `source_id`。
 
+## 低复杂度入口速查
+
+| 层级 | 何时使用 | 入口命令 | 禁止事项 |
+|---|---|---|---|
+| 日常路径 | 新增、检索、复核普通知识条目 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh ...`；`rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<keyword>" --json`；`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 不伪造 source id、owner、hash、验证结果或 active 状态 |
+| owner gate | 处理 PCR02 owner-gated worksheet 和人工签收材料 | `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --next-open --checklist --forms` | 不代签 `reviewed_by`，不把 `routing_owner` 当真实 reviewer，不关闭 gate |
+| 终态检查 | 判断是否只剩 owner 语义门禁或存在工具/索引/registry 漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 不把 `needs-owner-review` 当工具失败，不跳过 regression 证明 terminal 状态 |
+| 高级写入计划 | copy-first、artifact-ref、promote、retire 等需要 reviewed manifest 的操作 | `rtk bash ~/knowledge-hub/tools/knowledge-copy-first.sh ... --dry-run`；`rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target <target> --dry-run` | 不启用无人值守写入，不绕过 owner、rollback、hash 和验证命令 |
+
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
@@ -201,10 +210,11 @@ JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治�
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
-先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` 和 `registry.review_after_command`。过期项不等于工具失败，但必须由 owner 复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing`，不得自动改 `active`、关闭 owner gate 或提升标准。
+先看 `knowledge-status.sh --json` 的 `registry.stale_review_after_count` / `registry.review_after_command`，以及 `sources.stale_review_after_count` / `sources.review_after_command`。过期项不等于工具失败，但必须由 owner 或 source registry 维护人复核 current validity、适用范围、证据是否仍有效和下一次 `review_after`；不确定时保持 `reviewing` 或 source 现有 final disposition，不得自动改 `active`、关闭 owner gate 或提升标准。
 
 ## 离线人工维护
 
