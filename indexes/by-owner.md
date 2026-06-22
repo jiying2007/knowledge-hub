@@ -189,6 +189,7 @@
 - `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
 - `knowledge-hub-review-after-topic-owner-hardening-20260622`
 - `knowledge-hub-owner-status-review-proof-hardening-20260622`
+- `knowledge-hub-proof-search-runtime-hardening-20260622`
 
 ## pcr02-registry-owner
 

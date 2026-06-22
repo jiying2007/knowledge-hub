@@ -1743,7 +1743,9 @@ def test_final_gate_owner_review_blocker():
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and proof_artifacts.get("status") == "pass"
-        and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-20260622"
+        and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
+        and proof_artifacts.get("selection_date") == parsed.get("today")
+        and proof_artifacts.get("dynamic_selector", {}).get("date") == parsed.get("today")
         and proof_artifacts.get("expected_count") == proof_artifacts.get("dynamic_count")
         and proof_artifacts.get("dynamic_count", 0) >= 17
         and "knowledge-hub-review-after-topic-owner-hardening-20260622" in proof_artifacts.get("expected_ids", [])
@@ -3737,6 +3739,8 @@ def test_index_readme_maintenance_coverage():
     )
 
 def test_final_proof_artifact_discoverability():
+    selector_date = today.isoformat()
+    selector_suffix = selector_date.replace("-", "")
     seed_ids = [
         "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
         "knowledge-hub-final-gate-evidence-recovery-20260622",
@@ -3794,10 +3798,10 @@ def test_final_proof_artifact_discoverability():
         if (
             row.get("domain") == "governance"
             and row.get("kind") == "audit"
-            and (row.get("created_at") == "2026-06-22" or row.get("updated_at") == "2026-06-22")
+            and (row.get("created_at") == selector_date or row.get("updated_at") == selector_date)
             and "governance" in tags
             and path_text.startswith("artifacts/manifests/knowledge-hub-")
-            and path_text.endswith("-20260622.md")
+            and path_text.endswith(f"-{selector_suffix}.md")
             and (review_status.endswith("-applied") or review_status.endswith("-registered"))
         ):
             dynamic_ids.append(item_id)
@@ -3842,10 +3846,10 @@ def test_final_proof_artifact_discoverability():
             missing_topic_paths.append(candidate)
     expect(
         not errors
-        and len(dynamic_ids) >= 17
-        and len(required_ids) == len(dynamic_ids)
+        and (selector_date != "2026-06-22" or len(dynamic_ids) >= 17)
+        and (selector_date != "2026-06-22" or len(required_ids) == len(dynamic_ids))
         and set(seed_ids) <= set(required_ids)
-        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in required_ids
+        and (selector_date != "2026-06-22" or "knowledge-hub-review-after-topic-owner-hardening-20260622" in required_ids)
         and not missing_registry
         and not missing_md
         and not missing_jsonl
@@ -3859,6 +3863,7 @@ def test_final_proof_artifact_discoverability():
         {
             "required_ids": required_ids,
             "seed_ids": seed_ids,
+            "selector_date": selector_date,
             "dynamic_ids": dynamic_ids,
             "required_count": len(required_ids),
             "dynamic_count": len(dynamic_ids),
@@ -3872,6 +3877,147 @@ def test_final_proof_artifact_discoverability():
             "missing_documented_by_paths": sorted(set(missing_documented_by_paths)),
             "missing_topic_paths": sorted(set(missing_topic_paths)),
         },
+    )
+
+def test_final_proof_artifact_as_of_date_selector():
+    repo = copy_repo("final-proof-artifact-as-of-date-selector")
+    artifact_id = "knowledge-hub-proof-date-selector-fixture-20260623"
+    md_rel = "artifacts/manifests/knowledge-hub-proof-date-selector-fixture-20260623.md"
+    jsonl_rel = "artifacts/manifests/knowledge-hub-proof-date-selector-fixture-20260623.jsonl"
+    md_path = repo / md_rel
+    jsonl_path = repo / jsonl_rel
+    md_path.write_text(
+        "# Knowledge Hub proof 日期选择器 fixture 2026-06-23\n\n"
+        "## 结论\n\n"
+        "该临时 fixture 只用于回归测试：证明 final gate 按 `--as-of 2026-06-23` 选择当天治理 proof，"
+        "同时保留 2026-06-22 seed 基线。\n\n"
+        "## 边界\n\n"
+        "- 不生成 owner decision。\n"
+        "- 不关闭 owner gate。\n"
+        "- 不修改源项目。\n"
+        "- 不写 memory。\n"
+    )
+    item_rows = []
+    for line in (repo / "registry" / "items.jsonl").read_text().splitlines():
+        if not line.strip():
+            continue
+        item_rows.append(json.loads(line))
+    base_item = next(
+        (row for row in item_rows if row.get("id") == "knowledge-hub-owner-status-review-proof-hardening-20260622"),
+        {},
+    )
+    fixture_item = dict(base_item)
+    fixture_item.update({
+        "id": artifact_id,
+        "title": "Knowledge Hub proof 日期选择器 fixture 2026-06-23",
+        "path": md_rel,
+        "source": {"type": "generated", "from": "temporary regression fixture for final proof as-of date selector"},
+        "validation_refs": [jsonl_rel, "rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23"],
+        "tags": ["knowledge-hub", "final-gate", "proof-discoverability", "regression", "governance"],
+        "review_after": "2026-09-23",
+        "summary_zh": "临时回归 fixture，用于证明 final gate 按 --as-of 日期发现新治理 proof，同时保留 2026-06-22 seed 基线。",
+        "review_status": "proof-date-selector-applied",
+        "evidence_strength": "temporary-regression-fixture-for-dynamic-as-of-date-proof-selector",
+        "evidence_refs": ["tools/knowledge-final-gate.sh --json --as-of 2026-06-23"],
+        "created_at": "2026-06-23",
+        "updated_at": "2026-06-23",
+    })
+    with (repo / "registry" / "items.jsonl").open("a") as fh:
+        fh.write(json.dumps(fixture_item, ensure_ascii=False, separators=(",", ":")) + "\n")
+    manifest_row = {
+        key: fixture_item.get(key)
+        for key in [
+            "id",
+            "title",
+            "kind",
+            "domain",
+            "path",
+            "status",
+            "owner",
+            "summary_zh",
+            "primary_language",
+            "source_language",
+            "translation_status",
+            "terminology_status",
+            "review_status",
+            "evidence_strength",
+            "evidence_refs",
+            "generated_by_ai",
+            "ai_role",
+            "ai_model_or_tool",
+            "ai_generated_at",
+            "human_reviewed_by",
+            "promotion_decision",
+            "created_at",
+            "updated_at",
+        ]
+    }
+    manifest_row["must_not"] = ["不得生成 owner decision", "不得关闭 owner gate", "不得修改源项目", "不得写 memory"]
+    jsonl_path.write_text(json.dumps(manifest_row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    migration_row = {
+        "from": "temporary regression fixture for final proof as-of date selector",
+        "to": f"{md_rel}; {jsonl_rel}",
+        "mode": "proof-date-selector-fixture",
+        "status": "applied",
+        "checked_at": "2026-06-23",
+        "notes": "Temporary fixture proving final proof dynamic selector follows --as-of date and preserves 2026-06-22 seed baseline.",
+        "notes_zh": "临时 fixture：证明 final proof 动态选择器跟随 --as-of 日期，同时保留 2026-06-22 seed 基线；不生成 owner decision、不关闭 owner gate、不修改源项目、不写 memory。",
+    }
+    with (repo / "registry" / "migrations.jsonl").open("a") as fh:
+        fh.write(json.dumps(migration_row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    index_appends = {
+        "indexes/by-owner.md": f"\n- `{artifact_id}`\n",
+        "indexes/by-status.md": f"\n- reviewing: `{artifact_id}`\n- proof-date-selector-applied: proof 日期选择器 fixture 已登记；证据：`{jsonl_rel}`.\n",
+        "indexes/by-review-date.md": f"\n- 2026-09-23: `{artifact_id}`\n",
+        "indexes/by-topic.md": f"\n- Knowledge Hub proof 日期选择器 fixture: `{md_rel}`\n",
+    }
+    for relative, text in index_appends.items():
+        with (repo / relative).open("a") as fh:
+            fh.write(text)
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "-lc",
+            "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    proof_artifacts = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
+    expect(
+        not parse_error
+        and result["exit_code"] == 1
+        and proof_artifacts.get("status") == "pass"
+        and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
+        and proof_artifacts.get("selection_date") == "2026-06-23"
+        and artifact_id in proof_artifacts.get("dynamic_ids", [])
+        and artifact_id in proof_artifacts.get("expected_ids", [])
+        and set(proof_artifacts.get("seed_ids", [])) <= set(proof_artifacts.get("expected_ids", [])),
+        "final-proof-artifact-as-of-date-selector",
+        "final proof dynamic selector follows --as-of date and preserves baseline seed ids",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
+            "selection_mode": proof_artifacts.get("selection_mode"),
+            "selection_date": proof_artifacts.get("selection_date"),
+            "dynamic_ids": proof_artifacts.get("dynamic_ids", []),
+            "expected_ids": proof_artifacts.get("expected_ids", []),
+            "missing_registry": proof_artifacts.get("missing_registry", []),
+            "missing_md": proof_artifacts.get("missing_md", []),
+            "missing_jsonl": proof_artifacts.get("missing_jsonl", []),
+            "missing_migration": proof_artifacts.get("missing_migration", []),
+            "missing_indexes": proof_artifacts.get("missing_indexes", {}),
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:1000],
+        },
+        repo,
     )
 
 def test_index_plan_extended_sections():
@@ -5622,6 +5768,69 @@ def test_knowledge_search_kind_alias_filters():
         },
     )
 
+def test_knowledge_search_registry_metadata_fallback():
+    repo = copy_repo("knowledge-search-registry-metadata-fallback")
+    token = "metadata-only-search-fixture-20260622"
+    fixture_item = {
+        "id": token,
+        "title": "Metadata only search fixture",
+        "kind": "audit",
+        "domain": "governance",
+        "path": "README.md",
+        "status": "reviewing",
+        "owner": "leiwenjun",
+        "source": {"type": "generated", "source_id": "metadata-only-fixture-source", "from": "temporary regression fixture"},
+        "tags": ["metadata-only-fixture", "knowledge-search", "governance"],
+        "summary_zh": "只存在于 registry metadata 的搜索回归关键词，正文不包含该 token。",
+        "review_after": "2026-09-22",
+        "review_status": "metadata-search-fallback-applied",
+        "created_at": "2026-06-22",
+        "updated_at": "2026-06-22",
+    }
+    with (repo / "registry" / "items.jsonl").open("a") as fh:
+        fh.write(json.dumps(fixture_item, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            token,
+            "--source-id",
+            "metadata-only-fixture-source",
+            "--json",
+            "--limit",
+            "5",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    results = parsed.get("results", []) if isinstance(parsed, dict) else []
+    first = results[0] if results else {}
+    expect(
+        not parse_error
+        and result["exit_code"] == 0
+        and parsed.get("count") == 1
+        and first.get("item_id") == token
+        and first.get("match") == "registry-metadata"
+        and first.get("source_id") == "metadata-only-fixture-source",
+        "knowledge-search-registry-metadata-fallback",
+        "knowledge search returns registry metadata-only matches with structured filters",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "count": parsed.get("count") if isinstance(parsed, dict) else None,
+            "first_result": first,
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:1000],
+        },
+        repo,
+    )
+
 def test_knowledge_search_invalid_filters():
     bad_status = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--status", "not-a-status"])
     bad_kind = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--kind", "not-a-kind"])
@@ -5723,6 +5932,7 @@ def test_regression_manifest_coverage():
         "templates-required-sections",
         "index-readme-maintenance-coverage",
         "final-proof-artifact-discoverability",
+        "final-proof-artifact-as-of-date-selector",
         "index-plan-extended-sections",
         "manifest-latest-filename-date-only",
         "manifest-jsonl-profile-gate",
@@ -5753,6 +5963,7 @@ def test_regression_manifest_coverage():
         "knowledge-search-structured-filters",
         "knowledge-search-structured-filters-exclude-unregistered-raw",
         "knowledge-search-kind-alias-filters",
+        "knowledge-search-registry-metadata-fallback",
         "knowledge-search-invalid-filters",
         "stable-governance-command-examples",
         "regression-manifest-coverage",
@@ -5891,6 +6102,7 @@ for test_fn in [
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
     test_final_proof_artifact_discoverability,
+    test_final_proof_artifact_as_of_date_selector,
     test_index_plan_extended_sections,
     test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,
@@ -5921,6 +6133,7 @@ for test_fn in [
     test_knowledge_search_structured_filters,
     test_knowledge_search_structured_filters_exclude_unregistered_raw,
     test_knowledge_search_kind_alias_filters,
+    test_knowledge_search_registry_metadata_fallback,
     test_knowledge_search_invalid_filters,
     test_stable_governance_command_examples,
     test_regression_manifest_coverage,

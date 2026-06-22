@@ -201,7 +201,7 @@ FINAL_PROOF_SEED_ARTIFACT_IDS = [
     "knowledge-hub-report-only-maintenance-tools-20260622",
     "knowledge-hub-owner-inbox-final-gate-audit-20260622",
 ]
-FINAL_PROOF_SELECTOR_DATE = "2026-06-22"
+FINAL_PROOF_BASELINE_DATE = "2026-06-22"
 FINAL_PROOF_SELECTOR_TAG = "governance"
 FINAL_PROOF_INDEX_PATHS = [
     "indexes/by-owner.md",
@@ -229,30 +229,31 @@ SOURCE_CHECK_SNAPSHOT_INDEX_PATHS = [
     "indexes/by-decision.md",
 ]
 
-def final_proof_dynamic_candidate(row):
+def final_proof_dynamic_candidate(row, selection_date):
     tags = row.get("tags", [])
     if not isinstance(tags, list):
         tags = []
     path_text = str(row.get("path", "") or "")
     review_status = str(row.get("review_status", "") or "")
+    selection_suffix = selection_date.replace("-", "")
     return (
         str(row.get("domain", "") or "") == "governance"
         and str(row.get("kind", "") or "") == "audit"
         and (
-            str(row.get("created_at", "") or "") == FINAL_PROOF_SELECTOR_DATE
-            or str(row.get("updated_at", "") or "") == FINAL_PROOF_SELECTOR_DATE
+            str(row.get("created_at", "") or "") == selection_date
+            or str(row.get("updated_at", "") or "") == selection_date
         )
         and FINAL_PROOF_SELECTOR_TAG in tags
         and path_text.startswith("artifacts/manifests/knowledge-hub-")
-        and path_text.endswith(f"-{FINAL_PROOF_SELECTOR_DATE.replace('-', '')}.md")
+        and path_text.endswith(f"-{selection_suffix}.md")
         and (review_status.endswith("-applied") or review_status.endswith("-registered"))
     )
 
-def select_final_proof_artifact_ids(items_rows):
+def select_final_proof_artifact_ids(items_rows, selection_date):
     dynamic_ids = [
         str(row.get("id", ""))
         for row in items_rows
-        if row.get("id") and final_proof_dynamic_candidate(row)
+        if row.get("id") and final_proof_dynamic_candidate(row, selection_date)
     ]
     selected = []
     for artifact_id in FINAL_PROOF_SEED_ARTIFACT_IDS + dynamic_ids:
@@ -260,7 +261,7 @@ def select_final_proof_artifact_ids(items_rows):
             selected.append(artifact_id)
     return selected, dynamic_ids
 
-def build_final_proof_artifacts_summary():
+def build_final_proof_artifacts_summary(selection_date):
     item_rows = [
         row
         for row in load_jsonl(root / "registry" / "items.jsonl")
@@ -270,7 +271,7 @@ def build_final_proof_artifacts_summary():
         str(row.get("id", "")): row
         for row in item_rows
     }
-    expected_ids, dynamic_ids = select_final_proof_artifact_ids(item_rows)
+    expected_ids, dynamic_ids = select_final_proof_artifact_ids(item_rows, selection_date)
     try:
         migration_text = (root / "registry" / "migrations.jsonl").read_text()
     except Exception:
@@ -370,7 +371,9 @@ def build_final_proof_artifacts_summary():
     )
     return {
         "status": status,
-        "selection_mode": "seed-plus-dynamic-governance-20260622",
+        "selection_mode": "seed-plus-dynamic-governance-by-as-of-date",
+        "baseline_date": FINAL_PROOF_BASELINE_DATE,
+        "selection_date": selection_date,
         "seed_ids": FINAL_PROOF_SEED_ARTIFACT_IDS,
         "dynamic_ids": dynamic_ids,
         "dynamic_count": len(dynamic_ids),
@@ -378,10 +381,10 @@ def build_final_proof_artifacts_summary():
             "domain": "governance",
             "kind": "audit",
             "date_field": "created_at or updated_at",
-            "date": FINAL_PROOF_SELECTOR_DATE,
+            "date": selection_date,
             "required_tag": FINAL_PROOF_SELECTOR_TAG,
             "path_prefix": "artifacts/manifests/knowledge-hub-",
-            "path_suffix": f"-{FINAL_PROOF_SELECTOR_DATE.replace('-', '')}.md",
+            "path_suffix": f"-{selection_date.replace('-', '')}.md",
             "review_status_suffixes": ["-applied", "-registered"],
         },
         "expected_ids": expected_ids,
@@ -397,7 +400,7 @@ def build_final_proof_artifacts_summary():
         "missing_migration": missing_migration,
         "missing_indexes": missing_indexes,
         "rows": rows,
-        "notes_zh": "只读汇总 2026-06-22 终态 proof 主制品在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
+        "notes_zh": f"只读汇总 {selection_date} 治理 proof 制品和 {FINAL_PROOF_BASELINE_DATE} seed 基线在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
     }
 
 def build_source_check_snapshot_summary():
@@ -697,7 +700,7 @@ elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
 else:
     knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
 strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
-proof_artifacts_20260622 = build_final_proof_artifacts_summary()
+proof_artifacts_20260622 = build_final_proof_artifacts_summary(today.isoformat())
 source_check_snapshot_20260621 = build_source_check_snapshot_summary()
 source_check_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
 source_check_runtime_summary = build_source_check_runtime_summary(source_check_runtime)

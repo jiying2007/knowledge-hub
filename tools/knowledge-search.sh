@@ -70,8 +70,9 @@ if invalid_kinds:
 def load_registry_items():
     path = root / "registry" / "items.jsonl"
     by_path = {}
+    rows = []
     if not path.exists():
-        return by_path
+        return by_path, rows
     for line in path.read_text().splitlines():
         if not line.strip():
             continue
@@ -79,6 +80,7 @@ def load_registry_items():
             item = json.loads(line)
         except Exception:
             continue
+        rows.append(item)
         item_path = item.get("path")
         if not item_path:
             continue
@@ -87,9 +89,9 @@ def load_registry_items():
         except Exception:
             continue
         by_path.setdefault(str(full_path), []).append(item)
-    return by_path
+    return by_path, rows
 
-registry_by_path = load_registry_items()
+registry_by_path, registry_items = load_registry_items()
 
 def item_source_id(item):
     source = item.get("source")
@@ -126,6 +128,27 @@ def metadata_for_item(item):
         "tags": item.get("tags", []),
     }
 
+def registry_metadata_haystack(item):
+    fields = [
+        item.get("id", ""),
+        item.get("title", ""),
+        item.get("path", ""),
+        item.get("kind", ""),
+        item.get("domain", ""),
+        item.get("status", ""),
+        item.get("owner", ""),
+        item.get("summary_zh", ""),
+        item.get("review_status", ""),
+        item_source_id(item),
+    ]
+    tags = item.get("tags", [])
+    if isinstance(tags, list):
+        fields.extend(str(tag) for tag in tags)
+    source = item.get("source")
+    if isinstance(source, dict):
+        fields.extend(str(value) for value in source.values() if isinstance(value, (str, int, float)))
+    return "\n".join(str(value) for value in fields if value).lower()
+
 sources = [
     {"id": "knowledge-hub", "path": str(root)},
 ]
@@ -137,6 +160,7 @@ if sources_path.exists():
 allowed_suffixes = {".md", ".txt", ".json", ".jsonl", ".csv"}
 results = []
 seen = set()
+result_item_ids = set()
 for source in sources:
     sid = source.get("id", "")
     if args.source and sid not in args.source:
@@ -176,9 +200,36 @@ for source in sources:
         }
         if item:
             result.update(metadata_for_item(item))
+            if item.get("id"):
+                result_item_ids.add(str(item.get("id")))
         results.append(result)
     if len(results) >= args.limit:
         break
+
+metadata_fallback_enabled = not args.source or "knowledge-hub" in args.source
+if metadata_fallback_enabled and len(results) < args.limit:
+    for item in registry_items:
+        if len(results) >= args.limit:
+            break
+        item_id = str(item.get("id", ""))
+        if item_id and item_id in result_item_ids:
+            continue
+        if not item_matches_filters(item):
+            continue
+        if query not in registry_metadata_haystack(item):
+            continue
+        path_text = str(item.get("path", ""))
+        result = {
+            "source": "knowledge-hub",
+            "path": str((root / path_text).resolve()) if path_text else str(root),
+            "line": 1,
+            "preview": f"registry metadata: {item.get('summary_zh') or item.get('title') or item_id}"[:240],
+            "match": "registry-metadata",
+        }
+        result.update(metadata_for_item(item))
+        if item_id:
+            result_item_ids.add(item_id)
+        results.append(result)
 
 if args.json:
     filters = {

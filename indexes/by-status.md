@@ -373,3 +373,5 @@
 - review-after-topic-owner-hardening-applied: review_after 分组报告、by-topic 优先恢复速查、owner form target_candidates 防篡改和合法终止组合回归已压实；证据：`artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-status-review-proof-hardening-20260622`
 - owner-status-review-proof-hardening-applied: owner queue 覆盖状态、review_after worksheet 恢复和 final proof 动态发现已压实；证据：`artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-proof-search-runtime-hardening-20260622`
+- proof-search-runtime-hardening-applied: final proof as-of 日期选择和 registry metadata-only 搜索 fallback 已压实，回归覆盖扩展到 103 项；证据：`artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.jsonl`.
