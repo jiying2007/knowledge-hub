@@ -188,3 +188,4 @@
 - Knowledge Hub report-only maintenance tools: `artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.md`
 - Knowledge Hub owner inbox and final gate audit: `artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.md`
 - Knowledge Hub manual source and kind contract: `artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.md`
+- Knowledge Hub offline maintenance and manifest profile hardening: `artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.md`

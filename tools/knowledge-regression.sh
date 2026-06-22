@@ -3029,6 +3029,37 @@ def test_manual_entry_offline_docs():
         },
     )
 
+def test_readme_offline_shortest_paths():
+    readme_path = root / "README.md"
+    try:
+        readme = readme_path.read_text()
+        read_error = ""
+    except Exception as exc:
+        readme = ""
+        read_error = str(exc)
+    required_fragments = [
+        "## 人工维护 5 条最短路径",
+        "### 1. 新增一条知识",
+        "### 2. 新增一个 source",
+        "### 3. 归档一条历史记录",
+        "### 4. owner 签收一个 gate",
+        "### 5. 跑一次终态检查",
+        "manual_validation_pending: true",
+        "required_followup",
+        "rtk git diff --check",
+        "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+    ]
+    missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
+    expect(
+        not read_error and not missing_fragments,
+        "readme-offline-shortest-paths",
+        "README keeps the five shortest manual maintenance paths and terminal-gate offline fallback",
+        {
+            "read_error": read_error,
+            "missing_fragments": missing_fragments,
+        },
+    )
+
 def test_manual_entry_validation_diagnostics_default():
     result = run_cmd(
         root,
@@ -3785,24 +3816,28 @@ def test_manifest_latest_filename_date_only():
 
 def test_manifest_jsonl_profile_gate():
     repo = copy_repo("manifest-jsonl-profile-gate")
-    manifest_path = repo / "artifacts" / "manifests" / "knowledge-hub-manifest-profile-index-plan-20260621.jsonl"
-    rows = []
+    manifest_paths = [
+        repo / "artifacts" / "manifests" / "knowledge-hub-manifest-profile-index-plan-20260621.jsonl",
+        repo / "artifacts" / "manifests" / "knowledge-hub-manual-source-kind-contract-20260622.jsonl",
+    ]
+    setup_errors = []
     try:
-        for line in manifest_path.read_text().splitlines():
-            if not line.strip():
-                continue
-            rows.append(json.loads(line))
-        rows[0].pop("summary_zh", None)
-        rows[0].pop("notes_zh", None)
-        rows[0].pop("evidence", None)
-        rows[0].pop("evidence_refs", None)
-        rows[0].pop("validation_refs", None)
-        rows[0].pop("verification_commands", None)
-        rows[0].pop("source_refs", None)
-        manifest_path.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n")
-        setup_error = ""
+        for manifest_path in manifest_paths:
+            rows = []
+            for line in manifest_path.read_text().splitlines():
+                if not line.strip():
+                    continue
+                rows.append(json.loads(line))
+            rows[0].pop("summary_zh", None)
+            rows[0].pop("notes_zh", None)
+            rows[0].pop("evidence", None)
+            rows[0].pop("evidence_refs", None)
+            rows[0].pop("validation_refs", None)
+            rows[0].pop("verification_commands", None)
+            rows[0].pop("source_refs", None)
+            manifest_path.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n")
     except Exception as exc:
-        setup_error = str(exc)
+        setup_errors.append(str(exc))
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     parsed = {}
     try:
@@ -3811,14 +3846,16 @@ def test_manifest_jsonl_profile_gate():
         pass
     errors = parsed.get("errors", [])
     expect(
-        not setup_error
+        not setup_errors
         and result["exit_code"] != 0
         and any("manifest-profile:knowledge-hub-manifest-profile-index-plan-20260621 missing summary_zh or notes_zh" in error for error in errors)
-        and any("manifest-profile:knowledge-hub-manifest-profile-index-plan-20260621 missing evidence field" in error for error in errors),
+        and any("manifest-profile:knowledge-hub-manifest-profile-index-plan-20260621 missing evidence field" in error for error in errors)
+        and any("manifest-profile:knowledge-hub-manual-source-kind-contract-20260622 missing summary_zh or notes_zh" in error for error in errors)
+        and any("manifest-profile:knowledge-hub-manual-source-kind-contract-20260622 missing evidence field" in error for error in errors),
         "manifest-jsonl-profile-gate",
-        "knowledge-check requires lightweight profile fields for new governance manifest JSONL rows",
+        "knowledge-check requires lightweight profile fields for governance manifest JSONL rows dated 2026-06-21 or later",
         {
-            "setup_error": setup_error,
+            "setup_errors": setup_errors,
             "exit_code": result["exit_code"],
             "errors": errors[:10],
         },
@@ -4729,16 +4766,19 @@ def test_source_manual_entry_guide():
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
     today_compact = today.strftime("%Y%m%d")
+    review_after_matches_today = f'"review_after":"{today.isoformat()}"' in result["stdout"]
     expect(
         result["exit_code"] == 0
         and not missing_fragments
-        and f'"id":"SCC-{today_compact}-example-source"' in result["stdout"],
+        and f'"id":"SCC-{today_compact}-example-source"' in result["stdout"]
+        and not review_after_matches_today,
         "source-manual-entry-guide",
         "source manual entry guide prints registry, index and coverage drafts",
         {
             "exit_code": result["exit_code"],
             "missing_fragments": missing_fragments,
             "today_compact": today_compact,
+            "review_after_matches_today": review_after_matches_today,
             "stdout_sample": result["stdout"][:1400],
         },
     )
@@ -5290,6 +5330,7 @@ def test_regression_manifest_coverage():
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
+        "readme-offline-shortest-paths",
         "manual-entry-validation-diagnostics-default",
         "manual-entry-readability-fields",
         "manual-entry-archive-default-status",
@@ -5453,6 +5494,7 @@ for test_fn in [
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
+    test_readme_offline_shortest_paths,
     test_manual_entry_validation_diagnostics_default,
     test_manual_entry_readability_fields,
     test_manual_entry_archive_default_status,

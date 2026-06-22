@@ -363,3 +363,5 @@
 - owner-inbox-final-gate-audit-applied: 新增 owner-inbox 单屏人工复核入口，并让 final gate 输出当前 source-check 运行证据和高优先级规则审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.jsonl`.
 - reviewing: `knowledge-hub-manual-source-kind-contract-20260622`
 - manual-source-kind-contract-applied: 人工新增条目的 source 绑定和 registry/search kind 契约已压实，并补齐 93 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.jsonl`.
+- reviewing: `knowledge-hub-offline-manifest-profile-hardening-20260622`
+- offline-manifest-profile-hardening-applied: 离线人工维护 fallback、source 默认复核周期和 2026-06-21 及之后 manifest profile gate 已压实，并补齐 94 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.jsonl`.

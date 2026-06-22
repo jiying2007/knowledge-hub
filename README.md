@@ -243,6 +243,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治理状态；当值为 `complete-except-owner-review` 且 `gap_map` 只有 `owner-gates-open` 时，说明非 owner 自动治理门禁已闭环，剩余动作只能由 owner 人工签收。复核证据时优先看 `evidence_index[]`，它逐条记录 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 `knowledge-status --strict` 的命令、退出码、状态和中文摘要；纯 owner-review 终态还会有 `owner-blocker-provenance` 行，指向 `automatic_governance.owner_blocker_source`。
 `final_state_audit` 会同时给出 Level 1 PCR02 docs、Level 2 PCR02 candidate sources、Level 3 registered sources 的摘要状态，用于快速判断终态证据缺在哪一层。
 
+离线或工具不可用时，不得声明终态 `ok` / `pass`。在维护记录中保留 `manual_validation_pending: true`，写清 `owner`、日期、当前 `cwd`、阻塞原因，并把 `required_followup` 写成完整命令：`rtk git diff --check` 和 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`。AI 或工具恢复后先补跑这些命令，再更新 registry、index 或 manifest 的验证证据。
+
 ## 常用辅助路径
 
 ### 复核过期和即将到期项

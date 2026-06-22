@@ -1077,16 +1077,30 @@ if not args.sources_only:
             elif not (root / target_path).exists():
                 errors.append(f"migrations:{migration_id} missing local target: {target_ref}")
 
-    manifest_profile_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-*-20260621.jsonl"))
+    manifest_profile_paths = []
+    for candidate_path in sorted((root / "artifacts" / "manifests").glob("knowledge-hub-*.jsonl")):
+        date_match = re.search(r"(20\d{6})", candidate_path.name)
+        if not date_match:
+            continue
+        try:
+            manifest_date = dt.datetime.strptime(date_match.group(1), "%Y%m%d").date()
+        except Exception:
+            continue
+        if manifest_date >= READABILITY_GATE_START:
+            manifest_profile_paths.append(candidate_path)
     manifest_evidence_fields = ["evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"]
-    manifest_boundary_fields = ["boundaries", "must_not", "non_goals", "rollback_policy", "risk"]
+    manifest_boundary_fields = ["boundaries", "guardrails", "must_not", "non_goals", "rollback_policy", "risk"]
     for manifest_path in manifest_profile_paths:
         rel_manifest = manifest_path.relative_to(root)
+        manifest_stem = manifest_path.stem
         filename_has_date = bool(re.search(r"20\d{6}", manifest_path.name))
         rows = load_jsonl(manifest_path)
         for row_index, row in enumerate(rows, 1):
             row_id = str(row.get("id", "")).strip()
             label = row_id or f"{rel_manifest}:{row_index}"
+            row_type = str(row.get("row_type", "")).strip()
+            if row_id != manifest_stem and row_type != "summary":
+                continue
             if not row_id:
                 errors.append(f"manifest-profile:{label} missing id")
             if not str(row.get("status", "")).strip():
@@ -1108,6 +1122,8 @@ if not args.sources_only:
             for field in manifest_boundary_fields:
                 value = row.get(field)
                 if isinstance(value, list) and value:
+                    has_boundary = True
+                elif isinstance(value, dict) and value:
                     has_boundary = True
                 elif isinstance(value, str) and value.strip():
                     has_boundary = True

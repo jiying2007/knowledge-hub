@@ -282,6 +282,11 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   JSON_OWNER="$(json_escape "${OWNER:-leiwenjun}")"
   TODAY="$(knowledge_today)"
   TODAY_COMPACT="${TODAY//-/}"
+  if DEFAULT_REVIEW_AFTER="$(date -u -d "${TODAY} +3 months" +%F 2>/dev/null)"; then
+    :
+  else
+    DEFAULT_REVIEW_AFTER="$TODAY"
+  fi
   SOURCE_OWNER_REGISTRY_STATUS="unchecked"
   SOURCE_OWNER_WARNING_LINE=""
   if [[ -f "$ROOT/registry/owners.json" ]]; then
@@ -364,7 +369,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### registry/sources.json object
 
 \`\`\`json
-{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}","migration_strategy":"classify-first","owner":"${JSON_OWNER}","review_after":"${TODAY}","final_disposition":"owner-gated-pending-decision"${CHECK_FIELD}${NO_CHECK_FIELD}}
+{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}","migration_strategy":"classify-first","owner":"${JSON_OWNER}","review_after":"${DEFAULT_REVIEW_AFTER}","final_disposition":"owner-gated-pending-decision"${CHECK_FIELD}${NO_CHECK_FIELD}}
 \`\`\`
 
 ### indexes/by-source.md 主表行

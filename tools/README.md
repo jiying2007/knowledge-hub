@@ -123,6 +123,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 查看 JSON 中的 `automatic_governance.status`、`owner_recovery`、`final_state_audit`、`source_check_runtime`、`highest_priority_rules_audit`、`evidence_index` 和 `gap_map`：`complete-except-owner-review` 表示自动治理已闭环但仍需人工 owner decision，只有 final gate 为 `needs-owner-review` 且唯一 gap 是 `owner-gates-open` 时才成立；`owner_recovery.next_open_queue[]` 可恢复下一批 open worksheet 的并行领取顺序，`owner_recovery.owner_dispatch[]` 和 `owner_recovery.next_open` 可继续按 owner 或单条 worksheet 恢复人工分派；`final_state_audit` 分层显示 Level 1/2/3 终态摘要；`source_check_runtime` 是当前 report-only source availability 证据；`highest_priority_rules_audit` 显示 rtk、apply_patch、no-memory-write、no-source-modification、report-only 等高优先级规则的证据边界；`evidence_index` 记录本次终态 gate 采信的每条命令证据；`needs-fix` 表示还有非 owner blocker 需要先修复。`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate。
 
+如果离线或工具不可用，不能把终态写成 `ok` / `pass`。在相邻维护记录中写 `manual_validation_pending: true`，并记录 owner、日期、当前 `cwd`、阻塞原因和 `required_followup: rtk git diff --check; rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；恢复后先补跑命令再更新证据。
+
 失败后按这个顺序恢复：
 
 1. `needs-fix`: 先看 `evidence_index[]`，定位哪条命令不是 `pass` 或 `owner-review`；再看对应 `blockers[]` / `gap_map[]` 的 `fix_action`。

@@ -208,3 +208,4 @@
 - 2026-09-22: `knowledge-hub-report-only-maintenance-tools-20260622`
 - 2026-09-22: `knowledge-hub-owner-inbox-final-gate-audit-20260622`
 - 2026-09-22: `knowledge-hub-manual-source-kind-contract-20260622`
+- 2026-09-22: `knowledge-hub-offline-manifest-profile-hardening-20260622`
