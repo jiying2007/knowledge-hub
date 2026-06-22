@@ -1,19 +1,19 @@
 # By Topic
 
-- Embedded standards: `domains/embedded/standards`
-- Embedded runbooks: `domains/embedded/runbooks`
-- Project current facts: `domains/projects/*/current`
-- Project archives: `domains/projects/*/archive`
-- Patents: `domains/patents`
-- Patent disclosure copy-first applied: `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
-- Patent disclosure Markdown corpus: `domains/patents/archive/patent-disclosure`
-- Patent disclosure artifact references: `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
-- Codex workflows: `domains/codex`
-- Codex archive reference-first boundary: `domains/codex/archive/codex-archive.ref.md`
-- Personal notes: `domains/personal`
-- Governance rules: `governance`
-- Chinese long-term asset templates: `templates`
-- Governance manifests: `artifacts/manifests`
+- 嵌入式团队标准：`domains/embedded/standards`
+- 嵌入式 runbook：`domains/embedded/runbooks`
+- 项目当前事实：`domains/projects/*/current`
+- 项目历史归档：`domains/projects/*/archive`
+- 专利材料：`domains/patents`
+- 专利披露 copy-first applied：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
+- 专利披露 Markdown 正文集：`domains/patents/archive/patent-disclosure`
+- 专利披露附件引用：`domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
+- Codex 工作流：`domains/codex`
+- Codex archive reference-first 边界：`domains/codex/archive/codex-archive.ref.md`
+- 个人笔记：`domains/personal`
+- 治理规则：`governance`
+- 中文长期资产模板：`templates`
+- 治理 manifest：`artifacts/manifests`
 - Knowledge Hub index drift remediation: `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.md`
 - Knowledge Hub stale index gate: `artifacts/manifests/knowledge-hub-stale-index-gate-20260619.md`
 - Knowledge Hub index path gate: `artifacts/manifests/knowledge-hub-index-path-gate-20260619.md`
@@ -184,3 +184,4 @@
 - Knowledge Hub final recovery discoverability hardening: `artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.md`
 - Knowledge Hub final proof summary and readability hardening: `artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.md`
 - Knowledge Hub source check snapshot evidence and readability hardening: `artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`
+- Knowledge Hub review_after near-due snapshot: `artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.md`

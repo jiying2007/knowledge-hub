@@ -102,7 +102,14 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 ```
 
 `rtk git rev-parse --short HEAD` 和 `rtk git status --branch --short` 先固定当前基线、分支和工作区状态，防止新线程把旧 handoff 当成当前事实。
-`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、`owner_gates.next_open_queue[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。`owner_gates.owner_dispatch[].suggested_owner_packet` 是只读 owner handoff 包，会把 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit 排成建议顺序，并给出本地临时 owner JSONL 路径；它不生成、不保存、不应用 owner decision。`owner_gates.next_open_queue[]` 按 `review_after, worksheet_id` 输出 open worksheet 的下一批领取顺序，便于新线程或多 owner 并行恢复；其中可执行命令只包含 checklist/forms、forms-jsonl 和 evidence-readiness，validate/landing 只作为人工回填后的模板。`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁；它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]`、下一条 open gate 和 `next_open_queue[]`，便于新线程直接恢复人工分派；它的 `evidence_index` 会把本次采信的命令、退出码、状态、中文摘要、runtime evidence path 和 related artifact 列成证据索引，`automatic_governance.owner_blocker_source` 会说明 owner gate 数量来自 strict status 的哪个字段。`final_state_audit.level1_pcr02_docs` 会暴露 `expected_owner_gate_count`、worksheet 行数和 owner-ready 数量来源，避免把 7 个 open gate 当成脚本魔法常量。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`sources.source_recovery_rows[]` 会把 source registry 终态、review_after、final_disposition、check/no-check 和 latest coverage decision 合成一行；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。manifest latest 只按文件名里的 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。`knowledge-index-plan.sh --section source --json` 若发现 latest source coverage 中同一 `source_id` 重复，会在 `source_coverage_selection.duplicate_source_ids` 和 warnings 中暴露，并保留第一行作为恢复视图。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
+
+恢复时按下面 5 个层面读取，不需要一次性重读全部 manifest：
+
+- 状态恢复：`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、`owner_gates.next_open_queue[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。
+- owner 分派：`owner_gates.owner_dispatch[].suggested_owner_packet` 是只读 owner handoff 包，会把 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit 排成建议顺序，并给出本地临时 owner JSONL 路径；它不生成、不保存、不应用 owner decision。`owner_gates.next_open_queue[]` 按 `review_after, worksheet_id` 输出 open worksheet 的下一批领取顺序，其中可执行命令只包含 checklist/forms、forms-jsonl 和 evidence-readiness，validate/landing 只作为人工回填后的模板。
+- 终态门禁：`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 strict status，并判断是否只剩 owner 语义门禁。它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]`、下一条 open gate 和 `next_open_queue[]`；`evidence_index` 会记录命令、退出码、状态、中文摘要、runtime evidence path 和 related artifact；`automatic_governance.owner_blocker_source` 会说明 owner gate 数量来自 strict status 的哪个字段。
+- source 与 boundary：`final_state_audit.level1_pcr02_docs` 会暴露 `expected_owner_gate_count`、worksheet 行数和 owner-ready 数量来源，避免把 7 个 open gate 当成脚本魔法常量。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`sources.source_recovery_rows[]` 会把 source registry 终态、review_after、final_disposition、check/no-check 和 latest coverage decision 合成一行；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。
+- 索引恢复：`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。manifest latest 只按文件名里的 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。`knowledge-index-plan.sh --section source --json` 若发现 latest source coverage 中同一 `source_id` 重复，会在 `source_coverage_selection.duplicate_source_ids` 和 warnings 中暴露，并保留第一行作为恢复视图。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
 
 ## 搜索知识
 
@@ -143,7 +150,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind patent-disclosure --domai
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner> --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
 ```
 
-最小落盘文件：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`；如涉及项目、source、主题或决策，再同步对应索引。若 `source.from` 或后续人工 `source_id` 指向 `registry/sources.json` 中的已登记 source，同步 `indexes/by-source.md`；未知来源保持 manual source reason 或 no-source reason，不伪造 source id。若 `kind=decision`，或内容承载真实 registry/migration/owner decision 入口，同步 `indexes/by-decision.md`；owner-ready package 不能写成已签收 owner decision。registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；2026-06-21 及之后 `generated_by_ai=true` 的 registry item 必须填写 `ai_role`、`ai_model_or_tool` 和 `ai_generated_at`。涉及迁移、引用或归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须包含 `notes_zh`，普通新知识不强制 migration。
+最小落盘按 5 组核对：
+
+- 必须落盘：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`。
+- 按条件同步：涉及项目、source、主题或决策时，再同步对应索引。若 `source.from` 或后续人工 `source_id` 指向 `registry/sources.json` 中的已登记 source，同步 `indexes/by-source.md`；未知来源保持 manual source reason 或 no-source reason，不伪造 source id。
+- 决策边界：若 `kind=decision`，或内容承载真实 registry/migration/owner decision 入口，同步 `indexes/by-decision.md`；owner-ready package 不能写成已签收 owner decision。
+- registry 必填：registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；2026-06-21 及之后 `generated_by_ai=true` 的 registry item 必须填写 `ai_role`、`ai_model_or_tool` 和 `ai_generated_at`。
+- migration 触发：涉及迁移、引用或归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须包含 `notes_zh`；普通新知识不强制 migration。
 
 复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。最后运行：
 
@@ -161,9 +174,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id>
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
-最小落盘文件：`registry/sources.json`、`indexes/by-source.md`、最新或相邻 source coverage / source identity manifest（例如 `artifacts/manifests/<source-id>-source-coverage-YYYYMMDD.{md,jsonl}` 或全局 closeout manifest），必要时同步 `indexes/by-project.md`、`indexes/by-topic.md`。
+新增 source 时按 4 组核对：
 
-人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。最后运行：
+- 最小落盘：`registry/sources.json`、`indexes/by-source.md`、最新或相邻 source coverage / source identity manifest（例如 `artifacts/manifests/<source-id>-source-coverage-YYYYMMDD.{md,jsonl}` 或全局 closeout manifest）；必要时同步 `indexes/by-project.md`、`indexes/by-topic.md`。
+- registry 字段：人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。
+- check/no-check 二选一：`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
+- 覆盖语义：同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。`source coverage` 是 source 覆盖/分类证据；`source identity manifest` 是 source 身份与哈希等元信息记录。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。
+
+最后运行：
 
 `knowledge-check --json` 会输出 `source_check_health`：它只做静态契约检查，统计 registered source、`rtk` check、`no_check_reason`、缺失项和不可达 source path；不会执行 registry 里的 check 命令。PCR02 Level 2 边界由 `boundary_health` 证明：它只读 Knowledge Hub 内部 manifest、registry 和 index，确认 7 组 boundary 证据链齐全；不会读取 PCR02 源项目正文、写 memory、关闭 owner gate 或启用自动化。
 
@@ -202,7 +220,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> --validate-forms '<owner-decisions.jsonl>' --landing-audit --json
 ```
 
-建议把 owner 人工填写的临时 JSONL 放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`，先只读校验，再用 landing plan 人工落地，并用 landing audit 复核 worksheet、registry、migration 和 index 人工落点。多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --evidence-readiness --json` 查看只读证据准备度和候选值，用 `--owner <owner> --forms-jsonl` 导出对应责任人的骨架。`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选，不会写入正式 owner 字段，也不能替代签收。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；表单和 landing plan 会带出 `verification_cwd` / `worksheet_verification_cwd` 与 `verification_commands` / `worksheet_verification_commands`，相对命令必须在该 cwd 下执行，不是在 Knowledge Hub root 下执行。`--landing-audit` 会显式提醒 `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl` 的对应 worksheet 行也必须进入 resolved/owner-approved/closed 状态，否则 owner JSONL 即使有效，gate 仍会 open。人工落地后按这些命令或等价证据复核。只有真实 owner 填写 decision；AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
+owner gate 人工签收按 6 步走：
+
+1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。
+2. 选择分派方式：多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --evidence-readiness --json` 查看只读证据准备度和候选值。
+3. 导出表单骨架：用 `--owner <owner> --forms-jsonl` 或全量 `--forms-jsonl` 导出骨架；`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选，不会写入正式 owner 字段，也不能替代签收。
+4. 人工填写并校验：真实 owner 填写 decision 后先只读 `--validate-forms '<owner-decisions.jsonl>' --json`。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外。
+5. 生成落地计划和审计：校验通过后再跑 `--landing-plan --json` 和 `--landing-audit --json`。表单和 landing plan 会带出 `verification_cwd` / `worksheet_verification_cwd` 与 `verification_commands` / `worksheet_verification_commands`，相对命令必须在该 cwd 下执行，不是在 Knowledge Hub root 下执行。
+6. 复核 worksheet 状态：`--landing-audit` 会显式提醒 `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl` 的对应 worksheet 行也必须进入 resolved/owner-approved/closed 状态，否则 owner JSONL 即使有效，gate 仍会 open。AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
 ### 5. 跑一次终态检查
 

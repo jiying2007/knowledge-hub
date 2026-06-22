@@ -2,38 +2,38 @@
 
 ## PCR02
 
-- Current docs source: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
-- Legacy archive source: `/home/leiwenjun/embedded/engineering_archive/pcr02`
-- Target domain: `domains/projects/pcr02`
-- Decisions: `domains/projects/pcr02/decisions/`; current owner-gated entries have no owner decision generated, with recovery entries in `indexes/by-decision.md`.
-- Classification baseline: `artifacts/manifests/pcr02-project-docs-classification-20260616.md`
-- Copy-first dry-run manifest: `artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
-- Copy-first applied report: `artifacts/manifests/pcr02-copy-first-applied-20260616.md`
-- Review-required resolution plan: `artifacts/manifests/pcr02-review-required-resolution-20260617.md`
-- Reference/artifact-ref applied report: `artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
-- Owner-review package for remaining blocked docs: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
-- ASAN split targets: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
-- Memory auto-curation report-only governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
-- DVR and motor MCU closeout targets: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
-- Remaining owner gates: `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
-- Docs governance closeout: `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
-- Owner action board: `artifacts/manifests/pcr02-owner-action-board-20260618.md`
-- Governance handoff: `artifacts/manifests/pcr02-governance-handoff-20260618.md`
-- Owner intake package: `artifacts/manifests/pcr02-owner-intake-package-20260618.md`
-- Owner source identity preflight: `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
-- Owner source identity validation: `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
-- Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
-- Tools boundary: `artifacts/manifests/pcr02-tools-boundary-20260620.md`
-- Knowledge secret/config boundary: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
-- Product-test artifact/config/interface boundary: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
-- Product-test artifact/config/interface identity: `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`
-- P1 source identity for agent-config/tools/root-artifacts: `artifacts/manifests/pcr02-p1-source-identity-20260621.md`
-- P2 archive/rule identity for module-agent-rules/scratch: `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`
-- Level 2 source check execution snapshot: `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`
-- Scratch archive boundary: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
-- Root artifacts boundary: `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`
-- Module agent rules boundary: `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`
-- Agent config boundary: `artifacts/manifests/pcr02-agent-config-boundary-20260620.md`
+- 当前 docs source：`/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- 历史归档 source：`/home/leiwenjun/embedded/engineering_archive/pcr02`
+- 目标项目域：`domains/projects/pcr02`
+- 决策目录：`domains/projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。
+- 分类基线：`artifacts/manifests/pcr02-project-docs-classification-20260616.md`
+- copy-first dry-run manifest：`artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
+- copy-first applied 报告：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`
+- review-required 处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
+- reference/artifact-ref applied 报告：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
+- 剩余阻塞 docs 的 owner-review package：`artifacts/manifests/pcr02-owner-review-package-20260618.md`
+- ASAN 拆分目标：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`
+- memory auto-curation report-only 治理：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
+- DVR 与 motor MCU 收口目标：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
+- 剩余 owner gates：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
+- docs 治理收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
+- owner 行动看板：`artifacts/manifests/pcr02-owner-action-board-20260618.md`
+- 治理交接：`artifacts/manifests/pcr02-governance-handoff-20260618.md`
+- owner intake package：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`
+- owner source identity preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
+- owner source identity validation：`artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
+- Level 2 source coverage 收口：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- tools 边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`
+- knowledge secret/config 边界：`artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
+- product-test artifact/config/interface 边界：`artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
+- product-test artifact/config/interface 身份清单：`artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`
+- P1 source identity，覆盖 agent-config/tools/root-artifacts：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`
+- P2 archive/rule identity，覆盖 module-agent-rules/scratch：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`
+- Level 2 source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`
+- scratch archive 边界：`artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
+- root artifacts 边界：`artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`
+- module agent rules 边界：`artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`
+- agent config 边界：`artifacts/manifests/pcr02-agent-config-boundary-20260620.md`
 - Owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
