@@ -170,10 +170,12 @@ if source_coverage_selection.get("ignored_non_date_candidates"):
     )
 coverage_by_source = {}
 if latest_coverage:
+    duplicate_source_ids = []
+    duplicate_source_rows = collections.defaultdict(list)
     for row in read_jsonl(latest_coverage, str(latest_coverage.relative_to(root))):
         source_id = str(row.get("source_id", ""))
         if source_id:
-            coverage_by_source[source_id] = {
+            coverage_row = {
                 "status": row.get("status", ""),
                 "classification": row.get("classification", ""),
                 "decision": row.get("decision", ""),
@@ -181,6 +183,24 @@ if latest_coverage:
                 "owner": row.get("owner", ""),
                 "checked_at": row.get("checked_at", ""),
             }
+            if source_id in coverage_by_source:
+                if source_id not in duplicate_source_ids:
+                    duplicate_source_ids.append(source_id)
+                    duplicate_source_rows[source_id].append(coverage_by_source[source_id])
+                duplicate_source_rows[source_id].append(coverage_row)
+                continue
+            coverage_by_source[source_id] = coverage_row
+    source_coverage_selection["duplicate_source_ids"] = sorted(duplicate_source_ids)
+    source_coverage_selection["duplicate_policy"] = "first-row-kept-duplicates-warned"
+    source_coverage_selection["duplicate_rows"] = {
+        source_id: rows for source_id, rows in sorted(duplicate_source_rows.items())
+    }
+    if duplicate_source_ids:
+        warnings.append(
+            "duplicate source_id rows in latest source coverage closeout: "
+            + ", ".join(sorted(duplicate_source_ids))
+            + "; first row kept for recovery view"
+        )
 else:
     warnings.append("missing dated knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl")
 
@@ -321,14 +341,8 @@ for manifest_path in manifest_jsonl_paths:
     filename_date = ""
     if filename_date_match:
         filename_date = "-".join(filename_date_match.groups())
-    date_value = (
-        filename_date
-        or first.get("checked_at")
-        or first.get("created_at")
-        or first.get("updated_at")
-        or first.get("review_after")
-        or ""
-    )
+    row_date_value = first.get("checked_at") or first.get("created_at") or first.get("updated_at") or first.get("review_after") or ""
+    date_value = filename_date
     evidence_value = (
         first.get("evidence")
         or first.get("evidence_refs")
@@ -350,6 +364,8 @@ for manifest_path in manifest_jsonl_paths:
             "row_count": len(rows),
             "status": first.get("status", ""),
             "date": date_value,
+            "date_source": "filename-YYYYMMDD" if filename_date else "missing-filename-date",
+            "row_date": row_date_value,
             "source_id": first.get("source_id", ""),
             "owner": first.get("owner", ""),
             "classification": first.get("classification", ""),
@@ -374,6 +390,8 @@ by_manifest = {
         "unpaired_count": len(unpaired_stems),
         "unpaired_expected_count": len(unpaired_expected),
         "unpaired_needs_review_count": len(unpaired_needs_review),
+        "latest_strategy": "filename-date-only",
+        "latest_strategy_zh": "latest 只按 manifest 文件名中的 YYYYMMDD 排序；JSONL row 内 checked_at/created_at/updated_at/review_after 仅作为 row_date 辅助字段，不参与 latest 排序。",
     },
     "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
     "unpaired": unpaired_classified,

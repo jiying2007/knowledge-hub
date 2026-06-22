@@ -343,3 +343,5 @@ Canonical buckets may use multiple lines with the same `- active:`、`- reviewin
 - owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读 `suggested_owner_packet`，owner landing worksheet 文件动态收集，final gate 暴露 source coverage selection，并用非 owner blocker 负向回归证明终态分类边界；documented by `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-gate-evidence-recovery-20260622`
 - final-gate-evidence-recovery-applied: `knowledge-final-gate.sh --json` 输出命令级 `evidence_index` 和 owner-blocker provenance，README/tools/indexes 补终态失败恢复路径与 source coverage latest 恢复规则；documented by `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.
+- reviewing: `knowledge-hub-recovery-search-manual-hardening-20260622`
+- recovery-search-manual-hardening-applied: manifest latest 文件名日期恢复、source coverage duplicate source_id warning、结构化搜索排除未登记 raw file、人工新增 diagnostics 默认验证和 source status coverage 同步已由 85 个回归场景覆盖；documented by `artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.

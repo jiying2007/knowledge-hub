@@ -2681,6 +2681,38 @@ def test_manual_entry_offline_docs():
         },
     )
 
+def test_manual_entry_validation_diagnostics_default():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--id",
+            "governance-validation-diagnostics",
+            "--path",
+            "governance/validation-diagnostics.md",
+        ],
+    )
+    diagnostics_command = "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"
+    expect(
+        result["exit_code"] == 0
+        and f'"validation_refs":["{diagnostics_command}"]' in result["stdout"]
+        and f"| `{diagnostics_command}` |" in result["stdout"],
+        "manual-entry-validation-diagnostics-default",
+        "manual entry drafts default validation refs and Evidence Index to diagnostics check",
+        {
+            "exit_code": result["exit_code"],
+            "has_validation_ref": f'"validation_refs":["{diagnostics_command}"]' in result["stdout"],
+            "has_evidence_index_command": f"| `{diagnostics_command}` |" in result["stdout"],
+            "stdout_sample": result["stdout"][:1600],
+        },
+    )
+
 def test_manual_entry_readability_fields():
     result = run_cmd(
         root,
@@ -2727,6 +2759,7 @@ def test_manual_entry_readability_fields():
         '"review_basis":""',
         "manual_validation_pending: true",
         "offline lab note awaiting rtk validation",
+        "required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
     expect(
@@ -3178,6 +3211,8 @@ def test_index_plan_extended_sections():
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
         and manifest_summary.get("jsonl_count", 0) >= 100
         and manifest_summary.get("markdown_count", 0) >= 100
+        and manifest_summary.get("latest_strategy") == "filename-date-only"
+        and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_summary.get("unpaired_count") == 6
         and manifest_summary.get("unpaired_expected_count") == 6
         and manifest_summary.get("unpaired_needs_review_count") == 0
@@ -3192,6 +3227,8 @@ def test_index_plan_extended_sections():
         and "review_status=`expected`" in manifest_text_result["stdout"]
         and "pairing=`" in manifest_text_result["stdout"]
         and bool(latest_manifests)
+        and all(row.get("date_source") in {"filename-YYYYMMDD", "missing-filename-date"} for row in latest_manifests)
+        and all("row_date" in row for row in latest_manifests)
         and current_owner_route_manifest.get("paired") is True
         and current_owner_route_manifest.get("evidence_count", 0) >= 1
         and current_manifest_profile.get("paired") is True
@@ -3234,6 +3271,51 @@ def test_index_plan_extended_sections():
             "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),
         },
+    )
+
+def test_manifest_latest_filename_date_only():
+    repo = copy_repo("manifest-latest-filename-date-only")
+    manifests_dir = repo / "artifacts" / "manifests"
+    old_by_filename = manifests_dir / "fixture-row-date-newer-20200101.jsonl"
+    old_by_filename.write_text(
+        '{"id":"fixture-row-date-newer","status":"applied","checked_at":"2099-01-01","summary_zh":"row 日期很新但文件名日期很旧，不能抢占 latest。","evidence_refs":["fixture"]}\n'
+    )
+    new_by_filename = manifests_dir / "fixture-filename-newer-20260623.jsonl"
+    new_by_filename.write_text(
+        '{"id":"fixture-filename-newer","status":"applied","checked_at":"2020-01-01","summary_zh":"文件名日期更新，应排在旧文件名前。","evidence_refs":["fixture"]}\n'
+    )
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "manifest", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    manifest_index = parsed.get("indexes", {}).get("by_manifest", {}) if isinstance(parsed, dict) else {}
+    latest = manifest_index.get("latest", [])
+    rows = manifest_index.get("rows", [])
+    old_row = next((row for row in rows if row.get("id") == "fixture-row-date-newer"), {})
+    new_row = next((row for row in rows if row.get("id") == "fixture-filename-newer"), {})
+    expect(
+        not parse_error
+        and result["exit_code"] == 0
+        and latest
+        and latest[0].get("id") == "fixture-filename-newer"
+        and old_row.get("date") == "2020-01-01"
+        and old_row.get("row_date") == "2099-01-01"
+        and old_row.get("date_source") == "filename-YYYYMMDD"
+        and new_row.get("date") == "2026-06-23"
+        and new_row.get("row_date") == "2020-01-01",
+        "manifest-latest-filename-date-only",
+        "manifest latest view sorts only by filename date, not JSONL row dates",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "latest_first": latest[0] if latest else {},
+            "old_row": old_row,
+            "new_row": new_row,
+        },
+        repo,
     )
 
 def test_manifest_jsonl_profile_gate():
@@ -3699,6 +3781,50 @@ def test_source_coverage_date_filename_selection():
         repo,
     )
 
+def test_source_coverage_duplicate_source_id_warning():
+    repo = copy_repo("source-coverage-duplicate-source-id-warning")
+    coverage_path = repo / "artifacts" / "manifests" / "knowledge-hub-source-coverage-closeout-20260620.jsonl"
+    rows = [line for line in coverage_path.read_text().splitlines() if line.strip()]
+    first = json.loads(rows[0])
+    duplicate = dict(first)
+    duplicate["id"] = "SCC-20260620-duplicate-fixture"
+    duplicate["status"] = "fixture-duplicate-should-not-overwrite"
+    duplicate["decision"] = "duplicate fixture should be warned and ignored for recovery view"
+    coverage_path.write_text("\n".join(rows + [json.dumps(duplicate, ensure_ascii=False, separators=(",", ":"))]) + "\n")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    selection = parsed.get("source_coverage_selection", {}) if isinstance(parsed, dict) else {}
+    source_id = first.get("source_id", "")
+    source_view = parsed.get("indexes", {}).get("by_source", {}).get(source_id, {}) if isinstance(parsed, dict) else {}
+    coverage = source_view.get("coverage", {}) if isinstance(source_view, dict) else {}
+    warnings_text = "\n".join(parsed.get("warnings", [])) if isinstance(parsed, dict) else ""
+    expect(
+        not parse_error
+        and result["exit_code"] == 0
+        and source_id in selection.get("duplicate_source_ids", [])
+        and selection.get("duplicate_policy") == "first-row-kept-duplicates-warned"
+        and source_id in selection.get("duplicate_rows", {})
+        and "duplicate source_id rows" in warnings_text
+        and coverage.get("status") == first.get("status")
+        and coverage.get("status") != "fixture-duplicate-should-not-overwrite",
+        "source-coverage-duplicate-source-id-warning",
+        "index plan warns on duplicate source coverage rows and keeps first recovery row",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "source_id": source_id,
+            "selection": selection,
+            "coverage": coverage,
+            "warnings": parsed.get("warnings", []) if isinstance(parsed, dict) else [],
+        },
+        repo,
+    )
+
 def test_review_after_as_of_deterministic():
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         expect(
@@ -4085,6 +4211,71 @@ def test_source_manual_entry_guide_check_command():
         },
     )
 
+def test_source_manual_entry_status_coverage_sync():
+    retired_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source-retired",
+            "--source-path",
+            "/tmp/example-retired",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--source-status",
+            "retired",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    deprecated_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-source-deprecated",
+            "--source-path",
+            "/tmp/example-deprecated",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--source-status",
+            "deprecated",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    expect(
+        retired_result["exit_code"] == 0
+        and deprecated_result["exit_code"] == 0
+        and '"status":"retired"' in retired_result["stdout"]
+        and '"status":"retired-pending-classification"' in retired_result["stdout"]
+        and '"status":"registered-pending-classification"' not in retired_result["stdout"]
+        and '"status":"deprecated"' in deprecated_result["stdout"]
+        and '"status":"deprecated-pending-classification"' in deprecated_result["stdout"],
+        "source-manual-entry-status-coverage-sync",
+        "source manual entry coverage row follows provided source status",
+        {
+            "retired_exit_code": retired_result["exit_code"],
+            "deprecated_exit_code": deprecated_result["exit_code"],
+            "retired_stdout_sample": retired_result["stdout"][:1800],
+            "deprecated_stdout_sample": deprecated_result["stdout"][:1800],
+        },
+    )
+
 def test_source_manual_entry_unknown_owner_warning():
     result = run_cmd(
         root,
@@ -4282,6 +4473,58 @@ def test_knowledge_search_structured_filters():
         },
     )
 
+def test_knowledge_search_structured_filters_exclude_unregistered_raw():
+    repo = copy_repo("knowledge-search-structured-filter-excludes-unregistered-raw")
+    raw_path = repo / "domains" / "projects" / "pcr02" / "current" / "unregistered-diag-raw-fixture.md"
+    raw_path.write_text(
+        "# Unregistered diag raw fixture\n\n"
+        "diag owner decision source_id pcr02-project-docs raw handoff text.\n"
+        "This file is intentionally not present in registry/items.jsonl.\n"
+    )
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            "diag",
+            "--source",
+            "knowledge-hub",
+            "--source-id",
+            "pcr02-project-docs",
+            "--json",
+            "--limit",
+            "50",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    results = parsed.get("results", []) if isinstance(parsed, dict) else []
+    fixture_path = str(raw_path)
+    expect(
+        not parse_error
+        and result["exit_code"] == 0
+        and results
+        and all(row.get("item_id") for row in results)
+        and all(row.get("source_id") == "pcr02-project-docs" for row in results)
+        and not any(row.get("path") == fixture_path for row in results),
+        "knowledge-search-structured-filters-exclude-unregistered-raw",
+        "structured source-id search excludes unregistered raw files with matching text",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "count": parsed.get("count") if isinstance(parsed, dict) else None,
+            "fixture_path": fixture_path,
+            "paths": [row.get("path") for row in results[:10]],
+            "first_result": results[0] if results else {},
+        },
+        repo,
+    )
+
 def test_knowledge_search_invalid_filters():
     bad_status = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--status", "not-a-status"])
     bad_kind = run_cmd(root, ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge Hub", "--kind", "not-a-kind"])
@@ -4362,6 +4605,7 @@ def test_regression_manifest_coverage():
         "manual-entry-owner-override",
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
+        "manual-entry-validation-diagnostics-default",
         "manual-entry-readability-fields",
         "manual-entry-archive-default-status",
         "offline-validation-template-placeholders",
@@ -4373,6 +4617,7 @@ def test_regression_manifest_coverage():
         "templates-required-sections",
         "index-readme-maintenance-coverage",
         "index-plan-extended-sections",
+        "manifest-latest-filename-date-only",
         "manifest-jsonl-profile-gate",
         "template-readability-field-gate",
         "index-plan-topic-schema-health",
@@ -4383,16 +4628,19 @@ def test_regression_manifest_coverage():
         "source-check-health-contract",
         "automation-report-only-safety-gate",
         "source-coverage-date-filename-selection",
+        "source-coverage-duplicate-source-id-warning",
         "review-after-as-of-deterministic",
         "stale-review-after-warning-surface",
         "source-review-after-stale-surface",
         "source-manual-entry-guide",
         "source-manual-entry-enum-guide",
         "source-manual-entry-guide-check-command",
+        "source-manual-entry-status-coverage-sync",
         "source-manual-entry-unknown-owner-warning",
         "source-manual-entry-requires-check-or-reason",
         "source-manual-entry-docs-check-preferred",
         "knowledge-search-structured-filters",
+        "knowledge-search-structured-filters-exclude-unregistered-raw",
         "knowledge-search-invalid-filters",
         "regression-manifest-coverage",
     ]
@@ -4469,6 +4717,7 @@ for test_fn in [
     test_manual_entry_owner_override,
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
+    test_manual_entry_validation_diagnostics_default,
     test_manual_entry_readability_fields,
     test_manual_entry_archive_default_status,
     test_offline_validation_template_placeholders,
@@ -4480,6 +4729,7 @@ for test_fn in [
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
     test_index_plan_extended_sections,
+    test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,
     test_template_readability_field_gate,
     test_index_plan_topic_schema_health,
@@ -4490,16 +4740,19 @@ for test_fn in [
     test_source_check_health_contract,
     test_automation_report_only_safety_gate,
     test_source_coverage_date_filename_selection,
+    test_source_coverage_duplicate_source_id_warning,
     test_review_after_as_of_deterministic,
     test_stale_review_after_warning_surface,
     test_source_review_after_stale_surface,
     test_source_manual_entry_guide,
     test_source_manual_entry_enum_guide,
     test_source_manual_entry_guide_check_command,
+    test_source_manual_entry_status_coverage_sync,
     test_source_manual_entry_unknown_owner_warning,
     test_source_manual_entry_requires_check_or_reason,
     test_source_manual_entry_docs_check_preferred,
     test_knowledge_search_structured_filters,
+    test_knowledge_search_structured_filters_exclude_unregistered_raw,
     test_knowledge_search_invalid_filters,
     test_regression_manifest_coverage,
 ]:

@@ -174,6 +174,7 @@
 - `knowledge-hub-source-review-template-entry-hardening-20260622`
 - `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
 - `knowledge-hub-final-gate-evidence-recovery-20260622`
+- `knowledge-hub-recovery-search-manual-hardening-20260622`
 
 ## pcr02-registry-owner
 

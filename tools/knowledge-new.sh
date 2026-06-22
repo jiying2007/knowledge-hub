@@ -251,6 +251,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   DISPLAY_SOURCE_ROLE="${SOURCE_ROLE:-<role>}"
   DISPLAY_SOURCE_AUTHORITY="${SOURCE_AUTHORITY:-<authority>}"
   DISPLAY_SOURCE_STATUS="${SOURCE_STATUS:-registered}"
+  DISPLAY_SOURCE_COVERAGE_STATUS="${DISPLAY_SOURCE_STATUS}-pending-classification"
   DISPLAY_SOURCE_WRITE_POLICY="${SOURCE_WRITE_POLICY:-<write_policy>}"
   DISPLAY_SOURCE_CHECK="${SOURCE_CHECK:-}"
   DISPLAY_SOURCE_NO_CHECK_REASON="${SOURCE_NO_CHECK_REASON:-<no-check reason if check is empty>}"
@@ -259,6 +260,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   JSON_SOURCE_ROLE="$(json_escape "$DISPLAY_SOURCE_ROLE")"
   JSON_SOURCE_AUTHORITY="$(json_escape "$DISPLAY_SOURCE_AUTHORITY")"
   JSON_SOURCE_STATUS="$(json_escape "$DISPLAY_SOURCE_STATUS")"
+  JSON_SOURCE_COVERAGE_STATUS="$(json_escape "$DISPLAY_SOURCE_COVERAGE_STATUS")"
   JSON_SOURCE_WRITE_POLICY="$(json_escape "$DISPLAY_SOURCE_WRITE_POLICY")"
   JSON_SOURCE_CHECK="$(json_escape "$DISPLAY_SOURCE_CHECK")"
   JSON_SOURCE_NO_CHECK_REASON="$(json_escape "$DISPLAY_SOURCE_NO_CHECK_REASON")"
@@ -359,7 +361,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### source coverage JSONL row
 
 \`\`\`json
-{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"registered-pending-classification","classification":"classify-first","decision":"新增 source 已进入 Knowledge Hub 控制面；默认不复制正文、不提升 active。","evidence":"registry/sources.json; indexes/by-source.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"directory-or-external-source","notes":"目录型 source 可用 manifest/evidence refs 表达 identity；不要强制 hash 整个目录。"}}
+{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"classify-first","decision":"新增 source 已进入 Knowledge Hub 控制面；默认不复制正文、不提升 active。","evidence":"registry/sources.json; indexes/by-source.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"directory-or-external-source","notes":"目录型 source 可用 manifest/evidence refs 表达 identity；不要强制 hash 整个目录。"}}
 \`\`\`
 
 ## 不要做
@@ -472,7 +474,7 @@ fi
 SOURCE_INDEX_DRAFT=""
 SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
 printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：当前人工新增入口没有接收已登记 source_id；未知来源不要同步 by-source，也不要复制 `<source-id>` 占位行。\n# 后续确认 source_id 已存在于 registry/sources.json 后，再按真实 source_id 追加：\n# - <真实-source-id>: `%s`\n' "$DISPLAY_ID"
-VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json"]'
+VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"]'
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
   VALIDATION_REFS_JSON="[\"manual_validation_pending: true\",\"reason: ${JSON_MANUAL_VALIDATION_REASON}\",\"required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\"]"
@@ -563,7 +565,7 @@ ${DECISION_INDEX_DRAFT}
 \`\`\`md
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | --- | --- | --- | --- | --- |
-| \`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
+| \`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
 \`\`\`
 
 ## 不要做
