@@ -2384,6 +2384,107 @@ def test_owner_form_target_decision_candidate_gate():
         },
     )
 
+def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision, expected_fragment):
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", setup_error)
+        return
+    if owner_decision not in form.get("allowed_owner_decisions", []):
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])})
+        return
+    if target_decision not in form.get("target_candidates", []):
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])})
+        return
+    form["owner_decision"] = owner_decision
+    form["target_decision"] = target_decision
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{case_id}-"))
+    temp_roots.append(temp_root)
+    forms_path = temp_root / "owner-decisions.jsonl"
+    forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-001",
+            "--validate-forms",
+            str(forms_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    errors = parsed.get("form_validation", {}).get("errors", [])
+    diagnostics = parsed.get("form_validation", {}).get("diagnostics", [])
+    mismatch_diagnostic = next(
+        (
+            row for row in diagnostics
+            if row.get("code") == "owner-decision-target-mismatch"
+            and row.get("field") == "target_decision"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and any(expected_fragment in error for error in errors)
+        and mismatch_diagnostic.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
+        and mismatch_diagnostic.get("actual") == {"owner_decision": owner_decision, "target_decision": target_decision}
+        and "成对兼容" in mismatch_diagnostic.get("action_zh", ""),
+        case_id,
+        "owner form rejects incompatible owner_decision and target_decision pairs",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "errors": errors,
+            "diagnostics": diagnostics,
+            "owner_decision": owner_decision,
+            "target_decision": target_decision,
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
+def test_owner_form_decision_target_pair_gate():
+    form, setup_error = make_valid_owner_decision_form(root)
+    if setup_error:
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", setup_error)
+        return
+    project_target = next(
+        (
+            target for target in form.get("target_candidates", [])
+            if str(target).startswith("domains/projects/")
+        ),
+        "",
+    )
+    if not project_target:
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "missing project target candidate", "target_candidates": form.get("target_candidates", [])})
+        return
+    run_owner_decision_target_pair_gate(
+        "owner-form-decision-target-pair-reference-only-project-path",
+        "reference-only",
+        project_target,
+        "owner_decision 'reference-only' is not compatible",
+    )
+    run_owner_decision_target_pair_gate(
+        "owner-form-decision-target-pair-no-migration-project-path",
+        "no-migration",
+        project_target,
+        "owner_decision 'no-migration' is not compatible",
+    )
+    run_owner_decision_target_pair_gate(
+        "owner-form-decision-target-pair-project-rule-reference-only",
+        "project-local-rule",
+        "reference-only",
+        "owner_decision 'project-local-rule' is not compatible",
+    )
+
 def test_owner_form_routing_owner_reviewed_by_gate():
     form, setup_error = make_valid_owner_decision_form(root)
     if setup_error:
@@ -3527,6 +3628,9 @@ def test_index_readme_maintenance_coverage():
         "indexes/by-decision.md",
         "knowledge-index-plan.sh --section all",
         "knowledge-check.sh --dry-run --json --diagnostics",
+        "profile_health",
+        "summary_source",
+        "evidence_source",
         "manual_validation_pending: true",
         "不得覆盖人工结论",
         "自动改 active",
@@ -3746,6 +3850,10 @@ def test_index_plan_extended_sections():
         and manifest_text_result["exit_code"] == 0
         and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
         and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
+        and "profile_health:" in manifest_text_result["stdout"]
+        and "profile_health=`pass`" in manifest_text_result["stdout"]
+        and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
+        and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
         and "review_status=`expected`" in manifest_text_result["stdout"]
         and "pairing=`" in manifest_text_result["stdout"]
         and bool(latest_manifests)
@@ -5438,6 +5546,9 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
         "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-target-decision-candidate-gate",
+        "owner-form-decision-target-pair-reference-only-project-path",
+        "owner-form-decision-target-pair-no-migration-project-path",
+        "owner-form-decision-target-pair-project-rule-reference-only",
         "owner-form-routing-owner-reviewed-by-gate",
         "owner-form-must-not-tamper-gate",
         "owner-form-allowed-decisions-tamper-gate",
@@ -5603,6 +5714,7 @@ for test_fn in [
     test_owner_landing_plan_requires_owner_ready_package_repo_relative_command,
     test_owner_landing_plan_requires_owner_ready_package_duplicate,
     test_owner_form_target_decision_candidate_gate,
+    test_owner_form_decision_target_pair_gate,
     test_owner_form_routing_owner_reviewed_by_gate,
     test_owner_form_must_not_tamper_gate,
     test_owner_form_allowed_decisions_tamper_gate,

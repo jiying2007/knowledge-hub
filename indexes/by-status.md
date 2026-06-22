@@ -367,3 +367,5 @@
 - offline-manifest-profile-hardening-applied: 离线人工维护 fallback、source 默认复核周期和 2026-06-21 及之后 manifest profile gate 已压实，并补齐 94 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
 - final-proof-runtime-recovery-hardening-applied: 终态 proof 主制品契约扩展到 10 项，source-check runtime 失败 blocker、manifest 恢复视图和 owner 表单 diagnostics 已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
+- owner-target-manifest-recovery-hardening-applied: owner 表单新增保守 decision/target 成对兼容门禁，manifest 文本恢复视图显示 profile_health、summary_source 和 evidence_source；证据：`artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.jsonl`.

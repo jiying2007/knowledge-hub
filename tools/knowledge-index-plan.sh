@@ -603,6 +603,13 @@ def print_manifest():
     print(f"- unpaired_count: {summary.get('unpaired_count', 0)}")
     print(f"- unpaired_expected_count: {summary.get('unpaired_expected_count', 0)}")
     print(f"- unpaired_needs_review_count: {summary.get('unpaired_needs_review_count', 0)}")
+    profile_health = summary.get("profile_health", {})
+    if profile_health:
+        print("- profile_health:")
+        for status, count in sorted(profile_health.items()):
+            print(f"  - {status}: {count}")
+        if summary.get("profile_health_zh"):
+            print(f"- profile_health_zh: {summary.get('profile_health_zh')}")
     unpaired = by_manifest.get("unpaired", [])
     if unpaired:
         print()
@@ -620,7 +627,9 @@ def print_manifest():
         print(
             f"- `{row.get('path', '')}` status=`{row.get('status', '')}` "
             f"date=`{row.get('date', '')}` rows={row.get('row_count', 0)} "
-            f"paired={row.get('paired', False)} evidence={row.get('evidence_count', 0)}"
+            f"paired={row.get('paired', False)} evidence={row.get('evidence_count', 0)} "
+            f"profile_health=`{row.get('profile_health', '')}` "
+            f"summary_source=`{row.get('summary_source', '')}` evidence_source=`{row.get('evidence_source', '')}`"
         )
 
 if args.section in {"all", "owner"}:

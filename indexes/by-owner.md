@@ -186,6 +186,7 @@
 - `knowledge-hub-manual-source-kind-contract-20260622`
 - `knowledge-hub-offline-manifest-profile-hardening-20260622`
 - `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
+- `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
 
 ## pcr02-registry-owner
 

@@ -970,6 +970,27 @@ def shlex_quote(value):
 def is_filled(value):
     return _is_filled(value)
 
+def owner_decision_target_mismatch(owner_decision, target_decision):
+    owner_decision = str(owner_decision or "")
+    target_decision = str(target_decision or "")
+    terminal_targets = {
+        "reference-only": {"reference-only"},
+        "no-migration": {"no-migration"},
+        "rejected": {"no-migration"},
+        "archive-only": {"archive-only"},
+    }
+    if owner_decision in terminal_targets and target_decision not in terminal_targets[owner_decision]:
+        return {
+            "expected": sorted(terminal_targets[owner_decision]),
+            "reason_zh": "终止类 owner_decision 只能搭配同语义的 target_decision，不能指向项目落地路径。",
+        }
+    if owner_decision not in terminal_targets and target_decision in {"reference-only", "no-migration"}:
+        return {
+            "expected": "与 owner_decision 成对兼容的落地目标",
+            "reason_zh": "落地类 owner_decision 不能搭配 reference-only 或 no-migration 目标。",
+        }
+    return None
+
 def validate_date(value, label, errors_out):
     try:
         parts = str(value).split("-")
@@ -1090,6 +1111,19 @@ def validate_forms_file(path, rows):
                 expected=row["target_candidates"],
                 line_no=index,
             )
+        if is_filled(owner_decision) and is_filled(target_decision):
+            mismatch = owner_decision_target_mismatch(owner_decision, target_decision)
+            if mismatch:
+                add_form_error(
+                    "owner-decision-target-mismatch",
+                    f"{prefix}: owner_decision {owner_decision!r} is not compatible with target_decision {target_decision!r}: {mismatch['reason_zh']}",
+                    worksheet_id=worksheet_id,
+                    field="target_decision",
+                    actual={"owner_decision": owner_decision, "target_decision": target_decision},
+                    expected=mismatch["expected"],
+                    line_no=index,
+                    action_zh="请保持 owner_decision 与 target_decision 成对兼容；不要把 reference-only/no-migration 与项目落地路径混用。",
+                )
         for field in row["required_owner_fields"]:
             if not is_filled(form.get(field)):
                 add_form_error("missing-required-owner-field", f"{prefix}: missing required field {field}", worksheet_id=worksheet_id, field=field, expected="filled-owner-field", line_no=index)

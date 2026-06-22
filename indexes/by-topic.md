@@ -190,3 +190,4 @@
 - Knowledge Hub manual source and kind contract: `artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.md`
 - Knowledge Hub offline maintenance and manifest profile hardening: `artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.md`
 - Knowledge Hub final proof runtime recovery hardening: `artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.md`
+- Knowledge Hub owner target and manifest recovery hardening: `artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.md`
