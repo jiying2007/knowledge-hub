@@ -298,58 +298,60 @@
 - source-registry-final-state-fields-applied: `registry/sources.json` records source maintenance owner, review date, migration strategy, final disposition and no-check reason when needed; `knowledge-final-gate.sh` Level 3 reports `missing_final_state_fields`; documented by `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.jsonl`.
 - status-owner-forms-jsonl-by-owner-applied: `tools/knowledge-status.sh` exposes by-owner owner decision JSONL skeleton commands in status output and owner blocker commands without generating owner decisions; documented by `artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.jsonl`.
 - status-final-gate-command-applied: `tools/knowledge-status.sh` exposes `final_gate_command` so recovery flows can jump from status dashboard to the terminal final gate; documented by `artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.jsonl`.
-- source-check-coverage-draft-applied: source 新增向导的 `--source --check` 分支在 registry source object 和 source coverage JSONL row 草稿中一致输出 `check`；documented by `artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.jsonl`.
-- source-check-docs-search-limit-applied: source 新增文档展示 `--check` 优先路径，source 草稿强制 `--check` / `--no-check-reason` 二选一，index-plan source 视图暴露 coverage decision/risk，且 `knowledge-search.sh` 拒绝非正 limit；documented by `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.jsonl`.
-- owner-target-landing-validation-applied: owner 表单校验拒绝 `target_decision` 越过 worksheet `target_candidates`，landing plan step 带出 `worksheet_verification_commands`；documented by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.jsonl`.
-- owner-ready-command-stability-applied: PCR02 owner-ready package、owner gate/status/final gate 人工命令统一为 cwd-stable `rtk bash ~/knowledge-hub/tools/...` 入口，并用负向回归阻断 repo-relative owner-ready 命令；documented by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
-- final-gap-readability-index-applied: final gate typed gap map、environment gap 词表、2026-06-21 后 governance audit / migration 中文可读性门禁和 PCR02/source governance 恢复锚点已压实；documented by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
-- owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch` 分派包，README/tools/templates 同步语言/术语状态和 migration `notes_zh` 维护规则，并补齐 regression manifest 自检 ID；documented by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
+- source-check-coverage-draft-applied: source 新增向导的 `--source --check` 分支在 registry source object 和 coverage JSONL row 草稿中一致输出 `check`；证据：`artifacts/manifests/knowledge-hub-source-check-coverage-draft-20260621.jsonl`.
+- source-check-docs-search-limit-applied: source 文档展示 `--check` 优先路径，草稿强制 `--check` / `--no-check-reason` 二选一，并拒绝非正 search limit；证据：`artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.jsonl`.
+- owner-target-landing-validation-applied: owner 表单拒绝越过 worksheet `target_candidates`，landing plan step 带出 worksheet 验证命令；证据：`artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.jsonl`.
+- owner-ready-command-stability-applied: PCR02 owner-ready、owner gate/status/final gate 人工命令统一使用 cwd-stable `~/knowledge-hub/tools` 入口；证据：`artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
+- final-gap-readability-index-applied: typed gap map、environment gap 词表、governance 中文可读性门禁和 PCR02/source 恢复锚点已压实；证据：`artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
+- owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch`，并同步中文字段和 migration `notes_zh` 规则；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
 - reviewing: `knowledge-hub-status-dispatch-notes-zh-20260621`
-- status-dispatch-notes-zh-applied: `knowledge-status.sh --json` 输出结构化 `owner_gates.owner_dispatch[]`，`knowledge-final-gate.sh --json` 透传 `owner_recovery`，owner landing plan step 带出 `worksheet_verification_cwd`，并由 `knowledge-check` 阻断 2026-06-21 之后缺少 AI provenance 的 registry item；documented by `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
-- asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，`knowledge-check/status/index-plan` 暴露 source coverage selection/health；documented by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.
+- status-dispatch-notes-zh-applied: status 输出 owner_dispatch，final gate 透传 owner_recovery，并阻断 2026-06-21 后缺少 AI provenance 的 registry item；证据：`artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
+- asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，并暴露 source coverage selection/health；证据：`artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-routing-recovery-20260621`
-- owner-routing-recovery-applied: `registry/owner-routing.json` 登记 owner decision role 的只读分派路由，`knowledge-owner-gates.sh --summary`、`knowledge-status.sh --json` 和 final gate `owner_recovery` 透传 `owner_route`；documented by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.jsonl`.
+- owner-routing-recovery-applied: `registry/owner-routing.json` 登记只读分派路由，owner/status/final gate 透传 `owner_route`；证据：`artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.jsonl`.
 - reviewing: `knowledge-hub-manifest-profile-index-plan-20260621`
-- manifest-profile-index-plan-applied: `knowledge-index-plan.sh --section manifest` 输出只读 manifest 恢复视图，`knowledge-check.sh` 对 2026-06-21 后治理 manifest JSONL 执行轻量 profile gate，并对长期模板执行可读性字段 gate；documented by `artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.jsonl`.
+- manifest-profile-index-plan-applied: manifest 恢复视图、governance JSONL 轻量 profile gate 和长期模板可读性字段 gate 已压实；证据：`artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.jsonl`.
 - reviewing: `knowledge-hub-source-selection-owner-warning-20260621`
-- source-selection-owner-warning-applied: `knowledge-check/status/index-plan` 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择 latest coverage，`knowledge-new.sh --source` 对未知 source owner 输出 warning；documented by `artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.
+- source-selection-owner-warning-applied: latest coverage 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择，未知 source owner 输出 warning；证据：`artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-evidence-readiness-20260621`
-- owner-evidence-readiness-applied: `knowledge-owner-gates.sh --evidence-readiness` 输出只读 owner 证据准备度，表单带 `read_only_prefill_candidates` 但正式 owner 字段仍需人工填写；documented by `artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.jsonl`.
+- owner-evidence-readiness-applied: `--evidence-readiness` 输出只读 owner 证据准备度，正式 owner 字段仍需人工填写；证据：`artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-landing-audit-manual-index-20260621`
-- owner-landing-audit-manual-index-applied: `knowledge-owner-gates.sh --landing-audit` 输出只读 worksheet/registry/migration/index 人工落地审计，`knowledge-new.sh` 输出 by-source/by-decision 条件索引提示，`knowledge-index-plan.sh --section manifest` 输出 unpaired expected/needs_review 分类；documented by `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.jsonl`.
+- owner-landing-audit-manual-index-applied: `--landing-audit` 输出只读落地审计，并提示 by-source/by-decision 和 unpaired manifest 分类；证据：`artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.jsonl`.
 - reviewing: `knowledge-hub-source-boundary-health-20260621`
-- source-boundary-health-applied: `knowledge-check/status/final-gate` 输出只读 `source_check_health` 和 `boundary_health`，静态审计 source check/no-check 契约和 PCR02 Level 2 boundary 内部证据链；documented by `artifacts/manifests/knowledge-hub-source-boundary-health-20260621.jsonl`.
+- source-boundary-health-applied: `knowledge-check/status/final-gate` 输出只读 source check 静态契约和 PCR02 Level 2 boundary 内部证据链；证据：`artifacts/manifests/knowledge-hub-source-boundary-health-20260621.jsonl`.
 - reviewing: `pcr02-product-test-artifact-config-interface-identity-20260621`
-- product-test-identity-preflight-applied: PCR02 product-test 73 个非生成物文件的 source_path、uri、size、sha256 和引用模式已只读登记，`.git/**` 与 `.o/.d` 保持排除边界；documented by `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl`.
+- product-test-identity-preflight-applied: PCR02 product-test 73 个非生成物文件的 source identity 已只读登记，`.git/**` 与 `.o/.d` 保持排除；证据：`artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl`.
 - reviewing: `pcr02-p1-source-identity-20260621`
-- p1-source-identity-preflight-applied: PCR02 agent-config、tools、root-artifacts 三个 P1 source 的 44 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not，并排除依赖树、缓存和子 source；documented by `artifacts/manifests/pcr02-p1-source-identity-20260621.jsonl`.
+- p1-source-identity-preflight-applied: PCR02 agent-config、tools、root-artifacts 三个 P1 source 的 44 个当前文件已只读登记；证据：`artifacts/manifests/pcr02-p1-source-identity-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-landing-index-completeness-20260621`
-- owner-landing-index-completeness-applied: `knowledge-owner-gates.sh --landing-plan/--landing-audit` 显式输出 by-source 与 by-decision 人工索引落点，并由回归断言；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.jsonl`.
+- owner-landing-index-completeness-applied: owner landing plan/audit 显式输出 by-source 与 by-decision 人工索引落点；不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.jsonl`.
 - reviewing: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
-- final-gate-regression-skip-blocker-applied: `knowledge-final-gate.sh` 将 regression self-test skip 作为 `knowledge-regression-skipped` blocker，不允许作为终态证据；documented by `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.jsonl`.
+- final-gate-regression-skip-blocker-applied: final gate 将 regression self-test skip 作为 blocker，不允许作为终态证据；证据：`artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.jsonl`.
 - reviewing: `pcr02-p2-archive-rule-identity-20260621`
-- p2-archive-rule-identity-preflight-applied: PCR02 module-agent-rules 与 scratch 两个 P2 source 的 16 个当前文件已只读登记 source_path、uri、size、sha256、引用模式和 must_not；规则文件保持 owner-gated reference，scratch 保持 archive-only；documented by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.jsonl`.
+- p2-archive-rule-identity-preflight-applied: PCR02 module-agent-rules 与 scratch 两个 P2 source 的 16 个当前文件已只读登记；规则 owner-gated，scratch archive-only；证据：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.jsonl`.
 - reviewing: `knowledge-hub-manual-entry-source-boundary-sync-20260621`
-- manual-entry-source-boundary-sync-applied: 人工新增入口已补齐专用模板映射、README 示例、回归覆盖和 13 个 source 的中文边界入口；documented by `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.jsonl`.
+- manual-entry-source-boundary-sync-applied: 人工新增入口补齐专用模板映射、README 示例、回归覆盖和 13 个 source 中文边界；证据：`artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.jsonl`.
 - reviewing: `pcr02-level2-source-check-execution-snapshot-20260621`
-- level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check 已按 report-only 手动快照执行且 exit_code=0；只证明路径/文件存在，不关闭 owner gate；documented by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.
+- level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check report-only 手动快照 exit_code=0；只证明路径/文件存在；证据：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.
 - reviewing: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
-- manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线待验证模板和 PCR02 source/project 边界可读性已压实；不生成 owner decision，不关闭 gate；documented by `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.
+- manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线模板和 PCR02 边界可读性已压实；证据：`artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.
 - reviewing: `knowledge-hub-owner-automation-template-hardening-20260621`
-- owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签 reviewed_by，maintenance-run 执行 report-only/no-memory 硬门禁，未知人工 source 不输出危险 by-source 占位；documented by `artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.
+- owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签，maintenance-run 强制 report-only/no-memory；证据：`artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.
 - reviewing: `knowledge-hub-source-review-template-entry-hardening-20260622`
-- source-review-template-entry-hardening-applied: source review_after 过期作为 warning/status surface 暴露，README/tools 四层低复杂度入口和模板字段填写矩阵已补齐；documented by `artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.
+- source-review-template-entry-hardening-applied: source review_after 过期 warning/status surface、低复杂度入口和模板字段矩阵已补齐；证据：`artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
-- owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读 `suggested_owner_packet`，owner landing worksheet 文件动态收集，final gate 暴露 source coverage selection，并用非 owner blocker 负向回归证明终态分类边界；documented by `artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.
+- owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读分派包，final gate 暴露 source coverage selection 和非 owner blocker 分类；证据：`artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-gate-evidence-recovery-20260622`
-- final-gate-evidence-recovery-applied: `knowledge-final-gate.sh --json` 输出命令级 `evidence_index` 和 owner-blocker provenance，README/tools/indexes 补终态失败恢复路径与 source coverage latest 恢复规则；documented by `artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.
+- final-gate-evidence-recovery-applied: final gate 输出命令级 `evidence_index` 和 owner-blocker provenance，并补终态失败恢复路径；证据：`artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.
 - reviewing: `knowledge-hub-recovery-search-manual-hardening-20260622`
-- recovery-search-manual-hardening-applied: manifest latest 文件名日期恢复、source coverage duplicate source_id warning、结构化搜索排除未登记 raw file、人工新增 diagnostics 默认验证和 source status coverage 同步已由 85 个回归场景覆盖；documented by `artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.
+- recovery-search-manual-hardening-applied: manifest latest 恢复、source coverage duplicate warning、结构化搜索过滤和 manual diagnostics 已由 85 个回归覆盖；证据：`artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-proof-maintenance-hardening-20260622`
-- final-proof-maintenance-hardening-applied: final gate Level 1 owner gate 来源字段、status source recovery rows、regression helper 表格结构自检和 governance/template 验证命令稳定入口已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
+- final-proof-maintenance-hardening-applied: final gate Level 1 来源字段、status source recovery rows 和 regression helper 表格自检已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-owner-queue-command-hardening-20260622`
-- owner-queue-command-hardening-applied: status dashboard 的 owner_gates.next_open_queue[]、owner 队列命令边界和治理文档稳定命令示例已压实；documented by `artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.
+- owner-queue-command-hardening-applied: status dashboard 的 owner queue、命令边界和稳定命令示例已压实；证据：`artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
-- final-recovery-discoverability-hardening-applied: final gate owner_recovery.next_open_queue[]、终态 proof 主制品可发现性、tools README 中文说明和旧 Evidence Index 表头已压实；documented by `artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.jsonl`.
+- final-recovery-discoverability-hardening-applied: final gate owner_recovery 队列、proof 制品可发现性、tools README 中文说明和旧 Evidence Index 表头已压实；证据：`artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-proof-summary-readability-hardening-20260622`
-- final-proof-summary-readability-hardening-applied: final gate 的 proof_artifacts_20260622 摘要、owner-review blocker 回归断言、剩余 tools README 中文说明和三份旧 Evidence Index 六列表头已压实；documented by `artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.jsonl`.
+- final-proof-summary-readability-hardening-applied: final gate proof 摘要、owner-review blocker 断言、tools README 中文说明和旧 Evidence Index 六列表头已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-source-check-snapshot-evidence-readability-20260622`
+- source-check-snapshot-evidence-readability-applied: status/final gate 输出 PCR02 Level 2 source check 快照只读摘要，核心 source/decision/status 索引中文化；证据：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.jsonl`.

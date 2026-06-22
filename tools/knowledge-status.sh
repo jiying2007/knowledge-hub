@@ -27,6 +27,16 @@ args = parser.parse_args(argv)
 
 errors = []
 DISPLAY_TOOL_ROOT = "~/knowledge-hub/tools"
+SOURCE_CHECK_SNAPSHOT_ID = "pcr02-level2-source-check-execution-snapshot-20260621"
+SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
+    "pcr02-project-tools",
+    "pcr02-project-knowledge",
+    "pcr02-product-test",
+    "pcr02-project-scratch",
+    "pcr02-project-root-artifacts",
+    "pcr02-module-agent-rules",
+    "pcr02-project-agent-config",
+]
 
 def resolve_today():
     if args.as_of:
@@ -139,6 +149,73 @@ def run_json(command):
         "payload": payload,
         "parse_error": parse_error,
         "stderr": completed.stderr.strip(),
+    }
+
+def build_source_check_snapshot_summary():
+    items_by_id = {
+        str(row.get("id", "")): row
+        for row in load_jsonl(root / "registry" / "items.jsonl")
+        if row.get("id")
+    }
+    item = items_by_id.get(SOURCE_CHECK_SNAPSHOT_ID, {})
+    md_relative = str(item.get("path", "")) if item else ""
+    jsonl_relative = str(pathlib.Path(md_relative).with_suffix(".jsonl")) if md_relative else ""
+    jsonl_path = root / jsonl_relative if jsonl_relative else root / "__missing__.jsonl"
+    rows = load_jsonl(jsonl_path) if jsonl_relative and jsonl_path.is_file() else []
+    row_source_ids = [
+        str(row.get("source_id", ""))
+        for row in rows
+        if row.get("source_id")
+    ]
+    expected_set = set(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
+    row_source_id_set = set(row_source_ids)
+    failed_rows = [
+        {
+            "id": row.get("id", ""),
+            "source_id": row.get("source_id", ""),
+            "status": row.get("status", ""),
+            "exit_code": row.get("exit_code", None),
+            "executed": row.get("executed", None),
+            "execution_mode": row.get("execution_mode", ""),
+        }
+        for row in rows
+        if row.get("status") != "pass"
+        or row.get("exit_code") != 0
+        or row.get("executed") is not True
+        or row.get("execution_mode") != "report-only-manual"
+    ]
+    status = (
+        "pass"
+        if item
+        and bool(md_relative and (root / md_relative).is_file())
+        and bool(jsonl_relative and jsonl_path.is_file())
+        and len(rows) == len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
+        and not sorted(expected_set - row_source_id_set)
+        and not sorted(row_source_id_set - expected_set)
+        and not failed_rows
+        else "fail"
+    )
+    return {
+        "status": status,
+        "artifact_id": SOURCE_CHECK_SNAPSHOT_ID,
+        "scope": "pcr02-level2-only",
+        "execution_mode": "report-only-manual-snapshot",
+        "runtime_execution": False,
+        "source_check_health_contract": "static-registry-only",
+        "md_path": md_relative,
+        "jsonl_path": jsonl_relative,
+        "expected_source_ids": SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS,
+        "covered_source_ids": sorted(row_source_id_set),
+        "expected_count": len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS),
+        "row_count": len(rows),
+        "passed_count": len(rows) - len(failed_rows),
+        "missing_source_ids": sorted(expected_set - row_source_id_set),
+        "unexpected_source_ids": sorted(row_source_id_set - expected_set),
+        "failed_rows": failed_rows,
+        "all_executed": bool(rows) and all(row.get("executed") is True for row in rows),
+        "all_exit_0": bool(rows) and all(row.get("exit_code") == 0 for row in rows),
+        "checked_at": sorted({str(row.get("checked_at", "")) for row in rows if row.get("checked_at")}),
+        "limitations_zh": "仅为 2026-06-21 report-only 手动快照，只证明 7 个 PCR02 Level 2 source 的路径或文件当时存在；不证明内容正确、语义可迁移、owner 签收或 active promotion。",
     }
 
 def count_by(rows, field):
@@ -716,6 +793,7 @@ else:
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
 source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health", {}), dict) else {}
+source_check_execution_snapshot = build_source_check_snapshot_summary()
 source_stale_review_after_ids = set(source_check_health.get("stale_review_after_ids", []) or [])
 source_check_rows = {
     str(row.get("source_id", "")): row
@@ -976,6 +1054,7 @@ result = {
         "latest_coverage_selection": latest_source_coverage_selection,
         "source_coverage_health": check_payload.get("source_coverage_health", {}),
         "source_check_health": source_check_health,
+        "source_check_execution_snapshot": source_check_execution_snapshot,
         "source_recovery_rows": source_recovery_rows,
         "stale_review_after_count": len(stale_sources),
         "stale_review_after_sample": stale_sources[:10],

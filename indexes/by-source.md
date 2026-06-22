@@ -31,7 +31,7 @@
 | pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | owner-gated-pending-decision | module/local AGENTS 规则保持 owner-gated reference，不升级全局规则 |
 | pcr02-project-agent-config | pcr02-registry-owner | 2026-09-20 | artifact-ref-registered | `.vscode`/`.kilo` 配置和 report-only 自动化只做 artifact/config ref |
 
-## Source Governance Recovery
+## Source 治理恢复
 
 本索引主表只保留 source id、role 和 path，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check/no_check_reason、coverage 和 migration refs 时，运行：
 
@@ -42,80 +42,81 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 
 `knowledge-index-plan` 只读输出 planned 视图，不写 registry、index、owner decision、memory，也不关闭 owner gate。
 
-- Latest source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`.
-- Latest final gap readability and index hardening: `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
-- Latest owner dispatch, readability and source scan sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
-- Latest status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`.
-- Latest terminal contract, AI provenance and template sync: `artifacts/manifests/knowledge-hub-terminal-contract-template-sync-20260621.md`.
-- Latest as-of and source coverage selection/health contract: `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
-- Latest final gate regression skip blocker: `artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`.
-- Latest manual entry template and source boundary sync: `artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`.
-- Latest manual/offline recovery and PCR02 readable boundary sync: `artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`.
+- 最新 source check 文档、边界和搜索限制：`artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`。
+- 最新 final gap 可读性和索引硬化：`artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`。
+- 最新 owner dispatch、可读性和 source scan 同步：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`。
+- 最新 status dispatch、owner recovery 和 AI provenance 同步：`artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`。
+- 最新 terminal contract、AI provenance 和模板同步：`artifacts/manifests/knowledge-hub-terminal-contract-template-sync-20260621.md`。
+- 最新 as-of、source coverage selection/health 契约：`artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`。
+- 最新 final gate regression skip blocker：`artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.md`。
+- 最新 manual entry 模板和 source 边界同步：`artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.md`。
+- 最新 manual/offline 恢复和 PCR02 可读边界同步：`artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`。
+- 最新 source check 快照证据和核心索引可读性硬化：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`。
 
-## Source-Specific Review Artifacts
+## Source 专项审查制品
 
-- `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN split targets are tracked by `artifacts/manifests/pcr02-asan-split-targets-20260618.md`.
-- `pcr02-project-docs/runbooks/asan-debug-guide.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only governance is tracked by `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`.
-- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan closeout is tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU fact split and archive-only boundary are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
-- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only metadata and memory-candidate exclusion are tracked by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`.
-- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
-- `pcr02-project-docs/AGENTS.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`.
-- `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata owner/gate evidence boundary is tracked by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`.
-- `pcr02-project-docs/standards/diag-command-metadata-standard.md owner-ready package`: single-item owner signoff material is tracked by `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`.
-- `pcr02-project-docs`: 32/32 docs governance coverage and registry/index closeout are tracked by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`.
-- `pcr02-project-docs owner gates`: executable owner decision board is tracked by `artifacts/manifests/pcr02-owner-action-board-20260618.md`.
-- `pcr02-project-docs owner intake`: Chinese owner sign-off fields and hard-gate questions are tracked by `artifacts/manifests/pcr02-owner-intake-package-20260618.md`.
-- `pcr02-project-docs owner-gated source identity`: current source SHA256/size preflight is tracked by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`.
-- `pcr02-project-docs owner form source identity validation`: owner decision form validation rejects stale source SHA256/size by `artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`.
-- `pcr02-project-docs owner target and landing validation`: owner form target decision, guardrail and worksheet verification commands are tracked by `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`.
-- `pcr02-project-docs owner-ready command stability`: owner-ready package and terminal status commands use cwd-stable `~/knowledge-hub/tools` entrypoints by `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`.
-- `pcr02-project-docs final gap/readability recovery`: terminal typed gap, governance readability gate and latest index anchor are tracked by `artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`.
-- `pcr02-project-docs owner dispatch/readability sync`: owner_dispatch 分派包、中文维护字段和 source scan no-drift evidence are tracked by `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`.
-- `pcr02-project-docs status dispatch/owner recovery sync`: status dashboard owner_dispatch、final gate owner_recovery、owner landing cwd 和 AI provenance gate are tracked by `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`.
-- `knowledge-hub source coverage selection/health`: latest source coverage selection and pass-state coverage health are surfaced by `artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`.
-- `pcr02-project-docs owner routing recovery`: owner decision role routing and status/final-gate owner_route recovery are tracked by `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`.
-- `pcr02-project-docs owner landing audit and manual index recovery`: owner landing audit、worksheet/manual index 落点和 manifest unpaired 分类 are tracked by `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md`.
-- `pcr02-project-docs source check and boundary health`: source check/no-check 静态契约和 PCR02 Level 2 boundary 内部证据链 are tracked by `artifacts/manifests/knowledge-hub-source-boundary-health-20260621.md`.
-- `pcr02-project-docs owner resolution`: owner decision landing rules are tracked by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`.
-- `pcr02-project-docs owner resolution schema`: owner decision fields, value sets and invalid combinations are tracked by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`.
-- `pcr02-project-docs governance closeout`: recoverable handoff is tracked by `artifacts/manifests/pcr02-governance-handoff-20260618.md`.
-- `registry/items.jsonl`、`registry/migrations.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit is tracked by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`.
-- `codex-memories`: remains auxiliary recall only; memory auto-curation governance must not write `~/.codex/memories/**`.
+- `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN 拆分目标证据：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`。
+- `pcr02-project-docs/runbooks/asan-debug-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
+- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan 收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU 事实拆分和 archive-only 边界：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
+- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only 元数据和 memory-candidate 排除：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
+- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
+- `pcr02-project-docs/AGENTS.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata owner/gate 证据边界：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`。
+- `pcr02-project-docs`: 32/32 docs 治理覆盖和 registry/index 收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
+- `pcr02-project-docs owner gates`: owner decision action board：`artifacts/manifests/pcr02-owner-action-board-20260618.md`。
+- `pcr02-project-docs owner intake`: 中文 owner 签收字段和 hard-gate 问题：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`。
+- `pcr02-project-docs owner-gated source identity`: 当前 source SHA256/size preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`。
+- `pcr02-project-docs owner form source identity validation`: owner 表单拒绝过期 SHA256/size：`artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`。
+- `pcr02-project-docs owner target and landing validation`: owner 表单 target decision、guardrail 和 worksheet 验证命令：`artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`。
+- `pcr02-project-docs owner-ready command stability`: owner-ready 和 terminal status 命令使用 `~/knowledge-hub/tools` 稳定入口：`artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`。
+- `pcr02-project-docs final gap/readability recovery`: terminal typed gap、governance readability gate 和 latest index 锚点：`artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.md`。
+- `pcr02-project-docs owner dispatch/readability sync`: owner_dispatch 分派包、中文维护字段和 source scan no-drift 证据：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`。
+- `pcr02-project-docs status dispatch/owner recovery sync`: status dashboard、final gate owner_recovery、owner landing cwd 和 AI provenance gate：`artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`。
+- `knowledge-hub source coverage selection/health`: latest source coverage selection 和 pass-state coverage health：`artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.md`。
+- `pcr02-project-docs owner routing recovery`: owner decision role routing 和 status/final-gate owner_route 恢复：`artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`。
+- `pcr02-project-docs owner landing audit and manual index recovery`: owner landing audit、worksheet/manual index 落点和 manifest unpaired 分类：`artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md`。
+- `pcr02-project-docs source check and boundary health`: source check/no-check 静态契约和 PCR02 Level 2 boundary 内部证据链：`artifacts/manifests/knowledge-hub-source-boundary-health-20260621.md`。
+- `pcr02-project-docs owner resolution`: owner decision landing 规则：`artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`。
+- `pcr02-project-docs owner resolution schema`: owner decision 字段、枚举和非法组合：`artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`。
+- `pcr02-project-docs governance closeout`: 可恢复 handoff：`artifacts/manifests/pcr02-governance-handoff-20260618.md`。
+- `registry/items.jsonl`、`registry/migrations.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
+- `codex-memories`: 仅作为辅助召回；memory auto-curation governance 不得写 `~/.codex/memories/**`。
 - `engineering-archive`: 38 PCR02 historical engineering archive files were copy-first migrated to `domains/projects/pcr02/archive/engineering-archive` and verified by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`.
 - `patent-disclosure`: 10 Markdown patent disclosure files were copy-first migrated to `domains/patents/archive/patent-disclosure`; 181 non-text attachments are registered by `artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl` and summarized in `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`.
-- `embedded-knowledge`: remains an external legacy team SSOT pending owner review and source stabilization; source coverage boundary is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
-- `codex-archive`: remains reference-first through Codex archive tools; boundary is tracked by `domains/codex/archive/codex-archive.ref.md` and `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`.
-- `pcr02-project-tools`: tool/diag/memory automation source coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-project-tools`: concrete README/AGENTS, diag, runtime diagnostic, memory automation and generated artifact boundaries are tracked by `artifacts/manifests/pcr02-tools-boundary-20260620.md`.
-- `pcr02-project-tools`: source identity for 18 non-generated tool files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
-- `pcr02-project-tools`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-project-knowledge`: classify-first, secret-boundary and tool/artifact boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-project-knowledge`: concrete env/config, project-local rule, runbook, standards-like doc, governance tool and skill-asset boundaries are tracked by `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`.
-- `pcr02-project-knowledge`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-product-test`: product-test artifact/config/interface boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-product-test`: concrete Markdown, PDF/archive, config, C/C++ reference and build artifact boundaries are tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`.
-- `pcr02-product-test`: artifact/config/interface source identity for 73 non-generated files is tracked by `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`.
-- `pcr02-product-test`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-project-scratch`: archive-only/no-memory-write coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-project-scratch`: concrete session/context/resume archive-only boundary is tracked by `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`.
-- `pcr02-project-scratch`: source identity for 8 scratch Markdown session/context/resume files is tracked by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`.
-- `pcr02-project-scratch`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-project-root-artifacts`: adjusted root loose artifact/tool boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-project-root-artifacts`: concrete root loose artifact/tool/config boundary and historical/current count drift are tracked by `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`.
-- `pcr02-project-root-artifacts`: source identity for 16 current root loose files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
-- `pcr02-project-root-artifacts`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-module-agent-rules`: module-local owner-gated rule coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-module-agent-rules`: concrete AGENTS/local rule owner-gated boundary is tracked by `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`.
-- `pcr02-module-agent-rules`: source identity for 8 current module/project/local AGENTS files is tracked by `artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`.
-- `pcr02-module-agent-rules`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `pcr02-project-agent-config`: config/artifact-ref and report-only automation boundary coverage is tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
-- `pcr02-project-agent-config`: concrete `.vscode`/`.kilo` config, artifact and report-only automation boundary is tracked by `artifacts/manifests/pcr02-agent-config-boundary-20260620.md`.
-- `pcr02-project-agent-config`: source identity for 10 `.vscode`/`.kilo` config and package files is tracked by `artifacts/manifests/pcr02-p1-source-identity-20260621.md`.
-- `pcr02-project-agent-config`: report-only source check execution snapshot is tracked by `artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`.
-- `registered sources`: current source coverage matrix and terminal boundaries are tracked by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`.
+- `embedded-knowledge`: 外部 legacy team SSOT，等待 owner review 和 source 稳定；source coverage 边界：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。
+- `codex-archive`: 通过 Codex archive 工具保持 reference-first；边界：`domains/codex/archive/codex-archive.ref.md` 和 `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。
+- `pcr02-project-tools`: tool/diag/memory automation source coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-project-tools`: README/AGENTS、diag、runtime diagnostic、memory automation 和生成制品边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`。
+- `pcr02-project-tools`: 18 个非生成 tool 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。
+- `pcr02-project-tools`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-project-knowledge`: classify-first、secret-boundary 和 tool/artifact boundary coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-project-knowledge`: env/config、项目本地规则、runbook、standards-like doc、治理工具和 skill 资产边界：`artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`。
+- `pcr02-project-knowledge`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-product-test`: product-test artifact/config/interface boundary coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-product-test`: Markdown、PDF/archive、config、C/C++ reference 和 build artifact 边界：`artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`。
+- `pcr02-product-test`: 73 个非生成 artifact/config/interface 文件的 source identity：`artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md`。
+- `pcr02-product-test`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-project-scratch`: archive-only/no-memory-write coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-project-scratch`: session/context/resume archive-only 边界：`artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`。
+- `pcr02-project-scratch`: 8 个 scratch Markdown session/context/resume 文件的 source identity：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`。
+- `pcr02-project-scratch`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-project-root-artifacts`: root loose artifact/tool boundary coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-project-root-artifacts`: root loose artifact/tool/config 边界和历史/当前数量漂移：`artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md`。
+- `pcr02-project-root-artifacts`: 16 个当前 root loose 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。
+- `pcr02-project-root-artifacts`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-module-agent-rules`: module-local owner-gated rule coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-module-agent-rules`: AGENTS/local rule owner-gated 边界：`artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`。
+- `pcr02-module-agent-rules`: 8 个 module/project/local AGENTS 文件的 source identity：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`。
+- `pcr02-module-agent-rules`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `pcr02-project-agent-config`: config/artifact-ref 和 report-only automation boundary coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
+- `pcr02-project-agent-config`: `.vscode`/`.kilo` config、artifact 和 report-only automation 边界：`artifacts/manifests/pcr02-agent-config-boundary-20260620.md`。
+- `pcr02-project-agent-config`: 10 个 `.vscode`/`.kilo` config/package 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。
+- `pcr02-project-agent-config`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
+- `registered sources`: 当前 source coverage matrix 和 terminal boundaries：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。

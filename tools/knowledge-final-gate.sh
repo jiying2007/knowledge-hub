@@ -199,6 +199,25 @@ FINAL_PROOF_INDEX_PATHS = [
     "indexes/by-review-date.md",
     "indexes/by-topic.md",
 ]
+SOURCE_CHECK_SNAPSHOT_ID = "pcr02-level2-source-check-execution-snapshot-20260621"
+SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
+    "pcr02-project-tools",
+    "pcr02-project-knowledge",
+    "pcr02-product-test",
+    "pcr02-project-scratch",
+    "pcr02-project-root-artifacts",
+    "pcr02-module-agent-rules",
+    "pcr02-project-agent-config",
+]
+SOURCE_CHECK_SNAPSHOT_INDEX_PATHS = [
+    "indexes/by-owner.md",
+    "indexes/by-project.md",
+    "indexes/by-source.md",
+    "indexes/by-status.md",
+    "indexes/by-review-date.md",
+    "indexes/by-topic.md",
+    "indexes/by-decision.md",
+]
 
 def build_final_proof_artifacts_summary():
     items_by_id = {
@@ -321,6 +340,112 @@ def build_final_proof_artifacts_summary():
         "notes_zh": "只读汇总 2026-06-22 终态 proof 主制品在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
     }
 
+def build_source_check_snapshot_summary():
+    items_by_id = {
+        str(row.get("id", "")): row
+        for row in load_jsonl(root / "registry" / "items.jsonl")
+        if row.get("id")
+    }
+    item = items_by_id.get(SOURCE_CHECK_SNAPSHOT_ID, {})
+    md_relative = str(item.get("path", "")) if item else ""
+    jsonl_relative = str(pathlib.Path(md_relative).with_suffix(".jsonl")) if md_relative else ""
+    md_path = root / md_relative if md_relative else root / "__missing__.md"
+    jsonl_path = root / jsonl_relative if jsonl_relative else root / "__missing__.jsonl"
+    md_exists = bool(md_relative and md_path.is_file())
+    jsonl_exists = bool(jsonl_relative and jsonl_path.is_file())
+    rows = load_jsonl(jsonl_path) if jsonl_exists else []
+    row_source_ids = [
+        str(row.get("source_id", ""))
+        for row in rows
+        if row.get("source_id")
+    ]
+    row_source_id_set = set(row_source_ids)
+    expected_set = set(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
+    unexpected_source_ids = sorted(row_source_id_set - expected_set)
+    missing_source_ids = sorted(expected_set - row_source_id_set)
+    failed_rows = [
+        {
+            "id": row.get("id", ""),
+            "source_id": row.get("source_id", ""),
+            "status": row.get("status", ""),
+            "exit_code": row.get("exit_code", None),
+            "executed": row.get("executed", None),
+            "execution_mode": row.get("execution_mode", ""),
+        }
+        for row in rows
+        if row.get("status") != "pass"
+        or row.get("exit_code") != 0
+        or row.get("executed") is not True
+        or row.get("execution_mode") != "report-only-manual"
+    ]
+
+    try:
+        migration_text = (root / "registry" / "migrations.jsonl").read_text()
+    except Exception:
+        migration_text = ""
+    migration_md_ref = bool(md_relative and md_relative in migration_text)
+    migration_jsonl_ref = bool(jsonl_relative and jsonl_relative in migration_text)
+
+    indexes_present = []
+    missing_indexes = []
+    for relative in SOURCE_CHECK_SNAPSHOT_INDEX_PATHS:
+        try:
+            text = (root / relative).read_text()
+        except Exception:
+            text = ""
+        if SOURCE_CHECK_SNAPSHOT_ID in text or (md_relative and md_relative in text) or (jsonl_relative and jsonl_relative in text):
+            indexes_present.append(relative)
+        else:
+            missing_indexes.append(relative)
+
+    status = (
+        "pass"
+        if item
+        and md_exists
+        and jsonl_exists
+        and len(rows) == len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
+        and not missing_source_ids
+        and not unexpected_source_ids
+        and not failed_rows
+        and migration_md_ref
+        and migration_jsonl_ref
+        and not missing_indexes
+        else "fail"
+    )
+    return {
+        "status": status,
+        "artifact_id": SOURCE_CHECK_SNAPSHOT_ID,
+        "execution_mode": "report-only-manual-snapshot",
+        "runtime_execution": False,
+        "source_check_health_contract": "static-registry-only",
+        "expected_source_ids": SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS,
+        "expected_count": len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS),
+        "row_count": len(rows),
+        "passed_count": len(rows) - len(failed_rows),
+        "registry_present": bool(item),
+        "md_path": md_relative,
+        "md_exists": md_exists,
+        "jsonl_path": jsonl_relative,
+        "jsonl_exists": jsonl_exists,
+        "migration_md_ref": migration_md_ref,
+        "migration_jsonl_ref": migration_jsonl_ref,
+        "required_indexes": SOURCE_CHECK_SNAPSHOT_INDEX_PATHS,
+        "indexes_present": indexes_present,
+        "missing_indexes": missing_indexes,
+        "missing_source_ids": missing_source_ids,
+        "unexpected_source_ids": unexpected_source_ids,
+        "failed_rows": failed_rows,
+        "guardrails_zh": [
+            "只证明路径或文件在快照执行时存在",
+            "不证明 source 内容正确或语义可迁移",
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不改变 source_check_health 静态契约",
+            "不写 memory",
+        ],
+        "notes_zh": "只读汇总既有 PCR02 Level 2 source check 执行快照的登记、配对、索引和 7 条 report-only 结果；final gate 本身不实时执行 source check。",
+    }
+
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
@@ -355,6 +480,7 @@ else:
     knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
 strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
 proof_artifacts_20260622 = build_final_proof_artifacts_summary()
+source_check_snapshot_20260621 = build_source_check_snapshot_summary()
 
 blockers = []
 
@@ -720,10 +846,12 @@ final_state_audit = {
             "owner_gate_mutation": bool(check_boundary_health.get("owner_gate_mutation", True)),
             "memory_write": bool(check_boundary_health.get("memory_write", True)),
         },
+        "source_check_execution_snapshot": source_check_snapshot_20260621,
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
             "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md",
+            "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md",
         ],
         "summary_zh": "PCR02 docs 外 7 个关键候选 source 已登记并纳入 source coverage。",
     },
@@ -850,6 +978,21 @@ if status_owner_blocker_source:
             "owner-blocker-provenance",
         )
     )
+evidence_index.append(
+    command_evidence_row(
+        f"artifact:{SOURCE_CHECK_SNAPSHOT_ID}",
+        0,
+        source_check_snapshot_20260621["status"],
+        (
+            "PCR02 Level 2 source check 快照可恢复；7 条 report-only 结果全部 pass，final gate 未实时执行 source check。"
+            if source_check_snapshot_20260621["status"] == "pass"
+            else "PCR02 Level 2 source check 快照登记、配对、索引或结果存在缺口；请查看 source_check_execution_snapshot_20260621。"
+        ),
+        source_check_snapshot_20260621["jsonl_path"] or source_check_snapshot_20260621["md_path"],
+        "source-check-snapshot",
+        SOURCE_CHECK_SNAPSHOT_ID,
+    )
+)
 
 result = {
     "schema_version": 1,
@@ -896,6 +1039,7 @@ result = {
         "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
     "proof_artifacts_20260622": proof_artifacts_20260622,
+    "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
     "final_state_audit": final_state_audit,
     "checks": {
         "knowledge_check": {
@@ -966,6 +1110,7 @@ print(f"- level1_pcr02_docs: {final_state_audit['level1_pcr02_docs']['status']}"
 print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candidate_sources']['status']}")
 print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
 print(f"- proof_artifacts_20260622: {proof_artifacts_20260622['status']} registered={proof_artifacts_20260622['registered_count']}/{proof_artifacts_20260622['expected_count']} paired={proof_artifacts_20260622['paired_count']}/{proof_artifacts_20260622['expected_count']} indexed={proof_artifacts_20260622['indexed_count']}/{proof_artifacts_20260622['expected_count']}")
+print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")

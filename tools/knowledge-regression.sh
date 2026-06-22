@@ -1540,6 +1540,7 @@ def test_final_gate_owner_review_blocker():
             recovery_queue_executable_commands.append(str(row.get(field, "")))
     final_state_audit = parsed.get("final_state_audit", {})
     proof_artifacts = parsed.get("proof_artifacts_20260622", {})
+    source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
     evidence_index = parsed.get("evidence_index", [])
     evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index}
     level1 = final_state_audit.get("level1_pcr02_docs", {})
@@ -1547,6 +1548,7 @@ def test_final_gate_owner_review_blocker():
     level3 = final_state_audit.get("level3_registered_sources", {})
     proof_rows = proof_artifacts.get("rows", [])
     level2_boundary_health = level2.get("boundary_health", {})
+    level2_source_check_snapshot = level2.get("source_check_execution_snapshot", {})
     level3_source_check_health = level3.get("source_check_health", {})
     level3_source_coverage_selection = level3.get("source_coverage_selection", {})
     gap_map = parsed.get("gap_map", [])
@@ -1618,7 +1620,15 @@ def test_final_gate_owner_review_blocker():
         and level2_boundary_health.get("source_project_read") is False
         and level2_boundary_health.get("owner_gate_mutation") is False
         and level2_boundary_health.get("memory_write") is False
+        and level2_source_check_snapshot.get("status") == "pass"
+        and level2_source_check_snapshot.get("runtime_execution") is False
+        and level2_source_check_snapshot.get("source_check_health_contract") == "static-registry-only"
+        and level2_source_check_snapshot.get("row_count") == 7
+        and level2_source_check_snapshot.get("passed_count") == 7
+        and level2_source_check_snapshot.get("missing_source_ids") == []
+        and level2_source_check_snapshot.get("failed_rows") == []
         and "registry/sources.json" in level2.get("evidence_refs", [])
+        and "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md" in level2.get("evidence_refs", [])
         and level3.get("status") == "complete"
         and level3.get("registered_count") == level3.get("covered_count")
         and level3.get("registered_count") == 13
@@ -1644,6 +1654,23 @@ def test_final_gate_owner_review_blocker():
         and proof_artifacts.get("missing_indexes") == {}
         and len(proof_rows) == 5
         and all(row.get("status") == "pass" for row in proof_rows)
+        and source_check_snapshot.get("status") == "pass"
+        and source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
+        and source_check_snapshot.get("execution_mode") == "report-only-manual-snapshot"
+        and source_check_snapshot.get("runtime_execution") is False
+        and source_check_snapshot.get("source_check_health_contract") == "static-registry-only"
+        and source_check_snapshot.get("expected_count") == 7
+        and source_check_snapshot.get("row_count") == 7
+        and source_check_snapshot.get("passed_count") == 7
+        and source_check_snapshot.get("registry_present") is True
+        and source_check_snapshot.get("md_exists") is True
+        and source_check_snapshot.get("jsonl_exists") is True
+        and source_check_snapshot.get("migration_md_ref") is True
+        and source_check_snapshot.get("migration_jsonl_ref") is True
+        and source_check_snapshot.get("missing_indexes") == []
+        and source_check_snapshot.get("missing_source_ids") == []
+        and source_check_snapshot.get("unexpected_source_ids") == []
+        and source_check_snapshot.get("failed_rows") == []
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
         and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
@@ -1656,7 +1683,7 @@ def test_final_gate_owner_review_blocker():
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
         and checks.get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 1
-        and len(evidence_index) == 5
+        and len(evidence_index) == 6
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
         and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
@@ -1664,6 +1691,8 @@ def test_final_gate_owner_review_blocker():
         and evidence_by_artifact.get("knowledge-status", {}).get("evidence_path") == "runtime:checks.knowledge_status_strict"
         and evidence_by_artifact.get("owner-blocker-provenance", {}).get("status") == "owner-review"
         and evidence_by_artifact.get("owner-blocker-provenance", {}).get("evidence_path") == "runtime:automatic_governance.owner_blocker_source"
+        and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("status") == "pass"
+        and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("layer") == "source-check-snapshot"
         and owner_blocker.get("count") == 7
         and len(gap_map) == 1
         and owner_gap.get("gap_type") == "owner-review"
@@ -1680,6 +1709,7 @@ def test_final_gate_owner_review_blocker():
             "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,
             "proof_artifacts_20260622": proof_artifacts,
+            "source_check_execution_snapshot_20260621": source_check_snapshot,
             "level3_source_coverage_selection": level3_source_coverage_selection,
             "checks": checks,
             "evidence_index": evidence_index,
@@ -3750,6 +3780,7 @@ def test_status_source_governance_summary():
     check_source_check_health = check_parsed.get("source_check_health", {}) if isinstance(check_parsed, dict) else {}
     check_boundary_health = check_parsed.get("boundary_health", {}) if isinstance(check_parsed, dict) else {}
     status_source_check_health = sources.get("source_check_health", {}) if isinstance(sources.get("source_check_health"), dict) else {}
+    status_source_check_snapshot = sources.get("source_check_execution_snapshot", {}) if isinstance(sources.get("source_check_execution_snapshot"), dict) else {}
     status_boundary_health = sources.get("boundary_health", {}) if isinstance(sources.get("boundary_health"), dict) else {}
     source_recovery_rows = sources.get("source_recovery_rows", []) if isinstance(sources.get("source_recovery_rows"), list) else []
     source_recovery_by_id = {
@@ -3786,6 +3817,19 @@ def test_status_source_governance_summary():
         and check_boundary_health.get("summary", {}).get("source_coverage_count") == 7
         and status_source_check_health.get("with_check_count") == 9
         and status_source_check_health.get("executed") is False
+        and status_source_check_snapshot.get("status") == "pass"
+        and status_source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
+        and status_source_check_snapshot.get("scope") == "pcr02-level2-only"
+        and status_source_check_snapshot.get("execution_mode") == "report-only-manual-snapshot"
+        and status_source_check_snapshot.get("runtime_execution") is False
+        and status_source_check_snapshot.get("source_check_health_contract") == "static-registry-only"
+        and status_source_check_snapshot.get("row_count") == 7
+        and status_source_check_snapshot.get("passed_count") == 7
+        and status_source_check_snapshot.get("all_executed") is True
+        and status_source_check_snapshot.get("all_exit_0") is True
+        and status_source_check_snapshot.get("missing_source_ids") == []
+        and status_source_check_snapshot.get("unexpected_source_ids") == []
+        and status_source_check_snapshot.get("failed_rows") == []
         and status_boundary_health.get("status") == "pass"
         and status_boundary_health.get("source_project_read") is False
         and len(source_recovery_rows) == 13
@@ -3816,6 +3860,7 @@ def test_status_source_governance_summary():
             "check_source_check_health": check_source_check_health,
             "check_boundary_health": check_boundary_health,
             "status_source_check_health": status_source_check_health,
+            "status_source_check_execution_snapshot": status_source_check_snapshot,
             "status_boundary_health": status_boundary_health,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
