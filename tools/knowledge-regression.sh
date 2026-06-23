@@ -1960,6 +1960,7 @@ def test_final_gate_owner_review_blocker():
         parsed = json.loads(result["stdout"])
     except Exception:
         pass
+    final_gate_summary = parsed.get("summary", {})
     checks = parsed.get("checks", {})
     blockers = parsed.get("blockers", [])
     automatic_governance = parsed.get("automatic_governance", {})
@@ -1983,7 +1984,9 @@ def test_final_gate_owner_review_blocker():
     maintenance_entry_audit = parsed.get("maintenance_entry_audit", {})
     maintenance_entries = maintenance_entry_audit.get("entries", [])
     maintenance_entry_ids = [row.get("entry_id") for row in maintenance_entries]
+    maintenance_entries_by_id = {row.get("entry_id"): row for row in maintenance_entries}
     linking_audit = parsed.get("linking_audit", {})
+    linking_summary = linking_audit.get("summary", {})
     proof_artifacts = parsed.get("proof_artifacts", {})
     legacy_proof_artifacts = parsed.get("proof_artifacts_20260622", {})
     source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
@@ -2033,6 +2036,21 @@ def test_final_gate_owner_review_blocker():
         and automatic_governance.get("owner_blocker_source", {}).get("status_source") == "knowledge-status --strict"
         and "owner-gates-open" in automatic_governance.get("owner_blocker_source", {}).get("strict_blocker_ids", [])
         and automatic_governance.get("owner_blocker_source", {}).get("owner_gate_open_count_field") == "owner_gates.open_count"
+        and final_gate_summary.get("final_status") == "needs-owner-review"
+        and final_gate_summary.get("automatic_governance_status") == "complete-except-owner-review"
+        and final_gate_summary.get("level1_status") == "complete-except-owner-review"
+        and final_gate_summary.get("level2_status") == "complete"
+        and final_gate_summary.get("level3_status") == "complete"
+        and final_gate_summary.get("level1_owner_gate_open_count") == 7
+        and final_gate_summary.get("proof_artifacts_status") == "pass"
+        and final_gate_summary.get("maintenance_entry_audit_status") == "pass"
+        and final_gate_summary.get("linking_audit_status") == "pass"
+        and final_gate_summary.get("cross_session_status") == "pass"
+        and final_gate_summary.get("cross_project_status") == "pass"
+        and final_gate_summary.get("markdown_index_recovery_status") == "pass"
+        and "Level 1" in final_gate_summary.get("section_refs", [])
+        and "七.2" in final_gate_summary.get("section_refs", [])
+        and "九" in final_gate_summary.get("section_refs", [])
         and owner_recovery.get("open_count") == 7
         and owner_recovery.get("owner_ready_package_coverage") == "7/7"
         and owner_recovery.get("active_exposure_count") == 0
@@ -2128,6 +2146,9 @@ def test_final_gate_owner_review_blocker():
         and legacy_proof_artifacts == proof_artifacts
         and proof_artifacts.get("status") == "pass"
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
+        and proof_artifacts.get("coverage_sections") == ["Level 1", "Level 2", "Level 3", "七", "七.2", "八", "九"]
+        and "七.2" in proof_artifacts.get("section_refs", [])
+        and any("七.2" in ref for ref in proof_artifacts.get("requirement_refs", []))
         and proof_artifacts.get("selection_date") == parsed.get("today")
         and proof_artifacts.get("dynamic_selector", {}).get("date") == parsed.get("today")
         and proof_artifacts.get("expected_count") == len(proof_expected_ids)
@@ -2186,6 +2207,10 @@ def test_final_gate_owner_review_blocker():
         and source_check_runtime.get("rejected_count") == 0
         and source_check_runtime.get("failed_rows") == []
         and maintenance_entry_audit.get("status") == "pass"
+        and "七" in maintenance_entry_audit.get("section_refs", [])
+        and "七.1" in maintenance_entry_audit.get("section_refs", [])
+        and "七.2" in maintenance_entry_audit.get("section_refs", [])
+        and any("长期维护能力" in ref for ref in maintenance_entry_audit.get("requirement_refs", []))
         and maintenance_entry_audit.get("expected_entry_count") == 9
         and maintenance_entry_audit.get("passed_entry_count") == 9
         and maintenance_entry_audit.get("missing_entry_ids") == []
@@ -2201,8 +2226,19 @@ def test_final_gate_owner_review_blocker():
             "offline-maintenance-package",
         ]
         and all(row.get("evidence_refs") for row in maintenance_entries)
+        and all(row.get("requirement_refs") for row in maintenance_entries)
+        and all(row.get("section_refs") for row in maintenance_entries)
         and all(row.get("limitations_zh") for row in maintenance_entries)
+        and "七.2" in maintenance_entries_by_id.get("offline-maintenance-package", {}).get("section_refs", [])
         and linking_audit.get("status") == "pass"
+        and linking_audit.get("section_refs") == ["八", "九"]
+        and linking_summary.get("status") == "pass"
+        and linking_summary.get("registered_source_count") == 13
+        and linking_summary.get("pcr02_level2_source_ids_present") is True
+        and linking_summary.get("provenance_fields_present") is True
+        and linking_summary.get("project_specific_not_team_promoted") is True
+        and linking_summary.get("missing_anchors") == []
+        and linking_summary.get("section_refs") == ["八", "九"]
         and linking_audit.get("read_only") is True
         and linking_audit.get("source_body_read") is False
         and linking_audit.get("owner_gate_mutation") is False
@@ -2234,21 +2270,28 @@ def test_final_gate_owner_review_blocker():
         and checks.get("index_plan_linking", {}).get("exit_code") == 0
         and checks.get("index_plan_linking", {}).get("linking_audit_status") == "pass"
         and len(evidence_index) == 10
+        and all(row.get("requirement_refs") for row in evidence_index)
+        and all(row.get("section_refs") for row in evidence_index)
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
+        and "Level 1" in evidence_by_artifact.get("knowledge-check", {}).get("section_refs", [])
         and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
         and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-status", {}).get("status") == "owner-review"
+        and "六" in evidence_by_artifact.get("knowledge-status", {}).get("section_refs", [])
         and evidence_by_artifact.get("knowledge-status", {}).get("evidence_path") == "runtime:checks.knowledge_status_strict"
         and evidence_by_artifact.get("owner-blocker-provenance", {}).get("status") == "owner-review"
         and evidence_by_artifact.get("owner-blocker-provenance", {}).get("evidence_path") == "runtime:automatic_governance.owner_blocker_source"
         and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("status") == "pass"
         and evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("layer") == "source-check-snapshot"
+        and "Level 2" in evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("section_refs", [])
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("layer") == "source-check-runtime"
         and evidence_by_artifact.get("maintenance-entry-audit", {}).get("status") == "pass"
         and evidence_by_artifact.get("maintenance-entry-audit", {}).get("evidence_path") == "runtime:maintenance_entry_audit"
+        and "七.2" in evidence_by_artifact.get("maintenance-entry-audit", {}).get("section_refs", [])
         and evidence_by_artifact.get("linking-audit", {}).get("status") == "pass"
         and evidence_by_artifact.get("linking-audit", {}).get("evidence_path") == "runtime:linking_audit"
+        and evidence_by_artifact.get("linking-audit", {}).get("section_refs") == ["八", "九"]
         and evidence_by_artifact.get("review-queue-recovery", {}).get("status") == "pass"
         and evidence_by_artifact.get("review-queue-recovery", {}).get("evidence_path") == "runtime:review_queue_recovery"
         and len(highest_priority_rules_audit) == 10
@@ -2274,6 +2317,7 @@ def test_final_gate_owner_review_blocker():
         {
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
+            "summary": final_gate_summary,
             "automatic_governance": automatic_governance,
             "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,

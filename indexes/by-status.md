@@ -407,3 +407,5 @@
 - review-queue-forms-validation-hardening-applied: review queue 已提供人工填回 JSONL 的 report-only 校验入口，覆盖必填人工字段、日期、decision 枚举、queue id 和 guardrail；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-offline-maintenance-audit-hardening-20260623`
 - offline-maintenance-audit-hardening-applied: final gate 的 `maintenance_entry_audit` 已显式覆盖 8 类长期维护入口和 1 个离线维护包；证据：`artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-final-gate-requirement-map-hardening-20260623`
+- final-gate-requirement-map-hardening-applied: final gate JSON 已新增顶层 `summary`、证据 `requirement_refs` / `section_refs`、`linking_audit.summary` 和 `proof_artifacts.coverage_sections`，终态证据可直接映射到目标章节；证据：`artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.jsonl`.

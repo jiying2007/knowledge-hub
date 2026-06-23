@@ -177,7 +177,37 @@ def blocker_gap_type(blocker):
         return str(blocker.get("gap_type", "final-gate"))
     return "final-gate"
 
-def command_evidence_row(command, exit_code, status, result_summary_zh, evidence_path, layer, related_artifact, parse_error=""):
+REQUIREMENT_REFS = {
+    "level1": "docs/goals/knowledge-hub-final-state.md#Level-1-PCR02-docs-终态",
+    "level2": "docs/goals/knowledge-hub-final-state.md#Level-2-PCR02-项目关键资料源终态",
+    "level3": "docs/goals/knowledge-hub-final-state.md#Level-3-全-Knowledge-Hub-registered-sources-终态",
+    "maintenance": "docs/goals/knowledge-hub-final-state.md#七、长期维护能力",
+    "offline": "docs/goals/knowledge-hub-final-state.md#七.2-人工维护与离线可维护标准",
+    "cross_session": "docs/goals/knowledge-hub-final-state.md#八、跨会话自动关联",
+    "cross_project": "docs/goals/knowledge-hub-final-state.md#九、跨项目自动关联",
+    "owner_gate": "docs/goals/knowledge-hub-final-state.md#六、owner-gated-两阶段流程",
+    "automation": "docs/goals/knowledge-hub-final-state.md#七.1-自动化等级",
+}
+
+SECTION_REFS = {
+    "level1": "Level 1",
+    "level2": "Level 2",
+    "level3": "Level 3",
+    "maintenance": "七",
+    "offline": "七.2",
+    "cross_session": "八",
+    "cross_project": "九",
+    "owner_gate": "六",
+    "automation": "七.1",
+}
+
+def refs_for(*keys):
+    return [REQUIREMENT_REFS[key] for key in keys if key in REQUIREMENT_REFS]
+
+def sections_for(*keys):
+    return [SECTION_REFS[key] for key in keys if key in SECTION_REFS]
+
+def command_evidence_row(command, exit_code, status, result_summary_zh, evidence_path, layer, related_artifact, parse_error="", requirement_refs=None, section_refs=None):
     return {
         "command": command,
         "exit_code": exit_code,
@@ -187,6 +217,8 @@ def command_evidence_row(command, exit_code, status, result_summary_zh, evidence
         "layer": layer,
         "related_artifact": related_artifact,
         "parse_error": parse_error,
+        "requirement_refs": requirement_refs or [],
+        "section_refs": section_refs or [],
     }
 
 FINAL_PROOF_SEED_ARTIFACT_IDS = [
@@ -391,6 +423,9 @@ def build_final_proof_artifacts_summary(selection_date):
     return {
         "status": status,
         "selection_mode": "seed-plus-dynamic-governance-by-as-of-date",
+        "coverage_sections": sections_for("level1", "level2", "level3", "maintenance", "offline", "cross_session", "cross_project"),
+        "requirement_refs": refs_for("level1", "level2", "level3", "maintenance", "offline", "cross_session", "cross_project"),
+        "section_refs": sections_for("level1", "level2", "level3", "maintenance", "offline", "cross_session", "cross_project"),
         "baseline_date": FINAL_PROOF_BASELINE_DATE,
         "selection_date": selection_date,
         "seed_ids": FINAL_PROOF_SEED_ARTIFACT_IDS,
@@ -706,6 +741,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "manual-knowledge-entry",
             "goal_item": 1,
+            "requirement_keys": ["maintenance", "offline"],
             "evidence_checks": [
                 ("README.md", ["人工维护 5 条最短路径", "新增一条知识", "knowledge-new.sh"]),
                 ("tools/README.md", ["新增一条知识", "knowledge-new.sh", "knowledge-check.sh --dry-run --json --diagnostics"]),
@@ -719,6 +755,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "source-coverage-entry",
             "goal_item": 2,
+            "requirement_keys": ["maintenance", "level3"],
             "evidence_checks": [
                 ("README.md", ["新增一个 source", "knowledge-index-plan.sh --section source", "knowledge-search.sh \"<source-id>\" --source knowledge-hub --json"]),
                 ("tools/README.md", ["新增一个 source", "source coverage", "knowledge-index-plan.sh --section source"]),
@@ -731,6 +768,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "manual-review-entry",
             "goal_item": 3,
+            "requirement_keys": ["maintenance"],
             "evidence_checks": [
                 ("README.md", ["复核过期和即将到期项", "knowledge-review-after.sh", "review_after"]),
                 ("tools/README.md", ["复核过期项", "knowledge-review-after.sh", "near-due"]),
@@ -743,6 +781,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "manual-search-entry",
             "goal_item": 4,
+            "requirement_keys": ["maintenance", "cross_session"],
             "evidence_checks": [
                 ("README.md", ["knowledge-search.sh \"ASAN\" --json --limit 10", "--source-id pcr02-project-docs"]),
                 ("tools/README.md", ["knowledge-search.sh", "结构化过滤", "--source-id"]),
@@ -755,6 +794,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "owner-signoff-entry",
             "goal_item": 5,
+            "requirement_keys": ["maintenance", "owner_gate", "level1"],
             "evidence_checks": [
                 ("README.md", ["owner 签收一个 gate", "validate-forms", "landing-plan"]),
                 ("tools/README.md", ["owner 签收一个 gate", "不生成 owner decision", "不关闭 gate"]),
@@ -767,6 +807,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "automation-boundary-entry",
             "goal_item": 6,
+            "requirement_keys": ["maintenance", "automation"],
             "evidence_checks": [
                 ("README.md", ["report-only", "不得自动改 `active`、关闭 owner gate 或提升标准"]),
                 ("tools/README.md", ["report-only", "不会自动删除、发布、提升 active、关闭 owner gate、写 memory 或修改源项目"]),
@@ -779,6 +820,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "quality-gate-entry",
             "goal_item": 7,
+            "requirement_keys": ["maintenance"],
             "evidence_checks": [
                 ("README.md", ["跑一次终态检查", "knowledge-final-gate.sh --json", "evidence_index"]),
                 ("tools/README.md", ["knowledge-final-gate.sh", "terminal gate", "evidence_index"]),
@@ -791,6 +833,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "chinese-readability-entry",
             "goal_item": 8,
+            "requirement_keys": ["maintenance", "offline"],
             "evidence_checks": [
                 ("README.md", ["中文长期资产规范", "默认简体中文", "可复核"]),
                 ("templates/README.md", ["默认简体中文", "中文摘要", "Evidence Index"]),
@@ -802,6 +845,7 @@ def build_maintenance_entry_audit():
         {
             "entry_id": "offline-maintenance-package",
             "goal_item": "七.2-8",
+            "requirement_keys": ["offline", "maintenance"],
             "evidence_checks": [
                 ("README.md", ["离线人工维护", "manual_validation_pending: true", "required_followup"]),
                 ("tools/README.md", ["离线人工维护", "registry/schema.md", "indexes/README.md"]),
@@ -836,6 +880,8 @@ def build_maintenance_entry_audit():
             "entry_id": spec["entry_id"],
             "goal_item": spec["goal_item"],
             "status": status,
+            "requirement_refs": refs_for(*spec.get("requirement_keys", [])),
+            "section_refs": sections_for(*spec.get("requirement_keys", [])),
             "evidence_refs": sorted(set(evidence_refs)),
             "commands": spec["commands"],
             "missing_evidence": missing_evidence,
@@ -846,6 +892,8 @@ def build_maintenance_entry_audit():
         "contract_version": 1,
         "status": "pass" if passed_count == len(entries) else "fail",
         "goal_ref": "docs/goals/knowledge-hub-final-state.md#七、长期维护能力",
+        "requirement_refs": refs_for("maintenance", "automation", "offline"),
+        "section_refs": sections_for("maintenance", "automation", "offline"),
         "expected_entry_count": len(entries),
         "passed_entry_count": passed_count,
         "missing_entry_ids": missing_entry_ids,
@@ -866,6 +914,8 @@ def build_linking_audit_summary(index_plan_linking):
         return {
             "contract_version": 1,
             "status": "fail",
+            "requirement_refs": refs_for("cross_session", "cross_project"),
+            "section_refs": sections_for("cross_session", "cross_project"),
             "read_only": True,
             "source_body_read": False,
             "owner_gate_mutation": False,
@@ -873,6 +923,17 @@ def build_linking_audit_summary(index_plan_linking):
             "exit_code": index_plan_linking.get("exit_code", None),
             "parse_error": index_plan_linking.get("parse_error", ""),
             "missing": ["index-plan-linking-json"],
+            "summary": {
+                "status": "fail",
+                "registered_source_count": 0,
+                "pcr02_level2_source_ids_present": False,
+                "provenance_fields_present": False,
+                "project_specific_not_team_promoted": False,
+                "missing_anchors": ["index-plan-linking-json"],
+                "requirement_refs": refs_for("cross_session", "cross_project"),
+                "section_refs": sections_for("cross_session", "cross_project"),
+                "notes_zh": "无法解析 linking audit JSON；跨会话和跨项目恢复链路不可采信。",
+            },
             "limitations_zh": "无法解析 linking audit JSON；未读取 PCR02 源项目正文，未关闭 owner gate。",
         }
     if index_plan_linking.get("exit_code") != 0:
@@ -881,6 +942,19 @@ def build_linking_audit_summary(index_plan_linking):
         audit["command"] = index_plan_linking.get("command", "")
         audit["exit_code"] = index_plan_linking.get("exit_code", None)
         audit["parse_error"] = index_plan_linking.get("parse_error", "")
+        audit["requirement_refs"] = refs_for("cross_session", "cross_project")
+        audit["section_refs"] = sections_for("cross_session", "cross_project")
+        audit["summary"] = {
+            "status": "fail",
+            "registered_source_count": 0,
+            "pcr02_level2_source_ids_present": False,
+            "provenance_fields_present": False,
+            "project_specific_not_team_promoted": False,
+            "missing_anchors": audit.get("missing", []),
+            "requirement_refs": refs_for("cross_session", "cross_project"),
+            "section_refs": sections_for("cross_session", "cross_project"),
+            "notes_zh": "index-plan linking 命令未通过；跨会话和跨项目恢复链路不可采信。",
+        }
         audit.setdefault("limitations_zh", "只证明 registry/index/search 恢复链路；不证明 owner decision 已签收，不读取 PCR02 源项目正文。")
         return audit
     audit.setdefault("contract_version", 1)
@@ -891,6 +965,21 @@ def build_linking_audit_summary(index_plan_linking):
     audit["command"] = index_plan_linking.get("command", "")
     audit["exit_code"] = index_plan_linking.get("exit_code", None)
     audit["parse_error"] = index_plan_linking.get("parse_error", "")
+    cross_project = audit.get("cross_project", {}) if isinstance(audit.get("cross_project", {}), dict) else {}
+    markdown_index_recovery = audit.get("markdown_index_recovery", {}) if isinstance(audit.get("markdown_index_recovery", {}), dict) else {}
+    audit["requirement_refs"] = refs_for("cross_session", "cross_project")
+    audit["section_refs"] = sections_for("cross_session", "cross_project")
+    audit["summary"] = {
+        "status": audit.get("status", "fail"),
+        "registered_source_count": cross_project.get("registered_source_count", 0),
+        "pcr02_level2_source_ids_present": bool(cross_project.get("pcr02_level2_source_ids_present", False)),
+        "provenance_fields_present": bool(cross_project.get("provenance_fields_present", False)),
+        "project_specific_not_team_promoted": bool(cross_project.get("project_specific_not_team_promoted", False)),
+        "missing_anchors": markdown_index_recovery.get("missing_anchors", []),
+        "requirement_refs": refs_for("cross_session", "cross_project"),
+        "section_refs": sections_for("cross_session", "cross_project"),
+        "notes_zh": "跨会话、跨项目、source、topic、decision 和 Markdown index 恢复链路的只读摘要；不读取 PCR02 源项目正文，不关闭 owner gate。",
+    }
     return audit
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
@@ -1431,6 +1520,8 @@ evidence_index = [
         "final-gate",
         "knowledge-check",
         knowledge_check["parse_error"],
+        refs_for("level1", "level2", "level3", "maintenance", "offline"),
+        sections_for("level1", "level2", "level3", "maintenance", "offline"),
     ),
     command_evidence_row(
         knowledge_regression["command"],
@@ -1454,6 +1545,8 @@ evidence_index = [
         "final-gate",
         "knowledge-regression",
         knowledge_regression["parse_error"],
+        refs_for("maintenance", "cross_session", "cross_project", "owner_gate", "automation"),
+        sections_for("maintenance", "cross_session", "cross_project", "owner_gate", "automation"),
     ),
     command_evidence_row(
         git_diff_check["command"],
@@ -1467,6 +1560,9 @@ evidence_index = [
         "runtime:checks.git_diff_check",
         "final-gate",
         "git-diff-check",
+        "",
+        refs_for("maintenance"),
+        sections_for("maintenance"),
     ),
     command_evidence_row(
         strict_status["command"],
@@ -1489,6 +1585,8 @@ evidence_index = [
         "final-gate",
         "knowledge-status",
         strict_status["parse_error"],
+        refs_for("owner_gate", "level1"),
+        sections_for("owner_gate", "level1"),
     ),
 ]
 if status_owner_blocker_source:
@@ -1505,6 +1603,9 @@ if status_owner_blocker_source:
             "runtime:automatic_governance.owner_blocker_source",
             "final-gate",
             "owner-blocker-provenance",
+            "",
+            refs_for("owner_gate", "level1"),
+            sections_for("owner_gate", "level1"),
         )
     )
 evidence_index.append(
@@ -1520,6 +1621,9 @@ evidence_index.append(
         source_check_snapshot_20260621["jsonl_path"] or source_check_snapshot_20260621["md_path"],
         "source-check-snapshot",
         SOURCE_CHECK_SNAPSHOT_ID,
+        "",
+        refs_for("level2", "level3"),
+        sections_for("level2", "level3"),
     )
 )
 evidence_index.append(
@@ -1536,6 +1640,8 @@ evidence_index.append(
         "source-check-runtime",
         "knowledge-source-check-runtime",
         source_check_runtime_summary["parse_error"],
+        refs_for("level2", "level3"),
+        sections_for("level2", "level3"),
     )
 )
 evidence_index.append(
@@ -1551,6 +1657,9 @@ evidence_index.append(
         "runtime:maintenance_entry_audit",
         "maintenance-entry-audit",
         "maintenance-entry-audit",
+        "",
+        refs_for("maintenance", "offline"),
+        sections_for("maintenance", "offline"),
     )
 )
 evidence_index.append(
@@ -1567,6 +1676,8 @@ evidence_index.append(
         "linking-audit",
         "linking-audit",
         index_plan_linking["parse_error"],
+        refs_for("cross_session", "cross_project"),
+        sections_for("cross_session", "cross_project"),
     )
 )
 evidence_index.append(
@@ -1586,6 +1697,9 @@ evidence_index.append(
         "runtime:review_queue_recovery",
         "review-queue",
         "review-queue-recovery",
+        "",
+        refs_for("maintenance", "offline"),
+        sections_for("maintenance", "offline"),
     )
 )
 
@@ -1596,6 +1710,41 @@ highest_priority_rules_audit = make_highest_priority_rules_audit(
     automatic_governance_status,
 )
 
+final_gate_summary = {
+    "final_status": final_status,
+    "automatic_governance_status": automatic_governance_status,
+    "level1_status": final_state_audit["level1_pcr02_docs"]["status"],
+    "level2_status": final_state_audit["level2_pcr02_candidate_sources"]["status"],
+    "level3_status": final_state_audit["level3_registered_sources"]["status"],
+    "level1_owner_gate_open_count": final_state_audit["level1_pcr02_docs"]["owner_gate_open_count"],
+    "level2_registered_count": final_state_audit["level2_pcr02_candidate_sources"]["registered_count"],
+    "level2_covered_count": final_state_audit["level2_pcr02_candidate_sources"]["covered_count"],
+    "level3_registered_count": final_state_audit["level3_registered_sources"]["registered_count"],
+    "level3_covered_count": final_state_audit["level3_registered_sources"]["covered_count"],
+    "proof_artifacts_status": proof_artifacts["status"],
+    "proof_artifacts_expected_count": proof_artifacts["expected_count"],
+    "proof_artifacts_registered_count": proof_artifacts["registered_count"],
+    "proof_artifacts_paired_count": proof_artifacts["paired_count"],
+    "proof_artifacts_migration_covered_count": proof_artifacts["migration_covered_count"],
+    "proof_artifacts_indexed_count": proof_artifacts["indexed_count"],
+    "maintenance_entry_audit_status": maintenance_entry_audit["status"],
+    "maintenance_entry_audit_passed_entry_count": maintenance_entry_audit["passed_entry_count"],
+    "maintenance_entry_audit_expected_entry_count": maintenance_entry_audit["expected_entry_count"],
+    "linking_audit_status": linking_audit.get("status", "fail"),
+    "cross_session_status": linking_audit.get("cross_session", {}).get("status", "fail")
+    if isinstance(linking_audit.get("cross_session", {}), dict)
+    else "fail",
+    "cross_project_status": linking_audit.get("cross_project", {}).get("status", "fail")
+    if isinstance(linking_audit.get("cross_project", {}), dict)
+    else "fail",
+    "markdown_index_recovery_status": linking_audit.get("markdown_index_recovery", {}).get("status", "fail")
+    if isinstance(linking_audit.get("markdown_index_recovery", {}), dict)
+    else "fail",
+    "requirement_refs": refs_for("level1", "level2", "level3", "maintenance", "offline", "cross_session", "cross_project", "owner_gate", "automation"),
+    "section_refs": sections_for("level1", "level2", "level3", "maintenance", "offline", "cross_session", "cross_project", "owner_gate", "automation"),
+    "notes_zh": "只读派生摘要；便于扫读终态证据覆盖情况，不参与 final_status 判定，不生成或关闭 owner decision。",
+}
+
 result = {
     "schema_version": 1,
     "root": str(root),
@@ -1604,6 +1753,7 @@ result = {
     "today": today.isoformat(),
     "as_of_source": today_source,
     "final_status": final_status,
+    "summary": final_gate_summary,
     "automatic_governance": {
         "status": automatic_governance_status,
         "complete": automatic_governance_complete,
