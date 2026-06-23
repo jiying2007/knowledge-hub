@@ -397,3 +397,5 @@
 - offline-review-queue-claiming-hardening-applied: 离线人工维护 follow-up 命令已统一为完整 rtk 命令，review queue 已支持过滤/分页领取；证据：`artifacts/manifests/knowledge-hub-offline-review-queue-claiming-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
 - owner-dispatch-regression-count-hardening-applied: owner_dispatch 已按 source_id + owner 隔离只读分派范围，历史 manifest 固定回归数量已补当次捕获口径；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
+- owner-handoff-profile-advisory-hardening-applied: owner handoff one-shot JSON 入口已可从 status 发现，manifest profile boundary 缺失已改为 advisory 恢复提示；证据：`artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.jsonl`.

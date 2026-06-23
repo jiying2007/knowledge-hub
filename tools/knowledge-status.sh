@@ -712,6 +712,17 @@ if open_owner_rows:
                 "--evidence-readiness",
                 "--json",
             ]) if source_id else "",
+            "handoff_packet_json_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--handoff-packet",
+                "--json",
+            ]) if source_id else "",
             "validate_forms_command_template": shell_command([
                 "rtk",
                 "bash",

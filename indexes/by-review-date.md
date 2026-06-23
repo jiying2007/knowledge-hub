@@ -225,3 +225,4 @@
 - 2026-09-23: `knowledge-hub-review-queue-topic-readability-20260623`
 - 2026-09-23: `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
 - 2026-09-23: `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
+- 2026-09-23: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`

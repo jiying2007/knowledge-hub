@@ -1214,6 +1214,120 @@ def test_owner_summary_by_owner():
         },
     )
 
+def test_owner_handoff_packet_json():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--owner",
+            "project-owner",
+            "--handoff-packet",
+            "--json",
+        ],
+    )
+    text_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--owner",
+            "project-owner",
+            "--handoff-packet",
+        ],
+    )
+    status_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    parsed = {}
+    status_parsed = {}
+    parse_error = ""
+    status_parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    try:
+        status_parsed = json.loads(status_result["stdout"])
+    except Exception as exc:
+        status_parse_error = str(exc)
+    packets = parsed.get("owner_handoff_packets", []) if isinstance(parsed, dict) else []
+    packet = packets[0] if packets else {}
+    status_dispatch = status_parsed.get("owner_gates", {}).get("owner_dispatch", []) if isinstance(status_parsed, dict) else []
+    project_owner_dispatch = next(
+        (
+            row for row in status_dispatch
+            if row.get("owner") == "project-owner" and row.get("source_id") == "pcr02-project-docs"
+        ),
+        {},
+    )
+    forms_jsonl_lines = packet.get("forms_jsonl_lines", [])
+    parsed_forms = []
+    form_parse_errors = []
+    for line in forms_jsonl_lines:
+        try:
+            parsed_forms.append(json.loads(line))
+        except Exception as exc:
+            form_parse_errors.append(str(exc))
+    owner_inbox = packet.get("owner_inbox", {})
+    evidence_readiness = packet.get("evidence_readiness", {})
+    commands = packet.get("commands", {})
+    expect(
+        result["exit_code"] == 0
+        and text_result["exit_code"] == 2
+        and status_result["exit_code"] == 0
+        and not parse_error
+        and not status_parse_error
+        and len(packets) == 1
+        and packet.get("packet_type") == "owner-handoff"
+        and packet.get("status") == "ready-for-owner-review"
+        and packet.get("read_only") is True
+        and packet.get("report_only") is True
+        and packet.get("owner") == "project-owner"
+        and packet.get("source_id") == "pcr02-project-docs"
+        and packet.get("dispatch_scope_id") == "pcr02-project-docs:project-owner"
+        and packet.get("source_ids") == ["pcr02-project-docs"]
+        and packet.get("mixed_source_owner") is False
+        and packet.get("open_count") == 2
+        and packet.get("no_owner_decision_generated") is True
+        and packet.get("no_owner_gate_closed") is True
+        and packet.get("routing_owner_is_not_reviewed_by") is True
+        and owner_inbox.get("row_count") == 2
+        and evidence_readiness.get("row_count") == 2
+        and len(forms_jsonl_lines) == 2
+        and not form_parse_errors
+        and {form.get("worksheet_id") for form in parsed_forms} == {
+            "pcr02-owner-decision-worksheet-005",
+            "pcr02-owner-decision-worksheet-007",
+        }
+        and all(not form.get("owner_decision") for form in parsed_forms)
+        and "--owner project-owner --owner-inbox --json" in commands.get("owner_inbox_json_command", "")
+        and "--owner project-owner --forms-jsonl" in commands.get("forms_jsonl_command", "")
+        and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in commands.get("validate_forms_command_template", "")
+        and "--owner project-owner --handoff-packet --json" in project_owner_dispatch.get("handoff_packet_json_command", "")
+        and any("不得由工具或 AI 代签 owner decision" in rule for rule in packet.get("must_not", []))
+        and "decision_forms" not in parsed
+        and "form_validation" not in parsed,
+        "owner-handoff-packet-json",
+        "owner gate helper emits a one-shot read-only handoff packet without generating owner decisions",
+        {
+            "exit_code": result["exit_code"],
+            "text_exit_code": text_result["exit_code"],
+            "status_exit_code": status_result["exit_code"],
+            "parse_error": parse_error,
+            "status_parse_error": status_parse_error,
+            "packet": packet,
+            "project_owner_dispatch": project_owner_dispatch,
+            "form_parse_errors": form_parse_errors,
+            "stdout_sample": result["stdout"][:1000],
+            "text_stderr_sample": text_result["stderr"][:1000],
+        },
+    )
+
 def test_owner_dispatch_source_scope_isolation():
     repo = copy_repo("owner-dispatch-source-scope-isolation")
     worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
@@ -1326,6 +1440,43 @@ def test_manifest_regression_count_capture_qualifier():
         "manifest-regression-count-capture-qualifier",
         "dated governance manifests qualify fixed regression counts as historical captures",
         {"violations": violations},
+    )
+
+def test_manifest_profile_boundary_advisory():
+    json_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "manifest", "--json"])
+    text_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "manifest"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(json_result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    manifest_index = parsed.get("indexes", {}).get("by_manifest", {}) if isinstance(parsed, dict) else {}
+    summary = manifest_index.get("summary", {})
+    profile_health = summary.get("profile_health", {})
+    rows = manifest_index.get("rows", [])
+    advisory_rows = [row for row in rows if row.get("profile_health") == "advisory-missing-boundary"]
+    expect(
+        json_result["exit_code"] == 0
+        and text_result["exit_code"] == 0
+        and not parse_error
+        and profile_health.get("advisory-missing-boundary", 0) >= 1
+        and "missing-boundary" not in profile_health
+        and advisory_rows
+        and "advisory-* 仅提示人工补强方向" in summary.get("profile_health_zh", "")
+        and "advisory-missing-boundary" in text_result["stdout"]
+        and "missing-summary/missing-evidence" in text_result["stdout"],
+        "manifest-profile-boundary-advisory",
+        "manifest profile reports missing boundaries as advisory rather than hard-failure-looking status",
+        {
+            "json_exit_code": json_result["exit_code"],
+            "text_exit_code": text_result["exit_code"],
+            "parse_error": parse_error,
+            "profile_health": profile_health,
+            "advisory_sample": advisory_rows[:3],
+            "profile_health_zh": summary.get("profile_health_zh", ""),
+            "stdout_sample": text_result["stdout"][:1200],
+        },
     )
 
 def test_owner_next_open_focus():
@@ -5076,7 +5227,7 @@ def test_index_plan_extended_sections():
         and current_manifest_profile.get("derived_summary_zh") == current_manifest_profile.get("summary_zh")
         and current_manifest_profile.get("summary_source") in {"summary_zh", "notes_zh", "notes"}
         and current_manifest_profile.get("evidence_source") in {"evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"}
-        and current_manifest_profile.get("profile_health") in {"pass", "missing-boundary", "legacy-missing-profile"}
+        and current_manifest_profile.get("profile_health") in {"pass", "advisory-missing-boundary", "legacy-missing-profile"}
         and current_runtime_recovery_profile.get("paired") is True
         and current_runtime_recovery_profile.get("derived_summary_zh") == current_runtime_recovery_profile.get("summary_zh")
         and current_runtime_recovery_profile.get("summary_source") == "summary_zh"
@@ -6943,8 +7094,10 @@ def test_regression_manifest_coverage():
         "owner-inbox-contract",
         "owner-summary-all-open",
         "owner-summary-by-owner",
+        "owner-handoff-packet-json",
         "owner-dispatch-source-scope-isolation",
         "manifest-regression-count-capture-qualifier",
+        "manifest-profile-boundary-advisory",
         "owner-next-open-focus",
         "status-next-owner-gate",
         "status-owner-ready-source-no-registry-fallback",
@@ -7130,8 +7283,10 @@ for test_fn in [
     test_owner_inbox_contract,
     test_owner_summary_all_open,
     test_owner_summary_by_owner,
+    test_owner_handoff_packet_json,
     test_owner_dispatch_source_scope_isolation,
     test_manifest_regression_count_capture_qualifier,
+    test_manifest_profile_boundary_advisory,
     test_owner_next_open_focus,
     test_status_next_owner_gate,
     test_status_owner_ready_source_no_registry_fallback,

@@ -606,7 +606,7 @@ def manifest_profile_health(manifest_path, first, date_value, summary_source, ev
     if evidence_source == "missing" or evidence_count == 0:
         return "missing-evidence"
     if not isinstance(first.get("boundaries"), dict):
-        return "missing-boundary"
+        return "advisory-missing-boundary"
     return "pass"
 
 def classify_unpaired_manifest(stem, has_jsonl, has_md):
@@ -711,7 +711,7 @@ by_manifest = {
         "latest_strategy": "filename-date-only",
         "latest_strategy_zh": "latest 只按 manifest 文件名中的 YYYYMMDD 排序；JSONL row 内 checked_at/created_at/updated_at/review_after 仅作为 row_date 辅助字段，不参与 latest 排序。",
         "profile_health": dict(sorted(manifest_profile_health_counts.items())),
-        "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；legacy/reference 类旧制品不作为硬失败；missing-* 仅提示人工补强方向。",
+        "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；legacy/reference 类旧制品不作为硬失败；advisory-* 仅提示人工补强方向，missing-summary/missing-evidence 才说明当前 profile 基础字段缺失。",
     },
     "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
     "unpaired": unpaired_classified,

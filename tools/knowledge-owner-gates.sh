@@ -23,6 +23,7 @@ parser.add_argument("--forms-jsonl", action="store_true", help="Print only owner
 parser.add_argument("--checklist", action="store_true", help="Print owner-facing closure checklists with intake questions and hard gates.")
 parser.add_argument("--evidence-readiness", action="store_true", help="Print read-only evidence readiness and prefill candidates for open rows.")
 parser.add_argument("--owner-inbox", action="store_true", help="Print a compact owner-facing inbox with grouped fields, routing and validation commands.")
+parser.add_argument("--handoff-packet", action="store_true", help="Print one read-only owner handoff packet with inbox, evidence readiness, forms JSONL and command sequence.")
 parser.add_argument("--validate-forms", default="", help="Validate a filled owner decision JSONL file without applying it.")
 parser.add_argument("--landing-plan", action="store_true", help="With --validate-forms, print a read-only manual landing plan for valid forms.")
 parser.add_argument("--landing-audit", action="store_true", help="With --validate-forms, print a read-only manual landing audit for worksheet/registry/index deltas.")
@@ -49,6 +50,8 @@ if args.forms_jsonl:
         conflicts.append("--evidence-readiness")
     if args.owner_inbox:
         conflicts.append("--owner-inbox")
+    if args.handoff_packet:
+        conflicts.append("--handoff-packet")
     if args.validate_forms:
         conflicts.append("--validate-forms")
     if args.landing_plan:
@@ -60,6 +63,9 @@ if args.forms_jsonl:
 
 if args.next_open and args.worksheet_id:
     errors.append("--next-open cannot be combined with --worksheet-id")
+
+if args.handoff_packet and not args.json:
+    parser.error("--handoff-packet requires --json")
 
 def load_jsonl(path):
     rows = []
@@ -921,6 +927,57 @@ def make_owner_dispatch(rows):
         )
     return dispatch_rows
 
+def make_owner_handoff_packets(rows):
+    packets = []
+    dispatch_rows = make_owner_dispatch(rows)
+    for dispatch in dispatch_rows:
+        owner = dispatch.get("owner", "")
+        source_id = dispatch.get("source_id", "")
+        owner_open_rows = [
+            row
+            for row in rows
+            if row.get("status") == "open"
+            and (row.get("owner", "") or "<missing-owner>") == owner
+            and (row.get("source_id", "") or "") == source_id
+        ]
+        base_packet = dict(dispatch.get("suggested_owner_packet", {}))
+        command_fields = [
+            "owner_inbox_json_command",
+            "summary_command",
+            "forms_jsonl_command",
+            "evidence_readiness_command",
+            "validate_forms_command_template",
+            "landing_plan_command_template",
+            "landing_audit_command_template",
+            "next_focus_command",
+        ]
+        base_packet.update(
+            {
+                "packet_type": "owner-handoff",
+                "dispatch_scope_id": dispatch.get("dispatch_scope_id", ""),
+                "source_ids": dispatch.get("source_ids", []),
+                "mixed_source_owner": dispatch.get("mixed_source_owner", False),
+                "owner_route": dispatch.get("owner_route", {}),
+                "owner_routes": dispatch.get("owner_routes", []),
+                "source_paths": dispatch.get("source_paths", []),
+                "commands": {field: dispatch.get(field, "") for field in command_fields},
+                "owner_inbox": make_owner_inbox(owner_open_rows),
+                "evidence_readiness": make_evidence_readiness(owner_open_rows),
+                "forms_jsonl_lines": [
+                    json.dumps(make_decision_form(row), ensure_ascii=False, separators=(",", ":"))
+                    for row in owner_open_rows
+                ],
+                "owner_checklists": [make_owner_checklist(row) for row in owner_open_rows],
+                "no_owner_decision_generated": True,
+                "no_owner_gate_closed": True,
+                "routing_owner_is_not_reviewed_by": True,
+                "report_only": True,
+                "notes_zh": "只读 owner handoff packet；一次性聚合 inbox、证据准备度、JSONL 骨架和命令序列，方便人工 owner 离线签收。不写文件、不代签、不关闭 gate。",
+            }
+        )
+        packets.append(base_packet)
+    return packets
+
 def make_owner_summary(rows):
     summary_rows = []
     source_identity_counts = {}
@@ -1657,6 +1714,9 @@ if args.evidence_readiness:
 
 if args.owner_inbox:
     result["owner_inbox"] = make_owner_inbox([row for row in rows if row["status"] == "open"])
+
+if args.handoff_packet:
+    result["owner_handoff_packets"] = make_owner_handoff_packets(rows)
 
 if args.checklist:
     result["owner_checklists"] = [make_owner_checklist(row) for row in rows if row["status"] == "open"]

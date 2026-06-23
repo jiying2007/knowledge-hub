@@ -200,6 +200,7 @@
 - `knowledge-hub-final-state-handoff-supersede-20260623`
 - `knowledge-hub-review-queue-topic-readability-20260623`
 - `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
+- `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
 
 ## pcr02-registry-owner
 
