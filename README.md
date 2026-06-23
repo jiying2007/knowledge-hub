@@ -57,37 +57,16 @@
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
-rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --check "rtk ..."
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-06-22 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 rtk git diff --check
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id>
-rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id <id> --owner-gates pcr02-project-docs
-rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
-rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --forms-jsonl
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --evidence-readiness --json
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --json
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-plan --json
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --checklist
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --worksheet-id pcr02-owner-decision-worksheet-001 --forms-jsonl
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --forms-jsonl
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>'
-rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --source <path> --kind <kind> --dry-run
-rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target embedded/runbooks --dry-run
-rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <id> --dry-run
 ```
+
+更多 owner gate、doctor、inventory、capture、promote、retire 和 landing-audit 示例见 `tools/README.md`；根 README 只保留能选入口的最短路径。
 
 ## 新会话恢复
 
@@ -104,13 +83,13 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 
 `rtk git rev-parse --short HEAD` 和 `rtk git status --branch --short` 先固定当前基线、分支和工作区状态，防止新线程把旧 handoff 当成当前事实。
 
-恢复时按下面 5 个层面读取，不需要一次性重读全部 manifest：
+恢复时按 5 个层面读取，不需要一次性重读全部 manifest：
 
-- 状态恢复：`knowledge-status.sh --json` 给出当前 owner gate、`owner_gates.owner_dispatch[]`、`owner_gates.next_open_queue[]`、source coverage、source check health、boundary health、下一步命令和 `final_gate_command`；`knowledge-status.sh --strict` 是 blocker dashboard，不是终态完成证据。
-- owner 分派：`owner_gates.owner_dispatch[].suggested_owner_packet` 是只读 owner handoff 包，会把 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit 排成建议顺序，并给出本地临时 owner JSONL 路径；它不生成、不保存、不应用 owner decision。`owner_gates.next_open_queue[]` 按 `review_after, worksheet_id` 输出 open worksheet 的下一批领取顺序，其中可执行命令只包含 checklist/forms、forms-jsonl 和 evidence-readiness，validate/landing 只作为人工回填后的模板。
-- 终态门禁：`knowledge-final-gate.sh --json` 是 terminal gate，会聚合 `knowledge-check`、`knowledge-regression`、`rtk git diff --check`、strict status、长期维护入口审计、关联恢复审计和当前 PCR02 Level 2 report-only source-check，并判断是否只剩 owner 语义门禁。它的 `owner_recovery` 会透传 open owner 数量、owner-ready 覆盖、`owner_dispatch[]`、下一条 open gate 和 `next_open_queue[]`；`maintenance_entry_audit` 会证明人工新增、source coverage、复核、检索、owner 签收、自动化边界、质量门禁和中文可读性 8 类入口可恢复；`linking_audit` 会证明跨会话、项目、source、topic、decision 和 Markdown index 链路可恢复；`source_check_runtime` 会记录当前 7 条 allowlist 路径存在性检查；`highest_priority_rules_audit` 会列出 10 条高优先级规则的证据和不可机器证明边界；`evidence_index` 会记录命令、退出码、状态、中文摘要、runtime evidence path 和 related artifact；`automatic_governance.owner_blocker_source` 会说明 owner gate 数量来自 strict status 的哪个字段。
-- source 与 boundary：`final_state_audit.level1_pcr02_docs` 会暴露 `expected_owner_gate_count`、worksheet 行数和 owner-ready 数量来源，避免把 7 个 open gate 当成脚本魔法常量。`source_check_health` 只静态检查 `registry/sources.json` 的 `rtk` check / `no_check_reason` 契约，不执行外部命令；`sources.source_recovery_rows[]` 会把 source registry 终态、review_after、final_disposition、check/no-check 和 latest coverage decision 合成一行；`boundary_health` 只检查 Knowledge Hub 内部 PCR02 Level 2 boundary manifest、registry 和 index 证据，不读取源项目正文。
-- 索引恢复：`knowledge-index-plan.sh --section manifest --json` 用于恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数，并把历史 unpaired manifest 分类为 `expected` 或 `needs_review`；这是 report-only 恢复视图，不会因为历史例外自动失败。manifest latest 只按文件名里的 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。manifest row 的 `summary_source` / `evidence_source` 说明中文摘要和证据数量从哪个 JSONL 字段派生，`profile_health` 只提示恢复质量：`pass` 表示当前治理 manifest 满足摘要、证据和边界字段，`missing-summary` / `missing-evidence` / `missing-boundary` 表示人工补强方向，`legacy-missing-profile` / `reference-only` 不要求回填历史正文，也不是新硬门禁。`knowledge-index-plan.sh --section source --json` 若发现 latest source coverage 中同一 `source_id` 重复，会在 `source_coverage_selection.duplicate_source_ids` 和 warnings 中暴露，并保留第一行作为恢复视图。`knowledge-index-plan.sh --section linking --json` 用于汇总 `by-project`、`by-source`、`by-topic`、`by-decision` 和 Markdown index 锚点，证明跨会话/项目/source/topic/decision 恢复链路存在；它不读取 PCR02 源项目正文，不关闭 owner gate。`owner_dispatch[].owner_route` 来自 `registry/owner-routing.json`，只说明抽象 decision owner role 的分派和升级路径，不生成 owner decision，不替代 `reviewed_by`。`by-project`、`by-source`、`by-topic`、`by-decision` 用于恢复项目/source/topic/decision 入口，`by-status` 用于恢复 owner-ready、owner-dispatch、terminal gate 和 reviewing bucket 的收口线索。
+- 先固定 HEAD、分支和工作区状态，避免把旧 handoff 当成当前事实。
+- 看 `knowledge-status.sh --json` 恢复 owner queue、source coverage、source check、boundary health 和下一步命令。
+- 看 `knowledge-final-gate.sh --json` 判断 `ok`、`needs-owner-review` 或 `needs-fix`；`needs-owner-review` 只有在唯一 gap 是 `owner-gates-open` 时才交给真实 owner。
+- 从 `owner_gates.next_open_queue[]` 或 `owner_gates.owner_dispatch[]` 领取 owner gate；工具只导出、校验和规划，不生成 owner decision、不关闭 gate。
+- 用 `knowledge-index-plan.sh` 和 `knowledge-search.sh` 恢复 project/source/topic/decision 入口；字段级说明见 `tools/README.md`。
 
 ## 搜索知识
 

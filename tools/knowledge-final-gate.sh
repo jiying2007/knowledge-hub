@@ -249,17 +249,34 @@ def final_proof_dynamic_candidate(row, selection_date):
         and (review_status.endswith("-applied") or review_status.endswith("-registered"))
     )
 
-def select_final_proof_artifact_ids(items_rows, selection_date):
-    dynamic_ids = [
+def final_proof_dynamic_ids(items_rows, selection_date):
+    return [
         str(row.get("id", ""))
         for row in items_rows
         if row.get("id") and final_proof_dynamic_candidate(row, selection_date)
+    ]
+
+def unique_ordered(values):
+    selected = []
+    for value in values:
+        if value and value not in selected:
+            selected.append(value)
+    return selected
+
+def select_final_proof_artifact_ids(items_rows, selection_date):
+    baseline_dynamic_ids = final_proof_dynamic_ids(items_rows, FINAL_PROOF_BASELINE_DATE)
+    selection_dynamic_ids = final_proof_dynamic_ids(items_rows, selection_date)
+    dynamic_ids = unique_ordered(baseline_dynamic_ids + selection_dynamic_ids)
+    baseline_selection_overlap_ids = [
+        artifact_id
+        for artifact_id in baseline_dynamic_ids
+        if selection_date != FINAL_PROOF_BASELINE_DATE and artifact_id in selection_dynamic_ids
     ]
     selected = []
     for artifact_id in FINAL_PROOF_SEED_ARTIFACT_IDS + dynamic_ids:
         if artifact_id and artifact_id not in selected:
             selected.append(artifact_id)
-    return selected, dynamic_ids
+    return selected, dynamic_ids, baseline_dynamic_ids, selection_dynamic_ids, baseline_selection_overlap_ids
 
 def build_final_proof_artifacts_summary(selection_date):
     item_rows = [
@@ -271,7 +288,7 @@ def build_final_proof_artifacts_summary(selection_date):
         str(row.get("id", "")): row
         for row in item_rows
     }
-    expected_ids, dynamic_ids = select_final_proof_artifact_ids(item_rows, selection_date)
+    expected_ids, dynamic_ids, baseline_dynamic_ids, selection_dynamic_ids, baseline_selection_overlap_ids = select_final_proof_artifact_ids(item_rows, selection_date)
     try:
         migration_text = (root / "registry" / "migrations.jsonl").read_text()
     except Exception:
@@ -367,6 +384,7 @@ def build_final_proof_artifacts_summary(selection_date):
         and not missing_jsonl
         and not missing_migration
         and not missing_indexes
+        and not baseline_selection_overlap_ids
         else "fail"
     )
     return {
@@ -377,6 +395,12 @@ def build_final_proof_artifacts_summary(selection_date):
         "seed_ids": FINAL_PROOF_SEED_ARTIFACT_IDS,
         "dynamic_ids": dynamic_ids,
         "dynamic_count": len(dynamic_ids),
+        "baseline_dynamic_ids": baseline_dynamic_ids,
+        "baseline_dynamic_count": len(baseline_dynamic_ids),
+        "selection_dynamic_ids": selection_dynamic_ids,
+        "selection_dynamic_count": len(selection_dynamic_ids),
+        "baseline_selection_overlap_ids": baseline_selection_overlap_ids,
+        "baseline_selection_overlap_count": len(baseline_selection_overlap_ids),
         "dynamic_selector": {
             "domain": "governance",
             "kind": "audit",
@@ -400,7 +424,7 @@ def build_final_proof_artifacts_summary(selection_date):
         "missing_migration": missing_migration,
         "missing_indexes": missing_indexes,
         "rows": rows,
-        "notes_zh": f"只读汇总 {selection_date} 治理 proof 制品和 {FINAL_PROOF_BASELINE_DATE} seed 基线在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
+        "notes_zh": f"只读汇总 {FINAL_PROOF_BASELINE_DATE} 基线治理 proof、{selection_date} 当日治理 proof 和 seed 基线在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
     }
 
 def build_source_check_snapshot_summary():

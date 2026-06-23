@@ -121,11 +121,18 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 新增 source 时，`registry/sources.json` 的 `owner` 必须是 `registry/owners.json` 中已有的 source registry 维护责任人。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 source coverage 或相邻 manifest 写清 no-check reason。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
 
-查看 JSON 中的 `automatic_governance.status`、`owner_recovery`、`final_state_audit`、`maintenance_entry_audit`、`linking_audit`、`source_check_runtime`、`highest_priority_rules_audit`、`evidence_index` 和 `gap_map`：`complete-except-owner-review` 表示自动治理已闭环但仍需人工 owner decision，只有 final gate 为 `needs-owner-review` 且唯一 gap 是 `owner-gates-open` 时才成立；`owner_recovery.next_open_queue[]` 可恢复下一批 open worksheet 的并行领取顺序，`owner_recovery.owner_dispatch[]` 和 `owner_recovery.next_open` 可继续按 owner 或单条 worksheet 恢复人工分派；`final_state_audit` 分层显示 Level 1/2/3 终态摘要；`maintenance_entry_audit` 证明人工新增、source coverage、复核、检索、owner 签收、自动化边界、质量门禁和中文可读性 8 类入口可恢复；`linking_audit` 证明跨会话、项目、source、topic、decision 和 Markdown index 链路可恢复；`source_check_runtime` 是当前 report-only source availability 证据；`highest_priority_rules_audit` 显示 rtk、apply_patch、no-memory-write、no-source-modification、report-only 等高优先级规则的证据边界；`evidence_index` 记录本次终态 gate 采信的每条命令证据；`needs-fix` 表示还有非 owner blocker 需要先修复。`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate。
+终态 JSON 先看 4 组字段：
+
+- `automatic_governance.status` 和 `gap_map[]`：判断自动治理是否 `complete-except-owner-review`，以及唯一缺口是否为 `owner-gates-open`。
+- `owner_recovery`：恢复下一批 open worksheet、owner 分派、owner handoff packet 和单条 gate 入口；只服务真实 owner 人工签收。
+- `maintenance_entry_audit`、`linking_audit`、`final_state_audit`、`source_check_runtime` 和 `highest_priority_rules_audit`：证明长期维护入口、跨索引恢复、分层终态、report-only source availability 和高优先级规则证据边界。
+- `evidence_index[]`：记录本次 terminal gate 采信的每条命令证据、退出码、状态和中文摘要。
+
+`knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --json` 才是 terminal gate；`needs-fix` 表示还有非 owner blocker 需要先修复。
 
 如果离线或工具不可用，不能把终态写成 `ok` / `pass`。在相邻维护记录中写 `manual_validation_pending: true`，并记录 owner、日期、当前 `cwd`、阻塞原因和 `required_followup: rtk git diff --check; rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；恢复后先补跑命令再更新证据。
 
-失败后按这个顺序恢复：
+失败恢复决策树以根 README 为准，本文件只补工具字段和边界。简要顺序：
 
 1. `needs-fix`: 先看 `evidence_index[]`，定位哪条命令不是 `pass` 或 `owner-review`；再看对应 `blockers[]` / `gap_map[]` 的 `fix_action`。
 2. `needs-owner-review`: 只在 `gap_map[]` 唯一项为 `owner-gates-open` 时进入 owner 人工签收路径；从 `owner_recovery.owner_dispatch[]` 选择 owner，再运行 handoff packet 中的 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit。

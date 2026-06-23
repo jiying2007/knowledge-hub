@@ -377,3 +377,5 @@
 - proof-search-runtime-hardening-applied: final proof as-of 日期选择和 registry metadata-only 搜索 fallback 已压实，回归覆盖扩展到 103 项；证据：`artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-maintenance-linking-audit-hardening-20260622`
 - maintenance-linking-audit-hardening-applied: final gate 顶层 maintenance_entry_audit 与 linking_audit 已压实，index-plan 新增 linking 恢复视图；证据：`artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.jsonl`.
+- reviewing: `knowledge-hub-final-proof-date-rollover-hardening-20260623`
+- final-proof-date-rollover-hardening-applied: final proof 日期滚动保留 2026-06-22 baseline 动态 proof，并继续叠加当前 as-of 日期 proof；README 低复杂度维护入口已压缩；证据：`artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.jsonl`.

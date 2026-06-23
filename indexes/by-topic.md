@@ -215,3 +215,4 @@
 - Knowledge Hub owner status, review_after and final proof hardening: `artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.md`
 - Knowledge Hub proof 与搜索运行时加固: `artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.md`
 - Knowledge Hub 维护入口与关联恢复审计加固: `artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.md`
+- Knowledge Hub final proof 日期滚动加固: `artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.md`

@@ -1637,6 +1637,15 @@ def test_final_gate_owner_review_blocker():
     level2 = final_state_audit.get("level2_pcr02_candidate_sources", {})
     level3 = final_state_audit.get("level3_registered_sources", {})
     proof_rows = proof_artifacts.get("rows", [])
+    proof_seed_ids = proof_artifacts.get("seed_ids", [])
+    proof_dynamic_ids = proof_artifacts.get("dynamic_ids", [])
+    proof_expected_ids = proof_artifacts.get("expected_ids", [])
+    proof_baseline_dynamic_ids = proof_artifacts.get("baseline_dynamic_ids", [])
+    proof_selection_dynamic_ids = proof_artifacts.get("selection_dynamic_ids", [])
+    proof_baseline_selection_overlap_ids = proof_artifacts.get("baseline_selection_overlap_ids", [])
+    expected_source_check_runtime_command = (
+        f"rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of {parsed.get('today')}"
+    )
     level2_boundary_health = level2.get("boundary_health", {})
     level2_source_check_snapshot = level2.get("source_check_execution_snapshot", {})
     level2_source_check_runtime = level2.get("source_check_runtime", {})
@@ -1750,9 +1759,15 @@ def test_final_gate_owner_review_blocker():
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
         and proof_artifacts.get("selection_date") == parsed.get("today")
         and proof_artifacts.get("dynamic_selector", {}).get("date") == parsed.get("today")
-        and proof_artifacts.get("expected_count") == proof_artifacts.get("dynamic_count")
-        and proof_artifacts.get("dynamic_count", 0) >= 17
-        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in proof_artifacts.get("expected_ids", [])
+        and proof_artifacts.get("expected_count") == len(proof_expected_ids)
+        and proof_artifacts.get("expected_count") == len(set(proof_seed_ids + proof_dynamic_ids))
+        and proof_artifacts.get("dynamic_count") == len(proof_dynamic_ids)
+        and proof_artifacts.get("baseline_dynamic_count") == len(proof_baseline_dynamic_ids)
+        and proof_artifacts.get("selection_dynamic_count") == len(proof_selection_dynamic_ids)
+        and proof_artifacts.get("baseline_selection_overlap_count") == len(proof_baseline_selection_overlap_ids)
+        and proof_baseline_selection_overlap_ids == []
+        and proof_artifacts.get("baseline_dynamic_count", 0) >= 17
+        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in proof_expected_ids
         and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("migration_covered_count") == proof_artifacts.get("expected_count")
@@ -1782,7 +1797,7 @@ def test_final_gate_owner_review_blocker():
         and source_check_snapshot.get("unexpected_source_ids") == []
         and source_check_snapshot.get("failed_rows") == []
         and source_check_runtime.get("status") == "pass"
-        and source_check_runtime.get("command") == "rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of 2026-06-22"
+        and source_check_runtime.get("command") == expected_source_check_runtime_command
         and source_check_runtime.get("runtime_execution") is True
         and source_check_runtime.get("read_only") is True
         and source_check_runtime.get("report_only") is True
@@ -4235,7 +4250,7 @@ def test_manifest_latest_filename_date_only():
     old_by_filename.write_text(
         '{"id":"fixture-row-date-newer","status":"applied","checked_at":"2099-01-01","summary_zh":"row 日期很新但文件名日期很旧，不能抢占 latest。","evidence_refs":["fixture"]}\n'
     )
-    new_by_filename = manifests_dir / "fixture-filename-newer-20260623.jsonl"
+    new_by_filename = manifests_dir / "fixture-filename-newer-20260624.jsonl"
     new_by_filename.write_text(
         '{"id":"fixture-filename-newer","status":"applied","checked_at":"2020-01-01","summary_zh":"文件名日期更新，应排在旧文件名前。","evidence_refs":["fixture"]}\n'
     )
@@ -4259,7 +4274,7 @@ def test_manifest_latest_filename_date_only():
         and old_row.get("date") == "2020-01-01"
         and old_row.get("row_date") == "2099-01-01"
         and old_row.get("date_source") == "filename-YYYYMMDD"
-        and new_row.get("date") == "2026-06-23"
+        and new_row.get("date") == "2026-06-24"
         and new_row.get("row_date") == "2020-01-01",
         "manifest-latest-filename-date-only",
         "manifest latest view sorts only by filename date, not JSONL row dates",
