@@ -1079,6 +1079,10 @@ def test_owner_summary_all_open():
         result["exit_code"] == 0
         and parsed.get("row_count") == 7
         and parsed.get("open_count") == 7
+        and parsed.get("status") == "ok"
+        and parsed.get("status_scope") == "tool-health"
+        and parsed.get("owner_review_status") == "needs-owner-review"
+        and parsed.get("owner_gate_status") == "owner-gates-open"
         and summary.get("status") == "needs-owner-review"
         and summary.get("row_count") == 7
         and summary.get("open_count") == 7
@@ -1119,6 +1123,10 @@ def test_owner_summary_all_open():
         "owner summary gives all open gates without emitting forms or closing gates",
         {
             "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "status_scope": parsed.get("status_scope"),
+            "owner_review_status": parsed.get("owner_review_status"),
+            "owner_gate_status": parsed.get("owner_gate_status"),
             "row_count": parsed.get("row_count"),
             "open_count": parsed.get("open_count"),
             "summary_status": summary.get("status"),
@@ -1508,6 +1516,28 @@ def test_status_owner_ready_source_no_registry_fallback():
         not present_banned and not missing_required,
         "status-owner-ready-source-no-registry-fallback",
         "status next_open_queue owner-ready state comes from owner-gates row validation, not registry_items fallback",
+        {
+            "present_banned_fragments": present_banned,
+            "missing_required_fragments": missing_required,
+        },
+    )
+
+def test_final_gate_maintenance_entry_wording_no_section_drift():
+    source = (root / "tools" / "knowledge-final-gate.sh").read_text()
+    banned_fragments = [
+        "第七节 8 类长期维护入口",
+        "第七节长期维护入口",
+    ]
+    required_fragments = [
+        "docs/goals 中列出的 8 类长期维护入口均有文档、工具或回归证据。",
+        "docs/goals 中列出的 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。",
+    ]
+    present_banned = [fragment for fragment in banned_fragments if fragment in source]
+    missing_required = [fragment for fragment in required_fragments if fragment not in source]
+    expect(
+        not present_banned and not missing_required,
+        "final-gate-maintenance-entry-wording-no-section-drift",
+        "final gate maintenance entry wording points to docs/goals instead of stale section numbering",
         {
             "present_banned_fragments": present_banned,
             "missing_required_fragments": missing_required,
@@ -2369,6 +2399,45 @@ def make_valid_owner_decision_form(repo):
         form[key] = value
     return form, {}
 
+def make_owner_decision_form_for_worksheet(repo, worksheet_id):
+    forms_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            worksheet_id,
+            "--forms",
+            "--json",
+        ],
+    )
+    parsed_forms = {}
+    try:
+        parsed_forms = json.loads(forms_result["stdout"])
+    except Exception:
+        pass
+    forms = parsed_forms.get("decision_forms", [])
+    if not forms:
+        return {}, {"setup_error": "missing decision form", "worksheet_id": worksheet_id, "stdout_sample": forms_result["stdout"][:1000]}
+    form = forms[0]
+    identity = form.get("observed_source_identity", {})
+    form["reviewed_by"] = "regression-fixture-owner"
+    form["reviewed_at"] = "2026-06-23"
+    form["review_after"] = "2026-09-23"
+    form["source_status"] = "owner-reviewed-fixture"
+    form["source_sha256"] = identity.get("observed_sha256", "")
+    form["source_size"] = identity.get("observed_size", "")
+    form["evidence_refs"] = ["artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md"]
+    form["status_reason"] = "Regression fixture for owner decision compatibility."
+    for field in form.get("required_owner_fields", []):
+        value = form.get(field)
+        if value in (None, "") or value == [] or value == {}:
+            form[field] = f"fixture-{field}"
+    return form, {}
+
 def test_owner_validate_forms_partial_coverage_warning():
     repo = copy_repo("owner-validate-forms-partial-coverage")
     form, setup_error = make_valid_owner_decision_form(repo)
@@ -2432,6 +2501,110 @@ def test_owner_validate_forms_partial_coverage_warning():
             "landing_audit_status": landing_audit.get("status"),
             "stdout_sample": result["stdout"][:1200],
             "stderr_sample": result["stderr"][:1000],
+        },
+        repo,
+    )
+
+def test_owner_archive_only_target_path_compatibility():
+    repo = copy_repo("owner-archive-only-target-path")
+    form, setup_error = make_owner_decision_form_for_worksheet(repo, "pcr02-owner-decision-worksheet-007")
+    if setup_error:
+        expect(False, "owner-archive-only-target-path-compatibility", "owner archive-only forms can target explicit archive paths", setup_error, repo)
+        return
+    archive_target = "domains/projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
+    form["owner_decision"] = "archive-only"
+    form["target_decision"] = archive_target
+    form_path = repo / "archive-owner-decisions.jsonl"
+    form_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-007",
+            "--validate-forms",
+            str(form_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    diagnostics = parsed.get("form_validation", {}).get("diagnostics", [])
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("form_validation", {}).get("status") == "pass"
+        and not any(row.get("code") == "owner-decision-target-mismatch" for row in diagnostics),
+        "owner-archive-only-target-path-compatibility",
+        "owner archive-only forms can target explicit archive paths",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "diagnostics": diagnostics,
+            "target_decision": archive_target,
+            "stdout_sample": result["stdout"][:1000],
+        },
+        repo,
+    )
+
+def test_owner_archive_only_rejects_non_archive_target():
+    repo = copy_repo("owner-archive-only-rejects-non-archive")
+    form, setup_error = make_owner_decision_form_for_worksheet(repo, "pcr02-owner-decision-worksheet-007")
+    if setup_error:
+        expect(False, "owner-archive-only-rejects-non-archive-target", "owner archive-only forms reject validation or decision targets", setup_error, repo)
+        return
+    form["owner_decision"] = "archive-only"
+    form["target_decision"] = "domains/projects/pcr02/validation/"
+    form_path = repo / "archive-owner-decisions.jsonl"
+    form_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--worksheet-id",
+            "pcr02-owner-decision-worksheet-007",
+            "--validate-forms",
+            str(form_path),
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    diagnostics = parsed.get("form_validation", {}).get("diagnostics", [])
+    mismatch_diagnostic = next(
+        (
+            row for row in diagnostics
+            if row.get("code") == "owner-decision-target-mismatch"
+            and row.get("field") == "target_decision"
+        ),
+        {},
+    )
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("form_validation", {}).get("status") == "fail"
+        and mismatch_diagnostic.get("worksheet_id") == "pcr02-owner-decision-worksheet-007"
+        and "/archive/" in str(mismatch_diagnostic.get("expected", "")),
+        "owner-archive-only-rejects-non-archive-target",
+        "owner archive-only forms reject validation or decision targets",
+        {
+            "exit_code": result["exit_code"],
+            "validation_status": parsed.get("form_validation", {}).get("status"),
+            "diagnostics": diagnostics,
+            "mismatch_diagnostic": mismatch_diagnostic,
+            "stdout_sample": result["stdout"][:1000],
         },
         repo,
     )
@@ -3534,12 +3707,19 @@ def test_manual_entry_offline_docs():
 
 def test_readme_offline_shortest_paths():
     readme_path = root / "README.md"
+    gitignore_path = root / ".gitignore"
     try:
         readme = readme_path.read_text()
         read_error = ""
     except Exception as exc:
         readme = ""
         read_error = str(exc)
+    try:
+        gitignore = gitignore_path.read_text()
+        gitignore_read_error = ""
+    except Exception as exc:
+        gitignore = ""
+        gitignore_read_error = str(exc)
     required_fragments = [
         "## 人工维护 5 条最短路径",
         "### 1. 新增一条知识",
@@ -3551,15 +3731,25 @@ def test_readme_offline_shortest_paths():
         "required_followup",
         "rtk git diff --check",
         "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+        "artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl",
+        "不登记 registry/index，不作为 landing artifact",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
+    gitignore_required_fragments = ["artifacts/manifests/*.local.jsonl"]
+    gitignore_missing_fragments = [
+        fragment
+        for fragment in gitignore_required_fragments
+        if fragment not in gitignore
+    ]
     expect(
-        not read_error and not missing_fragments,
+        not read_error and not gitignore_read_error and not missing_fragments and not gitignore_missing_fragments,
         "readme-offline-shortest-paths",
         "README keeps the five shortest manual maintenance paths and terminal-gate offline fallback",
         {
             "read_error": read_error,
+            "gitignore_read_error": gitignore_read_error,
             "missing_fragments": missing_fragments,
+            "gitignore_missing_fragments": gitignore_missing_fragments,
         },
     )
 
@@ -6336,6 +6526,7 @@ def test_regression_manifest_coverage():
         "owner-next-open-focus",
         "status-next-owner-gate",
         "status-owner-ready-source-no-registry-fallback",
+        "final-gate-maintenance-entry-wording-no-section-drift",
         "status-text-owner-summary-commands",
         "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
@@ -6347,6 +6538,8 @@ def test_regression_manifest_coverage():
         "final-gap-readability-positive-contracts",
         "owner-landing-plan-project-index",
         "owner-validate-forms-partial-coverage-warning",
+        "owner-archive-only-target-path-compatibility",
+        "owner-archive-only-rejects-non-archive-target",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
@@ -6514,6 +6707,7 @@ for test_fn in [
     test_owner_next_open_focus,
     test_status_next_owner_gate,
     test_status_owner_ready_source_no_registry_fallback,
+    test_final_gate_maintenance_entry_wording_no_section_drift,
     test_status_text_owner_summary_commands,
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
@@ -6525,6 +6719,8 @@ for test_fn in [
     test_final_gap_readability_positive_contracts,
     test_owner_landing_plan_project_index,
     test_owner_validate_forms_partial_coverage_warning,
+    test_owner_archive_only_target_path_compatibility,
+    test_owner_archive_only_rejects_non_archive_target,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
     test_owner_landing_plan_requires_owner_ready_package_repo_relative_command,

@@ -832,9 +832,9 @@ def build_maintenance_entry_audit():
         "missing_entry_ids": missing_entry_ids,
         "entries": entries,
         "summary_zh": (
-            "第七节 8 类长期维护入口均有文档、工具或回归证据。"
+            "docs/goals 中列出的 8 类长期维护入口均有文档、工具或回归证据。"
             if passed_count == len(entries)
-            else "第七节长期维护入口存在缺口，请按 missing_entry_ids 和 missing_evidence 补齐。"
+            else "长期维护入口存在缺口，请按 missing_entry_ids 和 missing_evidence 补齐。"
         ),
     }
 
@@ -1008,7 +1008,7 @@ if maintenance_entry_audit["status"] != "pass":
         "severity": "blocker",
         "gap_type": "manual-maintenance",
         "count": len(maintenance_entry_audit.get("missing_entry_ids", [])),
-        "summary_zh": "第七节长期维护入口审计未通过，不能证明中文开发人员长期维护路径完整。",
+        "summary_zh": "长期维护入口审计未通过，不能证明中文开发人员长期维护路径完整。",
         "command": "runtime:maintenance_entry_audit",
         "missing_entry_ids": maintenance_entry_audit.get("missing_entry_ids", []),
     })
@@ -1484,9 +1484,9 @@ evidence_index.append(
         0,
         maintenance_entry_audit["status"],
         (
-            "第七节 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。"
+            "docs/goals 中列出的 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。"
             if maintenance_entry_audit["status"] == "pass"
-            else "第七节长期维护入口存在缺口；请查看 maintenance_entry_audit.missing_entry_ids。"
+            else "长期维护入口存在缺口；请查看 maintenance_entry_audit.missing_entry_ids。"
         ),
         "runtime:maintenance_entry_audit",
         "maintenance-entry-audit",

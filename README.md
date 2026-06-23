@@ -207,7 +207,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 
 owner gate 人工签收按 6 步走：
 
-1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。
+1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。该类 `.local.jsonl` 已被 `.gitignore` 排除，只是 owner 草稿，不登记 registry/index，不作为 landing artifact。
 2. 选择分派方式：多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --evidence-readiness --json` 查看只读证据准备度和候选值。
 3. 导出表单骨架：用 `--owner <owner> --forms-jsonl` 或全量 `--forms-jsonl` 导出骨架；`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选，不会写入正式 owner 字段，也不能替代签收。
 4. 人工填写并校验：真实 owner 填写 decision 后先只读 `--validate-forms '<owner-decisions.jsonl>' --json`。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；同时 `owner_decision` 与 `target_decision` 必须成对兼容，不能把 `reference-only` / `no-migration` 和项目落地路径混用。校验可以合法只覆盖本批 JSONL 子集；批量处理时必须查看 `form_validation.coverage_status` 和 `missing_open_worksheet_ids`，单条处理优先带 `--worksheet-id`。

@@ -196,6 +196,7 @@
 - `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
 - `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
 - `knowledge-hub-owner-ready-status-source-hardening-20260623`
+- `knowledge-hub-owner-archive-form-readability-hardening-20260623`
 
 ## pcr02-registry-owner
 

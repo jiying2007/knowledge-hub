@@ -983,11 +983,17 @@ def is_filled(value):
 def owner_decision_target_mismatch(owner_decision, target_decision):
     owner_decision = str(owner_decision or "")
     target_decision = str(target_decision or "")
+    if owner_decision == "archive-only":
+        if target_decision == "archive-only" or "/archive/" in target_decision:
+            return None
+        return {
+            "expected": ["archive-only", "target path containing /archive/"],
+            "reason_zh": "archive-only 只能搭配 archive-only 字面目标或明确的 archive 路径，不能指向 current、validation 或 decisions 目标。",
+        }
     terminal_targets = {
         "reference-only": {"reference-only"},
         "no-migration": {"no-migration"},
         "rejected": {"no-migration"},
-        "archive-only": {"archive-only"},
     }
     if owner_decision in terminal_targets and target_decision not in terminal_targets[owner_decision]:
         return {
@@ -1610,11 +1616,16 @@ open_count = sum(1 for row in rows if row["status"] == "open")
 resolved_count = sum(1 for row in rows if row["status"] == "resolved")
 active_exposure_count = sum(len(row["active_registry_items"]) for row in rows)
 owner_ready_coverage = make_owner_ready_coverage(rows)
+owner_review_status = "needs-owner-review" if open_count else "complete"
+owner_gate_status = "owner-gates-open" if open_count else "owner-gates-complete"
 result_status = "blocked" if errors else "needs-fix" if active_exposure_count else "ok"
 exit_status = 1 if errors or active_exposure_count else 0
 
 result = {
     "status": result_status,
+    "status_scope": "tool-health",
+    "owner_review_status": owner_review_status,
+    "owner_gate_status": owner_gate_status,
     "root": str(root),
     "read_only": True,
     "source_id": args.source_id,

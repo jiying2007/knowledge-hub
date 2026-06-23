@@ -10,6 +10,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Local owner decision drafts; real landing artifacts must be explicit reviewed manifests.
+artifacts/manifests/*.local.jsonl
+
 # Runtime logs and generated reports
 *.log
 *.trace
