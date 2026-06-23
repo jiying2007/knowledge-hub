@@ -1553,34 +1553,49 @@ for worksheet_path in worksheet_paths:
             continue
         intake = intake_by_worksheet.get(row_id) or intake_by_source_path.get(source_path, {})
         execution_root = source_execution_root(source_id)
-        rows.append(
-            {
-                "id": row_id,
-                "source_id": source_id,
-                "source_path": source_path,
-                "owner": owner,
-                "owner_route": owner_route_for(source_id, owner),
-                "status": row_status,
-                "worksheet_status": row.get("worksheet_status") or row.get("status") or row.get("default_state") or "",
-                "decision_options": row.get("decision_options", []),
-                "target_candidates": row.get("target_candidates", []),
-                "required_owner_fields": row.get("required_owner_fields", []),
-                "must_not": row.get("must_not", []),
-                "review_after": row.get("review_after", ""),
-                "worksheet": str(worksheet_path.relative_to(root)),
-                "registry_items": items_by_source_path.get(key, []),
-                "active_registry_items": active_by_source_path.get(key, []),
-                "source_execution_root": execution_root,
-                "verification_cwd": execution_root,
-                "verification_commands": effective_verification_commands(row, source_id),
-                "owner_question_zh": intake.get("owner_question_zh", ""),
-                "default_state": intake.get("default_state", ""),
-                "allowed_next_status": intake.get("allowed_next_status", []),
-                "hard_gate_summary": intake.get("hard_gate_summary", ""),
-                "hard_gate": intake.get("hard_gate", ""),
-                "observed_source_identity": compute_source_identity(row),
-            }
-        )
+        row_entry = {
+            "id": row_id,
+            "source_id": source_id,
+            "source_path": source_path,
+            "owner": owner,
+            "owner_route": owner_route_for(source_id, owner),
+            "status": row_status,
+            "worksheet_status": row.get("worksheet_status") or row.get("status") or row.get("default_state") or "",
+            "decision_options": row.get("decision_options", []),
+            "target_candidates": row.get("target_candidates", []),
+            "required_owner_fields": row.get("required_owner_fields", []),
+            "must_not": row.get("must_not", []),
+            "review_after": row.get("review_after", ""),
+            "worksheet": str(worksheet_path.relative_to(root)),
+            "registry_items": items_by_source_path.get(key, []),
+            "active_registry_items": active_by_source_path.get(key, []),
+            "source_execution_root": execution_root,
+            "verification_cwd": execution_root,
+            "verification_commands": effective_verification_commands(row, source_id),
+            "owner_question_zh": intake.get("owner_question_zh", ""),
+            "default_state": intake.get("default_state", ""),
+            "allowed_next_status": intake.get("allowed_next_status", []),
+            "hard_gate_summary": intake.get("hard_gate_summary", ""),
+            "hard_gate": intake.get("hard_gate", ""),
+            "observed_source_identity": compute_source_identity(row),
+        }
+        ready_status, ready_packages = owner_ready_state(row_entry)
+        row_entry["owner_ready_package_status"] = ready_status
+        row_entry["owner_ready_package_status_source"] = "knowledge-owner-gates.owner_ready_state"
+        row_entry["owner_ready_strong_validation"] = True
+        row_entry["owner_ready_package_count"] = len(ready_packages)
+        row_entry["owner_ready_packages"] = ready_packages
+        row_entry["owner_ready_package_ids"] = [
+            str(item.get("id", ""))
+            for item in ready_packages
+            if isinstance(item, dict) and item.get("id")
+        ]
+        row_entry["owner_ready_package_paths"] = [
+            str(item.get("path", ""))
+            for item in ready_packages
+            if isinstance(item, dict) and item.get("path")
+        ]
+        rows.append(row_entry)
 
 if args.next_open and not errors:
     rows = sorted(

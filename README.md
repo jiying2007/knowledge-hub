@@ -89,7 +89,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision|source coverage" ~/knowledge-
 - 先固定 HEAD、分支和工作区状态，避免把旧 handoff 当成当前事实。
 - 看 `knowledge-status.sh --json` 恢复 owner queue、source coverage、source check、boundary health 和下一步命令。
 - 看 `knowledge-final-gate.sh --json` 判断 `ok`、`needs-owner-review` 或 `needs-fix`；`needs-owner-review` 只有在唯一 gap 是 `owner-gates-open` 时才交给真实 owner。
-- 从 `owner_gates.next_open_queue[]` 或 `owner_gates.owner_dispatch[]` 领取 owner gate；默认先用 `owner_inbox_json_command` 单屏查看问题、字段分组和候选证据，再导出、校验和规划，不生成 owner decision、不关闭 gate。
+- 从 `owner_gates.next_open_queue[]` 或 `owner_gates.owner_dispatch[]` 领取 owner gate；默认先用 `owner_inbox_json_command` 单屏查看问题、字段分组和候选证据，再导出、校验和规划。`next_open_queue[].owner_ready_package_status` 只来自 owner-gates 逐行强校验，不用 registry item presence 推断；不生成 owner decision、不关闭 gate。
 - 用 `knowledge-index-plan.sh --section linking --json` 和 `knowledge-search.sh` 恢复跨会话、project、source、topic、decision 入口；字段级说明见 `tools/README.md`。
 
 ## 搜索知识

@@ -37,6 +37,7 @@ SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
     "pcr02-module-agent-rules",
     "pcr02-project-agent-config",
 ]
+OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"
 
 def resolve_today():
     if args.as_of:
@@ -271,6 +272,18 @@ open_owner_rows = sorted(
         str(row.get("id", "")),
     ),
 )
+owner_ready_row_schema_errors = [
+    {
+        "worksheet_id": str(row.get("id", "")),
+        "source_id": str(row.get("source_id", "")),
+        "source_path": str(row.get("source_path", "")),
+        "missing_field": "owner_ready_package_status",
+        "expected_source": OWNER_READY_ROW_STATUS_SOURCE,
+        "summary_zh": "open owner row 缺少 owner-ready 逐行强校验状态；status dashboard 不再从 registry_items 静默推断 covered。",
+    }
+    for row in open_owner_rows
+    if "owner_ready_package_status" not in row
+]
 next_owner_gate = {}
 next_open_queue = []
 owner_dispatch = []
@@ -367,18 +380,15 @@ def make_next_open_queue_entry(row):
         "--worksheet-id",
         worksheet_id,
     ]
-    registry_items = row.get("registry_items", []) if isinstance(row.get("registry_items", []), list) else []
     owner_ready_packages = row.get("owner_ready_packages", []) if isinstance(row.get("owner_ready_packages", []), list) else []
-    owner_ready_package_status = str(row.get("owner_ready_package_status", "")) or (
-        "covered" if owner_ready_packages or registry_items else "missing"
-    )
+    owner_ready_package_status = str(row.get("owner_ready_package_status", ""))
+    if not owner_ready_package_status:
+        owner_ready_package_status = "unknown-owner-ready-status"
     owner_ready_package_ids = [
         str(item.get("id", ""))
         for item in owner_ready_packages
         if isinstance(item, dict) and item.get("id")
     ]
-    if not owner_ready_package_ids:
-        owner_ready_package_ids = [str(item.get("id", "")) for item in registry_items if isinstance(item, dict)]
     return {
         "worksheet_id": worksheet_id,
         "source_id": source_id,
@@ -388,8 +398,10 @@ def make_next_open_queue_entry(row):
         "review_after": str(row.get("review_after", "")),
         "owner_question_zh": str(row.get("owner_question_zh", "")),
         "owner_ready_package_status": owner_ready_package_status,
+        "owner_ready_package_status_source": str(row.get("owner_ready_package_status_source", OWNER_READY_ROW_STATUS_SOURCE)),
+        "owner_ready_source": OWNER_READY_ROW_STATUS_SOURCE,
         "owner_ready_package_ids": owner_ready_package_ids,
-        "owner_ready_package_count": len(owner_ready_packages) if owner_ready_packages else len(registry_items),
+        "owner_ready_package_count": int(row.get("owner_ready_package_count", len(owner_ready_package_ids)) or 0),
         "selection_order": "review_after, worksheet_id",
         "focus_command": shell_command(base + ["--checklist", "--forms"]),
         "forms_jsonl_command": shell_command(base + ["--forms-jsonl"]),
@@ -803,7 +815,7 @@ owner_gates_failed = owner_gates["exit_code"] != 0
 
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count:
+elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors:
     status = "needs-fix"
 elif open_owner_gate_count:
     status = "needs-owner-review"
@@ -981,7 +993,9 @@ owner_blocker_source = {
     "open_count": open_owner_gate_count,
     "owner_ready_package_coverage": owner_ready_package_coverage,
     "active_exposure_count": active_exposure_count,
-    "notes_zh": "owner gate 数量、owner-ready 覆盖和 active exposure 均来自本 status 输出的 owner_gates；本结构只解释 blocker 来源，不生成 owner decision，不关闭 gate。",
+    "owner_ready_row_status_source": OWNER_READY_ROW_STATUS_SOURCE,
+    "owner_ready_row_schema_error_count": len(owner_ready_row_schema_errors),
+    "notes_zh": "owner gate 数量、owner-ready 覆盖和 active exposure 均来自本 status 输出的 owner_gates；next_open_queue 的逐行 owner-ready 状态只消费 knowledge-owner-gates 的强校验字段，不从 registry_items 推断 covered；本结构只解释 blocker 来源，不生成 owner decision，不关闭 gate。",
 }
 if errors:
     strict_blockers.append({
@@ -1017,6 +1031,15 @@ if active_exposure_count:
         "severity": "blocker",
         "count": active_exposure_count,
         "summary_zh": "存在 unresolved owner-gated 内容暴露为 active，必须先移除 active exposure。",
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json"],
+    })
+if owner_ready_row_schema_errors:
+    strict_blockers.append({
+        "id": "owner-ready-row-schema-missing",
+        "severity": "blocker",
+        "count": len(owner_ready_row_schema_errors),
+        "summary_zh": "owner-gates open rows 缺少逐行 owner-ready 强校验字段；不能用 registry_items presence 代替 covered。",
+        "errors": owner_ready_row_schema_errors,
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json"],
     })
 if open_owner_gate_count:
@@ -1112,6 +1135,8 @@ result = {
         "owner_ready_missing": owner_payload.get("owner_ready_missing", []),
         "owner_ready_invalid": owner_payload.get("owner_ready_invalid", []),
         "owner_ready_duplicate": owner_payload.get("owner_ready_duplicate", []),
+        "owner_ready_row_status_source": OWNER_READY_ROW_STATUS_SOURCE,
+        "owner_ready_row_schema_errors": owner_ready_row_schema_errors,
         "owner_dispatch": owner_dispatch,
         "summary_commands": summary_commands,
         "owner_summary_commands": owner_summary_commands,

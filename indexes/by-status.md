@@ -385,3 +385,5 @@
 - manual-entry-owner-personal-source-recommendation-applied: `knowledge-new.sh` 已暴露 item owner registry 状态、personal-local 默认值和 source role-aware 推荐提示；证据：`artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.jsonl`.
 - reviewing: `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
 - proof-alias-owner-coverage-hardening-applied: final gate 已提供稳定 `proof_artifacts` 字段，owner validate/landing 已暴露分批覆盖提示，终态 goal 最短路径口径已统一；证据：`artifacts/manifests/knowledge-hub-proof-alias-owner-coverage-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-owner-ready-status-source-hardening-20260623`
+- owner-ready-status-source-hardening-applied: owner-ready 状态来源已收口到 owner-gates 逐行强校验字段，status owner queue 不再从 registry_items 推断 covered；证据：`artifacts/manifests/knowledge-hub-owner-ready-status-source-hardening-20260623.jsonl`.

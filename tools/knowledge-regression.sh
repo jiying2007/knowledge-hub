@@ -1319,12 +1319,16 @@ def test_status_next_owner_gate():
         and owner_blocker_source.get("owner_gate_open_count_field") == "owner_gates.open_count"
         and owner_blocker_source.get("open_count") == 7
         and owner_blocker_source.get("owner_ready_package_coverage") == "7/7"
+        and owner_blocker_source.get("owner_ready_row_status_source") == "knowledge-owner-gates.rows[].owner_ready_package_status"
+        and owner_blocker_source.get("owner_ready_row_schema_error_count") == 0
         and owner_blocker_source.get("active_exposure_count") == 0
         and owner_gates.get("owner_ready_package_count") == 7
         and owner_gates.get("owner_ready_missing_count") == 0
         and owner_gates.get("owner_ready_invalid_count") == 0
         and owner_gates.get("owner_ready_duplicate_count") == 0
         and owner_gates.get("owner_ready_package_coverage") == "7/7"
+        and owner_gates.get("owner_ready_row_status_source") == "knowledge-owner-gates.rows[].owner_ready_package_status"
+        and owner_gates.get("owner_ready_row_schema_errors") == []
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
         and project_owner_handoff_packet.get("status") == "ready-for-owner-review"
@@ -1390,6 +1394,8 @@ def test_status_next_owner_gate():
         and first_queue_row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and first_queue_row.get("source_path") == "AGENTS.md"
         and first_queue_row.get("owner_ready_package_status") == "covered"
+        and first_queue_row.get("owner_ready_source") == "knowledge-owner-gates.rows[].owner_ready_package_status"
+        and first_queue_row.get("owner_ready_package_status_source") == "knowledge-owner-gates.owner_ready_state"
         and first_queue_row.get("owner_ready_package_count") == 1
         and "pcr02-agents-owner-ready-package-20260620" in first_queue_row.get("owner_ready_package_ids", [])
         and "--worksheet-id pcr02-owner-decision-worksheet-001 --checklist --forms" in first_queue_row.get("focus_command", "")
@@ -1400,6 +1406,8 @@ def test_status_next_owner_gate():
         and second_queue_row.get("source_path") == "standards/diag-command-metadata-standard.md"
         and second_queue_row.get("owner") == "pcr02-diag-owner-or-team-core"
         and second_queue_row.get("owner_ready_package_status") == "covered"
+        and second_queue_row.get("owner_ready_source") == "knowledge-owner-gates.rows[].owner_ready_package_status"
+        and second_queue_row.get("owner_ready_package_status_source") == "knowledge-owner-gates.owner_ready_state"
         and second_queue_row.get("owner_ready_package_count") == 1
         and not any("owner-decisions.jsonl" in command for command in queue_executable_commands)
         and any("owner-decisions.jsonl" in command and "--landing-plan" in command for command in queue_template_commands)
@@ -1479,6 +1487,30 @@ def test_status_next_owner_gate():
             "next_actions_zh": next_actions,
             "stdout_sample": result["stdout"][:1000],
             "strict_stdout_sample": strict_result["stdout"][:1000],
+        },
+    )
+
+def test_status_owner_ready_source_no_registry_fallback():
+    source = (root / "tools" / "knowledge-status.sh").read_text()
+    banned_fragments = [
+        "covered\" if owner_ready_packages or registry_items else \"missing",
+        "owner_ready_package_ids = [str(item.get(\"id\", \"\")) for item in registry_items",
+        "owner_ready_package_count\": len(owner_ready_packages) if owner_ready_packages else len(registry_items)",
+    ]
+    required_fragments = [
+        "OWNER_READY_ROW_STATUS_SOURCE = \"knowledge-owner-gates.rows[].owner_ready_package_status\"",
+        "\"owner_ready_source\": OWNER_READY_ROW_STATUS_SOURCE",
+        "\"id\": \"owner-ready-row-schema-missing\"",
+    ]
+    present_banned = [fragment for fragment in banned_fragments if fragment in source]
+    missing_required = [fragment for fragment in required_fragments if fragment not in source]
+    expect(
+        not present_banned and not missing_required,
+        "status-owner-ready-source-no-registry-fallback",
+        "status next_open_queue owner-ready state comes from owner-gates row validation, not registry_items fallback",
+        {
+            "present_banned_fragments": present_banned,
+            "missing_required_fragments": missing_required,
         },
     )
 
@@ -6303,6 +6335,7 @@ def test_regression_manifest_coverage():
         "owner-summary-by-owner",
         "owner-next-open-focus",
         "status-next-owner-gate",
+        "status-owner-ready-source-no-registry-fallback",
         "status-text-owner-summary-commands",
         "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
@@ -6480,6 +6513,7 @@ for test_fn in [
     test_owner_summary_by_owner,
     test_owner_next_open_focus,
     test_status_next_owner_gate,
+    test_status_owner_ready_source_no_registry_fallback,
     test_status_text_owner_summary_commands,
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
