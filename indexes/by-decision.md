@@ -16,6 +16,7 @@
 - `pcr02-owner-decision-worksheet-006`: PCR02 motor MCU owner-ready 签收包：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`；该包不生成 owner decision。
 - `pcr02-owner-review-007`: DVR session archive 保持 archive-only，排除 memory candidate；归档边界证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
 - `pcr02-owner-decision-worksheet-007`: PCR02 DVR session archive owner-ready 签收包：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`；该包不生成 owner decision。
+- `pcr02-project-docs-owner-decision-landing-20260623`: PCR02 project docs 7 条 owner gate 已按人工授权落地；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。决策边界为 AGENTS/diag `reference-only`、ASAN `split-approved`、memory auto-curation `teamized-report-only`、DVR plan/motor MCU/DVR session archive `archive-only`；不复制源项目正文、不提升到 embedded standards、不写 memory。
 - `pcr02-docs-copy-first-migration`: PCR02 docs copy-first 已落地；证据：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`。
 - `pcr02-docs-reference-artifact-ref-migration`: PCR02 docs reference/artifact-ref 已落地；证据：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`。
 - `engineering-archive-copy-first-migration`: PCR02 engineering archive copy-first 已落地；证据：`artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`。
@@ -75,3 +76,4 @@
 - `knowledge-hub-review-queue-forms-validation-hardening-20260623`: review queue 表单校验加固；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.md`；只校验普通 review queue 人工表单结构和覆盖范围，不写 registry、不自动回填 human review 字段、不生成 owner decision、不关闭 owner gate、不把普通 review queue 变成 final gate blocker。
 - `knowledge-hub-offline-maintenance-audit-hardening-20260623`: 离线维护审计加固；证据：`artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.md`；只证明 8 类长期维护入口和离线维护包可恢复，不代表人工动作已完成，不生成 owner decision、不关闭 owner gate。
 - `knowledge-hub-final-gate-requirement-map-hardening-20260623`: final gate 需求章节映射加固；证据：`artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.md`；只增强 evidence/summary 到终态章节的可追溯性，不改变 `needs-owner-review` 语义，不生成 owner decision、不关闭 owner gate。
+- `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`: owner/source/subagent 边界加固；证据：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`；只增强 source identity 读取边界、subagent 单写者规则和 owner decision 草稿泄漏可观测性，不生成 owner decision、不关闭 owner gate、不写 memory。

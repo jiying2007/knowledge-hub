@@ -51,6 +51,8 @@
 
 AI / external source 人工复核队列按批次处理：优先用 `knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json` 领取一页，继续翻页读取 `pagination.next_command`。需要交给人工填写时，再用同一组过滤条件加 `--queue-forms-jsonl` 导出 JSONL 表单骨架；`--queue-forms-jsonl` 是 JSONL-only 输出，不能和 `--json` 同用。该输出只包含只读上下文和空白人工字段，不写 registry、不自动回填、不提升 active、不关闭 owner gate。人工填写后可用同一组过滤条件加 `--validate-queue-forms <review-queue-forms.jsonl> --json` 做 report-only 校验；校验通过只说明结构、必填人工字段、枚举、日期和 queue id 覆盖有效，不代表 registry 已更新，也不代表 owner gate 已关闭。每条 row 的 `next_commands[]` 只用于打开只读 explain/诊断入口；人工复核结论仍必须由人填写 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`。
 
+使用 subagents 时，默认把子代理当并行只读审查者：除非主线程给出互不冲突的写入范围，否则子代理 `WRITE: NONE`，只输出 `STATUS` / `CHANGES` / `RISKS` / `VERIFY` / `OPEN`。主线程负责唯一写入、冲突检查、最终验证和提交；子代理不得代签 owner decision、修改 PCR02 源项目、写 `~/.codex/memories` 或把 owner-ready / landing-plan 当已批准事实。
+
 终态失败恢复决策树：
 
 1. 先看 `knowledge-final-gate.sh --json` 的 `final_status`。
@@ -209,9 +211,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id <source-id> 
 
 owner gate 人工签收按 6 步走：
 
-1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。该类 `.local.jsonl` 已被 `.gitignore` 排除，只是 owner 草稿，不登记 registry/index，不作为 landing artifact。
+1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。该类 `.local.jsonl` 已被 `.gitignore` 排除，只是 owner 草稿，不登记 registry/index，不作为 landing artifact。非 `.local.jsonl` 的 owner decision 文件若包含 `owner_decision`、`reviewed_by`、`reviewed_at` 等签收字段，必须已登记为 reviewed landing artifact；否则 `knowledge-check --diagnostics` 会把它标成 owner decision 草稿泄漏 warning。
 2. 选择分派方式：多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --evidence-readiness --json` 查看只读证据准备度和候选值。
-3. 导出表单骨架：用 `--owner <owner> --forms-jsonl` 或全量 `--forms-jsonl` 导出骨架；`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选，不会写入正式 owner 字段，也不能替代签收。
+3. 导出表单骨架：用 `--owner <owner> --forms-jsonl` 或全量 `--forms-jsonl` 导出骨架；`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选。source identity 为计算 hash 会只读读取 source 文件字节，但不复制正文、不写源项目、不会写入正式 owner 字段，也不能替代签收。
 4. 人工填写并校验：真实 owner 填写 decision 后先只读 `--validate-forms '<owner-decisions.jsonl>' --json`。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；同时 `owner_decision` 与 `target_decision` 必须成对兼容，不能把 `reference-only` / `no-migration` 和项目落地路径混用。校验可以合法只覆盖本批 JSONL 子集；批量处理时必须查看 `form_validation.coverage_status` 和 `missing_open_worksheet_ids`，单条处理优先带 `--worksheet-id`。
 5. 生成落地计划和审计：校验通过后再跑 `--landing-plan --json` 和 `--landing-audit --json`。表单和 landing plan 会带出 `verification_cwd` / `worksheet_verification_cwd` 与 `verification_commands` / `worksheet_verification_commands`，相对命令必须在该 cwd 下执行，不是在 Knowledge Hub root 下执行。`landing_scope` 和 `remaining_open_after_this_batch` 只提示本批覆盖范围；是否全部闭环仍以 owner gate `open_count` 和 final gate 为准。
 6. 复核 worksheet 状态：`--landing-audit` 会显式提醒 `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl` 的对应 worksheet 行也必须进入 resolved/owner-approved/closed 状态，否则 owner JSONL 即使有效，gate 仍会 open。AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。

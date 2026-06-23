@@ -141,6 +141,10 @@ def compute_source_identity(row):
     expected_size = row.get("source_size_expected", "")
     source_root = source_roots.get(source_id, "")
     identity = {
+        "source_identity_read_mode": "read-bytes-for-hash",
+        "source_body_read_for_hash": True,
+        "source_body_copied": False,
+        "source_project_written": False,
         "source_root": source_root,
         "source_path": source_path,
         "source_file_exists": False,
@@ -149,7 +153,7 @@ def compute_source_identity(row):
         "observed_sha256": "",
         "observed_size": "",
         "identity_status": "unavailable",
-        "notes_zh": "只读源文件身份提示；不代表 owner 已签收，不自动填充 source_sha256/source_size，不关闭门禁。",
+        "notes_zh": "只读源文件身份提示；为计算 hash 会读取 source 文件字节，但不复制正文、不写源项目、不代表 owner 已签收，不自动填充 source_sha256/source_size，不关闭门禁。",
     }
     if not source_root or not source_path:
         return identity
@@ -1693,6 +1697,14 @@ result = {
     "worksheet_id": args.worksheet_id,
     "next_open": args.next_open,
     "filter_status": args.status,
+    "source_identity_read_policy": {
+        "source_identity_read_mode": "read-bytes-for-hash",
+        "source_body_read_for_hash": True,
+        "source_body_copied": False,
+        "source_project_written": False,
+        "owner_gate_mutation": False,
+        "notes_zh": "owner-gates 为 source identity/hash 匹配会只读读取 source 文件字节；不会复制 source 正文、不会写源项目、不会生成 owner decision、不会关闭 gate。",
+    },
     "worksheet_count": len(worksheet_paths),
     "row_count": len(rows),
     "open_count": open_count,

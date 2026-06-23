@@ -680,10 +680,10 @@ def make_highest_priority_rules_audit(
         {
             "rule_id": "no-project-specific-standards-promotion",
             "rule_zh": "不得把 PCR02 project-specific 内容提升到 domains/embedded/standards/。",
-            "status": "pass" if only_owner_review_blockers else "needs-review",
+            "status": "pass" if final_status_value in {"ok", "needs-owner-review"} and automatic_governance_status_value != "needs-fix" else "needs-review",
             "evidence_refs": ["runtime:automatic_governance", "runtime:owner_recovery", "runtime:gap_map"],
             "runtime_fields": ["automatic_governance.no_owner_decision_generated", "owner_recovery.open_count", "gap_map[].requires_owner_decision"],
-            "limitations_zh": "当前只剩 owner gate，且无 owner decision 生成；语义提升仍需 owner 签收和独立拆分证据。",
+            "limitations_zh": "当前终态 gate 未发现 PCR02 project-specific 内容被提升到 domains/embedded/standards；若后续抽取团队级方法论，仍需独立拆分证据和 owner review。",
         },
         {
             "rule_id": "automation-report-only",
@@ -691,7 +691,7 @@ def make_highest_priority_rules_audit(
             "status": "pass",
             "evidence_refs": ["runtime:checks.source_check_runtime", "runtime:automatic_governance"],
             "runtime_fields": ["checks.source_check_runtime.report_only", "checks.source_check_runtime.automation_write", "automatic_governance.no_owner_decision_generated"],
-            "limitations_zh": "当前 gate 和维护工具保持只读/report-only；真实启用自动化仍需单独 owner 审批。",
+            "limitations_zh": "当前 gate 和维护工具保持只读/report-only；owner 决策落地不等于启用自动化，真实启用自动化仍需单独 owner 审批。",
         },
         {
             "rule_id": "single-canonical-body",
@@ -716,6 +716,14 @@ def make_highest_priority_rules_audit(
             "evidence_refs": ["runtime:checks.git_diff_check", "本次变更过程记录"],
             "runtime_fields": ["checks.git_diff_check.status"],
             "limitations_zh": "git diff --check 只证明 diff 无空白错误，不证明未覆盖用户改动；该规则依赖过程审计和局部读取。",
+        },
+        {
+            "rule_id": "subagent-single-writer-readonly",
+            "rule_zh": "使用 subagents 时默认只读审查，主线程负责唯一写入和最终整合；子代理不得代签 owner decision、改源项目或写 memory。",
+            "status": "process-audited",
+            "evidence_refs": ["docs/goals/knowledge-hub-final-state.md#十", "README.md", "tools/README.md"],
+            "runtime_fields": [],
+            "limitations_zh": "本审计只证明 Knowledge Hub 对 subagent 使用边界有可发现规则；无法机器证明每一次子代理调度都严格遵守。",
         },
         {
             "rule_id": "evidence-before-completion",
@@ -1206,6 +1214,24 @@ core_checks_pass = (
     and source_check_runtime_summary["status"] == "pass"
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+owner_gate_open_count = int(owner_payload.get("open_count", 0) or 0)
+owner_gate_resolved_count = int(owner_payload.get("resolved_count", 0) or 0)
+owner_gate_row_count = int(owner_payload.get("row_count", 0) or 0)
+owner_ready_package_coverage = str(owner_payload.get("owner_ready_package_coverage", ""))
+owner_active_exposure_count = int(owner_payload.get("active_exposure_count", 0) or 0)
+owner_gates_complete = (
+    owner_gate_row_count == 7
+    and owner_gate_open_count == 0
+    and owner_gate_resolved_count == 7
+    and owner_ready_package_coverage == "7/7"
+    and owner_active_exposure_count == 0
+)
+owner_gates_ready_for_review = (
+    owner_gate_row_count == 7
+    and owner_gate_open_count == 7
+    and owner_ready_package_coverage == "7/7"
+    and owner_active_exposure_count == 0
+)
 review_queue_payload = strict_payload.get("review_queues", {}) if isinstance(strict_payload, dict) else {}
 review_queue_summary = (
     review_queue_payload.get("summary", {})
@@ -1398,11 +1424,14 @@ def make_source_audit_gaps():
 
 gap_map = [blocker_to_gap(blocker) for blocker in blockers] + make_source_audit_gaps()
 level1_status = (
+    "complete"
+    if core_checks_pass
+    and owner_gates_complete
+    and bool(pcr02_docs_coverage)
+    else
     "complete-except-owner-review"
     if core_checks_pass
-    and str(owner_payload.get("owner_ready_package_coverage", "")) == "7/7"
-    and int(owner_payload.get("open_count", 0) or 0) == 7
-    and int(owner_payload.get("active_exposure_count", 0) or 0) == 0
+    and owner_gates_ready_for_review
     and bool(pcr02_docs_coverage)
     else "needs-fix"
 )
@@ -1428,15 +1457,17 @@ final_state_audit = {
         "source_id": "pcr02-project-docs",
         "coverage_status": str(pcr02_docs_coverage.get("status", "")),
         "expected_owner_gate_count": 7,
-        "expected_owner_gate_count_source": "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl open rows with owner-ready package coverage",
+        "expected_owner_gate_count_source": "artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl total rows with owner-ready package coverage; open=7 before owner decision, open=0/resolved=7 after owner decision landing",
         "worksheet_count": int(owner_payload.get("worksheet_count", 0) or 0),
-        "worksheet_row_count": int(owner_payload.get("row_count", 0) or 0),
-        "owner_gate_open_count": int(owner_payload.get("open_count", 0) or 0),
-        "owner_gate_count_matches_expected": int(owner_payload.get("open_count", 0) or 0) == 7,
+        "worksheet_row_count": owner_gate_row_count,
+        "owner_gate_open_count": owner_gate_open_count,
+        "owner_gate_resolved_count": owner_gate_resolved_count,
+        "owner_gate_count_matches_expected": owner_gates_complete or owner_gates_ready_for_review,
+        "owner_gate_terminal_status": "owner-gates-complete" if owner_gates_complete else "owner-gates-open" if owner_gates_ready_for_review else "owner-gates-inconsistent",
         "owner_ready_package_count": int(owner_payload.get("owner_ready_package_count", 0) or 0),
-        "owner_ready_expected_count": int(owner_payload.get("row_count", 0) or 0),
-        "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
-        "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
+        "owner_ready_expected_count": owner_gate_row_count,
+        "owner_ready_package_coverage": owner_ready_package_coverage,
+        "active_exposure_count": owner_active_exposure_count,
         "no_owner_decision_generated": only_owner_review_blockers,
         "evidence_refs": [
             latest_coverage_manifest,
@@ -1444,7 +1475,11 @@ final_state_audit = {
             "artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md",
             "tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json",
         ],
-        "summary_zh": "PCR02 docs 控制面已闭合；剩余 7 个 owner-gated docs 只能由 owner 人工签收。",
+        "summary_zh": (
+            "PCR02 docs 控制面已闭合；7 条 owner gate 已人工签收并落地，未暴露 active 污染。"
+            if owner_gates_complete
+            else "PCR02 docs 控制面已闭合；剩余 7 个 owner-gated docs 只能由 owner 人工签收。"
+        ),
     },
     "level2_pcr02_candidate_sources": {
         "status": level2_status,
@@ -1759,10 +1794,12 @@ result = {
         "complete": automatic_governance_complete,
         "core_checks_pass": core_checks_pass,
         "only_owner_review_blockers": only_owner_review_blockers,
-        "remaining_owner_gate_count": int(owner_payload.get("open_count", 0) or 0),
-        "owner_ready_package_coverage": str(owner_payload.get("owner_ready_package_coverage", "")),
-        "active_exposure_count": int(owner_payload.get("active_exposure_count", 0) or 0),
+        "remaining_owner_gate_count": owner_gate_open_count,
+        "resolved_owner_gate_count": owner_gate_resolved_count,
+        "owner_ready_package_coverage": owner_ready_package_coverage,
+        "active_exposure_count": owner_active_exposure_count,
         "no_owner_decision_generated": only_owner_review_blockers,
+        "owner_decision_landing_status": "owner-decisions-landed" if owner_gates_complete else "pending-owner-review" if only_owner_review_blockers else "not-applicable",
         "owner_blocker_source": status_owner_blocker_source or {
             "status_source": "knowledge-status --strict",
             "strict_blocker_ids": strict_blocker_ids,

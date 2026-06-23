@@ -206,6 +206,8 @@
 - `knowledge-hub-review-queue-forms-validation-hardening-20260623`
 - `knowledge-hub-offline-maintenance-audit-hardening-20260623`
 - `knowledge-hub-final-gate-requirement-map-hardening-20260623`
+- `pcr02-project-docs-owner-decision-landing-20260623`
+- `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
 
 ## pcr02-registry-owner
 

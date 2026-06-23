@@ -241,3 +241,5 @@
 - Knowledge Hub review queue 表单校验加固: `artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.md`
 - Knowledge Hub 离线维护审计加固: `artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.md`
 - Knowledge Hub final gate 需求章节映射加固: `artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.md`
+- PCR02 project docs owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- Knowledge Hub owner/source/subagent 边界加固: `artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`

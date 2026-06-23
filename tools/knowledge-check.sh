@@ -250,6 +250,16 @@ ALLOWED_SOURCE_FINAL_DISPOSITIONS = {
     "mixed-terminal-coverage",
 }
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
+OWNER_DECISION_DRAFT_FIELDS = {
+    "owner_decision",
+    "target_decision",
+    "reviewed_by",
+    "reviewed_at",
+    "source_sha256",
+    "source_size",
+    "evidence_refs",
+    "status_reason",
+}
 
 def load_json(path):
     try:
@@ -271,6 +281,40 @@ def load_jsonl(path):
         except Exception as exc:
             errors.append(f"{path}:{lineno}: invalid jsonl: {exc}")
     return rows
+
+def is_owner_decision_draft_path(path):
+    name = path.name
+    if name.endswith(".local.jsonl"):
+        return False
+    if "owner-decision-worksheets" in name or "owner-intake-package" in name:
+        return False
+    return (
+        "owner-decision" in name
+        or "owner-decisions" in name
+    ) and path.suffix == ".jsonl"
+
+def audit_owner_decision_draft_leaks(registered_paths):
+    manifest_dir = root / "artifacts" / "manifests"
+    if not manifest_dir.exists():
+        return
+    candidate_paths = sorted({
+        *manifest_dir.glob("*owner-decision*.jsonl"),
+        *manifest_dir.glob("*owner-decisions*.jsonl"),
+    })
+    for path in candidate_paths:
+        if not is_owner_decision_draft_path(path):
+            continue
+        relative = str(path.relative_to(root))
+        rows = load_jsonl(path)
+        has_owner_fields = any(
+            isinstance(row, dict)
+            and any(str(row.get(field, "")).strip() for field in OWNER_DECISION_DRAFT_FIELDS)
+            for row in rows
+        )
+        if has_owner_fields and relative not in registered_paths:
+            warnings.append(
+                f"owner-decision-draft:{relative} non-local owner decision JSONL with owner fields is not registered; use *.local.jsonl for drafts or register an explicit reviewed landing artifact"
+            )
 
 def build_diagnostics(error_items, warning_items):
     rules = [
@@ -297,6 +341,12 @@ def build_diagnostics(error_items, warning_items):
             "source coverage 终态矩阵异常",
             "更新最新 artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl，确保每个 registered source 都有终态分类、决策和风险说明。",
             lambda msg: msg.startswith("source-coverage:"),
+        ),
+        (
+            "owner-decision-draft",
+            "owner decision 草稿命名异常",
+            "将未签收 owner decision 草稿改为 *.local.jsonl，或在真实 owner 签收后登记为 reviewed landing artifact；Codex 不代签、不关闭 gate。",
+            lambda msg: msg.startswith("owner-decision-draft:"),
         ),
         (
             "automation-boundary",
@@ -1271,6 +1321,22 @@ if not args.sources_only:
 
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
+    registered_item_paths = {
+        str(item.get("path", "")).strip()
+        for item in items
+        if isinstance(item, dict) and str(item.get("path", "")).strip()
+    }
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        validation_refs = item.get("validation_refs", [])
+        if not isinstance(validation_refs, list):
+            continue
+        for validation_ref in validation_refs:
+            ref_text = str(validation_ref).strip()
+            if ref_text and not ref_text.startswith("rtk ") and not ref_text.startswith("command:"):
+                registered_item_paths.add(ref_text)
+    audit_owner_decision_draft_leaks(registered_item_paths)
     for item in items:
         item_id = item.get("id")
         if not item_id:

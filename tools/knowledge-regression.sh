@@ -78,6 +78,93 @@ def copy_repo(label):
     shutil.copytree(root, repo, ignore=shutil.ignore_patterns(".git"))
     return repo
 
+OWNER_DECISION_FIELD_NAMES = {
+    "owner_decision",
+    "target_decision",
+    "split_approval",
+    "reviewed_by",
+    "reviewed_at",
+    "source_status",
+    "source_sha256",
+    "source_size",
+    "current_validity",
+    "scope_statement",
+    "applicable_project_version",
+    "project_only_source_of_truth",
+    "applicable_branch_firmware_version",
+    "implementation_match",
+    "gate_evidence",
+    "applicable_branch_or_sdk_version",
+    "target_binary",
+    "team_level_status",
+    "governance_mode",
+    "automation_enabled",
+    "writes_memory",
+    "writes_team_active_index",
+    "no_memory_write_gate",
+    "manual_approval_owner",
+    "manual_approval_cadence",
+    "final_branch_commit_or_tag_refs",
+    "proto_generation_evidence",
+    "build_evidence",
+    "api_dvr_refcount_evidence",
+    "targeted_grep_evidence",
+    "task_iot_dependency_status",
+    "replay_data_channel_status",
+    "LIST_FETCH_pagination_or_limit_decision",
+    "RecordSetEvent_contract_extract_decision",
+    "firmware_version_refs",
+    "protection_parameter_table",
+    "serial_waveform_or_protocol_logs",
+    "hardware_start_evidence",
+    "field_retest_records",
+    "calibration_before_after_data",
+    "fault_code_or_protocol_field_definitions",
+    "whole_device_validation_records",
+    "unresolved_items_acknowledgement",
+    "source_status_at_capture",
+    "contains_memory_candidates",
+    "not_active_source",
+    "extracts_require_owner_review",
+    "commit_branch_dirty_state_evidence",
+    "proto_generation_evidence_refs",
+    "build_evidence_refs",
+    "refcount_evidence_refs",
+    "grep_evidence_refs",
+    "final_ready_evidence_refs",
+    "task_iot_status",
+    "LIST_FETCH_pagination_risk_status",
+    "memory_candidates_exclusion_confirmation",
+    "evidence_refs",
+    "open_items",
+    "status_reason",
+}
+
+def reopen_owner_decision_worksheets(repo):
+    worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
+    rows = []
+    for line in worksheet_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        row["worksheet_status"] = "owner-fill-required"
+        for field_name in OWNER_DECISION_FIELD_NAMES:
+            row.pop(field_name, None)
+        rows.append(row)
+    worksheet_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+    )
+    return repo
+
+def copy_repo_with_open_owner_gates(label):
+    return reopen_owner_decision_worksheets(copy_repo(label))
+
+def init_temp_git_repo(repo):
+    result = run_cmd(repo, ["rtk", "git", "init"])
+    if result["exit_code"] != 0:
+        return {"setup_error": "git init failed", "stderr": result["stderr"][:1000]}
+    return {}
+
 def cleanup_temp_roots():
     if args.keep_temp:
         return
@@ -450,7 +537,7 @@ def test_status_noncanonical_only():
     )
 
 def test_owner_partial_resolved():
-    repo = copy_repo("owner-partial-resolved")
+    repo = copy_repo_with_open_owner_gates("owner-partial-resolved")
     worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
     lines = worksheet_path.read_text().splitlines()
     if not lines:
@@ -481,8 +568,9 @@ def test_owner_partial_resolved():
     )
 
 def test_owner_single_form():
+    repo = copy_repo_with_open_owner_gates("owner-single-form")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -517,8 +605,9 @@ def test_owner_single_form():
     )
 
 def test_owner_forms_text_jsonl_output():
+    repo = copy_repo_with_open_owner_gates("owner-forms-text-jsonl-output")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -561,8 +650,9 @@ def test_owner_forms_text_jsonl_output():
     )
 
 def test_owner_forms_jsonl_single_output():
+    repo = copy_repo_with_open_owner_gates("owner-forms-jsonl-single-output")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -624,8 +714,9 @@ def test_owner_forms_jsonl_single_output():
     )
 
 def test_owner_forms_jsonl_all_open_output():
+    repo = copy_repo_with_open_owner_gates("owner-forms-jsonl-all-open-output")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -706,8 +797,9 @@ def test_owner_forms_jsonl_conflict_json_mode():
     )
 
 def test_owner_checklist_context():
+    repo = copy_repo_with_open_owner_gates("owner-checklist-context")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -748,8 +840,9 @@ def test_owner_checklist_context():
     )
 
 def test_owner_form_context():
+    repo = copy_repo_with_open_owner_gates("owner-form-context")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -798,8 +891,9 @@ def test_owner_form_context():
     )
 
 def test_owner_source_identity_context():
+    repo = copy_repo_with_open_owner_gates("owner-source-identity-context")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -824,6 +918,10 @@ def test_owner_source_identity_context():
         and len(forms) == 1
         and first.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and identity.get("identity_status") == "match"
+        and identity.get("source_identity_read_mode") == "read-bytes-for-hash"
+        and identity.get("source_body_read_for_hash") is True
+        and identity.get("source_body_copied") is False
+        and identity.get("source_project_written") is False
         and identity.get("source_file_exists") is True
         and identity.get("observed_sha256") == identity.get("expected_sha256")
         and identity.get("observed_size") == identity.get("expected_size")
@@ -836,6 +934,8 @@ def test_owner_source_identity_context():
             "form_count": len(forms),
             "worksheet_id": first.get("worksheet_id"),
             "identity_status": identity.get("identity_status"),
+            "source_identity_read_mode": identity.get("source_identity_read_mode"),
+            "source_body_read_for_hash": identity.get("source_body_read_for_hash"),
             "source_file_exists": identity.get("source_file_exists"),
             "source_sha256_field": first.get("source_sha256"),
             "source_size_field": first.get("source_size"),
@@ -844,8 +944,9 @@ def test_owner_source_identity_context():
     )
 
 def test_owner_prefill_candidates_manual_fields():
+    repo = copy_repo_with_open_owner_gates("owner-prefill-candidates-manual-fields")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -904,8 +1005,9 @@ def test_owner_prefill_candidates_manual_fields():
     )
 
 def test_owner_evidence_readiness():
+    repo = copy_repo_with_open_owner_gates("owner-evidence-readiness")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -957,8 +1059,9 @@ def test_owner_evidence_readiness():
     )
 
 def test_owner_inbox_contract():
+    repo = copy_repo_with_open_owner_gates("owner-inbox-contract")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -972,7 +1075,7 @@ def test_owner_inbox_contract():
         ],
     )
     text_result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1050,8 +1153,9 @@ def test_owner_inbox_contract():
     )
 
 def test_owner_summary_all_open():
+    repo = copy_repo_with_open_owner_gates("owner-summary-all-open")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1145,8 +1249,9 @@ def test_owner_summary_all_open():
     )
 
 def test_owner_summary_by_owner():
+    repo = copy_repo_with_open_owner_gates("owner-summary-by-owner")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1215,8 +1320,9 @@ def test_owner_summary_by_owner():
     )
 
 def test_owner_handoff_packet_json():
+    repo = copy_repo_with_open_owner_gates("owner-handoff-packet-json")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1230,7 +1336,7 @@ def test_owner_handoff_packet_json():
         ],
     )
     text_result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1242,7 +1348,7 @@ def test_owner_handoff_packet_json():
             "--handoff-packet",
         ],
     )
-    status_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     parsed = {}
     status_parsed = {}
     parse_error = ""
@@ -1329,7 +1435,7 @@ def test_owner_handoff_packet_json():
     )
 
 def test_owner_dispatch_source_scope_isolation():
-    repo = copy_repo("owner-dispatch-source-scope-isolation")
+    repo = copy_repo_with_open_owner_gates("owner-dispatch-source-scope-isolation")
     worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
     rows = []
     for line in worksheet_path.read_text().splitlines():
@@ -1485,8 +1591,9 @@ def test_manifest_profile_boundary_advisory():
     )
 
 def test_owner_next_open_focus():
+    repo = copy_repo_with_open_owner_gates("owner-next-open-focus")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -1533,8 +1640,9 @@ def test_owner_next_open_focus():
     )
 
 def test_status_next_owner_gate():
-    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
-    strict_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
+    repo = copy_repo_with_open_owner_gates("status-next-owner-gate")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    strict_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json"])
     expected_final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
     if today_source != "system-date":
         expected_final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
@@ -1611,8 +1719,13 @@ def test_status_next_owner_gate():
         and project_owner_dispatch.get("open_count") == 2
         and project_owner_handoff_packet.get("status") == "ready-for-owner-review"
         and project_owner_handoff_packet.get("read_only") is True
+        and owner_gates.get("source_identity_read_policy", {}).get("source_body_read_for_hash") is True
+        and owner_gates.get("source_identity_read_policy", {}).get("source_body_copied") is False
+        and owner_gates.get("source_identity_read_policy", {}).get("source_project_written") is False
         and project_owner_handoff_packet.get("suggested_local_owner_decisions_path") == "artifacts/manifests/pcr02-project-docs-project-owner-owner-decisions-YYYYMMDD.local.jsonl"
+        and project_owner_handoff_packet.get("source_identity_read_policy", {}).get("source_body_read_for_hash") is True
         and len(project_owner_handoff_packet.get("recommended_sequence", [])) == 7
+        and all(step.get("notes_zh") for step in project_owner_handoff_packet.get("recommended_sequence", []))
         and any(step.get("step") == "1-open-owner-inbox" and "--owner-inbox --json" in step.get("command", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
         and any(step.get("step") == "5-validate-filled-forms" and "owner-decisions.jsonl" in step.get("command_template", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
         and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
@@ -1869,7 +1982,8 @@ def test_stable_governance_command_examples():
     )
 
 def test_status_text_owner_summary_commands():
-    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-status.sh"])
+    repo = copy_repo_with_open_owner_gates("status-text-owner-summary-commands")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh"])
     expect(
         result["exit_code"] == 0
         and "- owner summary commands:" in result["stdout"]
@@ -1954,7 +2068,12 @@ def test_final_gate_owner_review_blocker():
             {"skipped_in_inner_final_gate": True},
         )
         return
-    result = run_cmd(root, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    repo = copy_repo_with_open_owner_gates("final-gate-owner-review-blocker")
+    setup_error = init_temp_git_repo(repo)
+    if setup_error:
+        expect(False, "final-gate-owner-review-blocker", "final gate includes check, regression and strict owner blockers", setup_error, repo)
+        return
+    result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
     parsed = {}
     try:
         parsed = json.loads(result["stdout"])
@@ -2294,7 +2413,7 @@ def test_final_gate_owner_review_blocker():
         and evidence_by_artifact.get("linking-audit", {}).get("section_refs") == ["八", "九"]
         and evidence_by_artifact.get("review-queue-recovery", {}).get("status") == "pass"
         and evidence_by_artifact.get("review-queue-recovery", {}).get("evidence_path") == "runtime:review_queue_recovery"
-        and len(highest_priority_rules_audit) == 10
+        and len(highest_priority_rules_audit) == 11
         and rules_by_id.get("shell-through-rtk", {}).get("status") == "pass"
         and rules_by_id.get("manual-write-apply-patch", {}).get("status") == "process-audited"
         and rules_by_id.get("no-memory-write", {}).get("status") == "pass"
@@ -2304,6 +2423,7 @@ def test_final_gate_owner_review_blocker():
         and rules_by_id.get("single-canonical-body", {}).get("status") == "pass"
         and rules_by_id.get("session-archive-not-active-facts", {}).get("status") == "pass"
         and rules_by_id.get("respect-existing-worktree-changes", {}).get("status") == "process-audited"
+        and rules_by_id.get("subagent-single-writer-readonly", {}).get("status") == "process-audited"
         and rules_by_id.get("evidence-before-completion", {}).get("status") == "pass"
         and owner_blocker.get("count") == 7
         and len(gap_map) == 1
@@ -2453,16 +2573,18 @@ def test_final_gate_default_regression_path():
     checks = parsed.get("checks", {})
     regression_command = checks.get("knowledge_regression", {}).get("command", "")
     expect(
-        result["exit_code"] == 1
-        and parsed.get("final_status") == "needs-owner-review"
+        result["exit_code"] == 0
+        and parsed.get("final_status") == "ok"
         and checks.get("knowledge_regression", {}).get("status") == "pass"
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("result_count", 0) >= 1
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
         and "knowledge-regression.sh --json --as-of" in regression_command
-        and checks.get("git_diff_check", {}).get("status") == "pass",
+        and checks.get("git_diff_check", {}).get("status") == "pass"
+        and checks.get("knowledge_status_strict", {}).get("status") == "ok"
+        and checks.get("knowledge_status_strict", {}).get("exit_code") == 0,
         "final-gate-default-regression-path",
-        "final gate default path executes regression instead of relying on self-test skip",
+        "final gate default path executes regression and reaches ok after owner decisions land",
         {
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
@@ -2666,14 +2788,14 @@ def test_final_gap_readability_positive_contracts():
     expect(
         check_result["exit_code"] == 0
         and check_parsed.get("status") == "pass"
-        and final_result["exit_code"] == 1
-        and final_parsed.get("final_status") == "needs-owner-review"
+        and final_result["exit_code"] == 0
+        and final_parsed.get("final_status") == "ok"
         and not missing_readability_fields
         and not missing_notes_zh
         and not missing_source_fields
         and not non_owner_gaps,
         "final-gap-readability-positive-contracts",
-        "current repository satisfies final gap and readability positive contracts except owner review",
+        "current repository satisfies final gap and readability positive contracts after owner decisions land",
         {
             "knowledge_check_exit_code": check_result["exit_code"],
             "knowledge_check_status": check_parsed.get("status"),
@@ -2770,7 +2892,7 @@ def make_owner_decision_form_for_worksheet(repo, worksheet_id):
     return form, {}
 
 def test_owner_validate_forms_partial_coverage_warning():
-    repo = copy_repo("owner-validate-forms-partial-coverage")
+    repo = copy_repo_with_open_owner_gates("owner-validate-forms-partial-coverage")
     form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
         expect(False, "owner-validate-forms-partial-coverage-warning", "owner validate-forms reports partial coverage without blocking valid subset forms", setup_error, repo)
@@ -2837,7 +2959,7 @@ def test_owner_validate_forms_partial_coverage_warning():
     )
 
 def test_owner_archive_only_target_path_compatibility():
-    repo = copy_repo("owner-archive-only-target-path")
+    repo = copy_repo_with_open_owner_gates("owner-archive-only-target-path")
     form, setup_error = make_owner_decision_form_for_worksheet(repo, "pcr02-owner-decision-worksheet-007")
     if setup_error:
         expect(False, "owner-archive-only-target-path-compatibility", "owner archive-only forms can target explicit archive paths", setup_error, repo)
@@ -2885,7 +3007,7 @@ def test_owner_archive_only_target_path_compatibility():
     )
 
 def test_owner_archive_only_rejects_non_archive_target():
-    repo = copy_repo("owner-archive-only-rejects-non-archive")
+    repo = copy_repo_with_open_owner_gates("owner-archive-only-rejects-non-archive")
     form, setup_error = make_owner_decision_form_for_worksheet(repo, "pcr02-owner-decision-worksheet-007")
     if setup_error:
         expect(False, "owner-archive-only-rejects-non-archive-target", "owner archive-only forms reject validation or decision targets", setup_error, repo)
@@ -2941,16 +3063,17 @@ def test_owner_archive_only_rejects_non_archive_target():
     )
 
 def test_owner_landing_plan_project_index():
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates("owner-landing-plan-project-index")
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, "owner-landing-plan-project-index", "owner landing plan requires by-project index", setup_error)
+        expect(False, "owner-landing-plan-project-index", "owner landing plan requires by-project index", setup_error, repo)
         return
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-landing-plan-"))
     temp_roots.append(temp_root)
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3023,9 +3146,10 @@ def test_owner_landing_plan_project_index():
     )
 
 def test_owner_form_target_decision_candidate_gate():
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates("owner-form-target-decision-candidate-gate")
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, "owner-form-target-decision-candidate-gate", "owner form rejects target decisions outside worksheet candidates", setup_error)
+        expect(False, "owner-form-target-decision-candidate-gate", "owner form rejects target decisions outside worksheet candidates", setup_error, repo)
         return
     form["target_decision"] = "domains/embedded/standards/invalid-owner-target.md"
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-target-decision-"))
@@ -3033,7 +3157,7 @@ def test_owner_form_target_decision_candidate_gate():
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3083,15 +3207,16 @@ def test_owner_form_target_decision_candidate_gate():
     )
 
 def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision, expected_fragment):
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates(case_id)
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", setup_error)
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", setup_error, repo)
         return
     if owner_decision not in form.get("allowed_owner_decisions", []):
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])})
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
         return
     if target_decision not in form.get("target_candidates", []):
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])})
+        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
         return
     form["owner_decision"] = owner_decision
     form["target_decision"] = target_decision
@@ -3100,7 +3225,7 @@ def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3150,9 +3275,10 @@ def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision
     )
 
 def test_owner_form_decision_target_pair_gate():
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates("owner-form-decision-target-pair-gate")
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", setup_error)
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", setup_error, repo)
         return
     project_target = next(
         (
@@ -3162,7 +3288,7 @@ def test_owner_form_decision_target_pair_gate():
         "",
     )
     if not project_target:
-        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "missing project target candidate", "target_candidates": form.get("target_candidates", [])})
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "missing project target candidate", "target_candidates": form.get("target_candidates", [])}, repo)
         return
     run_owner_decision_target_pair_gate(
         "owner-form-decision-target-pair-reference-only-project-path",
@@ -3184,15 +3310,16 @@ def test_owner_form_decision_target_pair_gate():
     )
 
 def run_owner_decision_target_pair_positive(case_id, owner_decision, target_decision):
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates(case_id)
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", setup_error)
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", setup_error, repo)
         return
     if owner_decision not in form.get("allowed_owner_decisions", []):
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])})
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
         return
     if target_decision not in form.get("target_candidates", []):
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])})
+        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
         return
     form["owner_decision"] = owner_decision
     form["target_decision"] = target_decision
@@ -3201,7 +3328,7 @@ def run_owner_decision_target_pair_positive(case_id, owner_decision, target_deci
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3249,9 +3376,10 @@ def test_owner_form_decision_target_pair_positive_gate():
     )
 
 def test_owner_form_routing_owner_reviewed_by_gate():
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates("owner-form-routing-owner-reviewed-by-gate")
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, "owner-form-routing-owner-reviewed-by-gate", "owner form rejects routing_owner as reviewed_by", setup_error)
+        expect(False, "owner-form-routing-owner-reviewed-by-gate", "owner form rejects routing_owner as reviewed_by", setup_error, repo)
         return
     form["reviewed_by"] = "pcr02-registry-owner"
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-owner-routing-reviewed-by-"))
@@ -3259,7 +3387,7 @@ def test_owner_form_routing_owner_reviewed_by_gate():
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3294,9 +3422,10 @@ def test_owner_form_routing_owner_reviewed_by_gate():
     )
 
 def run_owner_form_tamper_gate(case_id, mutate_form, expected_fragment):
-    form, setup_error = make_valid_owner_decision_form(root)
+    repo = copy_repo_with_open_owner_gates(case_id)
+    form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, case_id, "owner form rejects worksheet guardrail tampering", setup_error)
+        expect(False, case_id, "owner form rejects worksheet guardrail tampering", setup_error, repo)
         return
     mutate_form(form)
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{case_id}-"))
@@ -3304,7 +3433,7 @@ def run_owner_form_tamper_gate(case_id, mutate_form, expected_fragment):
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3369,7 +3498,7 @@ def test_owner_form_target_candidates_tamper_gate():
     )
 
 def run_owner_landing_ready_block_fixture(case_id, expected_status, mutate_repo):
-    repo = copy_repo(f"owner-landing-plan-owner-ready-{case_id}")
+    repo = copy_repo_with_open_owner_gates(f"owner-landing-plan-owner-ready-{case_id}")
     form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
         expect(
@@ -3501,8 +3630,9 @@ def test_owner_landing_plan_requires_owner_ready_package_duplicate():
     run_owner_landing_ready_block_fixture("duplicate", "duplicate", mutate)
 
 def test_owner_form_source_identity_mismatch():
+    repo = copy_repo_with_open_owner_gates("owner-form-source-identity-mismatch")
     forms_result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -3527,6 +3657,7 @@ def test_owner_form_source_identity_mismatch():
             "owner-form-source-identity-mismatch",
             "owner form rejects stale source identity",
             {"setup_error": "missing decision form", "stdout_sample": forms_result["stdout"][:1000]},
+            repo,
         )
         return
     form = forms[0]
@@ -3552,7 +3683,7 @@ def test_owner_form_source_identity_mismatch():
     forms_path = temp_root / "owner-decisions.jsonl"
     forms_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -4064,6 +4195,10 @@ def test_readme_offline_shortest_paths():
         "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
         "artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl",
         "不登记 registry/index，不作为 landing artifact",
+        "使用 subagents 时",
+        "默认把子代理当并行只读审查者",
+        "主线程负责唯一写入",
+        "owner decision 草稿泄漏 warning",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
     gitignore_required_fragments = ["artifacts/manifests/*.local.jsonl"]
@@ -4082,6 +4217,48 @@ def test_readme_offline_shortest_paths():
             "missing_fragments": missing_fragments,
             "gitignore_missing_fragments": gitignore_missing_fragments,
         },
+    )
+
+def test_owner_decision_draft_leak_warning():
+    repo = copy_repo("owner-decision-draft-leak-warning")
+    draft_path = repo / "artifacts" / "manifests" / "fixture-owner-decision-landing-29990101.jsonl"
+    draft_path.write_text(
+        json.dumps(
+            {
+                "worksheet_id": "fixture-owner-decision-worksheet-001",
+                "owner_decision": "reference-only",
+                "target_decision": "no-local-copy",
+                "reviewed_by": "fixture-owner",
+                "reviewed_at": "2999-01-01",
+                "status_reason": "fixture warning only",
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ) + "\n"
+    )
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-23"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    warnings = parsed.get("warnings", []) if isinstance(parsed.get("warnings"), list) else []
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("status") == "pass"
+        and not parse_error
+        and any("owner-decision-draft:artifacts/manifests/fixture-owner-decision-landing-29990101.jsonl" in warning for warning in warnings),
+        "owner-decision-draft-leak-warning",
+        "knowledge-check warns about non-local owner decision drafts without closing owner gates",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "parse_error": parse_error,
+            "warnings": warnings,
+            "diagnostics": parsed.get("diagnostics", {}),
+        },
+        repo,
     )
 
 def test_manual_entry_offline_package_consistency():
@@ -5499,7 +5676,8 @@ def test_final_proof_artifacts_stable_alias():
     legacy = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
     expect(
         not parse_error
-        and result["exit_code"] == 1
+        and result["exit_code"] == 0
+        and parsed.get("final_status") == "ok"
         and stable
         and legacy
         and stable == legacy
@@ -5659,9 +5837,10 @@ def test_index_plan_extended_sections():
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
         )
         and first_owner_worksheet.get("owner") == "team-core-or-pcr02-docs-owner"
-        and first_owner_worksheet.get("status") == "owner-fill-required"
+        and first_owner_worksheet.get("status") == "owner-approved"
         and first_owner_worksheet.get("review_after") == "2026-09-17"
-        and any(row.get("decision_state") == "no owner decision generated" for row in owner_worksheets)
+        and first_owner_worksheet.get("decision_state") == "owner_decision:reference-only"
+        and any(row.get("status") == "owner-approved" for row in owner_worksheets)
         and bool(migration_decisions),
         "index-plan-extended-sections",
         "index planner covers project/source/topic/decision/manifest sections",
@@ -6287,8 +6466,9 @@ def test_final_gate_source_check_runtime_failed_blocker():
     )
 
 def test_review_after_near_due_json_contract():
-    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30"])
-    owner_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30", "--include-owner-gates"])
+    repo = copy_repo_with_open_owner_gates("review-after-near-due-json-contract")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30"])
+    owner_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30", "--include-owner-gates"])
     parsed = {}
     owner_parsed = {}
     parse_error = ""
@@ -6559,6 +6739,10 @@ def test_review_after_as_of_deterministic():
         )
         return
     repo = copy_repo("review-after-as-of")
+    setup_error = init_temp_git_repo(repo)
+    if setup_error:
+        expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", setup_error, repo)
+        return
     item_id = "knowledge-hub-final-maintenance-closure-20260620"
     path = repo / "registry" / "items.jsonl"
     lines = path.read_text().splitlines()
@@ -6615,7 +6799,10 @@ def test_review_after_as_of_deterministic():
         and parsed.get("past_status", {}).get("today") == "2026-06-01"
         and parsed.get("past_status", {}).get("as_of_source") == "arg:--as-of"
         and parsed.get("past_status", {}).get("final_gate_command") == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of 2026-06-01 --json"
-        and "knowledge-final-gate.sh --as-of 2026-06-01 --json" in past_actions_text
+        and (
+            "knowledge-final-gate.sh --as-of 2026-06-01 --json" in past_actions_text
+            or parsed.get("past_status", {}).get("status") == "ok"
+        )
         and not any(row.get("id") == item_id for row in past_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
         and any(row.get("id") == item_id for row in future_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
         and parsed.get("final_gate", {}).get("today") == "2026-06-01"
@@ -7543,6 +7730,7 @@ def test_regression_manifest_coverage():
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "readme-offline-shortest-paths",
+        "owner-decision-draft-leak-warning",
         "manual-entry-offline-package-consistency",
         "manual-entry-validation-diagnostics-default",
         "manual-entry-readability-fields",
@@ -7729,6 +7917,7 @@ for test_fn in [
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_readme_offline_shortest_paths,
+    test_owner_decision_draft_leak_warning,
     test_manual_entry_offline_package_consistency,
     test_manual_entry_validation_diagnostics_default,
     test_manual_entry_readability_fields,

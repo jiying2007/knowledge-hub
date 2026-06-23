@@ -59,6 +59,9 @@ errors = []
 warnings = []
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
 
+def is_local_manifest_draft(path):
+    return path.suffix == ".jsonl" and path.name.endswith(".local.jsonl")
+
 def select_source_coverage_closeout(root):
     paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
     dated = []
@@ -301,6 +304,7 @@ for worksheet_path in worksheet_paths:
     for row in read_jsonl(worksheet_path, str(worksheet_path.relative_to(root))):
         worksheet_id = str(row.get("id") or row.get("worksheet_id") or "")
         if worksheet_id:
+            owner_decision = str(row.get("owner_decision", "")).strip()
             by_decision["owner_worksheets"].append(
                 {
                     "worksheet_id": worksheet_id,
@@ -309,7 +313,7 @@ for worksheet_path in worksheet_paths:
                     "status": row.get("worksheet_status") or row.get("status") or row.get("default_state", ""),
                     "owner": row.get("owner_required") or row.get("owner_candidate") or row.get("owner", ""),
                     "review_after": row.get("review_after", ""),
-                    "decision_state": "no owner decision generated",
+                    "decision_state": f"owner_decision:{owner_decision}" if owner_decision else "no owner decision generated",
                 }
             )
 
@@ -325,7 +329,11 @@ for row in migrations:
             }
         )
 
-manifest_jsonl_paths = sorted((root / "artifacts" / "manifests").glob("*.jsonl"))
+manifest_jsonl_paths = [
+    path
+    for path in sorted((root / "artifacts" / "manifests").glob("*.jsonl"))
+    if not is_local_manifest_draft(path)
+]
 manifest_md_paths = sorted((root / "artifacts" / "manifests").glob("*.md"))
 manifest_md_by_stem = {path.stem: path for path in manifest_md_paths}
 manifest_jsonl_stems = {path.stem for path in manifest_jsonl_paths}

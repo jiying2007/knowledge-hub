@@ -48,6 +48,7 @@
 - DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
 - Motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
+- Owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - Owner target and landing validation: `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`
 - Owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
 - Source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`

@@ -409,3 +409,7 @@
 - offline-maintenance-audit-hardening-applied: final gate 的 `maintenance_entry_audit` 已显式覆盖 8 类长期维护入口和 1 个离线维护包；证据：`artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-final-gate-requirement-map-hardening-20260623`
 - final-gate-requirement-map-hardening-applied: final gate JSON 已新增顶层 `summary`、证据 `requirement_refs` / `section_refs`、`linking_audit.summary` 和 `proof_artifacts.coverage_sections`，终态证据可直接映射到目标章节；证据：`artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.jsonl`.
+- reviewing: `pcr02-project-docs-owner-decision-landing-20260623`
+- owner-decision-landing-applied: PCR02 project docs 7 条 owner gate 已按人工授权落地，当前 owner-gates 显示 `open_count=0`、`resolved_count=7`；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- reviewing: `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
+- owner-source-subagent-boundary-hardening-applied: owner/source/subagent 边界已显性化，source identity read policy、status handoff notes、subagent 单写者审计和 owner decision 草稿泄漏 warning 已纳入工具与回归；证据：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.jsonl`.
