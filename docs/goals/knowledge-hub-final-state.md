@@ -803,7 +803,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```text
 manual_validation_pending: true
 reason: tools unavailable / AI unavailable / offline field note
-required_followup: run knowledge-check and update registry/index
+required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics; rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 owner: <owner>
 review_after: <date>
 ```

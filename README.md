@@ -40,6 +40,7 @@
 | 层级 | 何时使用 | 入口命令 | 禁止事项 |
 |---|---|---|---|
 | 日常路径 | 新增、检索、复核普通知识条目 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh ...`；`rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<keyword>" --json`；`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 不伪造 source id、owner、hash、验证结果或 active 状态 |
+| 人工复核 | 领取 AI 生成或外部资料待复核条目 | `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --review-queue-limit 10`；`rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json` | 不自动填 `human_reviewed_by`，不把 queue 当 owner decision 或 active 提升依据 |
 | owner gate | 处理 PCR02 owner-gated worksheet 和人工签收材料 | `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json` | 不代签 `reviewed_by`，不把 `routing_owner` 当真实 reviewer，不关闭 gate |
 | 终态检查 | 判断是否只剩 owner 语义门禁或存在工具/索引/registry 漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 不把 `needs-owner-review` 当工具失败，不跳过 regression 证明 terminal 状态 |
 | 高级写入计划 | copy-first、artifact-ref、promote、retire 等需要 reviewed manifest 的操作 | `rtk bash ~/knowledge-hub/tools/knowledge-copy-first.sh ... --dry-run`；`rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target <target> --dry-run` | 不启用无人值守写入，不绕过 owner、rollback、hash 和验证命令 |
@@ -137,9 +138,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> 
 - 必须落盘：唯一正文 `domains/.../<file>.md` 或 `artifacts/manifests/...`、`registry/items.jsonl`、`indexes/by-owner.md`、`indexes/by-review-date.md`、`indexes/by-status.md`。
 - 按条件同步：涉及项目、source、主题或决策时，再同步对应索引。若已知来源已经登记在 `registry/sources.json`，优先用 `--item-source-id` 生成 `source.source_id` 和 `indexes/by-source.md` 草稿；未知来源保持 manual source reason 或 no-source reason，不伪造 source id。
 - 决策边界：若 `kind=decision`，或内容承载真实 registry/migration/owner decision 入口，同步 `indexes/by-decision.md`；owner-ready package 不能写成已签收 owner decision。
-- registry 必填：registry 草稿必须补清 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段；2026-06-21 及之后 `generated_by_ai=true` 的 registry item 必须填写 `ai_role`、`ai_model_or_tool` 和 `ai_generated_at`。
-- owner / personal 边界：`knowledge-new.sh` 会输出 item owner 是否已在 `registry/owners.json` 登记；未知 owner 只是 warning，不能伪造 owner。`--domain personal` 或 `domains/personal/` 路径默认使用 `visibility=personal-local`、`status=personal`，不得进入团队 active index。
-- migration 触发：涉及迁移、引用或归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须包含 `notes_zh`；普通新知识不强制 migration。
+- 字段权威：registry 草稿字段、AI provenance、`personal-local` 默认值、owner 归属和 migration 触发条件以 `templates/README.md` 的字段矩阵、`registry/schema.md` 的 allowed enum / invariants、以及 `tools/README.md` 的工具语义为准；根 README 只保留最短路径和同步位置，避免复制出另一套字段权威。`knowledge-new.sh` 的 warning 只提示人工补 owner/source，不替代签收或校验。
 
 复制 `templates/` 中合适模板到唯一正文位置，优先中文写清背景、范围、结论、证据、风险和下一步。最后运行：
 
@@ -157,12 +156,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id>
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> --no-check-reason "classify-first pending source coverage"
 ```
 
+新增 source 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `rtk` check；提供 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
+
 新增 source 时按 4 组核对：
 
 - 最小落盘：`registry/sources.json`、`indexes/by-source.md`、最新或相邻 source coverage / source identity manifest（例如 `artifacts/manifests/<source-id>-source-coverage-YYYYMMDD.{md,jsonl}` 或全局 closeout manifest）；必要时同步 `indexes/by-project.md`、`indexes/by-topic.md`。
-- registry 字段：人工补 `registry/sources.json` 的 `id`、`path`、`role`、`authority`、`status`、`write_policy`、`migration_strategy`、`owner`、`review_after` 和 `final_disposition`；这里的 `owner` 是 source registry 维护责任人，必须已登记在 `registry/owners.json`，不是 owner decision 或签收结论。
-- check/no-check 二选一：`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk ..."` 记录可复核检查命令；只有暂时没有稳定检查入口时才使用 `--no-check-reason`，且如果 `check` 为空，必须填写 `no_check_reason`。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。
-- 推荐不等于决策：`knowledge-new.sh --source` 会按 role / write_policy / check 输出 `recommended_final_disposition`、`recommended_migration_strategy` 和中文理由，但可复制 JSON 仍保守使用 `owner-gated-pending-decision`。人工必须按 `registry/schema.md`、coverage manifest 和 owner gate 状态确认后再替换；推荐提示不替代 owner decision，不关闭 owner gate。
+- 字段权威：source registry 字段、`--check` / `--no-check-reason` 二选一、`recommended_final_disposition` / `recommended_migration_strategy` 等 role-aware 推荐终态、以及 copyable JSON 保守默认值以 `registry/schema.md` 和 `tools/README.md` 为准；这里的 `owner` 是 source registry 维护责任人，不是 owner decision 或签收结论。推荐提示不替代 owner decision、不关闭 owner gate。
 - 覆盖语义：同步 `indexes/by-source.md`，并记录 coverage/classification/source identity 或 no-check reason。`source coverage` 是 source 覆盖/分类证据；`source identity manifest` 是 source 身份与哈希等元信息记录。新增 source 只代表进入治理控制面，不代表复制正文、关闭 owner gate 或提升 active。
 
 最后运行：

@@ -3753,6 +3753,48 @@ def test_readme_offline_shortest_paths():
         },
     )
 
+def test_manual_entry_offline_package_consistency():
+    files = {
+        "README.md": root / "README.md",
+        "indexes/README.md": root / "indexes" / "README.md",
+        "docs/goals/knowledge-hub-final-state.md": root / "docs" / "goals" / "knowledge-hub-final-state.md",
+    }
+    texts = {}
+    read_errors = {}
+    for rel, path in files.items():
+        try:
+            texts[rel] = path.read_text()
+            read_errors[rel] = ""
+        except Exception as exc:
+            texts[rel] = ""
+            read_errors[rel] = str(exc)
+
+    diagnostics_command = "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"
+    index_plan_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all"
+    weak_followup = "required_followup: run knowledge-check and update registry/index"
+    per_file_missing = {}
+    for rel, text in texts.items():
+        required = [
+            "manual_validation_pending: true",
+            "required_followup",
+            diagnostics_command,
+            index_plan_command,
+        ]
+        per_file_missing[rel] = [fragment for fragment in required if fragment not in text]
+
+    expect(
+        not any(read_errors.values())
+        and not any(per_file_missing.values())
+        and weak_followup not in texts.get("docs/goals/knowledge-hub-final-state.md", ""),
+        "manual-entry-offline-package-consistency",
+        "offline manual maintenance package keeps complete rtk follow-up commands across README, indexes and goal docs",
+        {
+            "read_errors": read_errors,
+            "per_file_missing": per_file_missing,
+            "weak_followup_present_in_goal": weak_followup in texts.get("docs/goals/knowledge-hub-final-state.md", ""),
+        },
+    )
+
 def test_manual_entry_validation_diagnostics_default():
     result = run_cmd(
         root,
@@ -4326,6 +4368,38 @@ def test_review_queue_json_contract():
     index_summary = by_review_queue.get("summary", {}) if isinstance(by_review_queue.get("summary", {}), dict) else {}
     rows = by_review_queue.get("rows", []) if isinstance(by_review_queue.get("rows", []), list) else []
     first_row = rows[0] if rows else {}
+    filtered_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--json",
+            "--queue-type",
+            str(first_row.get("queue_type", "ai-human-review")),
+            "--queue-owner",
+            str(first_row.get("owner", "leiwenjun")),
+            "--queue-review-after",
+            str(first_row.get("review_after", "2026-09-17")),
+            "--queue-limit",
+            "3",
+        ],
+    )
+    try:
+        filtered_payload = json.loads(filtered_result["stdout"])
+    except Exception as exc:
+        filtered_payload = {}
+        parse_errors.append(f"filtered-index-plan: {exc}")
+    filtered_queue = (
+        filtered_payload.get("indexes", {}).get("by_review_queue", {})
+        if isinstance(filtered_payload.get("indexes", {}), dict)
+        else {}
+    )
+    filtered_summary = filtered_queue.get("summary", {}) if isinstance(filtered_queue.get("summary", {}), dict) else {}
+    filtered_pagination = filtered_queue.get("pagination", {}) if isinstance(filtered_queue.get("pagination", {}), dict) else {}
+    filtered_rows = filtered_queue.get("rows", []) if isinstance(filtered_queue.get("rows", []), list) else []
     required_first_row_fields = [
         "queue_id",
         "queue_type",
@@ -4362,7 +4436,18 @@ def test_review_queue_json_contract():
         and first_row.get("memory_write") is False
         and first_row.get("source_project_write") is False
         and "ai-human-review" in by_review_queue.get("by_type", {})
-        and "不写 memory" in " ".join(by_review_queue.get("must_not", [])),
+        and "不写 memory" in " ".join(by_review_queue.get("must_not", []))
+        and filtered_result["exit_code"] == 0
+        and filtered_summary.get("matched_count", 0) >= len(filtered_rows)
+        and filtered_summary.get("shown_count") == len(filtered_rows)
+        and len(filtered_rows) <= 3
+        and filtered_pagination.get("limit") == 3
+        and all(row.get("queue_type") == first_row.get("queue_type") for row in filtered_rows)
+        and all(row.get("owner") == first_row.get("owner") for row in filtered_rows)
+        and all(row.get("review_after") == first_row.get("review_after") for row in filtered_rows)
+        and filtered_summary.get("read_only") is True
+        and filtered_summary.get("report_only") is True
+        and filtered_summary.get("memory_write") is False,
         "review-queue-json-contract",
         "status and index-plan expose report-only human review queue from registry",
         {
@@ -4375,6 +4460,10 @@ def test_review_queue_json_contract():
             "index_ai_generated_pending_count": index_summary.get("ai_generated_pending_count"),
             "active_or_promotion_blocker_count": index_summary.get("active_or_promotion_blocker_count"),
             "missing_first_row_fields": missing_first_row_fields,
+            "filtered_exit_code": filtered_result["exit_code"],
+            "filtered_summary": filtered_summary,
+            "filtered_row_count": len(filtered_rows),
+            "filtered_pagination": filtered_pagination,
         },
     )
 
@@ -6781,6 +6870,7 @@ def test_regression_manifest_coverage():
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "readme-offline-shortest-paths",
+        "manual-entry-offline-package-consistency",
         "manual-entry-validation-diagnostics-default",
         "manual-entry-readability-fields",
         "manual-entry-archive-default-status",
@@ -6962,6 +7052,7 @@ for test_fn in [
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_readme_offline_shortest_paths,
+    test_manual_entry_offline_package_consistency,
     test_manual_entry_validation_diagnostics_default,
     test_manual_entry_readability_fields,
     test_manual_entry_archive_default_status,

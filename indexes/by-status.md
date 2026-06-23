@@ -393,3 +393,5 @@
 - final-state-handoff-supersede-applied: 旧 final-state handoff 已有当前恢复口径的 supersede 锚点，final proof 可发现性扩展到 by-decision；证据：`artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.jsonl`.
 - reviewing: `knowledge-hub-review-queue-topic-readability-20260623`
 - review-queue-topic-readability-applied: AI / external source 人工复核队列已从 registry 派生为只读 report-only 视图，by-topic 首屏恢复入口与历史治理台账已拆分；证据：`artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.jsonl`.
+- reviewing: `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
+- offline-review-queue-claiming-hardening-applied: 离线人工维护 follow-up 命令已统一为完整 rtk 命令，review queue 已支持过滤/分页领取；证据：`artifacts/manifests/knowledge-hub-offline-review-queue-claiming-hardening-20260623.jsonl`.

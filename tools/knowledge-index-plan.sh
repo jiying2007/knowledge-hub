@@ -19,7 +19,17 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Print a read-only plan for core Knowledge Hub indexes from registry files.")
 parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking", "review-queue"], default="all")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--queue-type", help="Filter review queue rows by queue_type when --section review-queue is used.")
+parser.add_argument("--queue-owner", help="Filter review queue rows by owner when --section review-queue is used.")
+parser.add_argument("--queue-review-after", help="Filter review queue rows by review_after when --section review-queue is used.")
+parser.add_argument("--queue-priority", help="Filter review queue rows by priority when --section review-queue is used.")
+parser.add_argument("--queue-limit", type=int, default=0, help="Limit review queue rows after filters; 0 means no JSON limit.")
+parser.add_argument("--queue-offset", type=int, default=0, help="Offset review queue rows after filters.")
 args = parser.parse_args(argv)
+if args.queue_limit < 0:
+    parser.error("--queue-limit must be >= 0")
+if args.queue_offset < 0:
+    parser.error("--queue-offset must be >= 0")
 
 items_path = root / "registry" / "items.jsonl"
 sources_path = root / "registry" / "sources.json"
@@ -506,6 +516,81 @@ def build_review_queue_view(items, sources):
         ],
     }
 
+def apply_review_queue_filters(view):
+    rows = list(view.get("rows", []))
+    total_row_count = len(rows)
+    filters = {
+        "queue_type": args.queue_type or "",
+        "owner": args.queue_owner or "",
+        "review_after": args.queue_review_after or "",
+        "priority": args.queue_priority or "",
+    }
+    for field, expected in filters.items():
+        if expected:
+            rows = [row for row in rows if str(row.get(field, "")) == expected]
+    matched_count = len(rows)
+    offset = args.queue_offset
+    limit = args.queue_limit
+    shown_rows = rows[offset:] if not limit else rows[offset:offset + limit]
+    next_offset = offset + len(shown_rows)
+    has_next = next_offset < matched_count
+    command_parts = [
+        "rtk",
+        "bash",
+        "~/knowledge-hub/tools/knowledge-index-plan.sh",
+        "--section",
+        "review-queue",
+        "--json",
+    ]
+    if args.queue_type:
+        command_parts.extend(["--queue-type", args.queue_type])
+    if args.queue_owner:
+        command_parts.extend(["--queue-owner", args.queue_owner])
+    if args.queue_review_after:
+        command_parts.extend(["--queue-review-after", args.queue_review_after])
+    if args.queue_priority:
+        command_parts.extend(["--queue-priority", args.queue_priority])
+    if limit:
+        command_parts.extend(["--queue-limit", str(limit), "--queue-offset", str(next_offset)])
+
+    filtered = dict(view)
+    by_type = collections.defaultdict(list)
+    by_owner = collections.defaultdict(list)
+    by_review_date = collections.defaultdict(list)
+    for row in rows:
+        row_id = str(row.get("queue_id", ""))
+        by_type[str(row.get("queue_type", ""))].append(row_id)
+        by_owner[str(row.get("owner", "") or "<missing-owner>")].append(row_id)
+        by_review_date[str(row.get("review_after", "") or "<missing-review_after>")].append(row_id)
+    filtered_summary = dict(filtered.get("summary", {}))
+    filtered_summary.update({
+        "total_row_count": total_row_count,
+        "matched_count": matched_count,
+        "shown_count": len(shown_rows),
+        "offset": offset,
+        "limit": limit,
+        "has_next": has_next,
+        "next_offset": next_offset if has_next else None,
+        "next_command": " ".join(command_parts) if has_next else "",
+    })
+    filtered["summary"] = filtered_summary
+    filtered["filter"] = filters
+    filtered["by_type"] = dict(sorted(by_type.items()))
+    filtered["by_owner"] = dict(sorted(by_owner.items()))
+    filtered["by_review_date"] = dict(sorted(by_review_date.items()))
+    filtered["pagination"] = {
+        "offset": offset,
+        "limit": limit,
+        "matched_count": matched_count,
+        "shown_count": len(shown_rows),
+        "has_next": has_next,
+        "next_offset": next_offset if has_next else None,
+        "next_command": " ".join(command_parts) if has_next else "",
+        "notes_zh": "只过滤 registry 派生视图；不生成人工复核结论，不回填 human_reviewed_by，不改变 registry。",
+    }
+    filtered["rows"] = shown_rows
+    return filtered
+
 def manifest_profile_health(manifest_path, first, date_value, summary_source, evidence_source, evidence_count):
     path_name = manifest_path.name
     in_current_profile = path_name.startswith("knowledge-hub-") and date_value >= "2026-06-21"
@@ -634,7 +719,7 @@ by_manifest = {
     "unpaired_needs_review": unpaired_needs_review,
     "rows": manifest_rows,
 }
-by_review_queue = build_review_queue_view(items, sources)
+by_review_queue = apply_review_queue_filters(build_review_queue_view(items, sources))
 
 def read_relative_text(relative_path):
     path = root / relative_path
@@ -984,6 +1069,10 @@ def print_review_queue():
     print(f"- ai_generated_pending_count: {summary.get('ai_generated_pending_count', 0)}")
     print(f"- external_source_pending_count: {summary.get('external_source_pending_count', 0)}")
     print(f"- active_or_promotion_blocker_count: {summary.get('active_or_promotion_blocker_count', 0)}")
+    print(f"- matched_count: {summary.get('matched_count', summary.get('row_count', 0))}")
+    print(f"- shown_count: {summary.get('shown_count', len(by_review_queue.get('rows', [])))}")
+    if summary.get("has_next"):
+        print(f"- next_command: `{summary.get('next_command', '')}`")
     print(f"- source: `{summary.get('source', '')}`")
     print("- must_not:")
     for rule in by_review_queue.get("must_not", []):
@@ -993,13 +1082,18 @@ def print_review_queue():
     for queue_type, queue_ids in by_review_queue.get("by_type", {}).items():
         print(f"- `{queue_type}`: {len(queue_ids)}")
     print()
+    print("### Review Dates")
+    for review_after, queue_ids in by_review_queue.get("by_review_date", {}).items():
+        print(f"- `{review_after}`: {len(queue_ids)}")
+    print()
     print("### Rows")
     for row in by_review_queue.get("rows", [])[:80]:
         missing = ", ".join(row.get("missing_fields", []))
         print(
             f"- `{row.get('queue_id', '')}` priority=`{row.get('priority', '')}` "
             f"owner=`{row.get('owner', '')}` review_after=`{row.get('review_after', '')}` "
-            f"status=`{row.get('status', '')}` missing=`{missing}`"
+            f"status=`{row.get('status', '')}` kind=`{row.get('kind', '')}` "
+            f"domain=`{row.get('domain', '')}` path=`{row.get('path', '')}` missing=`{missing}`"
         )
 
 def print_linking():

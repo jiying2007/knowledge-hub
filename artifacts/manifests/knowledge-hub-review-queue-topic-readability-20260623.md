@@ -29,7 +29,7 @@
 
 ## Dynamic Context
 
-- `review_queues.summary.total_pending_count` 当前为 170，全部来自 AI 生成内容待人工复核；外部资料待复核为 0。
+- `review_queues.summary.total_pending_count` 在本 manifest 登记前为 170；登记该 AI 生成 manifest 后，当前 status 派生视图为 171。该计数是 registry 实时派生值，不应作为固定历史事实手工维护。
 - `review_queues.summary.active_or_promotion_blocker_count` 当前为 0，因此复核队列不阻塞 final gate。
 - PCR02 docs owner gate 仍为 7 个 open。
 - owner-ready package coverage 仍为 `7/7`。
