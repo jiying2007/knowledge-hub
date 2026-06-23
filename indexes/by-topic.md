@@ -2,6 +2,8 @@
 
 ## 优先恢复主题速查
 
+本段是跨会话恢复首屏，只保留必须优先定位的主题、命令和长期入口。历史治理制品不得插入本段，统一放入“历史治理台账”。
+
 - migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
 - PCR02: `domains/projects/pcr02`; `indexes/by-project.md`
@@ -20,6 +22,8 @@
 - patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `registry/sources.json`
 
+## 领域入口
+
 - 嵌入式团队标准：`domains/embedded/standards`
 - 嵌入式 runbook：`domains/embedded/runbooks`
 - 项目当前事实：`domains/projects/*/current`
@@ -34,6 +38,11 @@
 - 治理规则：`governance`
 - 中文长期资产模板：`templates`
 - 治理 manifest：`artifacts/manifests`
+
+## 历史治理台账
+
+本段只登记对恢复、审计或终态证明有长期导航价值的制品摘要；完整 manifest 恢复以 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json` 为准。
+
 - Knowledge Hub index drift remediation: `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.md`
 - Knowledge Hub stale index gate: `artifacts/manifests/knowledge-hub-stale-index-gate-20260619.md`
 - Knowledge Hub index path gate: `artifacts/manifests/knowledge-hub-index-path-gate-20260619.md`
@@ -222,3 +231,4 @@
 - Knowledge Hub owner-ready 状态来源加固: `artifacts/manifests/knowledge-hub-owner-ready-status-source-hardening-20260623.md`
 - Knowledge Hub owner archive 表单与维护文案加固: `artifacts/manifests/knowledge-hub-owner-archive-form-readability-hardening-20260623.md`
 - Knowledge Hub final-state handoff supersede and decision-index proof recovery: `artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.md`
+- Knowledge Hub review queue 与主题索引可读性加固: `artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.md`

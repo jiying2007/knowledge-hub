@@ -391,3 +391,5 @@
 - owner-archive-form-readability-hardening-applied: archive-only owner 表单已允许明确 archive 路径并拒绝非 archive 目标，final gate 维护入口文案和本地 owner JSONL 草稿边界已加固；证据：`artifacts/manifests/knowledge-hub-owner-archive-form-readability-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-final-state-handoff-supersede-20260623`
 - final-state-handoff-supersede-applied: 旧 final-state handoff 已有当前恢复口径的 supersede 锚点，final proof 可发现性扩展到 by-decision；证据：`artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.jsonl`.
+- reviewing: `knowledge-hub-review-queue-topic-readability-20260623`
+- review-queue-topic-readability-applied: AI / external source 人工复核队列已从 registry 派生为只读 report-only 视图，by-topic 首屏恢复入口与历史治理台账已拆分；证据：`artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.jsonl`.

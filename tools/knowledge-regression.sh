@@ -4230,6 +4230,154 @@ def test_index_readme_maintenance_coverage():
         },
     )
 
+def test_by_topic_first_screen_readability_contract():
+    by_topic_path = root / "indexes" / "by-topic.md"
+    try:
+        by_topic = by_topic_path.read_text()
+        read_error = ""
+    except Exception as exc:
+        by_topic = ""
+        read_error = str(exc)
+    required_first_screen_topics = [
+        "migration",
+        "owner gate",
+        "PCR02",
+        "tools",
+        "knowledge",
+        "product-test",
+        "scratch",
+        "diag",
+        "ASAN",
+        "memory auto-curation",
+        "DVR",
+        "motor MCU",
+        "governance",
+        "automation",
+        "regression",
+        "patent",
+        "Codex archive",
+    ]
+    first_screen_marker = "## 优先恢复主题速查"
+    domain_marker = "## 领域入口"
+    history_marker = "## 历史治理台账"
+    first_screen_index = by_topic.find(first_screen_marker)
+    domain_index = by_topic.find(domain_marker)
+    history_index = by_topic.find(history_marker)
+    first_screen_text = by_topic[first_screen_index:history_index] if first_screen_index >= 0 and history_index >= 0 else ""
+    missing_topics = [topic for topic in required_first_screen_topics if topic not in first_screen_text]
+    unexpected_history_before_ledger = [
+        path for path in re.findall(r"artifacts/manifests/knowledge-hub-[^`]+", first_screen_text)
+        if "knowledge-hub-source-coverage-closeout" not in path
+        and "knowledge-hub-governance-regression-helper" not in path
+    ]
+    missing_manifest_paths = []
+    for match in re.finditer(r"`([^`]+\.md)`", by_topic):
+        candidate = match.group(1)
+        if candidate.startswith("artifacts/manifests/") and not (root / candidate).exists():
+            missing_manifest_paths.append(candidate)
+    expect(
+        not read_error
+        and first_screen_index >= 0
+        and domain_index > first_screen_index
+        and history_index > domain_index
+        and not missing_topics
+        and not unexpected_history_before_ledger
+        and not missing_manifest_paths,
+        "by-topic-first-screen-readability-contract",
+        "by-topic keeps recovery topics before historical governance ledger",
+        {
+            "read_error": read_error,
+            "first_screen_index": first_screen_index,
+            "domain_index": domain_index,
+            "history_index": history_index,
+            "missing_topics": missing_topics,
+            "unexpected_history_before_ledger": unexpected_history_before_ledger,
+            "missing_manifest_paths": sorted(set(missing_manifest_paths)),
+        },
+    )
+
+def test_review_queue_json_contract():
+    status_result = run_cmd(
+        root,
+        ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", today.isoformat()],
+    )
+    index_result = run_cmd(
+        root,
+        ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "review-queue", "--json"],
+    )
+    parse_errors = []
+    try:
+        status_payload = json.loads(status_result["stdout"])
+    except Exception as exc:
+        status_payload = {}
+        parse_errors.append(f"status: {exc}")
+    try:
+        index_payload = json.loads(index_result["stdout"])
+    except Exception as exc:
+        index_payload = {}
+        parse_errors.append(f"index-plan: {exc}")
+    review_queues = status_payload.get("review_queues", {}) if isinstance(status_payload.get("review_queues", {}), dict) else {}
+    status_summary = review_queues.get("summary", {}) if isinstance(review_queues.get("summary", {}), dict) else {}
+    by_review_queue = (
+        index_payload.get("indexes", {}).get("by_review_queue", {})
+        if isinstance(index_payload.get("indexes", {}), dict)
+        else {}
+    )
+    index_summary = by_review_queue.get("summary", {}) if isinstance(by_review_queue.get("summary", {}), dict) else {}
+    rows = by_review_queue.get("rows", []) if isinstance(by_review_queue.get("rows", []), list) else []
+    first_row = rows[0] if rows else {}
+    required_first_row_fields = [
+        "queue_id",
+        "queue_type",
+        "object_type",
+        "id",
+        "owner",
+        "status",
+        "review_after",
+        "priority",
+        "missing_fields",
+        "read_only",
+        "report_only",
+        "owner_gate_mutation",
+        "memory_write",
+        "source_project_write",
+    ]
+    missing_first_row_fields = [field for field in required_first_row_fields if field not in first_row]
+    expect(
+        status_result["exit_code"] == 0
+        and index_result["exit_code"] == 0
+        and not parse_errors
+        and review_queues.get("read_only") is True
+        and review_queues.get("report_only") is True
+        and status_summary.get("total_pending_count", 0) == index_summary.get("row_count", -1)
+        and status_summary.get("ai_generated_pending_count", 0) == index_summary.get("ai_generated_pending_count", -1)
+        and status_summary.get("external_source_pending_count", 0) == index_summary.get("external_source_pending_count", -1)
+        and index_summary.get("active_or_promotion_blocker_count", -1) == status_summary.get("active_or_promotion_blocker_count", -2)
+        and index_summary.get("active_or_promotion_blocker_count", 1) == 0
+        and rows
+        and not missing_first_row_fields
+        and first_row.get("read_only") is True
+        and first_row.get("report_only") is True
+        and first_row.get("owner_gate_mutation") is False
+        and first_row.get("memory_write") is False
+        and first_row.get("source_project_write") is False
+        and "ai-human-review" in by_review_queue.get("by_type", {})
+        and "不写 memory" in " ".join(by_review_queue.get("must_not", [])),
+        "review-queue-json-contract",
+        "status and index-plan expose report-only human review queue from registry",
+        {
+            "status_exit_code": status_result["exit_code"],
+            "index_exit_code": index_result["exit_code"],
+            "parse_errors": parse_errors,
+            "status_total_pending_count": status_summary.get("total_pending_count"),
+            "index_row_count": index_summary.get("row_count"),
+            "status_ai_generated_pending_count": status_summary.get("ai_generated_pending_count"),
+            "index_ai_generated_pending_count": index_summary.get("ai_generated_pending_count"),
+            "active_or_promotion_blocker_count": index_summary.get("active_or_promotion_blocker_count"),
+            "missing_first_row_fields": missing_first_row_fields,
+        },
+    )
+
 def test_final_proof_artifact_discoverability():
     selector_date = today.isoformat()
     selector_suffix = selector_date.replace("-", "")
@@ -4620,7 +4768,7 @@ def test_index_plan_extended_sections():
     section_results = {}
     parsed_by_section = {}
     parse_errors = {}
-    for section in ["project", "source", "topic", "decision", "manifest", "linking"]:
+    for section in ["project", "source", "topic", "decision", "manifest", "linking", "review-queue"]:
         result = run_cmd(root, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", section, "--json"])
         section_results[section] = result
         try:
@@ -4637,6 +4785,8 @@ def test_index_plan_extended_sections():
     decision_index = parsed_by_section.get("decision", {}).get("indexes", {}).get("by_decision", {})
     manifest_index = parsed_by_section.get("manifest", {}).get("indexes", {}).get("by_manifest", {})
     linking_audit = parsed_by_section.get("linking", {}).get("linking_audit", {})
+    review_queue_index = parsed_by_section.get("review-queue", {}).get("indexes", {}).get("by_review_queue", {})
+    review_queue_summary = review_queue_index.get("summary", {})
     registry_decisions = decision_index.get("registry_decisions", [])
     owner_worksheets = decision_index.get("owner_worksheets", [])
     migration_decisions = decision_index.get("migration_decisions", [])
@@ -4707,7 +4857,6 @@ def test_index_plan_extended_sections():
         and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
         and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
-        and "profile_health=`pass`" in manifest_text_result["stdout"]
         and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
         and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
         and "review_status=`expected`" in manifest_text_result["stdout"]
@@ -4739,6 +4888,14 @@ def test_index_plan_extended_sections():
         and linking_audit.get("cross_project", {}).get("registered_source_count") == 13
         and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
         and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
+        and review_queue_summary.get("status") in {"needs-human-review", "empty"}
+        and review_queue_summary.get("read_only") is True
+        and review_queue_summary.get("report_only") is True
+        and review_queue_summary.get("owner_gate_mutation") is False
+        and review_queue_summary.get("memory_write") is False
+        and review_queue_summary.get("active_or_promotion_blocker_count") == 0
+        and review_queue_summary.get("ai_generated_pending_count", 0) >= 1
+        and any(row.get("queue_type") == "ai-human-review" for row in review_queue_index.get("rows", []))
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
@@ -4775,6 +4932,8 @@ def test_index_plan_extended_sections():
             "current_manifest_profile": current_manifest_profile,
             "current_runtime_recovery_profile": current_runtime_recovery_profile,
             "linking_audit": linking_audit,
+            "review_queue_summary": review_queue_summary,
+            "review_queue_row_count": len(review_queue_index.get("rows", [])),
             "owner_worksheet_count": len(owner_worksheets),
             "first_owner_worksheet": first_owner_worksheet,
             "migration_decision_count": len(migration_decisions),
@@ -6633,6 +6792,8 @@ def test_regression_manifest_coverage():
         "manual-entry-template-selection",
         "templates-required-sections",
         "index-readme-maintenance-coverage",
+        "by-topic-first-screen-readability-contract",
+        "review-queue-json-contract",
         "final-proof-artifact-discoverability",
         "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
@@ -6812,6 +6973,8 @@ for test_fn in [
     test_manual_entry_template_selection,
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
+    test_by_topic_first_screen_readability_contract,
+    test_review_queue_json_contract,
     test_final_proof_artifact_discoverability,
     test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,

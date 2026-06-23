@@ -17,7 +17,7 @@ root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only plan for core Knowledge Hub indexes from registry files.")
-parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking"], default="all")
+parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking", "review-queue"], default="all")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
 
@@ -130,6 +130,13 @@ by_manifest = {
     "latest": [],
     "unpaired": [],
     "rows": [],
+}
+by_review_queue = {
+    "summary": {},
+    "rows": [],
+    "by_type": {},
+    "by_owner": {},
+    "by_review_date": {},
 }
 
 for item in items:
@@ -314,6 +321,191 @@ def first_present_field(row, fields):
             return field, value
     return "missing", ""
 
+def is_blank(value):
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, list):
+        return not value
+    if isinstance(value, dict):
+        return not value
+    return False
+
+def as_list(value):
+    return value if isinstance(value, list) else []
+
+def review_priority_for_item(item):
+    status_value = str(item.get("status", ""))
+    path_text = str(item.get("path", ""))
+    tags = set(str(tag) for tag in as_list(item.get("tags", [])))
+    promotion_like = (
+        status_value == "active"
+        or path_text == "AGENTS.md"
+        or path_text.startswith("domains/embedded/standards/")
+        or path_text.startswith("src/codex-home/vendor/skills/")
+        or "promoted" in tags
+        or "team-standard" in tags
+    )
+    if promotion_like:
+        return "P0"
+    if status_value == "reviewing":
+        return "P1"
+    if status_value in {"archived", "personal"}:
+        return "P3"
+    return "P2"
+
+def source_looks_external(source):
+    path_text = str(source.get("path", ""))
+    return (
+        path_text.startswith("http://")
+        or path_text.startswith("https://")
+        or any(not is_blank(source.get(field)) for field in ["retrieved_at", "read_status", "source_license", "source_url", "url"])
+    )
+
+def make_review_queue_item(item, queue_type, reasons, missing_fields):
+    item_id = str(item.get("id", ""))
+    source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
+    return {
+        "queue_id": f"item:{item_id}:{queue_type}",
+        "queue_type": queue_type,
+        "object_type": "registry-item",
+        "id": item_id,
+        "title": str(item.get("title", "")),
+        "kind": str(item.get("kind", "")),
+        "domain": str(item.get("domain", "")),
+        "path": str(item.get("path", "")),
+        "owner": str(item.get("owner", "")),
+        "status": str(item.get("status", "")),
+        "review_after": str(item.get("review_after", "")),
+        "priority": review_priority_for_item(item),
+        "reasons": reasons,
+        "missing_fields": missing_fields,
+        "source_id": str(source.get("source_id", "")),
+        "generated_by_ai": bool(item.get("generated_by_ai", False)),
+        "human_reviewed_by": str(item.get("human_reviewed_by", "")),
+        "human_reviewed_at": str(item.get("human_reviewed_at", "")),
+        "review_basis": str(item.get("review_basis", "")),
+        "read_only": True,
+        "report_only": True,
+        "owner_gate_mutation": False,
+        "memory_write": False,
+        "source_project_write": False,
+    }
+
+def make_external_source_queue_item(source):
+    source_id = str(source.get("id", ""))
+    missing_fields = [
+        field for field in ["retrieved_at", "read_status", "source_license", "review_status"]
+        if is_blank(source.get(field))
+    ]
+    return {
+        "queue_id": f"source:{source_id}:external-source-review",
+        "queue_type": "external-source-review",
+        "object_type": "registered-source",
+        "id": source_id,
+        "title": str(source.get("name", source_id)),
+        "kind": "registered-source",
+        "domain": "",
+        "path": str(source.get("path", "")),
+        "owner": str(source.get("owner", "")),
+        "status": str(source.get("status", "")),
+        "review_after": str(source.get("review_after", "")),
+        "priority": "P2" if missing_fields else "P3",
+        "reasons": ["external-source-fields-incomplete"] if missing_fields else ["external-source-review-tracked"],
+        "missing_fields": missing_fields,
+        "source_id": source_id,
+        "generated_by_ai": False,
+        "read_only": True,
+        "report_only": True,
+        "owner_gate_mutation": False,
+        "memory_write": False,
+        "source_project_write": False,
+    }
+
+def build_review_queue_view(items, sources):
+    rows = []
+    for item in items:
+        if item.get("generated_by_ai") is True:
+            missing_fields = [
+                field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+                if is_blank(item.get(field))
+            ]
+            if missing_fields:
+                rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        [f"missing-{field.replace('_', '-')}" for field in missing_fields],
+                        missing_fields,
+                    )
+                )
+        external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
+        if str(item.get("kind", "")) == "external-source-note" or any(not is_blank(item.get(field)) for field in external_item_fields):
+            missing_fields = [
+                field for field in ["retrieved_at", "read_status", "source_license", "review_basis"]
+                if is_blank(item.get(field))
+            ]
+            if missing_fields:
+                rows.append(
+                    make_review_queue_item(
+                        item,
+                        "external-source-review",
+                        [f"missing-{field.replace('_', '-')}" for field in missing_fields],
+                        missing_fields,
+                    )
+                )
+    for source in sources:
+        if source_looks_external(source):
+            row = make_external_source_queue_item(source)
+            if row.get("missing_fields"):
+                rows.append(row)
+    rows = sorted(
+        rows,
+        key=lambda row: (
+            str(row.get("queue_type", "")),
+            str(row.get("priority", "P9")),
+            str(row.get("review_after", "") or "9999-12-31"),
+            str(row.get("owner", "")),
+            str(row.get("id", "")),
+        ),
+    )
+    by_type = collections.defaultdict(list)
+    by_owner = collections.defaultdict(list)
+    by_review_date = collections.defaultdict(list)
+    priority_counts = collections.Counter()
+    for row in rows:
+        row_id = str(row.get("queue_id", ""))
+        by_type[str(row.get("queue_type", ""))].append(row_id)
+        by_owner[str(row.get("owner", "") or "<missing-owner>")].append(row_id)
+        by_review_date[str(row.get("review_after", "") or "<missing-review_after>")].append(row_id)
+        priority_counts[str(row.get("priority", ""))] += 1
+    return {
+        "summary": {
+            "status": "needs-human-review" if rows else "clear",
+            "row_count": len(rows),
+            "ai_generated_pending_count": len([row for row in rows if row.get("queue_type") == "ai-human-review"]),
+            "external_source_pending_count": len([row for row in rows if row.get("queue_type") == "external-source-review"]),
+            "active_or_promotion_blocker_count": len([row for row in rows if row.get("priority") == "P0"]),
+            "by_priority": dict(sorted(priority_counts.items())),
+            "source": "registry/items.jsonl + registry/sources.json",
+            "read_only": True,
+            "report_only": True,
+            "owner_gate_mutation": False,
+            "memory_write": False,
+        },
+        "rows": rows,
+        "by_type": dict(sorted(by_type.items())),
+        "by_owner": dict(sorted(by_owner.items())),
+        "by_review_date": dict(sorted(by_review_date.items())),
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+        ],
+    }
+
 def manifest_profile_health(manifest_path, first, date_value, summary_source, evidence_source, evidence_count):
     path_name = manifest_path.name
     in_current_profile = path_name.startswith("knowledge-hub-") and date_value >= "2026-06-21"
@@ -442,6 +634,7 @@ by_manifest = {
     "unpaired_needs_review": unpaired_needs_review,
     "rows": manifest_rows,
 }
+by_review_queue = build_review_queue_view(items, sources)
 
 def read_relative_text(relative_path):
     path = root / relative_path
@@ -473,7 +666,15 @@ def build_linking_audit():
         },
         "by_topic": {
             "path": "indexes/by-topic.md",
-            "anchors": ["PCR02", "Knowledge Hub final gate", "knowledge-hub-proof-search-runtime-hardening-20260622.md"],
+            "anchors": [
+                "## 优先恢复主题速查",
+                "## 历史治理台账",
+                "PCR02",
+                "Knowledge Hub final gate",
+                "knowledge-hub-proof-search-runtime-hardening-20260622.md",
+                "memory auto-curation",
+                "Codex archive",
+            ],
         },
         "by_decision": {
             "path": "indexes/by-decision.md",
@@ -605,6 +806,7 @@ result = {
         "by_topic": by_topic,
         "by_decision": by_decision,
         "by_manifest": by_manifest,
+        "by_review_queue": by_review_queue,
         "linking_audit": linking_audit,
     },
     "linking_audit": linking_audit,
@@ -773,6 +975,33 @@ def print_manifest():
             f"summary_source=`{row.get('summary_source', '')}` evidence_source=`{row.get('evidence_source', '')}`"
             )
 
+def print_review_queue():
+    print()
+    print("## By Review Queue")
+    summary = by_review_queue.get("summary", {})
+    print(f"- status: `{summary.get('status', '')}`")
+    print(f"- row_count: {summary.get('row_count', 0)}")
+    print(f"- ai_generated_pending_count: {summary.get('ai_generated_pending_count', 0)}")
+    print(f"- external_source_pending_count: {summary.get('external_source_pending_count', 0)}")
+    print(f"- active_or_promotion_blocker_count: {summary.get('active_or_promotion_blocker_count', 0)}")
+    print(f"- source: `{summary.get('source', '')}`")
+    print("- must_not:")
+    for rule in by_review_queue.get("must_not", []):
+        print(f"  - {rule}")
+    print()
+    print("### Queue Types")
+    for queue_type, queue_ids in by_review_queue.get("by_type", {}).items():
+        print(f"- `{queue_type}`: {len(queue_ids)}")
+    print()
+    print("### Rows")
+    for row in by_review_queue.get("rows", [])[:80]:
+        missing = ", ".join(row.get("missing_fields", []))
+        print(
+            f"- `{row.get('queue_id', '')}` priority=`{row.get('priority', '')}` "
+            f"owner=`{row.get('owner', '')}` review_after=`{row.get('review_after', '')}` "
+            f"status=`{row.get('status', '')}` missing=`{missing}`"
+        )
+
 def print_linking():
     print()
     print("## Linking Audit")
@@ -808,6 +1037,8 @@ if args.section in {"all", "decision"}:
     print_decision()
 if args.section in {"all", "manifest"}:
     print_manifest()
+if args.section in {"all", "review-queue"}:
+    print_review_queue()
 if args.section in {"all", "linking"}:
     print_linking()
 

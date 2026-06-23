@@ -23,7 +23,10 @@ parser = argparse.ArgumentParser(description="Print a read-only Knowledge Hub st
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
+parser.add_argument("--review-queue-limit", type=int, default=20, help="Maximum rows per review queue sample in JSON/text output.")
 args = parser.parse_args(argv)
+if args.review_queue_limit < 1:
+    parser.error("--review-queue-limit must be a positive integer")
 
 errors = []
 DISPLAY_TOOL_ROOT = "~/knowledge-hub/tools"
@@ -235,6 +238,223 @@ def parse_date(value):
 items = load_jsonl(root / "registry" / "items.jsonl")
 migrations = load_jsonl(root / "registry" / "migrations.jsonl")
 sources = load_json(root / "registry" / "sources.json").get("sources", [])
+
+def is_blank(value):
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, list):
+        return not value
+    if isinstance(value, dict):
+        return not value
+    return False
+
+def as_list(value):
+    return value if isinstance(value, list) else []
+
+def review_priority_for_item(item):
+    status_value = str(item.get("status", ""))
+    path_text = str(item.get("path", ""))
+    tags = set(str(tag) for tag in as_list(item.get("tags", [])))
+    promotion_like = (
+        status_value == "active"
+        or path_text == "AGENTS.md"
+        or path_text.startswith("domains/embedded/standards/")
+        or path_text.startswith("src/codex-home/vendor/skills/")
+        or "promoted" in tags
+        or "team-standard" in tags
+    )
+    if promotion_like:
+        return "P0"
+    if status_value == "reviewing":
+        return "P1"
+    if status_value in {"archived", "personal"}:
+        return "P3"
+    return "P2"
+
+def make_review_queue_item(item, queue_type, reasons, missing_fields):
+    item_id = str(item.get("id", ""))
+    source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
+    return {
+        "queue_id": f"item:{item_id}:{queue_type}",
+        "queue_type": queue_type,
+        "object_type": "registry-item",
+        "id": item_id,
+        "title": str(item.get("title", "")),
+        "kind": str(item.get("kind", "")),
+        "domain": str(item.get("domain", "")),
+        "path": str(item.get("path", "")),
+        "owner": str(item.get("owner", "")),
+        "status": str(item.get("status", "")),
+        "review_after": str(item.get("review_after", "")),
+        "priority": review_priority_for_item(item),
+        "reasons": reasons,
+        "missing_fields": missing_fields,
+        "source_id": str(source.get("source_id", "")),
+        "evidence_refs": as_list(item.get("validation_refs", [])) + as_list(item.get("evidence_refs", [])),
+        "generated_by_ai": bool(item.get("generated_by_ai", False)),
+        "ai_role": str(item.get("ai_role", "")),
+        "ai_model_or_tool": str(item.get("ai_model_or_tool", "")),
+        "ai_generated_at": str(item.get("ai_generated_at", "")),
+        "human_reviewed_by": str(item.get("human_reviewed_by", "")),
+        "human_reviewed_at": str(item.get("human_reviewed_at", "")),
+        "review_basis": str(item.get("review_basis", "")),
+        "read_status": str(item.get("read_status", "")),
+        "source_license": str(item.get("source_license", "")),
+        "retrieved_at": str(item.get("retrieved_at", "")),
+        "promotion_decision": str(item.get("promotion_decision", "none") or "none"),
+        "read_only": True,
+        "report_only": True,
+        "owner_gate_mutation": False,
+        "memory_write": False,
+        "source_project_write": False,
+        "next_commands": [
+            f"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --explain {item_id}"
+        ],
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+        ],
+    }
+
+def source_looks_external(source):
+    path_text = str(source.get("path", ""))
+    return (
+        path_text.startswith("http://")
+        or path_text.startswith("https://")
+        or any(not is_blank(source.get(field)) for field in ["retrieved_at", "read_status", "source_license", "source_url", "url"])
+    )
+
+def make_external_source_queue_item(source):
+    source_id = str(source.get("id", ""))
+    missing_fields = [
+        field for field in ["retrieved_at", "read_status", "source_license", "review_status"]
+        if is_blank(source.get(field))
+    ]
+    return {
+        "queue_id": f"source:{source_id}:external-source-review",
+        "queue_type": "external-source-review",
+        "object_type": "registered-source",
+        "id": source_id,
+        "title": str(source.get("name", source_id)),
+        "kind": "registered-source",
+        "domain": "",
+        "path": str(source.get("path", "")),
+        "owner": str(source.get("owner", "")),
+        "status": str(source.get("status", "")),
+        "review_after": str(source.get("review_after", "")),
+        "priority": "P2" if missing_fields else "P3",
+        "reasons": ["external-source-fields-incomplete"] if missing_fields else ["external-source-review-tracked"],
+        "missing_fields": missing_fields,
+        "source_id": source_id,
+        "evidence_refs": [],
+        "generated_by_ai": False,
+        "read_status": str(source.get("read_status", "")),
+        "source_license": str(source.get("source_license", "")),
+        "retrieved_at": str(source.get("retrieved_at", "")),
+        "promotion_decision": str(source.get("promotion_decision", "none") or "none"),
+        "read_only": True,
+        "report_only": True,
+        "owner_gate_mutation": False,
+        "memory_write": False,
+        "source_project_write": False,
+        "next_commands": [
+            "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json"
+        ],
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+        ],
+    }
+
+def build_review_queues(items, sources):
+    ai_rows = []
+    external_rows = []
+    for item in items:
+        if item.get("generated_by_ai") is True:
+            missing_fields = [
+                field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+                if is_blank(item.get(field))
+            ]
+            if missing_fields:
+                ai_rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        [f"missing-{field.replace('_', '-')}" for field in missing_fields],
+                        missing_fields,
+                    )
+                )
+        external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
+        if str(item.get("kind", "")) == "external-source-note" or any(not is_blank(item.get(field)) for field in external_item_fields):
+            missing_fields = [
+                field for field in ["retrieved_at", "read_status", "source_license", "review_basis"]
+                if is_blank(item.get(field))
+            ]
+            if missing_fields:
+                external_rows.append(
+                    make_review_queue_item(
+                        item,
+                        "external-source-review",
+                        [f"missing-{field.replace('_', '-')}" for field in missing_fields],
+                        missing_fields,
+                    )
+                )
+    for source in sources:
+        if source_looks_external(source):
+            external_row = make_external_source_queue_item(source)
+            if external_row.get("missing_fields"):
+                external_rows.append(external_row)
+
+    def sort_key(row):
+        return (
+            str(row.get("priority", "P9")),
+            str(row.get("review_after", "") or "9999-12-31"),
+            str(row.get("owner", "")),
+            str(row.get("id", "")),
+        )
+
+    ai_rows = sorted(ai_rows, key=sort_key)
+    external_rows = sorted(external_rows, key=sort_key)
+    all_rows = ai_rows + external_rows
+    priority_counts = collections.Counter(str(row.get("priority", "")) for row in all_rows)
+    owner_counts = collections.Counter(str(row.get("owner", "") or "<missing-owner>") for row in all_rows)
+    active_or_promotion_rows = [row for row in all_rows if row.get("priority") == "P0"]
+    return {
+        "status": "needs-human-review" if all_rows else "clear",
+        "read_only": True,
+        "report_only": True,
+        "blocking_final_gate": bool(active_or_promotion_rows),
+        "queue_source": "registry/items.jsonl + registry/sources.json",
+        "sample_limit": args.review_queue_limit,
+        "summary": {
+            "total_pending_count": len(all_rows),
+            "ai_generated_pending_count": len(ai_rows),
+            "external_source_pending_count": len(external_rows),
+            "active_or_promotion_blocker_count": len(active_or_promotion_rows),
+            "by_priority": dict(sorted(priority_counts.items())),
+            "by_owner": dict(sorted(owner_counts.items())),
+        },
+        "ai_generated_pending": ai_rows[:args.review_queue_limit],
+        "external_source_pending": external_rows[:args.review_queue_limit],
+        "commands": {
+            "status_json": f"rtk bash ~/knowledge-hub/tools/knowledge-status.sh --as-of {today.isoformat()} --json",
+            "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json",
+        },
+        "must_not": [
+            "队列是 report-only 派生视图，不写 registry",
+            "不得把 AI 草稿或外部资料队列当 owner decision",
+            "不得自动提升 active 或关闭 owner gate",
+            "不得写 ~/.codex/memories",
+        ],
+    }
+
+review_queues = build_review_queues(items, sources)
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 owner_gates = run_json(["rtk", "bash", "tools/knowledge-owner-gates.sh", "--status", "all", "--json"])
@@ -812,10 +1032,11 @@ if open_owner_rows:
     }
 
 owner_gates_failed = owner_gates["exit_code"] != 0
+review_queue_blocking_count = int(review_queues.get("summary", {}).get("active_or_promotion_blocker_count", 0) or 0)
 
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors:
+elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count:
     status = "needs-fix"
 elif open_owner_gate_count:
     status = "needs-owner-review"
@@ -980,6 +1201,11 @@ if stale_sources:
         "复核 review_after 已过期的 registered source；先运行："
         f"{source_review_after_command}。"
     )
+if review_queues.get("summary", {}).get("total_pending_count", 0):
+    next_actions.append(
+        "复核 AI 生成和外部资料的人工复核队列；先运行："
+        f"{review_queues.get('commands', {}).get('index_plan', '')}。"
+    )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
@@ -1041,6 +1267,14 @@ if owner_ready_row_schema_errors:
         "summary_zh": "owner-gates open rows 缺少逐行 owner-ready 强校验字段；不能用 registry_items presence 代替 covered。",
         "errors": owner_ready_row_schema_errors,
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --status all --json"],
+    })
+if review_queue_blocking_count:
+    strict_blockers.append({
+        "id": "review-queue-active-or-promotion-without-human-review",
+        "severity": "blocker",
+        "count": review_queue_blocking_count,
+        "summary_zh": "存在 active 或 promotion 类条目缺少人工复核闭环；必须先补 human_reviewed_by/human_reviewed_at/review_basis，或降级为 reviewing/report-only。",
+        "commands": [review_queues.get("commands", {}).get("index_plan", "")],
     })
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
@@ -1117,6 +1351,7 @@ result = {
         "record_count": len(migrations),
         "by_status": count_by(migrations, "status"),
     },
+    "review_queues": review_queues,
     "owner_gates": {
         "command": shell_command(owner_gates["command"]),
         "exit_code": owner_gates["exit_code"],
@@ -1176,6 +1411,7 @@ print(f"- knowledge-check: {result['knowledge_check']['status']} (exit={knowledg
 print(f"- registry items: {len(items)}")
 print(f"- registered sources: {len(sources)}")
 print(f"- migrations: {len(migrations)}")
+print(f"- review queues: pending={review_queues['summary']['total_pending_count']}, ai={review_queues['summary']['ai_generated_pending_count']}, external={review_queues['summary']['external_source_pending_count']}, active_or_promotion={review_queue_blocking_count}")
 print(f"- owner gates: open={open_owner_gate_count}, resolved={owner_payload.get('resolved_count', 0)}, active_exposure={active_exposure_count}")
 print(
     f"- owner-ready packages: {owner_ready_package_coverage or str(owner_ready_package_count) + '/' + str(owner_payload.get('row_count', 0))}, "
@@ -1206,6 +1442,19 @@ if stale_sources:
             f"  - `{source['id']}` status={source['status']} "
             f"review_after={source['review_after']} owner={source['owner']}"
         )
+print()
+print("## Review Queues")
+print()
+print(f"- status: {review_queues['status']}")
+print(f"- pending: {review_queues['summary']['total_pending_count']}")
+print(f"- ai generated pending: {review_queues['summary']['ai_generated_pending_count']}")
+print(f"- external source pending: {review_queues['summary']['external_source_pending_count']}")
+print(f"- active or promotion blockers: {review_queue_blocking_count}")
+print(f"- index plan command: `{review_queues['commands']['index_plan']}`")
+for row in review_queues.get("ai_generated_pending", [])[:5]:
+    print(f"- ai: `{row['id']}` priority={row['priority']} owner={row['owner']} review_after={row['review_after']}")
+for row in review_queues.get("external_source_pending", [])[:5]:
+    print(f"- external: `{row['id']}` priority={row['priority']} owner={row['owner']} review_after={row['review_after']}")
 print()
 print("## Owner Gates")
 print()

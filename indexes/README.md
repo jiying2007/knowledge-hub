@@ -26,6 +26,7 @@
 - `by-decision.md` 同时记录真实决策、迁移决策和 owner-gated 的 `no owner decision generated` 状态；不得把 owner-ready package 写成已签收决策。
 - `by-project.md` 应能从 project id 找到 current、archive、decisions、validation 和 manifests。
 - `by-topic.md` 只做主题导航，不复制正文；跨会话、跨项目和跨 source 的恢复优先写清主题入口，不把临时会话 handoff 当 active fact。
+- `by-topic.md` 的首屏只放恢复主题、领域入口和最短命令；历史治理制品必须进入“历史治理台账”分区，不得挤占恢复首屏。
 - 跨会话、跨项目、source、topic 和 decision 恢复链路统一用 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json` 校验；索引只提供人读锚点，不替代 registry 权威字段。
 - `artifacts/manifests/` 不维护完整人工索引；恢复最新 manifest、Markdown/JSONL 配对、行数和证据计数时运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json`，只在确有长期导航价值时把摘要登记到 registry/index。manifest latest 只按文件名 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段，不能让旧文件凭 row 日期抢占最新恢复依据。`profile_health` 是 report-only 恢复提示，`summary_source` / `evidence_source` 只说明摘要和证据数从哪个 JSONL 字段派生；旧制品的 `legacy-missing-profile`、引用类的 `reference-only` 和 `missing-boundary` 提示不等同于硬失败，也不要求回填历史正文。
 
