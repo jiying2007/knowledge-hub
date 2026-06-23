@@ -766,35 +766,40 @@ def make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, comma
         "manual_owner_fields": required_fields,
         "recommended_sequence": [
             {
-                "step": "1-review-summary",
+                "step": "1-open-owner-inbox",
+                "command": commands.get("owner_inbox_json_command", ""),
+                "notes_zh": "先用单屏 owner inbox 查看问题、字段分组、候选证据和后续命令；这一步不生成 owner decision。",
+            },
+            {
+                "step": "2-review-summary",
                 "command": commands.get("summary_command", ""),
                 "notes_zh": "先确认 owner 角色、open worksheet、source path 和 owner_route；这一步不生成 owner decision。",
             },
             {
-                "step": "2-check-evidence-readiness",
+                "step": "3-check-evidence-readiness",
                 "command": commands.get("evidence_readiness_command", ""),
                 "notes_zh": "只读查看 source identity、owner-ready evidence ref 候选和仍需人工回答的字段。",
             },
             {
-                "step": "3-export-forms",
+                "step": "4-export-forms",
                 "command": commands.get("forms_jsonl_command", ""),
                 "output_path_hint": local_path,
                 "notes_zh": "owner 可把骨架复制到本地临时 JSONL 后手工填写；工具不写该文件。",
             },
             {
-                "step": "4-validate-filled-forms",
+                "step": "5-validate-filled-forms",
                 "command_template": commands.get("validate_forms_command_template", ""),
                 "replace_placeholder_with": local_path,
                 "notes_zh": "只读校验 owner 填写结果；不通过时不得进入 landing plan。",
             },
             {
-                "step": "5-plan-manual-landing",
+                "step": "6-plan-manual-landing",
                 "command_template": commands.get("landing_plan_command_template", ""),
                 "replace_placeholder_with": local_path,
                 "notes_zh": "生成 no-write 人工落地计划；仍不写 registry、worksheet、migration 或 index。",
             },
             {
-                "step": "6-audit-manual-landing",
+                "step": "7-audit-manual-landing",
                 "command_template": commands.get("landing_audit_command_template", ""),
                 "replace_placeholder_with": local_path,
                 "notes_zh": "人工落地后复核 worksheet、registry、migration 和 index 是否同步；不能把 audit 当 owner approval。",
@@ -845,6 +850,12 @@ def make_owner_dispatch(rows):
             seen_routes.add(key)
             unique_owner_routes.append(route)
         commands = {
+            "owner_inbox_json_command": (
+                "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
+                f"--source-id {source_id} --owner {owner_arg} --owner-inbox --json"
+            )
+            if source_id
+            else "",
             "summary_command": (
                 "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh "
                 f"--source-id {source_id} --owner {owner_arg} --summary"
@@ -1745,6 +1756,25 @@ if args.owner_inbox:
             f"`{item['source_path']}` | {fields} | {item['owner_ready_package_status']} | "
             f"`{item['commands']['focus_command']}` |"
         )
+    print()
+    print("### 字段分组和只读候选")
+    print()
+    for item in inbox["rows"]:
+        groups = item.get("required_field_groups", {})
+        prefill = item.get("read_only_prefill_candidates", {})
+        manual = ", ".join(groups.get("manual_decision_fields", [])[:8]) or "-"
+        candidates = ", ".join(groups.get("copyable_candidate_fields", [])[:8]) or "-"
+        evidence = ", ".join(groups.get("evidence_fields", [])[:8]) or "-"
+        candidate_keys = [
+            key
+            for key in ["source_sha256_candidate", "source_size_candidate", "review_after_candidate"]
+            if prefill.get(key)
+        ]
+        candidate_text = ", ".join(candidate_keys) or "-"
+        print(f"- `{item['worksheet_id']}`: manual=`{manual}`; candidates=`{candidates}`; evidence=`{evidence}`; read_only_prefill=`{candidate_text}`")
+        print(f"  - forms-jsonl: `{item['commands']['forms_jsonl_command']}`")
+        print(f"  - evidence-readiness: `{item['commands']['evidence_readiness_command']}`")
+        print(f"  - validate template: `{item['commands']['validate_forms_command_template']}`")
     print()
     print("### 使用边界")
     print()

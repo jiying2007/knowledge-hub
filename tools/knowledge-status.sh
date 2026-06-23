@@ -307,6 +307,7 @@ def make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_ro
     )
     base = ["rtk", "bash", display_tool("knowledge-owner-gates.sh")]
     summary = shell_command(base + ["--source-id", source_id, "--owner", owner, "--summary"]) if source_id else ""
+    owner_inbox = shell_command(base + ["--source-id", source_id, "--owner", owner, "--owner-inbox", "--json"]) if source_id else ""
     readiness = shell_command(base + ["--source-id", source_id, "--owner", owner, "--evidence-readiness", "--json"]) if source_id else ""
     forms = shell_command(base + ["--source-id", source_id, "--owner", owner, "--forms-jsonl"]) if source_id else ""
     validate = shell_command(base + ["--source-id", source_id, "--owner", owner, "--validate-forms", "<owner-decisions.jsonl>", "--json"]) if source_id else ""
@@ -332,12 +333,13 @@ def make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_ro
         "suggested_local_owner_decisions_path": local_path,
         "manual_owner_fields": required_fields,
         "recommended_sequence": [
-            {"step": "1-review-summary", "command": summary},
-            {"step": "2-check-evidence-readiness", "command": readiness},
-            {"step": "3-export-forms", "command": forms, "output_path_hint": local_path},
-            {"step": "4-validate-filled-forms", "command_template": validate, "replace_placeholder_with": local_path},
-            {"step": "5-plan-manual-landing", "command_template": landing_plan, "replace_placeholder_with": local_path},
-            {"step": "6-audit-manual-landing", "command_template": landing_audit, "replace_placeholder_with": local_path},
+            {"step": "1-open-owner-inbox", "command": owner_inbox, "notes_zh": "单屏查看 owner 问题、字段分组、候选证据和后续命令；不生成 owner decision。"},
+            {"step": "2-review-summary", "command": summary},
+            {"step": "3-check-evidence-readiness", "command": readiness},
+            {"step": "4-export-forms", "command": forms, "output_path_hint": local_path},
+            {"step": "5-validate-filled-forms", "command_template": validate, "replace_placeholder_with": local_path},
+            {"step": "6-plan-manual-landing", "command_template": landing_plan, "replace_placeholder_with": local_path},
+            {"step": "7-audit-manual-landing", "command_template": landing_audit, "replace_placeholder_with": local_path},
         ],
         "must_not": [
             "不得把 routing_owner 当 reviewed_by",
@@ -437,6 +439,17 @@ if open_owner_rows:
             "open_count": len(owner_rows),
             "worksheet_ids": [str(row.get("id", "")) for row in owner_rows],
             "source_paths": [str(row.get("source_path", "")) for row in owner_rows],
+            "owner_inbox_json_command": shell_command([
+                "rtk",
+                "bash",
+                display_tool("knowledge-owner-gates.sh"),
+                "--source-id",
+                source_id,
+                "--owner",
+                owner,
+                "--owner-inbox",
+                "--json",
+            ]) if source_id else "",
             "summary_command": shell_command([
                 "rtk",
                 "bash",
@@ -884,8 +897,8 @@ if open_owner_gate_count:
         )
     if owner_summary_commands:
         next_actions.append(
-            "需要按责任人分派 owner gate 时，先读取 JSON 中的 `owner_gates.owner_dispatch[]`，或运行 owner 过滤总览，例如："
-            f"{owner_summary_commands[0]}。"
+            "需要按责任人分派 owner gate 时，先读取 JSON 中的 `owner_gates.owner_dispatch[]`；默认先打开 owner-inbox 单屏入口，再看 owner 过滤总览，例如："
+            f"{owner_dispatch[0].get('owner_inbox_json_command', '') if owner_dispatch else ''}；{owner_summary_commands[0]}。"
         )
     if owner_forms_jsonl_commands:
         next_actions.append(

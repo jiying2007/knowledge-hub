@@ -379,3 +379,5 @@
 - maintenance-linking-audit-hardening-applied: final gate 顶层 maintenance_entry_audit 与 linking_audit 已压实，index-plan 新增 linking 恢复视图；证据：`artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.jsonl`.
 - reviewing: `knowledge-hub-final-proof-date-rollover-hardening-20260623`
 - final-proof-date-rollover-hardening-applied: final proof 日期滚动保留 2026-06-22 baseline 动态 proof，并继续叠加当前 as-of 日期 proof；README 低复杂度维护入口已压缩；证据：`artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`
+- owner-inbox-linking-maintenance-hardening-applied: owner-inbox 已成为 owner 分派第一步只读入口，linking/project 恢复和人工维护最短路径锚点已纳入保活检查；证据：`artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.jsonl`.

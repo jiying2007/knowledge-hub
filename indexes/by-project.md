@@ -5,6 +5,10 @@
 - 当前 docs source：`/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - 历史归档 source：`/home/leiwenjun/embedded/engineering_archive/pcr02`
 - 目标项目域：`domains/projects/pcr02`
+- current 恢复锚点：`domains/projects/pcr02/current/`
+- archive 恢复锚点：`domains/projects/pcr02/archive/`
+- validation 恢复锚点：`domains/projects/pcr02/validation/`
+- manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
 - 决策目录：`domains/projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。
 - 分类基线：`artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - copy-first dry-run manifest：`artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`

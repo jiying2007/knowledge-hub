@@ -216,3 +216,4 @@
 - 2026-09-22: `knowledge-hub-proof-search-runtime-hardening-20260622`
 - 2026-09-22: `knowledge-hub-maintenance-linking-audit-hardening-20260622`
 - 2026-09-23: `knowledge-hub-final-proof-date-rollover-hardening-20260623`
+- 2026-09-23: `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`

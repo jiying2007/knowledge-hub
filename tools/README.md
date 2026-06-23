@@ -31,7 +31,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - 结构化过滤只返回已登记 registry item；未登记 raw file 即使命中关键词，也不能在 `--source-id` / `--status` 等过滤模式下混入结果。
 - `knowledge-status.sh`: 只读控制面 dashboard。
   - 用途：汇总 `knowledge-check`、registry/source/migration、owner gate、`owner_gates.owner_dispatch[]`、下一条 open gate、`owner_gates.next_open_queue[]`、`final_gate_command` 和 `strict_blockers`。
-  - 主要输出：`owner_dispatch[].suggested_owner_packet` 只排列人工签收顺序；`next_open_queue[]` 按 `review_after, worksheet_id` 给出 open gate 领取队列；`sources.latest_coverage_selection` 记录 latest source coverage closeout 选择策略；`sources.source_recovery_rows[]` 合成 source 当前状态恢复行。
+  - 主要输出：`owner_dispatch[].owner_inbox_json_command` 是按 owner 恢复的默认单屏入口；`owner_dispatch[].suggested_owner_packet` 先排列 owner-inbox，再排列 summary、evidence-readiness、forms-jsonl、validate、landing-plan 和 landing-audit；`next_open_queue[]` 按 `review_after, worksheet_id` 给出 open gate 领取队列；`sources.latest_coverage_selection` 记录 latest source coverage closeout 选择策略；`sources.source_recovery_rows[]` 合成 source 当前状态恢复行。
   - 不会做什么：不生成或应用 owner decision；`--strict` 只作为 blocker dashboard；terminal gate 仍以 `knowledge-final-gate.sh --json` 为准。`strict_blockers[].commands` 可直接执行，`strict_blockers[].command_templates` 需要替换 `<owner-decisions.jsonl>`。
 - `knowledge-final-gate.sh`: 仓库只读终态门禁。
   - 用途：聚合 `knowledge-check --diagnostics`、`knowledge-regression --json`、`rtk git diff --check` 和 `knowledge-status --strict --json`，防止 terminal validation 漏掉回归漂移、空 JSON、whitespace 或 conflict marker。
@@ -40,7 +40,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-doctor.sh`: 只读维护辅助入口；运行 `knowledge-check --diagnostics`，可选输出 `--explain <item-id>`、搜索结果和 `--owner-gates <source-id>` 看板，不写文件。
 - `knowledge-index-plan.sh`: 只读核心索引规划入口；输出由 registry 派生的 `by-owner`、`by-review-date`、`by-status`、`by-project`、`by-source`、`by-topic`、`by-decision`、`manifest` 和 `linking` 恢复视图，不写文件。JSON 输出包含 `source_coverage_selection`，用于追溯 `by_source[*].coverage` 来自哪个 latest closeout manifest；如 latest source coverage 里同一 `source_id` 重复，`duplicate_source_ids` 和 warnings 会显式暴露，并保留第一行作为恢复视图。`--section manifest` 用于恢复 manifest 最新项、Markdown/JSONL 配对、行数、证据计数和 unpaired 分类；latest 只按文件名 `YYYYMMDD` 排序，row 内日期只作为 `row_date` 辅助字段。manifest 文本和 JSON 输出都会显示 `profile_health`、`summary_source` 和 `evidence_source`：这些字段只说明恢复质量和派生来源，不回填历史 manifest 正文，不新增硬门禁。历史 unpaired 会标记为 `expected` 或 `needs_review`，这是 report-only 恢复视图，不会自动作为硬失败。`--section linking` 汇总 `by-project`、`by-source`、`by-topic`、`by-decision` 和 Markdown index 锚点，证明跨会话/项目/source/topic/decision 恢复链路存在；它不读取 PCR02 源项目正文，不关闭 owner gate。
 - `knowledge-owner-gates.sh`: 只读 owner gate 看板。它输出 unresolved worksheet、必填 owner 字段、active exposure、owner route 和 source identity；`--summary` 会给出 owner 分布、`owner_dispatch[]` 和 `suggested_owner_packet`，后者把 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit 排成 owner handoff 顺序。`--forms-jsonl` 只打印骨架，`--validate-forms <jsonl>` 只校验人工回填，`--landing-plan` 和 `--landing-audit` 只输出 no-write 人工落地计划与审计。`form_validation.errors[]` 保留兼容的人类可读错误，`form_validation.diagnostics[]` 提供逐字段 `code/field/actual/expected/action_zh`，方便 owner 或 UI 定位问题；`owner_decision` 与 `target_decision` 会做保守成对兼容检查，避免 `reference-only` / `no-migration` 和项目落地路径混用。两者都不生成 owner decision、不代签、不关闭 gate。`read_only_prefill_candidates` 只给候选值；正式 owner 字段仍需真实 owner 填写。`owner_route` 只来自 `registry/owner-routing.json`，不生成 owner decision，也不能替代 `reviewed_by`。
-- `knowledge-owner-gates.sh --owner-inbox`: 单屏 owner 待办入口。它按 worksheet 汇总 owner 中文问题、路由、字段分组、只读候选、owner-ready package、verification commands 和 validate/landing 模板，适合从 `owner_recovery.next_open_queue[]` 之后给真实 owner 使用；它不生成 owner decision，不写本地 JSONL，不关闭 gate。
+- `knowledge-owner-gates.sh --owner-inbox`: 单屏 owner 待办入口。它按 worksheet 汇总 owner 中文问题、路由、字段分组、只读候选、owner-ready package、verification commands、forms-jsonl 和 validate/landing 模板，适合从 `owner_recovery.next_open_queue[]` 或 `owner_gates.owner_dispatch[].owner_inbox_json_command` 之后给真实 owner 使用；它不生成 owner decision，不写本地 JSONL，不关闭 gate。
 - `knowledge-regression.sh`: 只读回归 fixture 入口；把仓库复制到 `/tmp`，只修改临时副本，用于验证 status bucket mismatch、partial owner resolution 等关键负向门禁。默认每个场景后清理临时 fixture，内部异常会记录结构化失败细节；`--json` 模式输出 JSON，支持 `--as-of YYYY-MM-DD` / `KNOWLEDGE_TODAY` 固定日期敏感命令，并使用 `KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES` 做低空间预检。
 - `knowledge-inventory.sh`: 只读 source inventory；列出已登记 source 的 owner、路径、状态、复核日期和维护字段。
 - `knowledge-copy-first-plan.sh`: 为已登记 source 生成经审查的 JSONL copy-first manifest；只在 `artifacts/manifests/` 下写 manifest。
@@ -135,7 +135,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 失败恢复决策树以根 README 为准，本文件只补工具字段和边界。简要顺序：
 
 1. `needs-fix`: 先看 `evidence_index[]`，定位哪条命令不是 `pass` 或 `owner-review`；再看对应 `blockers[]` / `gap_map[]` 的 `fix_action`。
-2. `needs-owner-review`: 只在 `gap_map[]` 唯一项为 `owner-gates-open` 时进入 owner 人工签收路径；从 `owner_recovery.owner_dispatch[]` 选择 owner，再运行 handoff packet 中的 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit。
+2. `needs-owner-review`: 只在 `gap_map[]` 唯一项为 `owner-gates-open` 时进入 owner 人工签收路径；从 `owner_recovery.owner_dispatch[]` 选择 owner，先运行 `owner_inbox_json_command`，再按 handoff packet 运行 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit。
 3. `ok`: 终态完全通过；仍需用 `evidence_index[]` 留存命令证据，不用 owner handoff。
 
 `<owner-decisions.jsonl>` 是 owner 人工填写后的临时 JSONL 路径；工具只校验和生成 no-write landing plan，不代签、不关闭 gate。表单中的 `owner_route` 只说明抽象 decision owner role 的分派责任人、真实签收人待确认说明和升级路径；不能把 `routing_owner` 自动填成 `reviewed_by`。`target_decision` 不仅要在 `target_candidates` 内，还要和 `owner_decision` 成对兼容。表单中的 `verification_cwd` 和 landing plan step 中的 `worksheet_verification_cwd` 是项目侧命令执行目录；相对命令必须在该目录下运行，而不是在 Knowledge Hub root 下运行。
@@ -175,7 +175,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-doctor.sh --id knowledge-hub-root --own
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section decision
-rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh --markdown
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary
@@ -197,3 +197,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
 ## 命令证据
 
 命令证据应记录执行目录、完整 `rtk ...` 命令、日期、退出码、覆盖范围和中文结果摘要。写入计划工具默认先 dry-run；`--apply` 只能由人工在 reviewed manifest、owner、rollback policy、hash 校验和验证命令齐备后触发。
+
+## 离线人工维护
+
+工具不可用时，人工仍可按 `README.md`、`templates/`、`registry/schema.md` 和 `indexes/README.md` 写唯一正文、registry 草稿和索引 TODO。恢复后先运行：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
+```
+
+离线记录必须保留 `manual_validation_pending: true`、owner、review_after 和 required_followup；AI 恢复后只做校验、补索引和提示风险，不自动改 active、不关闭 owner gate、不写 memory。

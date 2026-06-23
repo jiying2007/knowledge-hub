@@ -1204,6 +1204,39 @@ if not args.sources_only:
             if term not in manual_text:
                 errors.append(f"manual-entry:{rel_manual} missing current gate term: {term}")
 
+    manual_entry_anchor_checks = {
+        "README.md": [
+            "低复杂度入口速查",
+            "人工维护 5 条最短路径",
+            "新增一条知识",
+            "新增一个 source",
+            "归档一条历史记录",
+            "owner 签收一个 gate",
+            "跑一次终态检查",
+            "knowledge-index-plan.sh --section linking --json",
+            "owner_inbox_json_command",
+        ],
+        "tools/README.md": [
+            "低复杂度入口速查",
+            "knowledge-owner-gates.sh --owner-inbox",
+            "owner_inbox_json_command",
+            "knowledge-index-plan.sh --section linking --json",
+            "离线人工维护",
+        ],
+        "indexes/README.md": [
+            "最小同步",
+            "knowledge-index-plan.sh --section linking --json",
+            "knowledge-index-plan.sh --section manifest --json",
+            "manual_validation_pending: true",
+        ],
+    }
+    for relative, terms in manual_entry_anchor_checks.items():
+        path = root / relative
+        text = path.read_text()
+        for term in terms:
+            if term not in text:
+                errors.append(f"manual-entry:{relative} missing maintenance anchor: {term}")
+
     ids = set()
     items = load_jsonl(root / "registry" / "items.jsonl")
     for item in items:

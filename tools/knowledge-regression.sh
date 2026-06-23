@@ -971,6 +971,19 @@ def test_owner_inbox_contract():
             "--json",
         ],
     )
+    text_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--owner",
+            "project-owner",
+            "--owner-inbox",
+        ],
+    )
     parsed = {}
     try:
         parsed = json.loads(result["stdout"])
@@ -1016,16 +1029,23 @@ def test_owner_inbox_contract():
         and "owner-decisions.jsonl" in commands.get("validate_forms_command_template", "")
         and "owner-decisions.jsonl" in commands.get("landing_plan_command_template", "")
         and "owner-decisions.jsonl" in commands.get("landing_audit_command_template", "")
-        and any("不得把 routing_owner 当 reviewed_by" in item for item in first.get("must_not", [])),
+        and any("不得把 routing_owner 当 reviewed_by" in item for item in first.get("must_not", []))
+        and text_result["exit_code"] == 0
+        and "### 字段分组和只读候选" in text_result["stdout"]
+        and "manual=`" in text_result["stdout"]
+        and "read_only_prefill=`" in text_result["stdout"]
+        and "validate template:" in text_result["stdout"],
         "owner-inbox-contract",
         "owner gate helper emits compact read-only owner inbox with grouped fields and safe commands",
         {
             "exit_code": result["exit_code"],
+            "text_exit_code": text_result["exit_code"],
             "row_count": parsed.get("row_count"),
             "open_count": parsed.get("open_count"),
             "inbox": inbox,
             "first": first,
             "stdout_sample": result["stdout"][:1200],
+            "text_stdout_sample": text_result["stdout"][:1200],
         },
     )
 
@@ -1157,8 +1177,9 @@ def test_owner_summary_by_owner():
         and handoff_packet.get("status") == "ready-for-owner-review"
         and handoff_packet.get("read_only") is True
         and handoff_packet.get("suggested_local_owner_decisions_path") == "artifacts/manifests/pcr02-project-docs-project-owner-owner-decisions-YYYYMMDD.local.jsonl"
-        and len(handoff_packet.get("recommended_sequence", [])) == 6
-        and any(step.get("step") == "3-export-forms" and "--forms-jsonl" in step.get("command", "") for step in handoff_packet.get("recommended_sequence", []))
+        and len(handoff_packet.get("recommended_sequence", [])) == 7
+        and any(step.get("step") == "1-open-owner-inbox" and "--owner-inbox --json" in step.get("command", "") for step in handoff_packet.get("recommended_sequence", []))
+        and any(step.get("step") == "4-export-forms" and "--forms-jsonl" in step.get("command", "") for step in handoff_packet.get("recommended_sequence", []))
         and any("不得由工具或 AI 代签 owner decision" in rule for rule in handoff_packet.get("must_not", []))
         and "--owner project-owner --forms-jsonl" in dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in dispatch.get("validate_forms_command_template", "")
@@ -1309,11 +1330,13 @@ def test_status_next_owner_gate():
         and project_owner_handoff_packet.get("status") == "ready-for-owner-review"
         and project_owner_handoff_packet.get("read_only") is True
         and project_owner_handoff_packet.get("suggested_local_owner_decisions_path") == "artifacts/manifests/pcr02-project-docs-project-owner-owner-decisions-YYYYMMDD.local.jsonl"
-        and len(project_owner_handoff_packet.get("recommended_sequence", [])) == 6
-        and any(step.get("step") == "4-validate-filled-forms" and "owner-decisions.jsonl" in step.get("command_template", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
+        and len(project_owner_handoff_packet.get("recommended_sequence", [])) == 7
+        and any(step.get("step") == "1-open-owner-inbox" and "--owner-inbox --json" in step.get("command", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
+        and any(step.get("step") == "5-validate-filled-forms" and "owner-decisions.jsonl" in step.get("command_template", "") for step in project_owner_handoff_packet.get("recommended_sequence", []))
         and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
         and project_owner_route.get("no_owner_decision_generated") is True
         and "pcr02-owner-decision-worksheet-005" in project_owner_dispatch.get("worksheet_ids", [])
+        and "--owner project-owner --owner-inbox --json" in project_owner_dispatch.get("owner_inbox_json_command", "")
         and "--owner project-owner --forms-jsonl" in project_owner_dispatch.get("forms_jsonl_command", "")
         and "--owner project-owner --evidence-readiness --json" in project_owner_dispatch.get("evidence_readiness_command", "")
         and "--owner project-owner --validate-forms '<owner-decisions.jsonl>' --json" in project_owner_dispatch.get("validate_forms_command_template", "")
