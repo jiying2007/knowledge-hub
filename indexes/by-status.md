@@ -383,3 +383,5 @@
 - owner-inbox-linking-maintenance-hardening-applied: owner-inbox 已成为 owner 分派第一步只读入口，linking/project 恢复和人工维护最短路径锚点已纳入保活检查；证据：`artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
 - manual-entry-owner-personal-source-recommendation-applied: `knowledge-new.sh` 已暴露 item owner registry 状态、personal-local 默认值和 source role-aware 推荐提示；证据：`artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.jsonl`.
+- reviewing: `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
+- proof-alias-owner-coverage-hardening-applied: final gate 已提供稳定 `proof_artifacts` 字段，owner validate/landing 已暴露分批覆盖提示，终态 goal 最短路径口径已统一；证据：`artifacts/manifests/knowledge-hub-proof-alias-owner-coverage-hardening-20260623.jsonl`.

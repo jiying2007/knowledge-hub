@@ -1649,7 +1649,8 @@ def test_final_gate_owner_review_blocker():
     maintenance_entries = maintenance_entry_audit.get("entries", [])
     maintenance_entry_ids = [row.get("entry_id") for row in maintenance_entries]
     linking_audit = parsed.get("linking_audit", {})
-    proof_artifacts = parsed.get("proof_artifacts_20260622", {})
+    proof_artifacts = parsed.get("proof_artifacts", {})
+    legacy_proof_artifacts = parsed.get("proof_artifacts_20260622", {})
     source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
     source_check_runtime = parsed.get("source_check_runtime", {})
     highest_priority_rules_audit = parsed.get("highest_priority_rules_audit", [])
@@ -1778,6 +1779,7 @@ def test_final_gate_owner_review_blocker():
         and level3_source_check_health.get("missing_check_or_reason_ids") == []
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
+        and legacy_proof_artifacts == proof_artifacts
         and proof_artifacts.get("status") == "pass"
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
         and proof_artifacts.get("selection_date") == parsed.get("today")
@@ -1926,7 +1928,8 @@ def test_final_gate_owner_review_blocker():
             "automatic_governance": automatic_governance,
             "owner_recovery": owner_recovery,
             "final_state_audit": final_state_audit,
-            "proof_artifacts_20260622": proof_artifacts,
+            "proof_artifacts": proof_artifacts,
+            "proof_artifacts_20260622": legacy_proof_artifacts,
             "source_check_execution_snapshot_20260621": source_check_snapshot,
             "source_check_runtime": source_check_runtime,
             "maintenance_entry_audit": maintenance_entry_audit,
@@ -2333,6 +2336,73 @@ def make_valid_owner_decision_form(repo):
     }.items():
         form[key] = value
     return form, {}
+
+def test_owner_validate_forms_partial_coverage_warning():
+    repo = copy_repo("owner-validate-forms-partial-coverage")
+    form, setup_error = make_valid_owner_decision_form(repo)
+    if setup_error:
+        expect(False, "owner-validate-forms-partial-coverage-warning", "owner validate-forms reports partial coverage without blocking valid subset forms", setup_error, repo)
+        return
+    form_path = repo / "partial-owner-decisions.jsonl"
+    form_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--validate-forms",
+            str(form_path),
+            "--landing-plan",
+            "--landing-audit",
+            "--json",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    validation = parsed.get("form_validation", {}) if isinstance(parsed, dict) else {}
+    coverage = validation.get("coverage", {}) if isinstance(validation, dict) else {}
+    landing_plan = parsed.get("landing_plan", {}) if isinstance(parsed, dict) else {}
+    landing_audit = parsed.get("landing_audit", {}) if isinstance(parsed, dict) else {}
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and validation.get("status") == "pass"
+        and validation.get("coverage_status") == "partial"
+        and coverage.get("filtered_open_count") == 7
+        and coverage.get("submitted_open_count") == 1
+        and form.get("worksheet_id") in coverage.get("submitted_worksheet_ids", [])
+        and len(coverage.get("missing_open_worksheet_ids", [])) == 6
+        and validation.get("warning_count") == 1
+        and landing_plan.get("status") == "planned"
+        and landing_plan.get("landing_scope", {}).get("coverage_status") == "partial"
+        and len(landing_plan.get("remaining_open_after_this_batch", [])) == 6
+        and landing_audit.get("status") == "ready-for-manual-landing"
+        and landing_audit.get("landing_scope", {}).get("coverage_status") == "partial"
+        and len(landing_audit.get("remaining_open_after_this_batch", [])) == 6,
+        "owner-validate-forms-partial-coverage-warning",
+        "owner validate-forms reports partial coverage without blocking valid subset forms",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "form_status": validation.get("status"),
+            "coverage": coverage,
+            "warning_count": validation.get("warning_count"),
+            "landing_plan_status": landing_plan.get("status"),
+            "landing_scope": landing_plan.get("landing_scope", {}),
+            "remaining_open_after_this_batch": landing_plan.get("remaining_open_after_this_batch", []),
+            "landing_audit_status": landing_audit.get("status"),
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:1000],
+        },
+        repo,
+    )
 
 def test_owner_landing_plan_project_index():
     form, setup_error = make_valid_owner_decision_form(root)
@@ -4189,10 +4259,12 @@ def test_final_proof_artifact_as_of_date_selector():
         parsed = json.loads(result["stdout"])
     except Exception as exc:
         parse_error = str(exc)
-    proof_artifacts = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
+    proof_artifacts = parsed.get("proof_artifacts", {}) if isinstance(parsed, dict) else {}
+    legacy_proof_artifacts = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
     expect(
         not parse_error
         and result["exit_code"] == 1
+        and legacy_proof_artifacts == proof_artifacts
         and proof_artifacts.get("status") == "pass"
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
         and proof_artifacts.get("selection_date") == "2026-06-23"
@@ -4207,6 +4279,7 @@ def test_final_proof_artifact_as_of_date_selector():
             "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
             "selection_mode": proof_artifacts.get("selection_mode"),
             "selection_date": proof_artifacts.get("selection_date"),
+            "alias_equal": legacy_proof_artifacts == proof_artifacts,
             "dynamic_ids": proof_artifacts.get("dynamic_ids", []),
             "expected_ids": proof_artifacts.get("expected_ids", []),
             "missing_registry": proof_artifacts.get("missing_registry", []),
@@ -4218,6 +4291,49 @@ def test_final_proof_artifact_as_of_date_selector():
             "stderr_sample": result["stderr"][:1000],
         },
         repo,
+    )
+
+def test_final_proof_artifacts_stable_alias():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "-lc",
+            "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23",
+        ],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    stable = parsed.get("proof_artifacts", {}) if isinstance(parsed, dict) else {}
+    legacy = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
+    expect(
+        not parse_error
+        and result["exit_code"] == 1
+        and stable
+        and legacy
+        and stable == legacy
+        and stable.get("status") == "pass"
+        and stable.get("selection_date") == "2026-06-23"
+        and stable.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date",
+        "final-proof-artifacts-stable-alias",
+        "final gate exposes stable proof_artifacts alias while keeping legacy date key compatible",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
+            "stable_present": bool(stable),
+            "legacy_present": bool(legacy),
+            "alias_equal": stable == legacy,
+            "stable_status": stable.get("status"),
+            "selection_date": stable.get("selection_date"),
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:1000],
+        },
     )
 
 def test_index_plan_extended_sections():
@@ -6197,6 +6313,7 @@ def test_regression_manifest_coverage():
         "final-gate-strict-status-nonowner-blocker",
         "final-gap-readability-positive-contracts",
         "owner-landing-plan-project-index",
+        "owner-validate-forms-partial-coverage-warning",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
@@ -6234,6 +6351,7 @@ def test_regression_manifest_coverage():
         "index-readme-maintenance-coverage",
         "final-proof-artifact-discoverability",
         "final-proof-artifact-as-of-date-selector",
+        "final-proof-artifacts-stable-alias",
         "index-plan-extended-sections",
         "manifest-latest-filename-date-only",
         "manifest-jsonl-profile-gate",
@@ -6372,6 +6490,7 @@ for test_fn in [
     test_final_gate_strict_status_nonowner_blocker,
     test_final_gap_readability_positive_contracts,
     test_owner_landing_plan_project_index,
+    test_owner_validate_forms_partial_coverage_warning,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
     test_owner_landing_plan_requires_owner_ready_package_repo_relative_command,
@@ -6406,6 +6525,7 @@ for test_fn in [
     test_index_readme_maintenance_coverage,
     test_final_proof_artifact_discoverability,
     test_final_proof_artifact_as_of_date_selector,
+    test_final_proof_artifacts_stable_alias,
     test_index_plan_extended_sections,
     test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,

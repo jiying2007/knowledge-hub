@@ -1182,12 +1182,40 @@ def validate_forms_file(path, rows):
             add_form_error("allowed-decisions-tampered", f"{prefix}: allowed_owner_decisions differs from worksheet decision options", worksheet_id=worksheet_id, field="allowed_owner_decisions", actual=form.get("allowed_owner_decisions", ""), expected=row["decision_options"], line_no=index, action_zh="请恢复 worksheet 原始 decision options；owner 表单不得修改 allowed_owner_decisions。")
         if "target_candidates" in form and form.get("target_candidates") != row["target_candidates"]:
             add_form_error("target-candidates-tampered", f"{prefix}: target_candidates differs from worksheet target candidates", worksheet_id=worksheet_id, field="target_candidates", actual=form.get("target_candidates", ""), expected=row["target_candidates"], line_no=index, action_zh="请恢复 worksheet 原始 target candidates；owner 表单不得修改 target_candidates。")
+    submitted_open_ids = sorted(worksheet_id for worksheet_id in seen if worksheet_id in open_by_id)
+    missing_open_ids = sorted(worksheet_id for worksheet_id in open_by_id if worksheet_id not in seen)
+    if len(open_by_id) <= 1:
+        coverage_status = "single-worksheet"
+    elif missing_open_ids:
+        coverage_status = "partial"
+    else:
+        coverage_status = "complete"
+    coverage = {
+        "filtered_open_count": len(open_by_id),
+        "submitted_form_count": len(forms),
+        "submitted_open_count": len(submitted_open_ids),
+        "submitted_worksheet_ids": submitted_open_ids,
+        "missing_open_worksheet_ids": missing_open_ids,
+        "coverage_status": coverage_status,
+        "notes_zh": "本字段只说明 validate-forms 覆盖了当前过滤范围内哪些 open worksheet；partial 不阻断分批签收，但 landing 后仍需继续处理 missing_open_worksheet_ids。",
+    }
+    if missing_open_ids:
+        warnings.append(
+            "validate-forms covers a subset of current open owner gates; remaining open worksheets: "
+            + ", ".join(missing_open_ids)
+        )
     status = "pass" if not form_errors else "fail"
     return {
         "status": status,
         "path": str(path),
         "form_count": len(forms),
         "checked_count": len(seen),
+        "coverage": coverage,
+        "filtered_open_count": coverage["filtered_open_count"],
+        "submitted_form_count": coverage["submitted_form_count"],
+        "submitted_worksheet_ids": coverage["submitted_worksheet_ids"],
+        "missing_open_worksheet_ids": coverage["missing_open_worksheet_ids"],
+        "coverage_status": coverage["coverage_status"],
         "forms": forms,
         "error_count": len(form_errors),
         "warning_count": len(warnings),
@@ -1259,6 +1287,11 @@ def make_landing_plan(form_validation, rows):
         "read_only": True,
         "source_form": form_validation.get("path", "") if form_validation else "",
         "reason": reason,
+        "landing_scope": form_validation.get("coverage", {}) if form_validation else {},
+        "remaining_open_after_this_batch": (
+            form_validation.get("coverage", {}).get("missing_open_worksheet_ids", [])
+            if form_validation else []
+        ),
         "owner_ready_gate": {
             "status": "blocked" if owner_ready_errors else "pass",
             "error_count": len(owner_ready_errors),
@@ -1382,6 +1415,11 @@ def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
         "status": "blocked" if blocked else "ready-for-manual-landing" if audit_rows else "empty",
         "read_only": True,
         "row_count": len(audit_rows),
+        "landing_scope": form_validation.get("coverage", {}) if form_validation else {},
+        "remaining_open_after_this_batch": (
+            form_validation.get("coverage", {}).get("missing_open_worksheet_ids", [])
+            if form_validation else []
+        ),
         "owner_ready_error_count": len(owner_ready_errors),
         "required_manual_files": required_manual_files_for_forms(form_validation, rows),
         "rows": audit_rows,
@@ -1653,7 +1691,13 @@ if args.forms_jsonl:
     if active_exposure_count:
         print("ERROR: active exposure exists; owner-gated rows must stay out of active until owner decisions are closed.", file=sys.stderr)
         sys.exit(exit_status)
-    for form in [make_decision_form(row) for row in rows if row["status"] == "open"]:
+    forms_jsonl_rows = [row for row in rows if row["status"] == "open"]
+    if not forms_jsonl_rows and (args.source_id or args.owner or args.worksheet_id):
+        hint_source_id = args.source_id or "<source-id>"
+        print("WARNING: no open owner decision forms matched the current filters.", file=sys.stderr)
+        print(f"WARNING: matched_row_count={len(rows)} matched_open_count=0", file=sys.stderr)
+        print(f"WARNING: hint_command=rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id {hint_source_id} --summary --json", file=sys.stderr)
+    for form in [make_decision_form(row) for row in forms_jsonl_rows]:
         print(json.dumps(form, ensure_ascii=False, separators=(",", ":")))
     sys.exit(exit_status)
 
@@ -1790,6 +1834,9 @@ if form_validation:
     print(f"- status: {form_validation['status']}")
     print(f"- forms: {form_validation['form_count']}")
     print(f"- checked: {form_validation['checked_count']}")
+    print(f"- coverage_status: {form_validation['coverage_status']}")
+    print(f"- filtered_open_count: {form_validation['filtered_open_count']}")
+    print(f"- missing_open_worksheet_ids: {', '.join(form_validation['missing_open_worksheet_ids']) or '-'}")
     print(f"- errors: {form_validation['error_count']}")
     print(f"- warnings: {form_validation['warning_count']}")
     for item in form_validation["errors"][:20]:
@@ -1805,6 +1852,10 @@ if landing_plan:
     print(f"- status: {landing_plan['status']}")
     if landing_plan.get("reason"):
         print(f"- reason: {landing_plan['reason']}")
+    if landing_plan.get("landing_scope"):
+        scope = landing_plan["landing_scope"]
+        print(f"- landing_scope: {scope.get('coverage_status', '<missing>')} submitted={scope.get('submitted_open_count', 0)}/{scope.get('filtered_open_count', 0)}")
+        print(f"- remaining_open_after_this_batch: {', '.join(landing_plan.get('remaining_open_after_this_batch', [])) or '-'}")
     owner_ready_gate = landing_plan.get("owner_ready_gate", {})
     if owner_ready_gate:
         print(f"- owner_ready_gate: {owner_ready_gate.get('status', '<missing-status>')}")
@@ -1838,6 +1889,10 @@ if landing_audit:
     print("本审计只读列出人工落地后必须核对的 worksheet、registry、migration 和 index 变化；不写文件、不关闭门禁。")
     print(f"- status: {landing_audit['status']}")
     print(f"- rows: {landing_audit['row_count']}")
+    if landing_audit.get("landing_scope"):
+        scope = landing_audit["landing_scope"]
+        print(f"- landing_scope: {scope.get('coverage_status', '<missing>')} submitted={scope.get('submitted_open_count', 0)}/{scope.get('filtered_open_count', 0)}")
+        print(f"- remaining_open_after_this_batch: {', '.join(landing_audit.get('remaining_open_after_this_batch', [])) or '-'}")
     print(f"- owner_ready_errors: {landing_audit['owner_ready_error_count']}")
     if landing_audit.get("required_manual_files"):
         print("- required_manual_files:")

@@ -907,7 +907,8 @@ elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
 else:
     knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
 strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
-proof_artifacts_20260622 = build_final_proof_artifacts_summary(today.isoformat())
+proof_artifacts = build_final_proof_artifacts_summary(today.isoformat())
+proof_artifacts_20260622 = proof_artifacts
 source_check_snapshot_20260621 = build_source_check_snapshot_summary()
 source_check_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
 source_check_runtime_summary = build_source_check_runtime_summary(source_check_runtime)
@@ -1560,6 +1561,7 @@ result = {
         "next_open_queue_selection_order": str(owner_payload.get("next_open_queue_selection_order", "")),
         "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
+    "proof_artifacts": proof_artifacts,
     "proof_artifacts_20260622": proof_artifacts_20260622,
     "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
     "source_check_runtime": source_check_runtime_summary,
@@ -1645,7 +1647,7 @@ print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candi
 print(f"- level3_registered_sources: {final_state_audit['level3_registered_sources']['status']}")
 print(f"- maintenance_entry_audit: {maintenance_entry_audit['status']} {maintenance_entry_audit['passed_entry_count']}/{maintenance_entry_audit['expected_entry_count']}")
 print(f"- linking_audit: {linking_audit.get('status', 'fail')}")
-print(f"- proof_artifacts_20260622: {proof_artifacts_20260622['status']} registered={proof_artifacts_20260622['registered_count']}/{proof_artifacts_20260622['expected_count']} paired={proof_artifacts_20260622['paired_count']}/{proof_artifacts_20260622['expected_count']} indexed={proof_artifacts_20260622['indexed_count']}/{proof_artifacts_20260622['expected_count']}")
+print(f"- proof_artifacts: {proof_artifacts['status']} registered={proof_artifacts['registered_count']}/{proof_artifacts['expected_count']} paired={proof_artifacts['paired_count']}/{proof_artifacts['expected_count']} indexed={proof_artifacts['indexed_count']}/{proof_artifacts['expected_count']}")
 print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
 print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={source_check_runtime_summary['passed_count']}/{source_check_runtime_summary['row_count']} report_only={str(source_check_runtime_summary['report_only']).lower()}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")

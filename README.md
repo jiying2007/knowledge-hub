@@ -210,8 +210,8 @@ owner gate 人工签收按 6 步走：
 1. 准备临时 JSONL：建议放在 `artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl`。
 2. 选择分派方式：多 owner 分派时先运行 `--summary` 查看 `owner_dispatch` 分派包，再用 `--owner <owner> --evidence-readiness --json` 查看只读证据准备度和候选值。
 3. 导出表单骨架：用 `--owner <owner> --forms-jsonl` 或全量 `--forms-jsonl` 导出骨架；`read_only_prefill_candidates` 只帮助 owner 找 `source_sha256`、`source_size`、`review_after` 和 evidence ref 候选，不会写入正式 owner 字段，也不能替代签收。
-4. 人工填写并校验：真实 owner 填写 decision 后先只读 `--validate-forms '<owner-decisions.jsonl>' --json`。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；同时 `owner_decision` 与 `target_decision` 必须成对兼容，不能把 `reference-only` / `no-migration` 和项目落地路径混用。
-5. 生成落地计划和审计：校验通过后再跑 `--landing-plan --json` 和 `--landing-audit --json`。表单和 landing plan 会带出 `verification_cwd` / `worksheet_verification_cwd` 与 `verification_commands` / `worksheet_verification_commands`，相对命令必须在该 cwd 下执行，不是在 Knowledge Hub root 下执行。
+4. 人工填写并校验：真实 owner 填写 decision 后先只读 `--validate-forms '<owner-decisions.jsonl>' --json`。`target_decision` 必须从表单里的 `target_candidates` 选择，不能手写到候选目标之外；同时 `owner_decision` 与 `target_decision` 必须成对兼容，不能把 `reference-only` / `no-migration` 和项目落地路径混用。校验可以合法只覆盖本批 JSONL 子集；批量处理时必须查看 `form_validation.coverage_status` 和 `missing_open_worksheet_ids`，单条处理优先带 `--worksheet-id`。
+5. 生成落地计划和审计：校验通过后再跑 `--landing-plan --json` 和 `--landing-audit --json`。表单和 landing plan 会带出 `verification_cwd` / `worksheet_verification_cwd` 与 `verification_commands` / `worksheet_verification_commands`，相对命令必须在该 cwd 下执行，不是在 Knowledge Hub root 下执行。`landing_scope` 和 `remaining_open_after_this_batch` 只提示本批覆盖范围；是否全部闭环仍以 owner gate `open_count` 和 final gate 为准。
 6. 复核 worksheet 状态：`--landing-audit` 会显式提醒 `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl` 的对应 worksheet 行也必须进入 resolved/owner-approved/closed 状态，否则 owner JSONL 即使有效，gate 仍会 open。AI 不代签、不关闭 gate、不把 owner-gated 内容设为 active。
 
 ### 5. 跑一次终态检查
@@ -222,7 +222,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
 如果结果是 `needs-owner-review`，确认唯一 blocker 是否为 `owner-gates-open`；这是人工语义 blocker，不等同于工具失败。
-JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治理状态；当值为 `complete-except-owner-review` 且 `gap_map` 只有 `owner-gates-open` 时，说明非 owner 自动治理门禁已闭环，剩余动作只能由 owner 人工签收。复核证据时优先看 `maintenance_entry_audit`、`linking_audit` 和 `evidence_index[]`：前两者证明长期维护入口和跨索引恢复链路，后者逐条记录 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 `knowledge-status --strict` 等命令的退出码、状态和中文摘要；纯 owner-review 终态还会有 `owner-blocker-provenance` 行，指向 `automatic_governance.owner_blocker_source`。
+JSON 输出中的 `automatic_governance.status` 会直接标明 Codex 自动治理状态；当值为 `complete-except-owner-review` 且 `gap_map` 只有 `owner-gates-open` 时，说明非 owner 自动治理门禁已闭环，剩余动作只能由 owner 人工签收。复核证据时优先看 `maintenance_entry_audit`、`linking_audit`、`proof_artifacts` 和 `evidence_index[]`：前两者证明长期维护入口和跨索引恢复链路，`proof_artifacts` 证明终态 proof 主制品在 registry、migration 和核心索引中可恢复，后者逐条记录 `knowledge-check`、`knowledge-regression`、`rtk git diff --check` 和 `knowledge-status --strict` 等命令的退出码、状态和中文摘要；纯 owner-review 终态还会有 `owner-blocker-provenance` 行，指向 `automatic_governance.owner_blocker_source`。旧字段 `proof_artifacts_20260622` 仅为兼容保留，新消费方优先使用稳定字段 `proof_artifacts`。
 `final_state_audit` 会同时给出 Level 1 PCR02 docs、Level 2 PCR02 candidate sources、Level 3 registered sources 的摘要状态，用于快速判断终态证据缺在哪一层。
 
 离线或工具不可用时，不得声明终态 `ok` / `pass`。在维护记录中保留 `manual_validation_pending: true`，写清 `owner`、日期、当前 `cwd`、阻塞原因，并把 `required_followup` 写成完整命令：`rtk git diff --check` 和 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`。AI 或工具恢复后先补跑这些命令，再更新 registry、index 或 manifest 的验证证据。

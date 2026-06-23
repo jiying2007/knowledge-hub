@@ -218,3 +218,4 @@
 - Knowledge Hub final proof 日期滚动加固: `artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.md`
 - Knowledge Hub owner inbox、linking 与人工维护入口加固: `artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.md`
 - Knowledge Hub manual entry owner、personal 与 source 推荐加固: `artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.md`
+- Knowledge Hub proof alias、owner coverage 与最短路径口径加固: `artifacts/manifests/knowledge-hub-proof-alias-owner-coverage-hardening-20260623.md`
