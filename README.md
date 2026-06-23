@@ -40,7 +40,7 @@
 | 层级 | 何时使用 | 入口命令 | 禁止事项 |
 |---|---|---|---|
 | 日常路径 | 新增、检索、复核普通知识条目 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh ...`；`rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<keyword>" --json`；`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 不伪造 source id、owner、hash、验证结果或 active 状态 |
-| 人工复核 | 领取 AI 生成或外部资料待复核条目 | `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --review-queue-limit 10`；`rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json` | 不自动填 `human_reviewed_by`，不把 queue 当 owner decision 或 active 提升依据 |
+| 人工复核 | 领取 AI 生成或外部资料待复核条目 | `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --review-queue-limit 10`；`rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json` | 不自动填 `human_reviewed_by`，不把 queue 当 owner decision 或 active 提升依据 |
 | owner gate | 处理 PCR02 owner-gated worksheet 和人工签收材料 | `rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox --json` | 不代签 `reviewed_by`，不把 `routing_owner` 当真实 reviewer，不关闭 gate |
 | 终态检查 | 判断是否只剩 owner 语义门禁或存在工具/索引/registry 漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json` | 不把 `needs-owner-review` 当工具失败，不跳过 regression 证明 terminal 状态 |
 | 高级写入计划 | copy-first、artifact-ref、promote、retire 等需要 reviewed manifest 的操作 | `rtk bash ~/knowledge-hub/tools/knowledge-copy-first.sh ... --dry-run`；`rtk bash ~/knowledge-hub/tools/knowledge-promote.sh --id <id> --target <target> --dry-run` | 不启用无人值守写入，不绕过 owner、rollback、hash 和验证命令 |
@@ -48,6 +48,8 @@
 首屏只负责选入口：字段规范以 `templates/README.md` 的字段填写矩阵为准，索引同步以 `indexes/README.md` 为准，工具语义以 `tools/README.md` 为准。新增知识时先用 `knowledge-new.sh` 生成只读草稿，再按模板字段矩阵和索引最小同步补齐；不要在 README 复制出另一套字段权威。
 
 人工新增草稿默认把 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` 写入 `validation_refs` 和 Evidence Index；离线待验证路径还必须保留 `manual_validation_pending: true` 与同一条 diagnostics follow-up，避免只留下普通 check 而缺少中文分组修复入口。
+
+AI / external source 人工复核队列按批次处理：优先用 `knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json` 领取一页，继续翻页读取 `pagination.next_command`。每条 row 的 `next_commands[]` 只用于打开只读 explain/诊断入口；人工复核结论仍必须由人填写 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`，工具不自动回填、不提升 active、不关闭 owner gate。
 
 终态失败恢复决策树：
 

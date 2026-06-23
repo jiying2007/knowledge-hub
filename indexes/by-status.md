@@ -399,3 +399,5 @@
 - owner-dispatch-regression-count-hardening-applied: owner_dispatch 已按 source_id + owner 隔离只读分派范围，历史 manifest 固定回归数量已补当次捕获口径；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
 - owner-handoff-profile-advisory-hardening-applied: owner handoff one-shot JSON 入口已可从 status 发现，manifest profile boundary 缺失已改为 advisory 恢复提示；证据：`artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
+- review-queue-recovery-packet-hardening-applied: review queue 已提供 row-level 诊断命令、批次恢复包和 final gate 结构化恢复字段，manifest advisory 已有中文 next action；证据：`artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.jsonl`.

@@ -392,15 +392,32 @@ def make_review_queue_item(item, queue_type, reasons, missing_fields):
         "reasons": reasons,
         "missing_fields": missing_fields,
         "source_id": str(source.get("source_id", "")),
+        "evidence_refs": as_list(item.get("validation_refs", [])) + as_list(item.get("evidence_refs", [])),
         "generated_by_ai": bool(item.get("generated_by_ai", False)),
+        "ai_role": str(item.get("ai_role", "")),
+        "ai_model_or_tool": str(item.get("ai_model_or_tool", "")),
+        "ai_generated_at": str(item.get("ai_generated_at", "")),
         "human_reviewed_by": str(item.get("human_reviewed_by", "")),
         "human_reviewed_at": str(item.get("human_reviewed_at", "")),
         "review_basis": str(item.get("review_basis", "")),
+        "read_status": str(item.get("read_status", "")),
+        "source_license": str(item.get("source_license", "")),
+        "retrieved_at": str(item.get("retrieved_at", "")),
+        "promotion_decision": str(item.get("promotion_decision", "none") or "none"),
         "read_only": True,
         "report_only": True,
         "owner_gate_mutation": False,
         "memory_write": False,
         "source_project_write": False,
+        "next_commands": [
+            f"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --explain {item_id}"
+        ],
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+        ],
     }
 
 def make_external_source_queue_item(source):
@@ -425,12 +442,26 @@ def make_external_source_queue_item(source):
         "reasons": ["external-source-fields-incomplete"] if missing_fields else ["external-source-review-tracked"],
         "missing_fields": missing_fields,
         "source_id": source_id,
+        "evidence_refs": [],
         "generated_by_ai": False,
+        "read_status": str(source.get("read_status", "")),
+        "source_license": str(source.get("source_license", "")),
+        "retrieved_at": str(source.get("retrieved_at", "")),
+        "promotion_decision": str(source.get("promotion_decision", "none") or "none"),
         "read_only": True,
         "report_only": True,
         "owner_gate_mutation": False,
         "memory_write": False,
         "source_project_write": False,
+        "next_commands": [
+            "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json"
+        ],
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+        ],
     }
 
 def build_review_queue_view(items, sources):
@@ -572,6 +603,32 @@ def apply_review_queue_filters(view):
         "has_next": has_next,
         "next_offset": next_offset if has_next else None,
         "next_command": " ".join(command_parts) if has_next else "",
+        "review_batch_packet": {
+            "packet_type": "review-queue-batch",
+            "read_only": True,
+            "report_only": True,
+            "filter": filters,
+            "offset": offset,
+            "limit": limit,
+            "matched_count": matched_count,
+            "shown_count": len(shown_rows),
+            "row_ids": [str(row.get("queue_id", "")) for row in shown_rows],
+            "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
+            "next_commands": [
+                command
+                for row in shown_rows
+                for command in row.get("next_commands", [])
+            ],
+            "next_page_command": " ".join(command_parts) if has_next else "",
+            "must_not": [
+                "不生成 owner decision",
+                "不关闭 owner gate",
+                "不写 memory",
+                "不自动提升 active",
+                "不把 review queue 当 owner gate 签收结果",
+            ],
+            "notes_zh": "只读人工复核批次包；用于按当前过滤和分页领取一批 AI/外部资料待复核条目。它只给诊断命令和必填人工字段，不写 registry，不回填 human_reviewed_by，不提升 active。",
+        },
     })
     filtered["summary"] = filtered_summary
     filtered["filter"] = filters
@@ -588,6 +645,7 @@ def apply_review_queue_filters(view):
         "next_command": " ".join(command_parts) if has_next else "",
         "notes_zh": "只过滤 registry 派生视图；不生成人工复核结论，不回填 human_reviewed_by，不改变 registry。",
     }
+    filtered["review_batch_packet"] = filtered_summary["review_batch_packet"]
     filtered["rows"] = shown_rows
     return filtered
 
@@ -712,6 +770,14 @@ by_manifest = {
         "latest_strategy_zh": "latest 只按 manifest 文件名中的 YYYYMMDD 排序；JSONL row 内 checked_at/created_at/updated_at/review_after 仅作为 row_date 辅助字段，不参与 latest 排序。",
         "profile_health": dict(sorted(manifest_profile_health_counts.items())),
         "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；legacy/reference 类旧制品不作为硬失败；advisory-* 仅提示人工补强方向，missing-summary/missing-evidence 才说明当前 profile 基础字段缺失。",
+        "profile_health_next_actions_zh": {
+            "advisory-missing-boundary": "不回填历史正文、不升为硬失败；如需人工复核，优先打开 paired Markdown、查看 evidence_refs/validation_refs，并只对后续新增治理 manifest 在新增时补 boundaries。",
+            "legacy-missing-profile": "历史制品保留 legacy 口径；只有迁移、重写或重新发布时才按当前 profile 补齐中文摘要、证据和边界字段。",
+            "reference-only": "引用类制品只维护引用和边界，不复制 source 正文。",
+            "missing-summary": "当前 profile 基础字段缺失；新增或近期治理 manifest 需要补中文摘要。",
+            "missing-evidence": "当前 profile 基础字段缺失；新增或近期治理 manifest 需要补 validation_refs/evidence_refs。",
+            "pass": "当前 profile 基础字段齐备，按 review_after 周期复核即可。",
+        },
     },
     "latest": sorted(manifest_rows, key=lambda row: (str(row.get("date", "")), str(row.get("path", ""))), reverse=True)[:20],
     "unpaired": unpaired_classified,
@@ -1095,6 +1161,8 @@ def print_review_queue():
             f"status=`{row.get('status', '')}` kind=`{row.get('kind', '')}` "
             f"domain=`{row.get('domain', '')}` path=`{row.get('path', '')}` missing=`{missing}`"
         )
+        if row.get("next_commands"):
+            print(f"  - next: `{row.get('next_commands', [''])[0]}`")
 
 def print_linking():
     print()

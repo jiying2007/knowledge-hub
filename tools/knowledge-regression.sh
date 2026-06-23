@@ -1454,6 +1454,7 @@ def test_manifest_profile_boundary_advisory():
     manifest_index = parsed.get("indexes", {}).get("by_manifest", {}) if isinstance(parsed, dict) else {}
     summary = manifest_index.get("summary", {})
     profile_health = summary.get("profile_health", {})
+    profile_next_actions = summary.get("profile_health_next_actions_zh", {})
     rows = manifest_index.get("rows", [])
     advisory_rows = [row for row in rows if row.get("profile_health") == "advisory-missing-boundary"]
     expect(
@@ -1464,6 +1465,9 @@ def test_manifest_profile_boundary_advisory():
         and "missing-boundary" not in profile_health
         and advisory_rows
         and "advisory-* 仅提示人工补强方向" in summary.get("profile_health_zh", "")
+        and "不回填历史正文" in profile_next_actions.get("advisory-missing-boundary", "")
+        and "后续新增治理 manifest" in profile_next_actions.get("advisory-missing-boundary", "")
+        and "当前 profile 基础字段缺失" in profile_next_actions.get("missing-summary", "")
         and "advisory-missing-boundary" in text_result["stdout"]
         and "missing-summary/missing-evidence" in text_result["stdout"],
         "manifest-profile-boundary-advisory",
@@ -1473,6 +1477,7 @@ def test_manifest_profile_boundary_advisory():
             "text_exit_code": text_result["exit_code"],
             "parse_error": parse_error,
             "profile_health": profile_health,
+            "profile_health_next_actions_zh": profile_next_actions,
             "advisory_sample": advisory_rows[:3],
             "profile_health_zh": summary.get("profile_health_zh", ""),
             "stdout_sample": text_result["stdout"][:1200],
@@ -1959,6 +1964,9 @@ def test_final_gate_owner_review_blocker():
     blockers = parsed.get("blockers", [])
     automatic_governance = parsed.get("automatic_governance", {})
     owner_recovery = parsed.get("owner_recovery", {})
+    review_queue_recovery = parsed.get("review_queue_recovery", {})
+    review_queue_summary = review_queue_recovery.get("summary", {})
+    review_queue_commands = review_queue_recovery.get("commands", {})
     owner_dispatch = owner_recovery.get("owner_dispatch", [])
     dispatch_by_owner = {row.get("owner"): row for row in owner_dispatch}
     project_owner_dispatch = dispatch_by_owner.get("project-owner", {})
@@ -2028,6 +2036,14 @@ def test_final_gate_owner_review_blocker():
         and owner_recovery.get("open_count") == 7
         and owner_recovery.get("owner_ready_package_coverage") == "7/7"
         and owner_recovery.get("active_exposure_count") == 0
+        and review_queue_recovery.get("read_only") is True
+        and review_queue_recovery.get("report_only") is True
+        and review_queue_summary.get("total_pending_count", 0) >= 1
+        and review_queue_summary.get("ai_generated_pending_count", 0) >= 1
+        and review_queue_summary.get("active_or_promotion_blocker_count") == 0
+        and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+        and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
+        and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
         and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
@@ -2213,7 +2229,7 @@ def test_final_gate_owner_review_blocker():
         and checks.get("index_plan_linking", {}).get("status") == "planned"
         and checks.get("index_plan_linking", {}).get("exit_code") == 0
         and checks.get("index_plan_linking", {}).get("linking_audit_status") == "pass"
-        and len(evidence_index) == 9
+        and len(evidence_index) == 10
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-regression", {}).get("status") == "pass"
         and evidence_by_artifact.get("git-diff-check", {}).get("status") == "pass"
@@ -2229,6 +2245,8 @@ def test_final_gate_owner_review_blocker():
         and evidence_by_artifact.get("maintenance-entry-audit", {}).get("evidence_path") == "runtime:maintenance_entry_audit"
         and evidence_by_artifact.get("linking-audit", {}).get("status") == "pass"
         and evidence_by_artifact.get("linking-audit", {}).get("evidence_path") == "runtime:linking_audit"
+        and evidence_by_artifact.get("review-queue-recovery", {}).get("status") == "pass"
+        and evidence_by_artifact.get("review-queue-recovery", {}).get("evidence_path") == "runtime:review_queue_recovery"
         and len(highest_priority_rules_audit) == 10
         and rules_by_id.get("shell-through-rtk", {}).get("status") == "pass"
         and rules_by_id.get("manual-write-apply-patch", {}).get("status") == "process-audited"
@@ -4664,6 +4682,7 @@ def test_review_queue_json_contract():
     )
     filtered_summary = filtered_queue.get("summary", {}) if isinstance(filtered_queue.get("summary", {}), dict) else {}
     filtered_pagination = filtered_queue.get("pagination", {}) if isinstance(filtered_queue.get("pagination", {}), dict) else {}
+    filtered_batch_packet = filtered_queue.get("review_batch_packet", {}) if isinstance(filtered_queue.get("review_batch_packet", {}), dict) else {}
     filtered_rows = filtered_queue.get("rows", []) if isinstance(filtered_queue.get("rows", []), list) else []
     required_first_row_fields = [
         "queue_id",
@@ -4675,6 +4694,13 @@ def test_review_queue_json_contract():
         "review_after",
         "priority",
         "missing_fields",
+        "evidence_refs",
+        "ai_role",
+        "ai_model_or_tool",
+        "ai_generated_at",
+        "promotion_decision",
+        "next_commands",
+        "must_not",
         "read_only",
         "report_only",
         "owner_gate_mutation",
@@ -4702,6 +4728,10 @@ def test_review_queue_json_contract():
         and first_row.get("source_project_write") is False
         and "ai-human-review" in by_review_queue.get("by_type", {})
         and "不写 memory" in " ".join(by_review_queue.get("must_not", []))
+        and first_row.get("next_commands")
+        and first_row.get("id", "") in first_row.get("next_commands", [""])[0]
+        and "--explain" in first_row.get("next_commands", [""])[0]
+        and "不自动提升 active" in " ".join(first_row.get("must_not", []))
         and filtered_result["exit_code"] == 0
         and filtered_summary.get("matched_count", 0) >= len(filtered_rows)
         and filtered_summary.get("shown_count") == len(filtered_rows)
@@ -4712,7 +4742,16 @@ def test_review_queue_json_contract():
         and all(row.get("review_after") == first_row.get("review_after") for row in filtered_rows)
         and filtered_summary.get("read_only") is True
         and filtered_summary.get("report_only") is True
-        and filtered_summary.get("memory_write") is False,
+        and filtered_summary.get("memory_write") is False
+        and filtered_batch_packet.get("packet_type") == "review-queue-batch"
+        and filtered_batch_packet.get("read_only") is True
+        and filtered_batch_packet.get("report_only") is True
+        and filtered_batch_packet.get("shown_count") == len(filtered_rows)
+        and filtered_batch_packet.get("row_ids") == [row.get("queue_id") for row in filtered_rows]
+        and "human_reviewed_by" in filtered_batch_packet.get("required_human_fields", [])
+        and len(filtered_batch_packet.get("next_commands", [])) == len(filtered_rows)
+        and all("--explain" in command for command in filtered_batch_packet.get("next_commands", []))
+        and "不把 review queue 当 owner gate 签收结果" in " ".join(filtered_batch_packet.get("must_not", [])),
         "review-queue-json-contract",
         "status and index-plan expose report-only human review queue from registry",
         {
@@ -4729,6 +4768,7 @@ def test_review_queue_json_contract():
             "filtered_summary": filtered_summary,
             "filtered_row_count": len(filtered_rows),
             "filtered_pagination": filtered_pagination,
+            "filtered_batch_packet": filtered_batch_packet,
         },
     )
 

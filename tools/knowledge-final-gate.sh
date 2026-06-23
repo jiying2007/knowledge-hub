@@ -1099,6 +1099,38 @@ core_checks_pass = (
     and source_check_runtime_summary["status"] == "pass"
 )
 owner_payload = strict_payload.get("owner_gates", {}) if isinstance(strict_payload, dict) else {}
+review_queue_payload = strict_payload.get("review_queues", {}) if isinstance(strict_payload, dict) else {}
+review_queue_summary = (
+    review_queue_payload.get("summary", {})
+    if isinstance(review_queue_payload.get("summary", {}), dict)
+    else {}
+)
+review_queue_recovery = {
+    "status": str(review_queue_payload.get("status", "")),
+    "read_only": bool(review_queue_payload.get("read_only", False)),
+    "report_only": bool(review_queue_payload.get("report_only", False)),
+    "blocking_final_gate": bool(review_queue_payload.get("blocking_final_gate", False)),
+    "summary": {
+        "total_pending_count": int(review_queue_summary.get("total_pending_count", 0) or 0),
+        "ai_generated_pending_count": int(review_queue_summary.get("ai_generated_pending_count", 0) or 0),
+        "external_source_pending_count": int(review_queue_summary.get("external_source_pending_count", 0) or 0),
+        "active_or_promotion_blocker_count": int(review_queue_summary.get("active_or_promotion_blocker_count", 0) or 0),
+        "by_priority": review_queue_summary.get("by_priority", {}),
+        "by_owner": review_queue_summary.get("by_owner", {}),
+    },
+    "commands": {
+        "index_plan": review_queue_payload.get("commands", {}).get("index_plan", "")
+        if isinstance(review_queue_payload.get("commands", {}), dict)
+        else "",
+        "status_json": review_queue_payload.get("commands", {}).get("status_json", "")
+        if isinstance(review_queue_payload.get("commands", {}), dict)
+        else "",
+    },
+    "must_not": review_queue_payload.get("must_not", [])
+    if isinstance(review_queue_payload.get("must_not", []), list)
+    else [],
+    "notes_zh": "只读 review queue 恢复入口；普通 AI/外部资料待复核项不阻断 final gate，只有 active/promotion 未人工复核时才由 knowledge-status --strict 变成 blocker。不回填 human_reviewed_by，不提升 active，不关闭 owner gate。",
+}
 strict_blocker_ids = [
     str(blocker.get("id", ""))
     for blocker in strict_payload.get("strict_blockers", [])
@@ -1510,6 +1542,25 @@ evidence_index.append(
         index_plan_linking["parse_error"],
     )
 )
+evidence_index.append(
+    command_evidence_row(
+        "runtime:review_queue_recovery",
+        0 if review_queue_recovery["read_only"] and review_queue_recovery["report_only"] else 1,
+        "pass"
+        if review_queue_recovery["read_only"]
+        and review_queue_recovery["report_only"]
+        and review_queue_recovery["summary"]["active_or_promotion_blocker_count"] == 0
+        else "fail",
+        (
+            "review queue 可结构化恢复；普通 AI/外部资料待复核项保持 report-only，不阻断 owner-review 终态。"
+            if review_queue_recovery["summary"]["active_or_promotion_blocker_count"] == 0
+            else "review queue 存在 active/promotion 未人工复核项，应由 knowledge-status --strict 作为非 owner blocker 处理。"
+        ),
+        "runtime:review_queue_recovery",
+        "review-queue",
+        "review-queue-recovery",
+    )
+)
 
 highest_priority_rules_audit = make_highest_priority_rules_audit(
     source_check_runtime_summary,
@@ -1562,6 +1613,7 @@ result = {
         "next_open_queue_selection_order": str(owner_payload.get("next_open_queue_selection_order", "")),
         "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
+    "review_queue_recovery": review_queue_recovery,
     "proof_artifacts": proof_artifacts,
     "proof_artifacts_20260622": proof_artifacts_20260622,
     "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
@@ -1654,6 +1706,7 @@ print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={s
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")
+print(f"- review_queue_recovery: {review_queue_recovery['status']} pending={review_queue_recovery['summary']['total_pending_count']} active_or_promotion_blockers={review_queue_recovery['summary']['active_or_promotion_blocker_count']} report_only={str(review_queue_recovery['report_only']).lower()}")
 print()
 print("## Evidence Index")
 print()
@@ -1682,7 +1735,13 @@ if gap_map:
     print()
     for gap in gap_map:
         print(f"- `{gap['gap_id']}` ({gap['gap_type']}): {gap['current_impact']}")
+        print(f"  - codex_auto_can_complete: {str(gap.get('codex_auto_can_complete', False)).lower()}")
+        print(f"  - requires_owner_decision: {str(gap.get('requires_owner_decision', False)).lower()}")
+        if gap.get("write_scope"):
+            print(f"  - write_scope: {gap['write_scope']}")
         print(f"  - fix: {gap['fix_action']}")
+        for command in gap.get("validation_commands", [])[:3]:
+            print(f"  - validation: `{command}`")
 if result["next_actions_zh"]:
     print()
     print("## 下一步")

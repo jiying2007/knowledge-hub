@@ -201,6 +201,7 @@
 - `knowledge-hub-review-queue-topic-readability-20260623`
 - `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
 - `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
+- `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
 
 ## pcr02-registry-owner
 
