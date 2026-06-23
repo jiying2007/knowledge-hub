@@ -381,3 +381,5 @@
 - final-proof-date-rollover-hardening-applied: final proof 日期滚动保留 2026-06-22 baseline 动态 proof，并继续叠加当前 as-of 日期 proof；README 低复杂度维护入口已压缩；证据：`artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`
 - owner-inbox-linking-maintenance-hardening-applied: owner-inbox 已成为 owner 分派第一步只读入口，linking/project 恢复和人工维护最短路径锚点已纳入保活检查；证据：`artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
+- manual-entry-owner-personal-source-recommendation-applied: `knowledge-new.sh` 已暴露 item owner registry 状态、personal-local 默认值和 source role-aware 推荐提示；证据：`artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.jsonl`.

@@ -63,6 +63,34 @@ json_escape() {
   printf "%s" "$value"
 }
 
+owner_registry_status() {
+  local owner="$1"
+  if [[ ! -f "$ROOT/registry/owners.json" ]]; then
+    printf "owners-registry-missing"
+    return 0
+  fi
+  if rtk python3 - "$ROOT/registry/owners.json" "$owner" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+owner = sys.argv[2]
+data = json.loads(path.read_text())
+owner_ids = {
+    str(row.get("id", ""))
+    for row in data.get("owners", [])
+    if isinstance(row, dict)
+}
+sys.exit(0 if owner in owner_ids else 1)
+PY
+  then
+    printf "registered"
+  else
+    printf "unknown-owner"
+  fi
+}
+
 knowledge_today() {
   local raw="${KNOWLEDGE_TODAY:-}"
   if [[ -n "$raw" ]]; then
@@ -287,33 +315,63 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   else
     DEFAULT_REVIEW_AFTER="$TODAY"
   fi
-  SOURCE_OWNER_REGISTRY_STATUS="unchecked"
+  SOURCE_OWNER_REGISTRY_STATUS="$(owner_registry_status "${OWNER:-leiwenjun}")"
   SOURCE_OWNER_WARNING_LINE=""
-  if [[ -f "$ROOT/registry/owners.json" ]]; then
-    if rtk python3 - "$ROOT/registry/owners.json" "${OWNER:-leiwenjun}" <<'PY'
-import json
-import pathlib
-import sys
-
-path = pathlib.Path(sys.argv[1])
-owner = sys.argv[2]
-data = json.loads(path.read_text())
-owner_ids = {
-    str(row.get("id", ""))
-    for row in data.get("owners", [])
-    if isinstance(row, dict)
-}
-sys.exit(0 if owner in owner_ids else 1)
-PY
-    then
-      SOURCE_OWNER_REGISTRY_STATUS="registered"
-    else
-      SOURCE_OWNER_REGISTRY_STATUS="unknown-owner"
-      SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: source registry owner 未在 registry/owners.json 登记；落盘前请先补 owner registry，或改用已登记 owner。"
-    fi
-  else
-    SOURCE_OWNER_REGISTRY_STATUS="owners-registry-missing"
+  if [[ "$SOURCE_OWNER_REGISTRY_STATUS" == "unknown-owner" ]]; then
+    SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: source registry owner 未在 registry/owners.json 登记；落盘前请先补 owner registry，或改用已登记 owner。"
+  elif [[ "$SOURCE_OWNER_REGISTRY_STATUS" == "owners-registry-missing" ]]; then
     SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: registry/owners.json 不存在；落盘前请先恢复 owner registry。"
+  fi
+  RECOMMENDED_SOURCE_FINAL_DISPOSITION="owner-gated-pending-decision"
+  RECOMMENDED_SOURCE_MIGRATION_STRATEGY="classify-first"
+  SOURCE_DISPOSITION_REASON_ZH="默认保持 owner-gated-pending-decision；需要先完成 source coverage、owner gate 或人工治理判断，不能由向导代签终态。"
+  SOURCE_MIGRATION_REASON_ZH="默认保持 classify-first；先登记 source，再由 coverage manifest、registry 和 owner review 决定 copy/reference/artifact/archive/no-migration。"
+  case "$DISPLAY_SOURCE_ROLE:$DISPLAY_SOURCE_WRITE_POLICY" in
+    project-archive-source:copy-first-migration-only)
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="copy-first-migrated"
+      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="copy-first-archive"
+      SOURCE_DISPOSITION_REASON_ZH="历史归档 source 且策略为 copy-first-migration-only；人工确认正文唯一位置和索引后，可考虑 copy-first-migrated。"
+      SOURCE_MIGRATION_REASON_ZH="归档语料适合按迁移清单批量登记，仍需 manifest 和 registry 证据证明已迁移。"
+      ;;
+    codex-governance-source:use-codex-archive-tools)
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="reference-first-registered"
+      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="reference-first"
+      SOURCE_DISPOSITION_REASON_ZH="Codex governance 历史由专用归档工具维护，Knowledge Hub 优先登记引用，不复制原始归档正文。"
+      SOURCE_MIGRATION_REASON_ZH="使用引用和恢复入口表达治理关系，避免把历史工作流正文复制成第二份。"
+      ;;
+    auxiliary-memory-source:*)
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="auxiliary-recall-only"
+      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="reference-first"
+      SOURCE_DISPOSITION_REASON_ZH="辅助记忆源只能用于召回候选，不写 memory、不进入 active facts、不替代 registry 或 source evidence。"
+      SOURCE_MIGRATION_REASON_ZH="只登记辅助召回边界和 no-memory-write 约束，不迁移为团队知识正文。"
+      ;;
+    project-scratch-source:*)
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="archive-only-registered"
+      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="archive-only"
+      SOURCE_DISPOSITION_REASON_ZH="scratch/session/handoff 默认 archive-only；memory candidates 和上下文草稿不得进入 active facts。"
+      SOURCE_MIGRATION_REASON_ZH="保留历史证据与边界，不复制为当前项目事实。"
+      ;;
+    project-agent-config-source:*)
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="artifact-ref-registered"
+      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="artifact-ref"
+      SOURCE_DISPOSITION_REASON_ZH="agent config 属于配置或自动化制品引用；默认登记 config/artifact-ref，自动化必须 report-only。"
+      SOURCE_MIGRATION_REASON_ZH="记录路径、hash、owner 和安全边界，不把配置正文提升为团队规则。"
+      ;;
+  esac
+  if [[ -n "$DISPLAY_SOURCE_CHECK" ]]; then
+    case "$DISPLAY_SOURCE_ROLE" in
+      project-current-tools-source|project-current-knowledge-source|project-product-test-source|project-root-artifact-source)
+        RECOMMENDED_SOURCE_FINAL_DISPOSITION="mixed-terminal-coverage"
+        RECOMMENDED_SOURCE_MIGRATION_STRATEGY="mixed-terminal-coverage"
+        SOURCE_DISPOSITION_REASON_ZH="当前项目目录有稳定只读 check，可按文件类型混合登记 copy/reference/artifact/config/tool-ref；不默认复制脚本或二进制正文。"
+        SOURCE_MIGRATION_REASON_ZH="用 coverage manifest 表达多种终态组合，check 只证明可复核，不证明 owner 签收或 active 提升。"
+        ;;
+    esac
+  elif [[ "$DISPLAY_SOURCE_ROLE" == project-current-* ]]; then
+    RECOMMENDED_SOURCE_FINAL_DISPOSITION="owner-gated-pending-decision"
+    RECOMMENDED_SOURCE_MIGRATION_STRATEGY="classify-first"
+    SOURCE_DISPOSITION_REASON_ZH="当前项目 source 没有稳定 check；先保持 owner-gated-pending-decision，避免把未复核内容误写成终态。"
+    SOURCE_MIGRATION_REASON_ZH="需要先补 coverage row、source identity 或 no-check reason，再由 owner/维护者确认后续处置。"
   fi
   CHECK_FIELD=""
   NO_CHECK_FIELD=",\"no_check_reason\":\"${JSON_SOURCE_NO_CHECK_REASON}\""
@@ -341,6 +399,14 @@ PY
 - owner: ${OWNER:-leiwenjun}
 - owner_registry_status: ${SOURCE_OWNER_REGISTRY_STATUS}
 ${SOURCE_OWNER_WARNING_LINE}
+
+## 只读推荐提示
+
+- recommended_final_disposition: ${RECOMMENDED_SOURCE_FINAL_DISPOSITION}
+- recommended_migration_strategy: ${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}
+- disposition_reason_zh: ${SOURCE_DISPOSITION_REASON_ZH}
+- migration_reason_zh: ${SOURCE_MIGRATION_REASON_ZH}
+- recommendation_scope_zh: 以上只是人工填写提示，不代表 owner decision，不关闭 owner gate；可复制 JSON 仍默认保守，落盘前必须按 registry/schema.md、coverage manifest 和 owner gate 状态确认。
 
 ## 最小人工步骤
 
@@ -491,10 +557,21 @@ fi
 DISPLAY_ID="${ITEM_ID:-<id>}"
 DISPLAY_INPUT_KIND="${KIND:-<kind>}"
 DISPLAY_KIND="$REGISTRY_KIND"
-DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_PATH="${TARGET_PATH:-<path>}"
 DISPLAY_OWNER="${OWNER:-leiwenjun}"
+ITEM_OWNER_REGISTRY_STATUS="$(owner_registry_status "$DISPLAY_OWNER")"
+ITEM_OWNER_WARNING_LINE=""
+if [[ "$ITEM_OWNER_REGISTRY_STATUS" == "unknown-owner" ]]; then
+  ITEM_OWNER_WARNING_LINE="- owner_warning_zh: item owner 未在 registry/owners.json 登记；落盘前请先补 owner registry，或改用已登记 owner。"
+elif [[ "$ITEM_OWNER_REGISTRY_STATUS" == "owners-registry-missing" ]]; then
+  ITEM_OWNER_WARNING_LINE="- owner_warning_zh: registry/owners.json 不存在；落盘前请先恢复 owner registry。"
+fi
+if [[ -z "$DOMAIN" && "$TARGET_PATH" == domains/personal/* ]]; then
+  DOMAIN="personal"
+fi
+DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_SCOPE="team-general"
+DISPLAY_VISIBILITY="team-internal"
 PROJECT_WARNING_BLOCK=""
 if [[ "$DOMAIN" == projects/* ]]; then
   DISPLAY_SCOPE="project-specific"
@@ -505,12 +582,24 @@ if [[ "$DOMAIN" == projects/* ]]; then
     printf -v PROJECT_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: --project `%s` 与 --domain `%s` 推导出的项目 `%s` 不一致；请人工确认项目导航和 registry domain。\n' "$PROJECT" "$DOMAIN" "$PROJECT_FROM_DOMAIN"
   fi
 fi
+PERSONAL_WARNING_BLOCK=""
+PERSONAL_DEFAULT_REASON=""
+if [[ "$DOMAIN" == "personal" ]]; then
+  DISPLAY_VISIBILITY="personal-local"
+  DRAFT_STATUS="personal"
+  STATUS_INDEX_BUCKET="personal"
+  PERSONAL_DEFAULT_REASON="- personal_default_reason_zh: personal-local 条目默认不进入团队 active index，不得标记 active，不代表 owner decision。"
+fi
+if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == domains/personal/* && "$DOMAIN" != "personal" ]]; then
+  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: 目标路径 `%s` 位于 domains/personal/，但 --domain 为 `%s`；该组合会被 domain/path invariant 拦截，不可直接落盘。请改为 `--domain personal`，或移动目标路径。\n' "$TARGET_PATH" "${DOMAIN:-<未指定>}"
+fi
 DISPLAY_PROJECT="${PROJECT:-<project>}"
 JSON_ID="$(json_escape "$DISPLAY_ID")"
 JSON_KIND="$(json_escape "$DISPLAY_KIND")"
 JSON_DOMAIN="$(json_escape "$DISPLAY_DOMAIN")"
 JSON_PATH="$(json_escape "$DISPLAY_PATH")"
 JSON_SCOPE="$(json_escape "$DISPLAY_SCOPE")"
+JSON_VISIBILITY="$(json_escape "$DISPLAY_VISIBILITY")"
 JSON_OWNER="$(json_escape "$DISPLAY_OWNER")"
 JSON_TITLE="$(json_escape "<中文标题>")"
 JSON_SOURCE_FROM="$(json_escape "$MANUAL_SOURCE_REASON")"
@@ -583,16 +672,22 @@ $(usage)
 - domain: ${DOMAIN:-<待填写>}
 - project: ${PROJECT:-<可选>}
 - owner: ${DISPLAY_OWNER}
+- owner_registry_status: ${ITEM_OWNER_REGISTRY_STATUS}
+${ITEM_OWNER_WARNING_LINE}
 - path: ${TARGET_PATH:-<待填写>}
 - item_source_id: ${ITEM_SOURCE_ID:-<未指定>}
 - item_source_path: ${ITEM_SOURCE_PATH:-<未指定>}
 - 推荐模板: ${TEMPLATE}
 - 推荐 registry status: ${DRAFT_STATUS}
+- 推荐 visibility: ${DISPLAY_VISIBILITY}
+- 推荐 scope: ${DISPLAY_SCOPE}
+${PERSONAL_DEFAULT_REASON}
 - manual_source_reason: ${MANUAL_SOURCE_REASON}
 - manual_validation_pending: ${MANUAL_VALIDATION_PENDING}
 - generated_by_ai: ${GENERATED_BY_AI}
 - ai_role: ${AI_ROLE}
 ${PROJECT_WARNING_BLOCK}
+${PERSONAL_WARNING_BLOCK}
 
 ## 最小人工步骤
 
@@ -621,7 +716,7 @@ ${PROJECT_STEP_5}
 ### registry/items.jsonl
 
 \`\`\`json
-{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"team-internal","status":"${DRAFT_STATUS}","owner":"${JSON_OWNER}","source":${SOURCE_OBJECT_JSON},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
+{"id":"${JSON_ID}","title":"${JSON_TITLE}","kind":"${JSON_KIND}","domain":"${JSON_DOMAIN}","path":"${JSON_PATH}","scope":"${JSON_SCOPE}","visibility":"${JSON_VISIBILITY}","status":"${DRAFT_STATUS}","owner":"${JSON_OWNER}","source":${SOURCE_OBJECT_JSON},"summary_zh":"<中文 1-3 句摘要>","primary_language":"zh-CN","source_language":"zh-CN","translation_status":"not-required","terminology_status":"pending-review","review_status":"manual-entry-pending-review","evidence_strength":"manual-entry-pending-validation","evidence_refs":[],"promotion_decision":"none","generated_by_ai":${GENERATED_BY_AI},"ai_role":"${JSON_AI_ROLE}","ai_model_or_tool":"${JSON_AI_MODEL_OR_TOOL}","ai_generated_at":"${JSON_AI_GENERATED_AT}","human_reviewed_by":"","human_reviewed_at":"","review_basis":"","validation_refs":${VALIDATION_REFS_JSON},"tags":["knowledge-hub","<topic>"],"review_after":"${DEFAULT_REVIEW_AFTER}","promotion":"none","created_at":"${TODAY}","updated_at":"${TODAY}"}
 \`\`\`
 ${MANUAL_VALIDATION_BLOCK}
 

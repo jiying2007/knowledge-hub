@@ -217,3 +217,4 @@
 - Knowledge Hub 维护入口与关联恢复审计加固: `artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.md`
 - Knowledge Hub final proof 日期滚动加固: `artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.md`
 - Knowledge Hub owner inbox、linking 与人工维护入口加固: `artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.md`
+- Knowledge Hub manual entry owner、personal 与 source 推荐加固: `artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.md`

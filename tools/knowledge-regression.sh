@@ -3246,6 +3246,125 @@ def test_manual_entry_owner_override():
         },
     )
 
+def test_manual_entry_owner_registry_and_personal_defaults():
+    registered_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--owner",
+            "team-core",
+            "--id",
+            "governance-owner-registered",
+            "--path",
+            "governance/owner-registered.md",
+        ],
+    )
+    unknown_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "decision",
+            "--domain",
+            "governance",
+            "--owner",
+            "unknown-item-owner",
+            "--id",
+            "governance-owner-warning",
+            "--path",
+            "governance/owner-warning.md",
+        ],
+    )
+    personal_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "personal-note",
+            "--domain",
+            "personal",
+            "--id",
+            "personal-defaults",
+            "--path",
+            "domains/personal/defaults.md",
+        ],
+    )
+    inferred_personal_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "personal-note",
+            "--id",
+            "personal-path-defaults",
+            "--path",
+            "domains/personal/path-defaults.md",
+        ],
+    )
+    mismatch_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "runbook",
+            "--domain",
+            "governance",
+            "--id",
+            "personal-path-mismatch",
+            "--path",
+            "domains/personal/path-mismatch.md",
+        ],
+    )
+    expect(
+        registered_result["exit_code"] == 0
+        and unknown_result["exit_code"] == 0
+        and personal_result["exit_code"] == 0
+        and inferred_personal_result["exit_code"] == 0
+        and mismatch_result["exit_code"] == 0
+        and "- owner_registry_status: registered" in registered_result["stdout"]
+        and "owner_warning_zh" not in registered_result["stdout"]
+        and "- owner_registry_status: unknown-owner" in unknown_result["stdout"]
+        and "item owner 未在 registry/owners.json 登记" in unknown_result["stdout"]
+        and '"owner":"unknown-item-owner"' in unknown_result["stdout"]
+        and '"domain":"personal"' in personal_result["stdout"]
+        and '"scope":"team-general"' in personal_result["stdout"]
+        and '"visibility":"personal-local"' in personal_result["stdout"]
+        and '"status":"personal"' in personal_result["stdout"]
+        and "- personal: `personal-defaults`" in personal_result["stdout"]
+        and '"domain":"personal"' in inferred_personal_result["stdout"]
+        and '"visibility":"personal-local"' in inferred_personal_result["stdout"]
+        and '"status":"personal"' in inferred_personal_result["stdout"]
+        and "该组合会被 domain/path invariant 拦截，不可直接落盘" in mismatch_result["stdout"],
+        "manual-entry-owner-registry-and-personal-defaults",
+        "manual entry guide exposes item owner registry status and personal-local safe defaults",
+        {
+            "registered_exit_code": registered_result["exit_code"],
+            "unknown_exit_code": unknown_result["exit_code"],
+            "personal_exit_code": personal_result["exit_code"],
+            "inferred_personal_exit_code": inferred_personal_result["exit_code"],
+            "mismatch_exit_code": mismatch_result["exit_code"],
+            "registered_stdout_sample": registered_result["stdout"][:1200],
+            "unknown_stdout_sample": unknown_result["stdout"][:1200],
+            "personal_stdout_sample": personal_result["stdout"][:1600],
+            "inferred_personal_stdout_sample": inferred_personal_result["stdout"][:1600],
+            "mismatch_stdout_sample": mismatch_result["stdout"][:1600],
+        },
+    )
+
 def test_manual_entry_docs_owner_option():
     readme_path = root / "README.md"
     tools_readme_path = root / "tools" / "README.md"
@@ -5697,6 +5816,95 @@ def test_source_manual_entry_docs_check_preferred():
         },
     )
 
+def test_source_manual_entry_role_aware_recommendations():
+    agent_config_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-agent-config-source",
+            "--source-path",
+            "/tmp/example-agent-config",
+            "--role",
+            "project-agent-config-source",
+            "--authority",
+            "legacy-project-agent-config",
+            "--write-policy",
+            "do-not-write-through-knowledge-hub",
+            "--check",
+            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+        ],
+    )
+    auxiliary_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-aux-memory-source",
+            "--source-path",
+            "/tmp/example-aux-memory",
+            "--role",
+            "auxiliary-memory-source",
+            "--authority",
+            "auxiliary-recall-only",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--no-check-reason",
+            "auxiliary recall source without stable check",
+        ],
+    )
+    no_check_current_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--source",
+            "--source-id",
+            "example-current-no-check-source",
+            "--source-path",
+            "/tmp/example-current-no-check",
+            "--role",
+            "project-current-docs-source",
+            "--authority",
+            "legacy-project-current-docs",
+            "--write-policy",
+            "read-only-unless-explicitly-approved",
+            "--no-check-reason",
+            "classify-first pending source coverage",
+        ],
+    )
+    expect(
+        agent_config_result["exit_code"] == 0
+        and auxiliary_result["exit_code"] == 0
+        and no_check_current_result["exit_code"] == 0
+        and "recommended_final_disposition: artifact-ref-registered" in agent_config_result["stdout"]
+        and "recommended_migration_strategy: artifact-ref" in agent_config_result["stdout"]
+        and '"final_disposition":"owner-gated-pending-decision"' in agent_config_result["stdout"]
+        and "recommendation_scope_zh: 以上只是人工填写提示，不代表 owner decision，不关闭 owner gate" in agent_config_result["stdout"]
+        and "recommended_final_disposition: auxiliary-recall-only" in auxiliary_result["stdout"]
+        and "不写 memory" in auxiliary_result["stdout"]
+        and "recommended_final_disposition: owner-gated-pending-decision" in no_check_current_result["stdout"]
+        and "没有稳定 check" in no_check_current_result["stdout"]
+        and '"final_disposition":"owner-gated-pending-decision"' in no_check_current_result["stdout"],
+        "source-manual-entry-role-aware-recommendations",
+        "source manual entry guide gives role-aware recommendations without replacing conservative copyable JSON",
+        {
+            "agent_config_exit_code": agent_config_result["exit_code"],
+            "auxiliary_exit_code": auxiliary_result["exit_code"],
+            "no_check_current_exit_code": no_check_current_result["exit_code"],
+            "agent_config_stdout_sample": agent_config_result["stdout"][:1800],
+            "auxiliary_stdout_sample": auxiliary_result["stdout"][:1800],
+            "no_check_current_stdout_sample": no_check_current_result["stdout"][:1800],
+        },
+    )
+
 def test_knowledge_search_structured_filters():
     active_result = run_cmd(
         root,
@@ -6009,6 +6217,7 @@ def test_regression_manifest_coverage():
         "manual-entry-project-derived-from-domain",
         "manual-entry-default-dates",
         "manual-entry-owner-override",
+        "manual-entry-owner-registry-and-personal-defaults",
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "readme-offline-shortest-paths",
@@ -6052,6 +6261,7 @@ def test_regression_manifest_coverage():
         "source-manual-entry-unknown-owner-warning",
         "source-manual-entry-requires-check-or-reason",
         "source-manual-entry-docs-check-preferred",
+        "source-manual-entry-role-aware-recommendations",
         "knowledge-search-structured-filters",
         "knowledge-search-structured-filters-exclude-unregistered-raw",
         "knowledge-search-kind-alias-filters",
@@ -6179,6 +6389,7 @@ for test_fn in [
     test_manual_entry_project_from_domain,
     test_manual_entry_default_dates,
     test_manual_entry_owner_override,
+    test_manual_entry_owner_registry_and_personal_defaults,
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_readme_offline_shortest_paths,
@@ -6222,6 +6433,7 @@ for test_fn in [
     test_source_manual_entry_unknown_owner_warning,
     test_source_manual_entry_requires_check_or_reason,
     test_source_manual_entry_docs_check_preferred,
+    test_source_manual_entry_role_aware_recommendations,
     test_knowledge_search_structured_filters,
     test_knowledge_search_structured_filters_exclude_unregistered_raw,
     test_knowledge_search_kind_alias_filters,

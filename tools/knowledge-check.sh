@@ -1204,6 +1204,34 @@ if not args.sources_only:
             if term not in manual_text:
                 errors.append(f"manual-entry:{rel_manual} missing current gate term: {term}")
 
+    manual_entry_file_specific_terms = {
+        root / "tools" / "knowledge-new.sh": [
+            "owner_registry_status",
+            "personal-local",
+            "recommended_final_disposition",
+            "recommended_migration_strategy",
+            "recommendation_scope_zh",
+            "--item-source-id",
+            "--check",
+            "--no-check-reason",
+            "Evidence Index",
+        ],
+        root / "templates" / "README.md": [
+            "personal-local",
+            "recommended_final_disposition",
+            "recommended_migration_strategy",
+            "不替代 owner decision",
+            "不关闭 owner gate",
+            "Evidence Index",
+        ],
+    }
+    for manual_entry_file, terms in manual_entry_file_specific_terms.items():
+        manual_text = manual_entry_file.read_text()
+        rel_manual = manual_entry_file.relative_to(root)
+        for term in terms:
+            if term not in manual_text:
+                errors.append(f"manual-entry:{rel_manual} missing terminal manual-entry term: {term}")
+
     manual_entry_anchor_checks = {
         "README.md": [
             "低复杂度入口速查",
@@ -1215,6 +1243,8 @@ if not args.sources_only:
             "跑一次终态检查",
             "knowledge-index-plan.sh --section linking --json",
             "owner_inbox_json_command",
+            "personal-local",
+            "recommended_final_disposition",
         ],
         "tools/README.md": [
             "低复杂度入口速查",
@@ -1222,6 +1252,8 @@ if not args.sources_only:
             "owner_inbox_json_command",
             "knowledge-index-plan.sh --section linking --json",
             "离线人工维护",
+            "personal-local",
+            "role-aware 推荐终态",
         ],
         "indexes/README.md": [
             "最小同步",

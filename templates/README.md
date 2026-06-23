@@ -47,9 +47,12 @@
 
 离线人工新增条目时，默认使用 `source.type=manual`、`source.from=field-debug / meeting / code-review / lab-test / owner-decision / design-review`、`status=reviewing` 和 `review_status=manual-entry-pending-review`，并在 `validation_refs` 或正文 Evidence Index 中保留 `manual_validation_pending: true`。完成工具复核前不得把条目写成 active fact、owner decision 或 promoted 标准。
 
+人工新增普通条目时，`owner` 必须能在 `registry/owners.json` 中登记；`knowledge-new.sh` 对未知 owner 只输出 warning，不替代 owner registry 或 owner decision。`domain=personal` 或目标路径位于 `domains/personal/` 时，默认使用 `visibility=personal-local`、`status=personal`、`scope=team-general`，不得写入团队 active index。
+
 AI 参与起草、摘要、翻译、分类、抽取或重写时，必须填写 `generated_by_ai`、`ai_role`、`ai_model_or_tool` 和 `ai_generated_at`；2026-06-21 及之后的 `generated_by_ai=true` registry item 缺少这些 provenance 字段会被 `knowledge-check` 阻断。进入 `active` 前必须补 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`，不得用空 reviewer 或占位文本关闭人工复核门禁。
 
 新增或维护 source 相关条目时，source registry 的 `owner` 必须先登记在 `registry/owners.json`；该字段表示 source 维护责任人，不等同于 owner decision。source 可复核时优先登记稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 coverage、manifest 或 Evidence Index 中写清原因和后续复核动作。
 source 新增向导的 coverage row `status` 跟随 `--source-status`：`registered`、`deprecated`、`retired` 会分别输出 `registered-pending-classification`、`deprecated-pending-classification`、`retired-pending-classification`，不得把退役或废弃 source 静默写成 registered。
+source 新增向导会按 `role`、`write_policy` 和 check/no-check 状态输出 `recommended_final_disposition`、`recommended_migration_strategy` 和中文理由；这些只是人工填写提示，不替代 owner decision，不关闭 owner gate。可复制 registry JSON 默认保持保守，落盘前必须按 `registry/schema.md`、coverage manifest 和 owner gate 状态确认。
 
 `indexes/by-status.md` 使用短 canonical 行维护状态归属，例如 `- reviewing: <id>`；不要把新条目只写入说明行，也不要继续扩展超长 status bucket。

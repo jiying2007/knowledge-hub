@@ -193,6 +193,7 @@
 - `knowledge-hub-maintenance-linking-audit-hardening-20260622`
 - `knowledge-hub-final-proof-date-rollover-hardening-20260623`
 - `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`
+- `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
 
 ## pcr02-registry-owner
 
