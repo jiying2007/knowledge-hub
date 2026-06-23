@@ -799,6 +799,24 @@ def build_maintenance_entry_audit():
                 "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
             ],
         },
+        {
+            "entry_id": "offline-maintenance-package",
+            "goal_item": "七.2-8",
+            "evidence_checks": [
+                ("README.md", ["离线人工维护", "manual_validation_pending: true", "required_followup"]),
+                ("tools/README.md", ["离线人工维护", "registry/schema.md", "indexes/README.md"]),
+                ("templates/README.md", ["默认简体中文", "Evidence Index"]),
+                ("registry/schema.md", ["Manual offline minimum fields", "manual-entry-pending-review", "manual_validation_pending: true"]),
+                ("indexes/README.md", ["最小同步", "manual_validation_pending: true", "knowledge-index-plan.sh --section all"]),
+                ("tools/knowledge-new.sh", ["manual-validation-pending", "manual-source-reason"]),
+                ("tools/knowledge-check.sh", ["--diagnostics", "--dry-run"]),
+            ],
+            "commands": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> --owner <owner>",
+                "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
+                "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all",
+            ],
+        },
     ]
     entries = []
     missing_entry_ids = []
@@ -833,9 +851,9 @@ def build_maintenance_entry_audit():
         "missing_entry_ids": missing_entry_ids,
         "entries": entries,
         "summary_zh": (
-            "docs/goals 中列出的 8 类长期维护入口均有文档、工具或回归证据。"
+            "docs/goals 中列出的 8 类长期维护入口和 1 个离线维护包均有文档、工具或回归证据。"
             if passed_count == len(entries)
-            else "长期维护入口存在缺口，请按 missing_entry_ids 和 missing_evidence 补齐。"
+            else "长期维护入口或离线维护包存在缺口，请按 missing_entry_ids 和 missing_evidence 补齐。"
         ),
     }
 
@@ -1526,9 +1544,9 @@ evidence_index.append(
         0,
         maintenance_entry_audit["status"],
         (
-            "docs/goals 中列出的 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。"
+            "docs/goals 中列出的 8 类长期维护入口和 1 个离线维护包均可恢复；只证明入口存在，不代表人工动作已完成。"
             if maintenance_entry_audit["status"] == "pass"
-            else "长期维护入口存在缺口；请查看 maintenance_entry_audit.missing_entry_ids。"
+            else "长期维护入口或离线维护包存在缺口；请查看 maintenance_entry_audit.missing_entry_ids。"
         ),
         "runtime:maintenance_entry_audit",
         "maintenance-entry-audit",

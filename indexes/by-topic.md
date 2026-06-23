@@ -239,3 +239,4 @@
 - Knowledge Hub review queue recovery packet 加固: `artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.md`
 - Knowledge Hub review queue JSONL 表单骨架加固: `artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md`
 - Knowledge Hub review queue 表单校验加固: `artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.md`
+- Knowledge Hub 离线维护审计加固: `artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.md`

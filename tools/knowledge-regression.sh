@@ -1799,8 +1799,8 @@ def test_final_gate_maintenance_entry_wording_no_section_drift():
         "第七节长期维护入口",
     ]
     required_fragments = [
-        "docs/goals 中列出的 8 类长期维护入口均有文档、工具或回归证据。",
-        "docs/goals 中列出的 8 类长期维护入口均可恢复；只证明入口存在，不代表人工动作已完成。",
+        "docs/goals 中列出的 8 类长期维护入口和 1 个离线维护包均有文档、工具或回归证据。",
+        "docs/goals 中列出的 8 类长期维护入口和 1 个离线维护包均可恢复；只证明入口存在，不代表人工动作已完成。",
     ]
     present_banned = [fragment for fragment in banned_fragments if fragment in source]
     missing_required = [fragment for fragment in required_fragments if fragment not in source]
@@ -2186,8 +2186,8 @@ def test_final_gate_owner_review_blocker():
         and source_check_runtime.get("rejected_count") == 0
         and source_check_runtime.get("failed_rows") == []
         and maintenance_entry_audit.get("status") == "pass"
-        and maintenance_entry_audit.get("expected_entry_count") == 8
-        and maintenance_entry_audit.get("passed_entry_count") == 8
+        and maintenance_entry_audit.get("expected_entry_count") == 9
+        and maintenance_entry_audit.get("passed_entry_count") == 9
         and maintenance_entry_audit.get("missing_entry_ids") == []
         and maintenance_entry_ids == [
             "manual-knowledge-entry",
@@ -2198,6 +2198,7 @@ def test_final_gate_owner_review_blocker():
             "automation-boundary-entry",
             "quality-gate-entry",
             "chinese-readability-entry",
+            "offline-maintenance-package",
         ]
         and all(row.get("evidence_refs") for row in maintenance_entries)
         and all(row.get("limitations_zh") for row in maintenance_entries)
@@ -7053,7 +7054,7 @@ def test_source_manual_entry_docs_check_preferred():
         tools_readme = ""
         read_error = str(exc)
     required_fragments = [
-        '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"',
+        '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"',
         "--no-check-reason",
         "要求 `--check` 或 `--no-check-reason` 二选一",
         "优先使用稳定只读",
@@ -7064,7 +7065,7 @@ def test_source_manual_entry_docs_check_preferred():
     tools_readme_missing = [fragment for fragment in required_fragments if fragment not in tools_readme]
     help_has_check_example = (
         help_result["exit_code"] == 0
-        and '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"' in help_result["stdout"]
+        and '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"' in help_result["stdout"]
         and "--no-check-reason" in help_result["stdout"]
     )
     expect(
