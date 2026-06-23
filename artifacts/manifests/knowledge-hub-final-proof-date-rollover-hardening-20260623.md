@@ -17,7 +17,7 @@
 | `rtk bash -n tools/knowledge-final-gate.sh` | pass | shell 语法通过。 |
 | `rtk bash -n tools/knowledge-regression.sh` | pass | shell 语法通过。 |
 | `KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review | final gate 保留 20 个 baseline 动态 proof；本轮 manifest 登记后，当前日期新增 proof 为 1，总 expected proof 为 21，baseline/selection overlap 为 0，source-check runtime 命令跟随 `2026-06-23`。 |
-| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 103 个 regression 场景全部通过。 |
+| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 当次运行历史捕获：103 个 regression 场景全部通过；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 | `rtk git diff --check` | pass | 当前 diff 无空白错误。 |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-23` | pass | 知识库一致性检查通过，errors=0，warnings=0。 |
 | `rtk bash tools/knowledge-search.sh "PCR02 OTA" --json --limit 5` | pass | 检索能恢复根 README、AGENTS 和 PCR02 OTA 归档链路。 |

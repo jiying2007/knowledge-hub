@@ -28,7 +28,7 @@
 | `rtk bash -n tools/knowledge-regression.sh` | pass | regression 工具语法通过。 |
 | `rtk bash -n tools/knowledge-final-gate.sh` | pass | final gate 工具语法通过。 |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --summary --json` | owner-review expected | 顶层 `status=ok`、`status_scope=tool-health`、`owner_review_status=needs-owner-review`、`owner_gate_status=owner-gates-open`。 |
-| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 111 个回归场景全部通过；新增 final gate 文案和 archive-only 表单兼容回归。 |
+| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 当次运行历史捕获：111 个回归场景全部通过；新增 final gate 文案和 archive-only 表单兼容回归；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-23` | pass | 全仓一致性通过，errors=0，warnings=0。 |
 | `rtk git diff --check` | pass | 当前补丁无 whitespace / conflict marker 问题。 |
 | `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review expected | `final_status=needs-owner-review`，非 owner 自动治理保持 `complete-except-owner-review`，唯一 gap 仍为 `owner-gates-open`。 |

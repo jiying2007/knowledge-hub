@@ -395,3 +395,5 @@
 - review-queue-topic-readability-applied: AI / external source 人工复核队列已从 registry 派生为只读 report-only 视图，by-topic 首屏恢复入口与历史治理台账已拆分；证据：`artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.jsonl`.
 - reviewing: `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
 - offline-review-queue-claiming-hardening-applied: 离线人工维护 follow-up 命令已统一为完整 rtk 命令，review queue 已支持过滤/分页领取；证据：`artifacts/manifests/knowledge-hub-offline-review-queue-claiming-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
+- owner-dispatch-regression-count-hardening-applied: owner_dispatch 已按 source_id + owner 隔离只读分派范围，历史 manifest 固定回归数量已补当次捕获口径；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.jsonl`.

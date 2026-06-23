@@ -25,7 +25,7 @@
 | `rtk bash -n tools/knowledge-status.sh` | pass | status dashboard 语法通过。 |
 | `rtk bash -n tools/knowledge-regression.sh` | pass | regression 工具语法通过。 |
 | `rtk bash tools/knowledge-status.sh --json --as-of 2026-06-23` | owner-review expected | `next_open_queue[]` 继续覆盖 7 条 open worksheet，逐行 `owner_ready_source=knowledge-owner-gates.rows[].owner_ready_package_status`。 |
-| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 108 个回归场景全部通过，新增 `status-owner-ready-source-no-registry-fallback`。 |
+| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 当次运行历史捕获：108 个回归场景全部通过，新增 `status-owner-ready-source-no-registry-fallback`；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-23` | pass | 全仓一致性通过，errors=0，warnings=0。 |
 | `rtk git diff --check` | pass | 当前补丁无 whitespace / conflict marker 问题。 |
 | `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review expected | `final_status=needs-owner-review`，非 owner 自动治理保持 `complete-except-owner-review`，唯一 gap 仍为 `owner-gates-open`。 |

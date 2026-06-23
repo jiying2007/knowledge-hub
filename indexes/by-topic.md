@@ -233,3 +233,4 @@
 - Knowledge Hub final-state handoff supersede and decision-index proof recovery: `artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.md`
 - Knowledge Hub review queue 与主题索引可读性加固: `artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.md`
 - Knowledge Hub offline 维护与 review queue 领取加固: `artifacts/manifests/knowledge-hub-offline-review-queue-claiming-hardening-20260623.md`
+- Knowledge Hub owner 分派与回归计数口径加固: `artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.md`

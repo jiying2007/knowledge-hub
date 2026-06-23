@@ -634,16 +634,12 @@ def make_next_open_queue_entry(row):
 
 if open_owner_rows:
     next_open_queue = [make_next_open_queue_entry(row) for row in open_owner_rows]
-    rows_by_owner = collections.defaultdict(list)
+    rows_by_scope = collections.defaultdict(list)
     for row in open_owner_rows:
-        rows_by_owner[str(row.get("owner", "") or "<missing-owner>")].append(row)
-    for owner, owner_rows in sorted(rows_by_owner.items()):
-        source_ids = sorted({
-            str(row.get("source_id", ""))
-            for row in owner_rows
-            if row.get("source_id")
-        })
-        source_id = source_ids[0] if len(source_ids) == 1 else ""
+        owner = str(row.get("owner", "") or "<missing-owner>")
+        source_id = str(row.get("source_id", "") or "")
+        rows_by_scope[(source_id, owner)].append(row)
+    for (source_id, owner), owner_rows in sorted(rows_by_scope.items()):
         next_owner_row = sorted(
             owner_rows,
             key=lambda row: (
@@ -665,6 +661,9 @@ if open_owner_rows:
         owner_dispatch.append({
             "owner": owner,
             "source_id": source_id,
+            "source_ids": [source_id] if source_id else [],
+            "dispatch_scope_id": f"{source_id or '<missing-source>'}:{owner}",
+            "mixed_source_owner": False,
             "owner_route": owner_routes[0] if len(owner_routes) == 1 else {},
             "owner_routes": owner_routes,
             "row_count": len(owner_rows),
@@ -765,7 +764,7 @@ if open_owner_rows:
                 "--forms",
             ]),
             "suggested_owner_packet": make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_row),
-            "notes_zh": "status dashboard 只读 owner 分派摘要；用于跨会话恢复 owner 领取、表单导出、校验和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
+            "notes_zh": "status dashboard 只读 owner 分派摘要；按 source_id + owner 分派，避免同一 owner 跨 source 时丢失 source scope。用于跨会话恢复 owner 领取、表单导出、校验和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
         })
     for source_id in sorted({str(row.get("source_id", "")) for row in open_owner_rows if row.get("source_id")}):
         summary_command = [

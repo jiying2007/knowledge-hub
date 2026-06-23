@@ -12,7 +12,7 @@
 - `tools/knowledge-index-plan.sh` 新增 `--section review-queue`，输出可恢复的 review queue 索引计划。
 - `indexes/by-topic.md` 首屏仅保留恢复主题、领域入口和最短命令；历史治理制品集中到“历史治理台账”。
 - `indexes/README.md` 增加 by-topic 首屏维护规则，避免历史 manifest 再次挤占恢复入口。
-- `tools/knowledge-regression.sh` 新增 `by-topic-first-screen-readability-contract` 和 `review-queue-json-contract` 两个回归场景，回归覆盖扩展到 114 项。
+- `tools/knowledge-regression.sh` 新增 `by-topic-first-screen-readability-contract` 和 `review-queue-json-contract` 两个回归场景；当次运行历史捕获为回归覆盖扩展到 114 项，当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。
 - `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md` 更新回归场景说明，保留中文可读维护证据。
 
 ## Stable Context
@@ -45,7 +45,7 @@
 | 主题索引 | `indexes/by-topic.md` | 首屏恢复入口与历史治理台账已拆分。 |
 | 索引维护说明 | `indexes/README.md` | by-topic 首屏可读性规则已记录。 |
 | 回归门禁 | `tools/knowledge-regression.sh` | 新增 by-topic 首屏可读性和 review queue JSON 契约。 |
-| 回归说明 | `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md` | 回归覆盖说明更新到 114 项。 |
+| 回归说明 | `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md` | 当次运行历史捕获：回归覆盖说明更新到 114 项；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 
 ## Validation
 

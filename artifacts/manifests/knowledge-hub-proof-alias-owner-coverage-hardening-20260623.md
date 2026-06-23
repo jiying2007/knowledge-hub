@@ -28,7 +28,7 @@
 | `rtk git diff --check` | pass | 当前补丁无 whitespace / conflict marker 问题。 |
 | `KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review expected | `proof_artifacts` 与 `proof_artifacts_20260622` 同时存在且内容一致，终态仍只剩 `owner-gates-open`。 |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms /tmp/kh-owner-partial-form-20260623.jsonl --landing-plan --landing-audit --json` | pass | 单条合法 owner form 在全 source 范围校验时 `coverage_status=partial`，剩余 6 条 open worksheet 进入 validation、landing plan 和 audit 提示。 |
-| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 107 个回归场景全部通过；`final-proof-artifacts-stable-alias`、`owner-validate-forms-partial-coverage-warning` 和 `regression-manifest-coverage` 均通过。 |
+| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 当次运行历史捕获：107 个回归场景全部通过；`final-proof-artifacts-stable-alias`、`owner-validate-forms-partial-coverage-warning` 和 `regression-manifest-coverage` 均通过；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-23` | pass | 全仓一致性通过，errors=0，warnings=0。 |
 | `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review expected | `final_status=needs-owner-review`，`automatic_governance.status=complete-except-owner-review`，唯一 gap 为 `owner-gates-open`，proof artifacts expected_count=24。 |
 

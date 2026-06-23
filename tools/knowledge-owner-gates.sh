@@ -821,13 +821,13 @@ def make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, comma
 
 def make_owner_dispatch(rows):
     dispatch_rows = []
-    rows_by_owner = {}
+    rows_by_scope = {}
     for row in rows:
         owner = row.get("owner", "") or "<missing-owner>"
-        rows_by_owner.setdefault(owner, []).append(row)
-    for owner, owner_rows in sorted(rows_by_owner.items()):
+        source_id = row.get("source_id", "") or ""
+        rows_by_scope.setdefault((source_id, owner), []).append(row)
+    for (source_id, owner), owner_rows in sorted(rows_by_scope.items()):
         owner_open_rows = [row for row in owner_rows if row["status"] == "open"]
-        source_id = owner_open_rows[0]["source_id"] if owner_open_rows else (owner_rows[0]["source_id"] if owner_rows else "")
         next_row = (
             sorted(
                 owner_open_rows,
@@ -897,6 +897,9 @@ def make_owner_dispatch(rows):
             {
                 "owner": owner,
                 "source_id": source_id,
+                "source_ids": [source_id] if source_id else [],
+                "dispatch_scope_id": f"{source_id or '<missing-source>'}:{owner}",
+                "mixed_source_owner": False,
                 "owner_route": unique_owner_routes[0] if len(unique_owner_routes) == 1 else {},
                 "owner_routes": unique_owner_routes,
                 "row_count": len(owner_rows),
@@ -913,7 +916,7 @@ def make_owner_dispatch(rows):
                 if next_row
                 else "",
                 "suggested_owner_packet": make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, commands),
-                "notes_zh": "只读 owner 分派包；用于人工领取、导出骨架、校验和生成 no-write landing plan。owner_route 只说明分派路由，不生成 owner decision，不关闭 gate。",
+                "notes_zh": "只读 owner 分派包；按 source_id + owner 分派，避免同一 owner 跨 source 时丢失 source scope。用于人工领取、导出骨架、校验和生成 no-write landing plan。owner_route 只说明分派路由，不生成 owner decision，不关闭 gate。",
             }
         )
     return dispatch_rows

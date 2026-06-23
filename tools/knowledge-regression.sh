@@ -1214,6 +1214,120 @@ def test_owner_summary_by_owner():
         },
     )
 
+def test_owner_dispatch_source_scope_isolation():
+    repo = copy_repo("owner-dispatch-source-scope-isolation")
+    worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
+    rows = []
+    for line in worksheet_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row.get("id") == "pcr02-owner-decision-worksheet-007":
+            row["source_id"] = "pcr02-project-tools"
+        rows.append(row)
+    worksheet_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
+
+    owner_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-owner-gates.sh", "--summary", "--json"])
+    status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
+    owner_parsed = {}
+    status_parsed = {}
+    try:
+        owner_parsed = json.loads(owner_result["stdout"])
+    except Exception:
+        pass
+    try:
+        status_parsed = json.loads(status_result["stdout"])
+    except Exception:
+        pass
+    owner_dispatch = owner_parsed.get("owner_summary", {}).get("owner_dispatch", [])
+    status_dispatch = status_parsed.get("owner_gates", {}).get("owner_dispatch", [])
+    owner_project_dispatches = [row for row in owner_dispatch if row.get("owner") == "project-owner"]
+    status_project_dispatches = [row for row in status_dispatch if row.get("owner") == "project-owner"]
+    expected_sources = {"pcr02-project-docs", "pcr02-project-tools"}
+
+    def scoped_dispatch_ok(dispatch_rows):
+        source_ids = {row.get("source_id") for row in dispatch_rows}
+        commands_ok = all(
+            row.get("source_id")
+            and f"--source-id {row.get('source_id')}" in row.get("owner_inbox_json_command", "")
+            and f"--source-id {row.get('source_id')}" in row.get("forms_jsonl_command", "")
+            and row.get("dispatch_scope_id") == f"{row.get('source_id')}:project-owner"
+            and row.get("source_ids") == [row.get("source_id")]
+            and row.get("mixed_source_owner") is False
+            for row in dispatch_rows
+        )
+        worksheet_scope_ok = all(
+            (
+                row.get("source_id") == "pcr02-project-docs"
+                and row.get("worksheet_ids") == ["pcr02-owner-decision-worksheet-005"]
+            )
+            or (
+                row.get("source_id") == "pcr02-project-tools"
+                and row.get("worksheet_ids") == ["pcr02-owner-decision-worksheet-007"]
+            )
+            for row in dispatch_rows
+        )
+        return len(dispatch_rows) == 2 and source_ids == expected_sources and commands_ok and worksheet_scope_ok
+
+    expect(
+        owner_result["exit_code"] == 0
+        and status_result["exit_code"] in {0, 1}
+        and scoped_dispatch_ok(owner_project_dispatches)
+        and scoped_dispatch_ok(status_project_dispatches),
+        "owner-dispatch-source-scope-isolation",
+        "owner dispatch keeps same-owner multi-source gates in separate executable source scopes",
+        {
+            "owner_exit_code": owner_result["exit_code"],
+            "status_exit_code": status_result["exit_code"],
+            "owner_project_dispatches": owner_project_dispatches,
+            "status_project_dispatches": status_project_dispatches,
+            "owner_stdout_sample": owner_result["stdout"][:1200],
+            "status_stdout_sample": status_result["stdout"][:1200],
+        },
+        repo,
+    )
+
+def test_manifest_regression_count_capture_qualifier():
+    manifests = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-*20260623.md"))
+    count_patterns = [
+        re.compile(r"\d+\s*个\s*regression\s*场景"),
+        re.compile(r"\d+\s*个\s*回归\s*场景"),
+        re.compile(r"回归覆盖扩展到\s*\d+\s*项"),
+        re.compile(r"回归覆盖说明更新到\s*\d+\s*项"),
+    ]
+    qualifier_patterns = [
+        "历史捕获",
+        "当次捕获",
+        "本次运行",
+        "以 live 输出为准",
+        "以 live 回归输出为准",
+        "以 `tools/knowledge-regression.sh --json`",
+        "registry 实时派生值",
+        "不应作为固定历史事实手工维护",
+    ]
+    violations = []
+    for manifest in manifests:
+        if manifest.name == "knowledge-hub-governance-regression-helper-20260619.md":
+            continue
+        for line_no, line in enumerate(manifest.read_text().splitlines(), start=1):
+            if not any(pattern.search(line) for pattern in count_patterns):
+                continue
+            if any(qualifier in line for qualifier in qualifier_patterns):
+                continue
+            violations.append(
+                {
+                    "path": str(manifest.relative_to(root)),
+                    "line": line_no,
+                    "text": line.strip(),
+                }
+            )
+    expect(
+        not violations,
+        "manifest-regression-count-capture-qualifier",
+        "dated governance manifests qualify fixed regression counts as historical captures",
+        {"violations": violations},
+    )
+
 def test_owner_next_open_focus():
     result = run_cmd(
         root,
@@ -6829,6 +6943,8 @@ def test_regression_manifest_coverage():
         "owner-inbox-contract",
         "owner-summary-all-open",
         "owner-summary-by-owner",
+        "owner-dispatch-source-scope-isolation",
+        "manifest-regression-count-capture-qualifier",
         "owner-next-open-focus",
         "status-next-owner-gate",
         "status-owner-ready-source-no-registry-fallback",
@@ -7014,6 +7130,8 @@ for test_fn in [
     test_owner_inbox_contract,
     test_owner_summary_all_open,
     test_owner_summary_by_owner,
+    test_owner_dispatch_source_scope_isolation,
+    test_manifest_regression_count_capture_qualifier,
     test_owner_next_open_focus,
     test_status_next_owner_gate,
     test_status_owner_ready_source_no_registry_fallback,

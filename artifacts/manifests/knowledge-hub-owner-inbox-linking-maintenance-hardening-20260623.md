@@ -20,7 +20,7 @@
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-23` | pass | 新增 manual-entry anchor 检查后，知识库一致性通过，errors=0。 |
 | `rtk bash tools/knowledge-status.sh --json --as-of 2026-06-23` | pass | `project-owner` 分派包含 `owner_inbox_json_command`，recommended sequence 为 7 步且第一步是 owner-inbox。 |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --owner-inbox` | pass | 人读 owner-inbox 显示字段分组、只读候选和 validate template。 |
-| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 103 个 regression 场景全部通过。 |
+| `rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-23` | pass | 当次运行历史捕获：103 个 regression 场景全部通过；当前 live 回归数量以 `tools/knowledge-regression.sh --json` 输出为准。 |
 | `rtk bash tools/knowledge-search.sh knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623 --json --limit 5` | pass | 可从 registry、migration 和核心索引恢复本轮条目。 |
 | `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23` | owner-review | final gate 仍只剩 `owner-gates-open`；proof expected=22，selection_dynamic=2，overlap=0。 |
 
