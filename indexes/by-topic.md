@@ -18,6 +18,7 @@
 - motor MCU: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - governance: `governance/`; `artifacts/manifests`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
+- review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `registry/sources.json`
@@ -237,3 +238,4 @@
 - Knowledge Hub owner handoff 与 manifest profile advisory 加固: `artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.md`
 - Knowledge Hub review queue recovery packet 加固: `artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.md`
 - Knowledge Hub review queue JSONL 表单骨架加固: `artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md`
+- Knowledge Hub review queue 表单校验加固: `artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.md`

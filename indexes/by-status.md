@@ -403,3 +403,5 @@
 - review-queue-recovery-packet-hardening-applied: review queue 已提供 row-level 诊断命令、批次恢复包和 final gate 结构化恢复字段，manifest advisory 已有中文 next action；证据：`artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-review-queue-forms-jsonl-hardening-20260623`
 - review-queue-forms-jsonl-hardening-applied: review queue 已提供 JSONL-only 人工填写前表单骨架，status/final gate 已暴露推荐批次和表单命令，分页恢复命令漂移已修复；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-review-queue-forms-validation-hardening-20260623`
+- review-queue-forms-validation-hardening-applied: review queue 已提供人工填回 JSONL 的 report-only 校验入口，覆盖必填人工字段、日期、decision 枚举、queue id 和 guardrail；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.jsonl`.

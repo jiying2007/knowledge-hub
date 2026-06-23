@@ -427,7 +427,7 @@ def build_review_queues(items, sources):
     active_or_promotion_rows = [row for row in all_rows if row.get("priority") == "P0"]
     recommended_row = ai_rows[0] if ai_rows else (external_rows[0] if external_rows else {})
 
-    def review_queue_command(json_mode=False, forms_jsonl=False):
+    def review_queue_command(json_mode=False, forms_jsonl=False, validate_queue_forms_path=""):
         parts = [
             "rtk",
             "bash",
@@ -444,6 +444,8 @@ def build_review_queues(items, sources):
             parts.append("--json")
         if forms_jsonl:
             parts.append("--queue-forms-jsonl")
+        if validate_queue_forms_path:
+            parts.extend(["--validate-queue-forms", validate_queue_forms_path])
         return " ".join(parts)
 
     return {
@@ -468,6 +470,7 @@ def build_review_queues(items, sources):
             "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json",
             "recommended_batch_json": review_queue_command(json_mode=True),
             "recommended_forms_jsonl": review_queue_command(forms_jsonl=True),
+            "recommended_validate_queue_forms": review_queue_command(json_mode=True, validate_queue_forms_path="'<review-queue-forms.jsonl>'"),
         },
         "must_not": [
             "队列是 report-only 派生视图，不写 registry",

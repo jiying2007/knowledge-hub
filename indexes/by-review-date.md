@@ -228,3 +228,4 @@
 - 2026-09-23: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
 - 2026-09-23: `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
 - 2026-09-23: `knowledge-hub-review-queue-forms-jsonl-hardening-20260623`
+- 2026-09-23: `knowledge-hub-review-queue-forms-validation-hardening-20260623`

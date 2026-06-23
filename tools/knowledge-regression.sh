@@ -2044,6 +2044,7 @@ def test_final_gate_owner_review_blocker():
         and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
         and review_queue_commands.get("recommended_batch_json") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json"
         and review_queue_commands.get("recommended_forms_jsonl") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --queue-forms-jsonl"
+        and review_queue_commands.get("recommended_validate_queue_forms") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json --validate-queue-forms '<review-queue-forms.jsonl>'"
         and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
         and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
@@ -4728,6 +4729,189 @@ def test_review_queue_json_contract():
             form_parse_errors.append(str(exc))
     first_form = forms[0] if forms else {}
     first_form_text = forms_result["stdout"]
+    temp_form_paths = []
+
+    def write_review_queue_forms_jsonl(form_rows):
+        handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".jsonl", delete=False)
+        temp_form_paths.append(pathlib.Path(handle.name))
+        with handle:
+            for form_row in form_rows:
+                handle.write(json.dumps(form_row, ensure_ascii=False, separators=(",", ":")) + "\n")
+        return handle.name
+
+    filled_form = dict(first_form)
+    filled_form.update({
+        "human_reviewed_by": "regression-fixture-human",
+        "human_reviewed_at": today.isoformat(),
+        "review_basis": "Regression fixture for review queue validation.",
+        "review_decision": "accept-as-review-record",
+    })
+    duplicate_form = dict(filled_form)
+    unknown_form = dict(filled_form)
+    unknown_form["queue_id"] = "item:unknown-review-queue-form:ai-human-review"
+    invalid_decision_form = dict(filled_form)
+    invalid_decision_form["review_decision"] = "owner-approved"
+    missing_human_field_form = dict(filled_form)
+    missing_human_field_form["review_basis"] = ""
+    forbidden_owner_field_form = dict(filled_form)
+    forbidden_owner_field_form["owner_decision"] = "approved"
+    identity_mismatch_form = dict(filled_form)
+    identity_mismatch_form["id"] = "tampered-review-queue-id"
+    guardrail_mismatch_form = dict(filled_form)
+    guardrail_mismatch_form["read_only"] = False
+    valid_forms_path = write_review_queue_forms_jsonl([filled_form])
+    duplicate_forms_path = write_review_queue_forms_jsonl([filled_form, duplicate_form])
+    unknown_forms_path = write_review_queue_forms_jsonl([unknown_form])
+    invalid_decision_forms_path = write_review_queue_forms_jsonl([invalid_decision_form])
+    missing_human_field_forms_path = write_review_queue_forms_jsonl([missing_human_field_form])
+    forbidden_owner_field_forms_path = write_review_queue_forms_jsonl([forbidden_owner_field_form])
+    identity_mismatch_forms_path = write_review_queue_forms_jsonl([identity_mismatch_form])
+    guardrail_mismatch_forms_path = write_review_queue_forms_jsonl([guardrail_mismatch_form])
+    validate_base_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-index-plan.sh",
+        "--section",
+        "review-queue",
+        "--json",
+        "--queue-type",
+        str(first_row.get("queue_type", "ai-human-review")),
+        "--queue-owner",
+        str(first_row.get("owner", "leiwenjun")),
+        "--queue-review-after",
+        str(first_row.get("review_after", "2026-09-17")),
+        "--queue-limit",
+        "3",
+        "--validate-queue-forms",
+    ]
+    validate_result = run_cmd(root, validate_base_command + [valid_forms_path])
+    duplicate_validate_result = run_cmd(root, validate_base_command + [duplicate_forms_path])
+    unknown_validate_result = run_cmd(root, validate_base_command + [unknown_forms_path])
+    invalid_decision_validate_result = run_cmd(root, validate_base_command + [invalid_decision_forms_path])
+    missing_human_field_validate_result = run_cmd(root, validate_base_command + [missing_human_field_forms_path])
+    forbidden_owner_field_validate_result = run_cmd(root, validate_base_command + [forbidden_owner_field_forms_path])
+    identity_mismatch_validate_result = run_cmd(root, validate_base_command + [identity_mismatch_forms_path])
+    guardrail_mismatch_validate_result = run_cmd(root, validate_base_command + [guardrail_mismatch_forms_path])
+    validate_without_json_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--validate-queue-forms",
+            valid_forms_path,
+        ],
+    )
+    validate_wrong_section_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "owner",
+            "--json",
+            "--validate-queue-forms",
+            valid_forms_path,
+        ],
+    )
+    validate_forms_conflict_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--queue-forms-jsonl",
+            "--validate-queue-forms",
+            valid_forms_path,
+        ],
+    )
+    validate_parse_errors = []
+    try:
+        validate_payload = json.loads(validate_result["stdout"])
+    except Exception as exc:
+        validate_payload = {}
+        validate_parse_errors.append(f"valid-forms: {exc}")
+    try:
+        duplicate_validate_payload = json.loads(duplicate_validate_result["stdout"])
+    except Exception as exc:
+        duplicate_validate_payload = {}
+        validate_parse_errors.append(f"duplicate-forms: {exc}")
+    try:
+        unknown_validate_payload = json.loads(unknown_validate_result["stdout"])
+    except Exception as exc:
+        unknown_validate_payload = {}
+        validate_parse_errors.append(f"unknown-forms: {exc}")
+    try:
+        invalid_decision_validate_payload = json.loads(invalid_decision_validate_result["stdout"])
+    except Exception as exc:
+        invalid_decision_validate_payload = {}
+        validate_parse_errors.append(f"invalid-decision-forms: {exc}")
+    try:
+        missing_human_field_validate_payload = json.loads(missing_human_field_validate_result["stdout"])
+    except Exception as exc:
+        missing_human_field_validate_payload = {}
+        validate_parse_errors.append(f"missing-human-field-forms: {exc}")
+    try:
+        forbidden_owner_field_validate_payload = json.loads(forbidden_owner_field_validate_result["stdout"])
+    except Exception as exc:
+        forbidden_owner_field_validate_payload = {}
+        validate_parse_errors.append(f"forbidden-owner-field-forms: {exc}")
+    try:
+        identity_mismatch_validate_payload = json.loads(identity_mismatch_validate_result["stdout"])
+    except Exception as exc:
+        identity_mismatch_validate_payload = {}
+        validate_parse_errors.append(f"identity-mismatch-forms: {exc}")
+    try:
+        guardrail_mismatch_validate_payload = json.loads(guardrail_mismatch_validate_result["stdout"])
+    except Exception as exc:
+        guardrail_mismatch_validate_payload = {}
+        validate_parse_errors.append(f"guardrail-mismatch-forms: {exc}")
+    for temp_form_path in temp_form_paths:
+        try:
+            temp_form_path.unlink()
+        except FileNotFoundError:
+            pass
+    form_validation = validate_payload.get("form_validation", {}) if isinstance(validate_payload.get("form_validation", {}), dict) else {}
+    duplicate_diagnostic_codes = [
+        row.get("code")
+        for row in duplicate_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    unknown_diagnostic_codes = [
+        row.get("code")
+        for row in unknown_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    invalid_decision_diagnostic_codes = [
+        row.get("code")
+        for row in invalid_decision_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    missing_human_field_diagnostic_codes = [
+        row.get("code")
+        for row in missing_human_field_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    forbidden_owner_field_diagnostic_codes = [
+        row.get("code")
+        for row in forbidden_owner_field_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    identity_mismatch_diagnostic_codes = [
+        row.get("code")
+        for row in identity_mismatch_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    guardrail_mismatch_diagnostic_codes = [
+        row.get("code")
+        for row in guardrail_mismatch_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
     required_first_row_fields = [
         "queue_id",
         "queue_type",
@@ -4799,6 +4983,8 @@ def test_review_queue_json_contract():
         and "knowledge-index-plan.sh --section review-queue" in filtered_batch_packet.get("recommended_batch_json", "")
         and "--json" in filtered_batch_packet.get("recommended_batch_json", "")
         and "--queue-forms-jsonl" in filtered_batch_packet.get("recommended_forms_jsonl", "")
+        and "--validate-queue-forms" in filtered_batch_packet.get("validate_queue_forms_command_template", "")
+        and "review-queue-forms.jsonl" in filtered_batch_packet.get("validate_queue_forms_command_template", "")
         and filtered_batch_packet.get("forms_jsonl_command", "").endswith("--queue-limit 3 --queue-offset 0")
         and "--queue-forms-jsonl" in filtered_batch_packet.get("forms_jsonl_command", "")
         and forms_result["exit_code"] == 0
@@ -4824,7 +5010,38 @@ def test_review_queue_json_contract():
         and "不写 registry" in " ".join(first_form.get("must_not", []))
         and first_form.get("read_only_context", {}).get("registry_owner") == first_row.get("owner")
         and forms_conflict_result["exit_code"] != 0
-        and "--queue-forms-jsonl cannot be combined with --json" in forms_conflict_result["stderr"],
+        and "--queue-forms-jsonl cannot be combined with --json" in forms_conflict_result["stderr"]
+        and validate_result["exit_code"] == 0
+        and not validate_parse_errors
+        and form_validation.get("status") == "pass"
+        and form_validation.get("read_only") is True
+        and form_validation.get("report_only") is True
+        and form_validation.get("no_registry_write") is True
+        and form_validation.get("no_owner_decision_generated") is True
+        and form_validation.get("owner_gate_mutation") is False
+        and form_validation.get("accepted_count") == 1
+        and form_validation.get("coverage_status") == "partial"
+        and "review_decision" in form_validation.get("required_submission_fields", [])
+        and duplicate_validate_result["exit_code"] != 0
+        and "duplicate-queue-id" in duplicate_diagnostic_codes
+        and unknown_validate_result["exit_code"] != 0
+        and "unknown-queue-id" in unknown_diagnostic_codes
+        and invalid_decision_validate_result["exit_code"] != 0
+        and "invalid-review-decision" in invalid_decision_diagnostic_codes
+        and missing_human_field_validate_result["exit_code"] != 0
+        and "missing-required-human-field" in missing_human_field_diagnostic_codes
+        and forbidden_owner_field_validate_result["exit_code"] != 0
+        and "forbidden-owner-field" in forbidden_owner_field_diagnostic_codes
+        and identity_mismatch_validate_result["exit_code"] != 0
+        and "field-mismatch" in identity_mismatch_diagnostic_codes
+        and guardrail_mismatch_validate_result["exit_code"] != 0
+        and "guardrail-field-mismatch" in guardrail_mismatch_diagnostic_codes
+        and validate_without_json_result["exit_code"] != 0
+        and "--validate-queue-forms requires --json" in validate_without_json_result["stderr"]
+        and validate_wrong_section_result["exit_code"] != 0
+        and "--validate-queue-forms requires --section review-queue" in validate_wrong_section_result["stderr"]
+        and validate_forms_conflict_result["exit_code"] != 0
+        and "--validate-queue-forms cannot be combined with --queue-forms-jsonl" in validate_forms_conflict_result["stderr"],
         "review-queue-json-contract",
         "status and index-plan expose report-only human review queue from registry",
         {
@@ -4848,6 +5065,29 @@ def test_review_queue_json_contract():
             "first_form": first_form,
             "forms_conflict_exit_code": forms_conflict_result["exit_code"],
             "forms_conflict_stderr": forms_conflict_result["stderr"][:500],
+            "validate_exit_code": validate_result["exit_code"],
+            "validate_parse_errors": validate_parse_errors,
+            "form_validation": form_validation,
+            "duplicate_validate_exit_code": duplicate_validate_result["exit_code"],
+            "duplicate_diagnostic_codes": duplicate_diagnostic_codes,
+            "unknown_validate_exit_code": unknown_validate_result["exit_code"],
+            "unknown_diagnostic_codes": unknown_diagnostic_codes,
+            "invalid_decision_validate_exit_code": invalid_decision_validate_result["exit_code"],
+            "invalid_decision_diagnostic_codes": invalid_decision_diagnostic_codes,
+            "missing_human_field_validate_exit_code": missing_human_field_validate_result["exit_code"],
+            "missing_human_field_diagnostic_codes": missing_human_field_diagnostic_codes,
+            "forbidden_owner_field_validate_exit_code": forbidden_owner_field_validate_result["exit_code"],
+            "forbidden_owner_field_diagnostic_codes": forbidden_owner_field_diagnostic_codes,
+            "identity_mismatch_validate_exit_code": identity_mismatch_validate_result["exit_code"],
+            "identity_mismatch_diagnostic_codes": identity_mismatch_diagnostic_codes,
+            "guardrail_mismatch_validate_exit_code": guardrail_mismatch_validate_result["exit_code"],
+            "guardrail_mismatch_diagnostic_codes": guardrail_mismatch_diagnostic_codes,
+            "validate_without_json_exit_code": validate_without_json_result["exit_code"],
+            "validate_without_json_stderr": validate_without_json_result["stderr"][:500],
+            "validate_wrong_section_exit_code": validate_wrong_section_result["exit_code"],
+            "validate_wrong_section_stderr": validate_wrong_section_result["stderr"][:500],
+            "validate_forms_conflict_exit_code": validate_forms_conflict_result["exit_code"],
+            "validate_forms_conflict_stderr": validate_forms_conflict_result["stderr"][:500],
         },
     )
 

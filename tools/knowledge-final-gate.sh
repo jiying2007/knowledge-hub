@@ -1131,6 +1131,9 @@ review_queue_recovery = {
         "recommended_forms_jsonl": review_queue_payload.get("commands", {}).get("recommended_forms_jsonl", "")
         if isinstance(review_queue_payload.get("commands", {}), dict)
         else "",
+        "recommended_validate_queue_forms": review_queue_payload.get("commands", {}).get("recommended_validate_queue_forms", "")
+        if isinstance(review_queue_payload.get("commands", {}), dict)
+        else "",
     },
     "must_not": review_queue_payload.get("must_not", [])
     if isinstance(review_queue_payload.get("must_not", []), list)
