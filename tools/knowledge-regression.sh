@@ -2042,6 +2042,8 @@ def test_final_gate_owner_review_blocker():
         and review_queue_summary.get("ai_generated_pending_count", 0) >= 1
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
         and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+        and review_queue_commands.get("recommended_batch_json") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json"
+        and review_queue_commands.get("recommended_forms_jsonl") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --queue-forms-jsonl"
         and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
         and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
@@ -4684,6 +4686,48 @@ def test_review_queue_json_contract():
     filtered_pagination = filtered_queue.get("pagination", {}) if isinstance(filtered_queue.get("pagination", {}), dict) else {}
     filtered_batch_packet = filtered_queue.get("review_batch_packet", {}) if isinstance(filtered_queue.get("review_batch_packet", {}), dict) else {}
     filtered_rows = filtered_queue.get("rows", []) if isinstance(filtered_queue.get("rows", []), list) else []
+    forms_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--queue-forms-jsonl",
+            "--queue-type",
+            str(first_row.get("queue_type", "ai-human-review")),
+            "--queue-owner",
+            str(first_row.get("owner", "leiwenjun")),
+            "--queue-review-after",
+            str(first_row.get("review_after", "2026-09-17")),
+            "--queue-limit",
+            "3",
+        ],
+    )
+    forms_conflict_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--queue-forms-jsonl",
+            "--json",
+        ],
+    )
+    form_parse_errors = []
+    forms = []
+    for line in forms_result["stdout"].splitlines():
+        if not line.strip():
+            continue
+        try:
+            forms.append(json.loads(line))
+        except Exception as exc:
+            form_parse_errors.append(str(exc))
+    first_form = forms[0] if forms else {}
+    first_form_text = forms_result["stdout"]
     required_first_row_fields = [
         "queue_id",
         "queue_type",
@@ -4751,7 +4795,36 @@ def test_review_queue_json_contract():
         and "human_reviewed_by" in filtered_batch_packet.get("required_human_fields", [])
         and len(filtered_batch_packet.get("next_commands", [])) == len(filtered_rows)
         and all("--explain" in command for command in filtered_batch_packet.get("next_commands", []))
-        and "不把 review queue 当 owner gate 签收结果" in " ".join(filtered_batch_packet.get("must_not", [])),
+        and "不把 review queue 当 owner gate 签收结果" in " ".join(filtered_batch_packet.get("must_not", []))
+        and "knowledge-index-plan.sh --section review-queue" in filtered_batch_packet.get("recommended_batch_json", "")
+        and "--json" in filtered_batch_packet.get("recommended_batch_json", "")
+        and "--queue-forms-jsonl" in filtered_batch_packet.get("recommended_forms_jsonl", "")
+        and filtered_batch_packet.get("forms_jsonl_command", "").endswith("--queue-limit 3 --queue-offset 0")
+        and "--queue-forms-jsonl" in filtered_batch_packet.get("forms_jsonl_command", "")
+        and forms_result["exit_code"] == 0
+        and not form_parse_errors
+        and len(forms) == len(filtered_rows)
+        and len(forms) <= 3
+        and "# Knowledge Index Plan" not in first_form_text
+        and "## 验证" not in first_form_text
+        and first_form.get("form_type") == "review-queue-human-review"
+        and first_form.get("status") == "human-fill-required"
+        and first_form.get("read_only") is True
+        and first_form.get("report_only") is True
+        and first_form.get("owner_gate_mutation") is False
+        and first_form.get("memory_write") is False
+        and first_form.get("source_project_write") is False
+        and first_form.get("human_reviewed_by") == ""
+        and first_form.get("human_reviewed_at") == ""
+        and first_form.get("review_basis") == ""
+        and "owner" not in first_form
+        and "owner_decision" not in first_form
+        and "reviewed_by" not in first_form
+        and "human_reviewed_by" in first_form.get("required_human_fields", [])
+        and "不写 registry" in " ".join(first_form.get("must_not", []))
+        and first_form.get("read_only_context", {}).get("registry_owner") == first_row.get("owner")
+        and forms_conflict_result["exit_code"] != 0
+        and "--queue-forms-jsonl cannot be combined with --json" in forms_conflict_result["stderr"],
         "review-queue-json-contract",
         "status and index-plan expose report-only human review queue from registry",
         {
@@ -4769,6 +4842,12 @@ def test_review_queue_json_contract():
             "filtered_row_count": len(filtered_rows),
             "filtered_pagination": filtered_pagination,
             "filtered_batch_packet": filtered_batch_packet,
+            "forms_exit_code": forms_result["exit_code"],
+            "forms_line_count": len(forms),
+            "form_parse_errors": form_parse_errors,
+            "first_form": first_form,
+            "forms_conflict_exit_code": forms_conflict_result["exit_code"],
+            "forms_conflict_stderr": forms_conflict_result["stderr"][:500],
         },
     )
 

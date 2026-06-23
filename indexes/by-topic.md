@@ -236,3 +236,4 @@
 - Knowledge Hub owner 分派与回归计数口径加固: `artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.md`
 - Knowledge Hub owner handoff 与 manifest profile advisory 加固: `artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.md`
 - Knowledge Hub review queue recovery packet 加固: `artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.md`
+- Knowledge Hub review queue JSONL 表单骨架加固: `artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md`

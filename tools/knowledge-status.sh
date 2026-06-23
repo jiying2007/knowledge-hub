@@ -425,6 +425,27 @@ def build_review_queues(items, sources):
     priority_counts = collections.Counter(str(row.get("priority", "")) for row in all_rows)
     owner_counts = collections.Counter(str(row.get("owner", "") or "<missing-owner>") for row in all_rows)
     active_or_promotion_rows = [row for row in all_rows if row.get("priority") == "P0"]
+    recommended_row = ai_rows[0] if ai_rows else (external_rows[0] if external_rows else {})
+
+    def review_queue_command(json_mode=False, forms_jsonl=False):
+        parts = [
+            "rtk",
+            "bash",
+            "~/knowledge-hub/tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+        ]
+        if recommended_row.get("queue_type"):
+            parts.extend(["--queue-type", str(recommended_row.get("queue_type", ""))])
+        if recommended_row.get("owner"):
+            parts.extend(["--queue-owner", str(recommended_row.get("owner", ""))])
+        parts.extend(["--queue-limit", str(args.review_queue_limit)])
+        if json_mode:
+            parts.append("--json")
+        if forms_jsonl:
+            parts.append("--queue-forms-jsonl")
+        return " ".join(parts)
+
     return {
         "status": "needs-human-review" if all_rows else "clear",
         "read_only": True,
@@ -445,6 +466,8 @@ def build_review_queues(items, sources):
         "commands": {
             "status_json": f"rtk bash ~/knowledge-hub/tools/knowledge-status.sh --as-of {today.isoformat()} --json",
             "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json",
+            "recommended_batch_json": review_queue_command(json_mode=True),
+            "recommended_forms_jsonl": review_queue_command(forms_jsonl=True),
         },
         "must_not": [
             "队列是 report-only 派生视图，不写 registry",

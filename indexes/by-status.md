@@ -401,3 +401,5 @@
 - owner-handoff-profile-advisory-hardening-applied: owner handoff one-shot JSON 入口已可从 status 发现，manifest profile boundary 缺失已改为 advisory 恢复提示；证据：`artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
 - review-queue-recovery-packet-hardening-applied: review queue 已提供 row-level 诊断命令、批次恢复包和 final gate 结构化恢复字段，manifest advisory 已有中文 next action；证据：`artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-review-queue-forms-jsonl-hardening-20260623`
+- review-queue-forms-jsonl-hardening-applied: review queue 已提供 JSONL-only 人工填写前表单骨架，status/final gate 已暴露推荐批次和表单命令，分页恢复命令漂移已修复；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.jsonl`.

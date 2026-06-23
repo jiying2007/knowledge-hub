@@ -1125,6 +1125,12 @@ review_queue_recovery = {
         "status_json": review_queue_payload.get("commands", {}).get("status_json", "")
         if isinstance(review_queue_payload.get("commands", {}), dict)
         else "",
+        "recommended_batch_json": review_queue_payload.get("commands", {}).get("recommended_batch_json", "")
+        if isinstance(review_queue_payload.get("commands", {}), dict)
+        else "",
+        "recommended_forms_jsonl": review_queue_payload.get("commands", {}).get("recommended_forms_jsonl", "")
+        if isinstance(review_queue_payload.get("commands", {}), dict)
+        else "",
     },
     "must_not": review_queue_payload.get("must_not", [])
     if isinstance(review_queue_payload.get("must_not", []), list)

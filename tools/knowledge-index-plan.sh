@@ -25,11 +25,16 @@ parser.add_argument("--queue-review-after", help="Filter review queue rows by re
 parser.add_argument("--queue-priority", help="Filter review queue rows by priority when --section review-queue is used.")
 parser.add_argument("--queue-limit", type=int, default=0, help="Limit review queue rows after filters; 0 means no JSON limit.")
 parser.add_argument("--queue-offset", type=int, default=0, help="Offset review queue rows after filters.")
+parser.add_argument("--queue-forms-jsonl", action="store_true", help="Print read-only human review form skeleton rows for the filtered review queue.")
 args = parser.parse_args(argv)
 if args.queue_limit < 0:
     parser.error("--queue-limit must be >= 0")
 if args.queue_offset < 0:
     parser.error("--queue-offset must be >= 0")
+if args.queue_forms_jsonl and args.json:
+    parser.error("--queue-forms-jsonl cannot be combined with --json")
+if args.queue_forms_jsonl and args.section != "review-queue":
+    parser.error("--queue-forms-jsonl requires --section review-queue")
 
 items_path = root / "registry" / "items.jsonl"
 sources_path = root / "registry" / "sources.json"
@@ -547,6 +552,86 @@ def build_review_queue_view(items, sources):
         ],
     }
 
+def build_review_queue_command(include_json=False, include_forms_jsonl=False, next_offset=None):
+    command_parts = [
+        "rtk",
+        "bash",
+        "~/knowledge-hub/tools/knowledge-index-plan.sh",
+        "--section",
+        "review-queue",
+    ]
+    if include_json:
+        command_parts.append("--json")
+    if include_forms_jsonl:
+        command_parts.append("--queue-forms-jsonl")
+    if args.queue_type:
+        command_parts.extend(["--queue-type", args.queue_type])
+    if args.queue_owner:
+        command_parts.extend(["--queue-owner", args.queue_owner])
+    if args.queue_review_after:
+        command_parts.extend(["--queue-review-after", args.queue_review_after])
+    if args.queue_priority:
+        command_parts.extend(["--queue-priority", args.queue_priority])
+    if args.queue_limit:
+        command_parts.extend(["--queue-limit", str(args.queue_limit), "--queue-offset", str(next_offset if next_offset is not None else args.queue_offset)])
+    elif args.queue_offset:
+        command_parts.extend(["--queue-offset", str(next_offset if next_offset is not None else args.queue_offset)])
+    return " ".join(command_parts)
+
+def make_review_queue_form(row):
+    form = {
+        "form_type": "review-queue-human-review",
+        "schema_version": 1,
+        "status": "human-fill-required",
+        "read_only": True,
+        "report_only": True,
+        "owner_gate_mutation": False,
+        "memory_write": False,
+        "source_project_write": False,
+        "no_registry_write": True,
+        "no_owner_decision_generated": True,
+        "no_active_promotion": True,
+        "queue_id": str(row.get("queue_id", "")),
+        "queue_type": str(row.get("queue_type", "")),
+        "object_type": str(row.get("object_type", "")),
+        "id": str(row.get("id", "")),
+        "title": str(row.get("title", "")),
+        "kind": str(row.get("kind", "")),
+        "domain": str(row.get("domain", "")),
+        "path": str(row.get("path", "")),
+        "source_id": str(row.get("source_id", "")),
+        "review_after": str(row.get("review_after", "")),
+        "priority": str(row.get("priority", "")),
+        "reasons": as_list(row.get("reasons", [])),
+        "missing_fields": as_list(row.get("missing_fields", [])),
+        "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
+        "human_reviewed_by": "",
+        "human_reviewed_at": "",
+        "review_basis": "",
+        "review_decision": "",
+        "review_decision_candidates": ["accept-as-review-record", "needs-edits", "archive-only", "reject", "defer"],
+        "retrieved_at": str(row.get("retrieved_at", "")),
+        "read_status": str(row.get("read_status", "")),
+        "source_license": str(row.get("source_license", "")),
+        "promotion_decision": str(row.get("promotion_decision", "none") or "none"),
+        "evidence_refs": as_list(row.get("evidence_refs", [])),
+        "next_commands": as_list(row.get("next_commands", [])),
+        "read_only_context": {
+            "registry_owner": str(row.get("owner", "")),
+            "registry_status": str(row.get("status", "")),
+            "ai_role": str(row.get("ai_role", "")),
+            "ai_model_or_tool": str(row.get("ai_model_or_tool", "")),
+            "ai_generated_at": str(row.get("ai_generated_at", "")),
+        },
+        "must_not": as_list(row.get("must_not", [])) + [
+            "不写 registry",
+            "不得把本表单当 owner decision",
+            "不得由 Codex 自动回填 human_reviewed_by/human_reviewed_at/review_basis",
+        ],
+        "notes_zh": "这是人工复核填写前的只读 JSONL 骨架；工具只负责按过滤条件列出待复核对象，不写 registry，不生成结论，不提升 active。",
+    }
+    return form
+
 def apply_review_queue_filters(view):
     rows = list(view.get("rows", []))
     total_row_count = len(rows)
@@ -565,24 +650,9 @@ def apply_review_queue_filters(view):
     shown_rows = rows[offset:] if not limit else rows[offset:offset + limit]
     next_offset = offset + len(shown_rows)
     has_next = next_offset < matched_count
-    command_parts = [
-        "rtk",
-        "bash",
-        "~/knowledge-hub/tools/knowledge-index-plan.sh",
-        "--section",
-        "review-queue",
-        "--json",
-    ]
-    if args.queue_type:
-        command_parts.extend(["--queue-type", args.queue_type])
-    if args.queue_owner:
-        command_parts.extend(["--queue-owner", args.queue_owner])
-    if args.queue_review_after:
-        command_parts.extend(["--queue-review-after", args.queue_review_after])
-    if args.queue_priority:
-        command_parts.extend(["--queue-priority", args.queue_priority])
-    if limit:
-        command_parts.extend(["--queue-limit", str(limit), "--queue-offset", str(next_offset)])
+    current_batch_command = build_review_queue_command(include_json=True)
+    next_page_command = build_review_queue_command(include_json=True, next_offset=next_offset) if has_next else ""
+    current_forms_command = build_review_queue_command(include_forms_jsonl=True)
 
     filtered = dict(view)
     by_type = collections.defaultdict(list)
@@ -602,7 +672,7 @@ def apply_review_queue_filters(view):
         "limit": limit,
         "has_next": has_next,
         "next_offset": next_offset if has_next else None,
-        "next_command": " ".join(command_parts) if has_next else "",
+        "next_command": next_page_command,
         "review_batch_packet": {
             "packet_type": "review-queue-batch",
             "read_only": True,
@@ -619,7 +689,10 @@ def apply_review_queue_filters(view):
                 for row in shown_rows
                 for command in row.get("next_commands", [])
             ],
-            "next_page_command": " ".join(command_parts) if has_next else "",
+            "recommended_batch_json": current_batch_command,
+            "recommended_forms_jsonl": current_forms_command,
+            "forms_jsonl_command": current_forms_command,
+            "next_page_command": next_page_command,
             "must_not": [
                 "不生成 owner decision",
                 "不关闭 owner gate",
@@ -642,7 +715,8 @@ def apply_review_queue_filters(view):
         "shown_count": len(shown_rows),
         "has_next": has_next,
         "next_offset": next_offset if has_next else None,
-        "next_command": " ".join(command_parts) if has_next else "",
+        "next_command": next_page_command,
+        "forms_jsonl_command": current_forms_command,
         "notes_zh": "只过滤 registry 派生视图；不生成人工复核结论，不回填 human_reviewed_by，不改变 registry。",
     }
     filtered["review_batch_packet"] = filtered_summary["review_batch_packet"]
@@ -786,6 +860,11 @@ by_manifest = {
     "rows": manifest_rows,
 }
 by_review_queue = apply_review_queue_filters(build_review_queue_view(items, sources))
+
+if args.queue_forms_jsonl:
+    for row in by_review_queue.get("rows", []):
+        print(json.dumps(make_review_queue_form(row), ensure_ascii=False, sort_keys=True))
+    sys.exit(1 if errors else 0)
 
 def read_relative_text(relative_path):
     path = root / relative_path

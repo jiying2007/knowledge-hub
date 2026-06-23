@@ -49,7 +49,7 @@
 
 人工新增草稿默认把 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` 写入 `validation_refs` 和 Evidence Index；离线待验证路径还必须保留 `manual_validation_pending: true` 与同一条 diagnostics follow-up，避免只留下普通 check 而缺少中文分组修复入口。
 
-AI / external source 人工复核队列按批次处理：优先用 `knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json` 领取一页，继续翻页读取 `pagination.next_command`。每条 row 的 `next_commands[]` 只用于打开只读 explain/诊断入口；人工复核结论仍必须由人填写 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`，工具不自动回填、不提升 active、不关闭 owner gate。
+AI / external source 人工复核队列按批次处理：优先用 `knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json` 领取一页，继续翻页读取 `pagination.next_command`。需要交给人工填写时，再用同一组过滤条件加 `--queue-forms-jsonl` 导出 JSONL 表单骨架；该输出只包含只读上下文和空白人工字段，不写 registry、不自动回填、不提升 active、不关闭 owner gate。每条 row 的 `next_commands[]` 只用于打开只读 explain/诊断入口；人工复核结论仍必须由人填写 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`。
 
 终态失败恢复决策树：
 
