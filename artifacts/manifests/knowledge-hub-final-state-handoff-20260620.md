@@ -1,5 +1,9 @@
 # Knowledge Hub final state handoff 2026-06-20
 
+## Superseded Recovery Note
+
+本接力包保留为历史证据。2026-06-23 起，当前恢复口径以 `artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.md` 为准：最新自动治理状态仍是 `needs-owner-review` / `complete-except-owner-review`，剩余语义 blocker 仍只有 7 个 PCR02 owner gates，且 final proof 可发现性已扩展到 `indexes/by-decision.md`。
+
 ## Latest Goal
 
 按 `docs/goals/knowledge-hub-final-state.md` 定义，继续把 Knowledge Hub 压实为长期可维护、跨会话可恢复、人工可独立维护、AI 可辅助治理、自动化受控的统一知识控制面。

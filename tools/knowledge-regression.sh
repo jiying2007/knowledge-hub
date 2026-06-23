@@ -4266,6 +4266,7 @@ def test_final_proof_artifact_discoverability():
         "indexes/by-status.md",
         "indexes/by-review-date.md",
         "indexes/by-topic.md",
+        "indexes/by-decision.md",
     ]:
         try:
             index_texts[relative] = (root / relative).read_text()
@@ -4371,6 +4372,62 @@ def test_final_proof_artifact_discoverability():
         },
     )
 
+def test_final_proof_decision_index_recovery_contract():
+    final_gate_text = ""
+    decision_index_text = ""
+    errors = []
+    try:
+        final_gate_text = (root / "tools" / "knowledge-final-gate.sh").read_text()
+    except Exception as exc:
+        errors.append(f"tools/knowledge-final-gate.sh read failed: {exc}")
+    try:
+        decision_index_text = (root / "indexes" / "by-decision.md").read_text()
+    except Exception as exc:
+        errors.append(f"indexes/by-decision.md read failed: {exc}")
+    required_ids = [
+        "knowledge-hub-final-proof-date-rollover-hardening-20260623",
+        "knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623",
+        "knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623",
+        "knowledge-hub-proof-alias-owner-coverage-hardening-20260623",
+        "knowledge-hub-owner-ready-status-source-hardening-20260623",
+        "knowledge-hub-owner-archive-form-readability-hardening-20260623",
+        "knowledge-hub-final-state-handoff-supersede-20260623",
+    ]
+    missing_tool_fragments = [
+        fragment for fragment in [
+            "FINAL_PROOF_INDEX_PATHS",
+            '"indexes/by-decision.md"',
+        ]
+        if fragment not in final_gate_text
+    ]
+    missing_decision_ids = [
+        item_id for item_id in required_ids
+        if item_id not in decision_index_text
+    ]
+    missing_guardrail_fragments = [
+        fragment for fragment in [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+        ]
+        if fragment not in decision_index_text
+    ]
+    expect(
+        not errors
+        and not missing_tool_fragments
+        and not missing_decision_ids
+        and not missing_guardrail_fragments,
+        "final-proof-decision-index-recovery-contract",
+        "final proof discoverability includes by-decision recovery anchors",
+        {
+            "errors": errors,
+            "missing_tool_fragments": missing_tool_fragments,
+            "missing_decision_ids": missing_decision_ids,
+            "missing_guardrail_fragments": missing_guardrail_fragments,
+            "required_ids": required_ids,
+        },
+    )
+
 def test_final_proof_artifact_as_of_date_selector():
     repo = copy_repo("final-proof-artifact-as-of-date-selector")
     artifact_id = "knowledge-hub-proof-date-selector-fixture-20260623"
@@ -4462,6 +4519,7 @@ def test_final_proof_artifact_as_of_date_selector():
         "indexes/by-status.md": f"\n- reviewing: `{artifact_id}`\n- proof-date-selector-applied: proof 日期选择器 fixture 已登记；证据：`{jsonl_rel}`.\n",
         "indexes/by-review-date.md": f"\n- 2026-09-23: `{artifact_id}`\n",
         "indexes/by-topic.md": f"\n- Knowledge Hub proof 日期选择器 fixture: `{md_rel}`\n",
+        "indexes/by-decision.md": f"\n- `{artifact_id}`: proof 日期选择器 fixture；证据：`{md_rel}`；不生成 owner decision、不关闭 owner gate、不写 memory。\n",
     }
     for relative, text in index_appends.items():
         with (repo / relative).open("a") as fh:
@@ -6576,6 +6634,7 @@ def test_regression_manifest_coverage():
         "templates-required-sections",
         "index-readme-maintenance-coverage",
         "final-proof-artifact-discoverability",
+        "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
         "final-proof-artifacts-stable-alias",
         "index-plan-extended-sections",
@@ -6754,6 +6813,7 @@ for test_fn in [
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
     test_final_proof_artifact_discoverability,
+    test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,
     test_final_proof_artifacts_stable_alias,
     test_index_plan_extended_sections,

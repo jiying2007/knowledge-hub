@@ -389,3 +389,5 @@
 - owner-ready-status-source-hardening-applied: owner-ready 状态来源已收口到 owner-gates 逐行强校验字段，status owner queue 不再从 registry_items 推断 covered；证据：`artifacts/manifests/knowledge-hub-owner-ready-status-source-hardening-20260623.jsonl`.
 - reviewing: `knowledge-hub-owner-archive-form-readability-hardening-20260623`
 - owner-archive-form-readability-hardening-applied: archive-only owner 表单已允许明确 archive 路径并拒绝非 archive 目标，final gate 维护入口文案和本地 owner JSONL 草稿边界已加固；证据：`artifacts/manifests/knowledge-hub-owner-archive-form-readability-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-final-state-handoff-supersede-20260623`
+- final-state-handoff-supersede-applied: 旧 final-state handoff 已有当前恢复口径的 supersede 锚点，final proof 可发现性扩展到 by-decision；证据：`artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.jsonl`.

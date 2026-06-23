@@ -208,6 +208,7 @@ FINAL_PROOF_INDEX_PATHS = [
     "indexes/by-status.md",
     "indexes/by-review-date.md",
     "indexes/by-topic.md",
+    "indexes/by-decision.md",
 ]
 SOURCE_CHECK_SNAPSHOT_ID = "pcr02-level2-source-check-execution-snapshot-20260621"
 SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [

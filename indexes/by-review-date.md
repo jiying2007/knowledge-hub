@@ -221,3 +221,4 @@
 - 2026-09-23: `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
 - 2026-09-23: `knowledge-hub-owner-ready-status-source-hardening-20260623`
 - 2026-09-23: `knowledge-hub-owner-archive-form-readability-hardening-20260623`
+- 2026-09-23: `knowledge-hub-final-state-handoff-supersede-20260623`

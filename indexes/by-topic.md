@@ -221,3 +221,4 @@
 - Knowledge Hub proof alias、owner coverage 与最短路径口径加固: `artifacts/manifests/knowledge-hub-proof-alias-owner-coverage-hardening-20260623.md`
 - Knowledge Hub owner-ready 状态来源加固: `artifacts/manifests/knowledge-hub-owner-ready-status-source-hardening-20260623.md`
 - Knowledge Hub owner archive 表单与维护文案加固: `artifacts/manifests/knowledge-hub-owner-archive-form-readability-hardening-20260623.md`
+- Knowledge Hub final-state handoff supersede and decision-index proof recovery: `artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.md`
