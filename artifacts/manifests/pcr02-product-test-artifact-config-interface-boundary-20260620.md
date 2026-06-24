@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-product-test`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test`
 - 扫描方式：只读路径分类；未执行 build/test，未展开附件，未复制源码正文。
 
 ## 统计

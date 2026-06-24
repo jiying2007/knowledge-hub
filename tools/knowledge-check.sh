@@ -49,6 +49,40 @@ def resolve_today():
 today, today_source = resolve_today()
 
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+TEXT_FILE_SUFFIXES = {".md", ".json", ".jsonl", ".sh", ".txt"}
+
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
+def iter_text_files(scan_roots, suffixes=TEXT_FILE_SUFFIXES):
+    seen_paths = set()
+    for base in scan_roots:
+        if not base.exists():
+            continue
+        candidates = [base] if base.is_file() else base.rglob("*")
+        for path in candidates:
+            if path in seen_paths:
+                continue
+            seen_paths.add(path)
+            if not path.is_file() or path.suffix.lower() not in suffixes:
+                continue
+            yield path
+
 EXPECTED_BOUNDARY_MANIFESTS = {
     "pcr02-tools-boundary-20260620": {
         "md": "artifacts/manifests/pcr02-tools-boundary-20260620.md",
@@ -152,6 +186,8 @@ ALLOWED_ITEM_KINDS = {
     "codex-workflow",
     "personal-note",
     "artifact-ref",
+    "authorization",
+    "automation-run",
 }
 ALLOWED_ITEM_STATUSES = {
     "draft",
@@ -189,10 +225,10 @@ ALLOWED_DOMAIN_ROOTS = {
     "root",
     "governance",
     "projects",
+    "notes",
     "embedded",
     "patents",
     "codex",
-    "personal",
 }
 ALLOWED_SOURCE_ROLES = {
     "team-knowledge-source",
@@ -200,6 +236,10 @@ ALLOWED_SOURCE_ROLES = {
     "patent-source",
     "codex-governance-source",
     "auxiliary-memory-source",
+    "codex-history-source",
+    "codex-session-source",
+    "codex-archive-registry-source",
+    "codex-automation-source",
     "project-current-docs-source",
     "project-current-tools-source",
     "project-current-knowledge-source",
@@ -215,6 +255,10 @@ ALLOWED_SOURCE_AUTHORITIES = {
     "patent-materials",
     "codex-workflow-history",
     "auxiliary-recall-only",
+    "codex-history-log",
+    "codex-raw-session-history",
+    "codex-archive-registry",
+    "codex-automation-ledger",
     "legacy-project-current-docs",
     "legacy-project-current-tools",
     "legacy-project-current-knowledge",
@@ -234,6 +278,7 @@ ALLOWED_SOURCE_WRITE_POLICIES = {
     "copy-first-migration-only",
     "do-not-mix-with-engineering-knowledge",
     "use-codex-archive-tools",
+    "hub-main-registry",
     "read-only-unless-explicitly-approved",
     "externalize-to-knowledge-hub-before-prune",
 }
@@ -246,9 +291,71 @@ ALLOWED_SOURCE_FINAL_DISPOSITIONS = {
     "owner-gated-pending-decision",
     "no-migration-with-reason",
     "auxiliary-recall-only",
+    "hub-main-source",
     "external-tool-owned",
     "mixed-terminal-coverage",
 }
+ALLOWED_SOURCE_CONTROL_OBJECT_TYPES = {
+    "markdown",
+    "session",
+    "history",
+    "tool",
+    "source-code",
+    "config",
+    "artifact",
+    "binary",
+    "log",
+    "archive",
+    "automation-run",
+    "unknown",
+}
+ALLOWED_SOURCE_CONTROL_DISPOSITIONS = {
+    "copy-body",
+    "summary-only",
+    "artifact-ref",
+    "reference-only",
+    "archive-only",
+    "exclude",
+}
+ALLOWED_SOURCE_CONTROL_STATUSES = {
+    "pending",
+    "covered",
+    "blocked",
+    "excluded",
+}
+SOURCE_CONTROL_REQUIRED_FILES = [
+    "README.md",
+    "inventory.jsonl",
+    "coverage.md",
+    "migration-plan.md",
+]
+SOURCE_CONTROL_REQUIRED_ROW_FIELDS = [
+    "id",
+    "source_id",
+    "source_path",
+    "object_type",
+    "hub_disposition",
+    "target_path",
+    "status",
+    "reason_zh",
+    "risk_zh",
+    "checked_at",
+]
+SOURCE_CONTROL_RAW_OBJECT_TYPES = {"session", "history", "source-code", "binary", "log"}
+LOCAL_PATH_PREFIXES = (
+    "artifacts/",
+    "docs/",
+    "domains/",
+    "inbox/",
+    "notes/",
+    "projects/",
+    "sources/",
+    "registry/",
+    "indexes/",
+    "governance/",
+    "tools/",
+    "templates/",
+)
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 OWNER_DECISION_DRAFT_FIELDS = {
     "owner_decision",
@@ -343,6 +450,18 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("source-coverage:"),
         ),
         (
+            "source-control",
+            "source 主控目录异常",
+            "检查 sources/<source_id>/README.md、inventory.jsonl、coverage.md、migration-plan.md，确保每个 registered source 都有 Hub 内控制面，raw/session/source-code 不能 copy-body 进入正文层。",
+            lambda msg: msg.startswith("source-control:"),
+        ),
+        (
+            "owner-target",
+            "owner 决策目标缺失",
+            "检查 owner decision landing JSONL 的 target_decision，并确认已映射到硬切换后的 projects/ 目标文件；reference-only/report-only 项不要求本地正文目标。",
+            lambda msg: msg.startswith("owner-target:"),
+        ),
+        (
             "owner-decision-draft",
             "owner decision 草稿命名异常",
             "将未签收 owner decision 草稿改为 *.local.jsonl，或在真实 owner 签收后登记为 reviewed landing artifact；Codex 不代签、不关闭 gate。",
@@ -351,7 +470,7 @@ def build_diagnostics(error_items, warning_items):
         (
             "automation-boundary",
             "自动化 report-only / no-memory 边界异常",
-            "检查 registry/maintenance-runs.jsonl 中 enabled、mode、writes_memory、writes_team_active_index 和 no_memory_write_gate 字段；自动化默认只能 report-only。",
+            "检查 registry/maintenance-runs.jsonl 中 enabled、mode、writes_memory、writes_team_active_index 和 no_memory_write_gate 字段；自动化默认只能 read-only/report-only/plan-only/local-commit。",
             lambda msg: msg.startswith("maintenance-runs:"),
         ),
         (
@@ -462,6 +581,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("secret-pattern:"),
         ),
         (
+            "user-path-boundary",
+            "用户绝对路径边界异常",
+            "把长期文本中的用户机器绝对路径改为 ~/ 形式；工具内部可解析真实路径，但对外输出必须脱敏。",
+            lambda msg: msg.startswith("user-path-boundary:"),
+        ),
+        (
             "explain",
             "explain 目标不存在",
             "确认 --explain 参数使用的是 registry/items.jsonl 中真实存在的 item id。",
@@ -535,6 +660,29 @@ source_check_health = {
     "report_only_findings": [
         "source check commands are inspected but not executed by knowledge-check",
     ],
+}
+source_control_health = {
+    "mode": "hub-source-control-directories",
+    "registered_source_count": len(sources),
+    "required_file_count": len(sources) * len(SOURCE_CONTROL_REQUIRED_FILES),
+    "present_file_count": 0,
+    "missing_source_ids": [],
+    "missing_files": [],
+    "inventory_row_count": 0,
+    "invalid_inventory_rows": [],
+    "unsafe_raw_copy_rows": [],
+    "rows_by_source": {},
+    "status": "pass",
+}
+owner_target_health = {
+    "mode": "owner-decision-landing-target-existence",
+    "landing_manifest": "artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl",
+    "checked_count": 0,
+    "present_count": 0,
+    "skipped_count": 0,
+    "missing_targets": [],
+    "rows": [],
+    "status": "pass",
 }
 source_ids = set()
 for source in sources:
@@ -623,13 +771,145 @@ source_check_health["stale_review_after_ids"] = sorted(source_check_health["stal
 source_check_health["stale_review_after_source_ids"] = sorted(source_check_health["stale_review_after_source_ids"])
 source_check_health["rows"] = sorted(source_check_health["rows"], key=lambda row: row["source_id"])
 
+def local_inventory_target_exists(target_text):
+    if not target_text:
+        return True
+    if pathlib.Path(target_text).is_absolute() or target_text.startswith(("./", "../")):
+        return False
+    target_path = root / target_text
+    if target_text.startswith(LOCAL_PATH_PREFIXES):
+        return target_path.exists()
+    return True
+
+for source_id in sorted(source_ids):
+    source_dir = root / "sources" / source_id
+    missing_for_source = []
+    for filename in SOURCE_CONTROL_REQUIRED_FILES:
+        required_path = source_dir / filename
+        if required_path.exists():
+            source_control_health["present_file_count"] += 1
+        else:
+            rel_missing = str(required_path.relative_to(root))
+            missing_for_source.append(rel_missing)
+            source_control_health["missing_files"].append(rel_missing)
+            errors.append(f"source-control:{source_id} missing {rel_missing}")
+    if missing_for_source:
+        source_control_health["missing_source_ids"].append(source_id)
+    inventory_path = source_dir / "inventory.jsonl"
+    source_control_health["rows_by_source"][source_id] = 0
+    if not inventory_path.exists():
+        continue
+    for line_no, row in enumerate(load_jsonl(inventory_path), 1):
+        row_id = str(row.get("id", f"{source_id}:{line_no}"))
+        source_control_health["inventory_row_count"] += 1
+        source_control_health["rows_by_source"][source_id] += 1
+        row_errors = []
+        for field in SOURCE_CONTROL_REQUIRED_ROW_FIELDS:
+            if field not in row or row.get(field) in (None, ""):
+                row_errors.append(f"missing {field}")
+        row_source_id = str(row.get("source_id", ""))
+        if row_source_id and row_source_id != source_id:
+            row_errors.append(f"source_id mismatch: {row_source_id}")
+        object_type = str(row.get("object_type", ""))
+        hub_disposition = str(row.get("hub_disposition", ""))
+        status = str(row.get("status", ""))
+        if object_type and object_type not in ALLOWED_SOURCE_CONTROL_OBJECT_TYPES:
+            row_errors.append(f"invalid object_type: {object_type}")
+        if hub_disposition and hub_disposition not in ALLOWED_SOURCE_CONTROL_DISPOSITIONS:
+            row_errors.append(f"invalid hub_disposition: {hub_disposition}")
+        if status and status not in ALLOWED_SOURCE_CONTROL_STATUSES:
+            row_errors.append(f"invalid status: {status}")
+        checked_at = str(row.get("checked_at", ""))
+        if checked_at:
+            try:
+                dt.date.fromisoformat(checked_at)
+            except Exception:
+                row_errors.append(f"invalid checked_at: {checked_at}")
+        target_path_text = str(row.get("target_path", "")).strip()
+        if target_path_text:
+            if pathlib.Path(target_path_text).is_absolute() or target_path_text.startswith(("./", "../")):
+                row_errors.append(f"target_path must be repo-relative or source-local reference: {target_path_text}")
+            elif not local_inventory_target_exists(target_path_text):
+                row_errors.append(f"target_path missing: {target_path_text}")
+        if object_type in SOURCE_CONTROL_RAW_OBJECT_TYPES and hub_disposition == "copy-body":
+            raw_row = {
+                "source_id": source_id,
+                "row_id": row_id,
+                "object_type": object_type,
+                "hub_disposition": hub_disposition,
+                "target_path": target_path_text,
+            }
+            source_control_health["unsafe_raw_copy_rows"].append(raw_row)
+            row_errors.append("raw/session/source-code/log/binary must not use copy-body")
+        if row_errors:
+            invalid = {
+                "source_id": source_id,
+                "row_id": row_id,
+                "line": line_no,
+                "errors": row_errors,
+            }
+            source_control_health["invalid_inventory_rows"].append(invalid)
+            for row_error in row_errors:
+                errors.append(f"source-control:{source_id} inventory row {row_id} {row_error}")
+
+owner_target_landing_path = root / owner_target_health["landing_manifest"]
+for row in load_jsonl(owner_target_landing_path):
+    worksheet_id = str(row.get("worksheet_id", "<unknown>"))
+    owner_decision = str(row.get("owner_decision", ""))
+    target_decision = str(row.get("target_decision", ""))
+    target_status = "skipped"
+    target_path = ""
+    skip_decisions = {"reference-only", "no-migration", "report-only-governance-candidate"}
+    if owner_decision in {"reference-only", "teamized-report-only"} or target_decision in skip_decisions:
+        owner_target_health["skipped_count"] += 1
+    elif target_decision.startswith("domains/projects/"):
+        target_path = "projects/" + target_decision[len("domains/projects/"):]
+    elif target_decision.startswith("projects/"):
+        target_path = target_decision
+    if target_path:
+        owner_target_health["checked_count"] += 1
+        if (root / target_path).exists():
+            owner_target_health["present_count"] += 1
+            target_status = "present"
+        else:
+            target_status = "missing"
+            missing = {
+                "worksheet_id": worksheet_id,
+                "target_decision": target_decision,
+                "mapped_target_path": target_path,
+            }
+            owner_target_health["missing_targets"].append(missing)
+            errors.append(f"owner-target:{worksheet_id} target path missing: {target_path}")
+    owner_target_health["rows"].append({
+        "worksheet_id": worksheet_id,
+        "owner_decision": owner_decision,
+        "target_decision": target_decision,
+        "mapped_target_path": target_path,
+        "status": target_status,
+    })
+source_control_health["missing_source_ids"] = sorted(set(source_control_health["missing_source_ids"]))
+source_control_health["missing_files"] = sorted(source_control_health["missing_files"])
+source_control_health["status"] = "fail" if (
+    source_control_health["missing_files"]
+    or source_control_health["invalid_inventory_rows"]
+    or source_control_health["unsafe_raw_copy_rows"]
+) else "pass"
+owner_target_health["status"] = "fail" if owner_target_health["missing_targets"] else "pass"
+
 automation_safety_health = {
     "mode": "registry-maintenance-runs",
     "record_count": 0,
     "checked_count": 0,
     "unsafe_run_ids": [],
     "missing_guard_run_ids": [],
+    "authorization_required_run_ids": [],
     "rows": [],
+}
+authorization_rows = load_jsonl(root / "registry" / "authorizations.jsonl")
+authorization_ids = {
+    str(row.get("authorization_id", ""))
+    for row in authorization_rows
+    if isinstance(row, dict) and str(row.get("authorization_id", "")).strip()
 }
 for run in load_jsonl(root / "registry" / "maintenance-runs.jsonl"):
     run_id = str(run.get("run_id", "<unknown>"))
@@ -644,24 +924,32 @@ for run in load_jsonl(root / "registry" / "maintenance-runs.jsonl"):
     automation_safety_health["checked_count"] += 1
     enabled = run.get("enabled")
     mode = str(run.get("mode", ""))
+    authorization_id = str(run.get("authorization_id", "")).strip()
     writes_memory = run.get("writes_memory")
     writes_team_active_index = run.get("writes_team_active_index")
     no_memory_write_gate = str(run.get("no_memory_write_gate", "")).strip()
     row_errors = []
     if enabled is not False:
         row_errors.append("enabled must be false")
-    if mode != "report-only":
-        row_errors.append("mode must be report-only")
-    if writes_memory is not False:
-        row_errors.append("writes_memory must be false")
-    if writes_team_active_index is not False:
-        row_errors.append("writes_team_active_index must be false")
+    if mode not in {"read-only", "report-only", "plan-only", "local-commit", "apply-with-review", "forbidden"}:
+        row_errors.append("mode must be read-only/report-only/plan-only/local-commit/apply-with-review/forbidden")
+    if mode == "apply-with-review" and authorization_id not in authorization_ids:
+        row_errors.append("apply-with-review requires registered authorization_id")
+    if mode in {"read-only", "report-only", "plan-only", "local-commit"}:
+        if writes_memory is not False:
+            row_errors.append("writes_memory must be false without authorization")
+        if writes_team_active_index is not False:
+            row_errors.append("writes_team_active_index must be false without authorization")
+    if mode == "apply-with-review" and (writes_memory is not False or writes_team_active_index is not False) and authorization_id not in authorization_ids:
+        row_errors.append("write actions require registered authorization_id")
     if not no_memory_write_gate:
         row_errors.append("no_memory_write_gate is required")
     if row_errors:
         automation_safety_health["unsafe_run_ids"].append(run_id)
         if "no_memory_write_gate is required" in row_errors:
             automation_safety_health["missing_guard_run_ids"].append(run_id)
+        if any("authorization_id" in row_error for row_error in row_errors):
+            automation_safety_health["authorization_required_run_ids"].append(run_id)
         for row_error in row_errors:
             errors.append(f"maintenance-runs:{run_id} {row_error}")
     automation_safety_health["rows"].append({
@@ -669,6 +957,7 @@ for run in load_jsonl(root / "registry" / "maintenance-runs.jsonl"):
         "automation_id": str(run.get("automation_id", "")),
         "enabled": enabled,
         "mode": mode,
+        "authorization_id": authorization_id,
         "writes_memory": writes_memory,
         "writes_team_active_index": writes_team_active_index,
         "has_no_memory_write_gate": bool(no_memory_write_gate),
@@ -677,6 +966,62 @@ for run in load_jsonl(root / "registry" / "maintenance-runs.jsonl"):
     })
 automation_safety_health["unsafe_run_ids"] = sorted(automation_safety_health["unsafe_run_ids"])
 automation_safety_health["missing_guard_run_ids"] = sorted(automation_safety_health["missing_guard_run_ids"])
+automation_safety_health["authorization_required_run_ids"] = sorted(automation_safety_health["authorization_required_run_ids"])
+
+authorization_health = {
+    "record_count": len(authorization_rows),
+    "active_count": 0,
+    "invalid_authorization_ids": [],
+    "rows": [],
+}
+allowed_authorization_actions = {
+    "owner-decision-landing",
+    "active-promotion",
+    "memory-write",
+    "source-project-write",
+    "automation-apply-with-review",
+    "external-publish",
+    "delete-or-prune",
+    "remote-git-write",
+}
+allowed_authorization_statuses = {"active", "expired", "revoked", "used", "superseded"}
+for row in authorization_rows:
+    auth_id = str(row.get("authorization_id", "<unknown>"))
+    row_errors = []
+    for field in ["authorization_id", "authorized_by", "authorized_at", "scope", "allowed_actions", "expires_at", "evidence_refs", "rollback_path", "validation_commands", "status"]:
+        if row.get(field) in ("", None, []):
+            row_errors.append(f"missing {field}")
+    for field in ["authorized_at", "expires_at"]:
+        value = str(row.get(field, ""))
+        if value:
+            try:
+                dt.date.fromisoformat(value)
+            except Exception:
+                row_errors.append(f"invalid {field}")
+    actions = row.get("allowed_actions", [])
+    if not isinstance(actions, list) or not actions:
+        row_errors.append("allowed_actions must be non-empty list")
+    else:
+        for action in actions:
+            if action not in allowed_authorization_actions:
+                row_errors.append(f"invalid allowed_action {action}")
+    status = str(row.get("status", ""))
+    if status and status not in allowed_authorization_statuses:
+        row_errors.append(f"invalid status {status}")
+    if status == "active":
+        authorization_health["active_count"] += 1
+    if row_errors:
+        authorization_health["invalid_authorization_ids"].append(auth_id)
+        for row_error in row_errors:
+            errors.append(f"authorizations:{auth_id} {row_error}")
+    authorization_health["rows"].append({
+        "authorization_id": auth_id,
+        "status": status,
+        "allowed_actions": actions if isinstance(actions, list) else [],
+        "check_status": "pass" if not row_errors else "fail",
+        "errors": row_errors,
+    })
+authorization_health["invalid_authorization_ids"] = sorted(authorization_health["invalid_authorization_ids"])
 
 source_coverage_selection = {
     "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
@@ -1059,6 +1404,8 @@ if not args.sources_only:
         if not topic_domain:
             errors.append(f"topics:{topic_id} missing domain")
         else:
+            if str(topic_domain).startswith(("domains/projects", "domains/personal")):
+                errors.append(f"topics:{topic_id} domain uses deprecated canonical path: {topic_domain}")
             topic_path = pathlib.Path(str(topic_domain))
             if topic_path.is_absolute():
                 errors.append(f"topics:{topic_id} domain must be relative: {topic_domain}")
@@ -1072,16 +1419,22 @@ if not args.sources_only:
                 if allowed_kind not in ALLOWED_ITEM_KINDS:
                     errors.append(f"topics:{topic_id} invalid allowed_kind: {allowed_kind}")
 
-    local_path_prefixes = (
-        "artifacts/",
-        "docs/",
-        "domains/",
-        "registry/",
-        "indexes/",
-        "governance/",
-        "tools/",
-        "templates/",
-    )
+    retention_path = root / "registry" / "retention.json"
+    if retention_path.exists():
+        retention_doc = load_json(retention_path)
+        rules = retention_doc.get("rules", [])
+        if not isinstance(rules, list):
+            errors.append("retention: rules must be list")
+        else:
+            for index, rule in enumerate(rules):
+                if not isinstance(rule, dict):
+                    errors.append(f"retention:{index} rule must be object")
+                    continue
+                rule_domain = str(rule.get("domain", ""))
+                if rule_domain.startswith(("domains/projects", "domains/personal")):
+                    errors.append(f"retention:{index} domain uses deprecated canonical path: {rule_domain}")
+
+    local_path_prefixes = LOCAL_PATH_PREFIXES
     migrations = load_jsonl(root / "registry" / "migrations.jsonl")
     for migration in migrations:
         migration_id = migration.get("to") or migration.get("mode") or "<unknown>"
@@ -1284,17 +1637,15 @@ if not args.sources_only:
 
     manual_entry_anchor_checks = {
         "README.md": [
-            "低复杂度入口速查",
-            "人工维护 5 条最短路径",
-            "新增一条知识",
-            "新增一个 source",
-            "归档一条历史记录",
-            "owner 签收一个 gate",
-            "跑一次终态检查",
+            "日常入口",
+            "目录边界",
+            "迁移口径",
+            "高风险授权",
+            "中文长期资产",
+            "新会话恢复",
             "knowledge-index-plan.sh --section linking --json",
-            "owner_inbox_json_command",
-            "personal-local",
-            "recommended_final_disposition",
+            "registry/authorizations.jsonl",
+            "registry/automation-runs.jsonl",
         ],
         "tools/README.md": [
             "低复杂度入口速查",
@@ -1459,16 +1810,18 @@ if not args.sources_only:
             errors.append(f"items:{item_id} governance domain path outside governance control plane: {path_text}")
         if domain.startswith("projects/"):
             project_id = domain.split("/", 1)[1]
-            if not path_text.startswith((f"domains/projects/{project_id}/", "artifacts/manifests/")):
+            if not path_text.startswith((f"projects/{project_id}/", "artifacts/manifests/")):
                 errors.append(f"items:{item_id} project domain path mismatch: domain={domain} path={path_text}")
+        if domain == "notes" and not path_text.startswith(("notes/", "artifacts/manifests/")):
+            errors.append(f"items:{item_id} notes domain path outside notes/control artifacts: {path_text}")
         if domain == "codex" and not path_text.startswith(("domains/codex/", "artifacts/manifests/")):
             errors.append(f"items:{item_id} codex domain path outside codex control plane: {path_text}")
         if domain == "embedded" and not path_text.startswith(("domains/embedded/", "artifacts/manifests/")):
             errors.append(f"items:{item_id} embedded domain path outside embedded/control artifacts: {path_text}")
         if domain == "patents" and not path_text.startswith(("domains/patents/", "artifacts/manifests/")):
             errors.append(f"items:{item_id} patents domain path outside patents/control artifacts: {path_text}")
-        if domain == "personal" and not path_text.startswith(("domains/personal/", "artifacts/manifests/")):
-            errors.append(f"items:{item_id} personal domain path outside personal/control artifacts: {path_text}")
+        if domain == "personal":
+            errors.append(f"items:{item_id} deprecated personal domain; use domain=notes path=notes/personal/**")
         status = item.get("status")
         if status in {"active", "reviewing"}:
             if not item.get("owner"):
@@ -1715,7 +2068,7 @@ if not args.sources_only:
         item = items_by_id.get(indexed_id)
         if not item:
             continue
-        if item.get("visibility") == "personal-local" or item.get("domain") == "personal":
+        if item.get("visibility") == "personal-local" or str(item.get("path", "")).startswith("notes/personal/"):
             errors.append(f"index:indexes/by-status.md active bucket references personal-local item {indexed_id}")
 
     for index_path in sorted((root / "indexes").glob("*.md")):
@@ -1736,35 +2089,46 @@ if not args.sources_only:
     ]
     scan_roots = [
         root / "domains",
+        root / "notes",
+        root / "projects",
+        root / "sources",
         root / "registry",
         root / "governance",
         root / "templates",
+        root / "indexes",
+        root / "tools",
+        root / "docs",
+        root / "README.md",
+        root / "AGENTS.md",
         root / "artifacts" / "manifests",
     ]
-    for base in scan_roots:
-        if not base.exists():
+    forbidden_path_prefixes = user_path_prefixes()
+    for path in iter_text_files(scan_roots):
+        try:
+            text = path.read_text(errors="ignore")
+        except Exception as exc:
+            warnings.append(f"{display_path(path)}: unreadable: {exc}")
             continue
-        for path in base.rglob("*"):
-            if not path.is_file() or path.suffix.lower() not in {".md", ".json", ".jsonl", ".sh", ".txt"}:
-                continue
-            try:
-                text = path.read_text(errors="ignore")
-            except Exception as exc:
-                warnings.append(f"{path}: unreadable: {exc}")
-                continue
-            for pattern in secret_patterns:
-                if pattern.search(text):
-                    errors.append(f"secret-pattern:{path.relative_to(root)}")
-                    break
+        for prefix in forbidden_path_prefixes:
+            if prefix in text:
+                errors.append(f"user-path-boundary:{path.relative_to(root)}")
+                break
+        for pattern in secret_patterns:
+            if pattern.search(text):
+                errors.append(f"secret-pattern:{path.relative_to(root)}")
+                break
 
 result = {
     "status": "pass" if not errors else "fail",
-    "root": str(root),
+    "root": display_path(root),
     "today": today.isoformat(),
     "as_of_source": today_source,
     "source_coverage_selection": source_coverage_selection,
     "source_coverage_health": source_coverage_health,
     "source_check_health": source_check_health,
+    "source_control_health": source_control_health,
+    "owner_target_health": owner_target_health,
+    "authorization_health": authorization_health,
     "automation_safety_health": automation_safety_health,
     "boundary_health": boundary_health,
     "errors": errors,

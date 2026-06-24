@@ -55,6 +55,27 @@ def resolve_today():
 
 today, today_source = resolve_today()
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
+def resolve_user_path(value):
+    return pathlib.Path(str(value)).expanduser()
+
 def load_sources():
     sources_path = root / "registry" / "sources.json"
     try:
@@ -80,22 +101,22 @@ BANNED_PATH_CHARS = set(";|&><`$*?[")
 
 def path_within_source(check_path, source_path):
     try:
-        check_resolved = pathlib.Path(check_path).resolve()
-        source_resolved = pathlib.Path(source_path).resolve()
+        check_resolved = resolve_user_path(check_path).resolve()
+        source_resolved = resolve_user_path(source_path).resolve()
     except Exception:
         return False
     return check_resolved == source_resolved or source_resolved in check_resolved.parents
 
 def validate_check_target(check_path, source):
-    if not check_path.startswith("/"):
-        return "check target must be an absolute path"
-    if "~" in check_path or ".." in pathlib.PurePosixPath(check_path).parts:
-        return "check target must not use home expansion or parent traversal"
+    if not (check_path.startswith("/") or check_path.startswith("~/")):
+        return "check target must be an absolute path or a ~/ user path"
+    if ".." in pathlib.PurePosixPath(check_path.replace("~/", "", 1)).parts:
+        return "check target must not use parent traversal"
     if any(char in check_path for char in BANNED_PATH_CHARS):
         return "check target contains shell control, expansion or glob characters"
     source_path = str(source.get("path", ""))
-    if not source_path.startswith("/"):
-        return "source registry path must be absolute"
+    if not (source_path.startswith("/") or source_path.startswith("~/")):
+        return "source registry path must be absolute or a ~/ user path"
     if not path_within_source(check_path, source_path):
         return "check target must equal or stay under the registered source path"
     return ""
@@ -130,7 +151,7 @@ for source_id in selected_ids:
                 "result": "unsupported-runtime-check",
                 "check_command": check,
                 "primitive": "",
-                "path": str(source.get("path", "")),
+                "path": display_path(source.get("path", "")),
                 "reason_zh": "仅允许执行 registry 中形如 rtk bash -lc 'test -d <path>' 或 rtk bash -lc 'test -f <path>' 的只读存在性检查。",
             }
         )
@@ -148,7 +169,7 @@ for source_id in selected_ids:
                 "result": "rejected-runtime-check",
                 "check_command": check,
                 "primitive": primitive,
-                "path": check_path,
+                "path": display_path(check_path),
                 "reason_zh": f"拒绝执行：{target_error}。",
             }
         )
@@ -161,11 +182,12 @@ for source_id in selected_ids:
         "result": "planned" if args.plan else "",
         "check_command": check,
         "primitive": primitive,
-        "path": check_path,
+        "path": display_path(check_path),
         "reason_zh": "只读路径存在性检查；不读取 source 正文。",
     }
     if not args.plan:
-        shell_payload = f"{primitive} {shlex.quote(check_path)}"
+        execution_check_path = str(resolve_user_path(check_path))
+        shell_payload = f"{primitive} {shlex.quote(execution_check_path)}"
         completed = subprocess.run(
             ["rtk", "bash", "-lc", shell_payload],
             cwd=root,
@@ -195,7 +217,7 @@ status = "fail" if errors or failed_rows else "planned" if args.plan else "pass"
 output = {
     "schema_version": 1,
     "status": status,
-    "root": str(root),
+    "root": display_path(root),
     "read_only": True,
     "report_only": True,
     "scope": args.scope,

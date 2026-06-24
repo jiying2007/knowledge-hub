@@ -9,6 +9,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import pathlib
 import sys
 
@@ -252,10 +253,23 @@ def _row_ref(row):
     }
 
 def _display_path(path):
+    text = str(path)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            return "~"
+        if text.startswith(prefix + "/"):
+            return "~" + text[len(prefix):]
     try:
         return str(path.relative_to(root))
     except ValueError:
-        return str(path)
+        return text
+
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
 
 def _read_jsonl_local(path):
     local_errors = []
@@ -406,7 +420,7 @@ def _classify_evidence_command(command):
     stable_prefixes = [
         "rtk bash ~/knowledge-hub/tools/",
         "rtk git -C ~/knowledge-hub ",
-        "rtk git -C /home/leiwenjun/knowledge-hub ",
+        "rtk git -C ~/knowledge-hub ",
     ]
     if any(text.startswith(prefix) for prefix in stable_prefixes):
         return {
@@ -1545,8 +1559,8 @@ def source_execution_root(source_id):
         return ""
     path = pathlib.Path(source_root).expanduser()
     if source_id == "pcr02-project-docs" and path.name == "docs":
-        return str(path.parent)
-    return str(path)
+        return _display_path(path.parent)
+    return _display_path(path)
 
 def effective_verification_commands(row, source_id):
     commands = list(row.get("verification_commands", []))
@@ -1690,7 +1704,7 @@ result = {
     "status_scope": "tool-health",
     "owner_review_status": owner_review_status,
     "owner_gate_status": owner_gate_status,
-    "root": str(root),
+    "root": _display_path(root),
     "read_only": True,
     "source_id": args.source_id,
     "owner": args.owner,

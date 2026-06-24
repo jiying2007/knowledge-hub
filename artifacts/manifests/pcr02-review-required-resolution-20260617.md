@@ -3,7 +3,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Classification baseline: `artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - Machine-readable blocked manifest: `artifacts/manifests/pcr02-review-required-resolution-20260617.jsonl`
 - Mode: review plan only. No source files were copied, moved, deleted, renamed, edited, or promoted.

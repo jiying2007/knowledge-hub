@@ -3,7 +3,7 @@
 ## Reference
 
 - Source id: `pcr02-project-docs`
-- Source URI: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/README.md`
+- Source URI: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/README.md`
 - Source path: `README.md`
 - Source size: `3010`
 - Source SHA256: `bb1b3ce7a1187d9c0c90ca53ae9a0aa9f0ca31ff5d1b2247369b0284a0243a60`

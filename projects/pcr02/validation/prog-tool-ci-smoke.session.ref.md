@@ -4,7 +4,7 @@
 
 - Source id: `pcr02-project-docs`
 - Artifact URI: `source://pcr02-project-docs/runbooks/examples/prog-tool-ci-smoke.session`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Source path: `runbooks/examples/prog-tool-ci-smoke.session`
 - Size: `394`
 - SHA256: `00bacb95fea9c9517edfa0db3e573d738d60659428f77f638cc2cf5774690247`

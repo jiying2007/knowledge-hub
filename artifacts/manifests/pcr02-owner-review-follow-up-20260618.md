@@ -3,7 +3,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
 - Machine-readable follow-up: `artifacts/manifests/pcr02-owner-review-follow-up-20260618.jsonl`
 - Mode: owner-review follow-up only. No source files were copied, moved, deleted, edited, pruned, promoted, or rewritten.
@@ -196,10 +196,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 DVR session archive me
 Source-project evidence checks for owners to attach as references:
 
 ```bash
-rtk rg -n "DEBUG_ASAN|fsanitize=address|TARGET_REL_FOLDER|fno-omit-frame-pointer|fsanitize-recover|funwind-tables" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/build
-rtk rg -n "DVR_RECORD|DVR_REPLAY|DvrRecordPayload|DvrReplayPayload" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
-rtk rg -n "VSAPIDVR_RecordSetEvent|astRecordTiming|_DVR_RecordCheckNextTiming" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
-rtk rg -n "0.2.0-20260527|1.3A|10s|缺相|堵转|Hall|校准" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
+rtk rg -n "DEBUG_ASAN|fsanitize=address|TARGET_REL_FOLDER|fno-omit-frame-pointer|fsanitize-recover|funwind-tables" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/build
+rtk rg -n "DVR_RECORD|DVR_REPLAY|DvrRecordPayload|DvrReplayPayload" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
+rtk rg -n "VSAPIDVR_RecordSetEvent|astRecordTiming|_DVR_RecordCheckNextTiming" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
+rtk rg -n "0.2.0-20260527|1.3A|10s|缺相|堵转|Hall|校准" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
 ```
 
 ## Non-Actions

@@ -13,7 +13,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
 - Follow-up package: `artifacts/manifests/pcr02-owner-review-follow-up-20260618.md`
 - Owner worksheet: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`
@@ -122,7 +122,7 @@ extracts_require_owner_review=true
 owner=<project owner required>
 reviewer=<reviewer required>
 review_date=<required>
-source_path=/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
+source_path=~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
 source_sha256=266a1c2706da87b39d9e4b204ccece61b0ec9c7a95183c64324e95f606c1dadc
 source_size_bytes=6697
 evidence_refs=<branch/commit/validation refs required>
@@ -162,12 +162,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 DVR RecordSetEvent tas
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 motor MCU 0.2.0-20260527"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 DVR session archive memory candidates"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "memory candidates archive-only not_active_source"
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-05-29-motor-mcu-debug-record.md
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-05-29-motor-mcu-debug-record.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-05-29-motor-mcu-debug-record.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-05-29-motor-mcu-debug-record.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/reports/2026-06-16-dvr-record-replay-session-archive.md
 ```
 
 ## Non-actions

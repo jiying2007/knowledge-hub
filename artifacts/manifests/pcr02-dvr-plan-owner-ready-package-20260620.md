@@ -173,7 +173,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源 plan 迁移到 `domains/projects/pcr02/current/plans/`。
+- 不把源 plan 迁移到 `projects/pcr02/current/plans/`。
 - 不创建 DVR contract decision。
 - 不创建 DVR validation report。
 - 不变更 worksheet 状态。

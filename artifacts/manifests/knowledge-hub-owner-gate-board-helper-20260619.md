@@ -40,7 +40,7 @@
 | --- | --- | --- | --- | --- | --- |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --json` | 0 | PCR02 owner gate 看板返回 7 条 open、0 条 resolved、0 active exposure。 | `tools/knowledge-owner-gates.sh` | Knowledge Hub | owner-gate-board-helper |
 | `rtk bash tools/knowledge-owner-gates.sh --source-id pcr02-project-docs` | 0 | 中文可读输出列出 7 个 PCR02 owner-gated source_path、owner、必填证据和禁止动作。 | `tools/knowledge-owner-gates.sh` | Knowledge Hub | owner-gate-board-helper |
-| `cd /tmp && rtk bash /home/leiwenjun/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --json` | 0 | 新工具可从非仓库 cwd 执行，返回 7 条 open、0 active exposure。 | `tools/knowledge-owner-gates.sh` | Entry smoke | owner-gate-board-helper |
+| `cd /tmp && rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --json` | 0 | 新工具可从非仓库 cwd 执行，返回 7 条 open、0 active exposure。 | `tools/knowledge-owner-gates.sh` | Entry smoke | owner-gate-board-helper |
 | `/tmp missing owner worksheet fixture` | 1 | 临时副本隐藏 owner worksheet 后，工具返回 `status=blocked` 和缺失 worksheet 错误。 | `/tmp/kh-owner-board-missing.*` | Negative fixture | owner-gate-board-helper |
 | `/tmp active exposure fixture` | 1 | 临时副本给 owner-gated source_path 注入 active registry item 后，工具返回 `status=needs-fix`、`active_exposure_count=1` 和退出 1。 | `/tmp/kh-owner-board-active.*` | Negative fixture | owner-gate-board-helper |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 新增工具和登记制品后全仓门禁通过，0 errors，0 warnings。 | `tools/knowledge-check.sh` | Knowledge Hub | owner-gate-board-helper |

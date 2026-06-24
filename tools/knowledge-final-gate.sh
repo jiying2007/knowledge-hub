@@ -37,6 +37,24 @@ def resolve_today():
 
 today, today_source = resolve_today()
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
 def run_json(command, extra_env=None):
     env = None
     if extra_env:
@@ -178,15 +196,15 @@ def blocker_gap_type(blocker):
     return "final-gate"
 
 REQUIREMENT_REFS = {
-    "level1": "docs/goals/knowledge-hub-final-state.md#Level-1-PCR02-docs-终态",
-    "level2": "docs/goals/knowledge-hub-final-state.md#Level-2-PCR02-项目关键资料源终态",
-    "level3": "docs/goals/knowledge-hub-final-state.md#Level-3-全-Knowledge-Hub-registered-sources-终态",
-    "maintenance": "docs/goals/knowledge-hub-final-state.md#七、长期维护能力",
-    "offline": "docs/goals/knowledge-hub-final-state.md#七.2-人工维护与离线可维护标准",
-    "cross_session": "docs/goals/knowledge-hub-final-state.md#八、跨会话自动关联",
-    "cross_project": "docs/goals/knowledge-hub-final-state.md#九、跨项目自动关联",
-    "owner_gate": "docs/goals/knowledge-hub-final-state.md#六、owner-gated-两阶段流程",
-    "automation": "docs/goals/knowledge-hub-final-state.md#七.1-自动化等级",
+    "level1": "docs/goals/knowledge-hub-simplified-final-version.md#二、硬切换目录",
+    "level2": "docs/goals/knowledge-hub-simplified-final-version.md#四、复杂度分级",
+    "level3": "docs/goals/knowledge-hub-simplified-final-version.md#五、Registry-与-Schema-硬切换",
+    "maintenance": "docs/goals/knowledge-hub-simplified-final-version.md#七、人工完全维护模式",
+    "offline": "docs/goals/knowledge-hub-simplified-final-version.md#七.2-离线人工维护包",
+    "cross_session": "docs/goals/knowledge-hub-simplified-final-version.md#十、AI-使用入口",
+    "cross_project": "docs/goals/knowledge-hub-simplified-final-version.md#一、最终定位",
+    "owner_gate": "docs/goals/knowledge-hub-simplified-final-version.md#三、非目标与禁止事项",
+    "automation": "docs/goals/knowledge-hub-simplified-final-version.md#十一、自动化边界",
 }
 
 SECTION_REFS = {
@@ -687,11 +705,11 @@ def make_highest_priority_rules_audit(
         },
         {
             "rule_id": "automation-report-only",
-            "rule_zh": "自动化默认 report-only，不得自动删除、发布、提交、提升或写 memory。",
+            "rule_zh": "自动化默认 read-only/report-only/plan-only；Hub 本仓本地 commit 可自动，push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory、修改源项目或改变远端 Git 状态必须授权。",
             "status": "pass",
             "evidence_refs": ["runtime:checks.source_check_runtime", "runtime:automatic_governance"],
             "runtime_fields": ["checks.source_check_runtime.report_only", "checks.source_check_runtime.automation_write", "automatic_governance.no_owner_decision_generated"],
-            "limitations_zh": "当前 gate 和维护工具保持只读/report-only；owner 决策落地不等于启用自动化，真实启用自动化仍需单独 owner 审批。",
+            "limitations_zh": "当前 gate 和维护工具保持只读/report-only；本地 commit 只代表 Git 可回滚快照，不代表 owner approval、active promotion、memory write、source project write 或 remote publish。",
         },
         {
             "rule_id": "single-canonical-body",
@@ -721,7 +739,7 @@ def make_highest_priority_rules_audit(
             "rule_id": "subagent-single-writer-readonly",
             "rule_zh": "使用 subagents 时默认只读审查，主线程负责唯一写入和最终整合；子代理不得代签 owner decision、改源项目或写 memory。",
             "status": "process-audited",
-            "evidence_refs": ["docs/goals/knowledge-hub-final-state.md#十", "README.md", "tools/README.md"],
+            "evidence_refs": ["docs/goals/knowledge-hub-simplified-final-version.md#十、AI-使用入口", "README.md", "tools/README.md"],
             "runtime_fields": [],
             "limitations_zh": "本审计只证明 Knowledge Hub 对 subagent 使用边界有可发现规则；无法机器证明每一次子代理调度都严格遵守。",
         },
@@ -751,7 +769,7 @@ def build_maintenance_entry_audit():
             "goal_item": 1,
             "requirement_keys": ["maintenance", "offline"],
             "evidence_checks": [
-                ("README.md", ["人工维护 5 条最短路径", "新增一条知识", "knowledge-new.sh"]),
+                ("README.md", ["日常入口", "knowledge-new.sh", "knowledge-check.sh --dry-run --json --diagnostics"]),
                 ("tools/README.md", ["新增一条知识", "knowledge-new.sh", "knowledge-check.sh --dry-run --json --diagnostics"]),
                 ("templates/README.md", ["新增 Knowledge Hub 条目", "默认简体中文"]),
             ],
@@ -765,7 +783,7 @@ def build_maintenance_entry_audit():
             "goal_item": 2,
             "requirement_keys": ["maintenance", "level3"],
             "evidence_checks": [
-                ("README.md", ["新增一个 source", "knowledge-index-plan.sh --section source", "knowledge-search.sh \"<source-id>\" --source knowledge-hub --json"]),
+                ("README.md", ["迁移口径", "registry/sources.json", "registry/automation-runs.jsonl"]),
                 ("tools/README.md", ["新增一个 source", "source coverage", "knowledge-index-plan.sh --section source"]),
             ],
             "commands": [
@@ -778,7 +796,7 @@ def build_maintenance_entry_audit():
             "goal_item": 3,
             "requirement_keys": ["maintenance"],
             "evidence_checks": [
-                ("README.md", ["复核过期和即将到期项", "knowledge-review-after.sh", "review_after"]),
+                ("README.md", ["新会话恢复", "knowledge-status.sh --json", "knowledge-final-gate.sh --json"]),
                 ("tools/README.md", ["复核过期项", "knowledge-review-after.sh", "near-due"]),
             ],
             "commands": [
@@ -791,7 +809,7 @@ def build_maintenance_entry_audit():
             "goal_item": 4,
             "requirement_keys": ["maintenance", "cross_session"],
             "evidence_checks": [
-                ("README.md", ["knowledge-search.sh \"ASAN\" --json --limit 10", "--source-id pcr02-project-docs"]),
+                ("README.md", ["knowledge-search.sh \"<关键词>\" --json", "indexes/", "projects/"]),
                 ("tools/README.md", ["knowledge-search.sh", "结构化过滤", "--source-id"]),
             ],
             "commands": [
@@ -804,7 +822,7 @@ def build_maintenance_entry_audit():
             "goal_item": 5,
             "requirement_keys": ["maintenance", "owner_gate", "level1"],
             "evidence_checks": [
-                ("README.md", ["owner 签收一个 gate", "validate-forms", "landing-plan"]),
+                ("README.md", ["高风险授权", "owner decision", "registry/authorizations.jsonl"]),
                 ("tools/README.md", ["owner 签收一个 gate", "不生成 owner decision", "不关闭 gate"]),
             ],
             "commands": [
@@ -817,8 +835,8 @@ def build_maintenance_entry_audit():
             "goal_item": 6,
             "requirement_keys": ["maintenance", "automation"],
             "evidence_checks": [
-                ("README.md", ["report-only", "不得自动改 `active`、关闭 owner gate 或提升标准"]),
-                ("tools/README.md", ["report-only", "不会自动删除、发布、提升 active、关闭 owner gate、写 memory 或修改源项目"]),
+                ("README.md", ["report-only", "apply-with-review", "registry/automation-runs.jsonl"]),
+                ("tools/README.md", ["report-only", "本地 commit", "不会自动 push/merge/release/tag", "远端 Git 状态", "提升 active", "关闭 owner gate", "写 memory", "修改源项目"]),
             ],
             "commands": [
                 "rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --json",
@@ -830,7 +848,7 @@ def build_maintenance_entry_audit():
             "goal_item": 7,
             "requirement_keys": ["maintenance"],
             "evidence_checks": [
-                ("README.md", ["跑一次终态检查", "knowledge-final-gate.sh --json", "evidence_index"]),
+                ("README.md", ["knowledge-final-gate.sh --json", "knowledge-check.sh --dry-run --json --diagnostics"]),
                 ("tools/README.md", ["knowledge-final-gate.sh", "terminal gate", "evidence_index"]),
             ],
             "commands": [
@@ -843,7 +861,7 @@ def build_maintenance_entry_audit():
             "goal_item": 8,
             "requirement_keys": ["maintenance", "offline"],
             "evidence_checks": [
-                ("README.md", ["中文长期资产规范", "默认简体中文", "可复核"]),
+                ("README.md", ["中文长期资产", "默认使用简体中文", "证据"]),
                 ("templates/README.md", ["默认简体中文", "中文摘要", "Evidence Index"]),
             ],
             "commands": [
@@ -899,7 +917,7 @@ def build_maintenance_entry_audit():
     return {
         "contract_version": 1,
         "status": "pass" if passed_count == len(entries) else "fail",
-        "goal_ref": "docs/goals/knowledge-hub-final-state.md#七、长期维护能力",
+        "goal_ref": "docs/goals/knowledge-hub-simplified-final-version.md#七、人工完全维护模式",
         "requirement_refs": refs_for("maintenance", "automation", "offline"),
         "section_refs": sections_for("maintenance", "automation", "offline"),
         "expected_entry_count": len(entries),
@@ -1282,6 +1300,8 @@ status_owner_blocker_source = strict_payload.get("owner_blocker_source", {})
 check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})
 check_source_coverage_selection = knowledge_check["payload"].get("source_coverage_selection", {})
 check_source_check_health = knowledge_check["payload"].get("source_check_health", {})
+check_source_control_health = knowledge_check["payload"].get("source_control_health", {})
+check_owner_target_health = knowledge_check["payload"].get("owner_target_health", {})
 check_boundary_health = knowledge_check["payload"].get("boundary_health", {})
 source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
 source_registry_ids = {
@@ -1449,6 +1469,8 @@ level3_status = (
     and not missing_source_final_state_fields
     and not check_source_check_health.get("missing_check_or_reason_ids", [])
     and not check_source_check_health.get("non_rtk_check_ids", [])
+    and check_source_control_health.get("status") == "pass"
+    and check_owner_target_health.get("status") == "pass"
     else "needs-fix"
 )
 final_state_audit = {
@@ -1502,7 +1524,7 @@ final_state_audit = {
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
-            "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md",
+            "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md",
             "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md",
             "runtime:checks.source_check_runtime",
         ],
@@ -1528,9 +1550,30 @@ final_state_audit = {
             "non_rtk_check_ids": check_source_check_health.get("non_rtk_check_ids", []),
             "missing_source_path_ids": check_source_check_health.get("missing_source_path_ids", []),
         },
+        "source_control_health": {
+            "status": check_source_control_health.get("status", ""),
+            "mode": check_source_control_health.get("mode", ""),
+            "registered_source_count": check_source_control_health.get("registered_source_count", 0),
+            "required_file_count": check_source_control_health.get("required_file_count", 0),
+            "present_file_count": check_source_control_health.get("present_file_count", 0),
+            "missing_source_ids": check_source_control_health.get("missing_source_ids", []),
+            "missing_file_count": len(check_source_control_health.get("missing_files", [])),
+            "inventory_row_count": check_source_control_health.get("inventory_row_count", 0),
+            "invalid_inventory_row_count": len(check_source_control_health.get("invalid_inventory_rows", [])),
+            "unsafe_raw_copy_row_count": len(check_source_control_health.get("unsafe_raw_copy_rows", [])),
+        },
+        "owner_target_health": {
+            "status": check_owner_target_health.get("status", ""),
+            "checked_count": check_owner_target_health.get("checked_count", 0),
+            "present_count": check_owner_target_health.get("present_count", 0),
+            "skipped_count": check_owner_target_health.get("skipped_count", 0),
+            "missing_target_count": len(check_owner_target_health.get("missing_targets", [])),
+        },
         "evidence_refs": [
             "registry/sources.json",
             latest_coverage_manifest,
+            "sources/<source_id>/",
+            "artifacts/manifests/knowledge-hub-source-control-unification-20260624.md",
             "tools/knowledge-check.sh --dry-run --json --diagnostics",
         ],
         "summary_zh": (
@@ -1681,6 +1724,42 @@ evidence_index.append(
 )
 evidence_index.append(
     command_evidence_row(
+        "runtime:knowledge_check.source_control_health",
+        0,
+        check_source_control_health.get("status", "fail") or "fail",
+        (
+            "source 主控目录门禁通过；registered source 都有 README/inventory/coverage/migration-plan，且 inventory 未发现 raw copy-body。"
+            if check_source_control_health.get("status") == "pass"
+            else "source 主控目录、inventory 或 raw dump safety 存在缺口；请查看 checks.knowledge_check.source_control_health。"
+        ),
+        "runtime:checks.knowledge_check.source_control_health",
+        "source-control",
+        "knowledge-check-source-control-health",
+        "",
+        refs_for("level3", "maintenance", "automation"),
+        sections_for("level3", "maintenance", "automation"),
+    )
+)
+evidence_index.append(
+    command_evidence_row(
+        "runtime:knowledge_check.owner_target_health",
+        0,
+        check_owner_target_health.get("status", "fail") or "fail",
+        (
+            "owner decision landing 的本地 target 存在性门禁通过；reference-only/report-only 项已跳过，PCR02 4 个目标正文存在。"
+            if check_owner_target_health.get("status") == "pass"
+            else "owner decision landing 指向的本地 target 缺失；请查看 checks.knowledge_check.owner_target_health。"
+        ),
+        "runtime:checks.knowledge_check.owner_target_health",
+        "owner-target",
+        "knowledge-check-owner-target-health",
+        "",
+        refs_for("level1", "level3", "owner_gate"),
+        sections_for("level1", "level3", "owner_gate"),
+    )
+)
+evidence_index.append(
+    command_evidence_row(
         "runtime:maintenance_entry_audit",
         0,
         maintenance_entry_audit["status"],
@@ -1782,7 +1861,7 @@ final_gate_summary = {
 
 result = {
     "schema_version": 1,
-    "root": str(root),
+    "root": display_path(root),
     "read_only": True,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "today": today.isoformat(),
@@ -1848,6 +1927,21 @@ result = {
                 "with_no_check_reason_count": check_source_check_health.get("with_no_check_reason_count", 0),
                 "missing_check_or_reason_ids": check_source_check_health.get("missing_check_or_reason_ids", []),
                 "non_rtk_check_ids": check_source_check_health.get("non_rtk_check_ids", []),
+            },
+            "source_control_health": {
+                "status": check_source_control_health.get("status", ""),
+                "registered_source_count": check_source_control_health.get("registered_source_count", 0),
+                "required_file_count": check_source_control_health.get("required_file_count", 0),
+                "present_file_count": check_source_control_health.get("present_file_count", 0),
+                "missing_source_ids": check_source_control_health.get("missing_source_ids", []),
+                "invalid_inventory_row_count": len(check_source_control_health.get("invalid_inventory_rows", [])),
+                "unsafe_raw_copy_row_count": len(check_source_control_health.get("unsafe_raw_copy_rows", [])),
+            },
+            "owner_target_health": {
+                "status": check_owner_target_health.get("status", ""),
+                "checked_count": check_owner_target_health.get("checked_count", 0),
+                "present_count": check_owner_target_health.get("present_count", 0),
+                "missing_target_count": len(check_owner_target_health.get("missing_targets", [])),
             },
             "boundary_health": {
                 "status": check_boundary_health.get("status", ""),
@@ -1917,6 +2011,8 @@ print(f"- linking_audit: {linking_audit.get('status', 'fail')}")
 print(f"- proof_artifacts: {proof_artifacts['status']} registered={proof_artifacts['registered_count']}/{proof_artifacts['expected_count']} paired={proof_artifacts['paired_count']}/{proof_artifacts['expected_count']} indexed={proof_artifacts['indexed_count']}/{proof_artifacts['expected_count']}")
 print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
 print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={source_check_runtime_summary['passed_count']}/{source_check_runtime_summary['row_count']} report_only={str(source_check_runtime_summary['report_only']).lower()}")
+print(f"- source_control_health: {check_source_control_health.get('status', 'fail')} files={check_source_control_health.get('present_file_count', 0)}/{check_source_control_health.get('required_file_count', 0)} inventory_rows={check_source_control_health.get('inventory_row_count', 0)}")
+print(f"- owner_target_health: {check_owner_target_health.get('status', 'fail')} targets={check_owner_target_health.get('present_count', 0)}/{check_owner_target_health.get('checked_count', 0)}")
 print(f"- knowledge-check: {result['checks']['knowledge_check']['status']} exit={knowledge_check['exit_code']} errors={result['checks']['knowledge_check']['error_count']} warnings={result['checks']['knowledge_check']['warning_count']}")
 print(f"- knowledge-regression: {result['checks']['knowledge_regression']['status']} exit={knowledge_regression['exit_code']} results={result['checks']['knowledge_regression']['result_count']}")
 print(f"- knowledge-status --strict: {result['checks']['knowledge_status_strict']['status']} exit={strict_status['exit_code']} blockers={result['checks']['knowledge_status_strict']['strict_blocker_count']}")

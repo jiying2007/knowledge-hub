@@ -249,7 +249,7 @@
 - owner-landing-project-index-alignment-applied: `tools/knowledge-owner-gates.sh` landing plans include `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-owner-landing-project-index-alignment-20260619.jsonl`.
 - manual-entry-project-index-alignment-applied: `tools/knowledge-new.sh` project entry guidance includes `indexes/by-project.md`, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-index-alignment-20260619.jsonl`.
 - manual-entry-conditional-project-index-applied: `tools/knowledge-new.sh` shows `indexes/by-project.md` only for project-domain entries, documented by `artifacts/manifests/knowledge-hub-manual-entry-conditional-project-index-20260619.jsonl`.
-- manual-entry-project-derivation-applied: `tools/knowledge-new.sh` derives project ids from `projects/<project>` domains, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-derivation-20260619.jsonl`.
+- manual-entry-project-derivation-applied: `tools/knowledge-new.sh` derives project ids from projects/<project> domains, documented by `artifacts/manifests/knowledge-hub-manual-entry-project-derivation-20260619.jsonl`.
 - manual-entry-default-dates-applied: `tools/knowledge-new.sh` fills default ISO dates in manual skeletons, documented by `artifacts/manifests/knowledge-hub-manual-entry-default-dates-20260619.jsonl`.
 - manual-entry-owner-override-applied: `tools/knowledge-new.sh` supports `--owner <owner>` in manual skeletons, documented by `artifacts/manifests/knowledge-hub-manual-entry-owner-override-20260619.jsonl`.
 - regression-manifest-coverage-applied: `tools/knowledge-regression.sh` checks its governance helper manifest coverage, documented by `artifacts/manifests/knowledge-hub-regression-manifest-coverage-20260619.jsonl`.
@@ -413,3 +413,23 @@
 - owner-decision-landing-applied: PCR02 project docs 7 条 owner gate 已按人工授权落地，当前 owner-gates 显示 `open_count=0`、`resolved_count=7`；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
 - reviewing: `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
 - owner-source-subagent-boundary-hardening-applied: owner/source/subagent 边界已显性化，source identity read policy、status handoff notes、subagent 单写者审计和 owner decision 草稿泄漏 warning 已纳入工具与回归；证据：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.jsonl`.
+- reviewing: `knowledge-hub-simplified-main-source-coverage-20260624`
+- simplified-main-source-coverage-applied: source coverage 已扩展为 18 个来源，新增 Codex history、raw sessions、session index、archive registry 和 automation run ledger，Hub 成为跨项目/跨会话历史与自动化主库入口；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`.
+- reviewing: `knowledge-hub-simplified-final-version-goal`
+- current-goal-under-review: 简化终态设计文档已登记为当前 Knowledge Hub 硬切换目标；证据：`docs/goals/knowledge-hub-simplified-final-version.md`.
+- reviewing: `knowledge-hub-git-automation-permission-20260624`
+- git-automation-permission-applied: Git 管理下 Hub 本仓 L1/L2 自动维护和本地 commit 默认允许；远端 Git 写入、owner decision、active、memory、源项目写入和非 report-only 自动化仍需授权；证据：`artifacts/manifests/knowledge-hub-git-automation-permission-20260624.jsonl`.
+- reviewing: `knowledge-hub-user-path-boundary-20260624`
+- user-path-boundary-applied: 长期文本、registry、index、manifest 和核心工具输出统一使用 `~` 用户路径形式；证据：`artifacts/manifests/knowledge-hub-user-path-boundary-20260624.jsonl`.
+- reviewing: `knowledge-hub-canonical-registry-boundary-20260624`
+- canonical-registry-boundary-applied: current topic registry、retention rules 和治理说明已收敛到 `projects/` 与 `notes/personal/`，旧项目/个人目录不得重新成为 current registry 入口；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.jsonl`.
+- reviewing: `pcr02-asan-debug-guide-project-local-20260624`
+- owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；团队级 ASAN 方法论仍需另行重写和复核；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
+- archived: `pcr02-dvr-plan-archive-only-20260624`
+- owner-approved-archive-only-target-materialized: DVR proto/sensor 解耦计划已按 archive-only 落地；缺 completed 证据，不声明完成；证据：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`.
+- archived: `pcr02-motor-mcu-debug-record-archive-only-20260624`
+- owner-approved-archive-only-target-materialized: motor MCU debug record 已按 archive-only 落地；事实、反馈、推断、建议和 open items 未拆分前不提升验证结论；证据：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`.
+- archived: `pcr02-dvr-session-archive-only-20260624`
+- owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
+- reviewing: `knowledge-hub-source-control-unification-20260624`
+- source-control-unification-applied: 18 个 registered source 已有 sources/<source_id>/ 主控目录，4 个 PCR02 owner target 已落地，并新增 source-control/owner-target/raw-dump 门禁；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`.

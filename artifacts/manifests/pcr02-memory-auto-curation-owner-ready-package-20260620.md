@@ -157,7 +157,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源 runbook 迁移到 `domains/projects/pcr02/personal/`。
+- 不把源 runbook 迁移到 `projects/pcr02/personal/`。
 - 不把源 runbook 提升为团队 workflow。
 - 不启用 `memory-auto-curation-report-only` 自动化。
 - 不写任何 memory 或 curation inbox。

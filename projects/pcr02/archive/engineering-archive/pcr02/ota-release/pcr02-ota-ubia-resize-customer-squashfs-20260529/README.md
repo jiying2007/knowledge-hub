@@ -2,7 +2,7 @@
 
 ## Source
 
-- Project: `/vsdata/leiwenjun/pcr02_ssc305_compile`
+- Project: `~/pcr02_ssc305_compile`
 - Date: 2026-05-29
 - Profile: `ap6303bh_512m_v20`
 - Product: `pcr02`

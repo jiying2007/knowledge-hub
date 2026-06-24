@@ -3,7 +3,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
 - Follow-up package: `artifacts/manifests/pcr02-owner-review-follow-up-20260618.md`
 - Machine-readable worksheets: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.jsonl`
@@ -168,7 +168,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 ASAN"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "libasan"
-rtk rg -n "DEBUG_ASAN|fsanitize=address|TARGET_REL_FOLDER|fno-omit-frame-pointer|fsanitize-recover|funwind-tables" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/build
+rtk rg -n "DEBUG_ASAN|fsanitize=address|TARGET_REL_FOLDER|fno-omit-frame-pointer|fsanitize-recover|funwind-tables" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/build
 ```
 
 ## `pcr02-owner-review-004` - `runbooks/memory-auto-curation-guide.md`
@@ -274,7 +274,7 @@ rtk bash -lc "./make.sh"
 rtk bash -lc "python3 build/check_api_dvr_refcount.py"
 rtk rg -n "astRecordTiming|_DVR_RecordCheckNextTiming" modules/api/src/api_dvr/api_dvr_record.c
 rtk rg -n "VSAPIDVR_RecordStart|VSAPIDVR_RecordStop|VSAPIDVR_Replay" modules/sensor modules/proto
-rtk rg -n "DVR_RECORD|DVR_REPLAY|DvrRecordPayload|DvrReplayPayload" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
+rtk rg -n "DVR_RECORD|DVR_REPLAY|DvrRecordPayload|DvrReplayPayload" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
 ```
 
 ## `pcr02-owner-review-006` - `reports/2026-05-29-motor-mcu-debug-record.md`
@@ -332,7 +332,7 @@ Must not:
 Suggested verification:
 
 ```bash
-rtk rg -n "0.2.0-20260527|1.3A|10s|缺相|堵转|Hall|校准" /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
+rtk rg -n "0.2.0-20260527|1.3A|10s|缺相|堵转|Hall|校准" ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
 ```
 
 ## `pcr02-owner-review-007` - `reports/2026-06-16-dvr-record-replay-session-archive.md`

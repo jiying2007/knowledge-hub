@@ -184,7 +184,7 @@ Commands:
 ```bash
 rtk git -C pcr02_ssc305_compile status --short --branch
 rtk git -C pcr02_ssc305_compile log --oneline --decorate -40
-cd /vsdata/leiwenjun/Iford_IMSSV05C13
+cd ~/Iford_IMSSV05C13
 rtk git init
 rtk git add -A
 rtk git commit -m "chore(import): 导入原厂 Iford_IMSSV05C13 基线"

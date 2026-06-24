@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Root: `/home/leiwenjun/knowledge-hub`
+- Root: `~/knowledge-hub`
 - Command: `rtk bash tools/knowledge-inventory.sh --markdown --max-files 20000`
 - Mode: read-only inventory.
 - Result: all 6 registered sources exist and no source scan was truncated.

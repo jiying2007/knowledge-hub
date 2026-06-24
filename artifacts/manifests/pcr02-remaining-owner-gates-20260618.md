@@ -14,7 +14,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
 - Follow-up package: `artifacts/manifests/pcr02-owner-review-follow-up-20260618.md`
 - Owner worksheet: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`
@@ -127,10 +127,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 AGENTS"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "project docs agent rules"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 diag command metadata"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "reference-only pending owner-gate"
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/AGENTS.md
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/standards/diag-command-metadata-standard.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/AGENTS.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/standards/diag-command-metadata-standard.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/AGENTS.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/standards/diag-command-metadata-standard.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/AGENTS.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/standards/diag-command-metadata-standard.md
 ```
 
 真正放行 diag current/decision 前还必须由 owner 提供源仓运行结果：

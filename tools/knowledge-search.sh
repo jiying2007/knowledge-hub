@@ -7,6 +7,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import json
+import os
 import pathlib
 import sys
 
@@ -29,6 +30,24 @@ query = args.query.lower()
 
 if args.limit < 1:
     parser.error("--limit must be >= 1")
+
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
 
 allowed_statuses = {"draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"}
 allowed_kinds = {
@@ -194,7 +213,7 @@ for source in sources:
         item = matching_items[0] if matching_items else (items[0] if items else {})
         result = {
             "source": sid,
-            "path": str(path),
+            "path": display_path(path),
             "line": line_no,
             "preview": line,
         }
@@ -221,7 +240,7 @@ if metadata_fallback_enabled and len(results) < args.limit:
         path_text = str(item.get("path", ""))
         result = {
             "source": "knowledge-hub",
-            "path": str((root / path_text).resolve()) if path_text else str(root),
+            "path": display_path((root / path_text).resolve()) if path_text else display_path(root),
             "line": 1,
             "preview": f"registry metadata: {item.get('summary_zh') or item.get('title') or item_id}"[:240],
             "match": "registry-metadata",

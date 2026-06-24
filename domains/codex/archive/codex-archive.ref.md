@@ -7,11 +7,11 @@
 ## Source Identity
 
 - source_id：`codex-archive`
-- source_root：`/home/leiwenjun/codex/docs/archive`
+- source_root：`~/codex/docs/archive`
 - role：`codex-governance-source`
 - authority：`codex-workflow-history`
 - write_policy：`use-codex-archive-tools`
-- check：`rtk bash /home/leiwenjun/codex/scripts/archive-check.sh`
+- check：`rtk bash ~/codex/scripts/archive-check.sh`
 
 ## 使用边界
 
@@ -23,7 +23,7 @@
 ## 验证
 
 ```bash
-rtk bash /home/leiwenjun/codex/scripts/archive-check.sh
+rtk bash ~/codex/scripts/archive-check.sh
 rtk bash tools/knowledge-check.sh --dry-run --json
 ```
 

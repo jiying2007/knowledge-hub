@@ -43,6 +43,24 @@ binary_suffixes = {".bin", ".elf", ".hex", ".img", ".iso", ".zip", ".7z", ".rar"
 def path_from_source(value):
     return pathlib.Path(str(value).replace("~", str(pathlib.Path.home()))).expanduser()
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
 def human_bytes(size):
     value = float(size)
     for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
@@ -85,7 +103,7 @@ def inventory(source):
     base = path_from_source(source.get("path", ""))
     item = {
         "id": source.get("id", ""),
-        "path": str(base),
+        "path": display_path(base),
         "role": source.get("role", ""),
         "authority": source.get("authority", ""),
         "write_policy": source.get("write_policy", ""),
@@ -159,7 +177,7 @@ def inventory(source):
 result = {
     "schema_version": 1,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-    "root": str(root),
+    "root": display_path(root),
     "max_files_per_source": args.max_files,
     "sources": [inventory(source) for source in sources],
 }
@@ -167,7 +185,7 @@ result = {
 if args.markdown:
     print(f"# Knowledge Hub Source Inventory ({dt.date.today().isoformat()})")
     print()
-    print(f"- root: `{root}`")
+    print(f"- root: `{display_path(root)}`")
     print(f"- max_files_per_source: `{args.max_files}`")
     print()
     print("| source | exists | files | dirs | size | text | binary | git | policy |")

@@ -10,9 +10,9 @@
 
 | Source ID | Source root | 登记文件数 | 边界 |
 |---|---|---:|---|
-| `pcr02-project-agent-config` | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 10 | 只覆盖 `.vscode` 与 `.kilo` 顶层配置、脚本和 package 声明；排除 `.kilo/node_modules/`。 |
-| `pcr02-project-tools` | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` | 18 | 只覆盖 README/AGENTS、debug、diag、CSV、runtime diagnostic、memory report-only automation；排除 `__pycache__` 和 `.pyc`。 |
-| `pcr02-project-root-artifacts` | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 16 | 只覆盖当前 root loose files；不递归进入 docs/tools/knowledge/app_product_test/scratch/module agent/config 子树。 |
+| `pcr02-project-agent-config` | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 10 | 只覆盖 `.vscode` 与 `.kilo` 顶层配置、脚本和 package 声明；排除 `.kilo/node_modules/`。 |
+| `pcr02-project-tools` | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` | 18 | 只覆盖 README/AGENTS、debug、diag、CSV、runtime diagnostic、memory report-only automation；排除 `__pycache__` 和 `.pyc`。 |
+| `pcr02-project-root-artifacts` | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 16 | 只覆盖当前 root loose files；不递归进入 docs/tools/knowledge/app_product_test/scratch/module agent/config 子树。 |
 
 ## 控制规则
 

@@ -10,8 +10,8 @@
 
 | Source ID | Source root | 登记文件数 | 边界 |
 |---|---|---:|---|
-| `pcr02-module-agent-rules` | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 8 | 覆盖当前复扫存在的 module/project/local `AGENTS.md`；只作为 owner-gated rule reference。 |
-| `pcr02-project-scratch` | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` | 8 | 覆盖 scratch 下 8 个 Markdown session/context/resume 文件；全部 archive-only，不进入 active facts。 |
+| `pcr02-module-agent-rules` | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` | 8 | 覆盖当前复扫存在的 module/project/local `AGENTS.md`；只作为 owner-gated rule reference。 |
+| `pcr02-project-scratch` | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` | 8 | 覆盖 scratch 下 8 个 Markdown session/context/resume 文件；全部 archive-only，不进入 active facts。 |
 
 ## 控制规则
 

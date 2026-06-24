@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Source: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Source id: `pcr02-project-docs`
 - Mode: read-only classification.
 - Files scanned: 32 files (`31` Markdown, `1` session script).

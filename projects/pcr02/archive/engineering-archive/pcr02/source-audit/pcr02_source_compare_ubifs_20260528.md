@@ -160,7 +160,7 @@
 常用完整发布命令：
 
 ```bash
-cd /vsdata/leiwenjun/pcr02_ssc305_compile
+cd ~/pcr02_ssc305_compile
 ./build.sh release --profile ap6303bh_512m_v20 --ota-partitions all --publish-soc
 ```
 

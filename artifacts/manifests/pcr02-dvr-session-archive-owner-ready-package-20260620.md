@@ -165,7 +165,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源 archive 迁移到 `domains/projects/pcr02/current/`。
+- 不把源 archive 迁移到 `projects/pcr02/current/`。
 - 不创建 DVR current fact。
 - 不创建 DVR decision。
 - 不创建 DVR validation report。

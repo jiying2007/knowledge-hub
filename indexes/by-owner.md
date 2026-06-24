@@ -3,6 +3,7 @@
 ## leiwenjun
 
 - `knowledge-hub-root`
+- `knowledge-hub-simplified-main-source-coverage-20260624`
 - `knowledge-hub-ultimate-maintenance-plan`
 - `source-inventory-20260616`
 - `pcr02-project-docs-classification-20260616`
@@ -208,6 +209,7 @@
 - `knowledge-hub-final-gate-requirement-map-hardening-20260623`
 - `pcr02-project-docs-owner-decision-landing-20260623`
 - `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
+- `knowledge-hub-source-control-unification-20260624`
 
 ## pcr02-registry-owner
 
@@ -241,3 +243,11 @@
 - `pcr02-docs-index-reference-20260618`
 - `engineering-archive-pcr02-archive-corpus-20260619`
 - `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
+- `knowledge-hub-simplified-final-version-goal`
+- `knowledge-hub-git-automation-permission-20260624`
+- `knowledge-hub-user-path-boundary-20260624`
+- `knowledge-hub-canonical-registry-boundary-20260624`
+- `pcr02-asan-debug-guide-project-local-20260624`
+- `pcr02-dvr-plan-archive-only-20260624`
+- `pcr02-motor-mcu-debug-record-archive-only-20260624`
+- `pcr02-dvr-session-archive-only-20260624`

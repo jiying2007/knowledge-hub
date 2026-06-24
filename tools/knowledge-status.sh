@@ -59,6 +59,24 @@ def resolve_today():
 today, today_source = resolve_today()
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
 def display_tool(script_name):
     return f"{DISPLAY_TOOL_ROOT}/{script_name}"
 
@@ -1350,7 +1368,7 @@ if open_owner_gate_count:
 
 result = {
     "schema_version": 1,
-    "root": str(root),
+    "root": display_path(root),
     "read_only": True,
     "strict": args.strict,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),

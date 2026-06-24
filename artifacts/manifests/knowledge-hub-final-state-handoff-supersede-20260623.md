@@ -15,7 +15,7 @@
 
 ## Stable Context
 
-- 仓库：`/home/leiwenjun/knowledge-hub`
+- 仓库：`~/knowledge-hub`
 - 本轮输入基线：`8f48ac2 docs(governance): 加固owner归档表单路径`
 - 所有 shell 命令必须通过 `rtk`。
 - 手工写文件必须使用 `apply_patch`。
@@ -57,7 +57,7 @@
 ## Resume Prompt
 
 ```text
-继续 /home/leiwenjun/knowledge-hub 的终态治理。当前应先验证最新 HEAD 和工作区状态，不要把 2026-06-20 handoff 当作当前口径。恢复时读取：
+继续 ~/knowledge-hub 的终态治理。当前应先验证最新 HEAD 和工作区状态，不要把 2026-06-20 handoff 当作当前口径。恢复时读取：
 - docs/goals/knowledge-hub-final-state.md
 - artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.md
 - registry/items.jsonl

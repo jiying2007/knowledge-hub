@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-module-agent-rules`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
 - 当前复扫发现：8 个 `AGENTS.md`。
 - 历史 closeout 记录：target module AGENTS=6，additional observed in `modules/api`、`modules/app`、`modules/hdi`。
 - 当前复扫未发现 `modules/**/AGENTS.md`，需作为历史证据差异记录，不能登记不存在路径为 active。

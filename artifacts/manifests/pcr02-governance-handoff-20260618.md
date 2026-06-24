@@ -6,9 +6,9 @@
 
 ## Stable Context
 
-- Knowledge Hub 根目录：`/home/leiwenjun/knowledge-hub`
+- Knowledge Hub 根目录：`~/knowledge-hub`
 - PCR02 source id：`pcr02-project-docs`
-- PCR02 docs source root：`/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- PCR02 docs source root：`~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Target domain：`domains/projects/pcr02`
 - closeout 日期：`2026-06-18`
 - 已分类源文件总数：32
@@ -67,7 +67,7 @@
 ## Resume Prompt
 
 ```text
-继续 PCR02 docs governance owner-gate 收口。请从 /home/leiwenjun/knowledge-hub 开始，只读回读：
+继续 PCR02 docs governance owner-gate 收口。请从 ~/knowledge-hub 开始，只读回读：
 - artifacts/manifests/pcr02-docs-governance-closeout-20260618.md
 - artifacts/manifests/pcr02-docs-governance-closeout-20260618.jsonl
 - artifacts/manifests/pcr02-owner-action-board-20260618.md

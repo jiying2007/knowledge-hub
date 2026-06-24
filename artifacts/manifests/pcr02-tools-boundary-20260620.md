@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-project-tools`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools`
 - 扫描方式：只读路径与小范围 Markdown 摘要复核；未运行任何源项目脚本。
 - 覆盖文件数：19 个文件。
 - 主要类型：Markdown 3、shell 3、Python 10、CSV 2、生成型 pyc 1。

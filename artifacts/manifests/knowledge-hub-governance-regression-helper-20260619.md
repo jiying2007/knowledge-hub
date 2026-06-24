@@ -52,8 +52,9 @@
 | owner-landing-plan-requires-owner-ready-repo-relative-command | 临时副本把某条 owner-ready package Markdown 的稳定工具命令改回 repo-relative 命令 | owner 表单校验仍可通过，但 `owner_ready_package_status=invalid` 会阻断 landing plan，避免生成只能在仓库 cwd 下执行的签收命令 |
 | owner-landing-plan-requires-owner-ready-duplicate | 临时副本复制某条 owner-ready registry item 后生成 landing plan | owner 表单校验仍可通过，但 `owner_ready_package_status=duplicate` 会阻断 landing plan，不能输出人工落地 steps |
 | owner-form-target-decision-candidate-gate | 当前 owner 表单校验拒绝 target_decision 越过 worksheet 候选目标 | valid form 若把 `target_decision` 改成 `domains/embedded/standards/...` 等非 `target_candidates` 值，`--validate-forms` 必须失败 |
-| owner-form-decision-target-pair-reference-only-project-path | 当前 owner 表单校验拒绝 `reference-only` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `reference-only` 且 `target_decision` 仍指向 `domains/projects/...`，`--validate-forms` 必须失败 |
-| owner-form-decision-target-pair-no-migration-project-path | 当前 owner 表单校验拒绝 `no-migration` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `no-migration` 且 `target_decision` 仍指向 `domains/projects/...`，`--validate-forms` 必须失败 |
+| owner-form-decision-target-pair-gate | 当前 owner 表单校验能从 worksheet 候选中找到项目路径并覆盖决策/目标成对门禁 | 若 worksheet 暴露 `projects/...` 项目路径，聚合场景必须继续运行三组负向和两组正向组合 |
+| owner-form-decision-target-pair-reference-only-project-path | 当前 owner 表单校验拒绝 `reference-only` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `reference-only` 且 `target_decision` 仍指向 `projects/...`，`--validate-forms` 必须失败 |
+| owner-form-decision-target-pair-no-migration-project-path | 当前 owner 表单校验拒绝 `no-migration` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `no-migration` 且 `target_decision` 仍指向 `projects/...`，`--validate-forms` 必须失败 |
 | owner-form-decision-target-pair-project-rule-reference-only | 当前 owner 表单校验拒绝落地类 decision 搭配 `reference-only` target | valid form 若把 `owner_decision` 填为 `project-local-rule` 且 `target_decision` 填为 `reference-only`，`--validate-forms` 必须失败 |
 | owner-form-decision-target-pair-positive-reference-only | 当前 owner 表单校验接受 `reference-only` 与 `reference-only` 的合法终止组合 | valid form 若把 `owner_decision` 和 `target_decision` 都填为 `reference-only`，`--validate-forms` 必须通过，避免负向门禁误伤不迁移引用决策 |
 | owner-form-decision-target-pair-positive-no-migration | 当前 owner 表单校验接受 `no-migration` 与 `no-migration` 的合法终止组合 | valid form 若把 `owner_decision` 和 `target_decision` 都填为 `no-migration`，`--validate-forms` 必须通过，避免负向门禁误伤明确不迁移决策 |
@@ -113,6 +114,11 @@
 | source-manual-entry-requires-check-or-reason | 当前人工 source 新增向导要求检查命令或 no-check 原因二选一 | 不传 `--check` / `--no-check-reason` 会失败；二者同时传也会失败，避免生成占位 source coverage 草稿 |
 | source-manual-entry-docs-check-preferred | 当前 README、tools README 和 `knowledge-new.sh --help` 展示 source `--check` 优先路径 | 文档和 help 同时展示 `--check` 与 `--no-check-reason`，说明二选一约束，并说明有稳定检查命令时 registry source object 与 source coverage JSONL row 草稿都记录 `check` |
 | source-manual-entry-role-aware-recommendations | 当前 source 新增向导按 role/write_policy/check 输出只读推荐终态和理由 | 推荐值不替代 owner decision，不关闭 owner gate，copyable registry JSON 仍保守使用 `owner-gated-pending-decision` |
+| no-user-absolute-path-persisted | 当前持久文本不得包含用户专属绝对路径前缀 | AGENTS、README、docs、domains、governance、indexes、notes、projects、registry、sources、templates、tools 和 artifacts/manifests 中的长期文本只允许使用 `~` 用户路径形式 |
+| user-path-redaction-in-tool-outputs | 当前核心只读工具输出不得回显用户专属绝对路径前缀 | `knowledge-check`、`knowledge-status`、`knowledge-source-check` 和 `knowledge-search` 的 JSON 输出必须使用 `~` 路径展示，同时内部路径解析仍可执行 |
+| source-control-directory-gate | 临时副本删除一个 `sources/<source_id>/README.md` | `knowledge-check` 必须以 `source-control:<source_id>` 错误阻断，证明每个 registered source 都必须有 Hub 内主控目录四件套 |
+| source-control-raw-copy-body-gate | 临时副本向 source inventory 加入 raw session `copy-body` 行 | `knowledge-check` 必须拒绝 session/history/source-code/log/binary 使用 `copy-body`，避免 raw dump 进入长期正文层 |
+| owner-target-existence-gate | 临时副本删除 PCR02 owner decision landing 指向的 ASAN target | `knowledge-check` 必须以 `owner-target:<worksheet_id>` 错误阻断，证明 owner landing 产生的本地 target 必须真实存在 |
 | knowledge-search-structured-filters | 当前搜索入口支持 registry-backed 结构化过滤 | `knowledge-search.sh` 保持全文搜索兼容，同时按 `--owner`、`--status` 和 `--source-id` 返回带 `item_id/status/owner/source_id` 的 registry item 命中 |
 | knowledge-search-structured-filters-exclude-unregistered-raw | 临时副本新增同关键词但未登记 raw file 后运行结构化 source 搜索 | 使用 `--source-id` 等结构化过滤时，结果必须全部关联 registry item，并排除未登记 raw file，避免恢复时把历史材料误当 current fact |
 | knowledge-search-kind-alias-filters | 当前搜索入口支持模板 kind 别名归一到 registry kind | `--kind validation-report` 会归一为 `validation` 过滤，并在 JSON 中暴露 `kind_normalized`，避免模板别名和 registry 枚举割裂 |
@@ -124,6 +130,7 @@
 | final-proof-artifact-as-of-date-selector | 临时副本新增 2026-06-23 governance proof manifest 后运行 final gate | `knowledge-final-gate.sh --as-of 2026-06-23` 必须按 as-of 日期发现新 proof，同时保留 2026-06-22 seed 基线，避免动态 proof selector 继续绑定固定日期 |
 | final-proof-artifacts-stable-alias | 当前终态 proof 主制品摘要提供稳定 JSON 字段并兼容旧日期字段 | final gate 必须输出稳定 `proof_artifacts`，保留 `proof_artifacts_20260622`，且两者内容完全一致，避免长期恢复依赖日期化 key |
 | index-plan-topic-schema-health | 当前 topic 索引规划视图和 `registry/topics.json` 对齐 | `knowledge-index-plan.sh --section topic --json` 输出的 topic id 与 topic registry 完全一致 |
+| registry-canonical-topic-retention-paths | 当前 topic registry 和 retention rules 使用硬切换后的 canonical 路径 | `registry/topics.json` 和 `registry/retention.json` 不得把旧项目/个人目录作为当前入口；临时副本回灌旧入口时 `knowledge-check` 必须失败 |
 | index-plan-decision-registry-health | 当前 decision 索引规划视图覆盖 registry decisions | `knowledge-index-plan.sh --section decision --json` 的 registry decision id 与 `registry/decisions.jsonl` 完全一致且不重复 |
 | index-decision-registry-subsection-gate | 当前 `by-decision` 强门禁只锁 registry decision 覆盖 | 移除 registry decision 的索引引用会触发 `knowledge-check`，但不把 owner worksheet / migration decision 当作 registry decision 强约束 |
 | index-topic-zero-bucket-allowed | 当前 topic 规划允许空 topic | 空 topic 作为健康数据保留，不作为硬失败 |
@@ -142,14 +149,20 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json` | 0 | 通过；105 个回归场景全部 pass，覆盖 governance goal path explainability、PCR02 Level 2 source coverage、7 个 PCR02 Level 2 source boundary manifests、boundary_health 内部证据健康面和负向 source_id 篡改、status 负向 fixture、owner gate 负向 fixture、owner handoff packet、owner form 聚焦、owner forms 文本 JSONL 输出、owner forms 纯 JSONL 输出、owner forms target candidates、owner forms 纯 JSONL 互斥保护、owner checklist、owner form 上下文、owner source identity 上下文、owner prefill candidates、owner evidence readiness、owner inbox 字段分组与安全命令、owner source identity 过期拒绝、owner target_decision 候选目标门禁、owner decision/target 成对兼容门禁、owner decision/target 合法终止组合正向门禁、owner routing_owner 代签 reviewed_by 拒绝、owner guardrail/decision enum/target_candidates 篡改拒绝、owner summary、owner by-owner summary、owner next-open 聚焦、status next owner gate、status text owner summary/review_after commands、owner-gates 子命令非零阻断、final gate owner blocker、final gate evidence index、final gate strict 非 owner blocker、final gate skip regression blocker、final gate empty child JSON blocker、final gate default regression path、final gate typed registry gap、final gate source coverage selection、final gate 当前 source-check 证据和高优先级规则审计、final gate source-check runtime 失败 blocker、final gap/readability 正向契约、final gate git diff check、final gate automatic governance/gap map、final state Level 1/2/3 audit summary、final gate owner_recovery、final proof as-of 日期选择、owner landing plan / landing audit 执行目录、动态 worksheet 文件、worksheet 验证命令和人工 delta、owner-ready missing/invalid/duplicate/repo-relative-command landing gate、manual entry by-project/by-source/by-decision 条件索引提示、manual entry 已登记 source 绑定、unknown source 拒绝、owner 文档可发现性、owner registry 状态与 personal-local 默认值、offline manual defaults、README 5 条最短路径和终态检查离线 fallback、人工新增 diagnostics 默认验证、人工新增可读性字段、归档类人工入口默认 archived、离线待验证模板占位、governance audit 可读性 gate、AI provenance gate、migration notes_zh gate、migration 条件提示、模板选择和 registry kind 映射、模板必备章节、indexes README 维护规则、index planner 核心 section 派生视图、coverage decision/risk、manifest filename-date-only latest 与 unpaired 分类、manifest JSONL 轻量 profile gate（2026-06-21 及之后）、模板可读性字段 gate、终态 proof 主制品可发现性、topic/decision 索引规划健康、decision registry 强门禁、空 topic 允许、status source governance summary、source_check_health 静态契约和非 rtk 负向门禁、source-check report-only helper、source-check unsafe runtime 拒绝、review_after near-due report、review_after 分组 JSON 契约、automation report-only/no-memory 硬门禁、source coverage 日期文件名选择、source coverage duplicate source_id warning、review_after as-of 固定日期复现、stale item/source review_after warning/status surface、source 新增向导、source 新增向导 review_after 默认复核周期、source 枚举速查和非法枚举预校验、source check 命令分支、source status coverage 同步、source unknown owner warning、source check/no-check 二选一、source check 文档优先路径、source role-aware 推荐提示、knowledge-search 结构化过滤、structured filters 排除未登记 raw file、kind alias 归一过滤、registry metadata-only fallback、无效 filter/limit 拒绝、治理文档稳定命令示例和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-23` | 0 | 通过；120 个回归场景全部 pass，新增 `owner-decision-draft-leak-warning`，并保留 `owner-handoff-packet-json`、`manifest-profile-boundary-advisory`、`owner-dispatch-source-scope-isolation` 与 `manifest-regression-count-capture-qualifier`，证明 owner 一包化 handoff packet 可离线签收但不生成 decision，非 `.local` owner decision 草稿会被 diagnostics 暴露，manifest boundary profile 缺失只作为 advisory 恢复提示，owner 分派按 source scope 隔离，历史 manifest 固定回归计数带当次捕获口径。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-24` | 0 | 通过；126 个回归场景全部 pass，新增 `source-control-directory-gate`、`source-control-raw-copy-body-gate` 和 `owner-target-existence-gate`，确认 registered source 主控目录、raw dump safety 与 owner landing target 存在性均有负向门禁，并保留 user-path、canonical registry、owner gate、source coverage、search、automation 和 regression manifest 自检覆盖。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 
-## Current Regression IDs Added 2026-06-21/2026-06-23
+## Current Regression IDs Added 2026-06-21/2026-06-24
 
 - `manual-entry-archive-default-status`
 - `readme-offline-shortest-paths`
+- `no-user-absolute-path-persisted`
+- `user-path-redaction-in-tool-outputs`
+- `source-control-directory-gate`
+- `source-control-raw-copy-body-gate`
+- `owner-target-existence-gate`
+- `registry-canonical-topic-retention-paths`
 - `owner-decision-draft-leak-warning`
 - `manual-entry-offline-package-consistency`
 - `offline-validation-template-placeholders`
@@ -173,6 +186,7 @@
 - `source-check-report-only-helper`
 - `source-check-rejects-unsafe-runtime-command`
 - `review-after-near-due-json-contract`
+- `owner-form-decision-target-pair-gate`
 - `owner-form-decision-target-pair-reference-only-project-path`
 - `owner-form-decision-target-pair-no-migration-project-path`
 - `owner-form-decision-target-pair-project-rule-reference-only`

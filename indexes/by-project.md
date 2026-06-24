@@ -2,14 +2,14 @@
 
 ## PCR02
 
-- 当前 docs source：`/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
-- 历史归档 source：`/home/leiwenjun/embedded/engineering_archive/pcr02`
-- 目标项目域：`domains/projects/pcr02`
-- current 恢复锚点：`domains/projects/pcr02/current/`
-- archive 恢复锚点：`domains/projects/pcr02/archive/`
-- validation 恢复锚点：`domains/projects/pcr02/validation/`
+- 当前 docs source：`~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- 历史归档 source：`~/embedded/engineering_archive/pcr02`
+- 目标项目域：`projects/pcr02`
+- current 恢复锚点：`projects/pcr02/current/`
+- archive 恢复锚点：`projects/pcr02/archive/`
+- validation 恢复锚点：`projects/pcr02/validation/`
 - manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
-- 决策目录：`domains/projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。
+- 决策目录：`projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。
 - 分类基线：`artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - copy-first dry-run manifest：`artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
 - copy-first applied 报告：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`
@@ -49,6 +49,12 @@
 - Motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- Source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/migration-plan.md`
+- ASAN project-local target：`projects/pcr02/current/runbooks/asan-debug-guide.md`
+- DVR plan archive target：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`
+- Motor MCU debug record archive target：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- DVR record/replay session archive target：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- Source control unification：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
 - Owner target and landing validation: `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`
 - Owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
 - Source check docs, guardrails and search limit: `artifacts/manifests/knowledge-hub-source-check-docs-search-limit-20260621.md`
@@ -56,7 +62,7 @@
 - Owner dispatch and readability sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`
 - Status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`
 - Owner routing recovery: `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`
-- Docs index reference: `domains/projects/pcr02/current/docs-index.ref.md`
-- CI smoke session artifact reference: `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
+- Docs index reference: `projects/pcr02/current/docs-index.ref.md`
+- CI smoke session artifact reference: `projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
-- Engineering archive corpus: `domains/projects/pcr02/archive/engineering-archive`
+- Engineering archive corpus: `projects/pcr02/archive/engineering-archive`

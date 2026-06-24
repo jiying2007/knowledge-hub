@@ -4,7 +4,7 @@ Date: 2026-06-18
 
 Status: active investigation progress note.
 
-Source: PCR02 SSC305 flash-read troubleshooting session on 2026-06-17 to 2026-06-18, selected serial-log summaries, board-side RIU readback, and repository state in `/vsdata/leiwenjun/pcr02_ssc305_compile`.
+Source: PCR02 SSC305 flash-read troubleshooting session on 2026-06-17 to 2026-06-18, selected serial-log summaries, board-side RIU readback, and repository state in `~/pcr02_ssc305_compile`.
 
 Scope: This note records the current low-level flash-read investigation state, software baseline, aging-test configuration, and remaining BSP questions. It does not archive full serial logs or claim a final root cause.
 

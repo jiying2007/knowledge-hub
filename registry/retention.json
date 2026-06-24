@@ -7,7 +7,7 @@
   },
   "rules": [
     {
-      "domain": "domains/personal",
+      "domain": "notes/personal",
       "policy": "personal-local; never promote without explicit review"
     },
     {

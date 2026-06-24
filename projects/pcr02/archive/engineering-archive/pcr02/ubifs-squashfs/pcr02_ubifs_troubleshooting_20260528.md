@@ -33,7 +33,7 @@
 主应用工程路径：
 
 ```text
-/vsdata/leiwenjun/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo
+~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo
 ```
 
 设备调试方式：

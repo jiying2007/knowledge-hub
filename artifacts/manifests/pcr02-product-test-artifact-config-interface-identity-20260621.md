@@ -9,7 +9,7 @@
 ## 范围
 
 - Source ID: `pcr02-product-test`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test`
 - Identity JSONL: `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl`
 - 采集方式：只读遍历，显式排除 `.git/**`；对 `.o/.d` 生成物只做聚合排除，不逐个登记 hash。
 

@@ -3,7 +3,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Baseline: `artifacts/manifests/pcr02-review-required-resolution-20260617.md`
 - Machine-readable checklist: `artifacts/manifests/pcr02-owner-review-package-20260618.jsonl`
 - Mode: owner-review package only. No source files were copied, moved, deleted, edited, pruned, promoted, or rewritten.

@@ -49,6 +49,24 @@ source_window_end = today + dt.timedelta(days=args.source_window_days)
 
 errors = []
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
 def read_jsonl(path):
     rows = []
     try:
@@ -238,7 +256,7 @@ status = "fail" if errors else "report-only"
 output = {
     "schema_version": 1,
     "status": status,
-    "root": str(root),
+    "root": display_path(root),
     "read_only": True,
     "report_only": True,
     "today": today.isoformat(),

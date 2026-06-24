@@ -94,7 +94,7 @@ SQUASHFS error: Unable to read page ...
 
 ### 平台文档依据
 
-- `/vsdata/leiwenjun/SSC30XXE_QFN128_HW_Checklist_V1.9_202502522.xlsx`：
+- `~/SSC30XXE_QFN128_HW_Checklist_V1.9_202502522.xlsx`：
   - `IO Mapping`：SPI0 boot flash 六线对应 PIN57/58/59/60/61/64、GPIO35/36/37/38/39/40。其中 `IO Mapping` 行内 WPZ pad 名称写作 `PAD_SPIO_WPZ`，`GPIO_Ctrl_Reg_Table` 使用 `PAD_SPI0_WPZ`，两者按同一 SPI0 WP# 信号处理。
   - `GPIO_Ctrl_Reg_Table` R37-R41：`PAD_SPI0_DO/DI/HLD/WPZ/CZ` 为 2-bit driving，编码 `(00)=4mA`、`(01)=8mA`、`(10)=12mA`、`(11)=16mA`，默认 `2'b10`。
   - `GPIO_Ctrl_Reg_Table` R42：`PAD_SPI0_CK` 为 3-bit driving，编码 `(000)=2mA`、`(001)=4mA`、`(010)=6mA`、`(011)=8mA`、`(100)=10mA`、`(101)=12mA`、`(110)=14mA`、`(111)=16mA`，默认 `3'b101`。

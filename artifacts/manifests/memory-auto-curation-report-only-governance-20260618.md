@@ -8,7 +8,7 @@
 
 - Source id: `pcr02-project-docs`
 - Source path: `runbooks/memory-auto-curation-guide.md`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Source sha256: `36e8529bff008fb42c90779f11724e020141e19d64a6533d6af99f70dfeedc91`
 - Source size: `2060`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
@@ -133,8 +133,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "memory-auto-curation"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "no-memory-write"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "teamized-report-only"
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/memory-auto-curation-guide.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/memory-auto-curation-guide.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/memory-auto-curation-guide.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/memory-auto-curation-guide.md
 ```
 
 ## Non-actions

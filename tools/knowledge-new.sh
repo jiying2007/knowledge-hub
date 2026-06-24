@@ -34,9 +34,9 @@ Usage:
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path <path> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
 
 Examples:
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --item-source-id pcr02-project-docs --item-source-path runbooks/example.md
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path domains/projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md --item-source-id pcr02-project-docs --item-source-path runbooks/example.md
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path /path/to/source --role project-current-docs-source --authority legacy-project-current-docs --write-policy read-only-unless-explicitly-approved --no-check-reason "manual source; classify-first pending coverage"
@@ -566,8 +566,8 @@ if [[ "$ITEM_OWNER_REGISTRY_STATUS" == "unknown-owner" ]]; then
 elif [[ "$ITEM_OWNER_REGISTRY_STATUS" == "owners-registry-missing" ]]; then
   ITEM_OWNER_WARNING_LINE="- owner_warning_zh: registry/owners.json 不存在；落盘前请先恢复 owner registry。"
 fi
-if [[ -z "$DOMAIN" && "$TARGET_PATH" == domains/personal/* ]]; then
-  DOMAIN="personal"
+if [[ -z "$DOMAIN" && "$TARGET_PATH" == notes/* ]]; then
+  DOMAIN="notes"
 fi
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_SCOPE="team-general"
@@ -584,14 +584,17 @@ if [[ "$DOMAIN" == projects/* ]]; then
 fi
 PERSONAL_WARNING_BLOCK=""
 PERSONAL_DEFAULT_REASON=""
-if [[ "$DOMAIN" == "personal" ]]; then
+if [[ "$DOMAIN" == "notes" && "$TARGET_PATH" == notes/personal/* ]]; then
   DISPLAY_VISIBILITY="personal-local"
   DRAFT_STATUS="personal"
   STATUS_INDEX_BUCKET="personal"
   PERSONAL_DEFAULT_REASON="- personal_default_reason_zh: personal-local 条目默认不进入团队 active index，不得标记 active，不代表 owner decision。"
 fi
-if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == domains/personal/* && "$DOMAIN" != "personal" ]]; then
-  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: 目标路径 `%s` 位于 domains/personal/，但 --domain 为 `%s`；该组合会被 domain/path invariant 拦截，不可直接落盘。请改为 `--domain personal`，或移动目标路径。\n' "$TARGET_PATH" "${DOMAIN:-<未指定>}"
+if [[ "$DOMAIN" == "personal" ]]; then
+  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: `domain=personal` 已废弃；请改用 `--domain notes --path notes/personal/<file>.md`。\n'
+fi
+if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == notes/personal/* && "$DOMAIN" != "notes" ]]; then
+  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: 目标路径 `%s` 位于 notes/personal/，但 --domain 为 `%s`；请改为 `--domain notes`。\n' "$TARGET_PATH" "${DOMAIN:-<未指定>}"
 fi
 DISPLAY_PROJECT="${PROJECT:-<project>}"
 JSON_ID="$(json_escape "$DISPLAY_ID")"

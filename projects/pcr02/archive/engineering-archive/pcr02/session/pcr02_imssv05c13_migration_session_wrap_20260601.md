@@ -1,7 +1,7 @@
 # PCR02 IMSSV05C13 SDK Migration Session Wrap
 
 - Captured at: 2026-06-01
-- Source scope: current Codex session, `/vsdata/leiwenjun/Iford_IMSSV05C13`, PCR02 archive notes
+- Source scope: current Codex session, `~/Iford_IMSSV05C13`, PCR02 archive notes
 - Topic: session-wrap
 - Sanitization: credential material omitted, no full chat transcript, no bulk build logs
 - Archive status: current session handoff
@@ -10,7 +10,7 @@
 
 ## Goal
 
-Migrate effective PCR02 product changes from `/vsdata/leiwenjun/pcr02_ssc305_compile` onto the new vendor SDK `/vsdata/leiwenjun/Iford_IMSSV05C13`, because the vendor stated `Iford_IMD00V5.1.1_20250529` and related older SDK lines are no longer maintained.
+Migrate effective PCR02 product changes from `~/pcr02_ssc305_compile` onto the new vendor SDK `~/Iford_IMSSV05C13`, because the vendor stated `Iford_IMD00V5.1.1_20250529` and related older SDK lines are no longer maintained.
 
 User constraints captured during the work:
 
@@ -23,10 +23,10 @@ User constraints captured during the work:
 
 | Role | Path | Notes |
 | --- | --- | --- |
-| New SDK migration target | `/vsdata/leiwenjun/Iford_IMSSV05C13` | Git repository initialized and used for ordered commits. |
-| Current product source | `/vsdata/leiwenjun/pcr02_ssc305_compile` | Effective product behavior source. |
-| Older vendor baseline | `/vsdata/leiwenjun/Iford_IMD00V5.1.1_20250529` | Historical comparison source. |
-| Nested app library repo | `/vsdata/leiwenjun/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo` | Has a local app/library rebuild commit. |
+| New SDK migration target | `~/Iford_IMSSV05C13` | Git repository initialized and used for ordered commits. |
+| Current product source | `~/pcr02_ssc305_compile` | Effective product behavior source. |
+| Older vendor baseline | `~/Iford_IMD00V5.1.1_20250529` | Historical comparison source. |
+| Nested app library repo | `~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo` | Has a local app/library rebuild commit. |
 
 ## Commits Produced in Target SDK
 
@@ -106,7 +106,7 @@ The build still completed, so this was a silent packaging risk. Commit `35645c87
 Full compile command:
 
 ```bash
-rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit `0`, log ended with `[build] done`.
@@ -137,7 +137,7 @@ Result: exit `0`; generated `/tmp/pcr02_flash.sni`.
 OTA validation after SNI fix:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit `0`; `SStarOta.bin.gz` passed `gzip -t`; observed OTA log no longer showed `snigenerator: invalid option -- 'q'`.
@@ -164,7 +164,7 @@ Important warning for the first migration package: `ubia` block-update rewrites 
 
 ## Current Dirty Worktree
 
-`/vsdata/leiwenjun/Iford_IMSSV05C13` is dirty because compile/OTA generated or refreshed tracked and untracked artifacts. Representative categories:
+`~/Iford_IMSSV05C13` is dirty because compile/OTA generated or refreshed tracked and untracked artifacts. Representative categories:
 
 - `SourceCode/boot/.config`, generated boot include files and build tools
 - `SourceCode/kernel/.config`, `Module.symvers`, `uImage.*`, generated scripts/tools/config headers
@@ -189,16 +189,16 @@ These were not cleaned or reverted. Treat them as generated build state unless e
 Recommended starting checks:
 
 ```bash
-rtk git -C /vsdata/leiwenjun/Iford_IMSSV05C13 log --oneline -14
-rtk git -C /vsdata/leiwenjun/Iford_IMSSV05C13 status --short
-rtk git -C /vsdata/leiwenjun/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo log --oneline -3
-rtk git -C /vsdata/leiwenjun/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo status --short
+rtk git -C ~/Iford_IMSSV05C13 log --oneline -14
+rtk git -C ~/Iford_IMSSV05C13 status --short
+rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo log --oneline -3
+rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo status --short
 ```
 
 Recommended host-side preparation before board validation:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 First-round acceptance checklist:

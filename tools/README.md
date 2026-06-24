@@ -1,6 +1,6 @@
 # Knowledge Hub Tools
 
-所有工具默认保守：优先只读、dry-run、report-only；不会自动删除、发布、提升 active、关闭 owner gate、写 memory 或修改源项目。
+所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护和本地 commit，但不会自动 push/merge/release/tag、删除外部资料、发布、提升 active、关闭 owner gate、写 memory、修改源项目或改变远端 Git 状态。
 
 用户、文档和自动化默认只调用稳定 shell 入口：
 
@@ -28,6 +28,8 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - registry item 和 registered source 的 stale `review_after` 只是 warning/status surface，不是阻断错误；日期格式非法和 `updated_at < created_at` 仍是错误。
 - `knowledge-review-after.sh`: 只读复核排期报告入口。它按 `--as-of` 和 `--window-days` 输出 stale / near-due registry item、source 统计和 owner gate open 计数；near-due 只是人工提醒，不作为 blocking gate，不自动修改 `review_after`，不关闭 owner gate。
 - `knowledge-source-check.sh`: 只读 source availability 报告入口。首版只支持 `--scope pcr02-level2`，只执行 allowlist 中 `rtk bash -lc 'test -d ...'` / `test -f ...` 的路径存在性检查；它不读取 PCR02 source 正文，不运行项目脚本，不改变 `knowledge-check` 的 `source_check_health.mode=static-registry-only` 和 `executed=false` 语义。
+- `knowledge-source-control.sh`: source 主控目录生成和检查入口。它读取 `registry/sources.json` 与 latest source coverage closeout，为每个 registered source 生成或检查 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`；默认只输出计划，`--apply` 只写 Hub 本仓控制文件，不读取或复制 source 正文。
+- `knowledge-pcr02-owner-targets.sh`: PCR02 owner-approved target materialization 入口。它只读 PCR02 docs source，按 owner landing 中已授权的 worksheet 生成 4 个 Hub 内目标正文；不修改源项目、不写 memory、不提升 embedded standards。
 - `knowledge-search.sh`: 只读检索入口。它支持全文检索，也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。
 - 结构化过滤只返回已登记 registry item；未登记 raw file 即使命中关键词，也不能在 `--source-id` / `--status` 等过滤模式下混入结果。
 - `knowledge-status.sh`: 只读控制面 dashboard。
@@ -48,12 +50,12 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-copy-first-plan.sh`: 为已登记 source 生成经审查的 JSONL copy-first manifest；只在 `artifacts/manifests/` 下写 manifest。
 - `knowledge-copy-first.sh`: 按 JSONL manifest 执行 copy-first 迁移；默认 dry-run，需显式确认后才会复制已批准正文。
 - `knowledge-artifact-ref-plan.sh`: 为非文本 source 文件生成 artifact 引用 manifest，记录 source URI、size 和 sha256；不复制二进制内容。
-- `knowledge-new.sh`: 只读人工新增向导。它只打印模板、registry 草稿、索引提示、条件 migration 草稿、验证步骤和可复制骨架，不写文件。支持 `--owner <owner>`、`--item-source-id <source-id>`、`--item-source-path <source-path>`、`--manual-source-reason <reason>`、`--manual-validation-pending --manual-validation-reason <reason>`、`--generated-by-ai --ai-role <role>`；默认 owner 为 `leiwenjun`，可从 `--domain projects/<project>` 推导 project，也可从 `domains/personal/` 路径推导 personal，并支持 `KNOWLEDGE_TODAY=YYYY-MM-DD` 固定草稿日期。草稿默认包含 `summary_zh`、语言/术语、review/evidence 和 AI provenance 字段；默认 `validation_refs` 与 Evidence Index 使用 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`。普通条目会显示 item owner 在 `registry/owners.json` 的登记状态；未知 owner 只输出 warning，不伪造 owner。`domain=personal` 默认 `visibility=personal-local`、`status=personal`，不进入团队 active index。普通条目指定 `--item-source-id` 时会先校验该 source 已登记，再输出 `source.source_id`、可选 `source.source_path`、`indexes/by-source.md` 草稿和带 `--source-id` 的定向检索命令；未知 source 不伪造 source id。模板别名会映射为合法 registry kind。`--source` 只打印 source registry、by-source 和 source coverage JSONL 骨架；未知 owner 只输出中文 warning，不替代正式 owner gate；coverage row 的 `status` 跟随 `--source-status` 输出为 `<status>-pending-classification`，并额外给出 role-aware 推荐终态和中文理由。
+- `knowledge-new.sh`: 只读人工新增向导。它只打印模板、registry 草稿、索引提示、条件 migration 草稿、验证步骤和可复制骨架，不写文件。支持 `--owner <owner>`、`--item-source-id <source-id>`、`--item-source-path <source-path>`、`--manual-source-reason <reason>`、`--manual-validation-pending --manual-validation-reason <reason>`、`--generated-by-ai --ai-role <role>`；默认 owner 为 `leiwenjun`，可从 `--domain projects/<project>` 推导 project，也可从 `notes/personal/` 路径推导 personal-local，并支持 `KNOWLEDGE_TODAY=YYYY-MM-DD` 固定草稿日期。草稿默认包含 `summary_zh`、语言/术语、review/evidence 和 AI provenance 字段；默认 `validation_refs` 与 Evidence Index 使用 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`。普通条目会显示 item owner 在 `registry/owners.json` 的登记状态；未知 owner 只输出 warning，不伪造 owner。`domain=notes` 且路径为 `notes/personal/**` 时默认 `visibility=personal-local`、`status=personal`，不进入团队 active index；`domain=personal` 已废弃。普通条目指定 `--item-source-id` 时会先校验该 source 已登记，再输出 `source.source_id`、可选 `source.source_path`、`indexes/by-source.md` 草稿和带 `--source-id` 的定向检索命令；未知 source 不伪造 source id。模板别名会映射为合法 registry kind。`--source` 只打印 source registry、by-source 和 source coverage JSONL 骨架；未知 owner 只输出中文 warning，不替代正式 owner gate；coverage row 的 `status` 跟随 `--source-status` 输出为 `<status>-pending-classification`，并额外给出 role-aware 推荐终态和中文理由。
 - `knowledge-capture.sh`: dry-run 候选捕获入口；只输出待审查候选，不写 active 知识。
 - `knowledge-promote.sh`: dry-run 提升计划入口；只输出提升前检查和人工步骤，不自动提升。
 - `knowledge-retire.sh`: dry-run 退役计划入口；只输出退役影响和人工步骤，不自动删除或移动正文。
 
-写入必须走显式 reviewed manifest、dry-run、owner、rollback 和验证证据；无人值守自动化不得使用写入入口。
+高风险写入、跨 source 写入、`apply-with-review`、copy-first apply、promote 和 retire 必须走显式 reviewed manifest、dry-run、owner、rollback 和验证证据；Hub 本仓 L1/L2 维护和 `local-commit` 按 `AGENTS.md` / `README.md` 边界执行，必须门禁全绿且可回滚。无人值守自动化不得执行未授权高风险写入。
 
 ## `knowledge-check.sh` 参数语义
 
@@ -71,9 +73,9 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 ```bash
 # 新增一条知识
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/archive/debug/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/archive/debug/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind external-source-note --domain codex --owner <owner> --id <id> --path artifacts/manifests/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/pcr02 --owner <owner> --id <id> --path artifacts/worksheets/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind patent-disclosure --domain patents --owner <owner> --id <id> --path domains/patents/disclosures/<file>.md
@@ -90,7 +92,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<source-id>" --source knowledge-hub --json
 
 # 归档一条历史记录
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --owner <owner> --id <id> --path domains/projects/<project>/archive/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind project-archive --domain projects/<project> --owner <owner> --id <id> --path projects/<project>/archive/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --domain projects/<project> --kind project-archive --json
 
@@ -162,7 +164,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 | 新增知识 | 唯一正文、`registry/items.jsonl`、核心索引；已登记 source 才同步 `indexes/by-source.md`，decision 类条目同步 `indexes/by-decision.md`，未知 source 不伪造 source id；人工来源、中文摘要、语言/术语、review/evidence、AI provenance 字段必须清楚；2026-06-21 及之后 `generated_by_ai=true` 的 item 必须带 `ai_role`、`ai_model_or_tool` 和 `ai_generated_at`；涉及迁移/引用/归档时补 `registry/migrations.jsonl`，2026-06-21 及之后的 migration row 必须带 `notes_zh` | `knowledge-index-plan --section all`、`knowledge-check --diagnostics`、定向 `knowledge-search` |
 | 新增 source | `registry/sources.json`、`indexes/by-source.md`、source coverage/source identity manifest | `knowledge-index-plan --section source`、`knowledge-check --diagnostics`、`knowledge-search "<source-id>" --source knowledge-hub --json` |
 | 新增治理 manifest | `artifacts/manifests/*.md`、`artifacts/manifests/*.jsonl`、必要的 registry/index 登记 | `knowledge-index-plan --section manifest --json`、`knowledge-check --diagnostics`、`knowledge-regression --json` |
-| 归档历史 | `domains/projects/<project>/archive/...`、`registry/items.jsonl`、`registry/migrations.jsonl`、相关索引 | `knowledge-check --diagnostics`、`knowledge-search "<keyword>" --domain projects/<project> --kind project-archive --json` |
+| 归档历史 | `projects/<project>/archive/...`、`registry/items.jsonl`、`registry/migrations.jsonl`、相关索引 | `knowledge-check --diagnostics`、`knowledge-search "<keyword>" --domain projects/<project> --kind project-archive --json` |
 | owner 人工签收 | owner 人工填写的临时 JSONL；真正落地文件以 `--landing-plan` 输出为准 | `--validate-forms '<owner-decisions.jsonl>' --json`、`--landing-plan --json` |
 | 终态检查 | 通常不新增文件；需要保存证据时落相邻 manifest | `rtk git diff --check`、`knowledge-final-gate.sh --json` |
 
@@ -192,7 +194,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>'
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-audit
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path domains/projects/pcr02/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
 ```
 

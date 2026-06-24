@@ -2,7 +2,7 @@
 
 Date: 2026-05-30
 
-Target tree: `/vsdata/leiwenjun/Iford_IMSSV05C13`
+Target tree: `~/Iford_IMSSV05C13`
 
 Product profile: `ap6303bh_512m_v20`
 
@@ -28,7 +28,7 @@ First-round acceptance is still blocked until PCR02 EVT2 real board boot and rea
 Command:
 
 ```bash
-rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `0`.
@@ -94,7 +94,7 @@ Clarification:
 Command:
 
 ```bash
-rtk ./build.sh self-check --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh self-check --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `0`.
@@ -105,7 +105,7 @@ Key output:
 [self-check] profile=ap6303bh_512m_v20 defconfig=xcrz_ipc_ap6303bh_512M_pcr02_v20_defconfig
 [self-check] app_name=xcrz_sigmastar_demo
 [self-check] app_build_system=make
-[self-check] vehicle_ota_config=/vsdata/leiwenjun/Iford_IMSSV05C13/tools/vehicle-ota/pcr02.env
+[self-check] vehicle_ota_config=~/Iford_IMSSV05C13/tools/vehicle-ota/pcr02.env
 [self-check] ota_partitions=default_without_rootfs_data
 [build] done
 ```
@@ -113,7 +113,7 @@ Key output:
 Strict compile without `--allow-dirty` was also attempted:
 
 ```bash
-rtk ./build.sh compile --profile ap6303bh_512m_v20 --no-clean --no-copy-nfs --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh compile --profile ap6303bh_512m_v20 --no-clean --no-copy-nfs --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `1`.
@@ -121,7 +121,7 @@ Result: exit code `1`.
 Reason:
 
 ```text
-ERROR: sdk has no upstream branch configured: /vsdata/leiwenjun/Iford_IMSSV05C13
+ERROR: sdk has no upstream branch configured: ~/Iford_IMSSV05C13
 ```
 
 Decision:
@@ -134,7 +134,7 @@ Decision:
 Command:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `0`.
@@ -178,7 +178,7 @@ ubia.bin         78.2M
 Command:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `0`.
@@ -226,9 +226,9 @@ Reason:
 Commands:
 
 ```bash
-rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh compile --profile ap6303bh_512m_v20 --allow-dirty --no-copy-nfs --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result:
@@ -305,7 +305,7 @@ Result: exit code `0`; output file `/tmp/pcr02_flash.sni` generated.
 OTA recheck:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,customer --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result:
@@ -328,7 +328,7 @@ a0e64ca2e882621fb1f95722c36c4fe23fa0a6e9ea7f01a295046b676fdeb2e7  customer.sqfs
 Command:
 
 ```bash
-rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia,customer --toolchain-root /vsdata/leiwenjun/pcr02_ssc305_compile/.toolchains/ssc305
+rtk ./build.sh ota --profile ap6303bh_512m_v20 --allow-dirty --skip-defconfig --no-clean --no-copy-nfs --ota-partitions rootfs,ubia,customer --toolchain-root ~/pcr02_ssc305_compile/.toolchains/ssc305
 ```
 
 Result: exit code `1`.

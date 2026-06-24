@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-project-scratch`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch`
 - 当前复扫：8 个 Markdown，均为 session/context 类材料。
 - 扫描边界：只读路径与关键词路径级扫描；未复制正文，未写 memory，未修改源项目。
 

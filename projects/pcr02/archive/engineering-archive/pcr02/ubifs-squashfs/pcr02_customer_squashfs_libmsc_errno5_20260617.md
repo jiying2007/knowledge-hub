@@ -7,14 +7,14 @@
 ## Source
 
 - 当前会话排障和代码修改记录，范围包括：
-  - `/vsdata/leiwenjun/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/ai`
-  - `/vsdata/leiwenjun/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/daemon`
-  - `/vsdata/leiwenjun/pcr02_ssc305_compile/SourceCode/project/pcr02_customer/prog_application.sh`
-  - `/vsdata/leiwenjun/pcr02_ssc305_compile/SourceCode/kernel/drivers/sstar/flash/nand/mdrv_spinand.c`
+  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/ai`
+  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/daemon`
+  - `~/pcr02_ssc305_compile/SourceCode/project/pcr02_customer/prog_application.sh`
+  - `~/pcr02_ssc305_compile/SourceCode/kernel/drivers/sstar/flash/nand/mdrv_spinand.c`
 - 串口日志摘要：
-  - `/vsdata/leiwenjun/Serial_2026-06-17_15_20_17.log`
-  - `/vsdata/leiwenjun/Serial_2026-06-17_15_34_01.log`
-  - `/vsdata/leiwenjun/Serial_2026-06-17_19_50_14.log`
+  - `~/Serial_2026-06-17_15_20_17.log`
+  - `~/Serial_2026-06-17_15_34_01.log`
+  - `~/Serial_2026-06-17_19_50_14.log`
 - 既有归档：
   - `ubifs-squashfs/pcr02_customer_squashfs_overlay_flash_read_20260606.md`
   - `boot-flash/pcr02_spinand_read_path_bdma_riu_20260529.md`

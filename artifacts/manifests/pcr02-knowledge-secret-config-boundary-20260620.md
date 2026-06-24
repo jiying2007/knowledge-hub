@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-project-knowledge`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge`
 - 扫描方式：只读路径分类；未读取 `.env` 正文，未执行源项目脚本。
 - 排除 `.git` 后文件数：191。
 - 主要类型：Markdown 93、shell 32、yaml 14、Python 13、pyc 13、env 2、CSV 2。

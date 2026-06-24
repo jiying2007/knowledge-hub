@@ -8,7 +8,7 @@
 
 - Source id: `pcr02-project-docs`
 - Source path: `runbooks/asan-debug-guide.md`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Source sha256: `d65cf6796eac2c306b6bd0fa101450a1307d5c49ba7b7640e6a329d4263d8e88`
 - Source size: `4736`
 - Baseline package: `artifacts/manifests/pcr02-owner-review-package-20260618.md`
@@ -100,8 +100,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 ASAN"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "libasan"
-rtk sha256sum /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/asan-debug-guide.md
-rtk wc -c /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/asan-debug-guide.md
+rtk sha256sum ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/asan-debug-guide.md
+rtk wc -c ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/runbooks/asan-debug-guide.md
 ```
 
 ## Non-actions

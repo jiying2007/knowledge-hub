@@ -9,6 +9,7 @@ import argparse
 import collections
 import datetime as dt
 import json
+import os
 import pathlib
 import re
 import sys
@@ -58,6 +59,24 @@ migrations = []
 errors = []
 warnings = []
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
 
 def is_local_manifest_draft(path):
     return path.suffix == ".jsonl" and path.name.endswith(".local.jsonl")
@@ -178,7 +197,7 @@ for project in projects:
         warnings.append("registry/projects.json contains project without id")
         continue
     domain = f"projects/{project_id}"
-    path_prefix = f"domains/projects/{project_id}/"
+    path_prefix = f"projects/{project_id}/"
     project_items = []
     for item in items:
         item_domain = str(item.get("domain", ""))
@@ -1200,7 +1219,7 @@ if args.validate_queue_forms:
     form_validation = validate_review_queue_forms(by_review_queue, all_review_queue_view)
     validation_payload = {
         "status": "planned" if form_validation.get("status") == "pass" and not errors else "blocked",
-        "root": str(root),
+        "root": display_path(root),
         "section": args.section,
         "read_only": True,
         "report_only": True,
@@ -1233,7 +1252,7 @@ def build_linking_audit():
     required_index_anchors = {
         "by_project": {
             "path": "indexes/by-project.md",
-            "anchors": ["domains/projects/pcr02", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
+            "anchors": ["projects/pcr02", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
         },
         "by_source": {
             "path": "indexes/by-source.md",
@@ -1266,7 +1285,7 @@ def build_linking_audit():
     migration_decisions = by_decision.get("migration_decisions", [])
 
     cross_session_checks = {
-        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "domains/projects/pcr02",
+        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "projects/pcr02",
         "source_recoverable": "pcr02-project-docs" in source_ids and required_level2_sources.issubset(source_ids),
         "topic_recoverable": required_topics.issubset(topic_ids),
         "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions) and bool(migration_decisions),
@@ -1362,7 +1381,7 @@ status_order = ["active", "reviewing", "archived"]
 
 result = {
     "status": "planned" if not errors else "blocked",
-    "root": str(root),
+    "root": display_path(root),
     "item_count": len(items),
     "source_count": len(sources),
     "project_count": len(projects),

@@ -8,6 +8,7 @@ exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import shutil
 import sys
@@ -28,6 +29,24 @@ warnings = []
 planned = []
 copied = []
 verified = []
+
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
 
 if args.apply and args.dry_run:
     errors.append("--apply and --dry-run are mutually exclusive")
@@ -201,8 +220,8 @@ else:
 
 result = {
     "status": result_status,
-    "root": str(root),
-    "manifest": str(manifest),
+    "root": display_path(root),
+    "manifest": display_path(manifest),
     "dry_run": bool(not args.apply),
     "planned_count": len(planned),
     "copied_count": len(copied),

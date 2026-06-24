@@ -233,3 +233,13 @@
 - 2026-09-23: `knowledge-hub-final-gate-requirement-map-hardening-20260623`
 - 2026-09-23: `pcr02-project-docs-owner-decision-landing-20260623`
 - 2026-09-23: `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
+- 2026-09-24: `knowledge-hub-simplified-main-source-coverage-20260624`
+- 2026-09-24: `knowledge-hub-simplified-final-version-goal`
+- 2026-09-24: `knowledge-hub-git-automation-permission-20260624`
+- 2026-09-24: `knowledge-hub-user-path-boundary-20260624`
+- 2026-09-24: `knowledge-hub-canonical-registry-boundary-20260624`
+- 2026-09-17: `pcr02-asan-debug-guide-project-local-20260624`
+- 2026-09-17: `pcr02-dvr-plan-archive-only-20260624`
+- 2026-09-17: `pcr02-motor-mcu-debug-record-archive-only-20260624`
+- 2026-09-17: `pcr02-dvr-session-archive-only-20260624`
+- 2026-09-24: `knowledge-hub-source-control-unification-20260624`

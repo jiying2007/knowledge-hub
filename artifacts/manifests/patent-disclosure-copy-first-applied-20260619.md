@@ -15,7 +15,7 @@
 ## 迁移范围
 
 - Source id：`patent-disclosure`
-- Source root：`/home/leiwenjun/embedded/patent_disclosure`
+- Source root：`~/embedded/patent_disclosure`
 - Markdown target root：`domains/patents/archive/patent-disclosure`
 - Markdown manifest：`artifacts/manifests/patent-disclosure-copy-first-dry-run-20260619.jsonl`
 - Artifact reference manifest：`artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl`
@@ -34,7 +34,7 @@
 
 ## 非目标
 
-- 不修改 `/home/leiwenjun/embedded/patent_disclosure` 源目录。
+- 不修改 `~/embedded/patent_disclosure` 源目录。
 - 不复制图片、doc、pdf、rar 等附件正文。
 - 不声明任何材料为已提交、已公开、已授权或法律终稿。
 - 不启用自动化。

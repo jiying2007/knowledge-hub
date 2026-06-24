@@ -39,8 +39,8 @@
 
 | owner_decision | 含义 | 允许 target_decision |
 | --- | --- | --- |
-| `pcr02-project-decision-after-owner-gate` | 作为 PCR02 项目 decision 候选，仍需 owner 证据和落地验证。 | `domains/projects/pcr02/decisions/diag-command-metadata-standard.md` |
-| `pcr02-project-current-after-owner-gate` | 作为 PCR02 项目 current 候选，必须有 gate evidence 或 documented owner exception。 | `domains/projects/pcr02/current/diag-command-metadata-standard.md` |
+| `pcr02-project-decision-after-owner-gate` | 作为 PCR02 项目 decision 候选，仍需 owner 证据和落地验证。 | `projects/pcr02/decisions/diag-command-metadata-standard.md` |
+| `pcr02-project-current-after-owner-gate` | 作为 PCR02 项目 current 候选，必须有 gate evidence 或 documented owner exception。 | `projects/pcr02/current/diag-command-metadata-standard.md` |
 | `reference-only` | 只保留引用和 source identity，不复制正文。 | `reference-only` |
 | `no-migration` | owner 确认不迁移、不抽取。 | `no-migration` |
 
@@ -137,8 +137,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源文档迁移到 `domains/projects/pcr02/decisions/`。
-- 不把源文档迁移到 `domains/projects/pcr02/current/`。
+- 不把源文档迁移到 `projects/pcr02/decisions/`。
+- 不把源文档迁移到 `projects/pcr02/current/`。
 - 不把源文档提升为团队标准。
 - 不变更 worksheet 状态。
 - 不修改 `registry/items.jsonl` 中既有 PCR02 owner gate 的状态。

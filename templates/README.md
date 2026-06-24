@@ -47,7 +47,7 @@
 
 离线人工新增条目时，默认使用 `source.type=manual`、`source.from=field-debug / meeting / code-review / lab-test / owner-decision / design-review`、`status=reviewing` 和 `review_status=manual-entry-pending-review`，并在 `validation_refs` 或正文 Evidence Index 中保留 `manual_validation_pending: true`。完成工具复核前不得把条目写成 active fact、owner decision 或 promoted 标准。
 
-人工新增普通条目时，`owner` 必须能在 `registry/owners.json` 中登记；`knowledge-new.sh` 对未知 owner 只输出 warning，不替代 owner registry 或 owner decision。`domain=personal` 或目标路径位于 `domains/personal/` 时，默认使用 `visibility=personal-local`、`status=personal`、`scope=team-general`，不得写入团队 active index。
+人工新增普通条目时，`owner` 必须能在 `registry/owners.json` 中登记；`knowledge-new.sh` 对未知 owner 只输出 warning，不替代 owner registry 或 owner decision。个人内容使用 `domain=notes` 和 `path=notes/personal/<file>.md`，默认使用 `visibility=personal-local`、`status=personal`、`scope=team-general`，不得写入团队 active index；`domain=personal` 已废弃。
 
 AI 参与起草、摘要、翻译、分类、抽取或重写时，必须填写 `generated_by_ai`、`ai_role`、`ai_model_or_tool` 和 `ai_generated_at`；2026-06-21 及之后的 `generated_by_ai=true` registry item 缺少这些 provenance 字段会被 `knowledge-check` 阻断。进入 `active` 前必须补 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`，不得用空 reviewer 或占位文本关闭人工复核门禁。
 

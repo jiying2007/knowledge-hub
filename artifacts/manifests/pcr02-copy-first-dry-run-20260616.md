@@ -3,7 +3,7 @@
 ## Scope
 
 - Source id: `pcr02-project-docs`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
 - Classification baseline: `artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - Machine-readable manifest: `artifacts/manifests/pcr02-copy-first-dry-run-20260616.jsonl`
 - Mode: dry-run only. No source or target files were copied, moved, deleted, renamed, edited, or promoted.

@@ -6,12 +6,12 @@
 
 - migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
-- PCR02: `domains/projects/pcr02`; `indexes/by-project.md`
+- PCR02: `projects/pcr02`; `indexes/by-project.md`
 - tools: `artifacts/manifests/pcr02-tools-boundary-20260620.md`; `tools/`
 - knowledge: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
-- diag: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`; `domains/projects/pcr02/current/runbooks/diag-usage-guide.md`
+- diag: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`; `projects/pcr02/current/runbooks/diag-usage-guide.md`
 - ASAN: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
 - memory auto-curation: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`; `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - DVR: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`; `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
@@ -27,15 +27,15 @@
 
 - 嵌入式团队标准：`domains/embedded/standards`
 - 嵌入式 runbook：`domains/embedded/runbooks`
-- 项目当前事实：`domains/projects/*/current`
-- 项目历史归档：`domains/projects/*/archive`
+- 项目当前事实：`projects/*/current`
+- 项目历史归档：`projects/*/archive`
 - 专利材料：`domains/patents`
 - 专利披露 copy-first applied：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
 - 专利披露 Markdown 正文集：`domains/patents/archive/patent-disclosure`
 - 专利披露附件引用：`domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex 工作流：`domains/codex`
 - Codex archive reference-first 边界：`domains/codex/archive/codex-archive.ref.md`
-- 个人笔记：`domains/personal`
+- 个人笔记：`notes/personal`
 - 治理规则：`governance`
 - 中文长期资产模板：`templates`
 - 治理 manifest：`artifacts/manifests`
@@ -93,7 +93,7 @@
 - Knowledge Hub status owner summary command: `artifacts/manifests/knowledge-hub-status-owner-summary-command-20260620.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
-- PCR02 debug runbooks: `domains/projects/pcr02/current/runbooks`
+- PCR02 debug runbooks: `projects/pcr02/current/runbooks`
 - Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - PCR02 DVR closeout: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
@@ -132,7 +132,7 @@
 - Knowledge Hub README maintenance path sync: `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.md`
 - Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
 - Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
-- Engineering archive PCR02 archive corpus: `domains/projects/pcr02/archive/engineering-archive`
+- Engineering archive PCR02 archive corpus: `projects/pcr02/archive/engineering-archive`
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - PCR02 Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - Source registry final-state fields: `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`
@@ -238,8 +238,18 @@
 - Knowledge Hub owner handoff 与 manifest profile advisory 加固: `artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.md`
 - Knowledge Hub review queue recovery packet 加固: `artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.md`
 - Knowledge Hub review queue JSONL 表单骨架加固: `artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md`
+- Knowledge Hub Git 自动化权限优化: `artifacts/manifests/knowledge-hub-git-automation-permission-20260624.md`
 - Knowledge Hub review queue 表单校验加固: `artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.md`
 - Knowledge Hub 离线维护审计加固: `artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.md`
 - Knowledge Hub final gate 需求章节映射加固: `artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.md`
 - PCR02 project docs owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - Knowledge Hub owner/source/subagent 边界加固: `artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`
+- Knowledge Hub 简化终态主库 source 覆盖收口: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`
+- Knowledge Hub 简化终态设计: `docs/goals/knowledge-hub-simplified-final-version.md`
+- Knowledge Hub 用户路径边界加固: `artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`
+- Knowledge Hub canonical registry 边界加固: `artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`
+- Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
+- PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
+- PCR02 ASAN project-local target: `projects/pcr02/current/runbooks/asan-debug-guide.md`
+- PCR02 DVR archive targets: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- PCR02 motor MCU archive target: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`

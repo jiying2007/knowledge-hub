@@ -27,7 +27,7 @@
 - Level 1：`pcr02-project-docs`，当前已有 32/32 docs 治理覆盖；其中 7 个 review-required 项仍保持 owner gate open。
 - Level 2：`pcr02-project-tools`、`pcr02-project-knowledge`、`pcr02-product-test`、`pcr02-project-scratch`、`pcr02-project-root-artifacts`、`pcr02-module-agent-rules`、`pcr02-project-agent-config`。这些 source 进入控制面后，默认只做分类、引用、artifact-ref、identity、archive-only 或 report-only evidence，不复制源码/脚本/日志/二进制正文。
 
-PCR02 project-specific 内容默认留在 `domains/projects/pcr02/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
+PCR02 project-specific 内容默认留在 `projects/pcr02/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
 
 ## 边界决策（Boundary Decisions）
 

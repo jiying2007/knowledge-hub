@@ -41,7 +41,7 @@
 | owner_decision | 含义 | 允许 target_decision |
 | --- | --- | --- |
 | `split-approved` | 只批准拆分边界；PCR02-local 和 team-candidate 后续仍需分别落地验证。 | `project-local-plus-team-candidate-boundary` |
-| `active-project-local` | 只允许创建 PCR02 project-local runbook 候选。 | `domains/projects/pcr02/current/runbooks/asan-debug-guide.md` |
+| `active-project-local` | 只允许创建 PCR02 project-local runbook 候选。 | `projects/pcr02/current/runbooks/asan-debug-guide.md` |
 | `team-candidate-only` | 只允许未来另行重写团队候选，不创建 PCR02 current runbook。 | `domains/embedded/runbooks/asan-debug-guide.md candidate-only` |
 | `reference-only` | 只保留引用和 source identity，不复制正文。 | `reference-only` |
 | `rejected` | owner 拒绝迁移或抽取。 | `no-migration` |
@@ -145,7 +145,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源 runbook 迁移到 `domains/projects/pcr02/current/runbooks/`。
+- 不把源 runbook 迁移到 `projects/pcr02/current/runbooks/`。
 - 不创建 `domains/embedded/runbooks/asan-debug-guide.md`。
 - 不把源 runbook 提升为团队标准。
 - 不变更 worksheet 状态。

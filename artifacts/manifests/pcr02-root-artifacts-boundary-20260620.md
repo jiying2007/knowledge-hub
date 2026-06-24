@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-project-root-artifacts`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
 - 当前复扫口径：根目录 `maxdepth=1` loose files；排除 `.git`、`docs`、`tools`、`knowledge`、`app_product_test`、`scratch`、`.kilo`、`.vscode` 和模块 AGENTS 子树。
 - 当前复扫数量：16。
 - 历史 closeout 证据：adjusted root loose view 21、broad no-git view 48。

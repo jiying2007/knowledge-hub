@@ -25,7 +25,7 @@
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
-| `rtk df -h / /tmp /home/leiwenjun/knowledge-hub` | 0 | 清理可重建缓存后，根分区恢复约 11G 可用空间 | Host environment | Environment | `knowledge-hub-terminal-gate-resilience-20260620` |
+| `rtk df -h / /tmp ~/knowledge-hub` | 0 | 清理可重建缓存后，根分区恢复约 11G 可用空间 | Host environment | Environment | `knowledge-hub-terminal-gate-resilience-20260620` |
 | `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，含 registry decision / by-decision 强门禁 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-terminal-gate-resilience-20260620` |
 | `rtk bash tools/knowledge-regression.sh --json` | 0 | 通过；43 个回归场景全部 pass，新增 topic/decision 索引规划健康和 decision registry 负向门禁 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-terminal-gate-resilience-20260620` |
 | `rtk bash tools/knowledge-final-gate.sh --json` | 1 | 预期返回 `needs-owner-review`；自动治理为 `complete-except-owner-review`，仅剩 7 个 owner gates open | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-terminal-gate-resilience-20260620` |

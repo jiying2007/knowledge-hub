@@ -16,12 +16,12 @@
 
 1. `domains/embedded/standards/`
 2. `domains/embedded/runbooks/`
-3. `domains/projects/<project>/current/`
-4. `domains/projects/<project>/decisions/`
-5. `domains/projects/<project>/archive/`
+3. `projects/<project>/current/`
+4. `projects/<project>/decisions/`
+5. `projects/<project>/archive/`
 6. `domains/patents/`
 7. `domains/codex/`
-8. `domains/personal/`
+8. `notes/personal/`
 9. `~/.codex/memories`
 
 `~/.codex/memories` 永远不是规则或工程事实权威源。

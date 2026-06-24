@@ -2,19 +2,24 @@
 
 | Source | Role | Path |
 | --- | --- | --- |
-| embedded-knowledge | team-knowledge-source | `/home/leiwenjun/embedded/knowledge` |
-| engineering-archive | project-archive-source | `/home/leiwenjun/embedded/engineering_archive` |
-| patent-disclosure | patent-source | `/home/leiwenjun/embedded/patent_disclosure` |
-| codex-archive | codex-governance-source | `/home/leiwenjun/codex/docs/archive` |
-| codex-memories | auxiliary-memory-source | `/home/leiwenjun/.codex/memories` |
-| pcr02-project-docs | project-current-docs-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs` |
-| pcr02-project-tools | project-current-tools-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` |
-| pcr02-project-knowledge | project-current-knowledge-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge` |
-| pcr02-product-test | project-product-test-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test` |
-| pcr02-project-scratch | project-scratch-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` |
-| pcr02-project-root-artifacts | project-root-artifact-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
-| pcr02-module-agent-rules | project-agent-rules-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
-| pcr02-project-agent-config | project-agent-config-source | `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| embedded-knowledge | team-knowledge-source | `~/embedded/knowledge` |
+| engineering-archive | project-archive-source | `~/embedded/engineering_archive` |
+| patent-disclosure | patent-source | `~/embedded/patent_disclosure` |
+| codex-archive | codex-governance-source | `~/codex/docs/archive` |
+| codex-memories | auxiliary-memory-source | `~/.codex/memories` |
+| codex-history | codex-history-source | `~/.codex/history.jsonl` |
+| codex-raw-sessions | codex-session-source | `~/.codex/sessions` |
+| codex-session-index | codex-session-source | `~/.codex/session_index.jsonl` |
+| codex-archive-registry | codex-archive-registry-source | `~/codex/docs/archive/_registry` |
+| knowledge-hub-automation-runs | codex-automation-source | `registry/automation-runs.jsonl` |
+| pcr02-project-docs | project-current-docs-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs` |
+| pcr02-project-tools | project-current-tools-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` |
+| pcr02-project-knowledge | project-current-knowledge-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge` |
+| pcr02-product-test | project-product-test-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test` |
+| pcr02-project-scratch | project-scratch-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` |
+| pcr02-project-root-artifacts | project-root-artifact-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| pcr02-module-agent-rules | project-agent-rules-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| pcr02-project-agent-config | project-agent-config-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
 
 ## PCR02 Source 边界速查
 
@@ -53,6 +58,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - 最新 manual/offline 恢复和 PCR02 可读边界同步：`artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md`。
 - 最新 source check 快照证据和核心索引可读性硬化：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`。
 - 最新 owner/source/subagent 边界加固：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`。
+- 最新 source 主控目录统一收口：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`。
+- 每个 registered source 的 Hub 内管理面位于 sources/<source_id>/，至少包含 `README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
 
 ## Source 专项审查制品
 
@@ -88,10 +95,20 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner resolution`: owner decision landing 规则：`artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`。
 - `pcr02-project-docs owner resolution schema`: owner decision 字段、枚举和非法组合：`artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`。
 - `pcr02-project-docs owner decision landing`: 7 条 owner gate 人工授权决策落地：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。
+- `pcr02-project-docs source control`: Hub 内 source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/migration-plan.md`。
+- `pcr02-project-docs ASAN owner target`: `projects/pcr02/current/runbooks/asan-debug-guide.md`，registry item `pcr02-asan-debug-guide-project-local-20260624`。
+- `pcr02-project-docs DVR plan owner target`: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`，registry item `pcr02-dvr-plan-archive-only-20260624`。
+- `pcr02-project-docs motor MCU owner target`: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`，registry item `pcr02-motor-mcu-debug-record-archive-only-20260624`。
+- `pcr02-project-docs DVR session owner target`: `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
 - `pcr02-project-docs governance closeout`: 可恢复 handoff：`artifacts/manifests/pcr02-governance-handoff-20260618.md`。
 - `registry/items.jsonl`、`registry/migrations.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
 - `codex-memories`: 仅作为辅助召回；memory auto-curation governance 不得写 `~/.codex/memories/**`。
-- `engineering-archive`: 38 PCR02 historical engineering archive files were copy-first migrated to `domains/projects/pcr02/archive/engineering-archive` and verified by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`.
+- `codex-history`: Hub 主库历史来源；只做索引、摘要和候选治理，不把 raw history 行直接提升为 active fact。
+- `codex-raw-sessions`: Hub 主库 raw session 来源；只做引用、摘要和证据定位，不复制完整 raw session 正文。
+- `codex-session-index`: Hub 主库 session 恢复索引；用于跨项目、跨会话串联 project/workstream/session。
+- `codex-archive-registry`: Hub 主库吸收 Codex archive registry；用于迁移项目、topic、session 和 workstream 索引。
+- `knowledge-hub-automation-runs`: Hub 内自动化运行账本；用于串联 automation、authorization、project、session、source 和验证证据。
+- `engineering-archive`: 38 PCR02 historical engineering archive files were copy-first migrated to `projects/pcr02/archive/engineering-archive` and verified by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`.
 - `patent-disclosure`: 10 Markdown patent disclosure files were copy-first migrated to `domains/patents/archive/patent-disclosure`; 181 non-text attachments are registered by `artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl` and summarized in `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`.
 - `embedded-knowledge`: 外部 legacy team SSOT，等待 owner review 和 source 稳定；source coverage 边界：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。
 - `codex-archive`: 通过 Codex archive 工具保持 reference-first；边界：`domains/codex/archive/codex-archive.ref.md` 和 `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。

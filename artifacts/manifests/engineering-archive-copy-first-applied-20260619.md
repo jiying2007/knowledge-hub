@@ -15,7 +15,7 @@
 ## 迁移范围
 
 - Source id：`engineering-archive`
-- Source root：`/home/leiwenjun/embedded/engineering_archive`
+- Source root：`~/embedded/engineering_archive`
 - Target root：`domains/projects/pcr02/archive/engineering-archive`
 - Manifest：`artifacts/manifests/engineering-archive-copy-first-dry-run-20260619.jsonl`
 - Rows：38

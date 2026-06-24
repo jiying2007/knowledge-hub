@@ -38,7 +38,7 @@
 
 | owner_decision | 含义 | 允许 target_decision |
 | --- | --- | --- |
-| `project-local-rule` | 作为 PCR02 项目本地 docs 规则候选。 | `domains/projects/pcr02/current/project-docs-agent-rules.md` |
+| `project-local-rule` | 作为 PCR02 项目本地 docs 规则候选。 | `projects/pcr02/current/project-docs-agent-rules.md` |
 | `reference-only` | 只保留引用和 source identity，不复制正文。 | `reference-only` |
 | `no-migration` | owner 确认不迁移、不抽取。 | `no-migration` |
 
@@ -116,8 +116,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把 `AGENTS.md` 原文迁移到 `domains/projects/pcr02/current/`。
-- 不创建 `domains/projects/pcr02/current/project-docs-agent-rules.md`。
+- 不把 `AGENTS.md` 原文迁移到 `projects/pcr02/current/`。
+- 不创建 `projects/pcr02/current/project-docs-agent-rules.md`。
 - 不把 `AGENTS.md` 规则合并进 Knowledge Hub 根规则。
 - 不变更 worksheet 状态。
 - 不修改 `registry/items.jsonl` 中既有 PCR02 owner gate 的状态。

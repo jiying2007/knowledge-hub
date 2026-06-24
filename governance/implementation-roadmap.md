@@ -26,13 +26,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 ## Phase 3: Project Docs Externalization
 
-- 将项目仓 docs 正文迁入 `domains/projects/<project>/current/` 和 `archive/`。
+- 将项目仓 docs 正文迁入 `projects/<project>/current/` 和 `projects/<project>/archive/`。
 - 项目仓仅保留 `docs/README.md`。
 - 写入 `registry/migrations.jsonl`。
 
 ## Phase 4: Engineering Archive Migration
 
-- 将 `~/embedded/engineering_archive` 按 project/domain 迁入 `domains/projects/*/archive/`。
+- 将 `~/embedded/engineering_archive` 按 project/domain 迁入 `projects/*/archive/`。
 - `decision-index.md` 迁入 `decisions/index.md`。
 - 保留旧路径直到校验完成。
 

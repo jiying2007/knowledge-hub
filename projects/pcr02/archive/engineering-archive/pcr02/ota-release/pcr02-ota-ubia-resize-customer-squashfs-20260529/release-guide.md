@@ -13,7 +13,7 @@ resized ota/customer/data UBI volumes
 Command:
 
 ```bash
-cd /vsdata/leiwenjun/pcr02_ssc305_compile
+cd ~/pcr02_ssc305_compile
 
 rtk bash ./build.sh release \
   --profile ap6303bh_512m_v20 \
@@ -44,7 +44,7 @@ Important:
 Use this only after the device has completed migration.
 
 ```bash
-cd /vsdata/leiwenjun/pcr02_ssc305_compile
+cd ~/pcr02_ssc305_compile
 
 rtk bash ./build.sh release \
   --profile ap6303bh_512m_v20 \
@@ -69,7 +69,7 @@ no /data wipe
 Use this if both `/customer` and `/config` content changed:
 
 ```bash
-cd /vsdata/leiwenjun/pcr02_ssc305_compile
+cd ~/pcr02_ssc305_compile
 
 rtk bash ./build.sh release \
   --profile ap6303bh_512m_v20 \
@@ -86,7 +86,7 @@ rtk bash ./build.sh release \
 Use this if rootfs startup scripts, kernel, or system mount logic changed:
 
 ```bash
-cd /vsdata/leiwenjun/pcr02_ssc305_compile
+cd ~/pcr02_ssc305_compile
 
 rtk bash ./build.sh release \
   --profile ap6303bh_512m_v20 \

@@ -157,7 +157,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 
 ## 非目标
 
-- 不把源 record 迁移到 `domains/projects/pcr02/validation/reports/`。
+- 不把源 record 迁移到 `projects/pcr02/validation/reports/`。
 - 不创建 motor MCU decision。
 - 不确认 root cause。
 - 不变更 worksheet 状态。

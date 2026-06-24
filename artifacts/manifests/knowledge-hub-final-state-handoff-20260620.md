@@ -19,7 +19,7 @@
 
 ## Stable Context
 
-- 仓库：`/home/leiwenjun/knowledge-hub`
+- 仓库：`~/knowledge-hub`
 - 接力包输入基线：`5f4ec31 docs(governance): 暴露终态门禁入口`
 - 接力包初始落盘提交：`9542510 docs(governance): 生成终态接力包`
 - 恢复时必须先用 `rtk git log --oneline -5` 确认最新 HEAD，不要把输入基线当作当前提交。
@@ -113,7 +113,7 @@ rtk bash tools/knowledge-final-gate.sh --json
 ## Resume Prompt
 
 ```text
-继续 /home/leiwenjun/knowledge-hub 的 Knowledge Hub 终态治理。先用 rtk git log --oneline -5 确认当前 HEAD；本接力包的输入基线是 5f4ec31，初始落盘提交是 9542510。自动治理状态为 complete-except-owner-review；final gate 预期返回 exit 1 / needs-owner-review，唯一 gap 是 owner-gates-open。Level 1 PCR02 docs 为 complete-except-owner-review，Level 2 PCR02 candidate sources complete，Level 3 registered sources complete。
+继续 ~/knowledge-hub 的 Knowledge Hub 终态治理。先用 rtk git log --oneline -5 确认当前 HEAD；本接力包的输入基线是 5f4ec31，初始落盘提交是 9542510。自动治理状态为 complete-except-owner-review；final gate 预期返回 exit 1 / needs-owner-review，唯一 gap 是 owner-gates-open。Level 1 PCR02 docs 为 complete-except-owner-review，Level 2 PCR02 candidate sources complete，Level 3 registered sources complete。
 
 请先读取：
 - artifacts/manifests/knowledge-hub-final-state-handoff-20260620.md

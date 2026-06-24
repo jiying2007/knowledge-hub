@@ -17,7 +17,7 @@
 
 ## Stable Context
 
-- 仓库：`/home/leiwenjun/knowledge-hub`
+- 仓库：`~/knowledge-hub`
 - 输入基线：`4e16206 docs(knowledge): 生成 PCR02 复核包`
 - 所有 shell 命令必须通过 `rtk`。
 - 手工写文件必须使用 `apply_patch`。
@@ -71,7 +71,7 @@
 ## Resume Prompt
 
 ```text
-继续 /home/leiwenjun/knowledge-hub 的终态治理。当前新增了 review queue 只读恢复视图和 by-topic 首屏可读性契约。恢复时优先读取：
+继续 ~/knowledge-hub 的终态治理。当前新增了 review queue 只读恢复视图和 by-topic 首屏可读性契约。恢复时优先读取：
 - artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.md
 - tools/knowledge-status.sh
 - tools/knowledge-index-plan.sh

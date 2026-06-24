@@ -7,7 +7,7 @@
 ## 范围
 
 - Source ID: `pcr02-project-agent-config`
-- Source root: `/home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
+- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
 - 重点路径：`.vscode/`、`.kilo/`
 - 当前复扫：非 `node_modules` 顶层文件 10 个；`.kilo/node_modules` 约 58M、3426 个文件、4 个 native `.node` 二进制模块。
 - 扫描边界：未打印潜在 secret 值，未执行脚本，未安装依赖，未启用自动化。

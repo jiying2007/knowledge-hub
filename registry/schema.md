@@ -74,6 +74,17 @@ Source reference invariants:
 - active item must not use blocking owner-gate `review_status` values such as `pending-owner-review`, `needs-owner-resolution`, `owner-intake-ready`, `source-identity-match` or `embedded-knowledge-owner-review-required`.
 - `artifact-ref` item `sha256` must be a lowercase 64-character SHA256 hex string, and `size` must be a positive integer.
 
+Source control directory invariants:
+
+- 每个 `registry/sources.json` 中的 registered source 必须有 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
+- `inventory.jsonl` 每行至少包含：`id`、`source_id`、`source_path`、`object_type`、`hub_disposition`、`target_path`、`status`、`reason_zh`、`risk_zh`、`checked_at`。
+- `object_type` 允许值：`markdown`、`session`、`history`、`tool`、`source-code`、`config`、`artifact`、`binary`、`log`、`archive`、`automation-run`、`unknown`。
+- `hub_disposition` 允许值：`copy-body`、`summary-only`、`artifact-ref`、`reference-only`、`archive-only`、`exclude`。
+- `status` 允许值：`pending`、`covered`、`blocked`、`excluded`。
+- `target_path` 必须是 repo-relative local path、source-local reference 或空值；不得使用绝对路径、`./` 或 `../`。
+- `session`、`history`、`source-code`、`binary`、`log` 不能使用 `copy-body`，只能使用摘要、引用、artifact-ref、archive-only 或 exclude。
+- owner decision landing 产生本地 target 时，`knowledge-check` 会把历史 `domains/projects/<project>/...` 目标映射到硬切换后的 `projects/<project>/...` 并要求目标存在。
+
 Validation reference invariants:
 
 - `active` and `reviewing` items must have non-empty `validation_refs`.
@@ -116,6 +127,8 @@ codex-session
 codex-workflow
 personal-note
 artifact-ref
+authorization
+automation-run
 ```
 
 Allowed `status`:
@@ -157,21 +170,22 @@ Allowed `domain` roots:
 root
 governance
 projects
+notes
 embedded
 patents
 codex
-personal
 ```
 
 Domain/path invariants:
 
 - `root` domain path must be `README.md` or `AGENTS.md`.
 - `governance` domain path must live under `governance/`, `registry/`, `indexes/`, `tools/`, `templates/`, `docs/goals/` or `artifacts/manifests/`.
-- `projects/<project>` domain path must live under `domains/projects/<project>/` or `artifacts/manifests/`.
+- `projects/<project>` domain path must live under `projects/<project>/` or `artifacts/manifests/`.
+- `notes` domain path must live under `notes/` or `artifacts/manifests/`.
 - `embedded` domain path must live under `domains/embedded/` or `artifacts/manifests/`.
 - `patents` domain path must live under `domains/patents/` or `artifacts/manifests/`.
 - `codex` domain path must live under `domains/codex/` or `artifacts/manifests/`.
-- `personal` domain path must live under `domains/personal/` or `artifacts/manifests/`.
+- `personal` domain is deprecated. New personal-local content must use `domain=notes` and `path=notes/personal/**`.
 - `project-specific` scope must use `projects/<project>` domain.
 - `codex-memory-curation-governance` scope must use `codex` domain.
 
@@ -210,6 +224,10 @@ project-archive-source
 patent-source
 codex-governance-source
 auxiliary-memory-source
+codex-history-source
+codex-session-source
+codex-archive-registry-source
+codex-automation-source
 project-current-docs-source
 project-current-tools-source
 project-current-knowledge-source
@@ -228,6 +246,10 @@ legacy-project-history
 patent-materials
 codex-workflow-history
 auxiliary-recall-only
+codex-history-log
+codex-raw-session-history
+codex-archive-registry
+codex-automation-ledger
 legacy-project-current-docs
 legacy-project-current-tools
 legacy-project-current-knowledge
@@ -253,6 +275,7 @@ do-not-write-through-knowledge-hub
 copy-first-migration-only
 do-not-mix-with-engineering-knowledge
 use-codex-archive-tools
+hub-main-registry
 read-only-unless-explicitly-approved
 externalize-to-knowledge-hub-before-prune
 ```
@@ -268,9 +291,103 @@ archive-only-registered
 owner-gated-pending-decision
 no-migration-with-reason
 auxiliary-recall-only
+hub-main-source
 external-tool-owned
 mixed-terminal-coverage
 ```
+
+## authorizations.jsonl
+
+登记 AI / Codex 或自动化执行高风险动作前的授权账本。没有匹配授权记录时，AI / Codex 仍可执行 Git 可回滚的 Hub 本仓 L1/L2 维护和本地 commit；高风险动作只能输出 plan、diff、manifest、review package 或 report-only 报告。
+
+Required authorization fields:
+
+- `authorization_id`
+- `authorized_by`
+- `authorized_at`
+- `scope`
+- `allowed_actions`
+- `expires_at`
+- `evidence_refs`
+- `rollback_path`
+- `validation_commands`
+- `status`
+
+Allowed authorization `allowed_actions` values:
+
+```text
+owner-decision-landing
+active-promotion
+memory-write
+source-project-write
+automation-apply-with-review
+external-publish
+delete-or-prune
+remote-git-write
+```
+
+Allowed authorization `status` values:
+
+```text
+active
+expired
+revoked
+used
+superseded
+```
+
+Authorization invariants:
+
+- `authorized_at` and `expires_at` must use ISO date format: `YYYY-MM-DD`.
+- `allowed_actions` must be a non-empty list.
+- `scope` must be narrow enough to identify project/source/path/action boundary.
+- `evidence_refs` must reference an existing local path, command-shaped evidence, or current-session explicit user instruction.
+- `rollback_path` and `validation_commands` must be non-empty for write actions.
+- AI / Codex may be executor, but must not pretend to be a human reviewer unless the authorization explicitly says it is acting on behalf of that owner.
+
+## automation-runs.jsonl
+
+登记跨项目、跨会话 AI 自动化运行。它是 Hub 主库串联 project、session、source、authorization 和输出证据的最小账本。
+
+Required automation run fields:
+
+- `run_id`
+- `automation_id`
+- `project_id`
+- `trigger`
+- `mode`
+- `status`
+- `started_at`
+- `input_refs`
+- `output_refs`
+- `validation_refs`
+
+Recommended automation run fields:
+
+- `session_id`
+- `workstream_id`
+- `source_ids`
+- `authorization_id`
+- `rollback_ref`
+- `notes_zh`
+
+Allowed automation `mode` values:
+
+```text
+read-only
+report-only
+plan-only
+local-commit
+apply-with-review
+forbidden
+```
+
+Automation run invariants:
+
+- `apply-with-review` requires an `authorization_id` registered in `registry/authorizations.jsonl`.
+- `remote-git-write` 类动作必须使用 authorization `allowed_actions=["remote-git-write"]` 或更窄授权，不能用本地 commit 代替。
+- `read-only`、`report-only`、`plan-only` 和 `local-commit` 不得写 memory、源项目、team active index、owner gate closure 或远端 Git 状态。
+- 每次自动化运行必须能从 `input_refs` 找到来源，从 `output_refs` 找到产物，从 `validation_refs` 找到验证或待验证原因。
 
 Source/index invariants:
 

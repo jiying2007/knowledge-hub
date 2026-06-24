@@ -50,6 +50,24 @@ if today_source != "system-date":
     child_env = os.environ.copy()
     child_env["KNOWLEDGE_TODAY"] = today.isoformat()
 
+def user_path_prefixes():
+    prefixes = [str(pathlib.Path.home())]
+    user_name = os.environ.get("USER", "")
+    if user_name:
+        prefixes.append("/" + "vsdata" + "/" + user_name)
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+def display_path(value):
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
+            text = "~"
+        elif text.startswith(prefix + "/"):
+            text = "~" + text[len(prefix):]
+        else:
+            text = text.replace(prefix, "~")
+    return text
+
 def run_cmd(repo, command):
     completed = subprocess.run(
         command,
@@ -224,7 +242,7 @@ def test_governance_goal_path_allowed():
             "--dry-run",
             "--json",
             "--explain",
-            "knowledge-hub-final-state-goal-20260620",
+            "knowledge-hub-simplified-final-version-goal",
         ],
     )
     parsed = {}
@@ -238,7 +256,7 @@ def test_governance_goal_path_allowed():
         result["exit_code"] == 0
         and parsed.get("status") == "pass"
         and explain.get("found") is True
-        and registry.get("path") == "docs/goals/knowledge-hub-final-state.md"
+        and registry.get("path") == "docs/goals/knowledge-hub-simplified-final-version.md"
         and registry.get("path_exists") is True,
         "governance-goal-path-allowed",
         "governance goal docs path is accepted and explainable",
@@ -305,7 +323,7 @@ def test_pcr02_level2_source_coverage():
     expect(
         not errors
         and coverage_path is not None
-        and coverage_path.name == "knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and coverage_path.name == "knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and expected <= source_ids
         and expected <= by_source_ids
         and expected <= coverage_ids,
@@ -2131,6 +2149,8 @@ def test_final_gate_owner_review_blocker():
     level2_source_check_snapshot = level2.get("source_check_execution_snapshot", {})
     level2_source_check_runtime = level2.get("source_check_runtime", {})
     level3_source_check_health = level3.get("source_check_health", {})
+    level3_source_control_health = level3.get("source_control_health", {})
+    level3_owner_target_health = level3.get("owner_target_health", {})
     level3_source_coverage_selection = level3.get("source_coverage_selection", {})
     gap_map = parsed.get("gap_map", [])
     owner_blocker = next(
@@ -2252,15 +2272,27 @@ def test_final_gate_owner_review_blocker():
         and "runtime:checks.source_check_runtime" in level2.get("evidence_refs", [])
         and level3.get("status") == "complete"
         and level3.get("registered_count") == level3.get("covered_count")
-        and level3.get("registered_count") == 13
+        and level3.get("registered_count") == 18
         and level3_source_coverage_selection.get("selected") == level3.get("latest_coverage_manifest")
         and level3.get("missing_coverage_ids") == []
         and level3.get("missing_final_state_fields") == []
         and level3_source_check_health.get("executed") is False
-        and level3_source_check_health.get("with_check_count") == 9
+        and level3_source_check_health.get("with_check_count") == 14
         and level3_source_check_health.get("with_no_check_reason_count") == 4
         and level3_source_check_health.get("missing_check_or_reason_ids") == []
         and level3_source_check_health.get("non_rtk_check_ids") == []
+        and level3_source_control_health.get("status") == "pass"
+        and level3_source_control_health.get("mode") == "hub-source-control-directories"
+        and level3_source_control_health.get("registered_source_count") == 18
+        and level3_source_control_health.get("required_file_count") == 72
+        and level3_source_control_health.get("present_file_count") == 72
+        and level3_source_control_health.get("missing_file_count") == 0
+        and level3_source_control_health.get("invalid_inventory_row_count") == 0
+        and level3_source_control_health.get("unsafe_raw_copy_row_count") == 0
+        and level3_owner_target_health.get("status") == "pass"
+        and level3_owner_target_health.get("checked_count") == 4
+        and level3_owner_target_health.get("present_count") == 4
+        and level3_owner_target_health.get("missing_target_count") == 0
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
         and legacy_proof_artifacts == proof_artifacts
         and proof_artifacts.get("status") == "pass"
@@ -2329,7 +2361,7 @@ def test_final_gate_owner_review_blocker():
         and "七" in maintenance_entry_audit.get("section_refs", [])
         and "七.1" in maintenance_entry_audit.get("section_refs", [])
         and "七.2" in maintenance_entry_audit.get("section_refs", [])
-        and any("长期维护能力" in ref for ref in maintenance_entry_audit.get("requirement_refs", []))
+        and any("人工完全维护模式" in ref for ref in maintenance_entry_audit.get("requirement_refs", []))
         and maintenance_entry_audit.get("expected_entry_count") == 9
         and maintenance_entry_audit.get("passed_entry_count") == 9
         and maintenance_entry_audit.get("missing_entry_ids") == []
@@ -2352,7 +2384,7 @@ def test_final_gate_owner_review_blocker():
         and linking_audit.get("status") == "pass"
         and linking_audit.get("section_refs") == ["八", "九"]
         and linking_summary.get("status") == "pass"
-        and linking_summary.get("registered_source_count") == 13
+        and linking_summary.get("registered_source_count") == 18
         and linking_summary.get("pcr02_level2_source_ids_present") is True
         and linking_summary.get("provenance_fields_present") is True
         and linking_summary.get("project_specific_not_team_promoted") is True
@@ -2364,7 +2396,7 @@ def test_final_gate_owner_review_blocker():
         and linking_audit.get("cross_session", {}).get("status") == "pass"
         and linking_audit.get("cross_session", {}).get("missing") == []
         and linking_audit.get("cross_project", {}).get("status") == "pass"
-        and linking_audit.get("cross_project", {}).get("registered_source_count") == 13
+        and linking_audit.get("cross_project", {}).get("registered_source_count") == 18
         and linking_audit.get("cross_project", {}).get("pcr02_level2_source_ids_present") is True
         and linking_audit.get("cross_project", {}).get("provenance_fields_present") is True
         and linking_audit.get("cross_project", {}).get("project_specific_not_team_promoted") is True
@@ -2373,7 +2405,13 @@ def test_final_gate_owner_review_blocker():
         and "runtime:index_plan.indexes.by_decision" in linking_audit.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
-        and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 9
+        and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 14
+        and checks.get("knowledge_check", {}).get("source_control_health", {}).get("status") == "pass"
+        and checks.get("knowledge_check", {}).get("source_control_health", {}).get("required_file_count") == 72
+        and checks.get("knowledge_check", {}).get("source_control_health", {}).get("present_file_count") == 72
+        and checks.get("knowledge_check", {}).get("owner_target_health", {}).get("status") == "pass"
+        and checks.get("knowledge_check", {}).get("owner_target_health", {}).get("checked_count") == 4
+        and checks.get("knowledge_check", {}).get("owner_target_health", {}).get("present_count") == 4
         and checks.get("knowledge_check", {}).get("boundary_health", {}).get("status") == "pass"
         and checks.get("git_diff_check", {}).get("status") == "pass"
         and checks.get("git_diff_check", {}).get("exit_code") == 0
@@ -2388,7 +2426,7 @@ def test_final_gate_owner_review_blocker():
         and checks.get("index_plan_linking", {}).get("status") == "planned"
         and checks.get("index_plan_linking", {}).get("exit_code") == 0
         and checks.get("index_plan_linking", {}).get("linking_audit_status") == "pass"
-        and len(evidence_index) == 10
+        and len(evidence_index) == 12
         and all(row.get("requirement_refs") for row in evidence_index)
         and all(row.get("section_refs") for row in evidence_index)
         and evidence_by_artifact.get("knowledge-check", {}).get("status") == "pass"
@@ -2405,6 +2443,10 @@ def test_final_gate_owner_review_blocker():
         and "Level 2" in evidence_by_artifact.get("pcr02-level2-source-check-execution-snapshot-20260621", {}).get("section_refs", [])
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("status") == "pass"
         and evidence_by_artifact.get("knowledge-source-check-runtime", {}).get("layer") == "source-check-runtime"
+        and evidence_by_artifact.get("knowledge-check-source-control-health", {}).get("status") == "pass"
+        and evidence_by_artifact.get("knowledge-check-source-control-health", {}).get("evidence_path") == "runtime:checks.knowledge_check.source_control_health"
+        and evidence_by_artifact.get("knowledge-check-owner-target-health", {}).get("status") == "pass"
+        and evidence_by_artifact.get("knowledge-check-owner-target-health", {}).get("evidence_path") == "runtime:checks.knowledge_check.owner_target_health"
         and evidence_by_artifact.get("maintenance-entry-audit", {}).get("status") == "pass"
         and evidence_by_artifact.get("maintenance-entry-audit", {}).get("evidence_path") == "runtime:maintenance_entry_audit"
         and "七.2" in evidence_by_artifact.get("maintenance-entry-audit", {}).get("section_refs", [])
@@ -2449,6 +2491,8 @@ def test_final_gate_owner_review_blocker():
             "linking_audit": linking_audit,
             "highest_priority_rules_audit": highest_priority_rules_audit,
             "level3_source_coverage_selection": level3_source_coverage_selection,
+            "level3_source_control_health": level3_source_control_health,
+            "level3_owner_target_health": level3_owner_target_health,
             "checks": checks,
             "evidence_index": evidence_index,
             "blockers": blockers,
@@ -2675,7 +2719,7 @@ def test_final_gate_strict_status_nonowner_blocker():
     status_path = repo / "tools" / "knowledge-status.sh"
     status_path.write_text(
         "#!/usr/bin/env bash\n"
-        "printf '%s\\n' '{\"schema_version\":1,\"status\":\"needs-fix\",\"strict\":true,\"knowledge_check\":{\"exit_code\":0,\"status\":\"pass\"},\"owner_gates\":{\"open_count\":7,\"owner_ready_package_coverage\":\"7/7\",\"active_exposure_count\":0},\"sources\":{\"latest_coverage_manifest\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl\",\"latest_coverage_selection\":{\"selected\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl\"}},\"strict_blockers\":[{\"id\":\"owner-gates-command-failed\",\"severity\":\"blocker\",\"count\":1,\"summary_zh\":\"fixture non-owner blocker\"}]}'\n"
+        "printf '%s\\n' '{\"schema_version\":1,\"status\":\"needs-fix\",\"strict\":true,\"knowledge_check\":{\"exit_code\":0,\"status\":\"pass\"},\"owner_gates\":{\"open_count\":7,\"owner_ready_package_coverage\":\"7/7\",\"active_exposure_count\":0},\"sources\":{\"latest_coverage_manifest\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl\",\"latest_coverage_selection\":{\"selected\":\"artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl\"}},\"strict_blockers\":[{\"id\":\"owner-gates-command-failed\",\"severity\":\"blocker\",\"count\":1,\"summary_zh\":\"fixture non-owner blocker\"}]}'\n"
         "exit 1\n"
     )
     result = run_cmd(
@@ -2964,7 +3008,7 @@ def test_owner_archive_only_target_path_compatibility():
     if setup_error:
         expect(False, "owner-archive-only-target-path-compatibility", "owner archive-only forms can target explicit archive paths", setup_error, repo)
         return
-    archive_target = "domains/projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
+    archive_target = "projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
     form["owner_decision"] = "archive-only"
     form["target_decision"] = archive_target
     form_path = repo / "archive-owner-decisions.jsonl"
@@ -3013,7 +3057,7 @@ def test_owner_archive_only_rejects_non_archive_target():
         expect(False, "owner-archive-only-rejects-non-archive-target", "owner archive-only forms reject validation or decision targets", setup_error, repo)
         return
     form["owner_decision"] = "archive-only"
-    form["target_decision"] = "domains/projects/pcr02/validation/"
+    form["target_decision"] = "projects/pcr02/validation/"
     form_path = repo / "archive-owner-decisions.jsonl"
     form_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
@@ -3283,7 +3327,7 @@ def test_owner_form_decision_target_pair_gate():
     project_target = next(
         (
             target for target in form.get("target_candidates", [])
-            if str(target).startswith("domains/projects/")
+            if str(target).startswith("projects/")
         ),
         "",
     )
@@ -3489,7 +3533,7 @@ def test_owner_form_allowed_decisions_tamper_gate():
 
 def test_owner_form_target_candidates_tamper_gate():
     def mutate(form):
-        form["target_candidates"] = list(form.get("target_candidates", [])) + ["domains/projects/pcr02/current/invalid-target-candidate-fixture.md"]
+        form["target_candidates"] = list(form.get("target_candidates", [])) + ["projects/pcr02/current/invalid-target-candidate-fixture.md"]
 
     run_owner_form_tamper_gate(
         "owner-form-target-candidates-tamper-gate",
@@ -3734,7 +3778,7 @@ def test_manual_entry_project_index_hint():
             "--id",
             "pcr02-regression-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/regression.md",
+            "projects/pcr02/current/runbooks/regression.md",
         ],
     )
     governance_result = run_cmd(
@@ -3761,7 +3805,7 @@ def test_manual_entry_project_index_hint():
         and "未知来源不要同步 by-source" in project_result["stdout"]
         and "- <source-id>:" not in project_result["stdout"]
         and "# - <真实-source-id>:" in project_result["stdout"]
-        and "domains/projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
+        and "projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
         and "indexes/by-decision.md" in governance_result["stdout"]
         and "governance-regression-decision: governance/regression-decision.md" in governance_result["stdout"]
         and "indexes/by-project.md" not in governance_result["stdout"],
@@ -3796,7 +3840,7 @@ def test_manual_entry_registered_source_binding():
             "--id",
             "pcr02-source-bound-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/source-bound.md",
+            "projects/pcr02/current/runbooks/source-bound.md",
             "--item-source-id",
             "pcr02-project-docs",
             "--item-source-path",
@@ -3816,7 +3860,7 @@ def test_manual_entry_registered_source_binding():
             "--id",
             "pcr02-unknown-source-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/unknown-source.md",
+            "projects/pcr02/current/runbooks/unknown-source.md",
             "--item-source-id",
             "not-registered-source",
         ],
@@ -3856,7 +3900,7 @@ def test_manual_entry_project_from_domain():
             "--id",
             "pcr02-derived-project-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/derived.md",
+            "projects/pcr02/current/runbooks/derived.md",
         ],
     )
     mismatch_result = run_cmd(
@@ -3874,12 +3918,12 @@ def test_manual_entry_project_from_domain():
             "--id",
             "pcr02-mismatch-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/mismatch.md",
+            "projects/pcr02/current/runbooks/mismatch.md",
         ],
     )
     expect(
         derived_result["exit_code"] == 0
-        and "- pcr02: domains/projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"]
+        and "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"]
         and mismatch_result["exit_code"] == 0
         and "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
         "manual-entry-project-derived-from-domain",
@@ -3887,7 +3931,7 @@ def test_manual_entry_project_from_domain():
         {
             "derived_exit_code": derived_result["exit_code"],
             "mismatch_exit_code": mismatch_result["exit_code"],
-            "derived_has_project": "- pcr02: domains/projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"],
+            "derived_has_project": "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"],
             "mismatch_has_warning": "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
             "derived_stdout_sample": derived_result["stdout"][:1200],
             "mismatch_stdout_sample": mismatch_result["stdout"][:1200],
@@ -4029,11 +4073,11 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "--kind",
             "personal-note",
             "--domain",
-            "personal",
+            "notes",
             "--id",
             "personal-defaults",
             "--path",
-            "domains/personal/defaults.md",
+            "notes/personal/defaults.md",
         ],
     )
     inferred_personal_result = run_cmd(
@@ -4047,7 +4091,7 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "--id",
             "personal-path-defaults",
             "--path",
-            "domains/personal/path-defaults.md",
+            "notes/personal/path-defaults.md",
         ],
     )
     mismatch_result = run_cmd(
@@ -4063,7 +4107,7 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "--id",
             "personal-path-mismatch",
             "--path",
-            "domains/personal/path-mismatch.md",
+            "notes/personal/path-mismatch.md",
         ],
     )
     expect(
@@ -4077,17 +4121,17 @@ def test_manual_entry_owner_registry_and_personal_defaults():
         and "- owner_registry_status: unknown-owner" in unknown_result["stdout"]
         and "item owner 未在 registry/owners.json 登记" in unknown_result["stdout"]
         and '"owner":"unknown-item-owner"' in unknown_result["stdout"]
-        and '"domain":"personal"' in personal_result["stdout"]
+        and '"domain":"notes"' in personal_result["stdout"]
         and '"scope":"team-general"' in personal_result["stdout"]
         and '"visibility":"personal-local"' in personal_result["stdout"]
         and '"status":"personal"' in personal_result["stdout"]
-        and "- personal: `personal-defaults`" in personal_result["stdout"]
-        and '"domain":"personal"' in inferred_personal_result["stdout"]
+        and '"domain":"notes"' in inferred_personal_result["stdout"]
         and '"visibility":"personal-local"' in inferred_personal_result["stdout"]
         and '"status":"personal"' in inferred_personal_result["stdout"]
-        and "该组合会被 domain/path invariant 拦截，不可直接落盘" in mismatch_result["stdout"],
+        and "目标路径 `notes/personal/path-mismatch.md` 位于 notes/personal/" in mismatch_result["stdout"]
+        and "请改为 `--domain notes`" in mismatch_result["stdout"],
         "manual-entry-owner-registry-and-personal-defaults",
-        "manual entry guide exposes item owner registry status and personal-local safe defaults",
+        "manual entry guide exposes item owner registry status and notes/personal safe defaults",
         {
             "registered_exit_code": registered_result["exit_code"],
             "unknown_exit_code": unknown_result["exit_code"],
@@ -4183,22 +4227,19 @@ def test_readme_offline_shortest_paths():
         gitignore = ""
         gitignore_read_error = str(exc)
     required_fragments = [
-        "## 人工维护 5 条最短路径",
-        "### 1. 新增一条知识",
-        "### 2. 新增一个 source",
-        "### 3. 归档一条历史记录",
-        "### 4. owner 签收一个 gate",
-        "### 5. 跑一次终态检查",
+        "## 日常入口",
+        "## 离线人工维护",
+        "## 高风险授权",
         "manual_validation_pending: true",
         "required_followup",
-        "rtk git diff --check",
         "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
-        "artifacts/manifests/<source-id>-owner-decisions-YYYYMMDD.local.jsonl",
-        "不登记 registry/index，不作为 landing artifact",
-        "使用 subagents 时",
-        "默认把子代理当并行只读审查者",
-        "主线程负责唯一写入",
-        "owner decision 草稿泄漏 warning",
+        "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
+        "registry/authorizations.jsonl",
+        "registry/automation-runs.jsonl",
+        "本地 commit 只代表可审计快照",
+        "push、merge、release、tag",
+        "改变远端 Git 状态",
+        "没有授权记录时，AI / Codex 只能在 Hub 内执行 L1/L2 维护、本地 commit，或输出 plan、diff、manifest、review package、report-only 报告。",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
     gitignore_required_fragments = ["artifacts/manifests/*.local.jsonl"]
@@ -4217,6 +4258,130 @@ def test_readme_offline_shortest_paths():
             "missing_fragments": missing_fragments,
             "gitignore_missing_fragments": gitignore_missing_fragments,
         },
+    )
+
+def test_no_user_absolute_path_persisted():
+    scan_roots = [
+        root / "AGENTS.md",
+        root / "README.md",
+        root / "docs",
+        root / "domains",
+        root / "governance",
+        root / "indexes",
+        root / "notes",
+        root / "projects",
+        root / "registry",
+        root / "sources",
+        root / "templates",
+        root / "tools",
+        root / "artifacts" / "manifests",
+    ]
+    suffixes = {".md", ".json", ".jsonl", ".sh", ".txt"}
+    matches = []
+    prefixes = user_path_prefixes()
+    for base in scan_roots:
+        if not base.exists():
+            continue
+        candidates = [base] if base.is_file() else base.rglob("*")
+        for path in candidates:
+            if not path.is_file() or path.suffix.lower() not in suffixes:
+                continue
+            try:
+                text = path.read_text(errors="ignore")
+            except Exception:
+                continue
+            if any(prefix in text for prefix in prefixes):
+                matches.append(str(path.relative_to(root)))
+    expect(
+        not matches,
+        "no-user-absolute-path-persisted",
+        "persistent Knowledge Hub text does not contain user-specific absolute path prefixes",
+        {"matches": matches[:20], "match_count": len(matches)},
+    )
+
+def test_user_path_redaction_in_tool_outputs():
+    commands = [
+        ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--as-of", today.isoformat()],
+        ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", today.isoformat(), "--review-queue-limit", "1"],
+        ["rtk", "bash", "tools/knowledge-source-check.sh", "--json", "--plan", "--as-of", today.isoformat()],
+        ["rtk", "bash", "tools/knowledge-search.sh", "Knowledge", "--json", "--limit", "1"],
+    ]
+    rows = []
+    prefixes = user_path_prefixes()
+    for command in commands:
+        result = run_cmd(root, command)
+        combined = result["stdout"] + result["stderr"]
+        rows.append(
+            {
+                "command": " ".join(command),
+                "exit_code": result["exit_code"],
+                "has_forbidden_prefix": any(prefix in combined for prefix in prefixes),
+            }
+        )
+    expect(
+        all(row["exit_code"] == 0 and not row["has_forbidden_prefix"] for row in rows),
+        "user-path-redaction-in-tool-outputs",
+        "core read-only tool outputs redact user-specific absolute path prefixes",
+        {"rows": rows},
+    )
+
+def test_source_control_directory_gate():
+    repo = copy_repo("source-control-directory-gate")
+    missing_path = repo / "sources" / "pcr02-project-docs" / "README.md"
+    if missing_path.exists():
+        missing_path.unlink()
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    combined = result["stdout"] + result["stderr"]
+    expect(
+        result["exit_code"] != 0
+        and "source-control:pcr02-project-docs missing sources/pcr02-project-docs/README.md" in combined,
+        "source-control-directory-gate",
+        "knowledge-check rejects missing source control directory required files",
+        {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
+        repo,
+    )
+
+def test_source_control_raw_copy_body_gate():
+    repo = copy_repo("source-control-raw-copy-body-gate")
+    inventory_path = repo / "sources" / "codex-raw-sessions" / "inventory.jsonl"
+    fixture_row = {
+        "id": "fixture-raw-session-copy-body",
+        "source_id": "codex-raw-sessions",
+        "source_path": "fixture-session.jsonl",
+        "object_type": "session",
+        "hub_disposition": "copy-body",
+        "target_path": "sources/codex-raw-sessions/README.md",
+        "status": "covered",
+        "reason_zh": "fixture should fail because raw sessions cannot use copy-body",
+        "risk_zh": "raw session body must not enter long-term body layer",
+        "checked_at": today.isoformat(),
+    }
+    inventory_path.write_text(inventory_path.read_text() + json.dumps(fixture_row, ensure_ascii=False) + "\n")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    combined = result["stdout"] + result["stderr"]
+    expect(
+        result["exit_code"] != 0
+        and "source-control:codex-raw-sessions inventory row fixture-raw-session-copy-body raw/session/source-code/log/binary must not use copy-body" in combined,
+        "source-control-raw-copy-body-gate",
+        "knowledge-check rejects copy-body disposition for raw session/history/source-code/log/binary inventory rows",
+        {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
+        repo,
+    )
+
+def test_owner_target_existence_gate():
+    repo = copy_repo("owner-target-existence-gate")
+    target_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "asan-debug-guide.md"
+    if target_path.exists():
+        target_path.unlink()
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    combined = result["stdout"] + result["stderr"]
+    expect(
+        result["exit_code"] != 0
+        and "owner-target:pcr02-owner-decision-worksheet-003 target path missing: projects/pcr02/current/runbooks/asan-debug-guide.md" in combined,
+        "owner-target-existence-gate",
+        "knowledge-check rejects missing owner decision landing target documents",
+        {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
+        repo,
     )
 
 def test_owner_decision_draft_leak_warning():
@@ -4265,7 +4430,7 @@ def test_manual_entry_offline_package_consistency():
     files = {
         "README.md": root / "README.md",
         "indexes/README.md": root / "indexes" / "README.md",
-        "docs/goals/knowledge-hub-final-state.md": root / "docs" / "goals" / "knowledge-hub-final-state.md",
+        "docs/goals/knowledge-hub-simplified-final-version.md": root / "docs" / "goals" / "knowledge-hub-simplified-final-version.md",
     }
     texts = {}
     read_errors = {}
@@ -4293,13 +4458,13 @@ def test_manual_entry_offline_package_consistency():
     expect(
         not any(read_errors.values())
         and not any(per_file_missing.values())
-        and weak_followup not in texts.get("docs/goals/knowledge-hub-final-state.md", ""),
+        and weak_followup not in texts.get("docs/goals/knowledge-hub-simplified-final-version.md", ""),
         "manual-entry-offline-package-consistency",
         "offline manual maintenance package keeps complete rtk follow-up commands across README, indexes and goal docs",
         {
             "read_errors": read_errors,
             "per_file_missing": per_file_missing,
-            "weak_followup_present_in_goal": weak_followup in texts.get("docs/goals/knowledge-hub-final-state.md", ""),
+            "weak_followup_present_in_goal": weak_followup in texts.get("docs/goals/knowledge-hub-simplified-final-version.md", ""),
         },
     )
 
@@ -4351,7 +4516,7 @@ def test_manual_entry_readability_fields():
             "--id",
             "pcr02-readable-runbook",
             "--path",
-            "domains/projects/pcr02/current/runbooks/readable.md",
+            "projects/pcr02/current/runbooks/readable.md",
             "--manual-source-reason",
             "field-debug",
             "--manual-validation-pending",
@@ -4411,7 +4576,7 @@ def test_manual_entry_archive_default_status():
             "--id",
             "pcr02-archive-status-default",
             "--path",
-            "domains/projects/pcr02/archive/status-default.md",
+            "projects/pcr02/archive/status-default.md",
         ],
     )
     required_fragments = [
@@ -5759,18 +5924,18 @@ def test_index_plan_extended_sections():
         and all(result["exit_code"] == 0 for result in section_results.values())
         and all(parsed_by_section.get(section, {}).get("status") == "planned" for section in section_results)
         and "pcr02" in project_index
-        and project_index.get("pcr02", {}).get("domain") == "domains/projects/pcr02"
+        and project_index.get("pcr02", {}).get("domain") == "projects/pcr02"
         and "pcr02-project-tools" in source_index
         and pcr02_source.get("owner") == "pcr02-registry-owner"
         and pcr02_source.get("review_after") == "2026-09-20"
         and pcr02_source.get("final_disposition") == "mixed-terminal-coverage"
         and pcr02_source.get("check", "").startswith("rtk bash -lc")
         and source_selection.get("strategy") == "filename-yyyymmdd-sort-last"
-        and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and source_selection.get("candidate_count", 0) >= 1
         and source_selection.get("dated_candidate_count", 0) >= 1
         and bool(source_coverage)
-        and source_coverage.get("checked_at") == "2026-06-20"
+        and source_coverage.get("checked_at") == "2026-06-24"
         and bool(source_coverage_decision)
         and bool(source_coverage_risk)
         and "project-current" in topic_index
@@ -5821,7 +5986,7 @@ def test_index_plan_extended_sections():
         and linking_audit.get("owner_gate_mutation") is False
         and linking_audit.get("cross_session", {}).get("status") == "pass"
         and linking_audit.get("cross_project", {}).get("status") == "pass"
-        and linking_audit.get("cross_project", {}).get("registered_source_count") == 13
+        and linking_audit.get("cross_project", {}).get("registered_source_count") == 18
         and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
         and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
         and review_queue_summary.get("status") in {"needs-human-review", "empty"}
@@ -5884,7 +6049,7 @@ def test_manifest_latest_filename_date_only():
     old_by_filename.write_text(
         '{"id":"fixture-row-date-newer","status":"applied","checked_at":"2099-01-01","summary_zh":"row 日期很新但文件名日期很旧，不能抢占 latest。","evidence_refs":["fixture"]}\n'
     )
-    new_by_filename = manifests_dir / "fixture-filename-newer-20260624.jsonl"
+    new_by_filename = manifests_dir / "fixture-filename-newer-20260625.jsonl"
     new_by_filename.write_text(
         '{"id":"fixture-filename-newer","status":"applied","checked_at":"2020-01-01","summary_zh":"文件名日期更新，应排在旧文件名前。","evidence_refs":["fixture"]}\n'
     )
@@ -5908,7 +6073,7 @@ def test_manifest_latest_filename_date_only():
         and old_row.get("date") == "2020-01-01"
         and old_row.get("row_date") == "2099-01-01"
         and old_row.get("date_source") == "filename-YYYYMMDD"
-        and new_row.get("date") == "2026-06-24"
+        and new_row.get("date") == "2026-06-25"
         and new_row.get("row_date") == "2020-01-01",
         "manifest-latest-filename-date-only",
         "manifest latest view sorts only by filename date, not JSONL row dates",
@@ -6024,6 +6189,53 @@ def test_index_plan_topic_schema_health():
             "planner_topic_ids": planner_topic_ids,
             "stdout_sample": result["stdout"][:1000],
         },
+    )
+
+def test_registry_canonical_topic_retention_paths():
+    topics_doc = json.loads((root / "registry" / "topics.json").read_text())
+    retention_doc = json.loads((root / "registry" / "retention.json").read_text())
+    old_prefixes = ("domains/projects", "domains/personal")
+    topic_domains = [str(topic.get("domain", "")) for topic in topics_doc.get("topics", [])]
+    retention_domains = [str(rule.get("domain", "")) for rule in retention_doc.get("rules", []) if isinstance(rule, dict)]
+
+    repo = copy_repo("registry-canonical-topic-retention-paths")
+    mutated_topics = json.loads((repo / "registry" / "topics.json").read_text())
+    for topic in mutated_topics.get("topics", []):
+        if topic.get("id") == "project-current":
+            topic["domain"] = "domains/projects"
+        if topic.get("id") == "personal":
+            topic["domain"] = "domains/personal"
+    (repo / "registry" / "topics.json").write_text(json.dumps(mutated_topics, ensure_ascii=False, indent=2) + "\n")
+    mutated_retention = json.loads((repo / "registry" / "retention.json").read_text())
+    for rule in mutated_retention.get("rules", []):
+        if isinstance(rule, dict) and rule.get("domain") == "notes/personal":
+            rule["domain"] = "domains/personal"
+    (repo / "registry" / "retention.json").write_text(json.dumps(mutated_retention, ensure_ascii=False, indent=2) + "\n")
+
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    errors = parsed.get("errors", []) if isinstance(parsed, dict) else []
+    expect(
+        not any(domain.startswith(old_prefixes) for domain in topic_domains + retention_domains)
+        and result["exit_code"] != 0
+        and any(error.startswith("topics:project-current domain uses deprecated canonical path") for error in errors)
+        and any(error.startswith("topics:personal domain uses deprecated canonical path") for error in errors)
+        and any(error.startswith("retention:0 domain uses deprecated canonical path") for error in errors),
+        "registry-canonical-topic-retention-paths",
+        "registry topics and retention rules use final canonical paths and reject deprecated project/personal roots",
+        {
+            "topic_domains": topic_domains,
+            "retention_domains": retention_domains,
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "errors": errors[:10],
+        },
+        repo,
     )
 
 def test_index_plan_decision_registry_health():
@@ -6145,27 +6357,27 @@ def test_status_source_governance_summary():
         and not parse_error
         and check_result["exit_code"] == 0
         and not check_parse_error
-        and sources.get("registered_count") == 13
-        and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and sources.get("registered_count") == 18
+        and sources.get("latest_coverage_manifest") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and sources.get("latest_coverage_selection", {}).get("strategy") == "filename-yyyymmdd-sort-last"
-        and sources.get("latest_coverage_selection", {}).get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and sources.get("latest_coverage_selection", {}).get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and sources.get("latest_coverage_selection", {}).get("candidate_count", 0) >= 1
         and sources.get("latest_coverage_selection", {}).get("dated_candidate_count", 0) >= 1
-        and check_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+        and check_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and check_selection.get("strategy") == "filename-yyyymmdd-sort-last"
-        and check_health.get("registered_source_count") == 13
-        and check_health.get("row_count") == 13
-        and check_health.get("unique_source_count") == 13
+        and check_health.get("registered_source_count") == 18
+        and check_health.get("row_count") == 18
+        and check_health.get("unique_source_count") == 18
         and check_health.get("missing_source_ids") == []
         and check_health.get("stale_source_ids") == []
         and check_health.get("duplicate_source_ids") == []
-        and check_source_check_health.get("with_check_count") == 9
+        and check_source_check_health.get("with_check_count") == 14
         and check_source_check_health.get("with_no_check_reason_count") == 4
         and check_source_check_health.get("missing_check_or_reason_ids") == []
         and check_source_check_health.get("non_rtk_check_ids") == []
         and check_boundary_health.get("status") == "pass"
         and check_boundary_health.get("summary", {}).get("source_coverage_count") == 7
-        and status_source_check_health.get("with_check_count") == 9
+        and status_source_check_health.get("with_check_count") == 14
         and status_source_check_health.get("executed") is False
         and status_source_check_snapshot.get("status") == "pass"
         and status_source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
@@ -6182,7 +6394,7 @@ def test_status_source_governance_summary():
         and status_source_check_snapshot.get("failed_rows") == []
         and status_boundary_health.get("status") == "pass"
         and status_boundary_health.get("source_project_read") is False
-        and len(source_recovery_rows) == 13
+        and len(source_recovery_rows) == 18
         and pcr02_docs_recovery.get("final_disposition") == "mixed-terminal-coverage"
         and pcr02_docs_recovery.get("coverage_status") == "covered-control-plane"
         and "owner-gated" in pcr02_docs_recovery.get("coverage_classification", "")
@@ -6260,13 +6472,13 @@ def test_source_check_health_contract():
         and not parse_error
         and source_check_health.get("mode") == "static-registry-only"
         and source_check_health.get("executed") is False
-        and source_check_health.get("registered_source_count") == 13
-        and source_check_health.get("with_check_count") == 9
+        and source_check_health.get("registered_source_count") == 18
+        and source_check_health.get("with_check_count") == 14
         and source_check_health.get("with_no_check_reason_count") == 4
         and source_check_health.get("missing_check_or_reason_ids") == []
         and source_check_health.get("non_rtk_check_ids") == []
         and source_check_health.get("missing_source_path_ids") == []
-        and len(source_check_health.get("rows", [])) == 13
+        and len(source_check_health.get("rows", [])) == 18
         and all(row.get("execution_status") == "not-run" for row in source_check_health.get("rows", []))
         and bad_result["exit_code"] != 0
         and not bad_parse_error
@@ -6588,9 +6800,7 @@ def test_automation_report_only_safety_gate():
         and parsed.get("status") == "fail"
         and "memory-auto-curation-20260618-definition" in health.get("unsafe_run_ids", [])
         and any("enabled must be false" in error for error in errors)
-        and any("mode must be report-only" in error for error in errors)
-        and any("writes_memory must be false" in error for error in errors)
-        and any("writes_team_active_index must be false" in error for error in errors)
+        and any("mode must be read-only/report-only/plan-only/local-commit/apply-with-review/forbidden" in error for error in errors)
         and any("no_memory_write_gate is required" in error for error in errors),
         "automation-report-only-safety-gate",
         "knowledge-check rejects enabled or memory-writing automation records",
@@ -6639,7 +6849,7 @@ def test_source_coverage_date_filename_selection():
             index_parsed = value
         else:
             final_parsed = value
-    expected_selected = "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.jsonl"
+    expected_selected = "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
     expected_ignored = "artifacts/manifests/knowledge-hub-source-coverage-closeout-latest.jsonl"
     check_selection = parsed.get("source_coverage_selection", {}) if isinstance(parsed, dict) else {}
     status_selection = (
@@ -6687,11 +6897,11 @@ def test_source_coverage_date_filename_selection():
 
 def test_source_coverage_duplicate_source_id_warning():
     repo = copy_repo("source-coverage-duplicate-source-id-warning")
-    coverage_path = repo / "artifacts" / "manifests" / "knowledge-hub-source-coverage-closeout-20260620.jsonl"
+    coverage_path = repo / "artifacts" / "manifests" / "knowledge-hub-source-coverage-closeout-20260624.jsonl"
     rows = [line for line in coverage_path.read_text().splitlines() if line.strip()]
     first = json.loads(rows[0])
     duplicate = dict(first)
-    duplicate["id"] = "SCC-20260620-duplicate-fixture"
+    duplicate["id"] = "SCC-20260624-duplicate-fixture"
     duplicate["status"] = "fixture-duplicate-should-not-overwrite"
     duplicate["decision"] = "duplicate fixture should be warned and ignored for recovery view"
     coverage_path.write_text("\n".join(rows + [json.dumps(duplicate, ensure_ascii=False, separators=(",", ":"))]) + "\n")
@@ -7284,7 +7494,14 @@ def test_source_manual_entry_docs_check_preferred():
         readme = ""
         tools_readme = ""
         read_error = str(exc)
-    required_fragments = [
+    readme_required_fragments = [
+        "--check",
+        "--no-check-reason",
+        "稳定只读",
+        "registry source object 和 source coverage JSONL row 草稿都应记录 `check`",
+        "不再补 JSON 形式的 `no_check_reason`",
+    ]
+    tools_required_fragments = [
         '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"',
         "--no-check-reason",
         "要求 `--check` 或 `--no-check-reason` 二选一",
@@ -7292,8 +7509,8 @@ def test_source_manual_entry_docs_check_preferred():
         "registry source object 和 source coverage JSONL row 草稿都应记录 `check`",
         "不再补 JSON 形式的 `no_check_reason`",
     ]
-    readme_missing = [fragment for fragment in required_fragments if fragment not in readme]
-    tools_readme_missing = [fragment for fragment in required_fragments if fragment not in tools_readme]
+    readme_missing = [fragment for fragment in readme_required_fragments if fragment not in readme]
+    tools_readme_missing = [fragment for fragment in tools_required_fragments if fragment not in tools_readme]
     help_has_check_example = (
         help_result["exit_code"] == 0
         and '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"' in help_result["stdout"]
@@ -7478,7 +7695,8 @@ def test_knowledge_search_structured_filters():
 
 def test_knowledge_search_structured_filters_exclude_unregistered_raw():
     repo = copy_repo("knowledge-search-structured-filter-excludes-unregistered-raw")
-    raw_path = repo / "domains" / "projects" / "pcr02" / "current" / "unregistered-diag-raw-fixture.md"
+    raw_path = repo / "projects" / "pcr02" / "current" / "unregistered-diag-raw-fixture.md"
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
     raw_path.write_text(
         "# Unregistered diag raw fixture\n\n"
         "diag owner decision source_id pcr02-project-docs raw handoff text.\n"
@@ -7570,9 +7788,9 @@ def test_knowledge_search_kind_alias_filters():
 
 def test_knowledge_search_registry_metadata_fallback():
     repo = copy_repo("knowledge-search-registry-metadata-fallback")
-    token = "metadata-only-search-fixture-20260622"
+    marker = "metadata-only-search-fixture-20260622"
     fixture_item = {
-        "id": token,
+        "id": marker,
         "title": "Metadata only search fixture",
         "kind": "audit",
         "domain": "governance",
@@ -7581,7 +7799,7 @@ def test_knowledge_search_registry_metadata_fallback():
         "owner": "leiwenjun",
         "source": {"type": "generated", "source_id": "metadata-only-fixture-source", "from": "temporary regression fixture"},
         "tags": ["metadata-only-fixture", "knowledge-search", "governance"],
-        "summary_zh": "只存在于 registry metadata 的搜索回归关键词，正文不包含该 token。",
+        "summary_zh": "只存在于 registry metadata 的搜索回归关键词，正文不包含该 marker。",
         "review_after": "2026-09-22",
         "review_status": "metadata-search-fallback-applied",
         "created_at": "2026-06-22",
@@ -7595,7 +7813,7 @@ def test_knowledge_search_registry_metadata_fallback():
             "rtk",
             "bash",
             "tools/knowledge-search.sh",
-            token,
+            marker,
             "--source-id",
             "metadata-only-fixture-source",
             "--json",
@@ -7615,7 +7833,7 @@ def test_knowledge_search_registry_metadata_fallback():
         not parse_error
         and result["exit_code"] == 0
         and parsed.get("count") == 1
-        and first.get("item_id") == token
+        and first.get("item_id") == marker
         and first.get("match") == "registry-metadata"
         and first.get("source_id") == "metadata-only-fixture-source",
         "knowledge-search-registry-metadata-fallback",
@@ -7711,6 +7929,7 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
         "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-target-decision-candidate-gate",
+        "owner-form-decision-target-pair-gate",
         "owner-form-decision-target-pair-reference-only-project-path",
         "owner-form-decision-target-pair-no-migration-project-path",
         "owner-form-decision-target-pair-project-rule-reference-only",
@@ -7730,6 +7949,11 @@ def test_regression_manifest_coverage():
         "manual-entry-docs-owner-option",
         "manual-entry-offline-docs",
         "readme-offline-shortest-paths",
+        "no-user-absolute-path-persisted",
+        "user-path-redaction-in-tool-outputs",
+        "source-control-directory-gate",
+        "source-control-raw-copy-body-gate",
+        "owner-target-existence-gate",
         "owner-decision-draft-leak-warning",
         "manual-entry-offline-package-consistency",
         "manual-entry-validation-diagnostics-default",
@@ -7754,6 +7978,7 @@ def test_regression_manifest_coverage():
         "manifest-jsonl-profile-gate",
         "template-readability-field-gate",
         "index-plan-topic-schema-health",
+        "registry-canonical-topic-retention-paths",
         "index-plan-decision-registry-health",
         "index-decision-registry-subsection-gate",
         "index-topic-zero-bucket-allowed",
@@ -7917,6 +8142,11 @@ for test_fn in [
     test_manual_entry_docs_owner_option,
     test_manual_entry_offline_docs,
     test_readme_offline_shortest_paths,
+    test_no_user_absolute_path_persisted,
+    test_user_path_redaction_in_tool_outputs,
+    test_source_control_directory_gate,
+    test_source_control_raw_copy_body_gate,
+    test_owner_target_existence_gate,
     test_owner_decision_draft_leak_warning,
     test_manual_entry_offline_package_consistency,
     test_manual_entry_validation_diagnostics_default,
@@ -7941,6 +8171,7 @@ for test_fn in [
     test_manifest_jsonl_profile_gate,
     test_template_readability_field_gate,
     test_index_plan_topic_schema_health,
+    test_registry_canonical_topic_retention_paths,
     test_index_plan_decision_registry_health,
     test_index_decision_registry_gate,
     test_index_topic_zero_bucket_allowed,
@@ -7977,7 +8208,7 @@ for test_fn in [
 status = "pass" if all(result["status"] == "pass" for result in results) else "fail"
 output = {
     "status": status,
-    "root": str(root),
+    "root": display_path(root),
     "read_only": True,
     "writes_real_repo": False,
     "today": today.isoformat(),

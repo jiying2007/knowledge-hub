@@ -7,7 +7,7 @@
 ## 制品身份
 
 - source_id：`patent-disclosure`
-- source_root：`/home/leiwenjun/embedded/patent_disclosure`
+- source_root：`~/embedded/patent_disclosure`
 - manifest：`artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl`
 - rows：181
 - artifact_type：`png=153`、`docx=12`、`doc=7`、`pdf=6`、`rar=3`

@@ -1,4 +1,4 @@
-继续 /home/leiwenjun/knowledge-hub 的知识库终态治理。
+继续 ~/knowledge-hub 的知识库终态治理。
 
 本次目标是把 Knowledge Hub 建成长期可维护、跨会话可恢复、跨项目可自动关联、人工可独立维护、AI 可辅助治理、自动化受控的统一知识控制面，并完成所有已登记 source 与 PCR02 关键候选 source 的 source coverage、迁移治理和终态闭环。
 
@@ -51,12 +51,12 @@ memory candidates 只能进入 manifest / candidate registry，不能进入 acti
 
 包括但不限于：
 
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
-- /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo 下其他源码、日志、patch、脚本、配置、制品
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
+- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo 下其他源码、日志、patch、脚本、配置、制品
 
 Knowledge Hub 只维护迁移副本、reference、artifact-ref、registry、manifest、index 和状态。
 
@@ -121,12 +121,12 @@ Level 2：PCR02 项目关键资料源终态
 
 1. `pcr02-project-docs`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
 - strategy: existing migration + owner gates
 
 2. `pcr02-project-tools`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
 - strategy:
   - README.md / AGENTS.md: reference-first 或 owner-gated
   - diag scripts / checks / csv: tool-ref、artifact-ref、validation-tool-ref
@@ -135,7 +135,7 @@ Level 2：PCR02 项目关键资料源终态
 
 3. `pcr02-project-knowledge`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
 - strategy:
   - classify-first
   - runbooks / architecture: 可迁移候选
@@ -146,7 +146,7 @@ Level 2：PCR02 项目关键资料源终态
 
 4. `pcr02-product-test`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
 - strategy:
   - Markdown docs: classify-first，按 owner 决策 copy-first / reference-first / owner-gated
   - PDF: artifact-ref
@@ -156,7 +156,7 @@ Level 2：PCR02 项目关键资料源终态
 
 5. `pcr02-project-scratch`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
 - strategy:
   - archive-only
   - session wrap / context preflight 不进入 active facts
@@ -165,7 +165,7 @@ Level 2：PCR02 项目关键资料源终态
 
 6. `pcr02-project-root-artifacts`
 
-- path: /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
+- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
 - scope:
   - 根目录 loose docs / logs / txt / patch / scripts / py / bin
 - strategy:
@@ -328,12 +328,12 @@ registry/sources.json 中所有 registered source 必须有 source coverage 状�
 同时只读扫描 PCR02 candidate source：
 
 ```bash
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs -maxdepth 4 -type f
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools -maxdepth 4 -type f
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge -maxdepth 4 -type f
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test -maxdepth 3 -type f
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch -maxdepth 3 -type f
-rtk find /home/leiwenjun/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo -maxdepth 2 -name AGENTS.md -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs -maxdepth 4 -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools -maxdepth 4 -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge -maxdepth 4 -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test -maxdepth 3 -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch -maxdepth 3 -type f
+rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo -maxdepth 2 -name AGENTS.md -type f
 ```
 
 然后运行基线命令：
@@ -1191,7 +1191,7 @@ rtk bash tools/knowledge-final-gate.sh --json
 
 仓库：
 
-- /home/leiwenjun/knowledge-hub
+- ~/knowledge-hub
 
 已知 registered sources：
 
