@@ -26,6 +26,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
+需要检查“正文最大迁移”终态时，使用 `max-body` profile：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body
+```
+
+`standard` profile 保持日常自动治理边界：普通 AI / 外部资料人工复核队列是 report-only，不阻断 final gate。`max-body` profile 用于迁移收口：待人工复核队列、`needs-edits` / `defer` 复核结果，以及不安全的 `copy-body` source inventory 都是 blocker。它仍然不代签 owner decision、不提升 active、不写 memory、不修改源项目。
+
 ## 目录边界
 
 | 目录 | 用途 | 维护强度 |
@@ -86,6 +94,16 @@ domains/personal/**
 - 门禁全绿后创建本地 commit。
 
 本地 commit 只代表可审计快照，不代表发布、owner approval 或 active promotion。自动 push、merge、release、tag、删除外部资料、修改源项目、写 memory、关闭 owner gate、提升 active 或改变远端 Git 状态仍必须走授权账本。
+
+AI / 外部资料人工复核的默认路径是先导出 JSONL 骨架，再由真实人工填写 `human_reviewed_by`、`human_reviewed_at`、`review_basis` 和 `review_decision`：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-forms-jsonl > artifacts/manifests/review-queue.local.jsonl
+rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts/manifests/review-queue.local.jsonl --dry-run --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts/manifests/review-queue.local.jsonl --apply --json
+```
+
+`knowledge-review-queue-apply.sh` 只机械落地已校验人工复核字段；表单中出现 owner gate、active promotion、memory write、source project write 等字段会被拒绝。`needs-edits` 和 `defer` 会保留为 `max-body` blocker，直到人工补正或改判。
 
 ## 高风险授权
 
