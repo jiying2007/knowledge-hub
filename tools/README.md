@@ -19,6 +19,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 | owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --owner-inbox`、`--forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
 | 终态检查 | 证明自动治理是否闭环，区分 `needs-owner-review` 和 `needs-fix` | `knowledge-final-gate.sh --json`；正文最大迁移收口使用 `knowledge-final-gate.sh --json --final-profile max-body` | 必须包含 regression、diff check、strict status；`standard` 不让普通人工复核队列阻断终态，`max-body` 会把待复核队列和不安全 source inventory 作为 blocker |
 | 高级写入计划 | copy-first、artifact-ref、capture、promote、retire 等需要 reviewed manifest 的流程 | 对应工具默认 dry-run；`--apply` 只允许人工在证据齐备后触发 | 自动化不得删除、发布、提升 active、关闭 owner gate、写 memory 或改源项目 |
+| 硬迁移 | 将 registered sources 的文档正文和明确文档附件迁入 Hub，并生成 tombstone / decommission 账本 | `knowledge-hard-migration.sh --dry-run --json`、`knowledge-hard-migration.sh --apply --json` | 只写 Hub 本仓正文、artifact vault 和 manifest；不删除外部 source、不修改源项目、不写 memory、不关闭 owner gate |
 
 - `knowledge-check.sh`: 只读一致性门禁。
   - 用途：检查 registry JSON/JSONL、owner/project/topic/source 登记、核心索引、migration record、template 必填字段、secret-pattern、owner-gated active 阻断、AI provenance 和中文 diagnostics。
@@ -29,6 +30,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 - `knowledge-review-after.sh`: 只读复核排期报告入口。它按 `--as-of` 和 `--window-days` 输出 stale / near-due registry item、source 统计和 owner gate open 计数；near-due 只是人工提醒，不作为 blocking gate，不自动修改 `review_after`，不关闭 owner gate。
 - `knowledge-source-check.sh`: 只读 source availability 报告入口。首版只支持 `--scope pcr02-level2`，只执行 allowlist 中 `rtk bash -lc 'test -d ...'` / `test -f ...` 的路径存在性检查；它不读取 PCR02 source 正文，不运行项目脚本，不改变 `knowledge-check` 的 `source_check_health.mode=static-registry-only` 和 `executed=false` 语义。
 - `knowledge-source-control.sh`: source 主控目录生成和检查入口。它读取 `registry/sources.json` 与 latest source coverage closeout，为每个 registered source 生成或检查 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`；默认只输出计划，`--apply` 只写 Hub 本仓控制文件，不读取或复制 source 正文。
+- `knowledge-hard-migration.sh`: 全量 source 硬迁移入口。它读取 `registry/sources.json` 的 18 类 source policy，复制 Markdown/TXT 正文到 `domains/`、`projects/` 或 `notes/` 下的 Hub canonical target，复制明确文档附件到 `artifacts/vault/`，并生成 `artifacts/manifests/source-hard-migration-YYYYMMDD.jsonl`、`source-hard-decommission-YYYYMMDD.jsonl` 和 `registry/source-tombstones.jsonl`。复制正文时会把本机绝对路径脱敏成 `~`。它不删除外部 source、不改源项目、不写 memory、不关闭 owner gate；删除外部 source 必须另走 authorization、rollback 和最终 gate。
 - `knowledge-pcr02-owner-targets.sh`: PCR02 owner-approved target materialization 入口。它只读 PCR02 docs source，按 owner landing 中已授权的 worksheet 生成 4 个 Hub 内目标正文；不修改源项目、不写 memory、不提升 embedded standards。
 - `knowledge-search.sh`: 只读检索入口。它支持全文检索，也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。
 - 结构化过滤只返回已登记 registry item；未登记 raw file 即使命中关键词，也不能在 `--source-id` / `--status` 等过滤模式下混入结果。

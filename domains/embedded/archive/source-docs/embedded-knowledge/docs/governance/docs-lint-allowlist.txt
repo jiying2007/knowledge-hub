@@ -1,0 +1,9 @@
+# Docs lint allowlist.
+# Format: category:path-or-conflict
+# Categories: expired, orphan, conflict, low-ref
+
+orphan:docs/templates/plan-template.md
+orphan:docs/templates/report-template.md
+orphan:docs/templates/runbook-template.md
+orphan:docs/templates/spec-template.md
+orphan:docs/templates/standard-template.md

@@ -404,6 +404,69 @@ Automation run invariants:
 - `read-only`、`report-only`、`plan-only` 和 `local-commit` 不得写 memory、源项目、team active index、owner gate closure 或远端 Git 状态。
 - 每次自动化运行必须能从 `input_refs` 找到来源，从 `output_refs` 找到产物，从 `validation_refs` 找到验证或待验证原因。
 
+## source-tombstones.jsonl
+
+登记硬迁移后不再作为 active source 的历史来源。tombstone 只保存 provenance、迁移 manifest、退役策略和回滚说明，不代表可继续回源读取。
+
+Required tombstone fields:
+
+- `id`
+- `source_id`
+- `origin_path`
+- `origin_role`
+- `origin_authority`
+- `hard_migration_policy`
+- `canonical_manifest`
+- `decommission_manifest`
+- `delete_policy`
+- `status`
+- `checked_at`
+- `notes_zh`
+
+Tombstone invariants:
+
+- `source_id` 必须曾经在 `registry/sources.json` 或硬迁移 manifest 中出现。
+- `canonical_manifest` 和 `decommission_manifest` 必须是 Hub 本仓相对路径。
+- `origin_path` 只作历史 provenance，不得作为 active index、search source、check command 或长期正文入口。
+- `delete_policy` 必须说明 delete、prune、runtime-not-deleted、hub-native 或 not-deleted 的原因。
+- active 文档不得把 tombstone 当作当前 source authority。
+
+## source hard migration manifests
+
+`artifacts/manifests/source-hard-migration-YYYYMMDD.jsonl` 记录每个 source 文件的硬迁移动作。它是文件级证据，不是 active index。
+
+Required hard migration row fields:
+
+- `id`
+- `source_id`
+- `origin_path`
+- `origin_role`
+- `origin_authority`
+- `hard_migration_policy`
+- `checked_at`
+- `action`
+- `status`
+
+File rows also require:
+
+- `source_path`
+- `source_sha256`
+- `size`
+- `target_path` when `action` is `copy-body` or `copy-artifact`
+- `target_sha256` when text was sanitized before writing
+
+Allowed hard migration `action` values:
+
+```text
+copy-body
+copy-artifact
+drop-non-knowledge
+runtime-input
+hub-native
+```
+
+`artifacts/manifests/source-hard-decommission-YYYYMMDD.jsonl` records source-level deletion or prune policy. External deletion is not allowed unless this manifest, authorization, rollback, and final validation all exist.
+
 Source/index invariants:
 
 - source `id` must be unique.
