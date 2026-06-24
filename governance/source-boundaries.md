@@ -4,28 +4,30 @@
 
 ## 当前已登记 Sources（Registered Sources）
 
-截至 2026-06-21，Knowledge Hub 控制面登记 13 个 source。登记 source 只代表治理覆盖、检索入口和后续分类路径已经建立，不代表正文已迁移、owner 已签收或内容已成为 active fact。
+截至 2026-06-24，Knowledge Hub 控制面登记 18 个 source。`registry/sources.json.path` 只允许指向 Hub 内 `sources/<source_id>`；旧外部目录仅通过 `origin_path`、`registry/source-tombstones.jsonl` 和迁移 manifest 保留 provenance，不再作为 active source、默认查询入口或新增归档目的地。
 
 | 分组 | source_id | 边界摘要 |
 |---|---|---|
-| legacy team knowledge | `embedded-knowledge` | 旧团队知识源，reference-first + owner review；不得混入未拆分的 project-specific 内容 |
-| legacy project archive | `engineering-archive` | 历史工程归档，copy-first archive；历史证据不等于当前 active fact |
-| patent materials | `patent-disclosure` | 专利材料，专利域独立治理；法律状态和披露边界需 owner/legal review |
-| Codex archive | `codex-archive` | Codex 工作流历史，reference-first；历史记录不能直接提升为当前规则 |
-| Codex memories | `codex-memories` | 辅助召回源；不得作为事实或规则唯一来源，不得由 Knowledge Hub 自动写入 |
-| PCR02 Level 1 | `pcr02-project-docs` | 项目 docs 已做 copy/reference/artifact/owner-gated 覆盖；7 个 owner gate 仍未语义关闭 |
-| PCR02 Level 2 | `pcr02-project-tools` | 工具、诊断和 memory automation 边界；脚本正文不默认复制，自动化默认 report-only |
-| PCR02 Level 2 | `pcr02-project-knowledge` | 项目知识候选，classify-first + secret boundary；不得直接提升团队标准 |
+| legacy team knowledge | `embedded-knowledge` | 已硬迁移到 `domains/embedded/archive/source-docs/embedded-knowledge`；旧团队知识目录 retired，后续提升仍需 owner review |
+| legacy project archive | `engineering-archive` | 已硬迁移到 `projects/pcr02/archive/source-docs/engineering-archive`；历史证据不等于当前 active fact |
+| patent materials | `patent-disclosure` | Markdown 正文进入 `domains/patents/archive/patent-disclosure`，附件进入 `artifacts/vault/patent-disclosure`；法律状态和披露边界仍需 owner/legal review |
+| Codex archive | `codex-archive` | 已硬迁移到 `domains/codex/archive/source-docs/codex-archive`；旧 Codex archive 目录 retired，不再作为新增归档入口 |
+| Codex runtime | `codex-memories` / `codex-history` / `codex-raw-sessions` / `codex-session-index` | 运行态输入 provenance；不复制 raw memory、history 或 session 正文，不写 `~/.codex/memories` |
+| Codex archive registry | `codex-archive-registry` | 已硬迁移到 Hub Codex source-docs 和 artifact vault；旧 registry 只作 provenance |
+| Hub native | `knowledge-hub-automation-runs` | Hub 原生账本；正文权威仍是 `registry/automation-runs.jsonl` |
+| PCR02 Level 1 | `pcr02-project-docs` | 已硬迁移到 Hub PCR02 source-docs；项目 current/archive 中的 owner-approved target 继续按 owner 决策使用 |
+| PCR02 Level 2 | `pcr02-project-tools` | 工具、诊断和 memory automation 边界；脚本正文不默认提升，自动化默认 report-only |
+| PCR02 Level 2 | `pcr02-project-knowledge` | 项目知识候选，secret boundary；不得直接提升团队标准 |
 | PCR02 Level 2 | `pcr02-product-test` | 产品测试资料、配置、接口和制品引用；源码和构建产物不进入文本知识层 |
-| PCR02 Level 2 | `pcr02-project-scratch` | session/context/resume 类材料，archive-only；handoff 和 memory candidates 不进入 active facts |
-| PCR02 Level 2 | `pcr02-project-root-artifacts` | 根目录散落 artifacts/tools/logs/patch/bin 等，只做 artifact/tool/archive/classify-first 边界 |
-| PCR02 Level 2 | `pcr02-module-agent-rules` | 模块本地 `AGENTS.md` 规则引用，owner-gated；未签收前不提升为 Knowledge Hub 根规则 |
+| PCR02 Level 2 | `pcr02-project-scratch` | session/context/resume 类材料；handoff 和 memory candidates 不进入 active facts |
+| PCR02 Level 2 | `pcr02-project-root-artifacts` | 根目录散落 artifacts/tools/logs/patch/bin 等，只做 Hub control、artifact vault 或 archive 边界 |
+| PCR02 Level 2 | `pcr02-module-agent-rules` | 模块本地 `AGENTS.md` 规则已进入 Hub source control；未签收前不提升为 Knowledge Hub 根规则 |
 | PCR02 Level 2 | `pcr02-project-agent-config` | `.vscode` / `.kilo` 等 agent config 和自动化边界；不执行 setup/npm/script |
 
 ## PCR02 Source 分层
 
-- Level 1：`pcr02-project-docs`，当前已有 32/32 docs 治理覆盖；其中 7 个 review-required 项仍保持 owner gate open。
-- Level 2：`pcr02-project-tools`、`pcr02-project-knowledge`、`pcr02-product-test`、`pcr02-project-scratch`、`pcr02-project-root-artifacts`、`pcr02-module-agent-rules`、`pcr02-project-agent-config`。这些 source 进入控制面后，默认只做分类、引用、artifact-ref、identity、archive-only 或 report-only evidence，不复制源码/脚本/日志/二进制正文。
+- Level 1：`pcr02-project-docs`，当前已有 Hub source control、source-docs 迁移副本和 owner-approved target；剩余 AI/外部资料复核队列仍按 review queue 处理。
+- Level 2：`pcr02-project-tools`、`pcr02-project-knowledge`、`pcr02-product-test`、`pcr02-project-scratch`、`pcr02-project-root-artifacts`、`pcr02-module-agent-rules`、`pcr02-project-agent-config`。这些 source 已进入 Hub 控制面；后续只从 Hub canonical、artifact vault、registry 和 manifest 推进，不默认回源。
 
 PCR02 project-specific 内容默认留在 `projects/pcr02/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
 
@@ -37,8 +39,8 @@ PCR02 project-specific 内容默认留在 `projects/pcr02/` 或 source/artifact 
 - patent domain 不保存通用工程 runbook。
 - codex domain 不保存工程事实正文。
 - memories 不作为唯一 source。
-- source 正文只维护一份；Knowledge Hub 使用迁移副本、ref、artifact-ref、registry 和 manifest 管理。
-- source check 的默认门禁是 registry 静态契约审计；外部 source check 只允许显式 report-only 快照，不自动执行、不自动修复。
+- source 正文只维护一份；Hub canonical 文本位于 `projects/`、`domains/`、`notes/` 或 source-docs 迁移区，非文本附件位于 `artifacts/vault/`。
+- source check 的默认门禁是 Hub-local registry 静态契约审计；不得把旧外部路径或旧归档工具作为 active check。
 
 ## 禁止事项（Must Not）
 

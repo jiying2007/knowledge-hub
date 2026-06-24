@@ -2,8 +2,11 @@
 
 ## PCR02
 
-- 当前 docs source：`~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
-- 历史归档 source：`~/embedded/engineering_archive/pcr02`
+- 当前 docs source control：`sources/pcr02-project-docs`
+- 当前 docs 迁移副本：`projects/pcr02/archive/source-docs/pcr02-project-docs`
+- 历史归档 source control：`sources/engineering-archive`
+- 历史归档迁移副本：`projects/pcr02/archive/source-docs/engineering-archive`
+- 旧外部路径：仅保留在 registry/sources.json 的 origin_path 字段、`registry/source-tombstones.jsonl` 和迁移 manifest 中作 provenance；不作为 active source 或默认查询入口。
 - 目标项目域：`projects/pcr02`
 - current 恢复锚点：`projects/pcr02/current/`
 - archive 恢复锚点：`projects/pcr02/archive/`
@@ -26,7 +29,7 @@
 - owner intake package：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`
 - owner source identity preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
 - owner source identity validation：`artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
-- Level 2 source coverage 收口：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- Level 2 source coverage 收口：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`
 - tools 边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`
 - knowledge secret/config 边界：`artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - product-test artifact/config/interface 边界：`artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`

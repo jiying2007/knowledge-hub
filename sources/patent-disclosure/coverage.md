@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `covered-copy-first-and-artifact-ref`
-- Classification: `patent markdown copy-first + attachments artifact-ref`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs-and-artifacts`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Patent disclosure Markdown 与附件引用已进入 Hub 治理。
+patent-disclosure Markdown 与文档附件已硬迁移到 Hub 专利域和 artifact vault；旧路径只保留 provenance。
 
 ## 风险
 
-专利语义和法律状态仍需 owner/legal review。
+专利法律状态、授权和提交口径仍需 owner/legal review。
 
 ## 证据
 

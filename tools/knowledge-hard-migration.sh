@@ -256,11 +256,12 @@ for source in sources:
     if not policy:
         errors.append(f"no hard migration policy for source: {source_id}")
         continue
-    source_root = expand_path(source.get("path", ""))
+    origin_path = source.get("origin_path") or source.get("path", "")
+    source_root = expand_path(origin_path)
     kind = policy["kind"]
     base_row = {
         "source_id": source_id,
-        "origin_path": source.get("path", ""),
+        "origin_path": origin_path,
         "origin_role": source.get("role", ""),
         "origin_authority": source.get("authority", ""),
         "hard_migration_policy": kind,

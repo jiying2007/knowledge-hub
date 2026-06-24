@@ -21,7 +21,8 @@ generated_at: 2026-06-24
 
 ## 来源
 
-- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Hub source path: `sources/pcr02-project-docs`
+- Origin root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`（retired provenance only）
 - Source path: `runbooks/asan-debug-guide.md`
 - Source SHA256: `d65cf6796eac2c306b6bd0fa101450a1307d5c49ba7b7640e6a329d4263d8e88`
 - Owner decision: `split-approved`

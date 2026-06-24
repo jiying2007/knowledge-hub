@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `covered-control-plane`
-- Classification: `copy-first+reference-first+artifact-ref+owner-gated`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs-and-artifacts`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 project docs 32/32 已完成治理覆盖；owner-gated 文件仍需授权或 owner decision 才能落地。
+pcr02-project-docs 已硬迁移到 Hub PCR02 source-docs archive；旧项目 docs 路径只保留 origin_path，后续新增归档写入 Hub。
 
 ## 风险
 
-控制面闭合不等于 owner 决策完成。
+owner-gated 历史内容仍不能绕过 owner/review 直接提升 active。
 
 ## 证据
 

@@ -9,18 +9,18 @@ created: 2026-05-18
 last_updated: 2026-05-18
 tags: [pcr02, tools, debug, knowledge]
 related: [project-build-and-deploy-guide.md, ../architecture/project-overview-design.md]
-validation_refs: [../../tools/debug/project-knowledge-debug.sh, $EMBEDDED_KNOWLEDGE_HOME/tools/debug/README.md]
+validation_refs: [../../tools/debug/project-knowledge-debug.sh, projects/pcr02/archive/source-docs/pcr02-project-tools/README.md]
 ---
 
 # PCR02 项目调试工具入口
 
 ## 1. 目标
 
-本手册定义当前项目如何使用团队知识库 `~/embedded/knowledge` 中的公共调试工具。当前项目只保留 wrapper 和项目默认参数，不复制公共工具实现。
+本手册定义当前项目如何使用已迁移到 Knowledge Hub 的 PCR02 调试工具说明和项目 wrapper。旧团队知识库路径只作为 retired origin provenance，不再作为当前知识入口。
 
 ## 2. 前置条件
 
-建议设置：
+若仍需运行源项目 wrapper，可由调用环境显式设置旧工具路径；Knowledge Hub 不把该路径作为知识权威入口：
 
 ```bash
 export EMBEDDED_KNOWLEDGE_HOME="$HOME/embedded/knowledge"
@@ -86,17 +86,16 @@ rtk bash tools/debug/project-knowledge-debug.sh core-fastpass --core out/arm/app
 rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/core-xxxx
 ```
 
-## 4. 公共知识库入口
+## 4. Hub 知识入口
 
-- `$EMBEDDED_KNOWLEDGE_HOME/docs/runbooks/core-dump-capture-guide.md`
-- `$EMBEDDED_KNOWLEDGE_HOME/docs/runbooks/embedded-linux-performance-triage-guide.md`
-- `$EMBEDDED_KNOWLEDGE_HOME/docs/runbooks/sigmastar-media-pipeline-triage-guide.md`
-- `$EMBEDDED_KNOWLEDGE_HOME/docs/runbooks/yolo-ai-vision-deployment-guide.md`
-- `$EMBEDDED_KNOWLEDGE_HOME/tools/debug/README.md`
+- `domains/embedded/archive/source-docs/embedded-knowledge`
+- `projects/pcr02/archive/source-docs/pcr02-project-tools/README.md`
+- `projects/pcr02/archive/source-docs/pcr02-project-docs/runbooks/project-debug-tools-guide.md`
+- `sources/pcr02-project-tools/README.md`
 
 ## 5. 边界
 
 1. 项目 wrapper 只设置默认参数与调用入口。
-2. 公共脚本增强必须回到 `~/embedded/knowledge`。
+2. 公共脚本增强必须先进入 Knowledge Hub source control 或对应源项目的明确变更流程；不得把旧团队知识库路径当作默认写入目标。
 3. 现场日志、core 和大体积归档只能放 `/tmp`、受控 NAS 或问题单附件，不进入 Git。
 4. wrapper 仅检查知识库目录和目标脚本是否可执行，不替代公共脚本自身参数校验。

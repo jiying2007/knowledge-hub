@@ -6,12 +6,12 @@
 
 ## 当前批次
 
-- 建立 source 主控目录。
-- 登记最小 inventory root row。
-- 保留 source 原文边界，不批量复制 raw、大文件、二进制或源码树。
+- `registry/sources.json` 的 `path` 已收敛到 `sources/embedded-knowledge`。
+- 旧外部路径只保留为 `origin_path` 和 tombstone provenance。
+- 通过 hard migration manifest、decommission manifest 和 inventory 记录正文、附件、runtime input 或 hub-native 边界。
 
 ## 后续批次
 
-- 将高价值 Markdown 或可读知识迁移到 `projects/`、`domains/` 或 `notes/`。
-- 将 raw session/history/log 压缩为中文摘要、时间线、决策和候选。
-- 将 artifact、binary、PDF、zip、源码树和脚本正文转为 artifact-ref、命令契约、接口说明或 hash 清单。
+- 删除或剪枝外部 source 前，先完成授权账本、回滚路径和最终验证。
+- 新增归档、摘要和知识正文必须写入 Hub canonical 目录，不得写回旧 origin。
+- runtime input 只抽取摘要、候选和证据索引；不复制 raw 全文，不把 raw 行提升为 active fact。

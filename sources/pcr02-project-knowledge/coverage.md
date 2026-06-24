@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `registered-classify-first-secret-boundary`
-- Classification: `classify-first + migration-candidate + tool-ref/artifact-ref + secret-boundary`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 knowledge 作为项目知识子源登记；secret/config/tool-ref 需保持边界。
+pcr02-project-knowledge 已硬迁移到 Hub PCR02 source-docs archive；旧项目 knowledge 路径不再作为知识正文入口。
 
 ## 风险
 
-含配置和 standards-like doc，不能直接提升团队标准。
+project-specific 内容不能直接提升团队标准。
 
 ## 证据
 

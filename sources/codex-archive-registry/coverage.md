@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `hub-main-registry-source`
-- Classification: `archive registry source`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs-and-artifacts`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Codex archive registry 进入 Hub 主库 source registry，用于吸收 project/topic/session/workstream 索引。
+codex-archive-registry 已硬迁移到 Hub codex source-docs；旧 archive registry 不再作为 active source path。
 
 ## 风险
 
-archive registry 的 open session 不自动成为当前项目事实。
+旧 registry open session 不自动成为当前项目事实。
 
 ## 证据
 

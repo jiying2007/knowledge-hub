@@ -32,13 +32,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 ## Phase 4: Engineering Archive Migration
 
-- 将 `~/embedded/engineering_archive` 按 project/domain 迁入 `projects/*/archive/`。
+- 将 `engineering-archive` source 按 project/domain 迁入 `projects/*/archive/`，source control 入口统一为 `sources/engineering-archive`。
 - `decision-index.md` 迁入 `decisions/index.md`。
-- 保留旧路径直到校验完成。
+- 旧路径只保留为 `origin_path`、tombstone 和迁移 manifest provenance，不作为 active source。
 
 ## Phase 5: Team Knowledge Migration
 
-- 将 `~/embedded/knowledge/docs/standards` 等通用内容迁入 `domains/embedded/`。
+- 将 `embedded-knowledge` source 中的通用内容迁入 `domains/embedded/`，source control 入口统一为 `sources/embedded-knowledge`。
 - 工具和 skill 迁入或挂接到 `domains/embedded/tools`、`skills`。
 
 ## Phase 6: Codex Automation Integration

@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `auxiliary-only-authorized-write-gated`
-- Classification: `auxiliary recall only`
+- Status: `runtime-input-control`
+- Classification: `runtime-input no-copy no-memory-write`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Codex memories 默认只作为辅助召回；写入 memory 必须先有授权账本记录。
+codex-memories 不是迁移正文源；Hub 只保留 sources/codex-memories 控制面和 runtime provenance，禁止自动写 memory。
 
 ## 风险
 

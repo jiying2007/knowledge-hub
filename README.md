@@ -67,7 +67,9 @@ domains/personal/**
 - 每个 `registry/sources.json` 中的 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
 - 安全、可读、长期有价值的 Markdown/text 可以迁移为正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
-- `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/codex/docs/archive/**`、`~/.codex/memories/**` 是 Hub 主库的来源，不直接等于 active fact。
+- `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只保留在 `origin_path`、tombstone 或历史 manifest 中作 provenance。
+- `~/codex/docs/archive/**` 已硬迁移到 Hub 的 Codex archive source-docs；新归档和新索引不得回写旧 archive 路径。
+- `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不迁移 raw 正文，不直接等于 active fact。
 
 ## 权威边界
 

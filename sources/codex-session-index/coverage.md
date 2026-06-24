@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hub-main-index-source`
-- Classification: `session index source`
+- Status: `runtime-input-control`
+- Classification: `runtime-input index-primary`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Codex session index 作为跨项目、跨会话恢复主索引来源。
+codex-session-index 只作为运行态索引输入 provenance；Hub source path 为 sources/codex-session-index。
 
 ## 风险
 

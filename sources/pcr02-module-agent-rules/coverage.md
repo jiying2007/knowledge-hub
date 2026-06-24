@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `registered-owner-gated-module-rules`
-- Classification: `module-local owner-gated rules`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin agent-rules`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 module AGENTS 作为模块本地规则引用登记，不直接提升为 Hub 根规则或团队标准。
+pcr02-module-agent-rules 已硬迁移到 Hub PCR02 source-docs archive；模块 AGENTS 旧路径不再作为 Hub 规则来源。
 
 ## 风险
 
-模块本地约束未经 owner review 直接提升会污染全局规则。
+模块本地约束未经 owner review 不得提升为全局规则。
 
 ## 证据
 

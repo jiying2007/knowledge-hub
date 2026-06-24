@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `registered-artifact-config-interface-boundary`
-- Classification: `classify-first + artifact-ref + config-ref + interface/diagnostic/validation reference`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs-and-artifacts`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 product test 作为产品测试资料源登记；二进制、PDF、压缩包和源码只做引用或 artifact-ref。
+pcr02-product-test 文档与明确文档附件已硬迁移到 Hub；旧 app_product_test 路径不再作为知识 source path。
 
 ## 风险
 
-构建产物和源码不得进入文本知识层。
+源码、构建产物和产测运行结果不得混入文本知识层。
 
 ## 证据
 

@@ -59,6 +59,9 @@ coverage_by_source = {
 }
 
 source_type_rules = {
+    "hub-migrated-source": ("markdown", "copy-body"),
+    "hub-runtime-input": ("archive", "reference-only"),
+    "hub-native-source": ("automation-run", "reference-only"),
     "codex-history-source": ("history", "summary-only"),
     "codex-session-source": ("session", "summary-only"),
     "codex-archive-registry-source": ("archive", "summary-only"),
@@ -94,14 +97,22 @@ for source in sources:
         disposition = "reference-only" if disposition == "copy-body" else disposition
     if "artifact" in str(source.get("migration_strategy", "")) and disposition == "copy-body":
         disposition = "artifact-ref"
+    target_path = f"sources/{source_id}/README.md"
+    canonical_target = str(source.get("canonical_target", ""))
+    if disposition == "copy-body":
+        if canonical_target.startswith(("projects/", "domains/", "notes/")):
+            target_path = canonical_target
+        else:
+            disposition = "reference-only"
 
     inventory_row = {
         "id": f"{source_id}-root",
         "source_id": source_id,
         "source_path": source.get("path", ""),
+        "origin_path": source.get("origin_path", ""),
         "object_type": object_type,
         "hub_disposition": disposition,
-        "target_path": f"sources/{source_id}/README.md",
+        "target_path": target_path,
         "sha256": "",
         "size_bytes": 0,
         "status": "covered",
@@ -115,7 +126,8 @@ for source in sources:
 ## 定位
 
 - Source ID: `{source_id}`
-- Source path: `{source.get('path', '')}`
+- Hub source path: `{source.get('path', '')}`
+- Retired origin path: `{source.get('origin_path', '') or 'not-external'}`
 - Role: `{role}`
 - Authority: `{source.get('authority', '')}`
 - Final disposition: `{source.get('final_disposition', '')}`
@@ -129,10 +141,10 @@ for source in sources:
 
 ## 边界
 
-- Hub 统一管理的是 source 的清单、覆盖状态、可读摘要、证据和可复用提取物。
-- raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料默认不复制正文。
-- 需要进入 `projects/`、`domains/` 或 `notes/` 的长期正文，必须由 registry、migration、owner gate 或 evidence refs 支撑。
-- 不修改源项目，不写 `~/.codex/memories`，不自动提升 active。
+- `path` 指向 Hub 内 source 控制目录；旧外部路径只允许作为 `origin_path` provenance。
+- Hub 统一管理 source 的清单、覆盖状态、迁移证据、退役策略和可复用提取物。
+- raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料不得作为 active source 入口。
+- 不修改源项目，不写 `~/.codex/memories`，不自动提升 active，不重新回源读取作为默认路径。
 
 ## 当前风险
 
@@ -176,15 +188,15 @@ for source in sources:
 
 ## 当前批次
 
-- 建立 source 主控目录。
-- 登记最小 inventory root row。
-- 保留 source 原文边界，不批量复制 raw、大文件、二进制或源码树。
+- `registry/sources.json` 的 `path` 已收敛到 `sources/{source_id}`。
+- 旧外部路径只保留为 `origin_path` 和 tombstone provenance。
+- 通过 hard migration manifest、decommission manifest 和 inventory 记录正文、附件、runtime input 或 hub-native 边界。
 
 ## 后续批次
 
-- 将高价值 Markdown 或可读知识迁移到 `projects/`、`domains/` 或 `notes/`。
-- 将 raw session/history/log 压缩为中文摘要、时间线、决策和候选。
-- 将 artifact、binary、PDF、zip、源码树和脚本正文转为 artifact-ref、命令契约、接口说明或 hash 清单。
+- 删除或剪枝外部 source 前，先完成授权账本、回滚路径和最终验证。
+- 新增归档、摘要和知识正文必须写入 Hub canonical 目录，不得写回旧 origin。
+- runtime input 只抽取摘要、候选和证据索引；不复制 raw 全文，不把 raw 行提升为 active fact。
 """
 
     desired = {
@@ -204,6 +216,10 @@ for source in sources:
                 path.write_text(content)
                 source_result["written"].append(str(path.relative_to(root)))
                 written.append(str(path.relative_to(root)))
+        elif args.apply and path.read_text() != content:
+            path.write_text(content)
+            source_result["written"].append(str(path.relative_to(root)))
+            written.append(str(path.relative_to(root)))
     results.append(source_result)
 
 status = "applied" if args.apply else "planned"

@@ -94,7 +94,8 @@ generated_at: {today}
 
 ## 来源
 
-- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Hub source path: `sources/pcr02-project-docs`
+- Origin root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`（retired provenance only）
 - Source path: `{item['source_path']}`
 - Source SHA256: `{source_hash}`
 - Owner decision: `{item['owner_decision']}`

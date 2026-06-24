@@ -231,42 +231,14 @@ ALLOWED_DOMAIN_ROOTS = {
     "codex",
 }
 ALLOWED_SOURCE_ROLES = {
-    "team-knowledge-source",
-    "project-archive-source",
-    "patent-source",
-    "codex-governance-source",
-    "auxiliary-memory-source",
-    "codex-history-source",
-    "codex-session-source",
-    "codex-archive-registry-source",
-    "codex-automation-source",
-    "project-current-docs-source",
-    "project-current-tools-source",
-    "project-current-knowledge-source",
-    "project-product-test-source",
-    "project-scratch-source",
-    "project-root-artifact-source",
-    "project-agent-rules-source",
-    "project-agent-config-source",
+    "hub-migrated-source",
+    "hub-native-source",
+    "hub-runtime-input",
 }
 ALLOWED_SOURCE_AUTHORITIES = {
-    "legacy-team-ssot",
-    "legacy-project-history",
-    "patent-materials",
-    "codex-workflow-history",
-    "auxiliary-recall-only",
-    "codex-history-log",
-    "codex-raw-session-history",
-    "codex-archive-registry",
-    "codex-automation-ledger",
-    "legacy-project-current-docs",
-    "legacy-project-current-tools",
-    "legacy-project-current-knowledge",
-    "legacy-project-product-test",
-    "legacy-project-scratch",
-    "legacy-project-root-artifacts",
-    "legacy-project-agent-rules",
-    "legacy-project-agent-config",
+    "knowledge-hub-canonical",
+    "knowledge-hub-ledger",
+    "runtime-input-provenance",
 }
 ALLOWED_SOURCE_STATUSES = {
     "registered",
@@ -274,26 +246,14 @@ ALLOWED_SOURCE_STATUSES = {
     "retired",
 }
 ALLOWED_SOURCE_WRITE_POLICIES = {
-    "do-not-write-through-knowledge-hub",
-    "copy-first-migration-only",
-    "do-not-mix-with-engineering-knowledge",
-    "use-codex-archive-tools",
-    "hub-main-registry",
-    "read-only-unless-explicitly-approved",
-    "externalize-to-knowledge-hub-before-prune",
+    "knowledge-hub-only",
+    "hub-native-registry",
+    "runtime-read-only-input",
 }
 ALLOWED_SOURCE_FINAL_DISPOSITIONS = {
-    "fully-migrated",
-    "copy-first-migrated",
-    "reference-first-registered",
-    "artifact-ref-registered",
-    "archive-only-registered",
-    "owner-gated-pending-decision",
-    "no-migration-with-reason",
-    "auxiliary-recall-only",
-    "hub-main-source",
-    "external-tool-owned",
-    "mixed-terminal-coverage",
+    "hard-migrated-to-hub",
+    "hub-native-source",
+    "runtime-input-not-migrated",
 }
 ALLOWED_SOURCE_CONTROL_OBJECT_TYPES = {
     "markdown",
@@ -717,7 +677,20 @@ for source in sources:
         errors.append(f"sources:{source_id} invalid final_disposition: {source.get('final_disposition')}")
     check_command = str(source.get("check", "")).strip()
     no_check_reason = str(source.get("no_check_reason", "")).strip()
-    path = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser()
+    source_path_text = str(source.get("path", ""))
+    if (
+        source_path_text.startswith("~/")
+        or source_path_text.startswith("/")
+        or source_path_text.startswith("../")
+        or source_path_text.startswith("./")
+        or not source_path_text.startswith("sources/")
+    ):
+        errors.append(f"sources:{source_id} path must point to Hub source control directory: {source_path_text}")
+    if any(token in check_command for token in ["~/embedded", "~/codex/docs/archive", "~/work/", "~/.codex", "/vsdata/"]):
+        errors.append(f"sources:{source_id} check must not depend on retired external source path")
+    path = pathlib.Path(source_path_text.replace("~", str(pathlib.Path.home()))).expanduser()
+    if not path.is_absolute():
+        path = root / path
     path_exists = path.exists()
     if check_command:
         source_check_health["with_check_count"] += 1

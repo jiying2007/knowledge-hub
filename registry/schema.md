@@ -206,7 +206,7 @@ Domain/path invariants:
 
 ## sources.json
 
-登记 Knowledge Hub 挂接的外部或旧知识源。
+登记 Knowledge Hub 的 source 控制面。终态下 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只能写入 `origin_path` 作为 provenance，不得作为 active source、check command 或新增归档入口。
 
 Required source fields:
 
@@ -223,6 +223,11 @@ Required source fields:
 
 Recommended source fields:
 
+- `origin_path`
+- `canonical_target`
+- `artifact_target`
+- `canonical_manifest`
+- `decommission_manifest`
 - `source_language`
 - `expected_normalization`
 - `translation_required`
@@ -234,45 +239,17 @@ Recommended source fields:
 Allowed source `role`:
 
 ```text
-team-knowledge-source
-project-archive-source
-patent-source
-codex-governance-source
-auxiliary-memory-source
-codex-history-source
-codex-session-source
-codex-archive-registry-source
-codex-automation-source
-project-current-docs-source
-project-current-tools-source
-project-current-knowledge-source
-project-product-test-source
-project-scratch-source
-project-root-artifact-source
-project-agent-rules-source
-project-agent-config-source
+hub-migrated-source
+hub-runtime-input
+hub-native-source
 ```
 
 Allowed source `authority`:
 
 ```text
-legacy-team-ssot
-legacy-project-history
-patent-materials
-codex-workflow-history
-auxiliary-recall-only
-codex-history-log
-codex-raw-session-history
-codex-archive-registry
-codex-automation-ledger
-legacy-project-current-docs
-legacy-project-current-tools
-legacy-project-current-knowledge
-legacy-project-product-test
-legacy-project-scratch
-legacy-project-root-artifacts
-legacy-project-agent-rules
-legacy-project-agent-config
+knowledge-hub-canonical
+runtime-input-provenance
+knowledge-hub-ledger
 ```
 
 Allowed source `status`:
@@ -286,30 +263,26 @@ retired
 Allowed source `write_policy`:
 
 ```text
-do-not-write-through-knowledge-hub
-copy-first-migration-only
-do-not-mix-with-engineering-knowledge
-use-codex-archive-tools
-hub-main-registry
-read-only-unless-explicitly-approved
-externalize-to-knowledge-hub-before-prune
+knowledge-hub-only
+runtime-read-only-input
+hub-native-registry
 ```
 
 Allowed source `final_disposition`:
 
 ```text
-fully-migrated
-copy-first-migrated
-reference-first-registered
-artifact-ref-registered
-archive-only-registered
-owner-gated-pending-decision
-no-migration-with-reason
-auxiliary-recall-only
-hub-main-source
-external-tool-owned
-mixed-terminal-coverage
+hard-migrated-to-hub
+runtime-input-not-migrated
+hub-native-source
 ```
+
+Source path invariants:
+
+- `path` must be a Hub-relative `sources/<source_id>` path and must exist.
+- `origin_path`, when present, is historical provenance only; it must not be used as a default scan path, search source, check command, active index entry, or new archive destination.
+- `check` must validate the Hub control directory or Hub-native ledger; it must not call retired external tools or depend on `~/embedded`, `~/codex/docs/archive`, `~/work`, `~/.codex`, or `/vsdata`.
+- Former external sources use `status=retired`, `role=hub-migrated-source`, `authority=knowledge-hub-canonical`, `write_policy=knowledge-hub-only`, and `final_disposition=hard-migrated-to-hub`.
+- Runtime inputs such as Codex history, raw sessions, session index, and memories use `role=hub-runtime-input` and `final_disposition=runtime-input-not-migrated`; they are not deleted and are not copied as knowledge正文.
 
 ## authorizations.jsonl
 

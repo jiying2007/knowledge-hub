@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hub-main-indexed-source`
-- Classification: `history jsonl discovery source`
+- Status: `runtime-input-control`
+- Classification: `runtime-input index-summary-only`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Codex history 进入 Hub 主库 source registry；只做索引、摘要、候选和证据定位。
+codex-history 只作为运行态输入 provenance；Hub source path 为 sources/codex-history，不把 raw history 行复制为正文。
 
 ## 风险
 

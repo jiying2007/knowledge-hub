@@ -1,25 +1,25 @@
 # Knowledge Sources
 
-| Source | Role | Path |
-| --- | --- | --- |
-| embedded-knowledge | team-knowledge-source | `~/embedded/knowledge` |
-| engineering-archive | project-archive-source | `~/embedded/engineering_archive` |
-| patent-disclosure | patent-source | `~/embedded/patent_disclosure` |
-| codex-archive | codex-governance-source | `~/codex/docs/archive` |
-| codex-memories | auxiliary-memory-source | `~/.codex/memories` |
-| codex-history | codex-history-source | `~/.codex/history.jsonl` |
-| codex-raw-sessions | codex-session-source | `~/.codex/sessions` |
-| codex-session-index | codex-session-source | `~/.codex/session_index.jsonl` |
-| codex-archive-registry | codex-archive-registry-source | `~/codex/docs/archive/_registry` |
-| knowledge-hub-automation-runs | codex-automation-source | `registry/automation-runs.jsonl` |
-| pcr02-project-docs | project-current-docs-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs` |
-| pcr02-project-tools | project-current-tools-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools` |
-| pcr02-project-knowledge | project-current-knowledge-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge` |
-| pcr02-product-test | project-product-test-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test` |
-| pcr02-project-scratch | project-scratch-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch` |
-| pcr02-project-root-artifacts | project-root-artifact-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
-| pcr02-module-agent-rules | project-agent-rules-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
-| pcr02-project-agent-config | project-agent-config-source | `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo` |
+| Source | Status | Hub Path | Origin Policy |
+| --- | --- | --- | --- |
+| embedded-knowledge | retired | `sources/embedded-knowledge` | origin only in `origin_path` / tombstone |
+| engineering-archive | retired | `sources/engineering-archive` | origin only in `origin_path` / tombstone |
+| patent-disclosure | retired | `sources/patent-disclosure` | origin only in `origin_path` / tombstone |
+| codex-archive | retired | `sources/codex-archive` | origin only in `origin_path` / tombstone |
+| codex-memories | runtime input | `sources/codex-memories` | runtime input, not copied, not deleted |
+| codex-history | runtime input | `sources/codex-history` | runtime input, not copied, not deleted |
+| codex-raw-sessions | runtime input | `sources/codex-raw-sessions` | runtime input, not copied, not deleted |
+| codex-session-index | runtime input | `sources/codex-session-index` | runtime input, not copied, not deleted |
+| codex-archive-registry | retired | `sources/codex-archive-registry` | origin only in `origin_path` / tombstone |
+| knowledge-hub-automation-runs | hub-native | `sources/knowledge-hub-automation-runs` | Hub native ledger |
+| pcr02-project-docs | retired | `sources/pcr02-project-docs` | origin only in `origin_path`; prune needs authorization |
+| pcr02-project-tools | retired | `sources/pcr02-project-tools` | origin only in `origin_path`; prune needs authorization |
+| pcr02-project-knowledge | retired | `sources/pcr02-project-knowledge` | origin only in `origin_path`; prune needs authorization |
+| pcr02-product-test | retired | `sources/pcr02-product-test` | origin only in `origin_path`; prune needs authorization |
+| pcr02-project-scratch | retired | `sources/pcr02-project-scratch` | origin only in `origin_path`; prune needs authorization |
+| pcr02-project-root-artifacts | retired | `sources/pcr02-project-root-artifacts` | project root not deleted; knowledge residue prune needs authorization |
+| pcr02-module-agent-rules | retired | `sources/pcr02-module-agent-rules` | origin only in `origin_path`; prune needs authorization |
+| pcr02-project-agent-config | retired | `sources/pcr02-project-agent-config` | config not deleted; active source path retired |
 
 ## PCR02 Source 边界速查
 
@@ -33,12 +33,12 @@
 | pcr02-product-test | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | artifact/config/interface 只做身份和引用登记，不复制大附件或构建物 |
 | pcr02-project-scratch | pcr02-registry-owner | 2026-09-20 | archive-only-registered | scratch/session/resume archive-only，不写 memory，不进 active facts |
 | pcr02-project-root-artifacts | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | root loose artifact/tool/config 边界，排除子 source 和生成物 |
-| pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | owner-gated-pending-decision | module/local AGENTS 规则保持 owner-gated reference，不升级全局规则 |
+| pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | hard-migrated-to-hub | module/local AGENTS 规则进入 Hub source control；未签收前不升级全局规则 |
 | pcr02-project-agent-config | pcr02-registry-owner | 2026-09-20 | artifact-ref-registered | `.vscode`/`.kilo` 配置和 report-only 自动化只做 artifact/config ref |
 
 ## Source 治理恢复
 
-本索引主表只保留 source id、role 和 path，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check/no_check_reason、coverage 和 migration refs 时，运行：
+本索引主表只保留 source id、终态状态、Hub path 和 origin policy，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check、coverage、tombstone 和 migration refs 时，运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
@@ -59,7 +59,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - 最新 source check 快照证据和核心索引可读性硬化：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`。
 - 最新 owner/source/subagent 边界加固：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`。
 - 最新 source 主控目录统一收口：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`。
-- 每个 registered source 的 Hub 内管理面位于 sources/<source_id>/，至少包含 `README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
+- 每个 source 的 Hub 内管理面位于 `sources/<source_id>/`，至少包含 `README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
+- `registry/sources.json` 的 `path` 必须指向 `sources/<source_id>`；旧外部路径只能出现在 `origin_path`、`registry/source-tombstones.jsonl` 或 hard migration manifest 中，不能作为 active source、check command 或新增归档入口。
 
 ## Source 专项审查制品
 
@@ -102,16 +103,16 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs DVR session owner target`: `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
 - `pcr02-project-docs governance closeout`: 可恢复 handoff：`artifacts/manifests/pcr02-governance-handoff-20260618.md`。
 - `registry/items.jsonl`、`registry/migrations.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
-- `codex-memories`: 仅作为辅助召回；memory auto-curation governance 不得写 `~/.codex/memories/**`。
-- `codex-history`: Hub 主库历史来源；只做索引、摘要和候选治理，不把 raw history 行直接提升为 active fact。
-- `codex-raw-sessions`: Hub 主库 raw session 来源；只做引用、摘要和证据定位，不复制完整 raw session 正文。
-- `codex-session-index`: Hub 主库 session 恢复索引；用于跨项目、跨会话串联 project/workstream/session。
-- `codex-archive-registry`: Hub 主库吸收 Codex archive registry；用于迁移项目、topic、session 和 workstream 索引。
-- `knowledge-hub-automation-runs`: Hub 内自动化运行账本；用于串联 automation、authorization、project、session、source 和验证证据。
-- `engineering-archive`: 38 PCR02 historical engineering archive files were copy-first migrated to `projects/pcr02/archive/engineering-archive` and verified by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`.
-- `patent-disclosure`: 10 Markdown patent disclosure files were copy-first migrated to `domains/patents/archive/patent-disclosure`; 181 non-text attachments are registered by `artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl` and summarized in `domains/patents/artifacts/patent-disclosure-artifacts.ref.md`.
-- `embedded-knowledge`: 外部 legacy team SSOT，等待 owner review 和 source 稳定；source coverage 边界：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。
-- `codex-archive`: 通过 Codex archive 工具保持 reference-first；边界：`domains/codex/archive/codex-archive.ref.md` 和 `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260619.md`。
+- `codex-memories`: runtime input；不迁移 raw memory，不写 `~/.codex/memories/**`，只在 Hub 生成候选、摘要或人工复核记录。
+- `codex-history`: runtime input；不复制 raw history 行，只在 Hub 生成索引、摘要和候选治理。
+- `codex-raw-sessions`: runtime input；不复制完整 raw session 正文，只做摘要、证据定位和候选。
+- `codex-session-index`: runtime input；跨项目恢复索引必须落成 Hub 摘要或 registry 后才可长期引用。
+- `codex-archive-registry`: 已硬迁移到 `domains/codex/archive/source-docs/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
+- `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
+- `engineering-archive`: 已硬迁移到 `projects/pcr02/archive/source-docs/engineering-archive`，退役账本见 `registry/source-tombstones.jsonl`。
+- `patent-disclosure`: 已硬迁移到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`，退役账本见 `registry/source-tombstones.jsonl`。
+- `embedded-knowledge`: 已硬迁移到 `domains/embedded/archive/source-docs/embedded-knowledge`，旧外部路径不再作为 source authority。
+- `codex-archive`: 已硬迁移到 `domains/codex/archive/source-docs/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
 - `pcr02-project-tools`: tool/diag/memory automation source coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `pcr02-project-tools`: README/AGENTS、diag、runtime diagnostic、memory automation 和生成制品边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`。
 - `pcr02-project-tools`: 18 个非生成 tool 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。

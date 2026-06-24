@@ -3,28 +3,29 @@
 ## 定位
 
 - Source ID: `pcr02-project-scratch`
-- Source path: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch`
-- Role: `project-scratch-source`
-- Authority: `legacy-project-scratch`
-- Final disposition: `archive-only-registered`
-- Migration strategy: `archive-only-no-memory-write`
+- Hub source path: `sources/pcr02-project-scratch`
+- Retired origin path: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch`
+- Role: `hub-migrated-source`
+- Authority: `knowledge-hub-canonical`
+- Final disposition: `hard-migrated-to-hub`
+- Migration strategy: `hard-migrated-to-hub-copy-docs`
 - Owner: `pcr02-registry-owner`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-PCR02 scratch 只作为历史证据或 handoff 参考；memory candidates 不写 memory。
+pcr02-project-scratch 可读 session/context/resume 材料已硬迁移到 Hub PCR02 source-docs archive。
 
 ## 边界
 
-- Hub 统一管理的是 source 的清单、覆盖状态、可读摘要、证据和可复用提取物。
-- raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料默认不复制正文。
-- 需要进入 `projects/`、`domains/` 或 `notes/` 的长期正文，必须由 registry、migration、owner gate 或 evidence refs 支撑。
-- 不修改源项目，不写 `~/.codex/memories`，不自动提升 active。
+- `path` 指向 Hub 内 source 控制目录；旧外部路径只允许作为 `origin_path` provenance。
+- Hub 统一管理 source 的清单、覆盖状态、迁移证据、退役策略和可复用提取物。
+- raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料不得作为 active source 入口。
+- 不修改源项目，不写 `~/.codex/memories`，不自动提升 active，不重新回源读取作为默认路径。
 
 ## 当前风险
 
-handoff、memory candidates 和 session notes 若直接提升会污染 active facts。
+scratch/handoff/memory candidates 不能直接提升 active 或写 memory。
 
 ## 维护入口
 

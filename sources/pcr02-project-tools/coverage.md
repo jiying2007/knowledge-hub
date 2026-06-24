@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `registered-reference-tool-boundary`
-- Classification: `reference-first + tool-ref + validation-tool-ref + owner-gated`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 tools 作为当前项目工具源登记；脚本正文不默认复制，自动化默认 report-only，授权后可 apply-with-review。
+pcr02-project-tools 可读文档已硬迁移到 Hub PCR02 source-docs；工具代码不作为 Hub 正文源。
 
 ## 风险
 
-memory 自动化脚本不能无授权写 memory。
+脚本和工具逻辑仍属于源项目代码边界，不由 Hub 自动改写。
 
 ## 证据
 

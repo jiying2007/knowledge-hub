@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `reference-first`
-- Classification: `codex workflow history reference-first`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-Codex archive 继续作为历史归档来源；Hub 作为主库登记索引和摘要。
+codex-archive 已硬迁移到 Hub codex archive source-docs；旧 Codex archive 入口不再作为新增归档或默认查询入口。
 
 ## 风险
 
-历史记录不能直接作为 active governance rule。
+历史 Codex archive 记录不能直接提升为 active governance rule。
 
 ## 证据
 

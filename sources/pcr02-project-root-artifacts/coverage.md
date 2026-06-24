@@ -2,17 +2,17 @@
 
 ## 结论
 
-- Status: `registered-mixed-artifact-tool-boundary`
-- Classification: `mixed artifact-ref + archive-only + tool-ref + classify-first candidate`
+- Status: `hard-migrated-to-hub`
+- Classification: `retired-origin project-root-shallow`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-PCR02 root loose artifacts 使用边界化登记，排除子 source 和生成物。
+pcr02-project-root-artifacts 的根部可读文本已按 shallow policy 迁入 Hub；项目根目录不再作为知识 source path。
 
 ## 风险
 
-.bin/.log/.patch/.sh/.py 不复制正文；抽取事实需 owner review。
+root loose artifact、日志、patch、脚本和生成物不得被复制为 Hub 正文。
 
 ## 证据
 

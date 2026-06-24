@@ -4,7 +4,7 @@
 
 本段是跨会话恢复首屏，只保留必须优先定位的主题、命令和长期入口。历史治理制品不得插入本段，统一放入“历史治理台账”。
 
-- migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
+- migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`; `artifacts/manifests/source-hard-migration-20260624.md`
 - owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
 - PCR02: `projects/pcr02`; `indexes/by-project.md`
 - tools: `artifacts/manifests/pcr02-tools-boundary-20260620.md`; `tools/`
@@ -21,7 +21,7 @@
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
-- Codex archive: `domains/codex/archive/codex-archive.ref.md`; `registry/sources.json`
+- Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/source-docs/codex-archive`; `registry/sources.json`
 
 ## 领域入口
 
@@ -34,7 +34,7 @@
 - 专利披露 Markdown 正文集：`domains/patents/archive/patent-disclosure`
 - 专利披露附件引用：`domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex 工作流：`domains/codex`
-- Codex archive reference-first 边界：`domains/codex/archive/codex-archive.ref.md`
+- Codex archive 硬迁移边界：`domains/codex/archive/codex-archive.ref.md`
 - 个人笔记：`notes/personal`
 - 治理规则：`governance`
 - 中文长期资产模板：`templates`
