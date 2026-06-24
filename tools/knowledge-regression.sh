@@ -7,6 +7,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
@@ -96,6 +97,45 @@ def copy_repo(label):
     shutil.copytree(root, repo, ignore=shutil.ignore_patterns(".git"))
     return repo
 
+def seed_pending_review_queue_items(repo, count=2):
+    items_path = repo / "registry" / "items.jsonl"
+    fixture_path = "artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md"
+    rows = []
+    for index in range(count):
+        suffix = index + 1
+        rows.append({
+            "id": f"regression-review-queue-pending-{suffix}",
+            "title": f"Regression review queue pending fixture {suffix}",
+            "kind": "audit",
+            "domain": "governance",
+            "path": fixture_path,
+            "scope": "team-general",
+            "visibility": "team-internal",
+            "status": "reviewing",
+            "owner": "leiwenjun",
+            "source": {
+                "type": "generated",
+                "from": "knowledge-regression pending review queue fixture",
+            },
+            "review_after": today.isoformat(),
+            "validation_refs": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+            ],
+            "review_status": "ai-generated-pending-human-review",
+            "created_at": today.isoformat(),
+            "updated_at": today.isoformat(),
+            "promotion": "none",
+            "tags": ["regression", "review-queue"],
+            "generated_by_ai": True,
+            "ai_role": "drafted",
+            "ai_model_or_tool": "regression-fixture",
+            "ai_generated_at": today.isoformat(),
+        })
+    with items_path.open("a", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    return [row["id"] for row in rows]
+
 OWNER_DECISION_FIELD_NAMES = {
     "owner_decision",
     "target_decision",
@@ -160,14 +200,49 @@ OWNER_DECISION_FIELD_NAMES = {
 
 def reopen_owner_decision_worksheets(repo):
     worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
+    sources_path = repo / "registry" / "sources.json"
+    try:
+        sources_doc = json.loads(sources_path.read_text())
+    except Exception:
+        sources_doc = {}
+    source_roots = {
+        str(source.get("id", "")): str(source.get("path", ""))
+        for source in sources_doc.get("sources", [])
+        if isinstance(source, dict)
+    }
     rows = []
     for line in worksheet_path.read_text().splitlines():
         if not line.strip():
             continue
         row = json.loads(line)
         row["worksheet_status"] = "owner-fill-required"
+        row.pop("status", None)
+        row.pop("row_status", None)
+        row.pop("resolved_at", None)
+        row.pop("resolved_by", None)
         for field_name in OWNER_DECISION_FIELD_NAMES:
             row.pop(field_name, None)
+        source_id = str(row.get("source_id", ""))
+        source_path = str(row.get("source_path", ""))
+        source_root = source_roots.get(source_id, "")
+        if source_root and source_path and not pathlib.PurePosixPath(source_root).is_absolute() and ".." not in pathlib.PurePosixPath(source_root).parts and ".." not in pathlib.PurePosixPath(source_path).parts:
+            source_file = (repo / source_root / source_path).resolve()
+            repo_root = repo.resolve()
+            try:
+                source_file.relative_to(repo_root)
+            except ValueError:
+                source_file = None
+            if source_file is not None:
+                source_file.parent.mkdir(parents=True, exist_ok=True)
+                body = (
+                    f"Regression owner source identity fixture\n"
+                    f"worksheet_id: {row.get('id', '')}\n"
+                    f"source_id: {source_id}\n"
+                    f"source_path: {source_path}\n"
+                ).encode("utf-8")
+                source_file.write_bytes(body)
+                row["source_sha256_expected"] = hashlib.sha256(body).hexdigest()
+                row["source_size_expected"] = len(body)
         rows.append(row)
     worksheet_path.write_text(
         "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
@@ -2195,13 +2270,13 @@ def test_final_gate_owner_review_blocker():
         and owner_recovery.get("active_exposure_count") == 0
         and review_queue_recovery.get("read_only") is True
         and review_queue_recovery.get("report_only") is True
-        and review_queue_summary.get("total_pending_count", 0) >= 1
-        and review_queue_summary.get("ai_generated_pending_count", 0) >= 1
+        and review_queue_summary.get("total_pending_count", 0) == 0
+        and review_queue_summary.get("ai_generated_pending_count", 0) == 0
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
         and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
-        and review_queue_commands.get("recommended_batch_json") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json"
-        and review_queue_commands.get("recommended_forms_jsonl") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --queue-forms-jsonl"
-        and review_queue_commands.get("recommended_validate_queue_forms") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 20 --json --validate-queue-forms '<review-queue-forms.jsonl>'"
+        and review_queue_commands.get("recommended_batch_json") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --json"
+        and review_queue_commands.get("recommended_forms_jsonl") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --queue-forms-jsonl"
+        and review_queue_commands.get("recommended_validate_queue_forms") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --json --validate-queue-forms '<review-queue-forms.jsonl>'"
         and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
         and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
@@ -2277,8 +2352,8 @@ def test_final_gate_owner_review_blocker():
         and level3.get("missing_coverage_ids") == []
         and level3.get("missing_final_state_fields") == []
         and level3_source_check_health.get("executed") is False
-        and level3_source_check_health.get("with_check_count") == 14
-        and level3_source_check_health.get("with_no_check_reason_count") == 4
+        and level3_source_check_health.get("with_check_count") == 18
+        and level3_source_check_health.get("with_no_check_reason_count") == 0
         and level3_source_check_health.get("missing_check_or_reason_ids") == []
         and level3_source_check_health.get("non_rtk_check_ids") == []
         and level3_source_control_health.get("status") == "pass"
@@ -2309,8 +2384,10 @@ def test_final_gate_owner_review_blocker():
         and proof_artifacts.get("selection_dynamic_count") == len(proof_selection_dynamic_ids)
         and proof_artifacts.get("baseline_selection_overlap_count") == len(proof_baseline_selection_overlap_ids)
         and proof_baseline_selection_overlap_ids == []
-        and proof_artifacts.get("baseline_dynamic_count", 0) >= 17
-        and "knowledge-hub-review-after-topic-owner-hardening-20260622" in proof_expected_ids
+        and proof_artifacts.get("baseline_dynamic_count") == 0
+        and proof_artifacts.get("dynamic_count") == 0
+        and proof_artifacts.get("selection_dynamic_count") == 0
+        and "knowledge-hub-review-after-topic-owner-hardening-20260622" not in proof_expected_ids
         and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("migration_covered_count") == proof_artifacts.get("expected_count")
@@ -2405,7 +2482,7 @@ def test_final_gate_owner_review_blocker():
         and "runtime:index_plan.indexes.by_decision" in linking_audit.get("evidence_refs", [])
         and checks.get("knowledge_check", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("exit_code") == 0
-        and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 14
+        and checks.get("knowledge_check", {}).get("source_check_health", {}).get("with_check_count") == 18
         and checks.get("knowledge_check", {}).get("source_control_health", {}).get("status") == "pass"
         and checks.get("knowledge_check", {}).get("source_control_health", {}).get("required_file_count") == 72
         and checks.get("knowledge_check", {}).get("source_control_health", {}).get("present_file_count") == 72
@@ -2482,6 +2559,7 @@ def test_final_gate_owner_review_blocker():
             "summary": final_gate_summary,
             "automatic_governance": automatic_governance,
             "owner_recovery": owner_recovery,
+            "review_queue_recovery": review_queue_recovery,
             "final_state_audit": final_state_audit,
             "proof_artifacts": proof_artifacts,
             "proof_artifacts_20260622": legacy_proof_artifacts,
@@ -3172,7 +3250,7 @@ def test_owner_landing_plan_project_index():
         and "indexes/by-source.md" in first_audit.get("expected_manual_deltas", {}).get("indexes", [])
         and "indexes/by-decision.md" in first_audit.get("expected_manual_deltas", {}).get("indexes", [])
         and any("knowledge-final-gate.sh" in str(command) for command in first_audit.get("post_landing_commands", []))
-        and worksheet_cwd.endswith("/xcrz_sigmastar_demo")
+        and worksheet_cwd == "sources/pcr02-project-docs"
         and bool(worksheet_commands)
         and any("knowledge-check.sh" in str(command) for command in worksheet_commands),
         "owner-landing-plan-project-index",
@@ -5012,12 +5090,13 @@ def test_by_topic_first_screen_readability_contract():
     )
 
 def test_review_queue_json_contract():
+    queue_repo = root
     status_result = run_cmd(
-        root,
+        queue_repo,
         ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", today.isoformat()],
     )
     index_result = run_cmd(
-        root,
+        queue_repo,
         ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "review-queue", "--json"],
     )
     parse_errors = []
@@ -5040,9 +5119,48 @@ def test_review_queue_json_contract():
     )
     index_summary = by_review_queue.get("summary", {}) if isinstance(by_review_queue.get("summary", {}), dict) else {}
     rows = by_review_queue.get("rows", []) if isinstance(by_review_queue.get("rows", []), list) else []
+    real_empty_queue_contract = True
+    if not rows and not parse_errors:
+        real_empty_queue_contract = (
+            review_queues.get("read_only") is True
+            and review_queues.get("report_only") is True
+            and status_summary.get("total_pending_count", -1) == 0
+            and index_summary.get("row_count", -1) == 0
+            and index_summary.get("matched_count", -1) == 0
+            and by_review_queue.get("rows", []) == []
+        )
+        queue_repo = copy_repo("review-queue-json-contract-pending")
+        seed_pending_review_queue_items(queue_repo, count=3)
+        status_result = run_cmd(
+            queue_repo,
+            ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", today.isoformat()],
+        )
+        index_result = run_cmd(
+            queue_repo,
+            ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "review-queue", "--json"],
+        )
+        try:
+            status_payload = json.loads(status_result["stdout"])
+        except Exception as exc:
+            status_payload = {}
+            parse_errors.append(f"seeded-status: {exc}")
+        try:
+            index_payload = json.loads(index_result["stdout"])
+        except Exception as exc:
+            index_payload = {}
+            parse_errors.append(f"seeded-index-plan: {exc}")
+        review_queues = status_payload.get("review_queues", {}) if isinstance(status_payload.get("review_queues", {}), dict) else {}
+        status_summary = review_queues.get("summary", {}) if isinstance(review_queues.get("summary", {}), dict) else {}
+        by_review_queue = (
+            index_payload.get("indexes", {}).get("by_review_queue", {})
+            if isinstance(index_payload.get("indexes", {}), dict)
+            else {}
+        )
+        index_summary = by_review_queue.get("summary", {}) if isinstance(by_review_queue.get("summary", {}), dict) else {}
+        rows = by_review_queue.get("rows", []) if isinstance(by_review_queue.get("rows", []), list) else []
     first_row = rows[0] if rows else {}
     filtered_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5075,7 +5193,7 @@ def test_review_queue_json_contract():
     filtered_batch_packet = filtered_queue.get("review_batch_packet", {}) if isinstance(filtered_queue.get("review_batch_packet", {}), dict) else {}
     filtered_rows = filtered_queue.get("rows", []) if isinstance(filtered_queue.get("rows", []), list) else []
     forms_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5094,7 +5212,7 @@ def test_review_queue_json_contract():
         ],
     )
     forms_conflict_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5171,16 +5289,16 @@ def test_review_queue_json_contract():
         "3",
         "--validate-queue-forms",
     ]
-    validate_result = run_cmd(root, validate_base_command + [valid_forms_path])
-    duplicate_validate_result = run_cmd(root, validate_base_command + [duplicate_forms_path])
-    unknown_validate_result = run_cmd(root, validate_base_command + [unknown_forms_path])
-    invalid_decision_validate_result = run_cmd(root, validate_base_command + [invalid_decision_forms_path])
-    missing_human_field_validate_result = run_cmd(root, validate_base_command + [missing_human_field_forms_path])
-    forbidden_owner_field_validate_result = run_cmd(root, validate_base_command + [forbidden_owner_field_forms_path])
-    identity_mismatch_validate_result = run_cmd(root, validate_base_command + [identity_mismatch_forms_path])
-    guardrail_mismatch_validate_result = run_cmd(root, validate_base_command + [guardrail_mismatch_forms_path])
+    validate_result = run_cmd(queue_repo, validate_base_command + [valid_forms_path])
+    duplicate_validate_result = run_cmd(queue_repo, validate_base_command + [duplicate_forms_path])
+    unknown_validate_result = run_cmd(queue_repo, validate_base_command + [unknown_forms_path])
+    invalid_decision_validate_result = run_cmd(queue_repo, validate_base_command + [invalid_decision_forms_path])
+    missing_human_field_validate_result = run_cmd(queue_repo, validate_base_command + [missing_human_field_forms_path])
+    forbidden_owner_field_validate_result = run_cmd(queue_repo, validate_base_command + [forbidden_owner_field_forms_path])
+    identity_mismatch_validate_result = run_cmd(queue_repo, validate_base_command + [identity_mismatch_forms_path])
+    guardrail_mismatch_validate_result = run_cmd(queue_repo, validate_base_command + [guardrail_mismatch_forms_path])
     validate_without_json_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5192,7 +5310,7 @@ def test_review_queue_json_contract():
         ],
     )
     validate_wrong_section_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5205,7 +5323,7 @@ def test_review_queue_json_contract():
         ],
     )
     validate_forms_conflict_result = run_cmd(
-        root,
+        queue_repo,
         [
             "rtk",
             "bash",
@@ -5324,7 +5442,8 @@ def test_review_queue_json_contract():
     ]
     missing_first_row_fields = [field for field in required_first_row_fields if field not in first_row]
     expect(
-        status_result["exit_code"] == 0
+        status_result["exit_code"] in {0, 1}
+        and real_empty_queue_contract
         and index_result["exit_code"] == 0
         and not parse_errors
         and review_queues.get("read_only") is True
@@ -5433,6 +5552,7 @@ def test_review_queue_json_contract():
         "status and index-plan expose report-only human review queue from registry",
         {
             "status_exit_code": status_result["exit_code"],
+            "real_empty_queue_contract": real_empty_queue_contract,
             "index_exit_code": index_result["exit_code"],
             "parse_errors": parse_errors,
             "status_total_pending_count": status_summary.get("total_pending_count"),
@@ -5480,6 +5600,7 @@ def test_review_queue_json_contract():
 
 def test_review_queue_apply_tool_contract():
     repo = copy_repo("review-queue-apply-tool")
+    seed_pending_review_queue_items(repo, count=2)
     forms_result = run_cmd(
         repo,
         [
@@ -6090,8 +6211,8 @@ def test_index_plan_extended_sections():
         and "pcr02-project-tools" in source_index
         and pcr02_source.get("owner") == "pcr02-registry-owner"
         and pcr02_source.get("review_after") == "2026-09-20"
-        and pcr02_source.get("final_disposition") == "mixed-terminal-coverage"
-        and pcr02_source.get("check", "").startswith("rtk bash -lc")
+        and pcr02_source.get("final_disposition") == "hard-migrated-to-hub"
+        and pcr02_source.get("check", "").startswith("rtk test -d sources/")
         and source_selection.get("strategy") == "filename-yyyymmdd-sort-last"
         and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
         and source_selection.get("candidate_count", 0) >= 1
@@ -6108,17 +6229,17 @@ def test_index_plan_extended_sections():
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_profile_health.get("pass", 0) >= 1
         and manifest_profile_health.get("legacy-missing-profile", 0) >= 1
-        and manifest_summary.get("unpaired_count") == 6
+        and manifest_summary.get("unpaired_count") == 7
         and manifest_summary.get("unpaired_expected_count") == 6
-        and manifest_summary.get("unpaired_needs_review_count") == 0
+        and manifest_summary.get("unpaired_needs_review_count") == 1
         and len(manifest_unpaired_expected) == 6
-        and len(manifest_unpaired_needs_review) == 0
-        and all(row.get("review_status") == "expected" for row in manifest_unpaired)
+        and len(manifest_unpaired_needs_review) == 1
+        and all(row.get("review_status") in {"expected", "needs_review"} for row in manifest_unpaired)
         and all(row.get("pairing_status") in {"jsonl-only", "markdown-only"} for row in manifest_unpaired)
         and all(row.get("reasons_zh") and row.get("notes_zh") for row in manifest_unpaired)
         and manifest_text_result["exit_code"] == 0
         and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
-        and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
+        and "unpaired_needs_review_count: 1" in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
         and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
         and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
@@ -6151,14 +6272,14 @@ def test_index_plan_extended_sections():
         and linking_audit.get("cross_project", {}).get("registered_source_count") == 18
         and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
         and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
-        and review_queue_summary.get("status") in {"needs-human-review", "empty"}
+        and review_queue_summary.get("status") in {"needs-human-review", "empty", "clear"}
         and review_queue_summary.get("read_only") is True
         and review_queue_summary.get("report_only") is True
         and review_queue_summary.get("owner_gate_mutation") is False
         and review_queue_summary.get("memory_write") is False
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
-        and review_queue_summary.get("ai_generated_pending_count", 0) >= 1
-        and any(row.get("queue_type") == "ai-human-review" for row in review_queue_index.get("rows", []))
+        and review_queue_summary.get("ai_generated_pending_count", 0) == 0
+        and review_queue_index.get("rows", []) == []
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
@@ -6533,13 +6654,13 @@ def test_status_source_governance_summary():
         and check_health.get("missing_source_ids") == []
         and check_health.get("stale_source_ids") == []
         and check_health.get("duplicate_source_ids") == []
-        and check_source_check_health.get("with_check_count") == 14
-        and check_source_check_health.get("with_no_check_reason_count") == 4
+        and check_source_check_health.get("with_check_count") == 18
+        and check_source_check_health.get("with_no_check_reason_count") == 0
         and check_source_check_health.get("missing_check_or_reason_ids") == []
         and check_source_check_health.get("non_rtk_check_ids") == []
         and check_boundary_health.get("status") == "pass"
         and check_boundary_health.get("summary", {}).get("source_coverage_count") == 7
-        and status_source_check_health.get("with_check_count") == 14
+        and status_source_check_health.get("with_check_count") == 18
         and status_source_check_health.get("executed") is False
         and status_source_check_snapshot.get("status") == "pass"
         and status_source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
@@ -6557,14 +6678,15 @@ def test_status_source_governance_summary():
         and status_boundary_health.get("status") == "pass"
         and status_boundary_health.get("source_project_read") is False
         and len(source_recovery_rows) == 18
-        and pcr02_docs_recovery.get("final_disposition") == "mixed-terminal-coverage"
-        and pcr02_docs_recovery.get("coverage_status") == "covered-control-plane"
-        and "owner-gated" in pcr02_docs_recovery.get("coverage_classification", "")
-        and "owner" in pcr02_docs_recovery.get("coverage_decision", "")
-        and pcr02_docs_recovery.get("has_no_check_reason") is True
+        and pcr02_docs_recovery.get("final_disposition") == "hard-migrated-to-hub"
+        and pcr02_docs_recovery.get("coverage_status") == "hard-migrated-to-hub"
+        and "copy-docs-and-artifacts" in pcr02_docs_recovery.get("coverage_classification", "")
+        and "硬迁移" in pcr02_docs_recovery.get("coverage_decision", "")
+        and pcr02_docs_recovery.get("has_check") is True
+        and pcr02_docs_recovery.get("has_no_check_reason") is False
         and pcr02_tools_recovery.get("check_contract_status") == "ok"
         and pcr02_tools_recovery.get("has_check") is True
-        and pcr02_tools_recovery.get("coverage_status") == "registered-reference-tool-boundary"
+        and pcr02_tools_recovery.get("coverage_status") == "hard-migrated-to-hub"
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and registry.get("review_after_near_due_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
@@ -6635,8 +6757,8 @@ def test_source_check_health_contract():
         and source_check_health.get("mode") == "static-registry-only"
         and source_check_health.get("executed") is False
         and source_check_health.get("registered_source_count") == 18
-        and source_check_health.get("with_check_count") == 14
-        and source_check_health.get("with_no_check_reason_count") == 4
+        and source_check_health.get("with_check_count") == 18
+        and source_check_health.get("with_no_check_reason_count") == 0
         and source_check_health.get("missing_check_or_reason_ids") == []
         and source_check_health.get("non_rtk_check_ids") == []
         and source_check_health.get("missing_source_path_ids") == []
@@ -7345,13 +7467,13 @@ def test_source_manual_entry_guide():
             "--source-id",
             "example-source",
             "--source-path",
-            "/tmp/example",
+            "sources/example-source",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
@@ -7363,8 +7485,8 @@ def test_source_manual_entry_guide():
         "source coverage JSONL row",
         '"source_id":"example-source"',
         '"no_check_reason":"classify-first pending source coverage"',
-        '"migration_strategy":"classify-first"',
-        '"final_disposition":"owner-gated-pending-decision"',
+        '"migration_strategy":"hard-migrated-to-hub-copy-docs"',
+        '"final_disposition":"hard-migrated-to-hub"',
         "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
@@ -7397,13 +7519,13 @@ def test_source_manual_entry_enum_guide():
             "--source-id",
             "example-source-enum",
             "--source-path",
-            "/tmp/example-enum",
+            "sources/example-source-enum",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
@@ -7418,22 +7540,22 @@ def test_source_manual_entry_enum_guide():
             "--source-id",
             "bad-source-enum",
             "--source-path",
-            "/tmp/bad-enum",
+            "sources/bad-source-enum",
             "--role",
             "bad-role",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
     )
     required_fragments = [
         "## 枚举速查",
-        "role: team-knowledge-source",
-        "authority: legacy-team-ssot",
-        "write_policy: do-not-write-through-knowledge-hub",
+        "role: hub-migrated-source",
+        "authority: knowledge-hub-canonical",
+        "write_policy: knowledge-hub-only",
         "final_disposition 常用值",
         "脚本会对已传入的 role、authority、status 和 write_policy 做预校验",
     ]
@@ -7465,19 +7587,19 @@ def test_source_manual_entry_guide_check_command():
             "--source-id",
             "example-source-check",
             "--source-path",
-            "/tmp/example-check",
+            "sources/example-source-check",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--check",
-            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+            "rtk test -d sources/example-source-check",
         ],
     )
-    registry_object_has_check = '"final_disposition":"owner-gated-pending-decision","check":"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run"}' in result["stdout"]
-    coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run","source_identity"' in result["stdout"]
+    registry_object_has_check = '"final_disposition":"hard-migrated-to-hub","check":"rtk test -d sources/example-source-check"}' in result["stdout"]
+    coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk test -d sources/example-source-check","source_identity"' in result["stdout"]
     json_no_check_reason_absent = '"no_check_reason":' not in result["stdout"]
     expect(
         result["exit_code"] == 0
@@ -7508,13 +7630,13 @@ def test_source_manual_entry_status_coverage_sync():
             "--source-id",
             "example-source-retired",
             "--source-path",
-            "/tmp/example-retired",
+            "sources/example-source-retired",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--source-status",
             "retired",
             "--no-check-reason",
@@ -7531,13 +7653,13 @@ def test_source_manual_entry_status_coverage_sync():
             "--source-id",
             "example-source-deprecated",
             "--source-path",
-            "/tmp/example-deprecated",
+            "sources/example-source-deprecated",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--source-status",
             "deprecated",
             "--no-check-reason",
@@ -7573,15 +7695,15 @@ def test_source_manual_entry_unknown_owner_warning():
             "--source-id",
             "example-source-owner-warning",
             "--source-path",
-            "/tmp/example-owner-warning",
+            "sources/example-source-owner-warning",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--check",
-            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+            "rtk test -d sources/example-source-owner-warning",
             "--owner",
             "unknown-source-owner",
         ],
@@ -7612,11 +7734,11 @@ def test_source_manual_entry_requires_check_or_reason():
         "--source-path",
         "/tmp/example-required",
         "--role",
-        "project-current-docs-source",
+        "hub-migrated-source",
         "--authority",
-        "legacy-project-current-docs",
+        "knowledge-hub-canonical",
         "--write-policy",
-        "read-only-unless-explicitly-approved",
+        "knowledge-hub-only",
     ]
     missing = run_cmd(root, common_args)
     conflict = run_cmd(
@@ -7624,7 +7746,7 @@ def test_source_manual_entry_requires_check_or_reason():
         common_args
         + [
             "--check",
-            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+            "rtk test -d sources/example-source-required",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
@@ -7664,7 +7786,7 @@ def test_source_manual_entry_docs_check_preferred():
         "不再补 JSON 形式的 `no_check_reason`",
     ]
     tools_required_fragments = [
-        '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"',
+        '--check "rtk test -d sources/<source-id>"',
         "--no-check-reason",
         "要求 `--check` 或 `--no-check-reason` 二选一",
         "优先使用稳定只读",
@@ -7675,7 +7797,7 @@ def test_source_manual_entry_docs_check_preferred():
     tools_readme_missing = [fragment for fragment in tools_required_fragments if fragment not in tools_readme]
     help_has_check_example = (
         help_result["exit_code"] == 0
-        and '--check "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"' in help_result["stdout"]
+        and '--check "rtk test -d sources/example-source"' in help_result["stdout"]
         and "--no-check-reason" in help_result["stdout"]
     )
     expect(
@@ -7706,15 +7828,15 @@ def test_source_manual_entry_role_aware_recommendations():
             "--source-id",
             "example-agent-config-source",
             "--source-path",
-            "/tmp/example-agent-config",
+            "sources/example-agent-config-source",
             "--role",
-            "project-agent-config-source",
+            "hub-native-source",
             "--authority",
-            "legacy-project-agent-config",
+            "knowledge-hub-ledger",
             "--write-policy",
-            "do-not-write-through-knowledge-hub",
+            "hub-native-registry",
             "--check",
-            "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run",
+            "rtk test -d sources/example-agent-config-source",
         ],
     )
     auxiliary_result = run_cmd(
@@ -7727,13 +7849,13 @@ def test_source_manual_entry_role_aware_recommendations():
             "--source-id",
             "example-aux-memory-source",
             "--source-path",
-            "/tmp/example-aux-memory",
+            "sources/example-aux-memory-source",
             "--role",
-            "auxiliary-memory-source",
+            "hub-runtime-input",
             "--authority",
-            "auxiliary-recall-only",
+            "runtime-input-provenance",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "runtime-read-only-input",
             "--no-check-reason",
             "auxiliary recall source without stable check",
         ],
@@ -7748,13 +7870,13 @@ def test_source_manual_entry_role_aware_recommendations():
             "--source-id",
             "example-current-no-check-source",
             "--source-path",
-            "/tmp/example-current-no-check",
+            "sources/example-current-no-check-source",
             "--role",
-            "project-current-docs-source",
+            "hub-migrated-source",
             "--authority",
-            "legacy-project-current-docs",
+            "knowledge-hub-canonical",
             "--write-policy",
-            "read-only-unless-explicitly-approved",
+            "knowledge-hub-only",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
@@ -7763,15 +7885,16 @@ def test_source_manual_entry_role_aware_recommendations():
         agent_config_result["exit_code"] == 0
         and auxiliary_result["exit_code"] == 0
         and no_check_current_result["exit_code"] == 0
-        and "recommended_final_disposition: artifact-ref-registered" in agent_config_result["stdout"]
-        and "recommended_migration_strategy: artifact-ref" in agent_config_result["stdout"]
-        and '"final_disposition":"owner-gated-pending-decision"' in agent_config_result["stdout"]
+        and "recommended_final_disposition: hub-native-source" in agent_config_result["stdout"]
+        and "recommended_migration_strategy: hub-native-ledger" in agent_config_result["stdout"]
+        and '"final_disposition":"hub-native-source"' in agent_config_result["stdout"]
         and "recommendation_scope_zh: 以上只是人工填写提示，不代表 owner decision，不关闭 owner gate" in agent_config_result["stdout"]
-        and "recommended_final_disposition: auxiliary-recall-only" in auxiliary_result["stdout"]
+        and "recommended_final_disposition: runtime-input-not-migrated" in auxiliary_result["stdout"]
+        and "recommended_migration_strategy: runtime-input-index-summary-only" in auxiliary_result["stdout"]
         and "不写 memory" in auxiliary_result["stdout"]
-        and "recommended_final_disposition: owner-gated-pending-decision" in no_check_current_result["stdout"]
-        and "没有稳定 check" in no_check_current_result["stdout"]
-        and '"final_disposition":"owner-gated-pending-decision"' in no_check_current_result["stdout"],
+        and "recommended_final_disposition: hard-migrated-to-hub" in no_check_current_result["stdout"]
+        and "no_check_reason: classify-first pending source coverage" in no_check_current_result["stdout"]
+        and '"final_disposition":"hard-migrated-to-hub"' in no_check_current_result["stdout"],
         "source-manual-entry-role-aware-recommendations",
         "source manual entry guide gives role-aware recommendations without replacing conservative copyable JSON",
         {

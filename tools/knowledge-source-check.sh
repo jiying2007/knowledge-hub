@@ -96,30 +96,50 @@ if args.source_id:
     else:
         selected_ids = [args.source_id]
 
-COMMAND_RE = re.compile(r"^rtk bash -lc 'test -(?P<kind>[df]) (?P<path>[^']+)'$")
+BASH_TEST_COMMAND_RE = re.compile(r"^rtk bash -lc 'test -(?P<kind>[df]) (?P<path>[^']+)'$")
+RTK_TEST_COMMAND_RE = re.compile(r"^rtk test -(?P<kind>[df]) (?P<path>\S+)$")
 BANNED_PATH_CHARS = set(";|&><`$*?[")
+
+def resolve_check_path(value):
+    raw = str(value)
+    if raw.startswith("/") or raw.startswith("~/"):
+        return pathlib.Path(raw).expanduser()
+    return root / raw
 
 def path_within_source(check_path, source_path):
     try:
-        check_resolved = resolve_user_path(check_path).resolve()
-        source_resolved = resolve_user_path(source_path).resolve()
+        check_resolved = resolve_check_path(check_path).resolve()
+        source_resolved = resolve_check_path(source_path).resolve()
     except Exception:
         return False
     return check_resolved == source_resolved or source_resolved in check_resolved.parents
 
 def validate_check_target(check_path, source):
-    if not (check_path.startswith("/") or check_path.startswith("~/")):
-        return "check target must be an absolute path or a ~/ user path"
     if ".." in pathlib.PurePosixPath(check_path.replace("~/", "", 1)).parts:
         return "check target must not use parent traversal"
     if any(char in check_path for char in BANNED_PATH_CHARS):
         return "check target contains shell control, expansion or glob characters"
+    if not (check_path.startswith("/") or check_path.startswith("~/")):
+        try:
+            resolved = resolve_check_path(check_path).resolve()
+            root_resolved = root.resolve()
+        except Exception:
+            return "relative check target could not be resolved under the hub root"
+        if resolved != root_resolved and root_resolved not in resolved.parents:
+            return "relative check target must stay under the hub root"
     source_path = str(source.get("path", ""))
-    if not (source_path.startswith("/") or source_path.startswith("~/")):
-        return "source registry path must be absolute or a ~/ user path"
+    if ".." in pathlib.PurePosixPath(source_path.replace("~/", "", 1)).parts:
+        return "source registry path must not use parent traversal"
     if not path_within_source(check_path, source_path):
         return "check target must equal or stay under the registered source path"
     return ""
+
+def parse_check_command(check):
+    for command_re in (BASH_TEST_COMMAND_RE, RTK_TEST_COMMAND_RE):
+        match = command_re.match(check)
+        if match:
+            return match
+    return None
 
 rows = []
 for source_id in selected_ids:
@@ -140,7 +160,7 @@ for source_id in selected_ids:
         )
         continue
     check = str(source.get("check", ""))
-    match = COMMAND_RE.match(check)
+    match = parse_check_command(check)
     if not match:
         rows.append(
             {
@@ -152,7 +172,7 @@ for source_id in selected_ids:
                 "check_command": check,
                 "primitive": "",
                 "path": display_path(source.get("path", "")),
-                "reason_zh": "仅允许执行 registry 中形如 rtk bash -lc 'test -d <path>' 或 rtk bash -lc 'test -f <path>' 的只读存在性检查。",
+                "reason_zh": "仅允许执行 registry 中形如 rtk test -d/-f <path> 或 rtk bash -lc 'test -d/-f <path>' 的只读存在性检查。",
             }
         )
         continue
@@ -186,7 +206,7 @@ for source_id in selected_ids:
         "reason_zh": "只读路径存在性检查；不读取 source 正文。",
     }
     if not args.plan:
-        execution_check_path = str(resolve_user_path(check_path))
+        execution_check_path = str(resolve_check_path(check_path))
         shell_payload = f"{primitive} {shlex.quote(execution_check_path)}"
         completed = subprocess.run(
             ["rtk", "bash", "-lc", shell_payload],

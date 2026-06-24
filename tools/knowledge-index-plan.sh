@@ -520,6 +520,16 @@ def build_review_queue_view(items, sources):
                         missing_fields,
                     )
                 )
+            elif str(item.get("human_review_decision", "")) in {"needs-edits", "defer"}:
+                review_decision = str(item.get("human_review_decision", ""))
+                rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        [f"human-review-{review_decision}"],
+                        ["review_resolution"],
+                    )
+                )
         external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
         if str(item.get("kind", "")) == "external-source-note" or any(not is_blank(item.get(field)) for field in external_item_fields):
             missing_fields = [

@@ -382,8 +382,8 @@ ${SOURCE_OWNER_WARNING_LINE}
 ## 最小人工步骤
 
 1. 先确认 source 是已硬迁移正文源、运行态输入，还是 Hub 原生账本。
-2. 在 registry/sources.json 增加 source object；`path` 必须是 `sources/<source_id>`，旧外部位置只能写入 `origin_path`。
-3. 在 indexes/by-source.md 的 Knowledge Sources 主表增加一行，并生成 `sources/<source_id>/` 控制目录。
+2. 在 registry/sources.json 增加 source object；path 必须是 sources/<source_id>，旧外部位置只能写入 origin_path。
+3. 在 indexes/by-source.md 的 Knowledge Sources 主表增加一行，并生成 sources/<source_id>/ 控制目录。
 4. 在最新 artifacts/manifests/knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 增加 coverage row，写清 hard-migrated/runtime-input/hub-native 状态、classification、decision、risk、owner、checked_at；没有可执行 check 时写 no_check_reason。
 5. 如果 source 涉及项目，同步 indexes/by-project.md；涉及主题时同步 indexes/by-topic.md；涉及 owner gate 时补 owner-ready package 或 worksheet。
 6. 运行：
@@ -418,7 +418,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### source coverage JSONL row
 
 \`\`\`json
-{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${RECOMMENDED_SOURCE_FINAL_DISPOSITION}","classification":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，旧外部路径仅作 provenance。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"旧外部位置只能进入 origin_path、tombstone 或 migration manifest，不作为 active source path。"}}
+{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，旧外部路径仅作 provenance。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"旧外部位置只能进入 origin_path、tombstone 或 migration manifest，不作为 active source path。"}}
 \`\`\`
 
 ## 不要做
