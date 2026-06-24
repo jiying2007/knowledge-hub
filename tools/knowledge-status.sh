@@ -24,6 +24,7 @@ parser.add_argument("--json", action="store_true")
 parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 parser.add_argument("--review-queue-limit", type=int, default=20, help="Maximum rows per review queue sample in JSON/text output.")
+parser.add_argument("--final-profile", choices=["standard", "max-body"], default="standard", help="Terminal profile. standard keeps ordinary review queues report-only; max-body blocks on any pending human review and unsafe source inventory.")
 args = parser.parse_args(argv)
 if args.review_queue_limit < 1:
     parser.error("--review-queue-limit must be a positive integer")
@@ -41,6 +42,8 @@ SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
     "pcr02-project-agent-config",
 ]
 OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"
+MAX_BODY_COPY_TARGET_PREFIXES = ("projects/", "domains/", "notes/")
+MAX_BODY_COPY_ALLOWED_OBJECT_TYPES = {"markdown"}
 
 def resolve_today():
     if args.as_of:
@@ -408,6 +411,16 @@ def build_review_queues(items, sources):
                         missing_fields,
                     )
                 )
+            elif str(item.get("human_review_decision", "")) in {"needs-edits", "defer"}:
+                review_decision = str(item.get("human_review_decision", ""))
+                ai_rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        [f"unresolved-{review_decision}"],
+                        ["review_resolution"],
+                    )
+                )
         external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
         if str(item.get("kind", "")) == "external-source-note" or any(not is_blank(item.get(field)) for field in external_item_fields):
             missing_fields = [
@@ -470,6 +483,8 @@ def build_review_queues(items, sources):
         "status": "needs-human-review" if all_rows else "clear",
         "read_only": True,
         "report_only": True,
+        "standard_blocking_final_gate": bool(active_or_promotion_rows),
+        "max_body_blocking_final_gate": bool(all_rows),
         "blocking_final_gate": bool(active_or_promotion_rows),
         "queue_source": "registry/items.jsonl + registry/sources.json",
         "sample_limit": args.review_queue_limit,
@@ -1093,12 +1108,100 @@ if open_owner_rows:
         "focus_landing_audit_command_template": shell_command(focus_landing_audit_command_template),
     }
 
+def build_max_body_source_inventory_audit():
+    rows = []
+    blockers = []
+    for source in sorted(sources, key=lambda row: str(row.get("id", ""))):
+        source_id = str(source.get("id", ""))
+        if not source_id:
+            continue
+        inventory_path = root / "sources" / source_id / "inventory.jsonl"
+        if not inventory_path.exists():
+            blockers.append({
+                "source_id": source_id,
+                "row_id": "",
+                "reason": "missing-inventory",
+                "summary_zh": "source 缺少 inventory.jsonl，不能证明正文最大迁移处置已覆盖。",
+            })
+            continue
+        inventory_rows = load_jsonl(inventory_path)
+        if not inventory_rows:
+            blockers.append({
+                "source_id": source_id,
+                "row_id": "",
+                "reason": "empty-inventory",
+                "summary_zh": "source inventory 为空，不能证明正文最大迁移处置已覆盖。",
+            })
+        for line_no, row in enumerate(inventory_rows, 1):
+            row_id = str(row.get("id", f"{source_id}:{line_no}"))
+            object_type = str(row.get("object_type", ""))
+            disposition = str(row.get("hub_disposition", ""))
+            row_status = str(row.get("status", ""))
+            target_path = str(row.get("target_path", "")).strip()
+            row_blockers = []
+            if row_status == "pending":
+                row_blockers.append("pending-row")
+            if disposition == "copy-body":
+                if object_type not in MAX_BODY_COPY_ALLOWED_OBJECT_TYPES:
+                    row_blockers.append("copy-body-non-markdown")
+                if not target_path:
+                    row_blockers.append("copy-body-missing-target")
+                elif not target_path.startswith(MAX_BODY_COPY_TARGET_PREFIXES):
+                    row_blockers.append("copy-body-noncanonical-target")
+                elif not (root / target_path).exists():
+                    row_blockers.append("copy-body-target-missing")
+            rows.append({
+                "source_id": source_id,
+                "row_id": row_id,
+                "line": line_no,
+                "object_type": object_type,
+                "hub_disposition": disposition,
+                "target_path": target_path,
+                "status": row_status,
+                "blockers": row_blockers,
+            })
+            if row_blockers:
+                blockers.append({
+                    "source_id": source_id,
+                    "row_id": row_id,
+                    "line": line_no,
+                    "reason": ",".join(row_blockers),
+                    "object_type": object_type,
+                    "hub_disposition": disposition,
+                    "target_path": target_path,
+                    "status": row_status,
+                    "summary_zh": "max-body 要求正文复制仅限可维护 Markdown，并落到 projects/domains/notes；其他对象必须 summary/reference/artifact/archive/exclude。",
+                })
+    by_reason = collections.Counter()
+    for blocker in blockers:
+        for reason in str(blocker.get("reason", "")).split(","):
+            if reason:
+                by_reason[reason] += 1
+    return {
+        "status": "pass" if not blockers else "needs-fix",
+        "profile": "max-body",
+        "row_count": len(rows),
+        "blocker_count": len(blockers),
+        "by_reason": dict(sorted(by_reason.items())),
+        "blockers": blockers,
+        "rules": {
+            "copy_body_allowed_object_types": sorted(MAX_BODY_COPY_ALLOWED_OBJECT_TYPES),
+            "copy_body_target_prefixes": list(MAX_BODY_COPY_TARGET_PREFIXES),
+            "pending_rows_block_final_gate": True,
+        },
+        "notes_zh": "max-body 终态要求可复制正文尽量落到 canonical 正文层；raw/session/history/log/binary/source-code/tool/config/artifact 不得全文 copy-body。",
+    }
+
+max_body_source_inventory_audit = build_max_body_source_inventory_audit()
+
 owner_gates_failed = owner_gates["exit_code"] != 0
 review_queue_blocking_count = int(review_queues.get("summary", {}).get("active_or_promotion_blocker_count", 0) or 0)
+review_queue_max_body_blocking_count = int(review_queues.get("summary", {}).get("total_pending_count", 0) or 0) if args.final_profile == "max-body" else 0
+max_body_source_inventory_blocking_count = int(max_body_source_inventory_audit.get("blocker_count", 0) or 0) if args.final_profile == "max-body" else 0
 
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count:
+elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count or review_queue_max_body_blocking_count or max_body_source_inventory_blocking_count:
     status = "needs-fix"
 elif open_owner_gate_count:
     status = "needs-owner-review"
@@ -1110,6 +1213,8 @@ if today_source == "system-date":
     final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json"
 else:
     final_gate_command = f"rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of {today.isoformat()} --json"
+if args.final_profile != "standard":
+    final_gate_command = final_gate_command + f" --final-profile {args.final_profile}"
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
 review_after_near_due_command = f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
@@ -1268,6 +1373,14 @@ if review_queues.get("summary", {}).get("total_pending_count", 0):
         "复核 AI 生成和外部资料的人工复核队列；先运行："
         f"{review_queues.get('commands', {}).get('index_plan', '')}。"
     )
+if args.final_profile == "max-body" and review_queue_max_body_blocking_count:
+    next_actions.append(
+        "max-body 终态要求 AI/外部资料复核队列清零；先导出表单、人工填写、校验，再用 review queue apply 工具落地。"
+    )
+if args.final_profile == "max-body" and max_body_source_inventory_blocking_count:
+    next_actions.append(
+        "max-body 终态要求 source inventory 无 pending，且 copy-body 仅限 canonical Markdown 正文；先查看 `max_body_source_inventory_audit.blockers`。"
+    )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
@@ -1338,6 +1451,28 @@ if review_queue_blocking_count:
         "summary_zh": "存在 active 或 promotion 类条目缺少人工复核闭环；必须先补 human_reviewed_by/human_reviewed_at/review_basis，或降级为 reviewing/report-only。",
         "commands": [review_queues.get("commands", {}).get("index_plan", "")],
     })
+if review_queue_max_body_blocking_count:
+    strict_blockers.append({
+        "id": "review-queue-pending-max-body",
+        "severity": "blocker",
+        "count": review_queue_max_body_blocking_count,
+        "summary_zh": "max-body 终态要求 AI/外部资料人工复核队列清零；普通待复核项在该 profile 下也是终态 blocker。",
+        "commands": [
+            review_queues.get("commands", {}).get("recommended_batch_json", ""),
+            review_queues.get("commands", {}).get("recommended_forms_jsonl", ""),
+            review_queues.get("commands", {}).get("recommended_validate_queue_forms", ""),
+            "rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms '<review-queue-forms.jsonl>' --dry-run",
+        ],
+    })
+if max_body_source_inventory_blocking_count:
+    strict_blockers.append({
+        "id": "source-inventory-max-body-blockers",
+        "severity": "blocker",
+        "count": max_body_source_inventory_blocking_count,
+        "summary_zh": "max-body source inventory 仍有 pending、非法 copy-body 或缺失 canonical target。",
+        "blockers": max_body_source_inventory_audit.get("blockers", []),
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json --final-profile max-body"],
+    })
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
     owner_commands.extend(owner_summary_commands)
@@ -1371,6 +1506,7 @@ result = {
     "root": display_path(root),
     "read_only": True,
     "strict": args.strict,
+    "final_profile": args.final_profile,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "status": status,
     "today": today.isoformat(),
@@ -1408,6 +1544,7 @@ result = {
         "review_after_command": source_review_after_command,
         "source_check_report_command": source_check_report_command,
         "boundary_health": check_payload.get("boundary_health", {}),
+        "max_body_source_inventory_audit": max_body_source_inventory_audit,
     },
     "migrations": {
         "record_count": len(migrations),
@@ -1476,12 +1613,14 @@ print("本命令只读汇总 Knowledge Hub 当前控制面状态，不创建、�
 print()
 print(f"- status: {status}")
 print(f"- strict: {str(args.strict).lower()}")
+print(f"- final_profile: {args.final_profile}")
 print(f"- today: {today.isoformat()}")
 print(f"- knowledge-check: {result['knowledge_check']['status']} (exit={knowledge_check['exit_code']}, errors={result['knowledge_check']['error_count']}, warnings={result['knowledge_check']['warning_count']})")
 print(f"- registry items: {len(items)}")
 print(f"- registered sources: {len(sources)}")
 print(f"- migrations: {len(migrations)}")
-print(f"- review queues: pending={review_queues['summary']['total_pending_count']}, ai={review_queues['summary']['ai_generated_pending_count']}, external={review_queues['summary']['external_source_pending_count']}, active_or_promotion={review_queue_blocking_count}")
+print(f"- review queues: pending={review_queues['summary']['total_pending_count']}, ai={review_queues['summary']['ai_generated_pending_count']}, external={review_queues['summary']['external_source_pending_count']}, active_or_promotion={review_queue_blocking_count}, max_body_blocking={review_queue_max_body_blocking_count}")
+print(f"- max-body source inventory: {max_body_source_inventory_audit['status']} blockers={max_body_source_inventory_audit['blocker_count']}")
 print(f"- owner gates: open={open_owner_gate_count}, resolved={owner_payload.get('resolved_count', 0)}, active_exposure={active_exposure_count}")
 print(
     f"- owner-ready packages: {owner_ready_package_coverage or str(owner_ready_package_count) + '/' + str(owner_payload.get('row_count', 0))}, "

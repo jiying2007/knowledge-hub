@@ -19,6 +19,7 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Run the read-only Knowledge Hub final-state gate.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for knowledge-check/status review_after checks.")
+parser.add_argument("--final-profile", choices=["standard", "max-body"], default="standard", help="Terminal profile forwarded to knowledge-status --strict.")
 args = parser.parse_args(argv)
 
 def resolve_today():
@@ -1040,7 +1041,10 @@ elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     }
 else:
     knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
-strict_status = run_json(["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+strict_status_command = ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()]
+if args.final_profile != "standard":
+    strict_status_command.extend(["--final-profile", args.final_profile])
+strict_status = run_json(strict_status_command)
 proof_artifacts = build_final_proof_artifacts_summary(today.isoformat())
 proof_artifacts_20260622 = proof_artifacts
 source_check_snapshot_20260621 = build_source_check_snapshot_summary()
@@ -1863,6 +1867,7 @@ result = {
     "schema_version": 1,
     "root": display_path(root),
     "read_only": True,
+    "final_profile": args.final_profile,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "today": today.isoformat(),
     "as_of_source": today_source,
@@ -2002,6 +2007,7 @@ print("本命令只读聚合终态验收，不修改 Knowledge Hub 正文、regi
 print("注意：内部 regression 子命令可能使用 /tmp 临时 fixture，并在结束时清理。")
 print()
 print(f"- final_status: {final_status}")
+print(f"- final_profile: {args.final_profile}")
 print(f"- automatic_governance: {result['automatic_governance']['status']}")
 print(f"- level1_pcr02_docs: {final_state_audit['level1_pcr02_docs']['status']}")
 print(f"- level2_pcr02_candidate_sources: {final_state_audit['level2_pcr02_candidate_sources']['status']}")

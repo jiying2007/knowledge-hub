@@ -49,6 +49,19 @@ Recommended AI provenance fields:
 - `human_reviewed_by`
 - `human_reviewed_at`
 - `review_basis`
+- `human_review_decision`
+
+AI human review decision values:
+
+```text
+accept-as-review-record
+needs-edits
+archive-only
+reject
+defer
+```
+
+`human_review_decision` 记录真实人工复核结论，不等同于 owner decision、active promotion 或 source 项目授权。`needs-edits` 和 `defer` 表示复核未闭环，在 `knowledge-status.sh --strict --final-profile max-body` 中仍是 blocker。
 
 Recommended external-source fields:
 
@@ -83,6 +96,8 @@ Source control directory invariants:
 - `status` 允许值：`pending`、`covered`、`blocked`、`excluded`。
 - `target_path` 必须是 repo-relative local path、source-local reference 或空值；不得使用绝对路径、`./` 或 `../`。
 - `session`、`history`、`source-code`、`binary`、`log` 不能使用 `copy-body`，只能使用摘要、引用、artifact-ref、archive-only 或 exclude。
+- 正文最大迁移 profile 下，`copy-body` 只允许用于 `object_type=markdown` 且 `target_path` 指向 Hub 正文目录 `projects/`、`domains/` 或 `notes/` 下的现存路径；其他正文迁移动作必须改为 summary-only、artifact-ref、reference-only、archive-only 或 exclude。
+- 正文最大迁移 profile 下，`status=pending` 的 inventory row 是 blocker；`covered`、`blocked`、`excluded` 才能表达已分类终态，其中 `blocked` 必须写清 `reason_zh` 和 `risk_zh`。
 - owner decision landing 产生本地 target 时，`knowledge-check` 会把历史 `domains/projects/<project>/...` 目标映射到硬切换后的 `projects/<project>/...` 并要求目标存在。
 
 Validation reference invariants:

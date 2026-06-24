@@ -5478,6 +5478,168 @@ def test_review_queue_json_contract():
         },
     )
 
+def test_review_queue_apply_tool_contract():
+    repo = copy_repo("review-queue-apply-tool")
+    forms_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--queue-forms-jsonl",
+            "--queue-type",
+            "ai-human-review",
+            "--queue-owner",
+            "leiwenjun",
+            "--queue-limit",
+            "2",
+        ],
+    )
+    parse_errors = []
+    forms = []
+    for line in forms_result["stdout"].splitlines():
+        if not line.strip():
+            continue
+        try:
+            forms.append(json.loads(line))
+        except Exception as exc:
+            parse_errors.append(str(exc))
+    if len(forms) < 2:
+        expect(False, "review-queue-apply-tool-contract", "review queue apply validates and applies filled forms without owner-gate mutation", {"setup_error": "expected at least two forms", "parse_errors": parse_errors, "stdout": forms_result["stdout"][:1000]}, repo)
+        return
+
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-review-queue-apply-"))
+    temp_roots.append(temp_root)
+    accept_form = dict(forms[0])
+    accept_form.update({
+        "human_reviewed_by": "regression-fixture-human",
+        "human_reviewed_at": today.isoformat(),
+        "review_basis": "Regression fixture accepted this AI review record.",
+        "review_decision": "accept-as-review-record",
+    })
+    needs_edits_form = dict(forms[1])
+    needs_edits_form.update({
+        "human_reviewed_by": "regression-fixture-human",
+        "human_reviewed_at": today.isoformat(),
+        "review_basis": "Regression fixture keeps this item open for edits.",
+        "review_decision": "needs-edits",
+    })
+    forbidden_form = dict(accept_form)
+    forbidden_form["owner_decision"] = "approved"
+    stale_date_form = dict(accept_form)
+    stale_date_form["human_reviewed_at"] = "2000-01-01"
+
+    accept_path = temp_root / "accept.jsonl"
+    needs_edits_path = temp_root / "needs-edits.jsonl"
+    forbidden_path = temp_root / "forbidden.jsonl"
+    stale_date_path = temp_root / "stale-date.jsonl"
+    accept_path.write_text(json.dumps(accept_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    needs_edits_path.write_text(json.dumps(needs_edits_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    forbidden_path.write_text(json.dumps(forbidden_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    stale_date_path.write_text(json.dumps(stale_date_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+    before_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat(), "--final-profile", "max-body"])
+    dry_run_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(accept_path), "--dry-run", "--json"])
+    forbidden_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(forbidden_path), "--dry-run", "--json"])
+    stale_date_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(stale_date_path), "--dry-run", "--json"])
+    apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(accept_path), "--apply", "--json"])
+    after_accept_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat(), "--final-profile", "max-body"])
+    needs_edits_apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(needs_edits_path), "--apply", "--json"])
+    after_needs_edits_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat(), "--final-profile", "max-body"])
+
+    payloads = {}
+    for name, result in [
+        ("before", before_status_result),
+        ("dry_run", dry_run_result),
+        ("forbidden", forbidden_result),
+        ("stale_date", stale_date_result),
+        ("apply", apply_result),
+        ("after_accept", after_accept_status_result),
+        ("needs_edits_apply", needs_edits_apply_result),
+        ("after_needs_edits", after_needs_edits_status_result),
+    ]:
+        try:
+            payloads[name] = json.loads(result["stdout"])
+        except Exception as exc:
+            payloads[name] = {}
+            parse_errors.append(f"{name}: {exc}")
+
+    def pending_count(name):
+        return int(payloads.get(name, {}).get("review_queues", {}).get("summary", {}).get("total_pending_count", -1))
+
+    forbidden_codes = [
+        row.get("code")
+        for row in payloads.get("forbidden", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    stale_date_codes = [
+        row.get("code")
+        for row in payloads.get("stale_date", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    items_by_id = {}
+    for line in (repo / "registry" / "items.jsonl").read_text().splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        items_by_id[item.get("id")] = item
+    accept_item_id = accept_form.get("id")
+    needs_edits_item_id = needs_edits_form.get("id")
+    accept_item = items_by_id.get(accept_item_id, {})
+    needs_edits_item = items_by_id.get(needs_edits_item_id, {})
+
+    expect(
+        forms_result["exit_code"] == 0
+        and len(forms) >= 2
+        and not parse_errors
+        and before_status_result["exit_code"] != 0
+        and pending_count("before") >= 2
+        and dry_run_result["exit_code"] == 0
+        and payloads.get("dry_run", {}).get("status") == "planned"
+        and payloads.get("dry_run", {}).get("applied") is False
+        and forbidden_result["exit_code"] != 0
+        and "forbidden-owner-field" in forbidden_codes
+        and stale_date_result["exit_code"] != 0
+        and "human-reviewed-at-before-created-at" in stale_date_codes
+        and apply_result["exit_code"] == 0
+        and payloads.get("apply", {}).get("status") == "applied"
+        and pending_count("after_accept") == pending_count("before") - 1
+        and accept_item.get("human_reviewed_by") == "regression-fixture-human"
+        and accept_item.get("human_review_decision") == "accept-as-review-record"
+        and accept_item.get("review_status") == "human-reviewed-accepted"
+        and needs_edits_apply_result["exit_code"] == 0
+        and needs_edits_item.get("human_review_decision") == "needs-edits"
+        and needs_edits_item.get("review_status") == "human-review-needs-edits"
+        and pending_count("after_needs_edits") == pending_count("after_accept")
+        and any(
+            blocker.get("id") == "review-queue-pending-max-body"
+            for blocker in payloads.get("after_needs_edits", {}).get("strict_blockers", [])
+        ),
+        "review-queue-apply-tool-contract",
+        "review queue apply validates and applies filled forms without owner-gate mutation",
+        {
+            "forms_exit_code": forms_result["exit_code"],
+            "parse_errors": parse_errors,
+            "before_exit_code": before_status_result["exit_code"],
+            "before_pending": pending_count("before"),
+            "dry_run_exit_code": dry_run_result["exit_code"],
+            "dry_run_payload": payloads.get("dry_run", {}),
+            "forbidden_exit_code": forbidden_result["exit_code"],
+            "forbidden_codes": forbidden_codes,
+            "stale_date_exit_code": stale_date_result["exit_code"],
+            "stale_date_codes": stale_date_codes,
+            "apply_exit_code": apply_result["exit_code"],
+            "after_accept_pending": pending_count("after_accept"),
+            "needs_edits_apply_exit_code": needs_edits_apply_result["exit_code"],
+            "after_needs_edits_pending": pending_count("after_needs_edits"),
+            "accept_item": accept_item,
+            "needs_edits_item": needs_edits_item,
+        },
+        repo,
+    )
+
 def test_final_proof_artifact_discoverability():
     selector_date = today.isoformat()
     selector_suffix = selector_date.replace("-", "")
@@ -7969,6 +8131,7 @@ def test_regression_manifest_coverage():
         "index-readme-maintenance-coverage",
         "by-topic-first-screen-readability-contract",
         "review-queue-json-contract",
+        "review-queue-apply-tool-contract",
         "final-proof-artifact-discoverability",
         "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
@@ -8162,6 +8325,7 @@ for test_fn in [
     test_index_readme_maintenance_coverage,
     test_by_topic_first_screen_readability_contract,
     test_review_queue_json_contract,
+    test_review_queue_apply_tool_contract,
     test_final_proof_artifact_discoverability,
     test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,
