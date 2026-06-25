@@ -21,7 +21,7 @@ generated_at: 2026-06-24
 
 ## 来源
 
-- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source provenance: `registry/sources.json` origin_path for `pcr02-project-docs`; `registry/source-tombstones.jsonl`
 - Source path: `reports/2026-05-29-motor-mcu-debug-record.md`
 - Source SHA256: `2ebdb26b56f3bd7a3561fd4f6a0aaf05389044e34530a10743d4032434fde734`
 - Owner decision: `archive-only`

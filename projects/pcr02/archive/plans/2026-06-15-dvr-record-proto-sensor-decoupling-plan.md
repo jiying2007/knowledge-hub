@@ -21,7 +21,7 @@ generated_at: 2026-06-24
 
 ## 来源
 
-- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source provenance: `registry/sources.json` origin_path for `pcr02-project-docs`; `registry/source-tombstones.jsonl`
 - Source path: `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`
 - Source SHA256: `9134247182e7578eec8c2bb4d702ffaed6c75359039d549b679f058bf8532cb3`
 - Owner decision: `archive-only`

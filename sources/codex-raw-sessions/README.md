@@ -4,7 +4,7 @@
 
 - Source ID: `codex-raw-sessions`
 - Hub source path: `sources/codex-raw-sessions`
-- Retired origin path: `~/.codex/sessions`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
 - Final disposition: `runtime-input-not-migrated`

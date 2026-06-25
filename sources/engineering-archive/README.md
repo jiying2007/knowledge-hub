@@ -4,7 +4,7 @@
 
 - Source ID: `engineering-archive`
 - Hub source path: `sources/engineering-archive`
-- Retired origin path: `~/embedded/engineering_archive`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

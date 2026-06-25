@@ -4,7 +4,7 @@
 
 - Source ID: `pcr02-module-agent-rules`
 - Hub source path: `sources/pcr02-module-agent-rules`
-- Retired origin path: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

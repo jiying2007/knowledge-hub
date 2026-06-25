@@ -6,7 +6,7 @@
 - Hub source path: `sources/pcr02-project-docs`
 - Hub source control: `sources/pcr02-project-docs/README.md`
 - 旧正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
-- Origin URI: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/README.md`（retired provenance only）
+- Origin provenance: `registry/sources.json` origin_path for `pcr02-project-docs`; `registry/source-tombstones.jsonl`
 - Source path: `README.md`
 - Source size: `3010`
 - Source SHA256: `bb1b3ce7a1187d9c0c90ca53ae9a0aa9f0ca31ff5d1b2247369b0284a0243a60`
@@ -17,7 +17,7 @@
 
 ## Boundary
 
-This file is a Hub index entry. It no longer treats the PCR02 project docs README in the source project as the active authority. The old migrated body copy has been pruned; the source control directory, body prune ledger and canonical `projects/pcr02/` targets are the Knowledge Hub entry points. The old URI is retained only for provenance and hash comparison.
+This file is a Hub index entry. It no longer treats the PCR02 project docs README in the source project as the active authority. The old migrated body copy has been pruned; the source control directory, body prune ledger and canonical `projects/pcr02/` targets are the Knowledge Hub entry points. Retired origin details are retained only in source registry provenance and tombstones for hash comparison.
 
 Use this entry to find the Hub-controlled PCR02 project docs source and to connect migrated Knowledge Hub records back to their original project-local docs index when provenance is needed.
 

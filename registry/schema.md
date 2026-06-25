@@ -525,10 +525,10 @@ Recommended project fields:
 - `entry`
 - `current`
 - `archive`
-- `retired_origins`
+- `origin_provenance`
 - `status`
 
-Project registry must be Hub-first: `entry`, `current` and `archive` point to local Knowledge Hub paths. Retired external locations, when still needed for provenance, must live under `retired_origins` and must not be used as active entry points, source authority or check commands.
+Project registry must be Hub-first: `entry`, `current` and `archive` point to local Knowledge Hub paths. Retired external locations, when still needed for provenance, must live in source registry `origin_path`, tombstones or migration manifests; project registry should reference those evidence locations through `origin_provenance` instead of repeating retired paths.
 
 ## topics.json
 

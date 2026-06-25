@@ -4,7 +4,7 @@
 
 - Source ID: `knowledge-hub-automation-runs`
 - Hub source path: `sources/knowledge-hub-automation-runs`
-- Retired origin path: `registry/automation-runs.jsonl`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-native-source`
 - Authority: `knowledge-hub-ledger`
 - Final disposition: `hub-native-source`

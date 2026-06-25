@@ -4,7 +4,7 @@
 
 - Source ID: `pcr02-product-test`
 - Hub source path: `sources/pcr02-product-test`
-- Retired origin path: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

@@ -4,7 +4,7 @@
 
 - Source ID: `embedded-knowledge`
 - Hub source path: `sources/embedded-knowledge`
-- Retired origin path: `~/embedded/knowledge`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

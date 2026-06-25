@@ -4,7 +4,7 @@
 
 - Source ID: `codex-archive-registry`
 - Hub source path: `sources/codex-archive-registry`
-- Retired origin path: `~/codex/docs/archive/_registry`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

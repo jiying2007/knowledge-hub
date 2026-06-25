@@ -4,7 +4,7 @@
 
 - Source ID: `patent-disclosure`
 - Hub source path: `sources/patent-disclosure`
-- Retired origin path: `~/embedded/patent_disclosure`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-migrated-source`
 - Authority: `knowledge-hub-canonical`
 - Final disposition: `hard-migrated-to-hub`

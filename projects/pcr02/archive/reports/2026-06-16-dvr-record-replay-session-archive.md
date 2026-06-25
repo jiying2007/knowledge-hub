@@ -21,7 +21,7 @@ generated_at: 2026-06-24
 
 ## 来源
 
-- Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- Source provenance: `registry/sources.json` origin_path for `pcr02-project-docs`; `registry/source-tombstones.jsonl`
 - Source path: `reports/2026-06-16-dvr-record-replay-session-archive.md`
 - Source SHA256: `266a1c2706da87b39d9e4b204ccece61b0ec9c7a95183c64324e95f606c1dadc`
 - Owner decision: `archive-only`

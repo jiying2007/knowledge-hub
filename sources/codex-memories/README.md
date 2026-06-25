@@ -4,7 +4,7 @@
 
 - Source ID: `codex-memories`
 - Hub source path: `sources/codex-memories`
-- Retired origin path: `~/.codex/memories`
+- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
 - Final disposition: `runtime-input-not-migrated`
