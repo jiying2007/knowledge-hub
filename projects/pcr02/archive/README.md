@@ -1,28 +1,19 @@
 # PCR02 归档入口
 
-本目录保存 PCR02 历史归档和工程排障材料。它是 Knowledge Hub 终态归档入口，不再使用旧 `~/embedded/engineering_archive/pcr02/` 或旧 source 迁移副本作为新增归档路径。
+本目录保存 PCR02 历史归档和工程排障材料。它是 Knowledge Hub 终态归档入口，新增归档不得写回外部旧目录或旧 source 迁移副本。
 
 ## 首选路径
 
 - 工程归档主题索引：`projects/pcr02/archive/engineering-archive/pcr02/README.md`
-- 旧 PCR02 docs/knowledge/tools/source 正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.md`
+- PCR02 旧正文剪枝账本：`artifacts/manifests/pcr02-*-body-prune-20260625.md`
 - owner 决策落地后的计划和报告：`projects/pcr02/archive/plans/`、`projects/pcr02/archive/reports/`
 
-## 旧路径映射
+## 归档主题路径
 
-```text
-~/embedded/engineering_archive/pcr02/boot-flash/
--> ~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/boot-flash/
-
-~/embedded/engineering_archive/pcr02/ubifs-squashfs/
--> ~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/ubifs-squashfs/
-
-~/embedded/engineering_archive/pcr02/validation/
--> ~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/validation/
-
-~/embedded/engineering_archive/pcr02/session/
--> ~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/session/
-```
+- Flash / SPI NAND / FSP / QSPI / pad drive / clock：`engineering-archive/pcr02/boot-flash/`
+- `/customer`、SquashFS、UBIFS、ubiblock、warmup read failed、解压失败：`engineering-archive/pcr02/ubifs-squashfs/`
+- 老化测试、板端命令、验证步骤、验收记录：`engineering-archive/pcr02/validation/`
+- 会话进展、阶段性总结：`engineering-archive/pcr02/session/`
 
 ## 使用边界
 

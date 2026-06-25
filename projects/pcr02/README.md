@@ -1,6 +1,6 @@
 # PCR02 项目知识入口
 
-本目录是 PCR02 在 Knowledge Hub 中的项目级入口。新增项目事实、归档、验证记录和决策时，优先落到本目录下的对应分区，不再写回旧 `~/embedded/engineering_archive`、源项目 `docs/`、`knowledge/` 或 `tools/`。
+本目录是 PCR02 在 Knowledge Hub 中的项目级入口。新增项目事实、归档、验证记录和决策时，优先落到本目录下的对应分区，不再写回源项目 `docs/`、`knowledge/` 或 `tools/`。
 
 ## 当前入口
 
@@ -10,15 +10,7 @@
 - 历史归档和工程排障材料：`projects/pcr02/archive/`
 - 迁移证据、owner gate、source coverage：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*`
 
-## 旧路径映射
-
-旧回答中出现的 `~/embedded/engineering_archive/pcr02/` 已迁移到：
-
-```text
-~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/
-```
-
-常见主题映射：
+## 归档主题路径
 
 - Flash / SPI NAND / FSP / QSPI / pad drive / clock：`projects/pcr02/archive/engineering-archive/pcr02/boot-flash/`
 - `/customer`、SquashFS、UBIFS、ubiblock、warmup read failed、解压失败：`projects/pcr02/archive/engineering-archive/pcr02/ubifs-squashfs/`

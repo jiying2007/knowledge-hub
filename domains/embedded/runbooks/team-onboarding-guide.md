@@ -1,5 +1,5 @@
 ---
-title: 团队知识库首次使用指南
+title: 嵌入式知识域首次使用指南
 doc_type: runbook
 knowledge_type: process
 maturity: verified
@@ -12,58 +12,39 @@ related: [codex-skills-install-guide.md, ../standards/knowledge-contribution-gui
 validation_refs: []
 ---
 
-# 团队知识库首次使用指南
+# 嵌入式知识域首次使用指南
 
 ## 1. 目标
 
-统一团队成员本机知识库路径，避免每个项目重复维护通用文档和工具。
+统一团队成员使用 Knowledge Hub 的嵌入式团队级知识域，避免每个项目重复维护通用文档和工具。
 
 ## 2. 标准路径
 
-每个用户本机统一使用：
+终态入口：
 
 ```text
-~/embedded/knowledge
+~/knowledge-hub/domains/embedded
 ```
 
-初始化：
+常用入口：
 
-```bash
-mkdir -p ~/embedded
-git clone ssh://git@192.168.1.4:10022/embedded/knowledge.git ~/embedded/knowledge
-export EMBEDDED_KNOWLEDGE_HOME="$HOME/embedded/knowledge"
-```
-
-建议把环境变量写入个人 shell 配置：
-
-```bash
-export EMBEDDED_KNOWLEDGE_HOME="$HOME/embedded/knowledge"
-```
+- 团队规范：`domains/embedded/standards/`
+- 排障 runbook：`domains/embedded/runbooks/`
+- 平台和架构知识：`domains/embedded/platform/`、`domains/embedded/architecture/`
+- 技能和工具说明：`domains/embedded/skills/`、`domains/embedded/tools/`
 
 ## 3. 验证
 
 ```bash
-cd "$EMBEDDED_KNOWLEDGE_HOME"
-rtk bash scripts/check-all.sh
-```
-
-如需启用本地提交前检查：
-
-```bash
-git config core.hooksPath .githooks
-```
-
-如需加载项目 profile：
-
-```bash
-source profiles/template.env
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "embedded" --json --limit 10
 ```
 
 如需个人开发增强建议：
 
 ```text
-docs/standards/personal-development-enhancements.md
-docs/runbooks/dev-tooling-setup-guide.md
+domains/embedded/standards/personal-development-enhancements.md
+domains/embedded/runbooks/dev-tooling-setup-guide.md
 ```
 
 ## 4. 使用方式

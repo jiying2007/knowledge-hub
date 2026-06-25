@@ -1,6 +1,6 @@
 # PCR02 Archive Index
 
-本目录对应旧路径 `~/embedded/engineering_archive/pcr02/`。终态归档路径是 `~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/`；新增 PCR02 工程归档、会话总结和排障材料应写入本目录对应主题分区，不再写回旧路径。
+本目录是 PCR02 工程归档主题索引。新增 PCR02 工程归档、会话总结和排障材料应写入本目录对应主题分区，不得写回外部旧目录。
 
 This index groups PCR02 archive material by engineering topic. Existing historical notes keep their original filenames; complex workstreams use a topic directory with a local `README.md`.
 

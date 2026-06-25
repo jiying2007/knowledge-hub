@@ -68,8 +68,8 @@ domains/personal/**
 - 安全、可读、长期有价值的 Markdown/text 可以迁移为正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
 - `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只保留在 `origin_path`、tombstone 或历史 manifest 中作 provenance。
-- `~/codex/docs/archive/**` 已硬迁移到 Hub 的 Codex archive source-docs；新归档和新索引不得回写旧 archive 路径。
-- `~/embedded/engineering_archive/pcr02/**` 已迁移到 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料不得回写旧 `~/embedded/engineering_archive`。
+- Codex archive 已硬迁移到 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
+- PCR02 工程归档已迁移到 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
 - `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不迁移 raw 正文，不直接等于 active fact。
 
 ## 权威边界

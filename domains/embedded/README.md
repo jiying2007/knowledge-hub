@@ -1,63 +1,48 @@
-# Embedded Knowledge Base
+# Embedded Domain
 
-本仓库是嵌入式研发团队知识库，沉淀可复用技术文档、排障 runbook、平台知识、调试工具与 Codex skill。
+本目录是 Knowledge Hub 的嵌入式团队级知识域，沉淀跨项目可复用技术文档、排障 runbook、平台知识、调试工具与 Codex skill。
 
 ## 首次使用
 
-团队成员本机统一放置在：
+团队成员统一使用 Knowledge Hub 终态入口：
 
 ```text
-~/embedded/knowledge
-```
-
-初始化：
-
-```bash
-mkdir -p ~/embedded
-git clone ssh://git@192.168.1.4:10022/embedded/knowledge.git ~/embedded/knowledge
-export EMBEDDED_KNOWLEDGE_HOME="$HOME/embedded/knowledge"
+~/knowledge-hub/domains/embedded
 ```
 
 验证：
 
 ```bash
-cd "$EMBEDDED_KNOWLEDGE_HOME"
-rtk bash scripts/check-all.sh
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "embedded" --json --limit 10
 ```
 
-项目 profile 示例：
+常用入口：
 
-```bash
-source profiles/template.env
-# PCR02 项目可使用：
-source profiles/pcr02.env
-```
+- 团队规范：`standards/`
+- 排障 runbook：`runbooks/`
+- 平台和架构知识：`platform/`、`architecture/`
+- 技能和工具说明：`skills/`、`tools/`
+- 模板和治理规则：`templates/`、`governance/`
 
 ## 目录
 
-- `docs/`：技术知识文档、治理规则与模板。
-- `tools/`：可复用调试、诊断、归档工具。
-- `docs/governance/`：文档命名、Frontmatter、链接与 AGENT/SKILL 一致性门禁。
-- `tools/.codex/skills/`：团队调试与资产处理技能。
-- `scripts/`：团队初始化、检查与安装入口。
-- `profiles/`：项目环境变量示例。
+- `standards/`：团队级规范和跨项目规则。
+- `runbooks/`：排障、验证、发布和工具使用流程。
+- `architecture/`、`platform/`：平台能力、系统架构和设计知识。
+- `skills/`、`tools/`：可复用技能和工具说明。
+- `templates/`、`governance/`：模板、命名、证据和治理规则。
 
-结构边界见 `docs/standards/repository-structure-guide.md`。
+结构边界见 `standards/repository-structure-guide.md`。
 
 ## 本地门禁
 
 ```bash
-rtk bash scripts/check-all.sh
-rtk bash scripts/check-artifacts.sh
-rtk bash scripts/check-repository-shape.sh
-rtk bash scripts/check-secrets.sh
-rtk bash scripts/check-shell-style.sh
-rtk bash scripts/check-tools.sh
-rtk bash scripts/generate-release-manifest.sh --root <release-dir> --out <release-dir>/release-manifest.csv
-rtk bash scripts/check-release-manifest.sh --manifest <release-dir>/release-manifest.csv --root <release-dir>
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body
 ```
 
-如果 Git 服务支持 CI 或服务端 hook，参考 `docs/runbooks/ci-setup-guide.md` 与 `docs/runbooks/server-hook-setup-guide.md`。
+如果需要恢复历史来源、迁移证据或 owner 边界，优先查看 `sources/embedded-knowledge/`、`registry/source-tombstones.jsonl` 和 `indexes/by-source.md`。
 
 ## Codex Skills
 

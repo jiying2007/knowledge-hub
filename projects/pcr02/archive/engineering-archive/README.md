@@ -1,6 +1,6 @@
 # Engineering Archive
 
-本目录是旧 `~/embedded/engineering_archive` 迁入 Knowledge Hub 后的工程归档区。PCR02 新增工程归档应写入 `projects/pcr02/archive/engineering-archive/pcr02/`，不再写回旧外部路径。
+本目录是 PCR02 工程归档区。新增工程归档应写入 `projects/pcr02/archive/engineering-archive/pcr02/`，不得写回外部旧目录。
 
 ## Structure
 
