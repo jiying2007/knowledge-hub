@@ -32,8 +32,8 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 核心工具输出不暴露用户专属绝对路径前缀。
 - 运行并通过：
   - `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`
-  - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-24`
-  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --as-of 2026-06-24`
+  - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-25`
+  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --as-of 2026-06-25`
   - `rtk git diff --check`
 
 非目标：
@@ -687,11 +687,13 @@ local-commit
 
 ## 十五、实施验证
 
+当前硬切换验收基准使用 `--as-of 2026-06-25`。2026-06-24 及更早制品只作为历史迁移证据；如果历史制品中仍出现 `needs-owner-review`、`owner-gates-open` 或旧 source 路径，应先判断它是否属于历史 manifest、tombstone、authorization、automation run 或回归负例，不得反向当作当前终态状态。
+
 只改本 goal 时：
 
 ```bash
 rtk git diff --check
-rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-24
+rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-25
 ```
 
 改 README、templates、schema 或 tools 时：
@@ -701,9 +703,9 @@ rtk bash -n tools/knowledge-check.sh
 rtk bash -n tools/knowledge-new.sh
 rtk bash -n tools/knowledge-search.sh
 rtk bash -n tools/knowledge-index-plan.sh
-rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-24
-rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-24
-rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-24
+rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-25
+rtk bash tools/knowledge-regression.sh --json --as-of 2026-06-25
+rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-25
 ```
 
 硬迁移后必须增加负向验证：

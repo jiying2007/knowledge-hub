@@ -5,6 +5,11 @@
 > 本文件保留为历史目标背景，不再作为新增归档、回源扫描或旧目录入口。
 > 旧外部路径只在 `registry/sources.json` 的 `origin_path`、`registry/source-tombstones.jsonl`
 > 和迁移 manifest 中作 provenance。
+> 截至 2026-06-25，PCR02 owner gate 已由
+> `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+> 作为 landing 证据收口；当前状态以
+> `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-25`
+> 的 `final_status=ok` 为准。本文件内早期 `needs-owner-review` 语句只保留为历史目标和失败恢复背景。
 
 本次目标是把 Knowledge Hub 建成长期可维护、跨会话可恢复、跨项目可自动关联、人工可独立维护、AI 可辅助治理、自动化受控的统一知识控制面，并完成所有已登记 source 与 PCR02 关键候选 source 的 source coverage、迁移治理和终态闭环。
 
@@ -1215,11 +1220,11 @@ rtk bash tools/knowledge-final-gate.sh --json
 - 23 个低风险 docs 已 copy-first 迁移。
 - README.md 已登记为 reference-first，不复制正文。
 - prog-tool-ci-smoke.session 已登记为 artifact-ref，不复制脚本正文。
-- 剩余 7 个 review-required 项已生成 owner-review package。
-- 已有 owner-ready package / intake execution / final gate / regression helper 等治理资产。
-- 当前 final gate 预期仍可能是 needs-owner-review，因为 7 个 owner gate 需要人工 owner decision。
+- 7 个 review-required 项已生成 owner-review package，并已通过 `pcr02-project-docs-owner-decision-landing-20260623.md` 收口为 reference-only、archive-only 或 split-approved 等终态决策。
+- 已有 owner-ready package / intake execution / landing / final gate / regression helper 等治理资产。
+- 当前 final gate 应以 2026-06-25 验证为准：`final_status=ok`，不再把 7 个旧 owner gate 当作当前 blocker。
 
-7 个 PCR02 docs owner-gated 阻塞项：
+7 个 PCR02 docs 历史 owner-gated 项：
 
 - AGENTS.md
 - standards/diag-command-metadata-standard.md
@@ -1229,7 +1234,7 @@ rtk bash tools/knowledge-final-gate.sh --json
 - reports/2026-05-29-motor-mcu-debug-record.md
 - reports/2026-06-16-dvr-record-replay-session-archive.md
 
-这些不得被 Codex 自行签收或提升 active。
+这些不得被 Codex 自行重新签收或提升 active；后续只按已落地的 owner decision landing 和当前 registry/index 状态维护。
 
 ====================
 十五、执行策略
