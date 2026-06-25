@@ -6332,7 +6332,7 @@ def test_manifest_latest_filename_date_only():
     old_by_filename.write_text(
         '{"id":"fixture-row-date-newer","status":"applied","checked_at":"2099-01-01","summary_zh":"row 日期很新但文件名日期很旧，不能抢占 latest。","evidence_refs":["fixture"]}\n'
     )
-    new_by_filename = manifests_dir / "fixture-filename-newer-20260625.jsonl"
+    new_by_filename = manifests_dir / "fixture-filename-newer-20991231.jsonl"
     new_by_filename.write_text(
         '{"id":"fixture-filename-newer","status":"applied","checked_at":"2020-01-01","summary_zh":"文件名日期更新，应排在旧文件名前。","evidence_refs":["fixture"]}\n'
     )
@@ -6356,7 +6356,7 @@ def test_manifest_latest_filename_date_only():
         and old_row.get("date") == "2020-01-01"
         and old_row.get("row_date") == "2099-01-01"
         and old_row.get("date_source") == "filename-YYYYMMDD"
-        and new_row.get("date") == "2026-06-25"
+        and new_row.get("date") == "2099-12-31"
         and new_row.get("row_date") == "2020-01-01",
         "manifest-latest-filename-date-only",
         "manifest latest view sorts only by filename date, not JSONL row dates",

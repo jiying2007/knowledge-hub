@@ -60,7 +60,7 @@ SKIP_DIRS = {
 SOURCE_POLICIES = {
     "embedded-knowledge": {
         "kind": "copy-docs",
-        "text_target": "domains/embedded/archive/source-docs/embedded-knowledge",
+        "text_target": "domains/embedded",
         "artifact_target": "artifacts/vault/embedded-knowledge",
         "decommission": "delete-external-after-verify",
     },
@@ -184,6 +184,63 @@ def safe_target(rel_text):
     return root / pathlib.Path(*rel.parts)
 
 
+def embedded_knowledge_terminal_target(source_path):
+    path = pathlib.PurePosixPath(source_path)
+    name = path.name
+    text = path.as_posix()
+    if text == ".github/PULL_REQUEST_TEMPLATE.md":
+        return "domains/embedded/templates/pull-request-template.md"
+    if text == ".gitlab/merge_request_templates/knowledge.md":
+        return "domains/embedded/templates/gitlab-knowledge-merge-request-template.md"
+    if text == "AGENTS.md":
+        return "domains/embedded/governance/agent-rules.md"
+    if text == "CHANGELOG.md":
+        return "domains/embedded/governance/changelog.md"
+    if text == "OWNERS.md":
+        return "domains/embedded/governance/owners.md"
+    if text == "README.md":
+        return "domains/embedded/README.md"
+    if text == "docs/AGENTS.md":
+        return "domains/embedded/governance/docs-agent-rules.md"
+    if text == "docs/README.md":
+        return "domains/embedded/governance/docs-index.md"
+    if text == "docs/archive/sigmastar/archive-template.md":
+        return "domains/embedded/governance/sigmastar-archive-template.md"
+    if text == "docs/archive/sigmastar/manifest.md":
+        return "domains/embedded/governance/sigmastar-archive-manifest.md"
+    if text == "docs/governance/README.md":
+        return "domains/embedded/governance/knowledge-governance.md"
+    if text == "docs/governance/docs-lint-allowlist.txt":
+        return "domains/embedded/governance/docs-lint-allowlist.txt"
+    if text == "tools/AGENTS.md":
+        return "domains/embedded/tools/agent-rules.md"
+    if text == "tools/README.md":
+        return "domains/embedded/tools/README.md"
+    if text == "tools/debug/README.md":
+        return "domains/embedded/tools/debug/README.md"
+    if text.startswith("docs/architecture/"):
+        return f"domains/embedded/architecture/{name}"
+    if text.startswith("docs/runbooks/"):
+        return f"domains/embedded/runbooks/{name}"
+    if text.startswith("docs/standards/"):
+        return f"domains/embedded/standards/{name}"
+    if text.startswith("docs/templates/"):
+        return f"domains/embedded/templates/{name}"
+    if text.startswith("docs/.codex/skills/") or text.startswith("tools/.codex/skills/"):
+        parts = path.parts
+        if len(parts) >= 5 and name in {"README.md", "SKILL.md"}:
+            return f"domains/embedded/skills/{parts[3]}/{name}"
+    return ""
+
+
+def terminal_target(row):
+    if row.get("source_id") == "embedded-knowledge":
+        remapped = embedded_knowledge_terminal_target(row.get("source_path", ""))
+        if remapped:
+            return remapped
+    return row.get("target_path", "")
+
+
 def should_skip(path, source_root):
     rel = path.relative_to(source_root)
     return any(part in SKIP_DIRS for part in rel.parts)
@@ -275,7 +332,7 @@ def copied_target_missing(rows):
     for row in rows:
         if row.get("action") not in {"copy-body", "copy-artifact"}:
             continue
-        target_path = row.get("target_path", "")
+        target_path = terminal_target(row)
         if not target_path:
             missing.append(f"{row.get('id', '<unknown>')}: empty target_path")
             continue
@@ -335,6 +392,13 @@ for source in sources:
             imported_rows = []
             for row in previous_rows:
                 imported = dict(row)
+                remapped_target = terminal_target(imported)
+                if remapped_target and remapped_target != imported.get("target_path", ""):
+                    imported["previous_target_path"] = imported.get("target_path", "")
+                    imported["target_path"] = remapped_target
+                    imported["terminal_relocation"] = "embedded-domain-complete-migration-20260625"
+                    if imported.get("action") in {"copy-body", "copy-artifact"}:
+                        imported["status"] = "relocated-to-canonical-domain"
                 imported["terminal_checked_at"] = args.as_of
                 imported["retired_origin_missing"] = True
                 imported_rows.append(imported)

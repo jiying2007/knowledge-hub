@@ -88,7 +88,7 @@ rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/co
 
 ## 4. Hub 知识入口
 
-- `domains/embedded/archive/source-docs/embedded-knowledge`
+- `domains/embedded/`
 - `projects/pcr02/archive/source-docs/pcr02-project-tools/README.md`
 - `projects/pcr02/archive/source-docs/pcr02-project-docs/runbooks/project-debug-tools-guide.md`
 - `sources/pcr02-project-tools/README.md`

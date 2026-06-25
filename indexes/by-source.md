@@ -111,7 +111,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
 - `engineering-archive`: 已硬迁移到 `projects/pcr02/archive/source-docs/engineering-archive`，退役账本见 `registry/source-tombstones.jsonl`。
 - `patent-disclosure`: 已硬迁移到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`，退役账本见 `registry/source-tombstones.jsonl`。
-- `embedded-knowledge`: 已硬迁移到 `domains/embedded/archive/source-docs/embedded-knowledge`，旧外部路径不再作为 source authority。
+- `embedded-knowledge`: 已完整迁移到 `domains/embedded/*`；旧过渡快照目录已删除，旧外部路径不再作为 source authority。
 - `codex-archive`: 已硬迁移到 `domains/codex/archive/source-docs/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
 - `pcr02-project-tools`: tool/diag/memory automation source coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `pcr02-project-tools`: README/AGENTS、diag、runtime diagnostic、memory automation 和生成制品边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`。

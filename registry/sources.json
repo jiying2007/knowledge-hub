@@ -14,9 +14,9 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/embedded-knowledge",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/embedded/archive/source-docs/embedded-knowledge",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "domains/embedded",
+      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260625.jsonl",
+      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260625.jsonl"
     },
     {
       "id": "engineering-archive",

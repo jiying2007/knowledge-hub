@@ -1,14 +1,16 @@
-# Source hard migration 2026-06-24
+# Source hard migration 2026-06-25
 
 本报告记录 Knowledge Hub 硬迁移的当前执行结果。长期知识正文以 Hub target 为准，外部 origin 只保留 tombstone/provenance。
 
-> Superseded: `embedded-knowledge` 的过渡 target 已在 `source-hard-migration-20260625.jsonl` 迁移到 `domains/embedded/*`；本报告只保留 2026-06-24 当时的历史执行记录，不作为当前 canonical target。
+本批次将 `embedded-knowledge` 的过渡快照正文完整归位到 `domains/embedded/*`，旧快照目录已删除；`sources/embedded-knowledge` 只保留 source 控制面。
 
 - registered_sources: 18
-- migration_rows: 973
-- planned_copy_or_artifact: 566
-- copied: 29
-- existing_verified: 537
+- migration_rows: 960
+- planned_copy_or_artifact: 553
+- copied: 0
+- existing_verified: 553
+- retired_origin_missing: 10
+- retired_manifest_reused: 942
 - decommission_rows: 18
 
 ## 验证
