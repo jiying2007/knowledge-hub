@@ -522,7 +522,13 @@ Recommended project fields:
 
 - `name`
 - `domain`
+- `entry`
+- `current`
+- `archive`
+- `retired_origins`
 - `status`
+
+Project registry must be Hub-first: `entry`, `current` and `archive` point to local Knowledge Hub paths. Retired external locations, when still needed for provenance, must live under `retired_origins` and must not be used as active entry points, source authority or check commands.
 
 ## topics.json
 

@@ -14,7 +14,7 @@
 
 ## Hub 管理方式
 
-pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；历史 `AGENTS.md` 正文副本已从 Hub source-docs 正文层剪枝，剪枝账本见 `artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl`。当前源码仓及独立子仓的 `AGENTS.md` 属于项目本地 Codex 运行控制文件，仍由源项目 Git 管理，不作为 Hub 知识正文双写。
+pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；历史 `AGENTS.md` 正文副本已从 Hub 旧迁移正文层剪枝，剪枝账本见 `artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl`。当前源码仓及独立子仓的 `AGENTS.md` 属于项目本地 Codex 运行控制文件，仍由源项目 Git 管理，不作为 Hub 知识正文双写。
 
 ## 边界
 

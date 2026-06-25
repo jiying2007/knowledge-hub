@@ -8,7 +8,7 @@
 
 ## 决策
 
-pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；历史 `AGENTS.md` 正文副本已从 Hub source-docs 正文层剪枝，只保留 hash/provenance。Hub 不把项目本地 AGENTS 提升为全局规则或团队标准。当前源码仓及独立子仓的 `AGENTS.md` 作为项目本地 Codex 运行控制文件保留在源项目 Git 中。
+pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；历史 `AGENTS.md` 正文副本已从 Hub 旧迁移正文层剪枝，只保留 hash/provenance。Hub 不把项目本地 AGENTS 提升为全局规则或团队标准。当前源码仓及独立子仓的 `AGENTS.md` 作为项目本地 Codex 运行控制文件保留在源项目 Git 中。
 
 ## 风险
 
