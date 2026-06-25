@@ -249,6 +249,40 @@ tombstone_rows = []
 copied = 0
 existing_verified = 0
 planned_copy = 0
+retired_origin_missing = 0
+retired_manifest_reused = 0
+
+
+def previous_manifest_rows(source, source_id):
+    manifest_rel = source.get("canonical_manifest", "")
+    if not manifest_rel:
+        return []
+    manifest = safe_target(manifest_rel)
+    if not manifest.exists():
+        return []
+    rows = []
+    for line in manifest.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row.get("source_id") == source_id:
+            rows.append(row)
+    return rows
+
+
+def copied_target_missing(rows):
+    missing = []
+    for row in rows:
+        if row.get("action") not in {"copy-body", "copy-artifact"}:
+            continue
+        target_path = row.get("target_path", "")
+        if not target_path:
+            missing.append(f"{row.get('id', '<unknown>')}: empty target_path")
+            continue
+        target = safe_target(target_path)
+        if not target.is_file():
+            missing.append(target_path)
+    return missing
 
 for source in sources:
     source_id = source["id"]
@@ -289,6 +323,54 @@ for source in sources:
         )
         continue
     if not source_root.exists():
+        if source.get("status") == "retired" and source.get("final_disposition") == "hard-migrated-to-hub":
+            previous_rows = previous_manifest_rows(source, source_id)
+            missing_targets = copied_target_missing(previous_rows)
+            if not previous_rows:
+                errors.append(f"{source_id}: retired source missing and canonical manifest rows not found: {source_root}")
+                continue
+            if missing_targets:
+                errors.append(f"{source_id}: retired source missing and canonical targets missing: {', '.join(missing_targets[:5])}")
+                continue
+            imported_rows = []
+            for row in previous_rows:
+                imported = dict(row)
+                imported["terminal_checked_at"] = args.as_of
+                imported["retired_origin_missing"] = True
+                imported_rows.append(imported)
+            migration_rows.extend(imported_rows)
+            copied_rows = [row for row in imported_rows if row.get("action") in {"copy-body", "copy-artifact"}]
+            planned_copy += len(copied_rows)
+            existing_verified += len(copied_rows)
+            retired_origin_missing += 1
+            retired_manifest_reused += len(imported_rows)
+            decommission_rows.append(
+                {
+                    **base_row,
+                    "id": f"{source_id}-decommission-policy",
+                    "status": "external-source-already-deleted",
+                    "delete_external": False,
+                    "previous_delete_policy": policy["decommission"],
+                    "source_file_count": len(previous_rows),
+                    "copy_body_count": len([row for row in imported_rows if row.get("action") == "copy-body"]),
+                    "copy_artifact_count": len([row for row in imported_rows if row.get("action") == "copy-artifact"]),
+                    "drop_count": len([row for row in imported_rows if row.get("action") == "drop-non-knowledge"]),
+                    "reason_zh": "retired origin 已按终态删除；复用既有 canonical_manifest 和 Hub target 校验作为迁移证据，不再回读旧外部 source。",
+                }
+            )
+            tombstone_rows.append(
+                {
+                    **base_row,
+                    "id": f"{source_id}-tombstone",
+                    "status": "planned" if not args.apply else "migration-recorded",
+                    "canonical_manifest": f"artifacts/manifests/source-hard-migration-{args.as_of.replace('-', '')}.jsonl",
+                    "decommission_manifest": f"artifacts/manifests/source-hard-decommission-{args.as_of.replace('-', '')}.jsonl",
+                    "delete_policy": "external-source-already-deleted",
+                    "previous_delete_policy": policy["decommission"],
+                    "notes_zh": "硬迁移已完成且旧 origin 已删除；active 面不得再把该 origin 当作 source、authority、SSOT 或 reference-first 入口。",
+                }
+            )
+            continue
         errors.append(f"{source_id}: source path missing: {source_root}")
         continue
     source_file_count = 0
@@ -427,6 +509,8 @@ if args.apply and not errors:
         f"- planned_copy_or_artifact: {planned_copy}",
         f"- copied: {copied}",
         f"- existing_verified: {existing_verified}",
+        f"- retired_origin_missing: {retired_origin_missing}",
+        f"- retired_manifest_reused: {retired_manifest_reused}",
         f"- decommission_rows: {len(decommission_rows)}",
         "",
         "## 验证",
@@ -444,6 +528,8 @@ result = {
     "planned_copy_or_artifact": planned_copy,
     "copied": copied,
     "existing_verified": existing_verified,
+    "retired_origin_missing": retired_origin_missing,
+    "retired_manifest_reused": retired_manifest_reused,
     "migration_manifest": str(migration_path.relative_to(root)),
     "decommission_manifest": str(decommission_path.relative_to(root)),
     "tombstone_ledger": str(tombstone_path.relative_to(root)),
@@ -463,6 +549,8 @@ else:
         "planned_copy_or_artifact",
         "copied",
         "existing_verified",
+        "retired_origin_missing",
+        "retired_manifest_reused",
         "migration_manifest",
         "decommission_manifest",
         "tombstone_ledger",

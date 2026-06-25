@@ -6839,6 +6839,72 @@ def test_source_check_report_only_helper():
         },
     )
 
+def test_hard_migration_retired_origin_missing_terminal():
+    repo = copy_repo("hard-migration-retired-origin-missing-terminal")
+    sources_path = repo / "registry" / "sources.json"
+    try:
+        payload = json.loads(sources_path.read_text())
+        missing_root = repo / ".missing-retired-source-fixtures"
+        changed_source_ids = []
+        for source in payload.get("sources", []):
+            if (
+                source.get("status") == "retired"
+                and source.get("final_disposition") == "hard-migrated-to-hub"
+                and source.get("canonical_manifest")
+            ):
+                source["path"] = str(missing_root / str(source.get("id", "unknown")))
+                changed_source_ids.append(source.get("id"))
+        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    except Exception as exc:
+        expect(
+            False,
+            "hard-migration-retired-origin-missing-terminal",
+            "hard migration reuses canonical manifest when retired external origins are gone",
+            {"setup_error": str(exc)},
+            repo,
+        )
+        return
+
+    result = run_cmd(
+        repo,
+        ["rtk", "bash", "tools/knowledge-hard-migration.sh", "--dry-run", "--json", "--as-of", today.isoformat()],
+    )
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    expect(
+        result["exit_code"] == 0
+        and not parse_error
+        and parsed.get("status") == "planned"
+        and len(changed_source_ids) >= 1
+        and parsed.get("retired_origin_missing", 0) >= 1
+        and parsed.get("retired_origin_missing", 0) <= len(changed_source_ids)
+        and parsed.get("retired_manifest_reused", 0) > 0
+        and parsed.get("planned_copy_or_artifact") == parsed.get("existing_verified")
+        and parsed.get("errors") == []
+        and parsed.get("warnings") == [],
+        "hard-migration-retired-origin-missing-terminal",
+        "hard migration reuses canonical manifest when retired external origins are gone",
+        {
+            "exit_code": result["exit_code"],
+            "parse_error": parse_error,
+            "changed_source_ids": changed_source_ids,
+            "changed_source_count": len(changed_source_ids),
+            "retired_origin_missing": parsed.get("retired_origin_missing"),
+            "retired_manifest_reused": parsed.get("retired_manifest_reused"),
+            "planned_copy_or_artifact": parsed.get("planned_copy_or_artifact"),
+            "existing_verified": parsed.get("existing_verified"),
+            "errors": parsed.get("errors"),
+            "warnings": parsed.get("warnings"),
+            "stderr_sample": result["stderr"][:500],
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
+    )
+
 def test_source_check_rejects_unsafe_runtime_command():
     repo = copy_repo("source-check-rejects-unsafe-runtime-command")
     sources_path = repo / "registry" / "sources.json"
@@ -8271,6 +8337,7 @@ def test_regression_manifest_coverage():
         "status-source-governance-summary",
         "source-check-health-contract",
         "source-check-report-only-helper",
+        "hard-migration-retired-origin-missing-terminal",
         "source-check-rejects-unsafe-runtime-command",
         "final-gate-source-check-runtime-failed-blocker",
         "review-after-near-due-json-contract",
@@ -8465,6 +8532,7 @@ for test_fn in [
     test_status_source_governance_summary,
     test_source_check_health_contract,
     test_source_check_report_only_helper,
+    test_hard_migration_retired_origin_missing_terminal,
     test_source_check_rejects_unsafe_runtime_command,
     test_final_gate_source_check_runtime_failed_blocker,
     test_review_after_near_due_json_contract,
