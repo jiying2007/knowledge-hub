@@ -3851,8 +3851,6 @@ def test_manual_entry_project_index_hint():
             "runbook",
             "--domain",
             "projects/pcr02",
-            "--project",
-            "pcr02",
             "--id",
             "pcr02-regression-runbook",
             "--path",
@@ -3981,7 +3979,7 @@ def test_manual_entry_project_from_domain():
             "projects/pcr02/current/runbooks/derived.md",
         ],
     )
-    mismatch_result = run_cmd(
+    old_project_arg_result = run_cmd(
         root,
         [
             "rtk",
@@ -4002,17 +4000,17 @@ def test_manual_entry_project_from_domain():
     expect(
         derived_result["exit_code"] == 0
         and "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"]
-        and mismatch_result["exit_code"] == 0
-        and "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
+        and old_project_arg_result["exit_code"] == 2
+        and "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
         "manual-entry-project-derived-from-domain",
-        "manual project entries derive project id from domain and warn on mismatch",
+        "manual project entries derive project id from domain and reject old --project compatibility",
         {
             "derived_exit_code": derived_result["exit_code"],
-            "mismatch_exit_code": mismatch_result["exit_code"],
+            "old_project_arg_exit_code": old_project_arg_result["exit_code"],
             "derived_has_project": "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"],
-            "mismatch_has_warning": "WARNING: --project `wrong-project`" in mismatch_result["stdout"],
+            "old_project_arg_rejected": "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
             "derived_stdout_sample": derived_result["stdout"][:1200],
-            "mismatch_stdout_sample": mismatch_result["stdout"][:1200],
+            "old_project_arg_stderr_sample": old_project_arg_result["stderr"][:500],
         },
     )
 

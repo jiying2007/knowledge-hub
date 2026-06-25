@@ -6,7 +6,6 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 KIND=""
 DOMAIN=""
-PROJECT=""
 OWNER="leiwenjun"
 ITEM_ID=""
 TARGET_PATH=""
@@ -30,7 +29,7 @@ AI_ROLE="none"
 usage() {
   cat <<EOF
 Usage:
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--project <project>] [--owner <owner>] [--item-source-id <source-id>] [--item-source-path <source-path>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --id <id> --path <path> [--owner <owner>] [--item-source-id <source-id>] [--item-source-path <source-path>] [--manual-source-reason <reason>] [--manual-validation-pending --manual-validation-reason <reason>] [--generated-by-ai --ai-role <role>]
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id <source-id> --source-path sources/<source-id> --role <role> --authority <authority> --write-policy <policy> (--check <command> | --no-check-reason <reason>) [--owner <owner>]
 
 Examples:
@@ -160,10 +159,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --domain)
       DOMAIN="$(read_value "$1" "${2:-}")"
-      shift 2
-      ;;
-    --project)
-      PROJECT="$(read_value "$1" "${2:-}")"
       shift 2
       ;;
     --owner)
@@ -543,15 +538,11 @@ fi
 DISPLAY_DOMAIN="${DOMAIN:-<domain>}"
 DISPLAY_SCOPE="team-general"
 DISPLAY_VISIBILITY="team-internal"
-PROJECT_WARNING_BLOCK=""
+DISPLAY_PROJECT="<可选>"
 if [[ "$DOMAIN" == projects/* ]]; then
   DISPLAY_SCOPE="project-specific"
   PROJECT_FROM_DOMAIN="${DOMAIN#projects/}"
-  if [[ -z "$PROJECT" ]]; then
-    PROJECT="$PROJECT_FROM_DOMAIN"
-  elif [[ "$PROJECT" != "$PROJECT_FROM_DOMAIN" ]]; then
-    printf -v PROJECT_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: --project `%s` 与 --domain `%s` 推导出的项目 `%s` 不一致；请人工确认项目导航和 registry domain。\n' "$PROJECT" "$DOMAIN" "$PROJECT_FROM_DOMAIN"
-  fi
+  DISPLAY_PROJECT="$PROJECT_FROM_DOMAIN"
 fi
 PERSONAL_WARNING_BLOCK=""
 PERSONAL_DEFAULT_REASON=""
@@ -567,7 +558,6 @@ fi
 if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == notes/personal/* && "$DOMAIN" != "notes" ]]; then
   printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: 目标路径 `%s` 位于 notes/personal/，但 --domain 为 `%s`；请改为 `--domain notes`。\n' "$TARGET_PATH" "${DOMAIN:-<未指定>}"
 fi
-DISPLAY_PROJECT="${PROJECT:-<project>}"
 JSON_ID="$(json_escape "$DISPLAY_ID")"
 JSON_KIND="$(json_escape "$DISPLAY_KIND")"
 JSON_DOMAIN="$(json_escape "$DISPLAY_DOMAIN")"
@@ -644,7 +634,7 @@ $(usage)
 - input_kind: ${DISPLAY_INPUT_KIND}
 - registry_kind: ${DISPLAY_KIND}
 - domain: ${DOMAIN:-<待填写>}
-- project: ${PROJECT:-<可选>}
+- project: ${DISPLAY_PROJECT}
 - owner: ${DISPLAY_OWNER}
 - owner_registry_status: ${ITEM_OWNER_REGISTRY_STATUS}
 ${ITEM_OWNER_WARNING_LINE}
@@ -660,7 +650,6 @@ ${PERSONAL_DEFAULT_REASON}
 - manual_validation_pending: ${MANUAL_VALIDATION_PENDING}
 - generated_by_ai: ${GENERATED_BY_AI}
 - ai_role: ${AI_ROLE}
-${PROJECT_WARNING_BLOCK}
 ${PERSONAL_WARNING_BLOCK}
 
 ## 最小人工步骤

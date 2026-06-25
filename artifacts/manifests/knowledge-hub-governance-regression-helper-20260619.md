@@ -68,7 +68,7 @@
 | manifest-profile-boundary-advisory | 当前 manifest profile 恢复视图把边界字段缺失标为 advisory | `knowledge-index-plan.sh --section manifest --json` 不再输出硬失败式 `missing-boundary` 状态，而使用 `advisory-missing-boundary`，并在中文说明中明确它只提示人工补强方向 |
 | manual-entry-project-index-hint | 当前人工新增条目向导输出条件索引提示 | 项目域包含 `indexes/by-project.md`，非项目域不包含项目索引噪音；已登记 source 才提示同步 `indexes/by-source.md`，`kind=decision` 才输出 `indexes/by-decision.md` 骨架 |
 | manual-entry-registered-source-binding | 当前人工新增条目向导支持已登记 source 绑定 | 普通 item 模式传入 `--item-source-id` 后，registry 草稿写入 `source.source_id`，输出真实 `by-source` 草稿和带 `--source-id` 的检索命令；未知 source id 必须失败，不能伪造 source |
-| manual-entry-project-derived-from-domain | 当前人工新增项目条目向导从 domain 推导项目名 | 未传 `--project` 时由 `projects/<project>` 推导；不一致时输出 warning |
+| manual-entry-project-derived-from-domain | 当前人工新增项目条目向导从 domain 推导项目名 | 项目 id 只能由 `--domain projects/<project>` 推导；旧 `--project` 兼容参数必须被拒绝 |
 | manual-entry-default-dates | 当前人工新增向导输出默认日期 | registry / migration 草稿填入 ISO 日期，不保留日期占位符 |
 | manual-entry-owner-override | 当前人工新增向导支持 owner 覆盖 | 默认 owner 为 `leiwenjun`，传入 `--owner team-core` 时草稿使用 `team-core` |
 | manual-entry-owner-registry-and-personal-defaults | 当前人工新增向导暴露 item owner registry 状态，并对 personal-local 给出安全默认值 | 未登记 item owner 只输出 warning、不伪造 owner；`domain=personal` 或 `domains/personal/` 路径默认 `visibility=personal-local`、`status=personal`，显式 domain/path 冲突会提示不可直接落盘 |

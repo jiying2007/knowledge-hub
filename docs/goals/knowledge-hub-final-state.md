@@ -67,6 +67,8 @@ Knowledge Hub 只维护 canonical 项目正文、reference、artifact-ref、regi
 
 5. PCR02 project-specific 内容默认只能进入：
 
+以下路径清单是 2026-06 中旬历史治理口径；当前硬切换 canonical 入口已经改为 `projects/pcr02/...`。本段只保留为历史目标背景，不得作为新增内容入口。
+
 - domains/projects/pcr02/current/
 - domains/projects/pcr02/archive/
 - domains/projects/pcr02/decisions/
@@ -1158,7 +1160,7 @@ rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash tools/knowledge-final-gate.sh --json
 ```
 
-如果 final gate 返回 1，但 status 是 needs-owner-review 且唯一 blocker 是 owner-gates-open，可以作为 Codex 自动治理终态；必须在最终说明中明确这是人工语义 blocker，不是工具失败。
+历史 owner-gated 阶段失败恢复说明：如果 final gate 返回 1，但 status 是 needs-owner-review 且唯一 blocker 是 owner-gates-open，可以作为当时的 Codex 自动治理终态；必须在最终说明中明确这是人工语义 blocker，不是工具失败。当前终态以 2026-06-25 `final_status=ok` 验收为准。
 
 ====================
 十三、最终输出要求

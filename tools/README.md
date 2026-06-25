@@ -17,7 +17,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 | 日常路径 | 人工新增、检索、索引计划和全仓检查 | `knowledge-new.sh`、`knowledge-search.sh`、`knowledge-index-plan.sh`、`knowledge-check.sh --dry-run --json --diagnostics` | 只输出草稿或检查结果，不自动落盘、不伪造 source/owner/evidence |
 | 人工复核 | 查看、校验和机械落地 AI 生成内容及外部资料待复核队列 | `knowledge-status.sh --json --review-queue-limit 10`、`knowledge-index-plan.sh --section review-queue --json`、`knowledge-index-plan.sh --section review-queue --queue-forms-jsonl`、`knowledge-index-plan.sh --section review-queue --validate-queue-forms <jsonl> --json`、`knowledge-review-queue-apply.sh --forms <jsonl> --dry-run\|--apply --json` | 队列和表单骨架只读；apply 只允许机械落地真实人工填写的 human review 字段，不生成 review 结论、不代签 owner gate、不提升 active、不写 memory、不修改源项目 |
 | owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --owner-inbox`、`--forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
-| 终态检查 | 证明自动治理是否闭环，区分 `needs-owner-review` 和 `needs-fix` | `knowledge-final-gate.sh --json`；正文最大迁移收口使用 `knowledge-final-gate.sh --json --final-profile max-body` | 必须包含 regression、diff check、strict status；`standard` 不让普通人工复核队列阻断终态，`max-body` 会把待复核队列和不安全 source inventory 作为 blocker |
+| 终态检查 | 证明自动治理是否闭环，读取 `final_status` 并区分 `ok` / `needs-owner-review` / `needs-fix` | `knowledge-final-gate.sh --json`；正文最大迁移收口使用 `knowledge-final-gate.sh --json --final-profile max-body` | 必须包含 regression、diff check、strict status；`standard` 不让普通人工复核队列阻断终态，`max-body` 会把待复核队列和不安全 source inventory 作为 blocker |
 | 高级写入计划 | copy-first、artifact-ref、capture、promote、retire 等需要 reviewed manifest 的流程 | 对应工具默认 dry-run；`--apply` 只允许人工在证据齐备后触发 | 自动化不得删除、发布、提升 active、关闭 owner gate、写 memory 或改源项目 |
 | 硬迁移 | 将 registered sources 的文档正文和明确文档附件迁入 Hub，并生成 tombstone / decommission 账本 | `knowledge-hard-migration.sh --dry-run --json`、`knowledge-hard-migration.sh --apply --json` | 只写 Hub 本仓正文、artifact vault 和 manifest；不删除外部 source、不修改源项目、不写 memory、不关闭 owner gate |
 
@@ -65,7 +65,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 ## `knowledge-check.sh` 参数语义
 
-`knowledge-check.sh` 是全仓一致性门禁。`--project` 和 `--domain` 目前只是兼容保留参数，不会缩小检查范围；传入时会在 `warnings` 中提示仍执行全仓检查。
+`knowledge-check.sh` 是全仓一致性门禁。终态不再兼容 `--project` 或 `--domain` 检查过滤；需要定位项目或领域时，先用 `knowledge-search.sh` / `knowledge-index-plan.sh` 收窄，再运行全仓 `knowledge-check.sh --dry-run --json --diagnostics`。
 
 `--explain <item-id>` 是只读人工诊断入口，用于解释单个 registry item 的基础字段、正文路径是否存在、核心索引引用计数、`by-status` bucket 和维护提示。它不修复文件、不生成索引、不执行 `validation_refs`，适合在 `knowledge-check` 报缺失或重复引用后定位人工修改点。
 
@@ -132,9 +132,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 新增 source 时，`registry/sources.json` 的 `owner` 必须是 `registry/owners.json` 中已有的 source registry 维护责任人。`knowledge-new.sh --source` 要求 `--check` 或 `--no-check-reason` 二选一。优先使用稳定只读 `--check "rtk test -d sources/<source-id>"`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 source coverage 或相邻 manifest 写清 no-check reason。使用 `--check` 时，registry source object 和 source coverage JSONL row 草稿都应记录 `check`，不再补 JSON 形式的 `no_check_reason`。`knowledge-new.sh --source` 会输出推荐终态和中文理由，但 copyable JSON 仍默认保守；推荐提示不替代 owner decision、不关闭 owner gate，人工必须按 `registry/schema.md`、coverage manifest 和 owner gate 状态确认后再替换。
 
-终态 JSON 先看 4 组字段：
+终态 JSON 先看 `final_status`、`today` / `as_of_source` 和 `evidence_index[]`：`ok` 表示终态门禁已通过，不进入 owner handoff；`needs-owner-review` 才检查 `gap_map[]` 是否唯一为 `owner-gates-open`；`needs-fix` 先按非 owner blocker 修复。再看 4 组辅助字段：
 
-- `automatic_governance.status` 和 `gap_map[]`：判断自动治理是否 `complete-except-owner-review`，以及唯一缺口是否为 `owner-gates-open`。
+- `automatic_governance.status` 和 `gap_map[]`：判断自动治理是否闭环，以及在 `needs-owner-review` 分支下唯一缺口是否为 `owner-gates-open`。
 - `owner_recovery`：恢复下一批 open worksheet、owner 分派、owner handoff packet 和单条 gate 入口；只服务真实 owner 人工签收。
 - `maintenance_entry_audit`、`linking_audit`、`proof_artifacts`、`final_state_audit`、`source_check_runtime` 和 `highest_priority_rules_audit`：证明长期维护入口、跨索引恢复、终态 proof 主制品可发现性、分层终态、report-only source availability 和高优先级规则证据边界。
 - `evidence_index[]`：记录本次 terminal gate 采信的每条命令证据、退出码、状态和中文摘要。
@@ -143,7 +143,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 如果离线或工具不可用，不能把终态写成 `ok` / `pass`。在相邻维护记录中写 `manual_validation_pending: true`，并记录 owner、日期、当前 `cwd`、阻塞原因和 `required_followup: rtk git diff --check; rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；恢复后先补跑命令再更新证据。
 
-失败恢复决策树以根 README 为准，本文件只补工具字段和边界。简要顺序：
+失败恢复决策树以根 README 为准，本文件只补工具字段和边界。当前 terminal gate 以 `final_status` 为准；2026-06-25 的终态基准是 `ok`，`needs-owner-review` 只作为历史复现分支或未来新 owner blocker 分支处理。简要顺序：
 
 1. `needs-fix`: 先看 `evidence_index[]`，定位哪条命令不是 `pass` 或 `owner-review`；再看对应 `blockers[]` / `gap_map[]` 的 `fix_action`。
 2. `needs-owner-review`: 只在 `gap_map[]` 唯一项为 `owner-gates-open` 时进入 owner 人工签收路径；从 `owner_recovery.owner_dispatch[]` 选择 owner，先运行 `owner_inbox_json_command`，再按 handoff packet 运行 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit。
