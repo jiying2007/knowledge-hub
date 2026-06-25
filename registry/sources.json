@@ -66,7 +66,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/codex-archive",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/codex/archive/source-docs/codex-archive",
+      "canonical_target": "domains/codex/archive/codex-archive",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -151,7 +151,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/codex-archive-registry",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/codex/archive/source-docs/codex-archive-registry",
+      "canonical_target": "domains/codex/archive/codex-archive-registry",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },

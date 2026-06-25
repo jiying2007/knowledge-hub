@@ -14,7 +14,7 @@
 
 ## Hub 管理方式
 
-codex-archive 已硬迁移到 Hub codex archive source-docs；旧 Codex archive 入口不再作为新增归档或默认查询入口。
+codex-archive 已硬迁移到 Hub Codex archive 终态目录；旧 Codex archive 入口不再作为新增归档或默认查询入口。
 
 ## 边界
 

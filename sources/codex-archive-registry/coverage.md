@@ -8,7 +8,7 @@
 
 ## 决策
 
-codex-archive-registry 已硬迁移到 Hub codex source-docs；旧 archive registry 不再作为 active source path。
+codex-archive-registry 已硬迁移到 Hub Codex archive registry 终态目录；旧 archive registry 不再作为 active source path。
 
 ## 风险
 

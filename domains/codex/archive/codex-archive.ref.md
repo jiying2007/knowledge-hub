@@ -2,13 +2,13 @@
 
 ## 摘要
 
-`codex-archive` 是已登记且已硬迁移的 Codex workflow history source。Knowledge Hub 现在以 Hub 内 `sources/codex-archive` 和 `domains/codex/archive/source-docs/codex-archive` 为控制入口；旧 `~/codex/docs/archive` 只保留在 `origin_path`、tombstone 和迁移 manifest 中作 provenance，不再作为新增归档、默认读取或 active source 入口。
+`codex-archive` 是已登记且已硬迁移的 Codex workflow history source。Knowledge Hub 现在以 Hub 内 `sources/codex-archive` 和 `domains/codex/archive/codex-archive` 为控制入口；旧 `~/codex/docs/archive` 只保留在 `origin_path`、tombstone 和迁移 manifest 中作 provenance，不再作为新增归档、默认读取或 active source 入口。
 
 ## Source Identity
 
 - source_id：`codex-archive`
 - hub_source_path：`sources/codex-archive`
-- canonical_target：`domains/codex/archive/source-docs/codex-archive`
+- canonical_target：`domains/codex/archive/codex-archive`
 - origin_path：`~/codex/docs/archive`（retired provenance only）
 - role：`hub-migrated-source`
 - authority：`knowledge-hub-canonical`

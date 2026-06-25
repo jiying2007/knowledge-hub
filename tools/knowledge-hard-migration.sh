@@ -78,13 +78,13 @@ SOURCE_POLICIES = {
     },
     "codex-archive": {
         "kind": "copy-docs",
-        "text_target": "domains/codex/archive/source-docs/codex-archive",
+        "text_target": "domains/codex/archive/codex-archive",
         "artifact_target": "artifacts/vault/codex-archive",
         "decommission": "delete-external-after-verify",
     },
     "codex-archive-registry": {
         "kind": "copy-docs-and-artifacts",
-        "text_target": "domains/codex/archive/source-docs/codex-archive-registry",
+        "text_target": "domains/codex/archive/codex-archive-registry",
         "artifact_target": "artifacts/vault/codex-archive-registry",
         "decommission": "delete-external-after-verify",
     },
@@ -243,6 +243,16 @@ def terminal_target(row):
         old_prefix = "projects/pcr02/archive/source-docs/engineering-archive"
         if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
             return target_path.replace(old_prefix, "projects/pcr02/archive/engineering-archive", 1)
+    if row.get("source_id") == "codex-archive":
+        target_path = row.get("target_path", "")
+        old_prefix = "domains/codex/archive/source-docs/codex-archive"
+        if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
+            return target_path.replace(old_prefix, "domains/codex/archive/codex-archive", 1)
+    if row.get("source_id") == "codex-archive-registry":
+        target_path = row.get("target_path", "")
+        old_prefix = "domains/codex/archive/source-docs/codex-archive-registry"
+        if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
+            return target_path.replace(old_prefix, "domains/codex/archive/codex-archive-registry", 1)
     return row.get("target_path", "")
 
 
@@ -460,7 +470,7 @@ for source in sources:
                 if remapped_target and remapped_target != imported.get("target_path", ""):
                     imported["previous_target_path"] = imported.get("target_path", "")
                     imported["target_path"] = remapped_target
-                    imported["terminal_relocation"] = "embedded-domain-complete-migration-20260625"
+                    imported["terminal_relocation"] = "terminal-domain-complete-migration-20260625"
                     if imported.get("action") in {"copy-body", "copy-artifact"}:
                         imported["status"] = "relocated-to-canonical-domain"
                 imported["terminal_checked_at"] = args.as_of

@@ -8,12 +8,12 @@
 
 | 分组 | source_id | 边界摘要 |
 |---|---|---|
-| legacy team knowledge | `embedded-knowledge` | 已硬迁移到 `domains/embedded/archive/source-docs/embedded-knowledge`；旧团队知识目录 retired，后续提升仍需 owner review |
+| legacy team knowledge | `embedded-knowledge` | 已终态归位到 `domains/embedded/*`；旧团队知识目录 retired，后续提升仍需 owner review |
 | legacy project archive | `engineering-archive` | 已迁移到终态目录 `projects/pcr02/archive/engineering-archive`；历史证据不等于当前 active fact |
 | patent materials | `patent-disclosure` | Markdown 正文进入 `domains/patents/archive/patent-disclosure`，附件进入 `artifacts/vault/patent-disclosure`；法律状态和披露边界仍需 owner/legal review |
-| Codex archive | `codex-archive` | 已硬迁移到 `domains/codex/archive/source-docs/codex-archive`；旧 Codex archive 目录 retired，不再作为新增归档入口 |
+| Codex archive | `codex-archive` | 已硬迁移到 `domains/codex/archive/codex-archive`；旧 Codex archive 目录 retired，不再作为新增归档入口 |
 | Codex runtime | `codex-memories` / `codex-history` / `codex-raw-sessions` / `codex-session-index` | 运行态输入 provenance；不复制 raw memory、history 或 session 正文，不写 `~/.codex/memories` |
-| Codex archive registry | `codex-archive-registry` | 已硬迁移到 Hub Codex source-docs 和 artifact vault；旧 registry 只作 provenance |
+| Codex archive registry | `codex-archive-registry` | 已硬迁移到 `domains/codex/archive/codex-archive-registry` 和 artifact vault；旧 registry 只作 provenance |
 | Hub native | `knowledge-hub-automation-runs` | Hub 原生账本；正文权威仍是 `registry/automation-runs.jsonl` |
 | PCR02 Level 1 | `pcr02-project-docs` | 旧正文副本已剪枝；项目 current/archive 中的 owner-approved target 继续按 owner 决策使用，剩余只保留 hash/provenance |
 | PCR02 Level 2 | `pcr02-project-tools` | 工具、诊断和 memory automation 边界；脚本正文不默认提升，自动化默认 report-only |

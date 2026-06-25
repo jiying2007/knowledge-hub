@@ -21,7 +21,7 @@
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
-- Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/source-docs/codex-archive`; `registry/sources.json`
+- Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
 
 ## 领域入口
 
