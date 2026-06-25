@@ -3,13 +3,15 @@
 ## PCR02
 
 - 当前 docs source control：`sources/pcr02-project-docs`
-- 当前 docs 迁移副本：`projects/pcr02/archive/source-docs/pcr02-project-docs`
+- PCR02 旧 source 正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.md`
 - 历史归档 source control：`sources/engineering-archive`
-- 历史归档迁移副本：`projects/pcr02/archive/source-docs/engineering-archive`
+- 历史工程归档终态正文：`projects/pcr02/archive/engineering-archive`
 - 旧外部路径：仅保留在 registry/sources.json 的 origin_path 字段、`registry/source-tombstones.jsonl` 和迁移 manifest 中作 provenance；不作为 active source 或默认查询入口。
 - 目标项目域：`projects/pcr02`
+- 项目入口：`projects/pcr02/README.md`
 - current 恢复锚点：`projects/pcr02/current/`
 - archive 恢复锚点：`projects/pcr02/archive/`
+- archive 入口：`projects/pcr02/archive/README.md`
 - validation 恢复锚点：`projects/pcr02/validation/`
 - manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
 - 决策目录：`projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。

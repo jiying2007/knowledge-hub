@@ -66,7 +66,7 @@ SOURCE_POLICIES = {
     },
     "engineering-archive": {
         "kind": "copy-docs",
-        "text_target": "projects/pcr02/archive/source-docs/engineering-archive",
+        "text_target": "projects/pcr02/archive/engineering-archive",
         "artifact_target": "artifacts/vault/engineering-archive",
         "decommission": "delete-external-after-verify",
     },
@@ -95,49 +95,49 @@ SOURCE_POLICIES = {
     "knowledge-hub-automation-runs": {"kind": "hub-native", "decommission": "not-external"},
     "pcr02-project-docs": {
         "kind": "copy-docs-and-artifacts",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-docs",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-docs",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-project-tools": {
         "kind": "copy-docs",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-tools",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-tools",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-project-knowledge": {
         "kind": "copy-docs",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-knowledge",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-knowledge",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-product-test": {
         "kind": "copy-docs-and-artifacts",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-product-test",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-product-test",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-project-scratch": {
         "kind": "copy-docs",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-scratch",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-scratch",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-project-root-artifacts": {
         "kind": "project-root-shallow",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-root-artifacts",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-root-artifacts",
         "decommission": "source-project-root-not-deleted",
     },
     "pcr02-module-agent-rules": {
         "kind": "agent-rules",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-module-agent-rules",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-module-agent-rules",
         "decommission": "source-project-doc-prune-after-authorization",
     },
     "pcr02-project-agent-config": {
         "kind": "agent-config",
-        "text_target": "projects/pcr02/archive/source-docs/pcr02-project-agent-config",
+        "prune_body": True,
         "artifact_target": "artifacts/vault/pcr02-project-agent-config",
         "decommission": "source-project-config-not-deleted",
     },
@@ -238,7 +238,62 @@ def terminal_target(row):
         remapped = embedded_knowledge_terminal_target(row.get("source_path", ""))
         if remapped:
             return remapped
+    if row.get("source_id") == "engineering-archive":
+        target_path = row.get("target_path", "")
+        old_prefix = "projects/pcr02/archive/source-docs/engineering-archive"
+        if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
+            return target_path.replace(old_prefix, "projects/pcr02/archive/engineering-archive", 1)
     return row.get("target_path", "")
+
+
+def load_body_prune_rows():
+    rows_by_target = {}
+    prefix_rows = []
+    manifest_root = root / "artifacts" / "manifests"
+    for manifest in sorted(manifest_root.glob("*body-prune-*.jsonl")):
+        for line in manifest.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row.get("status") != "body-pruned-by-policy":
+                continue
+            target_path = str(row.get("target_path", "")).strip() or str(row.get("archived_path", "")).strip()
+            if target_path:
+                rows_by_target[target_path] = {**row, "prune_manifest": str(manifest.relative_to(root))}
+            target_prefix = str(row.get("target_prefix", "")).strip()
+            if target_prefix:
+                prefix_rows.append({**row, "target_prefix": target_prefix.rstrip("/"), "prune_manifest": str(manifest.relative_to(root))})
+    return rows_by_target, prefix_rows
+
+
+BODY_PRUNE_ROWS_BY_TARGET, BODY_PRUNE_PREFIX_ROWS = load_body_prune_rows()
+
+
+def body_prune_row(target_path):
+    normalized = str(target_path or "").strip().rstrip("/")
+    if not normalized:
+        return None
+    exact = BODY_PRUNE_ROWS_BY_TARGET.get(normalized)
+    if exact:
+        return exact
+    for row in BODY_PRUNE_PREFIX_ROWS:
+        prefix = row["target_prefix"]
+        if normalized == prefix or normalized.startswith(prefix + "/"):
+            return row
+    return None
+
+
+def mark_body_pruned(row, prune_row, target_path):
+    row["previous_action"] = row.get("action", "")
+    row["previous_status"] = row.get("status", "")
+    row["previous_target_path"] = target_path
+    row["action"] = "hash-only-provenance"
+    row["status"] = "body-pruned-by-policy"
+    row["target_path"] = ""
+    row["pruned_target_path"] = target_path
+    row["prune_manifest"] = prune_row.get("prune_manifest", "")
+    row["prune_reason_zh"] = prune_row.get("reason_zh", "")
+    return row
 
 
 def should_skip(path, source_root):
@@ -333,6 +388,8 @@ def copied_target_missing(rows):
         if row.get("action") not in {"copy-body", "copy-artifact"}:
             continue
         target_path = terminal_target(row)
+        if row.get("action") == "copy-body" and body_prune_row(target_path):
+            continue
         if not target_path:
             missing.append(f"{row.get('id', '<unknown>')}: empty target_path")
             continue
@@ -393,6 +450,13 @@ for source in sources:
             for row in previous_rows:
                 imported = dict(row)
                 remapped_target = terminal_target(imported)
+                prune_row = body_prune_row(remapped_target)
+                if imported.get("action") == "copy-body" and prune_row:
+                    imported = mark_body_pruned(imported, prune_row, remapped_target)
+                    imported["terminal_checked_at"] = args.as_of
+                    imported["retired_origin_missing"] = True
+                    imported_rows.append(imported)
+                    continue
                 if remapped_target and remapped_target != imported.get("target_path", ""):
                     imported["previous_target_path"] = imported.get("target_path", "")
                     imported["target_path"] = remapped_target
@@ -459,8 +523,19 @@ for source in sources:
             "status": "planned",
         }
         if action == "copy-body":
+            if policy.get("prune_body"):
+                prune_row = {
+                    "prune_manifest": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
+                    "reason_zh": "PCR02 旧 source 正文副本按终态剪枝；Hub 只保留 hash/provenance、source control、owner-approved canonical 项目正文和必要 artifact vault。",
+                }
+                migration_rows.append(mark_body_pruned(row, prune_row, ""))
+                continue
             target_rel = pathlib.PurePosixPath(policy["text_target"]) / rel
             row["target_path"] = target_rel.as_posix()
+            prune_row = body_prune_row(target_rel.as_posix())
+            if prune_row:
+                migration_rows.append(mark_body_pruned(row, prune_row, target_rel.as_posix()))
+                continue
             target = safe_target(target_rel.as_posix())
             target_payload = read_text_payload(path)
             target_hash = sha256_bytes(target_payload)

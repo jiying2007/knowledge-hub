@@ -2,15 +2,13 @@
 
 本报告记录 Knowledge Hub 硬迁移的当前执行结果。长期知识正文以 Hub target 为准，外部 origin 只保留 tombstone/provenance。
 
-本批次将 `embedded-knowledge` 的过渡快照正文完整归位到 `domains/embedded/*`，旧快照目录已删除；`sources/embedded-knowledge` 只保留 source 控制面。
-
 - registered_sources: 18
-- migration_rows: 960
-- planned_copy_or_artifact: 553
+- migration_rows: 943
+- planned_copy_or_artifact: 402
 - copied: 0
-- existing_verified: 553
-- retired_origin_missing: 10
-- retired_manifest_reused: 942
+- existing_verified: 402
+- retired_origin_missing: 9
+- retired_manifest_reused: 810
 - decommission_rows: 18
 
 ## 验证

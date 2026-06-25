@@ -266,6 +266,7 @@ ALLOWED_SOURCE_CONTROL_OBJECT_TYPES = {
     "binary",
     "log",
     "archive",
+    "manifest",
     "automation-run",
     "unknown",
 }
@@ -275,6 +276,7 @@ ALLOWED_SOURCE_CONTROL_DISPOSITIONS = {
     "artifact-ref",
     "reference-only",
     "archive-only",
+    "hash-only-provenance",
     "exclude",
 }
 ALLOWED_SOURCE_CONTROL_STATUSES = {

@@ -1,11 +1,11 @@
 # Engineering Archive
 
-This directory stores local engineering notes, validation records, release guides, and troubleshooting conclusions.
+本目录是旧 `~/embedded/engineering_archive` 迁入 Knowledge Hub 后的工程归档区。PCR02 新增工程归档应写入 `projects/pcr02/archive/engineering-archive/pcr02/`，不再写回旧外部路径。
 
 ## Structure
 
 ```text
-archive/
+projects/pcr02/archive/engineering-archive/
   README.md
   pcr02/
     README.md
@@ -19,14 +19,14 @@ archive/
     source-audit/
 ```
 
-## Rules
+## 规则
 
-- Keep reusable decisions, evidence, commands, and release/validation guides.
-- Do not store raw full serial logs by default; extract the relevant evidence snippets.
-- Do not store credentials, private keys, tokens, or runtime secrets.
-- Do not copy large release binaries by default; record path, size, hash, and NAS location.
-- Use a topic directory for complex workstreams with multiple notes or artifacts.
-- Use a single Markdown file for small, self-contained notes.
+- 保留可复用决策、证据、命令、发布说明和验证指南。
+- 默认不保存完整 raw 串口日志；只提取关键证据片段。
+- 不保存凭证、私钥、token 或运行时 secret。
+- 默认不复制大型 release binary；记录路径、大小、hash 和 NAS 位置。
+- 复杂工作流使用主题目录和局部 `README.md`。
+- 小型自包含记录使用单个 Markdown 文件。
 
 ## Projects
 

@@ -8,7 +8,7 @@
 
 ## 决策
 
-pcr02-project-tools 可读文档已硬迁移到 Hub PCR02 source-docs；工具代码不作为 Hub 正文源。
+pcr02-project-tools 的旧可读文档副本已按终态剪枝；Hub 仅保留 source control、hash/provenance 和必要的命令契约/验证记录，工具代码不作为 Hub 正文源。
 
 ## 风险
 

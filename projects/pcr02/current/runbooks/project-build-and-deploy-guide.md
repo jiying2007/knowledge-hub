@@ -90,4 +90,4 @@ rtk make clean
 
 - 构建期：优先看 `make` 首个错误和对应 `dep.mk/lib.mk`。
 - 运行期：先看 `daemon` 进程拉起状态，再看 `cmd_server` IPC，再看 `pcr02` 模块初始化日志。
-- ASAN 相关问题按 `$EMBEDDED_KNOWLEDGE_HOME/docs/runbooks/asan-debug-guide.md` 执行。
+- ASAN 相关问题按 `~/knowledge-hub/domains/embedded/` 中的调试与排障 runbook 执行。

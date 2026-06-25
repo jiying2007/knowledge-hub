@@ -6218,7 +6218,7 @@ def test_index_plan_extended_sections():
         and source_selection.get("candidate_count", 0) >= 1
         and source_selection.get("dated_candidate_count", 0) >= 1
         and bool(source_coverage)
-        and source_coverage.get("checked_at") == "2026-06-24"
+        and source_coverage.get("checked_at") == "2026-06-25"
         and bool(source_coverage_decision)
         and bool(source_coverage_risk)
         and "project-current" in topic_index
@@ -6680,8 +6680,8 @@ def test_status_source_governance_summary():
         and len(source_recovery_rows) == 18
         and pcr02_docs_recovery.get("final_disposition") == "hard-migrated-to-hub"
         and pcr02_docs_recovery.get("coverage_status") == "hard-migrated-to-hub"
-        and "copy-docs-and-artifacts" in pcr02_docs_recovery.get("coverage_classification", "")
-        and "硬迁移" in pcr02_docs_recovery.get("coverage_decision", "")
+        and "hash-only-provenance" in pcr02_docs_recovery.get("coverage_classification", "")
+        and "旧正文副本已按终态剪枝" in pcr02_docs_recovery.get("coverage_decision", "")
         and pcr02_docs_recovery.get("has_check") is True
         and pcr02_docs_recovery.get("has_no_check_reason") is False
         and pcr02_tools_recovery.get("check_contract_status") == "ok"
@@ -6852,7 +6852,9 @@ def test_hard_migration_retired_origin_missing_terminal():
                 and source.get("final_disposition") == "hard-migrated-to-hub"
                 and source.get("canonical_manifest")
             ):
-                source["path"] = str(missing_root / str(source.get("id", "unknown")))
+                missing_path = str(missing_root / str(source.get("id", "unknown")))
+                source["path"] = missing_path
+                source["origin_path"] = missing_path
                 changed_source_ids.append(source.get("id"))
         sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     except Exception as exc:

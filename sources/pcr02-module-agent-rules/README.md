@@ -14,12 +14,14 @@
 
 ## Hub 管理方式
 
-pcr02-module-agent-rules 已硬迁移到 Hub PCR02 source-docs archive；模块 AGENTS 旧路径不再作为 Hub 规则来源。
+pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；历史 `AGENTS.md` 正文副本已从 Hub source-docs 正文层剪枝，剪枝账本见 `artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl`。当前源码仓及独立子仓的 `AGENTS.md` 属于项目本地 Codex 运行控制文件，仍由源项目 Git 管理，不作为 Hub 知识正文双写。
 
 ## 边界
 
 - `path` 指向 Hub 内 source 控制目录；旧外部路径只允许作为 `origin_path` provenance。
 - Hub 统一管理 source 的清单、覆盖状态、迁移证据、退役策略和可复用提取物。
+- 源项目当前 `AGENTS.md` 仅保留本地运行边界、构建边界和危险操作限制；不承载迁移归档正文。
+- Hub 不保留历史 `AGENTS.md` 正文副本作为规则入口；只保留 hash/provenance 和剪枝账本。
 - raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料不得作为 active source 入口。
 - 不修改源项目，不写 `~/.codex/memories`，不自动提升 active，不重新回源读取作为默认路径。
 

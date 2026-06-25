@@ -14,7 +14,7 @@ validation_refs: []
 
 # Sigmastar AOV 与光敏控制全面分析
 
-> 归档说明：本文为历史报告，只记录当时结论与验证；当前执行以 active 文档、本仓实际脚本和 ~/embedded/knowledge 的当前入口为准。
+> 归档说明：本文为历史报告，只记录当时结论与验证；当前执行以 Knowledge Hub active 文档、本仓实际脚本、`~/knowledge-hub/domains/embedded/` 和 `~/knowledge-hub/projects/pcr02/` 的当前入口为准。
 
 > 分析范围：`examples/sigmastar/`  
 > 日期：2026-05-08

@@ -4,7 +4,8 @@
 
 - Source id: `pcr02-project-docs`
 - Hub source path: `sources/pcr02-project-docs`
-- Hub migrated README: `projects/pcr02/archive/source-docs/pcr02-project-docs/README.md`
+- Hub source control: `sources/pcr02-project-docs/README.md`
+- Body prune ledger: `artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
 - Origin URI: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs/README.md`（retired provenance only）
 - Source path: `README.md`
 - Source size: `3010`
@@ -16,13 +17,13 @@
 
 ## Boundary
 
-This file is a Hub index entry. It no longer treats the PCR02 project docs README in the source project as the active authority. The migrated Hub copy and source control directory are the Knowledge Hub entry points; the old URI is retained only for provenance and hash comparison.
+This file is a Hub index entry. It no longer treats the PCR02 project docs README in the source project as the active authority. The old migrated body copy has been pruned; the source control directory, prune ledger and canonical `projects/pcr02/` targets are the Knowledge Hub entry points. The old URI is retained only for provenance and hash comparison.
 
 Use this entry to find the Hub-controlled PCR02 project docs source and to connect migrated Knowledge Hub records back to their original project-local docs index when provenance is needed.
 
 ## Current Handling
 
-- Keep the Hub migrated README and project current/archive targets as the Knowledge Hub authority.
+- Keep source control, provenance ledger and project current/archive targets as the Knowledge Hub authority.
 - Keep migrated PCR02 content under `projects/pcr02/`.
 - Do not create new Knowledge Hub references that read from the retired source project docs path by default.
 - Do not promote project-specific docs index rules into `domains/embedded/`.

@@ -9,7 +9,7 @@ created: 2026-05-18
 last_updated: 2026-05-18
 tags: [pcr02, tools, debug, knowledge]
 related: [project-build-and-deploy-guide.md, ../architecture/project-overview-design.md]
-validation_refs: [../../tools/debug/project-knowledge-debug.sh, projects/pcr02/archive/source-docs/pcr02-project-tools/README.md]
+validation_refs: [../../tools/debug/project-knowledge-debug.sh, sources/pcr02-project-tools/README.md, artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl]
 ---
 
 # PCR02 项目调试工具入口
@@ -20,10 +20,10 @@ validation_refs: [../../tools/debug/project-knowledge-debug.sh, projects/pcr02/a
 
 ## 2. 前置条件
 
-若仍需运行源项目 wrapper，可由调用环境显式设置旧工具路径；Knowledge Hub 不把该路径作为知识权威入口：
+若仍需运行源项目 wrapper，按源项目当前脚本和项目本地 `AGENTS.md` 执行；Knowledge Hub 不再提供或推荐旧团队知识库环境变量。
 
 ```bash
-export EMBEDDED_KNOWLEDGE_HOME="$HOME/embedded/knowledge"
+export KNOWLEDGE_HUB_HOME="$HOME/knowledge-hub"
 ```
 
 默认项目参数：
@@ -89,9 +89,9 @@ rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/co
 ## 4. Hub 知识入口
 
 - `domains/embedded/`
-- `projects/pcr02/archive/source-docs/pcr02-project-tools/README.md`
-- `projects/pcr02/archive/source-docs/pcr02-project-docs/runbooks/project-debug-tools-guide.md`
+- `projects/pcr02/current/`
 - `sources/pcr02-project-tools/README.md`
+- `artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
 
 ## 5. 边界
 

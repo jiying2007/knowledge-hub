@@ -400,7 +400,7 @@ rtk bash -lc 'git add tools/diag/checks/check_diag_phase6_static.py docs/reports
 - Event/Msg/WiFi 类可外控且防重复：任务 4 覆盖。
 - CLI 膨胀与自发现：任务 3、6 覆盖。
 - 分层版本清单：任务 3（命令入口）+ 任务 2（registry 输出）覆盖。
-- 代码规范与门禁：任务 1、7 覆盖，且全程受 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md` 约束。
+- 代码规范与门禁：任务 1、7 覆盖，且全程受 `~/knowledge-hub/domains/embedded/` 中的 C/C++ 编码规范约束。
 
 ### 2. 占位符扫描
 - 无 `TODO`、`待定`、`后续实现` 作为执行步骤占位。

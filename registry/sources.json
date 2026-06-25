@@ -31,7 +31,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/engineering-archive",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/engineering-archive",
+      "canonical_target": "projects/pcr02/archive/engineering-archive",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -185,7 +185,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-docs",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-project-docs",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -202,7 +202,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-tools",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-project-tools",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -219,7 +219,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-knowledge",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-project-knowledge",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -236,7 +236,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-product-test",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-product-test",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "artifact_target": "artifacts/vault/pcr02-product-test",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
@@ -254,7 +254,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-scratch",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-project-scratch",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -271,7 +271,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-root-artifacts",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-project-root-artifacts",
+      "canonical_target": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },
@@ -288,7 +288,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-module-agent-rules",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/source-docs/pcr02-module-agent-rules",
+      "canonical_target": "artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl",
       "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
       "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
     },

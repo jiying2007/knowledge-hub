@@ -14,7 +14,7 @@
 
 ## Hub 管理方式
 
-engineering-archive 已硬迁移到 Hub PCR02 source-docs archive；旧工程归档路径可删除前只作 provenance。
+engineering-archive 已迁移到 Hub PCR02 终态工程归档目录 `projects/pcr02/archive/engineering-archive`；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
 
 ## 边界
 

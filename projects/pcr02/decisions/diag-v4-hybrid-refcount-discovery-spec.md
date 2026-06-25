@@ -18,7 +18,7 @@ validation_refs: []
 - 日期：2026-05-10
 - 适用范围：`cmd_server`、`cli`、`modules/hdi`、`modules/api`、`modules/app`、`pcr02`、`app_product_test`
 - 设计目标：在 V4 边界内建立可维护、可扩展、可观测的诊断体系，解决通用组件生命周期与 CLI 膨胀问题
-- 强制规范基线：`$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`（本设计所有实现细节若与其冲突，以该规范为准）
+- 强制规范基线：`~/knowledge-hub/domains/embedded/` 中的 C/C++ 编码规范（本设计所有实现细节若与其冲突，以该规范为准）
 
 ## 1. 已确认决策
 1. 生命周期策略：`Hybrid`（默认 owner 驱动，同时允许外部 bring up/down）。
@@ -183,8 +183,8 @@ CLI 仅保留稳定入口：
 
 ## 10. 代码规范与工程门禁（强制）
 0. 规范基线与优先级：
-- 必须严格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
-- 本节是 V4 诊断域的补充约束，不替代 C 代码总规范；冲突时以 `c_coding_standards.md` 为最高优先级。
+- 必须严格遵循 `~/knowledge-hub/domains/embedded/` 中的 C/C++ 编码规范。
+- 本节是 V4 诊断域的补充约束，不替代 C 代码总规范；冲突时以 Hub 中的 C/C++ 编码规范为最高优先级。
 
 1. 命名规范：
 - 运行时诊断 provider 统一由 APP 托管：API owner 使用 `app_diag_api_*_provider`，

@@ -14,7 +14,7 @@ validation_refs: []
 
 # 会话归档报告（2026-05-17）
 
-> 归档说明：本文为历史报告，只记录当时结论与验证；当前执行以 active 文档、本仓实际脚本和 ~/embedded/knowledge 的当前入口为准。
+> 归档说明：本文为历史报告，只记录当时结论与验证；当前执行以 Knowledge Hub active 文档、本仓实际脚本、`~/knowledge-hub/domains/embedded/` 和 `~/knowledge-hub/projects/pcr02/` 的当前入口为准。
 
 
 ## 1. 会话目标
@@ -53,7 +53,7 @@ validation_refs: []
 
 ## 4. 风险与后续
 
-- 若后续再次迁移目录结构，需同步更新当前项目 `docs/README.md`、`docs/AGENTS.md` 与 `~/embedded/knowledge` 中的公共门禁入口，避免“文档结构变更先于门禁更新”导致误报。
+- 若后续再次迁移目录结构，需同步更新 Knowledge Hub 中的 PCR02 项目入口、source control 目录和公共门禁入口，避免“文档结构变更先于门禁更新”导致误报。
 - 若 `prog_tool` 新增媒体命令，需同步更新 runbook，保持命令样例与实际 provider 注册一致。
 
 ## 5. 结论

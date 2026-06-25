@@ -8,7 +8,7 @@
 
 ## 决策
 
-pcr02-project-knowledge 已硬迁移到 Hub PCR02 source-docs archive；旧项目 knowledge 路径不再作为知识正文入口。
+pcr02-project-knowledge 的旧正文副本已按终态剪枝；Hub 仅保留 source control、hash/provenance、owner decision 和已落地的 canonical 项目正文。旧项目 knowledge 路径不再作为知识正文入口。
 
 ## 风险
 

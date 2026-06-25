@@ -14,7 +14,7 @@
 
 ## Hub 管理方式
 
-pcr02-project-scratch 可读 session/context/resume 材料已硬迁移到 Hub PCR02 source-docs archive。
+pcr02-project-scratch 的旧 session/context/resume 正文副本已按终态剪枝；Hub 仅保留 hash/provenance，不进入 active facts 或 memory。
 
 ## 边界
 

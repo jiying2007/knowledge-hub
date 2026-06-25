@@ -109,7 +109,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-session-index`: runtime input；跨项目恢复索引必须落成 Hub 摘要或 registry 后才可长期引用。
 - `codex-archive-registry`: 已硬迁移到 `domains/codex/archive/source-docs/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
 - `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
-- `engineering-archive`: 已硬迁移到 `projects/pcr02/archive/source-docs/engineering-archive`，退役账本见 `registry/source-tombstones.jsonl`。
+- `engineering-archive`: 已迁移到 `projects/pcr02/archive/engineering-archive` 终态工程归档目录；旧 source-docs 副本不再保留，退役账本见 `registry/source-tombstones.jsonl`。
 - `patent-disclosure`: 已硬迁移到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`，退役账本见 `registry/source-tombstones.jsonl`。
 - `embedded-knowledge`: 已完整迁移到 `domains/embedded/*`；旧过渡快照目录已删除，旧外部路径不再作为 source authority。
 - `codex-archive`: 已硬迁移到 `domains/codex/archive/source-docs/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
@@ -133,7 +133,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-root-artifacts`: 16 个当前 root loose 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。
 - `pcr02-project-root-artifacts`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
 - `pcr02-module-agent-rules`: module-local owner-gated rule coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
-- `pcr02-module-agent-rules`: AGENTS/local rule owner-gated 边界：`artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`。
+- `pcr02-module-agent-rules`: AGENTS/local rule owner-gated 边界；当前源项目根和独立子仓 `AGENTS.md` 仅作为项目本地 Codex 运行控制文件由源项目 Git 管理，Hub 已剪枝历史 AGENTS 正文副本并保留 hash/provenance：`artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md`、`artifacts/manifests/pcr02-agent-rules-body-prune-20260625.md`。
 - `pcr02-module-agent-rules`: 8 个 module/project/local AGENTS 文件的 source identity：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.md`。
 - `pcr02-module-agent-rules`: report-only source check 执行快照：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md`。
 - `pcr02-project-agent-config`: config/artifact-ref 和 report-only automation boundary coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。

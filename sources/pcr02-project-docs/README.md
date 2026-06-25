@@ -14,7 +14,7 @@
 
 ## Hub 管理方式
 
-pcr02-project-docs 已硬迁移到 Hub PCR02 source-docs archive；旧项目 docs 路径只保留 origin_path，后续新增归档写入 Hub。
+pcr02-project-docs 的旧正文副本已按终态剪枝；Hub 仅保留 source control、hash/provenance、owner decision 和已落地的 `projects/pcr02/` canonical 项目正文。旧项目 docs 路径只保留 origin_path，不再作为新增归档或知识入口。
 
 ## 边界
 

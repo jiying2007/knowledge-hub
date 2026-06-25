@@ -91,11 +91,11 @@ Source control directory invariants:
 
 - 每个 `registry/sources.json` 中的 registered source 必须有 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
 - `inventory.jsonl` 每行至少包含：`id`、`source_id`、`source_path`、`object_type`、`hub_disposition`、`target_path`、`status`、`reason_zh`、`risk_zh`、`checked_at`。
-- `object_type` 允许值：`markdown`、`session`、`history`、`tool`、`source-code`、`config`、`artifact`、`binary`、`log`、`archive`、`automation-run`、`unknown`。
-- `hub_disposition` 允许值：`copy-body`、`summary-only`、`artifact-ref`、`reference-only`、`archive-only`、`exclude`。
+- `object_type` 允许值：`markdown`、`session`、`history`、`tool`、`source-code`、`config`、`artifact`、`binary`、`log`、`archive`、`manifest`、`automation-run`、`unknown`。
+- `hub_disposition` 允许值：`copy-body`、`summary-only`、`artifact-ref`、`reference-only`、`archive-only`、`hash-only-provenance`、`exclude`。
 - `status` 允许值：`pending`、`covered`、`blocked`、`excluded`。
 - `target_path` 必须是 repo-relative local path、source-local reference 或空值；不得使用绝对路径、`./` 或 `../`。
-- `session`、`history`、`source-code`、`binary`、`log` 不能使用 `copy-body`，只能使用摘要、引用、artifact-ref、archive-only 或 exclude。
+- `session`、`history`、`source-code`、`binary`、`log` 不能使用 `copy-body`，只能使用摘要、引用、artifact-ref、archive-only、hash-only-provenance 或 exclude。
 - 正文最大迁移 profile 下，`copy-body` 只允许用于 `object_type=markdown` 且 `target_path` 指向 Hub 正文目录 `projects/`、`domains/` 或 `notes/` 下的现存路径；其他正文迁移动作必须改为 summary-only、artifact-ref、reference-only、archive-only 或 exclude。
 - 正文最大迁移 profile 下，`status=pending` 的 inventory row 是 blocker；`covered`、`blocked`、`excluded` 才能表达已分类终态，其中 `blocked` 必须写清 `reason_zh` 和 `risk_zh`。
 - owner decision landing 产生本地 target 时，`knowledge-check` 会把历史 `domains/projects/<project>/...` 目标映射到硬切换后的 `projects/<project>/...` 并要求目标存在。
