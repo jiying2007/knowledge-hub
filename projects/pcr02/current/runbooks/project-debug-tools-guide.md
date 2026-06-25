@@ -91,7 +91,7 @@ rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/co
 - `domains/embedded/`
 - `projects/pcr02/current/`
 - `sources/pcr02-project-tools/README.md`
-- `artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
+- 旧正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
 
 ## 5. 边界
 

@@ -10,7 +10,7 @@
 - 旧外部路径只保留为 `origin_path` 和 tombstone provenance。
 - 通过 hard migration manifest、decommission manifest 和 inventory 记录正文、附件、runtime input 或 hub-native 边界。
 - 源项目保留根目录及独立子仓 `AGENTS.md` 作为本地 Codex 运行控制文件；这些文件由源项目 Git 管理，不作为 Hub 知识正文双写。
-- Hub source-docs 中历史 `AGENTS.md` 正文副本已剪枝，后续只保留 `artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl` 作为 hash/provenance。
+- Hub 旧迁移副本中的历史 `AGENTS.md` 正文已剪枝，后续只保留 `artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl` 作为 hash/provenance。
 
 ## 后续批次
 
