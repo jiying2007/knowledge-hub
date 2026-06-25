@@ -9,7 +9,7 @@ created: 2026-05-18
 last_updated: 2026-05-18
 tags: [pcr02, tools, debug, knowledge]
 related: [project-build-and-deploy-guide.md, ../architecture/project-overview-design.md]
-validation_refs: [../../tools/debug/project-knowledge-debug.sh, sources/pcr02-project-tools/README.md, artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl]
+validation_refs: [../../tools/debug/project-knowledge-debug.sh, sources/pcr02-project-tools/README.md, artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl]
 ---
 
 # PCR02 项目调试工具入口
@@ -91,7 +91,7 @@ rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/co
 - `domains/embedded/`
 - `projects/pcr02/current/`
 - `sources/pcr02-project-tools/README.md`
-- 旧正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
+- 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl`
 
 ## 5. 边界
 

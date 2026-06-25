@@ -535,7 +535,7 @@ for source in sources:
         if action == "copy-body":
             if policy.get("prune_body"):
                 prune_row = {
-                    "prune_manifest": "artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl",
+                    "prune_manifest": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
                     "reason_zh": "PCR02 旧 source 正文副本按终态剪枝；Hub 只保留 hash/provenance、source control、owner-approved canonical 项目正文和必要 artifact vault。",
                 }
                 migration_rows.append(mark_body_pruned(row, prune_row, ""))

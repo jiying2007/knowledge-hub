@@ -5,7 +5,7 @@
 - Source id: `pcr02-project-docs`
 - Hub source path: `sources/pcr02-project-docs`
 - Hub source control: `sources/pcr02-project-docs/README.md`
-- 旧正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.jsonl`
+- 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl`
 - Origin provenance: `registry/sources.json` origin_path for `pcr02-project-docs`; `registry/source-tombstones.jsonl`
 - Source path: `README.md`
 - Source size: `3010`

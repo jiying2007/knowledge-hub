@@ -3,7 +3,7 @@
 ## PCR02
 
 - 当前 docs source control：`sources/pcr02-project-docs`
-- PCR02 旧正文剪枝账本：`artifacts/manifests/pcr02-source-docs-body-prune-20260625.md`
+- PCR02 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.md`
 - 历史归档 source control：`sources/engineering-archive`
 - 历史工程归档终态正文：`projects/pcr02/archive/engineering-archive`
 - 旧外部路径：仅保留在 registry/sources.json 的 origin_path 字段、`registry/source-tombstones.jsonl` 和迁移 manifest 中作 provenance；不作为 active source 或默认查询入口。
