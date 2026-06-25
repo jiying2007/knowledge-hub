@@ -109,7 +109,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-session-index`: runtime input；跨项目恢复索引必须落成 Hub 摘要或 registry 后才可长期引用。
 - `codex-archive-registry`: 已硬迁移到 `domains/codex/archive/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
 - `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
-- `engineering-archive`: 已迁移到 `projects/pcr02/archive/engineering-archive` 终态工程归档目录；旧 source-docs 副本不再保留，退役账本见 `registry/source-tombstones.jsonl`。
+- `engineering-archive`: 已迁移到 `projects/pcr02/archive/engineering-archive` 终态工程归档目录；旧过渡副本不再保留，退役账本见 `registry/source-tombstones.jsonl`。
 - `patent-disclosure`: 已硬迁移到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`，退役账本见 `registry/source-tombstones.jsonl`。
 - `embedded-knowledge`: 已完整迁移到 `domains/embedded/*`；旧过渡快照目录已删除，旧外部路径不再作为 source authority。
 - `codex-archive`: 已硬迁移到 `domains/codex/archive/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。

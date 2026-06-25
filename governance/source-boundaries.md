@@ -39,7 +39,7 @@ PCR02 project-specific 内容默认留在 `projects/pcr02/` 或 source/artifact 
 - patent domain 不保存通用工程 runbook。
 - codex domain 不保存工程事实正文。
 - memories 不作为唯一 source。
-- source 正文只维护一份；Hub canonical 文本位于 `projects/`、`domains/`、`notes/` 或 source-docs 迁移区，非文本附件位于 `artifacts/vault/`。
+- source 正文只维护一份；Hub canonical 文本位于 `projects/`、`domains/`、`notes/` 或对应终态归档目录，非文本附件位于 `artifacts/vault/`。
 - source check 的默认门禁是 Hub-local registry 静态契约审计；不得把旧外部路径或旧归档工具作为 active check。
 
 ## 禁止事项（Must Not）
