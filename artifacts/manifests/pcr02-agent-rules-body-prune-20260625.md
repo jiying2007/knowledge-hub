@@ -1,6 +1,6 @@
 # PCR02 AGENTS 正文剪枝账本
 
-本账本记录 2026-06-25 对 PCR02 `archive/source-docs` 中历史 `AGENTS.md` 正文副本的终态剪枝。
+本账本记录 2026-06-25 对 PCR02 旧迁移正文层中历史 `AGENTS.md` 正文副本的终态剪枝。
 
 ## 结论
 
@@ -10,13 +10,12 @@
 
 ## 剪枝范围
 
-- `projects/pcr02/archive/source-docs/pcr02-module-agent-rules/**/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-project-docs/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-project-knowledge/**/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-project-tools/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-project-root-artifacts/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-module-agent-rules/AGENTS.md`
-- `projects/pcr02/archive/source-docs/pcr02-product-test/AGENTS.md`
+- `pcr02-module-agent-rules` 历史 `AGENTS.md` 正文副本
+- `pcr02-project-docs` 历史 `AGENTS.md` 正文副本
+- `pcr02-project-knowledge` 历史 `AGENTS.md` 正文副本
+- `pcr02-project-tools` 历史 `AGENTS.md` 正文副本
+- `pcr02-project-root-artifacts` 历史 `AGENTS.md` 正文副本
+- `pcr02-product-test` 历史 `AGENTS.md` 正文副本
 
 ## 保留范围
 

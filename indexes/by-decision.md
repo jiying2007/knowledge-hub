@@ -2,20 +2,13 @@
 
 - `knowledge-hub-root-path`: Knowledge Hub 根控制面以 `README.md`、`registry/`、`indexes/`、`governance/` 和 `tools/` 作为长期入口。
 - `automation-report-only-default`: Knowledge Hub 自动化默认 `report-only`，不得自动删除、发布、提交、提升、关闭 owner gate 或写 memory。
-- `pcr02-owner-review-001`: PCR02 docs `AGENTS.md` 保持 reference-only，等待 owner gate；证据：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
-- `pcr02-owner-decision-worksheet-001`: PCR02 docs `AGENTS.md` owner-ready 签收包：`artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-002`: PCR02 diag command metadata 保持 reference-only，等待 owner 和 gate 证据；证据：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
-- `pcr02-owner-decision-worksheet-002`: PCR02 diag metadata owner-ready 签收包：`artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-003`: ASAN 拆分决策等待 owner worksheet 完成；目标证据：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`。
-- `pcr02-owner-decision-worksheet-003`: PCR02 ASAN owner-ready 签收包：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-004`: memory auto-curation 保持 blocked-personal-local；report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
-- `pcr02-owner-decision-worksheet-004`: PCR02 memory auto-curation owner-ready 签收包：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-005`: DVR plan 状态保持 owner-gated；收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
-- `pcr02-owner-decision-worksheet-005`: PCR02 DVR plan owner-ready 签收包：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-006`: motor MCU debug record 默认 archive-only；事实边界证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
-- `pcr02-owner-decision-worksheet-006`: PCR02 motor MCU owner-ready 签收包：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`；该包不生成 owner decision。
-- `pcr02-owner-review-007`: DVR session archive 保持 archive-only，排除 memory candidate；归档边界证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
-- `pcr02-owner-decision-worksheet-007`: PCR02 DVR session archive owner-ready 签收包：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`；该包不生成 owner decision。
+- `pcr02-owner-decision-worksheet-001`: PCR02 docs `AGENTS.md` 已由 2026-06-23 landing 确认为 `reference-only`；源项目本地 Codex 运行规则继续由源项目管理，Hub 不复制正文。
+- `pcr02-owner-decision-worksheet-002`: PCR02 diag command metadata 已由 2026-06-23 landing 确认为 `reference-only`；不提升为 `domains/embedded/standards/`。
+- `pcr02-owner-decision-worksheet-003`: ASAN runbook 已由 2026-06-23 landing 确认为 `split-approved`；项目内目标为 `projects/pcr02/current/runbooks/asan-debug-guide.md`。
+- `pcr02-owner-decision-worksheet-004`: memory auto-curation 已由 2026-06-23 landing 确认为 `teamized-report-only`；保持 no-memory-write 和 report-only 边界。
+- `pcr02-owner-decision-worksheet-005`: DVR proto/sensor 解耦计划已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
+- `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
+- `pcr02-owner-decision-worksheet-007`: DVR record/replay session archive 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`。
 - `pcr02-project-docs-owner-decision-landing-20260623`: PCR02 project docs 7 条 owner gate 已按人工授权落地；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。决策边界为 AGENTS/diag `reference-only`、ASAN `split-approved`、memory auto-curation `teamized-report-only`、DVR plan/motor MCU/DVR session archive `archive-only`；不复制源项目正文、不提升到 embedded standards、不写 memory。
 - `pcr02-docs-copy-first-migration`: PCR02 docs copy-first 已落地；证据：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`。
 - `pcr02-docs-reference-artifact-ref-migration`: PCR02 docs reference/artifact-ref 已落地；证据：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`。
@@ -24,7 +17,7 @@
 - `registered-source-coverage-closeout`: registered source coverage 终态边界；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `knowledge-hub-index-source-maintenance-tools`: index/source 人工维护入口；证据：`artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.md`；工具变更不生成 owner decision。
 - `knowledge-hub-final-gate-gap-map`: final gate 自动治理和 gap map；证据：`artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.md`；`complete-except-owner-review` 不生成或替代 owner decision。
-- `knowledge-hub-final-state-audit-summary`: Level 1/2/3 终态审计；证据：`artifacts/manifests/knowledge-hub-final-state-audit-summary-20260620.md`；Level 1 仍等待 owner review。
+- `knowledge-hub-final-state-audit-summary`: Level 1/2/3 终态审计历史快照；证据：`artifacts/manifests/knowledge-hub-final-state-audit-summary-20260620.md`；PCR02 Level 1 owner gate 已由 2026-06-23 landing 后续收口。
 - `knowledge-hub-source-registry-final-state-fields`: source registry 终态字段；证据：`artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`；source `owner` 是维护 owner，不生成 owner decision。
 - `knowledge-hub-status-owner-forms-jsonl-by-owner`: status by-owner forms-jsonl 命令；证据：`artifacts/manifests/knowledge-hub-status-owner-forms-jsonl-by-owner-20260620.md`；只导出空白表单骨架。
 - `knowledge-hub-status-final-gate-command`: status 暴露 final gate 命令；证据：`artifacts/manifests/knowledge-hub-status-final-gate-command-20260620.md`；status 是 dashboard，不替代 final gate。

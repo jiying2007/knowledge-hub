@@ -20,8 +20,6 @@ parser = argparse.ArgumentParser(description="Validate Knowledge Hub registry an
 parser.add_argument("--dry-run", action="store_true")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--sources-only", action="store_true")
-parser.add_argument("--project", default="")
-parser.add_argument("--domain", default="")
 parser.add_argument("--explain", default="", metavar="ITEM_ID")
 parser.add_argument("--diagnostics", action="store_true")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
@@ -160,10 +158,6 @@ def select_source_coverage_closeout(root):
     }
     return selection, dated[-1][2] if dated else None
 
-if args.project:
-    warnings.append(f"knowledge-check: --project is reserved and does not narrow validation scope: {args.project}")
-if args.domain:
-    warnings.append(f"knowledge-check: --domain is reserved and does not narrow validation scope: {args.domain}")
 if args.sources_only and args.explain:
     warnings.append(f"knowledge-check: --explain is ignored with --sources-only: {args.explain}")
 

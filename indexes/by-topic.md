@@ -53,7 +53,6 @@
 - Knowledge Hub migration record gate: `artifacts/manifests/knowledge-hub-migration-record-gate-20260619.md`
 - Knowledge Hub manual entry guide: `artifacts/manifests/knowledge-hub-manual-entry-guide-20260619.md`
 - Knowledge Hub template schema gate: `artifacts/manifests/knowledge-hub-template-schema-gate-20260619.md`
-- Knowledge Hub check filter compatibility: `artifacts/manifests/knowledge-hub-check-filter-compat-20260619.md`
 - Knowledge Hub manifest secret scan gate: `artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.md`
 - Knowledge Hub registry parse gate: `artifacts/manifests/knowledge-hub-registry-parse-gate-20260619.md`
 - Knowledge Hub owner registry gate: `artifacts/manifests/knowledge-hub-owner-registry-gate-20260619.md`

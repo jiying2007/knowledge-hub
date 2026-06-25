@@ -29,13 +29,13 @@
 - reviewing: `migrated-pcr02-docs-copyfirst-020`
 - reviewing: `migrated-pcr02-docs-copyfirst-021`
 - reviewing: `migrated-pcr02-docs-copyfirst-022`
-- reviewing: `pcr02-review-required-resolution-20260617`
+- archived: `pcr02-review-required-resolution-20260617`
 - reviewing: `pcr02-reference-artifact-ref-applied-20260618`
 - reviewing: `pcr02-docs-index-reference-20260618`
 - reviewing: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
-- reviewing: `pcr02-owner-review-package-20260618`
-- reviewing: `pcr02-owner-review-follow-up-20260618`
-- reviewing: `pcr02-owner-decision-worksheets-20260618`
+- archived: `pcr02-owner-review-package-20260618`
+- archived: `pcr02-owner-review-follow-up-20260618`
+- archived: `pcr02-owner-decision-worksheets-20260618`
 - reviewing: `knowledge-hub-chinese-readability-rules`
 - reviewing: `knowledge-hub-glossary-rules`
 - reviewing: `knowledge-hub-evidence-rules`
@@ -49,15 +49,15 @@
 - reviewing: `knowledge-hub-zh-template-set-20260618`
 - reviewing: `knowledge-hub-registry-schema-readability-extension`
 - reviewing: `chinese-developer-long-term-assets-20260618`
-- reviewing: `pcr02-asan-split-targets-20260618`
-- reviewing: `memory-auto-curation-report-only-governance-20260618`
-- reviewing: `pcr02-dvr-motor-closeout-targets-20260618`
-- reviewing: `pcr02-remaining-owner-gates-20260618`
-- reviewing: `pcr02-docs-governance-closeout-20260618`
-- reviewing: `pcr02-owner-action-board-20260618`
-- reviewing: `pcr02-governance-handoff-20260618`
-- reviewing: `pcr02-owner-intake-package-20260618`
-- reviewing: `pcr02-owner-source-identity-preflight-20260618`
+- archived: `pcr02-asan-split-targets-20260618`
+- archived: `memory-auto-curation-report-only-governance-20260618`
+- archived: `pcr02-dvr-motor-closeout-targets-20260618`
+- archived: `pcr02-remaining-owner-gates-20260618`
+- archived: `pcr02-docs-governance-closeout-20260618`
+- archived: `pcr02-owner-action-board-20260618`
+- archived: `pcr02-governance-handoff-20260618`
+- archived: `pcr02-owner-intake-package-20260618`
+- archived: `pcr02-owner-source-identity-preflight-20260618`
 - reviewing: `pcr02-owner-resolution-playbook-20260618`
 - reviewing: `pcr02-owner-resolution-schema-20260618`
 - reviewing: `knowledge-hub-index-drift-remediation-20260619`
@@ -69,7 +69,6 @@
 - reviewing: `knowledge-hub-migration-record-gate-20260619`
 - reviewing: `knowledge-hub-manual-entry-guide-20260619`
 - reviewing: `knowledge-hub-template-schema-gate-20260619`
-- reviewing: `knowledge-hub-check-filter-compat-20260619`
 - reviewing: `knowledge-hub-manifest-secret-scan-gate-20260619`
 - reviewing: `knowledge-hub-registry-parse-gate-20260619`
 - reviewing: `knowledge-hub-owner-registry-gate-20260619`
@@ -185,18 +184,10 @@
 - archived: `migrated-pcr02-docs-copyfirst-018`
 - archived: `migrated-pcr02-docs-copyfirst-023`
 - archived: `engineering-archive-pcr02-archive-corpus-20260619`
-- blocked-pending-owner-review: PCR02 remaining unresolved review-required source files are tracked by `artifacts/manifests/pcr02-review-required-resolution-20260617.jsonl`
-- blocked-pending-owner-review: ASAN split remains blocked at row level by `artifacts/manifests/pcr02-asan-split-targets-20260618.jsonl`; registry item remains `reviewing` because `blocked` is not a registry status.
-- blocked-personal-local: memory auto-curation remains blocked at row level by `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.jsonl`; registry item remains `reviewing`.
-- blocked-pending-owner-review: DVR plan, motor MCU debug record and DVR session archive closeout remains blocked at row level by `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.jsonl`; registry item remains `reviewing`.
-- blocked-pending-owner-review: PCR02 docs `AGENTS.md` and diag command metadata standard remain reference-only at row level by `artifacts/manifests/pcr02-remaining-owner-gates-20260618.jsonl`; registry item remains `reviewing`.
-- governance-closeout-reviewing: PCR02 docs governance is closed at control-plane coverage level by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.jsonl`; owner-gated rows remain not active.
-- needs-owner-resolution: PCR02 owner action board tracks the 7 unresolved gates by `artifacts/manifests/pcr02-owner-action-board-20260618.jsonl`.
-- pass-for-handoff: PCR02 governance handoff is recoverable by `artifacts/manifests/pcr02-governance-handoff-20260618.jsonl`; Knowledge Hub final-state handoff is recoverable by `artifacts/manifests/knowledge-hub-final-state-handoff-20260620.jsonl`; neither replaces raw evidence or owner decisions.
-- owner-intake-ready: PCR02 owner intake package is ready for human sign-off by `artifacts/manifests/pcr02-owner-intake-package-20260618.jsonl`; all hard gates remain `门禁待补证`.
-- source-identity-match: PCR02 owner-gated source identity preflight matched 7/7 current source SHA256 and size values by `artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.jsonl`; owner gates remain unresolved.
-- final-maintenance-closure-applied: Knowledge Hub final maintenance closure records final gate diff-check evidence, owner forms target candidates, status text owner commands and offline manual defaults by `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.jsonl`; owner gates remain unresolved.
-- index-recovery-hardening-applied: Knowledge Hub index/status recovery exposes source final-state fields, owner worksheet recovery fields, review_after commands and regression coverage by `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.jsonl`; owner gates remain unresolved.
+- archived-owner-review-plan: PCR02 review-required、owner review、worksheet、action board、intake、source preflight 和早期 closeout 包均为 landing 前历史证据；终态 owner decision 由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl` 记录。
+- archived-owner-target-evidence: ASAN、memory auto-curation、DVR plan、motor MCU 和 DVR session 的 2026-06-18 目标包仅保留为历史证据；终态目标见 `projects/pcr02/current/`、`projects/pcr02/archive/` 和 `indexes/by-decision.md`。
+- final-maintenance-closure-applied: Knowledge Hub final maintenance closure records final gate diff-check evidence, owner forms target candidates, status text owner commands and offline manual defaults by `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.jsonl`; PCR02 Level 1 owner gates were later landed on 2026-06-23.
+- index-recovery-hardening-applied: Knowledge Hub index/status recovery exposes source final-state fields, owner worksheet recovery fields, review_after commands and regression coverage by `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.jsonl`; PCR02 Level 1 owner gates were later landed on 2026-06-23.
 - owner-resolution-playbook-ready: PCR02 owner decision landing rules are ready by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.jsonl`; no owner gate is resolved by this playbook alone.
 - owner-resolution-schema-ready: PCR02 owner decision fields, value sets and invalid combinations are ready by `artifacts/manifests/pcr02-owner-resolution-schema-20260618.jsonl`; no owner gate is resolved by this schema alone.
 - index-drift-remediation-applied: Knowledge Hub core index coverage drift was remediated by `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.jsonl`; `knowledge-check` now gates `by-owner`、`by-review-date`、`by-status` coverage.
@@ -208,7 +199,6 @@
 - migration-record-gate-applied: Knowledge Hub migration records are enforced by `artifacts/manifests/knowledge-hub-migration-record-gate-20260619.jsonl`.
 - manual-entry-guide-applied: Knowledge Hub manual entry flow is guided by `artifacts/manifests/knowledge-hub-manual-entry-guide-20260619.jsonl`.
 - template-schema-gate-applied: Knowledge Hub item templates are checked by `artifacts/manifests/knowledge-hub-template-schema-gate-20260619.jsonl`.
-- check-filter-compat-applied: Knowledge Hub check filter compatibility is documented by `artifacts/manifests/knowledge-hub-check-filter-compat-20260619.jsonl`.
 - manifest-secret-scan-applied: Knowledge Hub manifest secret scan coverage is documented by `artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.jsonl`.
 - registry-parse-gate-applied: Knowledge Hub registry parse coverage is documented by `artifacts/manifests/knowledge-hub-registry-parse-gate-20260619.jsonl`.
 - owner-registry-gate-applied: Knowledge Hub owner registry coverage is documented by `artifacts/manifests/knowledge-hub-owner-registry-gate-20260619.jsonl`.

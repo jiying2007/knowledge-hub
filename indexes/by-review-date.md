@@ -69,7 +69,6 @@
 - 2026-09-19: `knowledge-hub-migration-record-gate-20260619`
 - 2026-09-19: `knowledge-hub-manual-entry-guide-20260619`
 - 2026-09-19: `knowledge-hub-template-schema-gate-20260619`
-- 2026-09-19: `knowledge-hub-check-filter-compat-20260619`
 - 2026-09-19: `knowledge-hub-manifest-secret-scan-gate-20260619`
 - 2026-09-19: `knowledge-hub-registry-parse-gate-20260619`
 - 2026-09-19: `knowledge-hub-owner-registry-gate-20260619`

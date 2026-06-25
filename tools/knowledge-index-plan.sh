@@ -1282,7 +1282,7 @@ def build_linking_audit():
         },
         "by_decision": {
             "path": "indexes/by-decision.md",
-            "anchors": ["pcr02-owner-decision-worksheet-001", "pcr02-owner-decision-worksheet-007", "该包不生成 owner decision"],
+            "anchors": ["pcr02-owner-decision-worksheet-001", "pcr02-owner-decision-worksheet-007", "pcr02-project-docs-owner-decision-landing-20260623"],
         },
     }
 

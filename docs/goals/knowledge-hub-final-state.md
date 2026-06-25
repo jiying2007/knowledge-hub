@@ -1,5 +1,11 @@
 继续 ~/knowledge-hub 的知识库终态治理。
 
+> 终态维护说明：本文件是 2026-06 中旬的治理目标草案，已由
+> `docs/goals/knowledge-hub-simplified-final-version.md` 接管为当前硬切换目标。
+> 本文件保留为历史目标背景，不再作为新增归档、回源扫描或旧目录入口。
+> 旧外部路径只在 `registry/sources.json` 的 `origin_path`、`registry/source-tombstones.jsonl`
+> 和迁移 manifest 中作 provenance。
+
 本次目标是把 Knowledge Hub 建成长期可维护、跨会话可恢复、跨项目可自动关联、人工可独立维护、AI 可辅助治理、自动化受控的统一知识控制面，并完成所有已登记 source 与 PCR02 关键候选 source 的 source coverage、迁移治理和终态闭环。
 
 这不是“继续推进下一步”，而是“终态收口”。请持续推进到以下终态之一：
@@ -49,16 +55,10 @@ memory candidates 只能进入 manifest / candidate registry，不能进入 acti
 
 4. 不修改源项目文件。
 
-包括但不限于：
+旧外部源的具体 provenance 只在 `registry/sources.json`、`registry/source-tombstones.jsonl`
+和迁移 manifest 中保留；本目标文档不再重复列旧路径，避免被误当作恢复入口。
 
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
-- ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo 下其他源码、日志、patch、脚本、配置、制品
-
-Knowledge Hub 只维护迁移副本、reference、artifact-ref、registry、manifest、index 和状态。
+Knowledge Hub 只维护 canonical 项目正文、reference、artifact-ref、registry、manifest、index 和状态。
 
 5. PCR02 project-specific 内容默认只能进入：
 
@@ -121,12 +121,12 @@ Level 2：PCR02 项目关键资料源终态
 
 1. `pcr02-project-docs`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs
+- Hub source control: `sources/pcr02-project-docs`
 - strategy: existing migration + owner gates
 
 2. `pcr02-project-tools`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools
+- Hub source control: `sources/pcr02-project-tools`
 - strategy:
   - README.md / AGENTS.md: reference-first 或 owner-gated
   - diag scripts / checks / csv: tool-ref、artifact-ref、validation-tool-ref
@@ -135,7 +135,7 @@ Level 2：PCR02 项目关键资料源终态
 
 3. `pcr02-project-knowledge`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge
+- Hub source control: `sources/pcr02-project-knowledge`
 - strategy:
   - classify-first
   - runbooks / architecture: 可迁移候选
@@ -146,7 +146,7 @@ Level 2：PCR02 项目关键资料源终态
 
 4. `pcr02-product-test`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test
+- Hub source control: `sources/pcr02-product-test`
 - strategy:
   - Markdown docs: classify-first，按 owner 决策 copy-first / reference-first / owner-gated
   - PDF: artifact-ref
@@ -156,7 +156,7 @@ Level 2：PCR02 项目关键资料源终态
 
 5. `pcr02-project-scratch`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch
+- Hub source control: `sources/pcr02-project-scratch`
 - strategy:
   - archive-only
   - session wrap / context preflight 不进入 active facts
@@ -165,7 +165,7 @@ Level 2：PCR02 项目关键资料源终态
 
 6. `pcr02-project-root-artifacts`
 
-- path: ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo
+- Hub source control: `sources/pcr02-project-root-artifacts`
 - scope:
   - 根目录 loose docs / logs / txt / patch / scripts / py / bin
 - strategy:
@@ -325,15 +325,12 @@ registry/sources.json 中所有 registered source 必须有 source coverage 状�
 - tools/knowledge-search.sh
 - tools/knowledge-new.sh
 
-同时只读扫描 PCR02 candidate source：
+同时核对 PCR02 candidate source 的 Hub source control 与 provenance：
 
 ```bash
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs -maxdepth 4 -type f
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/tools -maxdepth 4 -type f
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/knowledge -maxdepth 4 -type f
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/app_product_test -maxdepth 3 -type f
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/scratch -maxdepth 3 -type f
-rtk find ~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo -maxdepth 2 -name AGENTS.md -type f
+rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of 2026-06-25
+rtk bash tools/knowledge-index-plan.sh --section source --json
+rtk bash tools/knowledge-index-plan.sh --section linking --json
 ```
 
 然后运行基线命令：

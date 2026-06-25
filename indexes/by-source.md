@@ -27,7 +27,7 @@
 
 | Source | Owner | Review After | Final Disposition | Boundary |
 | --- | --- | --- | --- | --- |
-| pcr02-project-docs | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | copy/reference/artifact/owner-gated 混合覆盖；7 个 owner gate 不得代签关闭 |
+| pcr02-project-docs | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | copy/reference/artifact/owner decision landing 混合覆盖；7 个 owner gate 已按 2026-06-23 landing 收口 |
 | pcr02-project-tools | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | tool/diag/memory automation 只做 reference/report-only 边界，不写源项目 |
 | pcr02-project-knowledge | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | classify-first、secret/config/tool-ref 边界，不提升 active |
 | pcr02-product-test | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | artifact/config/interface 只做身份和引用登记，不复制大附件或构建物 |
@@ -68,20 +68,20 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs/runbooks/asan-debug-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: owner-gated DVR plan 收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU 事实拆分和 archive-only 边界：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only 元数据和 memory-candidate 排除：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`。
-- `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule owner gate：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
+- `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule 已由 landing 确认为 `reference-only`；历史证据：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
 - `pcr02-project-docs/AGENTS.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`。
-- `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata owner/gate 证据边界：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata 已由 landing 确认为 `reference-only`；历史证据边界：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
 - `pcr02-project-docs/standards/diag-command-metadata-standard.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`。
 - `pcr02-project-docs`: 32/32 docs 治理覆盖和 registry/index 收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
-- `pcr02-project-docs owner gates`: owner decision action board：`artifacts/manifests/pcr02-owner-action-board-20260618.md`。
-- `pcr02-project-docs owner intake`: 中文 owner 签收字段和 hard-gate 问题：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`。
-- `pcr02-project-docs owner-gated source identity`: 当前 source SHA256/size preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`。
+- `pcr02-project-docs owner gates`: 旧 owner decision action board 已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代；历史行动板：`artifacts/manifests/pcr02-owner-action-board-20260618.md`。
+- `pcr02-project-docs owner intake`: 旧中文 owner 签收字段包已由 landing 取代；历史 intake：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`。
+- `pcr02-project-docs owner-gated source identity`: landing 前 source SHA256/size preflight 历史证据：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`。
 - `pcr02-project-docs owner form source identity validation`: owner 表单拒绝过期 SHA256/size：`artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`。
 - `pcr02-project-docs owner target and landing validation`: owner 表单 target decision、guardrail 和 worksheet 验证命令：`artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`。
 - `pcr02-project-docs owner-ready command stability`: owner-ready 和 terminal status 命令使用 `~/knowledge-hub/tools` 稳定入口：`artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`。

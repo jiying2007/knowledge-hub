@@ -7077,8 +7077,8 @@ def test_review_after_near_due_json_contract():
         and groups.get("grouping_contract_version") == 1
         and groups.get("by_owner", {}).get("team-core", {}).get("count") == 23
         and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 9
-        and groups.get("by_status", {}).get("reviewing", {}).get("count") == 26
-        and groups.get("by_status", {}).get("archived", {}).get("count") == 6
+        and groups.get("by_status", {}).get("reviewing", {}).get("count") == 22
+        and groups.get("by_status", {}).get("archived", {}).get("count") == 10
         and groups.get("by_domain", {}).get("projects/pcr02", {}).get("count") == 31
         and groups.get("by_source_id", {}).get("pcr02-project-docs", {}).get("count") == 23
         and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 9

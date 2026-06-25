@@ -14,22 +14,22 @@
 - archive 入口：`projects/pcr02/archive/README.md`
 - validation 恢复锚点：`projects/pcr02/validation/`
 - manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
-- 决策目录：`projects/pcr02/decisions/`；当前 owner-gated 条目未生成 owner decision，恢复入口在 `indexes/by-decision.md`。
+- 决策目录：`projects/pcr02/decisions/`；7 条 PCR02 project docs owner gate 已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 落地，恢复入口在 `indexes/by-decision.md`。
 - 分类基线：`artifacts/manifests/pcr02-project-docs-classification-20260616.md`
 - copy-first dry-run manifest：`artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
 - copy-first applied 报告：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`
-- review-required 处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
+- review-required 历史处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
 - reference/artifact-ref applied 报告：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
-- 剩余阻塞 docs 的 owner-review package：`artifacts/manifests/pcr02-owner-review-package-20260618.md`
-- ASAN 拆分目标：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`
-- memory auto-curation report-only 治理：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
-- DVR 与 motor MCU 收口目标：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
-- 剩余 owner gates：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
-- docs 治理收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
-- owner 行动看板：`artifacts/manifests/pcr02-owner-action-board-20260618.md`
-- 治理交接：`artifacts/manifests/pcr02-governance-handoff-20260618.md`
-- owner intake package：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`
-- owner source identity preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
+- owner-review 历史 package：`artifacts/manifests/pcr02-owner-review-package-20260618.md`
+- ASAN 拆分历史目标：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`
+- memory auto-curation report-only 历史治理：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
+- DVR 与 motor MCU 历史收口目标：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
+- owner gates 历史证据：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`
+- docs 治理历史收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`
+- owner 历史行动看板：`artifacts/manifests/pcr02-owner-action-board-20260618.md`
+- 治理历史交接：`artifacts/manifests/pcr02-governance-handoff-20260618.md`
+- owner 历史 intake package：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`
+- owner source identity 历史 preflight：`artifacts/manifests/pcr02-owner-source-identity-preflight-20260618.md`
 - owner source identity validation：`artifacts/manifests/knowledge-hub-owner-source-identity-validation-20260620.md`
 - Level 2 source coverage 收口：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`
 - tools 边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`
