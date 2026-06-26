@@ -32,10 +32,10 @@ parser.add_argument("--strict", action="store_true", help="Return non-zero when 
 args = parser.parse_args(argv)
 
 TERMS = [
-    "~/embedded/engineering_archive",
-    str(home / "embedded" / "engineering_archive"),
-    "~/codex/docs/archive",
-    str(home / "codex" / "docs" / "archive"),
+    ("~/embedded/engineering_archive", "~/embedded/engineering_archive"),
+    ("~/embedded/engineering_archive", str(home / "embedded" / "engineering_archive")),
+    ("~/codex/docs/archive", "~/codex/docs/archive"),
+    ("~/codex/docs/archive", str(home / "codex" / "docs" / "archive")),
 ]
 
 CANONICAL_ROUTES = {
@@ -101,7 +101,7 @@ def scan_scope(scope, path):
         "--max-count",
         str(args.max_per_file),
     ]
-    for term in TERMS:
+    for _display, term in TERMS:
         cmd.extend(["-e", term])
     cmd.append(str(path))
     completed = subprocess.run(
@@ -150,7 +150,7 @@ payload = {
     "read_only": True,
     "root": "~/knowledge-hub",
     "scope": args.scope,
-    "searched_terms": TERMS,
+    "searched_terms": sorted({display for display, _term in TERMS}),
     "canonical_routes": CANONICAL_ROUTES,
     "summary": {
         "match_count": len(all_rows),

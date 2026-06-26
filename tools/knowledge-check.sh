@@ -536,6 +536,12 @@ def build_diagnostics(error_items, warning_items):
             lambda msg: msg.startswith("user-path-boundary:"),
         ),
         (
+            "path-routing",
+            "全局路径路由漂移",
+            "按 governance/path-routing.md 收敛旧归档路径；Hub 内不得重新出现会影响回答或新增落盘的旧路径 runtime 入口。",
+            lambda msg: msg.startswith("path-routing:"),
+        ),
+        (
             "explain",
             "explain 目标不存在",
             "确认 --explain 参数使用的是 registry/items.jsonl 中真实存在的 item id。",
@@ -2042,6 +2048,85 @@ if not args.sources_only:
                 errors.append(f"secret-pattern:{path.relative_to(root)}")
                 break
 
+PATH_ROUTING_TERMS = [
+    ("~/embedded/engineering_archive", "~/embedded/engineering_archive"),
+    ("~/embedded/engineering_archive", str(pathlib.Path.home() / "embedded" / "engineering_archive")),
+    ("~/codex/docs/archive", "~/codex/docs/archive"),
+    ("~/codex/docs/archive", str(pathlib.Path.home() / "codex" / "docs" / "archive")),
+]
+
+PATH_ROUTING_CANONICAL_ROUTES = {
+    "~/embedded/engineering_archive": "~/knowledge-hub/projects/pcr02/archive/engineering-archive",
+    "~/embedded/engineering_archive/pcr02": "~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02",
+    "~/codex/docs/archive": "~/knowledge-hub/domains/codex/archive/codex-archive",
+    "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
+}
+
+def classify_path_routing_hit(rel_path, line_text):
+    normalized = rel_path.replace("\\", "/")
+    text = line_text.lower()
+    if normalized in {
+        "README.md",
+        "governance/path-routing.md",
+        "governance/source-boundaries.md",
+        "governance/migration-policy.md",
+        "registry/schema.md",
+        "tools/knowledge-path-audit.sh",
+        "tools/knowledge-check.sh",
+    }:
+        return "canonical-policy"
+    if normalized.startswith("domains/codex/archive/codex-archive/"):
+        return "provenance"
+    if normalized.startswith("sources/") or normalized == "registry/sources.json":
+        return "provenance"
+    if normalized.startswith("artifacts/manifests/") or normalized.startswith("registry/authorizations") or normalized.startswith("registry/automation-runs"):
+        return "provenance"
+    if "旧" in line_text or "retired" in text or "provenance" in text or "不再作为" in line_text:
+        return "canonical-policy"
+    return "runtime-route-candidate"
+
+path_routing_health = {
+    "status": "pass",
+    "mode": "hub-local-hard-gate",
+    "terms": sorted({display for display, _term in PATH_ROUTING_TERMS}),
+    "canonical_routes": PATH_ROUTING_CANONICAL_ROUTES,
+    "match_count": 0,
+    "canonical_policy_count": 0,
+    "provenance_count": 0,
+    "runtime_route_candidate_count": 0,
+    "runtime_route_candidates": [],
+    "notes_zh": "Hub 内旧路径只允许作为 canonical policy 或 provenance；runtime-route-candidate 会阻断 knowledge-check。",
+}
+
+if not args.sources_only:
+    for path in iter_text_files(scan_roots):
+        rel_path = str(path.relative_to(root))
+        try:
+            lines = path.read_text(errors="ignore").splitlines()
+        except Exception as exc:
+            warnings.append(f"path-routing:{display_path(path)} unreadable: {exc}")
+            continue
+        for lineno, line in enumerate(lines, start=1):
+            if not any(term in line for _display, term in PATH_ROUTING_TERMS):
+                continue
+            classification = classify_path_routing_hit(rel_path, line)
+            path_routing_health["match_count"] += 1
+            if classification == "canonical-policy":
+                path_routing_health["canonical_policy_count"] += 1
+            elif classification == "provenance":
+                path_routing_health["provenance_count"] += 1
+            else:
+                row = {
+                    "path": rel_path,
+                    "line": lineno,
+                    "text": line.strip()[:200],
+                }
+                path_routing_health["runtime_route_candidate_count"] += 1
+                path_routing_health["runtime_route_candidates"].append(row)
+                errors.append(f"path-routing:{rel_path}:{lineno}")
+    if path_routing_health["runtime_route_candidate_count"]:
+        path_routing_health["status"] = "fail"
+
 result = {
     "status": "pass" if not errors else "fail",
     "root": display_path(root),
@@ -2055,6 +2140,7 @@ result = {
     "authorization_health": authorization_health,
     "automation_safety_health": automation_safety_health,
     "boundary_health": boundary_health,
+    "path_routing_health": path_routing_health,
     "errors": errors,
     "warnings": warnings,
     "dry_run": bool(args.dry_run),
