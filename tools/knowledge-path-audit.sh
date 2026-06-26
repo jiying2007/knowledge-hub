@@ -45,6 +45,11 @@ CANONICAL_ROUTES = {
     "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
 }
 
+memory_note_dir = home / ".codex" / "memories" / "extensions" / "ad_hoc" / "notes"
+memory_supersession_notes = sorted(memory_note_dir.glob("*knowledge-hub-hardcut-path-routing*.md"))
+memory_supersession_note = memory_supersession_notes[-1] if memory_supersession_notes else None
+memory_supersession_active = memory_supersession_note is not None
+
 def existing_scopes():
     values = {
         "hub": root,
@@ -76,7 +81,7 @@ def classify(scope, rel_path, line_text):
     if scope == "sessions":
         return "historical-session"
     if scope == "memories":
-        return "runtime-route-candidate"
+        return "memory-superseded" if memory_supersession_active else "runtime-route-candidate"
     if scope == "codex":
         return "runtime-route-candidate"
     if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/migration-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
@@ -152,6 +157,10 @@ payload = {
     "scope": args.scope,
     "searched_terms": sorted({display for display, _term in TERMS}),
     "canonical_routes": CANONICAL_ROUTES,
+    "memory_supersession": {
+        "active": memory_supersession_active,
+        "note": rel(memory_supersession_note) if memory_supersession_note else None,
+    },
     "summary": {
         "match_count": len(all_rows),
         "classification_counts": dict(sorted(counts.items())),
@@ -162,7 +171,8 @@ payload = {
     "next_actions_zh": [
         "Hub 内 canonical-policy/provenance 命中通常保留。",
         "runtime-route-candidate 需要在对应仓库、skill、memory candidate 或 Codex 资产链路中修复。",
-        "historical-session 默认不改写，只作为召回风险证据。",
+        "memory-superseded 表示旧 memory 文字已被硬切换 note 废止，不能作为当前路径路由。",
+        "historical-session 只作为历史证据；当前活动 session 可能包含本次查询和工具输出，不作为路径路由。",
     ],
     "matches": all_rows,
 }
