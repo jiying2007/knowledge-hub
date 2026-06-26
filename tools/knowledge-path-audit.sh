@@ -21,9 +21,9 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument(
     "--scope",
-    choices=["hub", "codex", "memories", "sessions", "all"],
+    choices=["hub", "codex", "memories", "sessions", "skills", "all"],
     default="hub",
-    help="Scope to scan. all includes hub, codex, memories and sessions.",
+    help="Scope to scan. all includes hub, codex, memories, sessions and skill assets.",
 )
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--max-matches", type=int, default=100)
@@ -57,8 +57,17 @@ def existing_scopes():
         "memories": home / ".codex" / "memories",
         "sessions": home / ".codex" / "sessions",
     }
+    skill_values = {
+        "skills-live": home / ".codex" / "skills",
+        "skills-live-vendor": home / ".codex" / "vendor" / "skills",
+        "skills-codex-source": home / "codex" / "src" / "codex-home" / "vendor" / "skills",
+        "skills-vsdata": pathlib.Path("/") / "vsdata" / home.name / "skills",
+    }
     if args.scope == "all":
-        return {key: path for key, path in values.items() if path.exists()}
+        combined = {**values, **skill_values}
+        return {key: path for key, path in combined.items() if path.exists()}
+    if args.scope == "skills":
+        return {key: path for key, path in skill_values.items() if path.exists()}
     path = values[args.scope]
     return {args.scope: path} if path.exists() else {}
 
@@ -82,7 +91,7 @@ def classify(scope, rel_path, line_text):
         return "historical-session"
     if scope == "memories":
         return "memory-superseded" if memory_supersession_active else "runtime-route-candidate"
-    if scope == "codex":
+    if scope == "codex" or scope.startswith("skills-"):
         return "runtime-route-candidate"
     if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/migration-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
         return "canonical-policy"
@@ -170,7 +179,7 @@ payload = {
     },
     "next_actions_zh": [
         "Hub 内 canonical-policy/provenance 命中通常保留。",
-        "runtime-route-candidate 需要在对应仓库、skill、memory candidate 或 Codex 资产链路中修复。",
+        "runtime-route-candidate 需要在对应仓库、skill、agent metadata、memory candidate 或 Codex 资产链路中修复。",
         "memory-superseded 表示旧 memory 文字已被硬切换 note 废止，不能作为当前路径路由。",
         "historical-session 只作为历史证据；当前活动 session 可能包含本次查询和工具输出，不作为路径路由。",
     ],
