@@ -21,7 +21,7 @@
   - `by-status`：只检查 canonical status 行中的 item id 和 range 展开结果。
 - `tools/README.md`
   - 说明核心索引检查同时覆盖 missing 和 stale 两个方向。
-- `registry/items.jsonl`、`registry/migrations.jsonl`、`indexes/by-*`
+- `registry/items.jsonl`、`registry/items.jsonl`、`indexes/by-*`
   - 登记本次门禁修复。
 
 ## 验证

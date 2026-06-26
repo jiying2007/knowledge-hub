@@ -6,7 +6,7 @@
 
 - `knowledge-new.sh` 普通 item 模式新增 `--item-source-id` / `--item-source-path`，只读校验 source 已在 `registry/sources.json` 登记后，才在 registry 草稿中输出 `source.source_id`、可选 `source.source_path`、`indexes/by-source.md` 草稿和带 `--source-id` 的定向检索命令。
 - `knowledge-new.sh` 将模板别名映射为合法 `registry kind`，避免 `validation-report`、`owner-worksheet`、`external-source` 等输入 kind 被原样写进 registry 后无法通过 `knowledge-check`。
-- `knowledge-check.sh`、`knowledge-search.sh`、`registry/schema.md` 和 `templates/README.md` 对齐扩展后的长期资产 kind：`debug-record`、`external-source-note`、`owner-decision-worksheet`、`migration-record`、`patent-disclosure`。
+- `knowledge-check.sh`、`knowledge-search.sh`、`registry/schema.md` 和 `templates/README.md` 对齐扩展后的长期资产 kind：`debug-record`、`external-source-note`、`owner-decision-worksheet`、`audit-record`、`patent-disclosure`。
 - `knowledge-search.sh --kind` 支持模板别名归一，例如 `validation-report` 归一为 `validation`，JSON 输出保留 `kind_normalized`。
 
 本轮不新增 source coverage，不修改 PCR02 源项目，不复制 source 正文，不生成 owner decision，不关闭 owner gate，不写 memory，不启用自动化写操作。

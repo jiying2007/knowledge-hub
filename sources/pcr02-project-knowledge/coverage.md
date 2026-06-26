@@ -3,8 +3,8 @@
 ## 结论
 
 - Status: `hard-migrated-to-hub`
-- Classification: `retired-origin copy-docs`
-- Checked at: `2026-06-24`
+- Classification: `retired-origin hash-only-provenance plus canonical targets`
+- Checked at: `2026-06-25`
 
 ## 决策
 

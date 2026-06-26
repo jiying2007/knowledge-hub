@@ -11,7 +11,7 @@
 - `tools/knowledge-new.sh`
   - 普通 item 模式新增 `--manual-source-reason`、`--manual-validation-pending`、`--manual-validation-reason`、`--generated-by-ai`、`--ai-role`。
   - registry 草稿新增 `summary_zh`、`primary_language`、`source_language`、`translation_status`、`terminology_status`、`review_status`、`evidence_strength`、`evidence_refs` 和 AI provenance 字段。
-  - `registry/migrations.jsonl` 明确为迁移、引用或归档时使用，普通新知识不强制新增 migration。
+  - `registry/items.jsonl` 明确为迁移、引用或归档时使用，普通新知识不强制新增 migration。
 - `templates/item.md`、`templates/runbook.md`、`templates/decision.md`
   - 对齐 `summary_zh` / `primary_language` canonical 字段。
   - 补齐 review/evidence/AI provenance 字段。

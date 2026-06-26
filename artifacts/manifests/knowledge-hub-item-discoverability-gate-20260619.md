@@ -33,7 +33,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . registry/items.jsonl`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-discoverability-gate-20260619.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后删除一个 item 的 `tags`，`knowledge-check` 应报 missing tags。
 - `/tmp` 负向验证：复制仓库后把一个 item 的 `tags` 改成字符串，`knowledge-check` 应报 tags must be list。
@@ -46,7 +46,7 @@
 - `rtk bash -n tools/knowledge-check.sh`: pass。
 - `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-discoverability-gate-20260619.jsonl`: pass。
-- `rtk jq -c . registry/migrations.jsonl`: pass。
+- `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `/tmp` missing-tags 负向验证：删除本条目的 `tags` 后，`knowledge-check` 报 `items:knowledge-hub-item-discoverability-gate-20260619 missing tags`。
 - `/tmp` tags-type 负向验证：把本条目的 `tags` 改成字符串后，`knowledge-check` 报 `items:knowledge-hub-item-discoverability-gate-20260619 tags must be list`。

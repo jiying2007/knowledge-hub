@@ -1350,7 +1350,6 @@ def required_manual_files_for_forms(form_validation, rows):
         "artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl",
         *sorted(worksheet_files),
         "registry/items.jsonl",
-        "registry/migrations.jsonl",
         "indexes/by-owner.md",
         "indexes/by-project.md",
         "indexes/by-review-date.md",
@@ -1396,7 +1395,7 @@ def make_landing_plan(form_validation, rows):
         ],
         "must_not": [
             "do not treat this plan as owner approval",
-            "do not auto-edit registry/index/migration",
+            "do not auto-edit registry/index",
             "do not promote project-specific content to domains/embedded/standards",
             "do not write ~/.codex/memories",
             "do not modify source project docs",
@@ -1423,7 +1422,6 @@ def make_landing_plan(form_validation, rows):
                 "manual_actions_zh": [
                     "把已审 owner decision 追加到 owner decision landing JSONL 制品。",
                     "按 target_decision 更新或新增对应 registry item，状态不得越过 owner 决策允许范围。",
-                    "同步 registry/migrations.jsonl，记录从 owner-gated 到目标状态的人工迁移决策。",
                     "同步 by-project、by-status、by-owner、by-review-date、by-topic、by-source 和 by-decision 索引。",
                     "按 worksheet_verification_commands 复核项目侧或 Knowledge Hub 侧证据；无法运行的命令必须记录原因。",
                     "运行 verification_commands 中的命令；strict gate 只有所有 owner gates 闭环后才会返回 0。",

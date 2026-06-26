@@ -42,7 +42,7 @@
 - `rtk bash tools/knowledge-search.sh doctor-helper-applied --json`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-doctor-helper-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk git diff --check`
 
 ## 结果
@@ -54,7 +54,7 @@
 - 负向验证：`rtk bash tools/knowledge-doctor.sh --id does-not-exist-for-doctor` 返回 1；全仓 diagnostics 通过，但 explain 报 `explain:does-not-exist-for-doctor item not found`，最终提示诊断未通过。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-doctor-helper-20260619.jsonl`：通过。
 - `rtk jq -c . registry/items.jsonl`：通过。
-- `rtk jq -c . registry/migrations.jsonl`：通过。
+- `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`：通过，`status=pass`。
 - `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics`：通过，`status=pass`。
 - `rtk bash tools/knowledge-search.sh doctor-helper-applied --json`：通过，返回 3 条可发现结果。

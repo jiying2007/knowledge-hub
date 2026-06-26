@@ -32,7 +32,7 @@
   - 回归场景从 56 个提升到 60 个。
 - `registry/schema.md`
   - 说明 2026-06-21 后 migration row 的 `notes_zh` 要求。
-- `registry/migrations.jsonl`
+- `registry/items.jsonl`
   - 为 2026-06-21 已有 migration row 补中文说明。
 - `indexes/by-project.md`
   - 为 PCR02 增加 owner target / landing validation 和 source check docs/search limit 的最新维护锚点。

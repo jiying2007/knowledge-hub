@@ -7,7 +7,7 @@
 ## 范围
 
 - 检查对象：`templates/*.md` 中用于新增知识条目的模板。
-- 显式跳过：`templates/README.md` 和 `templates/migration-record.md`。它们分别是模板说明和迁移记录模板，不是 `registry/items.jsonl` 条目模板。
+- 显式跳过：`templates/README.md` 和 `templates/README.md`。它们分别是模板说明和迁移记录模板，不是 `registry/items.jsonl` 条目模板。
 - 基础字段：`id`、`title`、`kind`、`domain`、`path`、`scope`、`visibility`、`status`、`owner`、`source`、`review_after`、`created_at`、`updated_at`。
 - `artifact-ref` 额外字段：`uri`、`size`、`sha256`。
 
@@ -29,7 +29,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-template-schema-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`
 - `rtk bash tools/knowledge-search.sh "template-schema-gate-applied" --json`
@@ -41,7 +41,7 @@
 已落地并验证通过。
 
 - `knowledge-check` 会在非 `--sources-only` 模式下检查 item template 必填字段。
-- `templates/README.md` 和 `templates/migration-record.md` 保持显式跳过。
+- `templates/README.md` 和 `templates/README.md` 保持显式跳过。
 - `templates/artifact-ref.md` 额外检查 `uri`、`size`、`sha256` 字段存在。
 - 正向验证通过：`knowledge-check --dry-run --json`、`knowledge-check --sources-only --dry-run --json`、JSON/JSONL 解析和 `git diff --check`。
 - 负向验证通过：删除 `/tmp` 副本中的 `templates/runbook.md` `domain:` 字段会失败；删除 `/tmp` 副本中的 `templates/artifact-ref.md` `sha256:` 字段会失败。

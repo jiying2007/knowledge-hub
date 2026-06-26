@@ -23,7 +23,7 @@
 - 不修改 PCR02 源项目 docs、tools、knowledge、product-test、scratch 或根目录源文件。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。
 - 自动化默认 read-only / report-only，不自动删除、发布、提交、提升 active、关闭 owner gate 或写 memory。
-- source 正文只维护一份；Knowledge Hub 通过迁移副本、ref、artifact-ref、registry、manifest 和 index 管理控制面。
+- source 正文只维护一份；Knowledge Hub 通过Hub 正文、ref、artifact-ref、registry、manifest 和 index 管理控制面。
 
 ## Dynamic Context
 

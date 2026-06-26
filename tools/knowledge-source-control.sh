@@ -127,7 +127,6 @@ for source in sources:
 
 - Source ID: `{source_id}`
 - Hub source path: `{source.get('path', '')}`
-- Retired origin path: `{source.get('origin_path', '') or 'not-external'}`
 - Role: `{role}`
 - Authority: `{source.get('authority', '')}`
 - Final disposition: `{source.get('final_disposition', '')}`
@@ -141,8 +140,8 @@ for source in sources:
 
 ## 边界
 
-- `path` 指向 Hub 内 source 控制目录；旧外部路径只允许作为 `origin_path` provenance。
-- Hub 统一管理 source 的清单、覆盖状态、迁移证据、退役策略和可复用提取物。
+- `path` 指向 Hub 内 source 控制目录；当前知识入口只使用 Hub 内路径。
+- Hub 统一管理 source 的清单、覆盖状态、当前策略和可复用提取物。
 - raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料不得作为 active source 入口。
 - 不修改源项目，不写 `~/.codex/memories`，不自动提升 active，不重新回源读取作为默认路径。
 
@@ -154,7 +153,7 @@ for source in sources:
 
 - 清单：`sources/{source_id}/inventory.jsonl`
 - 覆盖：`sources/{source_id}/coverage.md`
-- 计划：`sources/{source_id}/migration-plan.md`
+- 策略：`sources/{source_id}/source-policy.md`
 """
 
     coverage_text = f"""# {source_id} 覆盖状态
@@ -180,21 +179,20 @@ for source in sources:
 - `sources/{source_id}/inventory.jsonl`
 """
 
-    plan = f"""# {source_id} 迁移计划
+    plan = f"""# {source_id} Source 策略
 
 ## 终态
 
 该 source 必须通过 `sources/{source_id}/` 在 Hub 内可恢复、可搜索、可审计。
 
-## 当前批次
+## 当前策略
 
 - `registry/sources.json` 的 `path` 已收敛到 `sources/{source_id}`。
-- 旧外部路径只保留为 `origin_path` 和 tombstone provenance。
-- 通过 hard migration manifest、decommission manifest 和 inventory 记录正文、附件、runtime input 或 hub-native 边界。
+- 当前知识入口只使用 Hub 内路径。
+- 通过 inventory 记录正文、附件、runtime input 或 hub-native 边界。
 
-## 后续批次
+## 后续维护
 
-- 删除或剪枝外部 source 前，先完成授权账本、回滚路径和最终验证。
 - 新增归档、摘要和知识正文必须写入 Hub canonical 目录，不得写回旧 origin。
 - runtime input 只抽取摘要、候选和证据索引；不复制 raw 全文，不把 raw 行提升为 active fact。
 """
@@ -202,7 +200,7 @@ for source in sources:
     desired = {
         source_dir / "README.md": readme,
         source_dir / "coverage.md": coverage_text,
-        source_dir / "migration-plan.md": plan,
+        source_dir / "source-policy.md": plan,
         source_dir / "inventory.jsonl": json.dumps(inventory_row, ensure_ascii=False, separators=(",", ":")) + "\n",
     }
 

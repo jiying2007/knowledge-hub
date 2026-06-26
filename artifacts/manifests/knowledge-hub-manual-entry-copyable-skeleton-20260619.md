@@ -2,7 +2,7 @@
 
 ## 目标
 
-降低人工新增知识条目的重复查表成本。`knowledge-new.sh` 在保持只读的前提下，输出可复制的 `registry/items.jsonl` 草稿、核心索引登记提示、`registry/migrations.jsonl` 草稿和验证命令，帮助人工维护者按当前 schema 和门禁一次性补齐关键字段。
+降低人工新增知识条目的重复查表成本。`knowledge-new.sh` 在保持只读的前提下，输出可复制的 `registry/items.jsonl` 草稿、核心索引登记提示、`registry/items.jsonl` 草稿和验证命令，帮助人工维护者按当前 schema 和门禁一次性补齐关键字段。
 
 ## 问题地图
 
@@ -56,7 +56,7 @@
 - `/tmp` 验证：从 PCR02 示例输出中抽取 registry JSON 草稿后，`jq -e '.scope == "project-specific" and .domain == "projects/pcr02"'` 通过。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-manual-entry-copyable-skeleton-20260619.jsonl`：通过。
 - `rtk jq -c . registry/items.jsonl`：通过。
-- `rtk jq -c . registry/migrations.jsonl`：通过。
+- `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`：通过，`status=pass`。
 - `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics`：通过，`status=pass`。
 - `rtk bash tools/knowledge-search.sh manual-entry-copyable-skeleton-applied --json`：通过，返回 3 条可发现结果。

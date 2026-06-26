@@ -4,7 +4,6 @@
 
 - Source ID: `codex-session-index`
 - Hub source path: `sources/codex-session-index`
-- Retired origin provenance: `registry/sources.json` origin_path; `registry/source-tombstones.jsonl`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
 - Final disposition: `runtime-input-not-migrated`
@@ -18,8 +17,8 @@ codex-session-index 只作为运行态索引输入 provenance；Hub source path 
 
 ## 边界
 
-- `path` 指向 Hub 内 source 控制目录；旧外部路径只允许作为 `origin_path` provenance。
-- Hub 统一管理 source 的清单、覆盖状态、迁移证据、退役策略和可复用提取物。
+- `path` 指向 Hub 内 source 控制目录；当前知识入口只使用 Hub 内路径。
+- Hub 统一管理 source 的清单、覆盖状态、当前策略和可复用提取物。
 - raw session、history、源码树、大文件、二进制、压缩包、PDF、日志和敏感材料不得作为 active source 入口。
 - 不修改源项目，不写 `~/.codex/memories`，不自动提升 active，不重新回源读取作为默认路径。
 
@@ -31,4 +30,4 @@ session index 只说明历史记录位置，不替代项目事实验证。
 
 - 清单：`sources/codex-session-index/inventory.jsonl`
 - 覆盖：`sources/codex-session-index/coverage.md`
-- 计划：`sources/codex-session-index/migration-plan.md`
+- 策略：`sources/codex-session-index/source-policy.md`

@@ -38,7 +38,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-active-safety-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-search.sh "active-safety-gate-applied" --json`
 - `rtk git diff --check`

@@ -6,7 +6,7 @@
 
 ## 变更范围
 
-- 清理已落盘资料、索引、registry、manifest 和迁移副本中的用户专属绝对路径前缀。
+- 清理已落盘资料、索引、registry、manifest 和Hub 正文中的用户专属绝对路径前缀。
 - 更新 `tools/knowledge-check.sh`，新增用户路径边界硬门禁。
 - 更新核心只读工具的展示层，使 `root`、`path`、source check 路径和搜索结果使用 `~`。
 - 更新 `tools/knowledge-regression.sh`，新增持久文本扫描和核心工具输出脱敏回归。

@@ -3,12 +3,12 @@
 ## 结论
 
 - Status: `hard-migrated-to-hub`
-- Classification: `retired-origin project-root-shallow`
-- Checked at: `2026-06-24`
+- Classification: `retired-origin project-root-shallow hash-only-provenance`
+- Checked at: `2026-06-25`
 
 ## 决策
 
-pcr02-project-root-artifacts 的根部可读文本已按 shallow policy 迁入 Hub；项目根目录不再作为知识 source path。
+pcr02-project-root-artifacts 的旧浅层正文副本已按终态剪枝；项目根目录不再作为知识 source path，仅保留 hash/provenance。
 
 ## 风险
 

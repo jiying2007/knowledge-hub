@@ -41,7 +41,7 @@
 - `/tmp` 负向验证：复制最小工作树后从 `registry/items.jsonl` 注入无效 `validation_refs`，`--diagnostics` 应返回 `validation-ref` 分类和中文 action。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-check-diagnostics-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-search.sh check-diagnostics-applied --json`
 - `rtk git diff --check`
@@ -57,7 +57,7 @@
 - `/tmp/kh-kcd-validation.kXlc4N` 负向验证：向 `registry/items.jsonl` 注入无效 `validation_refs` 后，`diagnostics.categories[0].id=validation-ref`，并给出检查 `validation_refs` 的中文 action。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-check-diagnostics-20260619.jsonl`：通过。
 - `rtk jq -c . registry/items.jsonl`：通过。
-- `rtk jq -c . registry/migrations.jsonl`：通过。
+- `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`：通过，`status=pass`。
 - `rtk bash tools/knowledge-search.sh check-diagnostics-applied --json`：通过，返回 3 条可发现结果。
 - `rtk git diff --check`：通过。

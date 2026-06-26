@@ -32,7 +32,7 @@
 - `rtk jq -c . registry/projects.json`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-project-registry-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`
 - `/tmp` 负向验证：复制仓库后把一个 item domain 改成 `projects/unknown-project`，`knowledge-check` 应报 `project not registered`。

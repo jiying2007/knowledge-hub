@@ -64,10 +64,10 @@ domains/personal/**
 “完全迁移进来”采用治理全覆盖，不等于复制所有正文。
 
 - 每个来源、项目、历史会话和自动化链路必须登记、分类、索引和定责。
-- 每个 `registry/sources.json` 中的 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`。
+- 每个 `registry/sources.json` 中的 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
 - 安全、可读、长期有价值的 Markdown/text 可以迁移为正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
-- `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只保留在 `origin_path`、tombstone 或历史 manifest 中作 provenance。
+- `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；当前知识入口只使用 Hub 内路径。
 - Codex archive 已硬迁移到 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
 - PCR02 工程归档已迁移到 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
 - `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不迁移 raw 正文，不直接等于 active fact。

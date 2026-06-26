@@ -6,7 +6,7 @@
 
 - 删除旧 source 迁移正文副本，不再保留 `projects/pcr02/archive/source-docs/`。
 - 不把旧 `docs/`、`knowledge/`、`tools/`、`scratch/`、项目根散落文本和旧 agent 规则作为新增知识入口。
-- 保留必要治理证据：`sources/<source_id>/`、`registry/sources.json`、`registry/source-tombstones.jsonl`、`registry/migrations.jsonl`、hard migration manifest、owner decision manifest 和本剪枝账本。
+- 保留必要治理证据：`sources/<source_id>/`、`registry/sources.json`、`registry/sources.json`、`registry/items.jsonl`、hard migration manifest、owner decision manifest 和本剪枝账本。
 - `engineering-archive` 的终态正文不在 `source-docs`，保留于 `projects/pcr02/archive/engineering-archive/`。
 
 ## 边界

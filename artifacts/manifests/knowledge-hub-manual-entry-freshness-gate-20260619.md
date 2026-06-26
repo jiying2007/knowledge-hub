@@ -15,7 +15,7 @@
 ## 决策
 
 - `knowledge-check` 默认检查 `tools/knowledge-new.sh` 和 `templates/README.md` 是否包含当前人工新增所需的关键门禁词。
-- 当前关键门禁词包括 `promotion`、`tags`、`validation_refs`、核心索引路径、`registry/migrations.jsonl` 和 `duplicate`。
+- 当前关键门禁词包括 `promotion`、`tags`、`validation_refs`、核心索引路径、`registry/items.jsonl` 和 `duplicate`。
 - 本门禁只检查人工入口是否覆盖关键维护点，不生成文件、不修改 registry 内容、不启用自动化。
 
 ## 非目标
@@ -34,7 +34,7 @@
 - `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id sample-manual-entry --path governance/sample-manual-entry.md`
 - `rtk jq -c . registry/items.jsonl`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-manual-entry-freshness-gate-20260619.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后从 `tools/knowledge-new.sh` 删除 `promotion`，`knowledge-check` 应报 manual-entry missing current gate term。
 - `/tmp` 负向验证：复制仓库后从 `templates/README.md` 删除 `duplicate`，`knowledge-check` 应报 manual-entry missing current gate term。
@@ -47,7 +47,7 @@
 - `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id sample-manual-entry --path governance/sample-manual-entry.md`：通过，输出包含 `promotion`、`tags`、`validation_refs`、核心索引和 `duplicate item reference` 提示。
 - `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-manual-entry-freshness-gate-20260619.jsonl`：通过。
-- `rtk jq -c . registry/migrations.jsonl`：通过。
+- `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`：通过，`status=pass`。
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`：通过，`status=pass`。
 - `/tmp/kh-mefg-neg-prom.qIDTZG` 负向验证：从 `tools/knowledge-new.sh` 移除 `promotion` 后，`knowledge-check` 报 `manual-entry:tools/knowledge-new.sh missing current gate term: promotion`。

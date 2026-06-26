@@ -174,7 +174,6 @@ ALLOWED_ITEM_KINDS = {
     "debug-record",
     "external-source-note",
     "owner-decision-worksheet",
-    "migration-record",
     "patent-disclosure",
     "codex-session",
     "codex-workflow",
@@ -283,7 +282,7 @@ SOURCE_CONTROL_REQUIRED_FILES = [
     "README.md",
     "inventory.jsonl",
     "coverage.md",
-    "migration-plan.md",
+    "source-policy.md",
 ]
 SOURCE_CONTROL_REQUIRED_ROW_FIELDS = [
     "id",
@@ -408,7 +407,7 @@ def build_diagnostics(error_items, warning_items):
         (
             "source-control",
             "source 主控目录异常",
-            "检查 sources/<source_id>/README.md、inventory.jsonl、coverage.md、migration-plan.md，确保每个 registered source 都有 Hub 内控制面，raw/session/source-code 不能 copy-body 进入正文层。",
+            "检查 sources/<source_id>/README.md、inventory.jsonl、coverage.md、source-policy.md，确保每个 registered source 都有 Hub 内控制面，raw/session/source-code 不能 copy-body 进入正文层。",
             lambda msg: msg.startswith("source-control:"),
         ),
         (
@@ -452,12 +451,6 @@ def build_diagnostics(error_items, warning_items):
             "owner decision 角色路由异常",
             "检查 registry/owner-routing.json，确保每个 open owner worksheet 角色都有只读分派路由，routing_owner 和 candidate_registry_owners 已登记，且不得把 routing_owner 当作 owner decision。",
             lambda msg: msg.startswith("owner-routing:"),
-        ),
-        (
-            "migration-record",
-            "migration 记录异常",
-            "检查 registry/migrations.jsonl 的 from、to、mode、status、checked_at、notes 和本地目标路径。",
-            lambda msg: msg.startswith("migrations:"),
         ),
         (
             "template-schema",
@@ -1412,51 +1405,6 @@ if not args.sources_only:
                     errors.append(f"retention:{index} domain uses deprecated canonical path: {rule_domain}")
 
     local_path_prefixes = LOCAL_PATH_PREFIXES
-    migrations = load_jsonl(root / "registry" / "migrations.jsonl")
-    for migration in migrations:
-        migration_id = migration.get("to") or migration.get("mode") or "<unknown>"
-        missing_fields = set()
-        for field in ["from", "to", "mode", "status", "checked_at", "notes"]:
-            if field not in migration:
-                missing_fields.add(field)
-                errors.append(f"migrations:{migration_id} missing {field}")
-        is_bootstrap_empty = migration.get("mode") == "none" and migration.get("status") == "bootstrap-empty"
-        for field in ["mode", "status", "checked_at", "notes"]:
-            if field in missing_fields:
-                continue
-            if migration.get(field) in ("", None, []):
-                errors.append(f"migrations:{migration_id} empty {field}")
-        if not is_bootstrap_empty:
-            for field in ["from", "to"]:
-                if field in missing_fields:
-                    continue
-                if migration.get(field) in ("", None, []):
-                    errors.append(f"migrations:{migration_id} empty {field}")
-        checked_at = str(migration.get("checked_at", ""))
-        checked_date = None
-        try:
-            checked_date = dt.date.fromisoformat(checked_at)
-        except Exception:
-            errors.append(f"migrations:{migration_id} invalid checked_at: {checked_at}")
-        if checked_date and checked_date >= READABILITY_GATE_START and not is_bootstrap_empty:
-            notes_zh = str(migration.get("notes_zh", "")).strip()
-            if not notes_zh:
-                errors.append(f"migrations:{migration_id} missing notes_zh for post-2026-06-21 readability gate")
-        target_refs = [part.strip() for part in re.split(r"\s*;\s*", str(migration.get("to", ""))) if part.strip()]
-        for target_ref in target_refs:
-            target_path = pathlib.Path(target_ref)
-            if target_path.is_absolute():
-                errors.append(f"migrations:{migration_id} to must be relative local path: {target_ref}")
-                continue
-            if not (target_ref.startswith(local_path_prefixes) or target_ref in {"README.md", "AGENTS.md"}):
-                errors.append(f"migrations:{migration_id} to must reference a Knowledge Hub local path: {target_ref}")
-                continue
-            if "*" in target_ref:
-                if not list(root.glob(target_ref)):
-                    errors.append(f"migrations:{migration_id} missing local glob target: {target_ref}")
-            elif not (root / target_path).exists():
-                errors.append(f"migrations:{migration_id} missing local target: {target_ref}")
-
     manifest_profile_paths = []
     for candidate_path in sorted((root / "artifacts" / "manifests").glob("knowledge-hub-*.jsonl")):
         date_match = re.search(r"(20\d{6})", candidate_path.name)
@@ -1545,7 +1493,7 @@ if not args.sources_only:
         "human_reviewed_at",
         "review_basis",
     ]
-    template_skip = {"README.md", "migration-record.md"}
+    template_skip = {"README.md"}
     for template_path in sorted((root / "templates").glob("*.md")):
         rel_template = template_path.relative_to(root)
         if template_path.name in template_skip:
@@ -1570,7 +1518,6 @@ if not args.sources_only:
         "indexes/by-review-date.md",
         "indexes/by-status.md",
         "- reviewing:",
-        "registry/migrations.jsonl",
         "duplicate",
     ]
     manual_entry_files = [

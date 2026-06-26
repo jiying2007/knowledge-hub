@@ -8,7 +8,6 @@
       "entry": "projects/pcr02/README.md",
       "current": "projects/pcr02/current",
       "archive": "projects/pcr02/archive",
-      "origin_provenance": "registry/sources.json origin_path; registry/source-tombstones.jsonl",
       "status": "registered"
     }
   ]

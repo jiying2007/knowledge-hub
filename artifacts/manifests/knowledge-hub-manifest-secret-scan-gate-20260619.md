@@ -32,7 +32,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后在 `artifacts/manifests/secret-fixture.md` 写入一个 token 形态的长值，`knowledge-check` 应报 `secret-pattern:artifacts/manifests/secret-fixture.md`。
 - `rtk bash tools/knowledge-search.sh "manifest-secret-scan-applied" --json`

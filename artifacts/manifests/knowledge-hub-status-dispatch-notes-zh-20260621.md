@@ -8,7 +8,7 @@
 - `knowledge-final-gate.sh --json` 现在透传 `owner_recovery`，让终态 gate 结果本身携带 open owner 数量、owner-ready 覆盖、`owner_dispatch[]` 和下一条 open gate。
 - `knowledge-owner-gates.sh` 的 forms/checklist/landing plan 现在显式带出 `verification_cwd` / `worksheet_verification_cwd`，降低 owner 人工执行项目侧相对命令时走错 cwd 的风险。
 - `knowledge-check.sh` 现在阻断 2026-06-21 及之后缺少 `ai_model_or_tool` 或 `ai_generated_at` 的 AI-generated registry item。
-- `knowledge-new.sh` 的 `registry/migrations.jsonl` 可复制草稿补齐 `notes_zh`，避免 2026-06-21 及之后人工按向导复制出的 migration row 先天不满足中文可读性门禁。
+- `knowledge-new.sh` 的 `registry/items.jsonl` 可复制草稿补齐 `notes_zh`，避免 2026-06-21 及之后人工按向导复制出的 migration row 先天不满足中文可读性门禁。
 
 本轮不生成 owner decision，不关闭 owner gate，不修改 PCR02 源项目，不复制 owner-gated source 正文，不提升 PCR02 project-specific 内容到 `domains/embedded/standards/`，不启用自动化写操作，不写 `~/.codex/memories`。
 

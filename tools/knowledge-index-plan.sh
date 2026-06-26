@@ -49,13 +49,11 @@ sources_path = root / "registry" / "sources.json"
 projects_path = root / "registry" / "projects.json"
 topics_path = root / "registry" / "topics.json"
 decisions_path = root / "registry" / "decisions.jsonl"
-migrations_path = root / "registry" / "migrations.jsonl"
 items = []
 sources = []
 projects = []
 topics = []
 decisions = []
-migrations = []
 errors = []
 warnings = []
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
@@ -156,7 +154,6 @@ sources = read_json_array(sources_path, "sources")
 projects = read_json_array(projects_path, "projects")
 topics = read_json_array(topics_path, "topics")
 decisions = read_jsonl(decisions_path, "registry/decisions.jsonl")
-migrations = read_jsonl(migrations_path, "registry/migrations.jsonl")
 
 by_owner = collections.defaultdict(list)
 by_review_date = collections.defaultdict(list)
@@ -167,7 +164,6 @@ by_topic = {}
 by_decision = {
     "registry_decisions": [],
     "owner_worksheets": [],
-    "migration_decisions": [],
 }
 by_manifest = {
     "summary": {},
@@ -265,11 +261,6 @@ for source in sources:
         item_source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
         if str(item_source.get("source_id", "")) == source_id:
             item_refs.append(str(item.get("id", "")))
-    migration_refs = [
-        row.get("mode", "")
-        for row in migrations
-        if source_id in str(row.get("from", "")) or source_id in str(row.get("to", "")) or source_id in str(row.get("notes", ""))
-    ]
     by_source[source_id] = {
         "role": source.get("role", ""),
         "path": source.get("path", ""),
@@ -284,7 +275,6 @@ for source in sources:
         "no_check_reason": source.get("no_check_reason", ""),
         "coverage": coverage_by_source.get(source_id, {}),
         "item_refs": item_refs,
-        "migration_refs": migration_refs[:10],
     }
 
 for topic in topics:
@@ -335,18 +325,6 @@ for worksheet_path in worksheet_paths:
                     "decision_state": f"owner_decision:{owner_decision}" if owner_decision else "no owner decision generated",
                 }
             )
-
-for row in migrations:
-    mode = str(row.get("mode", ""))
-    if any(token in mode for token in ["migration", "copy-first", "reference", "artifact", "coverage", "boundary"]):
-        by_decision["migration_decisions"].append(
-            {
-                "mode": mode,
-                "status": row.get("status", ""),
-                "to": row.get("to", ""),
-                "checked_at": row.get("checked_at", ""),
-            }
-        )
 
 manifest_jsonl_paths = [
     path
@@ -1292,13 +1270,12 @@ def build_linking_audit():
     topic_ids = set(by_topic.keys())
     owner_worksheets = by_decision.get("owner_worksheets", [])
     registry_decisions = by_decision.get("registry_decisions", [])
-    migration_decisions = by_decision.get("migration_decisions", [])
 
     cross_session_checks = {
         "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "projects/pcr02",
         "source_recoverable": "pcr02-project-docs" in source_ids and required_level2_sources.issubset(source_ids),
         "topic_recoverable": required_topics.issubset(topic_ids),
-        "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions) and bool(migration_decisions),
+        "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions),
         "handoff_recoverable": any("pcr02-governance-handoff" in item_id for item_id in pcr02_project.get("items", [])),
     }
     for check_id, passed in cross_session_checks.items():
@@ -1364,7 +1341,7 @@ def build_linking_audit():
             "registered_source_count": len(by_source),
             "pcr02_level2_source_ids_present": required_level2_sources.issubset(source_ids),
             "required_topic_ids_present": required_topics.issubset(topic_ids),
-            "decision_refs_present": len(owner_worksheets) >= 7 and bool(registry_decisions) and bool(migration_decisions),
+            "decision_refs_present": len(owner_worksheets) >= 7 and bool(registry_decisions),
             "provenance_fields_present": len(pcr02_sources_with_provenance) == len(pcr02_sources),
             "project_specific_not_team_promoted": project_specific_not_team_promoted,
             "missing": missing_cross_project,
@@ -1506,8 +1483,6 @@ def print_source():
             print("- coverage: `<missing-latest-coverage-row>`")
         for item_id in info.get("item_refs", []):
             print(f"- item: `{item_id}`")
-        for mode in info.get("migration_refs", []):
-            print(f"- migration mode: `{mode}`")
 
 def print_topic():
     print()
@@ -1535,11 +1510,6 @@ def print_decision():
             f"status `{row.get('status', '')}`; owner `{row.get('owner', '')}`; "
             f"review_after `{row.get('review_after', '')}`; {row.get('decision_state', '')}"
         )
-    print()
-    print("### Migration Decisions")
-    for row in by_decision.get("migration_decisions", [])[:80]:
-        print(f"- `{row.get('mode', '')}`: {row.get('status', '')}; checked_at `{row.get('checked_at', '')}`")
-
 def print_manifest():
     print()
     print("## By Manifest")

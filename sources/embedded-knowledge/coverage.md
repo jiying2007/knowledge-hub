@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `superseded-by-terminal-domain-migration`
 - Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-25`
 
 ## 决策
 
-embedded-knowledge 已从过渡快照完整归位到 Hub canonical embedded domain；正文权威位于 `domains/embedded/*`，`sources/embedded-knowledge` 只保留控制面，旧路径只保留 `origin_path` / tombstone provenance。
+embedded-knowledge 的 2026-06-24 hard migration 记录已被 2026-06-25 终态归位取代；当前正文权威为 domains/embedded/*，sources/embedded-knowledge 只保留 source 控制面。
 
 ## 风险
 
@@ -17,6 +17,5 @@ embedded-knowledge 已从过渡快照完整归位到 Hub canonical embedded doma
 ## 证据
 
 - `registry/sources.json`
-- `artifacts/manifests/source-hard-migration-20260625.jsonl`
+- `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`
 - `sources/embedded-knowledge/inventory.jsonl`
-- `domains/embedded/`

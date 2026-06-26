@@ -336,7 +336,7 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   fi
   RECOMMENDED_SOURCE_FINAL_DISPOSITION="hard-migrated-to-hub"
   RECOMMENDED_SOURCE_MIGRATION_STRATEGY="hard-migrated-to-hub-copy-docs"
-  SOURCE_DISPOSITION_REASON_ZH="默认按终态 Hub-only source 处理；path 只能是 sources/<source_id>，旧外部路径只能进入 origin_path/tombstone/manifest provenance。"
+  SOURCE_DISPOSITION_REASON_ZH="默认按终态 Hub-only source 处理；path 只能是 sources/<source_id>，当前知识入口只使用 Hub 内路径。"
   SOURCE_MIGRATION_REASON_ZH="默认通过 Hub source control、canonical target、artifact vault 和 migration manifest 表达迁移状态，不生成旧回源入口。"
   case "$DISPLAY_SOURCE_ROLE:$DISPLAY_SOURCE_WRITE_POLICY" in
     hub-runtime-input:runtime-read-only-input)
@@ -426,7 +426,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### source coverage JSONL row
 
 \`\`\`json
-{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，旧外部路径仅作 provenance。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"旧外部位置只能进入 origin_path、tombstone 或 migration manifest，不作为 active source path。"}}
+{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，当前知识入口只使用 Hub 内路径。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"当前知识入口只使用 Hub 内 source control path；不把外部位置作为 active source path。"}}
 \`\`\`
 
 ## 不要做
@@ -496,9 +496,6 @@ case "$KIND" in
   patent-disclosure|patent)
     TEMPLATE="templates/patent-disclosure.md"
     ;;
-  migration-record|migration)
-    TEMPLATE="templates/migration-record.md"
-    ;;
   artifact-ref)
     TEMPLATE="templates/artifact-ref.md"
     ;;
@@ -520,9 +517,6 @@ case "$KIND" in
     ;;
   owner-worksheet)
     REGISTRY_KIND="owner-decision-worksheet"
-    ;;
-  migration)
-    REGISTRY_KIND="migration-record"
     ;;
 esac
 
@@ -671,9 +665,8 @@ ${PERSONAL_WARNING_BLOCK}
 4. 在 indexes/by-owner.md、indexes/by-review-date.md、indexes/by-status.md 登记新 id，避免 missing、stale 或 duplicate item reference。
 ${PROJECT_STEP_5}
 6. ${SOURCE_INDEX_STEP} ${DECISION_INDEX_STEP}
-7. 如涉及迁移、引用或归档，在 registry/migrations.jsonl 新增迁移或治理记录，to 指向真实本地路径；普通新知识不强制新增 migration。
-8. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
-9. 运行只读索引计划和验证：
+7. 在正文、manifest 或验证报告中写 Evidence Index，至少记录完整 rtk 命令、退出码、中文结果摘要和证据路径。
+8. 运行只读索引计划和验证：
 
    rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
    rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json
@@ -683,7 +676,7 @@ ${PROJECT_STEP_5}
 
 ## 可复制草稿
 
-以下内容是人工填写起点，不会自动落盘。复制前必须把尖括号占位符替换为真实值，并确认 owner、review_after、source、validation_refs、tags 和 migration notes。
+以下内容是人工填写起点，不会自动落盘。复制前必须把尖括号占位符替换为真实值，并确认 owner、review_after、source、validation_refs 和 tags。
 
 默认日期已按当前 UTC 日期生成：created_at / updated_at / checked_at = ${TODAY}，review_after = ${DEFAULT_REVIEW_AFTER}。如 owner 或 review cycle 另有要求，人工落盘前可修改。
 
@@ -711,18 +704,12 @@ ${SOURCE_INDEX_DRAFT}
 ${DECISION_INDEX_DRAFT}
 \`\`\`
 
-### registry/migrations.jsonl（仅迁移、引用或归档时使用）
-
-\`\`\`json
-{"from":"<source-or-manual-entry>","to":"${JSON_PATH}","mode":"manual-entry","status":"applied","checked_at":"${TODAY}","notes":"Manual entry created with one canonical body, registry item, core indexes and validation evidence; no source project docs modified, no automation enabled, no active promotion, and no memory written.","notes_zh":"人工新增条目已按唯一正文、registry item、核心索引和验证证据登记；未修改源项目、未启用自动化、未提升 active、未写 memory。"}
-\`\`\`
-
 ### Evidence Index
 
 \`\`\`md
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | --- | --- | --- | --- | --- |
-| \`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\` | 0 | 中文摘要，说明本次新增条目的 registry、index、migration 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
+| \`rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\` | 0 | 中文摘要，说明本次新增条目的 registry、index 和正文通过全仓门禁。 | <manifest-or-report-path> | Knowledge Hub | ${DISPLAY_ID} |
 \`\`\`
 
 ## 不要做

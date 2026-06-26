@@ -33,7 +33,7 @@
 - `rtk jq -c . registry/owners.json`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-owner-registry-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`
 - `/tmp` 负向验证：复制仓库后把一个 item owner 改成未登记 owner，`knowledge-check` 应报 `owner not registered`。

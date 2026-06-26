@@ -4,7 +4,6 @@
 
 本段是跨会话恢复首屏，只保留必须优先定位的主题、命令和长期入口。历史治理制品不得插入本段，统一放入“历史治理台账”。
 
-- migration: `registry/migrations.jsonl`; `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`; `artifacts/manifests/source-hard-migration-20260624.md`
 - owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
 - PCR02: `projects/pcr02`; `indexes/by-project.md`
 - tools: `artifacts/manifests/pcr02-tools-boundary-20260620.md`; `tools/`
@@ -50,7 +49,6 @@
 - Knowledge Hub registry enum gate: `artifacts/manifests/knowledge-hub-registry-enum-gate-20260619.md`
 - Knowledge Hub registry boundary gate: `artifacts/manifests/knowledge-hub-registry-boundary-gate-20260619.md`
 - Knowledge Hub active safety gate: `artifacts/manifests/knowledge-hub-active-safety-gate-20260619.md`
-- Knowledge Hub migration record gate: `artifacts/manifests/knowledge-hub-migration-record-gate-20260619.md`
 - Knowledge Hub manual entry guide: `artifacts/manifests/knowledge-hub-manual-entry-guide-20260619.md`
 - Knowledge Hub template schema gate: `artifacts/manifests/knowledge-hub-template-schema-gate-20260619.md`
 - Knowledge Hub manifest secret scan gate: `artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.md`

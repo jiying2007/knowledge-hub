@@ -66,7 +66,6 @@
 - reviewing: `knowledge-hub-registry-enum-gate-20260619`
 - reviewing: `knowledge-hub-registry-boundary-gate-20260619`
 - reviewing: `knowledge-hub-active-safety-gate-20260619`
-- reviewing: `knowledge-hub-migration-record-gate-20260619`
 - reviewing: `knowledge-hub-manual-entry-guide-20260619`
 - reviewing: `knowledge-hub-template-schema-gate-20260619`
 - reviewing: `knowledge-hub-manifest-secret-scan-gate-20260619`
@@ -196,7 +195,6 @@
 - registry-enum-gate-applied: Knowledge Hub registry item/source enums are enforced by `artifacts/manifests/knowledge-hub-registry-enum-gate-20260619.jsonl`.
 - registry-boundary-gate-applied: Knowledge Hub registry scope/visibility/domain boundaries are enforced by `artifacts/manifests/knowledge-hub-registry-boundary-gate-20260619.jsonl`.
 - active-safety-gate-applied: Knowledge Hub active safety invariants are enforced by `artifacts/manifests/knowledge-hub-active-safety-gate-20260619.jsonl`.
-- migration-record-gate-applied: Knowledge Hub migration records are enforced by `artifacts/manifests/knowledge-hub-migration-record-gate-20260619.jsonl`.
 - manual-entry-guide-applied: Knowledge Hub manual entry flow is guided by `artifacts/manifests/knowledge-hub-manual-entry-guide-20260619.jsonl`.
 - template-schema-gate-applied: Knowledge Hub item templates are checked by `artifacts/manifests/knowledge-hub-template-schema-gate-20260619.jsonl`.
 - manifest-secret-scan-applied: Knowledge Hub manifest secret scan coverage is documented by `artifacts/manifests/knowledge-hub-manifest-secret-scan-gate-20260619.jsonl`.

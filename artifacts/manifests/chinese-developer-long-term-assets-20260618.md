@@ -33,7 +33,7 @@
 - `templates/external-source-note.md`
 - `templates/archive-note.md`
 - `templates/patent-disclosure.md`
-- `templates/migration-record.md`
+- `templates/README.md`
 - `templates/artifact-ref.md`
 
 ## Registry 与索引
@@ -54,7 +54,7 @@
 ## 后续模板对齐
 
 - 2026-06-19：对齐 `templates/archive-note.md` 和 `templates/patent-disclosure.md` 到 `registry/schema.md` required fields，避免人工按模板新增归档或专利条目时缺少 `domain`、`path`、`scope`、`visibility`、`source`、`created_at`、`updated_at` 等字段。
-- 2026-06-19：对齐 `templates/migration-record.md` 到 `registry/migrations.jsonl` 门禁，提供可复制 JSONL 行和验证命令。
+- 2026-06-19：对齐 `templates/README.md` 到 `registry/items.jsonl` 门禁，提供可复制 JSONL 行和验证命令。
 - 2026-06-19：新增 `templates/artifact-ref.md`，并让 `knowledge-new.sh --kind artifact-ref` 推荐制品引用模板而不是 migration record 模板。
 
 ## Review

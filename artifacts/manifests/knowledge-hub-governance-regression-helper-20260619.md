@@ -4,6 +4,8 @@
 
 新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会记录为结构化 failure result，并在 `--json` / final gate 路径输出 JSON，避免 final gate 只能看到空输出或残留临时目录。
 
+当前 clean-slate 版本覆盖 126 个回归场景；已删除 hard migration 兼容路径、migration ledger 和 migration record 模板相关测试。
+
 ## 覆盖范围
 
 | ID | 场景 | 预期 |
@@ -73,7 +75,7 @@
 | manual-entry-owner-override | 当前人工新增向导支持 owner 覆盖 | 默认 owner 为 `leiwenjun`，传入 `--owner team-core` 时草稿使用 `team-core` |
 | manual-entry-owner-registry-and-personal-defaults | 当前人工新增向导暴露 item owner registry 状态，并对 personal-local 给出安全默认值 | 未登记 item owner 只输出 warning、不伪造 owner；`domain=notes` 且 `notes/personal/` 路径默认 `visibility=personal-local`、`status=personal`；`domain=personal`、`domains/personal/` 和 domain/path 冲突必须直接失败 |
 | manual-entry-docs-owner-option | 当前 README、tools README 和 `knowledge-new.sh --help` 暴露人工新增 owner 参数 | README、tools README 与工具 help 均包含 `knowledge-new.sh` 和 `--owner`；项目示例展示从 domain 推导 project |
-| manual-entry-offline-docs | 当前 README 和模板说明离线人工默认字段与迁移条件 | README 明确 `manual_validation_pending: true`、`source.type=manual`、`status=reviewing`、`review_status=manual-entry-pending-review`；模板说明 `registry/migrations.jsonl` 只在迁移、引用或归档时补齐 |
+| manual-entry-offline-docs | 当前 README 和模板说明离线人工默认字段 | README 明确 `manual_validation_pending: true`、`source.type=manual`、`status=reviewing`、`review_status=manual-entry-pending-review`；模板说明不暴露 migration ledger 入口 |
 | readme-offline-shortest-paths | 当前 README 保留 5 条人工维护最短路径和终态检查离线 fallback | README 必须包含“人工维护 5 条最短路径”、5 个子标题、`manual_validation_pending: true`、`required_followup`、`rtk git diff --check` 和 final-gate 命令，避免离线维护入口被删改 |
 | owner-decision-draft-leak-warning | 临时副本加入非 `.local.jsonl` 的 owner decision JSONL 草稿 | `knowledge-check --diagnostics` 必须给出 owner decision 草稿泄漏 warning，提示改为 `.local.jsonl` 或登记 reviewed landing artifact；不得关闭 owner gate |
 | manual-entry-offline-package-consistency | 当前离线人工维护包在 README、indexes README 和终态 goal 中保持一致 follow-up 命令 | 三处离线维护入口必须都包含完整 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` 与 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all`，不得退回弱化的自然语言 follow-up |
@@ -83,8 +85,7 @@
 | offline-validation-template-placeholders | 当前离线待验证模板保留人工复核占位 | README / indexes / templates 的离线片段包含 `manual_validation_pending`、原因、required follow-up 和 `review_after`，避免离线补录缺少后续验证路径 |
 | governance-audit-readability-gate | 临时副本移除 2026-06-21 governance audit registry item 的 `summary_zh` | `knowledge-check` 必须失败，避免新增治理 audit 缺少中文摘要和语言字段 |
 | ai-generated-item-provenance-gate | 临时副本移除 2026-06-21 AI-generated registry item 的 `ai_model_or_tool` 和 `ai_generated_at` | `knowledge-check` 必须失败，避免 AI 生成条目缺少可追溯模型/工具和生成时间 |
-| migration-notes-zh-gate | 临时副本移除 2026-06-21 migration row 的 `notes_zh` | `knowledge-check` 必须失败，避免新增 migration 只保留英文 notes 而无法被中文维护者快速理解 |
-| manual-entry-migration-conditional-guide | 当前人工新增向导把 migration 作为条件步骤 | 普通新知识不强制新增 migration；只有迁移、引用或归档时使用 `registry/migrations.jsonl` 草稿，且草稿包含 `notes_zh` |
+| manual-entry-no-migration-ledger-guide | 当前人工新增向导不暴露 migration ledger 入口 | 普通新知识只维护唯一正文、registry、核心索引和 Evidence Index，不生成迁移账本草稿 |
 | manual-entry-template-selection | 当前人工新增向导保持 kind 到模板映射稳定 | `runbook`、`decision`、`validation`、`project-archive`、`artifact-ref` 使用专用模板，其他 kind 回落 `templates/item.md` |
 | templates-required-sections | 当前核心模板包含长期资产字段和关键章节 | `item.md`、`runbook.md`、`decision.md` 均包含 canonical 可读性字段、AI provenance、Evidence Index、风险与 Review 章节 |
 | index-readme-maintenance-coverage | 当前索引 README 覆盖人工维护入口与 AI 安全边界 | README 必须说明 registry/source/migration 权威来源、核心与扩展索引、`knowledge-index-plan`/`knowledge-check` 命令、offline 默认字段，以及不得覆盖人工结论、自动 active、关闭 owner gate 或写 memory |
@@ -98,7 +99,6 @@
 | status-source-governance-summary | 当前状态看板 JSON 暴露 source coverage、source check、boundary health、review_after 和终态恢复命令 | `knowledge-status.sh --json` 必须输出 source 注册数、最新 source coverage manifest、latest coverage 选择依据、source_check_health、boundary_health、stale review_after 计数、review_after 复核命令、owner-ready package 覆盖率和 final gate 命令 |
 | source-check-health-contract | 当前 `knowledge-check` 输出 source check/no-check 静态契约健康面 | 18 个 registered source 均有 rtk check，不执行 check 命令；负向 fixture 将 check 改成非 rtk 时必须失败 |
 | source-check-report-only-helper | 当前 source check 辅助工具只执行 PCR02 Level 2 allowlist 的 report-only availability check | `knowledge-source-check.sh --scope pcr02-level2 --json` 必须 7/7 pass，且不改变 `knowledge-check` 的 `source_check_health.executed=false` 静态契约 |
-| hard-migration-retired-origin-missing-terminal | 临时副本把 retired 且 hard-migrated-to-hub 的 source path 改成不存在路径 | `knowledge-hard-migration.sh --dry-run --json` 必须复用 `canonical_manifest`，验证 Hub target 仍存在，并输出 `retired_origin_missing` / `retired_manifest_reused`，不能把旧外部 origin 缺失当成迁移阻断 |
 | source-check-rejects-unsafe-runtime-command | 临时副本把 allowlist source 的 check 改成带 shell 控制符的 runtime payload | `knowledge-source-check.sh` 必须拒绝执行并返回非零，避免 registry 字符串变成任意 shell 执行入口 |
 | final-gate-source-check-runtime-failed-blocker | 临时副本把 allowlist source 的 check 改成合法但必失败的路径存在性检查 | `knowledge-final-gate.sh` 必须输出 `source-check-runtime-failed` blocker、`final_status=needs-fix` 和 `gap_type=source-coverage`，避免 source-check 失败被 owner gate 掩盖 |
 | review-after-near-due-json-contract | 当前 review_after 辅助工具输出 30 天 near-due report | `knowledge-review-after.sh --as-of 2026-06-22 --window-days 30 --json` 必须输出 32 个 near-due item、0 个 stale item/source、7 个 owner gate open，且 near-due 不作为 blocking gate |
@@ -127,7 +127,7 @@
 | knowledge-search-registry-metadata-fallback | 临时副本新增正文不含关键词、registry metadata 含关键词的 item 后运行结构化搜索 | `knowledge-search.sh` 必须通过 registry metadata fallback 返回 `match=registry-metadata` 的 item，避免只登记在 registry 的长期入口无法被关键词发现 |
 | knowledge-search-invalid-filters | 当前搜索入口拒绝非法枚举过滤值和非正 limit | `--status not-a-status`、`--kind not-a-kind` 和 `--limit 0` 非零退出，并提示允许值或正整数要求，避免无效过滤静默退化为全文搜索 |
 | stable-governance-command-examples | 治理文档和模板保持稳定命令示例 | README、tools README、templates、governance 和 indexes 不得退回 repo-relative `rtk bash tools/...`、短 `knowledge-check --dry-run` 或弱 validation_refs 示例 |
-| final-proof-artifact-discoverability | 当前终态 proof/gate/recovery 主制品可从 registry、migration 和核心索引发现 | 终态 proof 主项必须有 `.md/.jsonl` 配对，出现在 registry/items、registry/migrations、by-owner、by-status、by-review-date、by-topic 和 by-decision，且索引引用不得指向不存在文件 |
+| final-proof-artifact-discoverability | 当前终态 proof/gate/recovery 主制品可从 registry、文件配对和核心索引发现 | 终态 proof 主项必须有 `.md/.jsonl` 配对，出现在 registry/items、by-owner、by-status、by-review-date、by-topic 和 by-decision，且索引引用不得指向不存在文件 |
 | final-proof-decision-index-recovery-contract | 终态 proof 可发现性覆盖 by-decision 决策恢复索引 | `tools/knowledge-final-gate.sh` 的 proof 索引清单必须包含 `indexes/by-decision.md`，且 2026-06-23 终态治理 proof 在 by-decision 中有中文决策/边界锚点 |
 | final-proof-artifact-as-of-date-selector | 临时副本新增 2026-06-23 governance proof manifest 后运行 final gate | `knowledge-final-gate.sh --as-of 2026-06-23` 必须按 as-of 日期发现新 proof，同时保留 2026-06-22 seed 基线，避免动态 proof selector 继续绑定固定日期 |
 | final-proof-artifacts-stable-key-only | 当前终态 proof 主制品摘要只提供稳定 JSON 字段 | final gate 必须输出稳定 `proof_artifacts`，不得输出 `proof_artifacts_20260622` 等日期化 alias，避免长期恢复依赖日期化 key |
@@ -151,7 +151,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json` | 0 | 通过；105 个回归场景全部 pass，覆盖 governance goal path explainability、PCR02 Level 2 source coverage、7 个 PCR02 Level 2 source boundary manifests、boundary_health 内部证据健康面和负向 source_id 篡改、status 负向 fixture、owner gate 负向 fixture、owner handoff packet、owner form 聚焦、owner forms 文本 JSONL 输出、owner forms 纯 JSONL 输出、owner forms target candidates、owner forms 纯 JSONL 互斥保护、owner checklist、owner form 上下文、owner source identity 上下文、owner prefill candidates、owner evidence readiness、owner inbox 字段分组与安全命令、owner source identity 过期拒绝、owner target_decision 候选目标门禁、owner decision/target 成对兼容门禁、owner decision/target 合法终止组合正向门禁、owner routing_owner 代签 reviewed_by 拒绝、owner guardrail/decision enum/target_candidates 篡改拒绝、owner summary、owner by-owner summary、owner next-open 聚焦、status next owner gate、status text owner summary/review_after commands、owner-gates 子命令非零阻断、final gate owner blocker、final gate evidence index、final gate strict 非 owner blocker、final gate skip regression blocker、final gate empty child JSON blocker、final gate default regression path、final gate typed registry gap、final gate source coverage selection、final gate 当前 source-check 证据和高优先级规则审计、final gate source-check runtime 失败 blocker、final gap/readability 正向契约、final gate git diff check、final gate automatic governance/gap map、final state Level 1/2/3 audit summary、final gate owner_recovery、final proof as-of 日期选择、owner landing plan / landing audit 执行目录、动态 worksheet 文件、worksheet 验证命令和人工 delta、owner-ready missing/invalid/duplicate/repo-relative-command landing gate、manual entry by-project/by-source/by-decision 条件索引提示、manual entry 已登记 source 绑定、unknown source 拒绝、owner 文档可发现性、owner registry 状态与 personal-local 默认值、offline manual defaults、README 5 条最短路径和终态检查离线 fallback、人工新增 diagnostics 默认验证、人工新增可读性字段、归档类人工入口默认 archived、离线待验证模板占位、governance audit 可读性 gate、AI provenance gate、migration notes_zh gate、migration 条件提示、模板选择和 registry kind 映射、模板必备章节、indexes README 维护规则、index planner 核心 section 派生视图、coverage decision/risk、manifest filename-date-only latest 与 unpaired 分类、manifest JSONL 轻量 profile gate（2026-06-21 及之后）、模板可读性字段 gate、终态 proof 主制品可发现性、topic/decision 索引规划健康、decision registry 强门禁、空 topic 允许、status source governance summary、source_check_health 静态契约和非 rtk 负向门禁、source-check report-only helper、source-check unsafe runtime 拒绝、review_after near-due report、review_after 分组 JSON 契约、automation report-only/no-memory 硬门禁、source coverage 日期文件名选择、source coverage duplicate source_id warning、review_after as-of 固定日期复现、stale item/source review_after warning/status surface、source 新增向导、source 新增向导 review_after 默认复核周期、source 枚举速查和非法枚举预校验、source check 命令分支、source status coverage 同步、source unknown owner warning、source check/no-check 二选一、source check 文档优先路径、source role-aware 推荐提示、knowledge-search 结构化过滤、structured filters 排除未登记 raw file、kind alias 归一过滤、registry metadata-only fallback、无效 filter/limit 拒绝、治理文档稳定命令示例和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-25` | 0 | 通过；128 个回归场景全部 pass，新增 `hard-migration-retired-origin-missing-terminal`，并保留 source-control、owner target、user-path、canonical registry、owner gate、source coverage、search、automation 和 regression manifest 自检覆盖。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-25` | 0 | 历史验证记录；后续 clean-slate 版本已删除 hard migration 兼容测试和 migration ledger 测试，当前以 126 个回归场景为准。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 
@@ -186,7 +186,6 @@
 - `source-review-after-stale-surface`
 - `final-gate-strict-status-nonowner-blocker`
 - `source-check-report-only-helper`
-- `hard-migration-retired-origin-missing-terminal`
 - `source-check-rejects-unsafe-runtime-command`
 - `review-after-near-due-json-contract`
 - `owner-form-decision-target-pair-gate`

@@ -18,7 +18,7 @@
 - `required_manual_files` 包含：
   - `artifacts/manifests/<owner-decision-landing-YYYYMMDD>.jsonl`
   - `registry/items.jsonl`
-  - `registry/migrations.jsonl`
+  - `registry/items.jsonl`
   - `indexes/by-project.md`
   - `indexes/by-status.md`
   - `indexes/by-owner.md`

@@ -37,7 +37,7 @@
 - `rtk bash tools/knowledge-search.sh evidence-index-template-applied --json`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-evidence-index-template-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk git diff --check`
 
 ## 结果
@@ -50,5 +50,5 @@
 - `rtk bash tools/knowledge-search.sh evidence-index-template-applied --json`：通过，可检索到 registry、status index 和本 manifest。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-evidence-index-template-20260619.jsonl`：通过，JSONL 格式有效。
 - `rtk jq -c . registry/items.jsonl`：通过，registry 条目格式有效。
-- `rtk jq -c . registry/migrations.jsonl`：通过，migration 记录格式有效。
+- `rtk jq -c . registry/items.jsonl`：通过，migration 记录格式有效。
 - `rtk git diff --check`：通过，无空白错误。

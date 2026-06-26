@@ -2390,12 +2390,10 @@ def test_final_gate_owner_review_blocker():
         and "knowledge-hub-review-after-topic-owner-hardening-20260622" not in proof_expected_ids
         and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
-        and proof_artifacts.get("migration_covered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("indexed_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("missing_registry") == []
         and proof_artifacts.get("missing_md") == []
         and proof_artifacts.get("missing_jsonl") == []
-        and proof_artifacts.get("missing_migration") == []
         and proof_artifacts.get("missing_indexes") == {}
         and len(proof_rows) == proof_artifacts.get("expected_count")
         and all(row.get("status") == "pass" for row in proof_rows)
@@ -2410,8 +2408,6 @@ def test_final_gate_owner_review_blocker():
         and source_check_snapshot.get("registry_present") is True
         and source_check_snapshot.get("md_exists") is True
         and source_check_snapshot.get("jsonl_exists") is True
-        and source_check_snapshot.get("migration_md_ref") is True
-        and source_check_snapshot.get("migration_jsonl_ref") is True
         and source_check_snapshot.get("missing_indexes") == []
         and source_check_snapshot.get("missing_source_ids") == []
         and source_check_snapshot.get("unexpected_source_ids") == []
@@ -2857,7 +2853,6 @@ def test_final_gap_readability_positive_contracts():
     except Exception:
         pass
     items_path = root / "registry" / "items.jsonl"
-    migrations_path = root / "registry" / "migrations.jsonl"
     sources_path = root / "registry" / "sources.json"
     readability_fields = [
         "summary_zh",
@@ -2867,7 +2862,6 @@ def test_final_gap_readability_positive_contracts():
         "terminology_status",
     ]
     missing_readability_fields = []
-    missing_notes_zh = []
     missing_source_fields = []
     try:
         for row in [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]:
@@ -2882,12 +2876,6 @@ def test_final_gap_readability_positive_contracts():
                         missing_readability_fields.append(f"{row.get('id')}:{field}")
     except Exception as exc:
         missing_readability_fields.append(f"parse-error:{exc}")
-    try:
-        for row in [json.loads(line) for line in migrations_path.read_text().splitlines() if line.strip()]:
-            if str(row.get("checked_at", "")) >= "2026-06-21" and not str(row.get("notes_zh", "")).strip():
-                missing_notes_zh.append(str(row.get("mode", row.get("to", "<unknown>"))))
-    except Exception as exc:
-        missing_notes_zh.append(f"parse-error:{exc}")
     try:
         source_required_fields = ["owner", "review_after", "migration_strategy", "final_disposition"]
         source_data = json.loads(sources_path.read_text())
@@ -2913,7 +2901,6 @@ def test_final_gap_readability_positive_contracts():
         and final_result["exit_code"] == 0
         and final_parsed.get("final_status") == "ok"
         and not missing_readability_fields
-        and not missing_notes_zh
         and not missing_source_fields
         and not non_owner_gaps,
         "final-gap-readability-positive-contracts",
@@ -2924,7 +2911,6 @@ def test_final_gap_readability_positive_contracts():
             "final_gate_exit_code": final_result["exit_code"],
             "final_status": final_parsed.get("final_status"),
             "missing_readability_fields": missing_readability_fields,
-            "missing_notes_zh": missing_notes_zh,
             "missing_source_fields": missing_source_fields,
             "non_owner_gaps": non_owner_gaps,
             "final_stdout_sample": final_result["stdout"][:1200],
@@ -4036,7 +4022,6 @@ def test_manual_entry_default_dates():
         result["exit_code"] == 0
         and f'"created_at":"{current_today}"' in result["stdout"]
         and f'"updated_at":"{current_today}"' in result["stdout"]
-        and f'"checked_at":"{current_today}"' in result["stdout"]
         and '"review_after":"<YYYY-MM-DD>"' not in result["stdout"]
         and "checked_at\":\"<YYYY-MM-DD>" not in result["stdout"],
         "manual-entry-default-dates",
@@ -4046,7 +4031,6 @@ def test_manual_entry_default_dates():
             "today": current_today,
             "has_created_at": f'"created_at":"{current_today}"' in result["stdout"],
             "has_updated_at": f'"updated_at":"{current_today}"' in result["stdout"],
-            "has_checked_at": f'"checked_at":"{current_today}"' in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -4298,6 +4282,8 @@ def test_manual_entry_docs_owner_option():
 def test_manual_entry_offline_docs():
     readme_path = root / "README.md"
     templates_readme_path = root / "templates" / "README.md"
+    legacy_ledger_path = "registry/" + "migrations.jsonl"
+    legacy_template_kind = "migration" + "-record"
     try:
         readme = readme_path.read_text()
         templates_readme = templates_readme_path.read_text()
@@ -4313,16 +4299,16 @@ def test_manual_entry_offline_docs():
         and '"from": "field-debug / meeting / code-review / lab-test / owner-decision / design-review"' in readme
         and '"status": "reviewing"' in readme
         and '"review_status": "manual-entry-pending-review"' in readme
-        and "registry/migrations.jsonl" in templates_readme
-        and "迁移、引用或归档" in templates_readme,
+        and legacy_ledger_path not in templates_readme
+        and legacy_template_kind not in templates_readme,
         "manual-entry-offline-docs",
-        "manual and offline maintenance docs state default registry values and conditional migration records",
+        "manual and offline maintenance docs state default registry values without migration ledger entrypoints",
         {
             "read_error": read_error,
             "readme_has_manual_validation_pending": "manual_validation_pending: true" in readme,
             "readme_has_manual_source_type": '"type": "manual"' in readme,
             "readme_has_reviewing_default": '"status": "reviewing"' in readme,
-            "templates_has_conditional_migration": "registry/migrations.jsonl" in templates_readme and "迁移、引用或归档" in templates_readme,
+            "templates_has_migration_ledger": legacy_ledger_path in templates_readme or legacy_template_kind in templates_readme,
         },
     )
 
@@ -4827,49 +4813,8 @@ def test_ai_generated_item_provenance_gate():
         repo,
     )
 
-def test_migration_notes_zh_gate():
-    repo = copy_repo("migration-notes-zh-gate")
-    migrations_path = repo / "registry" / "migrations.jsonl"
-    rows = [json.loads(line) for line in migrations_path.read_text().splitlines() if line.strip()]
-    target_found = False
-    for row in rows:
-        if row.get("mode") == "owner-ready-command-stability":
-            row.pop("notes_zh", None)
-            target_found = True
-            break
-    if not target_found:
-        expect(
-            False,
-            "migration-notes-zh-gate",
-            "knowledge-check requires notes_zh for new migration records",
-            {"setup_error": "migration fixture not found"},
-            repo,
-        )
-        return
-    migrations_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
-    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
-    parsed = {}
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception:
-        pass
-    errors = parsed.get("errors", [])
-    expect(
-        result["exit_code"] == 1
-        and parsed.get("status") == "fail"
-        and any("missing notes_zh for post-2026-06-21 readability gate" in error for error in errors),
-        "migration-notes-zh-gate",
-        "knowledge-check requires notes_zh for new migration records",
-        {
-            "exit_code": result["exit_code"],
-            "status": parsed.get("status"),
-            "errors": errors,
-            "stdout_sample": result["stdout"][:1200],
-        },
-        repo,
-    )
-
-def test_manual_entry_migration_conditional_guide():
+def test_manual_entry_no_migration_ledger_guide():
+    legacy_ledger_path = "registry/" + "migrations.jsonl"
     result = run_cmd(
         root,
         [
@@ -4881,23 +4826,23 @@ def test_manual_entry_migration_conditional_guide():
             "--domain",
             "governance",
             "--id",
-            "governance-conditional-migration",
+            "governance-no-migration-ledger",
             "--path",
-            "governance/conditional-migration.md",
+            "governance/no-migration-ledger.md",
         ],
     )
     expect(
         result["exit_code"] == 0
-        and "普通新知识不强制新增 migration" in result["stdout"]
-        and "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"]
-        and '"notes_zh":"人工新增条目已按唯一正文' in result["stdout"],
-        "manual-entry-migration-conditional-guide",
-        "manual entry guide treats migration record as conditional and includes notes_zh when used",
+        and legacy_ledger_path not in result["stdout"]
+        and "migration notes" not in result["stdout"]
+        and "Evidence Index" in result["stdout"],
+        "manual-entry-no-migration-ledger-guide",
+        "manual entry guide does not expose migration ledger entrypoints",
         {
             "exit_code": result["exit_code"],
-            "has_conditional_step": "普通新知识不强制新增 migration" in result["stdout"],
-            "has_conditional_heading": "registry/migrations.jsonl（仅迁移、引用或归档时使用）" in result["stdout"],
-            "has_notes_zh": '"notes_zh":"人工新增条目已按唯一正文' in result["stdout"],
+            "has_migrations_jsonl": legacy_ledger_path in result["stdout"],
+            "has_migration_notes": "migration notes" in result["stdout"],
+            "has_evidence_index": "Evidence Index" in result["stdout"],
             "stdout_sample": result["stdout"][:1600],
         },
     )
@@ -4917,8 +4862,6 @@ def test_manual_entry_template_selection():
         ("owner-worksheet", "templates/owner-decision-worksheet.md", "owner-decision-worksheet"),
         ("patent-disclosure", "templates/patent-disclosure.md", "patent-disclosure"),
         ("patent", "templates/patent-disclosure.md", "patent"),
-        ("migration-record", "templates/migration-record.md", "migration-record"),
-        ("migration", "templates/migration-record.md", "migration-record"),
         ("artifact-ref", "templates/artifact-ref.md", "artifact-ref"),
         ("audit", "templates/item.md", "audit"),
     ]
@@ -5026,7 +4969,6 @@ def test_index_readme_maintenance_coverage():
     required_fragments = [
         "registry/items.jsonl",
         "registry/sources.json",
-        "registry/migrations.jsonl",
         "indexes/by-owner.md",
         "indexes/by-review-date.md",
         "indexes/by-status.md",
@@ -5069,7 +5011,6 @@ def test_by_topic_first_screen_readability_contract():
         by_topic = ""
         read_error = str(exc)
     required_first_screen_topics = [
-        "migration",
         "owner gate",
         "PCR02",
         "tools",
@@ -5823,11 +5764,6 @@ def test_final_proof_artifact_discoverability():
             items_by_id[str(row.get("id", ""))] = row
     except Exception as exc:
         errors.append(f"registry/items.jsonl read/parse failed: {exc}")
-    migration_text = ""
-    try:
-        migration_text = (root / "registry" / "migrations.jsonl").read_text()
-    except Exception as exc:
-        errors.append(f"registry/migrations.jsonl read failed: {exc}")
     index_texts = {}
     for relative in [
         "indexes/by-owner.md",
@@ -5844,8 +5780,6 @@ def test_final_proof_artifact_discoverability():
     missing_registry = []
     missing_md = []
     missing_jsonl = []
-    missing_migration_md = []
-    missing_migration_jsonl = []
     missing_indexes = {}
     missing_documented_by_paths = []
     missing_topic_paths = []
@@ -5884,10 +5818,6 @@ def test_final_proof_artifact_discoverability():
             missing_jsonl.append({"id": item_id, "path": str(jsonl_path.relative_to(root))})
         md_relative = str(md_path.relative_to(root)) if path_text else ""
         jsonl_relative = str(jsonl_path.relative_to(root)) if path_text else ""
-        if md_relative and md_relative not in migration_text:
-            missing_migration_md.append({"id": item_id, "path": md_relative})
-        if jsonl_relative and jsonl_relative not in migration_text:
-            missing_migration_jsonl.append({"id": item_id, "path": jsonl_relative})
         per_index_missing = []
         for relative, text in index_texts.items():
             if item_id in text or (md_relative and md_relative in text) or (jsonl_relative and jsonl_relative in text):
@@ -5914,13 +5844,11 @@ def test_final_proof_artifact_discoverability():
         and not missing_registry
         and not missing_md
         and not missing_jsonl
-        and not missing_migration_md
-        and not missing_migration_jsonl
         and not missing_indexes
         and not missing_documented_by_paths
         and not missing_topic_paths,
         "final-proof-artifact-discoverability",
-        "final proof artifacts are discoverable from registry, migration and core indexes",
+        "final proof artifacts are discoverable from registry, file pairs and core indexes",
         {
             "required_ids": required_ids,
             "seed_ids": seed_ids,
@@ -5932,8 +5860,6 @@ def test_final_proof_artifact_discoverability():
             "missing_registry": missing_registry,
             "missing_md": missing_md,
             "missing_jsonl": missing_jsonl,
-            "missing_migration_md": missing_migration_md,
-            "missing_migration_jsonl": missing_migration_jsonl,
             "missing_indexes": missing_indexes,
             "missing_documented_by_paths": sorted(set(missing_documented_by_paths)),
             "missing_topic_paths": sorted(set(missing_topic_paths)),
@@ -6132,7 +6058,6 @@ def test_final_proof_artifact_as_of_date_selector():
             "missing_registry": proof_artifacts.get("missing_registry", []),
             "missing_md": proof_artifacts.get("missing_md", []),
             "missing_jsonl": proof_artifacts.get("missing_jsonl", []),
-            "missing_migration": proof_artifacts.get("missing_migration", []),
             "missing_indexes": proof_artifacts.get("missing_indexes", {}),
             "stdout_sample": result["stdout"][:1000],
             "stderr_sample": result["stderr"][:1000],
@@ -6206,7 +6131,6 @@ def test_index_plan_extended_sections():
     review_queue_summary = review_queue_index.get("summary", {})
     registry_decisions = decision_index.get("registry_decisions", [])
     owner_worksheets = decision_index.get("owner_worksheets", [])
-    migration_decisions = decision_index.get("migration_decisions", [])
     pcr02_source = source_index.get("pcr02-project-tools", {})
     source_coverage = pcr02_source.get("coverage", {})
     source_coverage_decision = source_coverage.get("decision", "")
@@ -6256,23 +6180,23 @@ def test_index_plan_extended_sections():
         and bool(source_coverage_risk)
         and "project-current" in topic_index
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
-        and manifest_summary.get("jsonl_count", 0) >= 100
-        and manifest_summary.get("markdown_count", 0) >= 100
+        and manifest_summary.get("jsonl_count", 0) >= 190
+        and manifest_summary.get("markdown_count", 0) >= 190
         and manifest_summary.get("latest_strategy") == "filename-date-only"
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_profile_health.get("pass", 0) >= 1
         and manifest_profile_health.get("legacy-missing-profile", 0) >= 1
-        and manifest_summary.get("unpaired_count") == 7
+        and manifest_summary.get("unpaired_count") == 6
         and manifest_summary.get("unpaired_expected_count") == 6
-        and manifest_summary.get("unpaired_needs_review_count") == 1
+        and manifest_summary.get("unpaired_needs_review_count") == 0
         and len(manifest_unpaired_expected) == 6
-        and len(manifest_unpaired_needs_review) == 1
+        and len(manifest_unpaired_needs_review) == 0
         and all(row.get("review_status") in {"expected", "needs_review"} for row in manifest_unpaired)
         and all(row.get("pairing_status") in {"jsonl-only", "markdown-only"} for row in manifest_unpaired)
         and all(row.get("reasons_zh") and row.get("notes_zh") for row in manifest_unpaired)
         and manifest_text_result["exit_code"] == 0
         and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
-        and "unpaired_needs_review_count: 1" in manifest_text_result["stdout"]
+        and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
         and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
         and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
@@ -6321,8 +6245,7 @@ def test_index_plan_extended_sections():
         and first_owner_worksheet.get("status") == "owner-approved"
         and first_owner_worksheet.get("review_after") == "2026-09-17"
         and first_owner_worksheet.get("decision_state") == "owner_decision:reference-only"
-        and any(row.get("status") == "owner-approved" for row in owner_worksheets)
-        and bool(migration_decisions),
+        and any(row.get("status") == "owner-approved" for row in owner_worksheets),
         "index-plan-extended-sections",
         "index planner covers project/source/topic/decision/manifest sections",
         {
@@ -6354,7 +6277,6 @@ def test_index_plan_extended_sections():
             "review_queue_row_count": len(review_queue_index.get("rows", [])),
             "owner_worksheet_count": len(owner_worksheets),
             "first_owner_worksheet": first_owner_worksheet,
-            "migration_decision_count": len(migration_decisions),
         },
     )
 
@@ -6870,74 +6792,6 @@ def test_source_check_report_only_helper():
             "check_parse_error": check_parse_error,
             "source_check_health": source_check_health,
         },
-    )
-
-def test_hard_migration_retired_origin_missing_terminal():
-    repo = copy_repo("hard-migration-retired-origin-missing-terminal")
-    sources_path = repo / "registry" / "sources.json"
-    try:
-        payload = json.loads(sources_path.read_text())
-        missing_root = repo / ".missing-retired-source-fixtures"
-        changed_source_ids = []
-        for source in payload.get("sources", []):
-            if (
-                source.get("status") == "retired"
-                and source.get("final_disposition") == "hard-migrated-to-hub"
-                and source.get("canonical_manifest")
-            ):
-                missing_path = str(missing_root / str(source.get("id", "unknown")))
-                source["path"] = missing_path
-                source["origin_path"] = missing_path
-                changed_source_ids.append(source.get("id"))
-        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-    except Exception as exc:
-        expect(
-            False,
-            "hard-migration-retired-origin-missing-terminal",
-            "hard migration reuses canonical manifest when retired external origins are gone",
-            {"setup_error": str(exc)},
-            repo,
-        )
-        return
-
-    result = run_cmd(
-        repo,
-        ["rtk", "bash", "tools/knowledge-hard-migration.sh", "--dry-run", "--json", "--as-of", today.isoformat()],
-    )
-    parsed = {}
-    parse_error = ""
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception as exc:
-        parse_error = str(exc)
-    expect(
-        result["exit_code"] == 0
-        and not parse_error
-        and parsed.get("status") == "planned"
-        and len(changed_source_ids) >= 1
-        and parsed.get("retired_origin_missing", 0) >= 1
-        and parsed.get("retired_origin_missing", 0) <= len(changed_source_ids)
-        and parsed.get("retired_manifest_reused", 0) > 0
-        and parsed.get("planned_copy_or_artifact") == parsed.get("existing_verified")
-        and parsed.get("errors") == []
-        and parsed.get("warnings") == [],
-        "hard-migration-retired-origin-missing-terminal",
-        "hard migration reuses canonical manifest when retired external origins are gone",
-        {
-            "exit_code": result["exit_code"],
-            "parse_error": parse_error,
-            "changed_source_ids": changed_source_ids,
-            "changed_source_count": len(changed_source_ids),
-            "retired_origin_missing": parsed.get("retired_origin_missing"),
-            "retired_manifest_reused": parsed.get("retired_manifest_reused"),
-            "planned_copy_or_artifact": parsed.get("planned_copy_or_artifact"),
-            "existing_verified": parsed.get("existing_verified"),
-            "errors": parsed.get("errors"),
-            "warnings": parsed.get("warnings"),
-            "stderr_sample": result["stderr"][:500],
-            "stdout_sample": result["stdout"][:1200],
-        },
-        repo,
     )
 
 def test_source_check_rejects_unsafe_runtime_command():
@@ -8348,8 +8202,7 @@ def test_regression_manifest_coverage():
         "offline-validation-template-placeholders",
         "governance-audit-readability-gate",
         "ai-generated-item-provenance-gate",
-        "migration-notes-zh-gate",
-        "manual-entry-migration-conditional-guide",
+        "manual-entry-no-migration-ledger-guide",
         "manual-entry-template-selection",
         "templates-required-sections",
         "index-readme-maintenance-coverage",
@@ -8372,7 +8225,6 @@ def test_regression_manifest_coverage():
         "status-source-governance-summary",
         "source-check-health-contract",
         "source-check-report-only-helper",
-        "hard-migration-retired-origin-missing-terminal",
         "source-check-rejects-unsafe-runtime-command",
         "final-gate-source-check-runtime-failed-blocker",
         "review-after-near-due-json-contract",
@@ -8543,8 +8395,7 @@ for test_fn in [
     test_offline_validation_template_placeholders,
     test_governance_audit_readability_gate,
     test_ai_generated_item_provenance_gate,
-    test_migration_notes_zh_gate,
-    test_manual_entry_migration_conditional_guide,
+    test_manual_entry_no_migration_ledger_guide,
     test_manual_entry_template_selection,
     test_templates_required_sections,
     test_index_readme_maintenance_coverage,
@@ -8567,7 +8418,6 @@ for test_fn in [
     test_status_source_governance_summary,
     test_source_check_health_contract,
     test_source_check_report_only_helper,
-    test_hard_migration_retired_origin_missing_terminal,
     test_source_check_rejects_unsafe_runtime_command,
     test_final_gate_source_check_runtime_failed_blocker,
     test_review_after_near_due_json_contract,

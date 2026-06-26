@@ -7,7 +7,7 @@
 ## 源事实
 
 - `templates/` 已经提供常用条目模板。
-- `registry/items.jsonl`、核心索引和 `registry/migrations.jsonl` 已有机器门禁。
+- `registry/items.jsonl`、核心索引和 `registry/items.jsonl` 已有机器门禁。
 - 人工仍应能够直接新增内容；脚本只能降低遗忘步骤的概率，不能成为唯一入口。
 
 ## 问题地图

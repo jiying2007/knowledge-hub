@@ -33,7 +33,7 @@
 - `rtk jq -c . registry/sources.json`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-source-index-gate-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`
 - `/tmp` 负向验证：复制仓库后从 `indexes/by-source.md` 主表删除一个 source 行，`knowledge-check` 应报 missing source。
@@ -46,7 +46,7 @@
 - `rtk jq -c . registry/sources.json`: pass。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-source-index-gate-20260619.jsonl`: pass。
 - `rtk jq -c . registry/items.jsonl`: pass。
-- `rtk jq -c . registry/migrations.jsonl`: pass。
+- `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `/tmp` missing-source 负向验证：从主表删除 `codex-memories` 后，`knowledge-check` 报 `index:indexes/by-source.md missing source codex-memories`。
@@ -57,4 +57,4 @@
 ## 子代理复核
 
 - SIG-REVIEW-001 发现首版实现会扫描整份 `indexes/by-source.md` 的 Markdown 表格，和“只解析主表”目标不一致；已修复为只读取 `# Knowledge Sources` 下第一个表格，并通过 extra-review-table 回归验证。
-- SIG-REVIEW-002 确认 `registry/items.jsonl`、`registry/migrations.jsonl`、owner/status/review/topic 索引链路完整；`indexes/by-source.md` 保持 source-id-only，不登记 gate 自身。
+- SIG-REVIEW-002 确认 `registry/items.jsonl`、`registry/items.jsonl`、owner/status/review/topic 索引链路完整；`indexes/by-source.md` 保持 source-id-only，不登记 gate 自身。

@@ -20,7 +20,7 @@
 - `indexes/by-owner.md`：补齐 `leiwenjun`、`team-core`、`pcr02-registry-owner` 三类 owner。
 - `indexes/by-review-date.md`：补齐所有 registry item 的 review bucket。
 - `tools/README.md`：补充 `knowledge-check.sh` 的索引漂移检查职责。
-- `registry/items.jsonl`、`registry/migrations.jsonl` 和索引：登记本次治理修复记录。
+- `registry/items.jsonl`、`registry/items.jsonl` 和索引：登记本次治理修复记录。
 
 ## 验证
 

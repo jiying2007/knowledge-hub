@@ -4,7 +4,7 @@
 
 - Status: `hard-migrated-to-hub`
 - Classification: `retired-origin copy-docs`
-- Checked at: `2026-06-24`
+- Checked at: `2026-06-25`
 
 ## 决策
 

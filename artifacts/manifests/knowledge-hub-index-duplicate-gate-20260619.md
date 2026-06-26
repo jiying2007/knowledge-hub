@@ -34,7 +34,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . registry/items.jsonl`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-index-duplicate-gate-20260619.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后在 `indexes/by-owner.md` 重复一个 item id，`knowledge-check` 应报 duplicate item reference。
 - `/tmp` 负向验证：复制仓库后在 `indexes/by-review-date.md` 重复一个 item id，`knowledge-check` 应报 duplicate item reference。
@@ -46,7 +46,7 @@
 - `rtk bash -n tools/knowledge-check.sh`: pass。
 - `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-index-duplicate-gate-20260619.jsonl`: pass。
-- `rtk jq -c . registry/migrations.jsonl`: pass。
+- `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `/tmp` by-owner duplicate 负向验证：重复 `knowledge-hub-root` 后，`knowledge-check` 报 `index:indexes/by-owner.md duplicate item reference knowledge-hub-root (2x)`。
 - `/tmp` by-review-date duplicate 负向验证：重复 `knowledge-hub-root` 后，`knowledge-check` 报 `index:indexes/by-review-date.md duplicate item reference knowledge-hub-root (2x)`。

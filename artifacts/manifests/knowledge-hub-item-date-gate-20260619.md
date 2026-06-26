@@ -32,7 +32,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . registry/items.jsonl`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-date-gate-20260619.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后把一个 item 的 `created_at` 改成非法日期，`knowledge-check` 应报 invalid created_at。
 - `/tmp` 负向验证：复制仓库后把一个 item 的 `updated_at` 改成早于 `created_at`，`knowledge-check` 应报 updated_at before created_at。
@@ -44,7 +44,7 @@
 - `rtk bash -n tools/knowledge-check.sh`: pass。
 - `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-date-gate-20260619.jsonl`: pass。
-- `rtk jq -c . registry/migrations.jsonl`: pass。
+- `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `/tmp` invalid-created-at 负向验证：把一个 item 的 `created_at` 改成 `2026-99-99` 后，`knowledge-check` 报 `items:knowledge-hub-root invalid created_at: 2026-99-99`。
 - `/tmp` updated-before-created 负向验证：把一个 item 的 `updated_at` 改成早于 `created_at` 后，`knowledge-check` 报 `items:knowledge-hub-root updated_at before created_at: 2026-06-15 < 2026-06-16`。

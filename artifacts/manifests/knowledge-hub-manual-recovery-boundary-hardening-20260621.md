@@ -7,7 +7,7 @@
 - 新会话恢复入口补充 HEAD、branch 和 worktree 状态命令，防止旧 handoff 被误当当前事实。
 - `knowledge-new.sh --source` 增加 source 枚举速查和已传入枚举预校验；`project-archive` / `archive-note` 的 registry 与 status index 草稿默认使用 `archived`。
 - 高频模板补可选 `manual_validation_pending` 块，离线手工维护时能保留 pending 原因、followup 命令、owner 和 review_after。
-- PCR02 “第三方库引用基线”迁移副本补项目边界提示，明确不是团队级标准，不进入 `domains/embedded/standards/`。
+- PCR02 “第三方库引用基线”Hub 正文补项目边界提示，明确不是团队级标准，不进入 `domains/embedded/standards/`。
 - `indexes/by-source.md` 增加 PCR02 source 边界速查，人工恢复 owner、review_after 和 final_disposition 时不必只依赖全量 JSON。
 
 ## 范围

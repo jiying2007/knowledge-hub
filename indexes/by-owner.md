@@ -44,7 +44,6 @@
 - `knowledge-hub-registry-enum-gate-20260619`
 - `knowledge-hub-registry-boundary-gate-20260619`
 - `knowledge-hub-active-safety-gate-20260619`
-- `knowledge-hub-migration-record-gate-20260619`
 - `knowledge-hub-manual-entry-guide-20260619`
 - `knowledge-hub-template-schema-gate-20260619`
 - `knowledge-hub-manifest-secret-scan-gate-20260619`

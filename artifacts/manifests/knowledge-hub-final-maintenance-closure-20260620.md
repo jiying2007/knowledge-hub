@@ -13,7 +13,7 @@
 | final-gate-diff-check-evidence | `tools/knowledge-final-gate.sh`、`tools/knowledge-regression.sh` | `rtk git diff --check` 进入 final gate JSON checks、blocker 判断和回归断言，避免终态检查遗漏 whitespace/conflict-marker drift。 |
 | owner-forms-jsonl-target-candidates | `tools/knowledge-owner-gates.sh`、`tools/knowledge-regression.sh` | owner decision JSONL skeleton 增加只读 `target_candidates`，owner 人工签收前能看到候选落点边界。 |
 | status-text-owner-summary-commands | `tools/knowledge-status.sh`、`tools/knowledge-regression.sh` | 文本 dashboard 增加 all-open/by-owner owner summary commands，避免人工分派只能从 JSON 恢复命令。 |
-| manual-offline-shortest-path-docs | `README.md`、`tools/README.md`、`templates/README.md` | 澄清 source owner 必须登记在 `registry/owners.json`、优先使用稳定只读 `--check`、离线人工默认 `reviewing/manual-entry-pending-review`，以及 `registry/migrations.jsonl` 只在迁移、引用或归档时补齐。 |
+| manual-offline-shortest-path-docs | `README.md`、`tools/README.md`、`templates/README.md` | 澄清 source owner 必须登记在 `registry/owners.json`、优先使用稳定只读 `--check`、离线人工默认 `reviewing/manual-entry-pending-review`，以及 `registry/items.jsonl` 只在迁移、引用或归档时补齐。 |
 | regression-manifest-sync | `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md` | 回归 helper manifest 从 33 项同步到 36 项，覆盖新增 status 文本命令、final gate 默认 regression 路径和离线人工文档默认值。 |
 
 ## Deferred

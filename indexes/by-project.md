@@ -6,7 +6,7 @@
 - PCR02 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.md`
 - 历史归档 source control：`sources/engineering-archive`
 - 历史工程归档终态正文：`projects/pcr02/archive/engineering-archive`
-- 旧外部路径：仅保留在 registry/sources.json 的 origin_path 字段、`registry/source-tombstones.jsonl` 和迁移 manifest 中作 provenance；不作为 active source 或默认查询入口。
+- 当前知识入口：只使用 Hub 内 projects/<project>/ 与 sources/<source_id>/ 路径；旧外部路径不作为 active source 或默认查询入口。
 - 目标项目域：`projects/pcr02`
 - 项目入口：`projects/pcr02/README.md`
 - current 恢复锚点：`projects/pcr02/current/`
@@ -54,7 +54,7 @@
 - Motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
-- Source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/migration-plan.md`
+- Source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/source-policy.md`
 - ASAN project-local target：`projects/pcr02/current/runbooks/asan-debug-guide.md`
 - DVR plan archive target：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`
 - Motor MCU debug record archive target：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`

@@ -11,7 +11,7 @@
 | ID | 发现 | 级别 | 证据 | 处理 |
 | --- | --- | --- | --- | --- |
 | KHD-20260619-006 | `indexes/*.md` 中的本地路径引用没有门禁，文件重命名或删除后可能留下残留导航。 | P1 | 只读扫描发现 97 个本地路径型引用；旧 `knowledge-check` 未校验这些路径。 | 已加入本地路径和 glob 引用检查。 |
-| KHD-20260619-007 | `indexes/by-source.md` 有一个 code span 同时包含多个路径，无法被机器可靠校验。 | P2 | `registry/items.jsonl; registry/migrations.jsonl; indexes/by-*.md` 被识别为一个复合引用。 | 已拆成独立 code span，并保留中文顿号连接。 |
+| KHD-20260619-007 | `indexes/by-source.md` 有一个 code span 同时包含多个路径，无法被机器可靠校验。 | P2 | `registry/items.jsonl; registry/items.jsonl; indexes/by-*.md` 被识别为一个复合引用。 | 已拆成独立 code span，并保留中文顿号连接。 |
 | KHD-20260619-008 | `indexes/by-topic.md` 使用 `domains/projects/*/current` 与 `domains/projects/*/archive` 这类 glob 导航。 | P2 | glob 当前能匹配 `domains/projects/pcr02/current` 和 `domains/projects/pcr02/archive`。 | 门禁支持 glob，要求至少匹配一个本地路径。 |
 
 ## 已改内容

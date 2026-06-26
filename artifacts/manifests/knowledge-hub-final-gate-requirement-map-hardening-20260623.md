@@ -23,7 +23,7 @@
 - `artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.md`
 - `artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.jsonl`
 - `registry/items.jsonl`
-- `registry/migrations.jsonl`
+- `registry/items.jsonl`
 - `indexes/by-owner.md`
 - `indexes/by-review-date.md`
 - `indexes/by-status.md`

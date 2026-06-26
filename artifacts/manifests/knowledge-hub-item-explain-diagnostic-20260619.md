@@ -41,7 +41,7 @@
 - 负向验证：解释不存在的 item，应返回 `explain:<item-id> item not found`。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-explain-diagnostic-20260619.jsonl`
 - `rtk jq -c . registry/items.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-search.sh item-explain-diagnostic-applied --json`
 - `rtk git diff --check`
 
@@ -57,6 +57,6 @@
 - `rtk bash tools/knowledge-check.sh --sources-only --dry-run --json --explain knowledge-hub-root`：通过，输出 warning 说明 `--sources-only` 下忽略 `--explain`。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-item-explain-diagnostic-20260619.jsonl`：通过。
 - `rtk jq -c . registry/items.jsonl`：通过。
-- `rtk jq -c . registry/migrations.jsonl`：通过。
+- `rtk jq -c . registry/items.jsonl`：通过。
 - `rtk bash tools/knowledge-search.sh item-explain-diagnostic-applied --json`：通过，返回 3 条可发现结果。
 - `rtk git diff --check`：通过。

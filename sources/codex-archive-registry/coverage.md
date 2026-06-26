@@ -4,11 +4,11 @@
 
 - Status: `hard-migrated-to-hub`
 - Classification: `retired-origin copy-docs-and-artifacts`
-- Checked at: `2026-06-24`
+- Checked at: `2026-06-25`
 
 ## 决策
 
-codex-archive-registry 已硬迁移到 Hub Codex archive registry 终态目录；旧 archive registry 不再作为 active source path。
+codex-archive-registry 已迁移到 Hub Codex archive registry 终态目录；旧 archive registry 不再作为 active source path。
 
 ## 风险
 

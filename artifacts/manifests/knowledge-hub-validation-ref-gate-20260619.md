@@ -35,7 +35,7 @@
 - `rtk bash -n tools/knowledge-check.sh`
 - `rtk jq -c . registry/items.jsonl`
 - `rtk jq -c . artifacts/manifests/knowledge-hub-validation-ref-gate-20260619.jsonl`
-- `rtk jq -c . registry/migrations.jsonl`
+- `rtk jq -c . registry/items.jsonl`
 - `rtk bash tools/knowledge-check.sh --dry-run --json`
 - `/tmp` 负向验证：复制仓库后删除一个 active item 的 `validation_refs`，`knowledge-check` 应报 active/reviewing missing validation_refs。
 - `/tmp` 负向验证：复制仓库后把一个 item 的 `validation_refs` 改成字符串，`knowledge-check` 应报 validation_refs must be list。
@@ -50,7 +50,7 @@
 - `rtk bash -n tools/knowledge-check.sh`: pass。
 - `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk jq -c . artifacts/manifests/knowledge-hub-validation-ref-gate-20260619.jsonl`: pass。
-- `rtk jq -c . registry/migrations.jsonl`: pass。
+- `rtk jq -c . registry/items.jsonl`: pass。
 - `rtk bash tools/knowledge-check.sh --dry-run --json`: pass，`errors=[]`，`warnings=[]`。
 - `/tmp` missing-validation-refs 负向验证：删除一个 active item 的 `validation_refs` 后，`knowledge-check` 报 `items:knowledge-hub-root active/reviewing missing validation_refs`。
 - `/tmp` validation-refs-type 负向验证：把一个 active item 的 `validation_refs` 改成字符串后，`knowledge-check` 报 `items:knowledge-hub-root validation_refs must be list`。

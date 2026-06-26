@@ -36,12 +36,11 @@
 | `debug-record` | `debug-record` | `debug-record.md` | 排障记录 |
 | `external-source-note` / `external-source` | `external-source-note` | `external-source-note.md` | 外部资料吸收记录 |
 | `project-archive` / `archive-note` | `project-archive` | `archive-note.md` | 归档说明 |
-| `migration-record` / `migration` | `migration-record` | `migration-record.md` | 迁移记录 |
 | `artifact-ref` | `artifact-ref` | `artifact-ref.md` | 制品引用 |
 | `patent-disclosure` | `patent-disclosure` | `patent-disclosure.md` | 专利披露 |
 | `patent` | `patent` | `patent-disclosure.md` | 专利材料通用条目 |
 
-`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；如涉及迁移、引用或归档，再补 `registry/migrations.jsonl`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
+`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
 
 `promotion` 是 registry 当前允许的枚举值，目前只能为 `none`；`promotion_decision` 是人读决策说明，用于写清“不提升、候选、拒绝、待 owner review”等背景。`promotion_decision` 不能替代 owner decision，也不能绕过 active / team-level promotion 门禁。
 

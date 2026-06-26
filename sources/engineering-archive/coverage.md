@@ -4,11 +4,11 @@
 
 - Status: `hard-migrated-to-hub`
 - Classification: `retired-origin copy-docs`
-- Checked at: `2026-06-24`
+- Checked at: `2026-06-25`
 
 ## 决策
 
-engineering-archive 已迁移到 Hub PCR02 终态工程归档目录 `projects/pcr02/archive/engineering-archive`；旧工程归档路径只作 provenance，旧过渡副本不再保留。
+engineering-archive 已迁移到 Hub PCR02 终态工程归档目录；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
 
 ## 风险
 

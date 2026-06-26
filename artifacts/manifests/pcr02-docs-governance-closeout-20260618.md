@@ -56,7 +56,7 @@
 - `pcr02-remaining-owner-gates-20260618`
 - `pcr02-docs-governance-closeout-20260618`
 
-`registry/migrations.jsonl` 已覆盖从 read-only classification、copy-first dry-run/apply、reference/artifact-ref、owner package、follow-up、worksheets 到后续 split/closeout/gate 的治理演进链路。
+`registry/items.jsonl` 已覆盖从 read-only classification、copy-first dry-run/apply、reference/artifact-ref、owner package、follow-up、worksheets 到后续 split/closeout/gate 的治理演进链路。
 
 ### 本轮索引修补
 

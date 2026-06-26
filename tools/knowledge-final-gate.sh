@@ -160,7 +160,6 @@ def diagnostic_gap_type(category_ids):
         "source-registry": "registry",
         "owner-project-topic-registry": "registry",
         "registry-parse": "registry",
-        "migration-record": "migration-record",
         "item-source-ref": "registry",
         "item-boundary": "registry",
         "template-schema": "manifest",
@@ -341,10 +340,6 @@ def build_final_proof_artifacts_summary(selection_date):
         for row in item_rows
     }
     expected_ids, dynamic_ids, baseline_dynamic_ids, selection_dynamic_ids, baseline_selection_overlap_ids = select_final_proof_artifact_ids(item_rows, selection_date)
-    try:
-        migration_text = (root / "registry" / "migrations.jsonl").read_text()
-    except Exception:
-        migration_text = ""
     index_texts = {}
     for relative in FINAL_PROOF_INDEX_PATHS:
         try:
@@ -356,11 +351,9 @@ def build_final_proof_artifacts_summary(selection_date):
     missing_registry = []
     missing_md = []
     missing_jsonl = []
-    missing_migration = []
     missing_indexes = {}
     registered_count = 0
     paired_count = 0
-    migration_covered_count = 0
     indexed_count = 0
 
     for artifact_id in expected_ids:
@@ -382,19 +375,6 @@ def build_final_proof_artifacts_summary(selection_date):
         if md_exists and jsonl_exists:
             paired_count += 1
 
-        migration_md_ref = bool(md_relative and md_relative in migration_text)
-        migration_jsonl_ref = bool(jsonl_relative and jsonl_relative in migration_text)
-        if migration_md_ref and migration_jsonl_ref:
-            migration_covered_count += 1
-        else:
-            missing_migration.append({
-                "id": artifact_id,
-                "md_path": md_relative,
-                "jsonl_path": jsonl_relative,
-                "missing_md_ref": not migration_md_ref,
-                "missing_jsonl_ref": not migration_jsonl_ref,
-            })
-
         indexes_present = []
         per_artifact_missing_indexes = []
         for relative, text in index_texts.items():
@@ -414,13 +394,11 @@ def build_final_proof_artifacts_summary(selection_date):
             "md_exists": md_exists,
             "jsonl_path": jsonl_relative,
             "jsonl_exists": jsonl_exists,
-            "migration_md_ref": migration_md_ref,
-            "migration_jsonl_ref": migration_jsonl_ref,
             "indexes_present": indexes_present,
             "missing_indexes": per_artifact_missing_indexes,
             "status": (
                 "pass"
-                if registered and md_exists and jsonl_exists and migration_md_ref and migration_jsonl_ref and not per_artifact_missing_indexes
+                if registered and md_exists and jsonl_exists and not per_artifact_missing_indexes
                 else "fail"
             ),
         })
@@ -429,12 +407,10 @@ def build_final_proof_artifacts_summary(selection_date):
         "pass"
         if registered_count == len(expected_ids)
         and paired_count == len(expected_ids)
-        and migration_covered_count == len(expected_ids)
         and indexed_count == len(expected_ids)
         and not missing_registry
         and not missing_md
         and not missing_jsonl
-        and not missing_migration
         and not missing_indexes
         and not baseline_selection_overlap_ids
         else "fail"
@@ -470,16 +446,14 @@ def build_final_proof_artifacts_summary(selection_date):
         "expected_count": len(expected_ids),
         "registered_count": registered_count,
         "paired_count": paired_count,
-        "migration_covered_count": migration_covered_count,
         "indexed_count": indexed_count,
         "required_indexes": FINAL_PROOF_INDEX_PATHS,
         "missing_registry": missing_registry,
         "missing_md": missing_md,
         "missing_jsonl": missing_jsonl,
-        "missing_migration": missing_migration,
         "missing_indexes": missing_indexes,
         "rows": rows,
-        "notes_zh": f"只读汇总 {FINAL_PROOF_BASELINE_DATE} 基线治理 proof、{selection_date} 当日治理 proof 和 seed 基线在 registry、Markdown/JSONL 配对、migration 和核心索引中的可发现性；不生成或提升任何 owner decision。",
+        "notes_zh": f"只读汇总 {FINAL_PROOF_BASELINE_DATE} 基线治理 proof、{selection_date} 当日治理 proof 和 seed 基线在 registry、Markdown/JSONL 配对和核心索引中的可发现性；不生成或提升任何 owner decision。",
     }
 
 def build_source_check_snapshot_summary():
@@ -521,13 +495,6 @@ def build_source_check_snapshot_summary():
         or row.get("execution_mode") != "report-only-manual"
     ]
 
-    try:
-        migration_text = (root / "registry" / "migrations.jsonl").read_text()
-    except Exception:
-        migration_text = ""
-    migration_md_ref = bool(md_relative and md_relative in migration_text)
-    migration_jsonl_ref = bool(jsonl_relative and jsonl_relative in migration_text)
-
     indexes_present = []
     missing_indexes = []
     for relative in SOURCE_CHECK_SNAPSHOT_INDEX_PATHS:
@@ -549,8 +516,6 @@ def build_source_check_snapshot_summary():
         and not missing_source_ids
         and not unexpected_source_ids
         and not failed_rows
-        and migration_md_ref
-        and migration_jsonl_ref
         and not missing_indexes
         else "fail"
     )
@@ -569,8 +534,6 @@ def build_source_check_snapshot_summary():
         "md_exists": md_exists,
         "jsonl_path": jsonl_relative,
         "jsonl_exists": jsonl_exists,
-        "migration_md_ref": migration_md_ref,
-        "migration_jsonl_ref": migration_jsonl_ref,
         "required_indexes": SOURCE_CHECK_SNAPSHOT_INDEX_PATHS,
         "indexes_present": indexes_present,
         "missing_indexes": missing_indexes,
@@ -714,7 +677,7 @@ def make_highest_priority_rules_audit(
         },
         {
             "rule_id": "single-canonical-body",
-            "rule_zh": "source 正文只维护一份，Knowledge Hub 使用迁移副本、ref、artifact-ref、registry 和 manifest 管理。",
+            "rule_zh": "source 正文只维护一份，Knowledge Hub 使用 canonical 正文、ref、artifact-ref、registry 和 manifest 管理。",
             "status": "pass",
             "evidence_refs": ["runtime:final_state_audit.level1_pcr02_docs", "runtime:final_state_audit.level2_pcr02_candidate_sources"],
             "runtime_fields": ["final_state_audit.level1_pcr02_docs.coverage_status", "final_state_audit.level2_pcr02_candidate_sources.status"],
@@ -750,7 +713,7 @@ def make_highest_priority_rules_audit(
             "status": "pass" if final_status_value in {"ok", "needs-owner-review"} and automatic_governance_status_value != "needs-fix" else "needs-review",
             "evidence_refs": ["runtime:evidence_index", "runtime:checks", "runtime:blockers"],
             "runtime_fields": ["evidence_index", "checks", "blockers", "final_status"],
-            "limitations_zh": "当前 final_status 仍为 needs-owner-review，不能声明 owner gates 完成；只能声明自动治理证据闭环到 owner blocker。",
+            "limitations_zh": "当前 final_status 由 checks、blockers 和 gap_map 共同判定；只有 final_status=ok 且 blockers/gap_map 为空时，才可声明自动治理终态完成。",
         },
     ]
 
@@ -1731,7 +1694,7 @@ evidence_index.append(
         0,
         check_source_control_health.get("status", "fail") or "fail",
         (
-            "source 主控目录门禁通过；registered source 都有 README/inventory/coverage/migration-plan，且 inventory 未发现 raw copy-body。"
+            "source 主控目录门禁通过；registered source 都有 README/inventory/coverage/source-policy，且 inventory 未发现 raw copy-body。"
             if check_source_control_health.get("status") == "pass"
             else "source 主控目录、inventory 或 raw dump safety 存在缺口；请查看 checks.knowledge_check.source_control_health。"
         ),
@@ -1842,7 +1805,6 @@ final_gate_summary = {
     "proof_artifacts_expected_count": proof_artifacts["expected_count"],
     "proof_artifacts_registered_count": proof_artifacts["registered_count"],
     "proof_artifacts_paired_count": proof_artifacts["paired_count"],
-    "proof_artifacts_migration_covered_count": proof_artifacts["migration_covered_count"],
     "proof_artifacts_indexed_count": proof_artifacts["indexed_count"],
     "maintenance_entry_audit_status": maintenance_entry_audit["status"],
     "maintenance_entry_audit_passed_entry_count": maintenance_entry_audit["passed_entry_count"],

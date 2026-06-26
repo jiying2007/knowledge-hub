@@ -63,7 +63,6 @@ allowed_kinds = {
     "debug-record",
     "external-source-note",
     "owner-decision-worksheet",
-    "migration-record",
     "patent-disclosure",
     "codex-session",
     "codex-workflow",
@@ -75,7 +74,6 @@ kind_aliases = {
     "archive-note": "project-archive",
     "external-source": "external-source-note",
     "owner-worksheet": "owner-decision-worksheet",
-    "migration": "migration-record",
 }
 normalized_kinds = [kind_aliases.get(kind, kind) for kind in args.kind]
 invalid_statuses = sorted(set(args.status) - allowed_statuses)

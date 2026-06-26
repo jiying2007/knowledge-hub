@@ -128,7 +128,7 @@
 每次 owner 决策正式落地，至少同步更新：
 
 - `registry/items.jsonl`
-- `registry/migrations.jsonl`
+- `registry/items.jsonl`
 - `indexes/by-status.md`
 - `indexes/by-project.md`
 
@@ -144,7 +144,7 @@
 1. `registry/items.jsonl` 更新 gate-tracking item 的 `review_status`、`updated_at`、`validation_refs`，必要时更新 `review_after`。
 2. 新建目标条目时，目标 item 只能使用 canonical `status`。
 3. owner gate 语义不要塞进目标正文条目的 `status`。
-4. `registry/migrations.jsonl` 只追加，不覆盖历史行。
+4. `registry/items.jsonl` 只追加，不覆盖历史行。
 5. `indexes/by-status.md` 保留 canonical bucket，额外用 overlay bullet 说明 owner gate 结果。
 6. `indexes/by-project.md` 必须保留 closeout / resolution artifact 引用，即使结果是 `no-migration`。
 
@@ -163,8 +163,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 owner"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<本次终态词>"
 rtk jq -c 'select(.id|test("pcr02|memory-auto-curation")) | {id,status,review_status,path,updated_at,review_after}' registry/items.jsonl
-rtk jq -c 'select((.from|tostring|test("pcr02|memory-auto-curation")) or (.to|tostring|test("pcr02|memory-auto-curation"))) | {from,to,mode,status,checked_at}' registry/migrations.jsonl
-rtk git diff -- registry/items.jsonl registry/migrations.jsonl indexes/by-status.md indexes/by-project.md
+rtk jq -c 'select((.from|tostring|test("pcr02|memory-auto-curation")) or (.to|tostring|test("pcr02|memory-auto-curation"))) | {from,to,mode,status,checked_at}' registry/items.jsonl
+rtk git diff -- registry/items.jsonl registry/items.jsonl indexes/by-status.md indexes/by-project.md
 ```
 
 按条目补充源侧 gate：

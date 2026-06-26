@@ -3,12 +3,12 @@
 ## 结论
 
 - Status: `hard-migrated-to-hub`
-- Classification: `retired-origin copy-docs-and-artifacts`
-- Checked at: `2026-06-24`
+- Classification: `retired-origin hash-only-provenance plus owner-approved canonical targets`
+- Checked at: `2026-06-25`
 
 ## 决策
 
-pcr02-project-docs 的旧正文副本已按终态剪枝；Hub 仅保留 source control、hash/provenance、owner decision 和已落地的 `projects/pcr02/` canonical 项目正文。旧项目 docs 路径只保留 origin_path，不再作为新增归档或知识入口。
+pcr02-project-docs 的旧正文副本已按终态剪枝；Hub 仅保留 source control、hash/provenance、owner decision 和已落地的 projects/pcr02 canonical 项目正文。旧项目 docs 路径只保留 origin_path，不再作为新增归档或知识入口。
 
 ## 风险
 

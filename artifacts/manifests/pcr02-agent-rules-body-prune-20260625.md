@@ -20,10 +20,10 @@
 ## 保留范围
 
 - 非 `AGENTS.md` 的 PCR02 历史文档、runbook、计划、报告和工程归档仍按 `projects/pcr02/archive/` 边界保留。
-- `artifacts/manifests/source-hard-migration-*.jsonl` 保留原始迁移事实；本账本只声明后续正文剪枝状态。
+- `artifacts/manifests/source-coverage-closeout-*.jsonl` 保留原始迁移事实；本账本只声明后续正文剪枝状态。
 
 ## 验证
 
-- `rtk bash tools/knowledge-hard-migration.sh --dry-run --json --as-of 2026-06-25`
+- `rtk bash tools/knowledge-source-control.sh --dry-run --json --as-of 2026-06-25`
 - `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-25`
 - `rtk bash tools/knowledge-final-gate.sh --as-of 2026-06-25 --json --final-profile max-body`

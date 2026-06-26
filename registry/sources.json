@@ -14,9 +14,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/embedded-knowledge",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/embedded",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260625.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260625.jsonl"
+      "canonical_target": "domains/embedded"
     },
     {
       "id": "engineering-archive",
@@ -31,9 +29,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/engineering-archive",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "projects/pcr02/archive/engineering-archive",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "projects/pcr02/archive/engineering-archive"
     },
     {
       "id": "patent-disclosure",
@@ -49,9 +45,7 @@
       "check": "rtk test -d sources/patent-disclosure",
       "final_disposition": "hard-migrated-to-hub",
       "canonical_target": "domains/patents/archive/patent-disclosure",
-      "artifact_target": "artifacts/vault/patent-disclosure",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "artifact_target": "artifacts/vault/patent-disclosure"
     },
     {
       "id": "codex-archive",
@@ -66,9 +60,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/codex-archive",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/codex/archive/codex-archive",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "domains/codex/archive/codex-archive"
     },
     {
       "id": "codex-memories",
@@ -83,9 +75,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/codex-memories",
       "final_disposition": "runtime-input-not-migrated",
-      "canonical_target": "sources/codex-memories",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "sources/codex-memories"
     },
     {
       "id": "codex-history",
@@ -100,9 +90,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/codex-history",
       "final_disposition": "runtime-input-not-migrated",
-      "canonical_target": "sources/codex-history",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "sources/codex-history"
     },
     {
       "id": "codex-raw-sessions",
@@ -117,9 +105,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/codex-raw-sessions",
       "final_disposition": "runtime-input-not-migrated",
-      "canonical_target": "sources/codex-raw-sessions",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "sources/codex-raw-sessions"
     },
     {
       "id": "codex-session-index",
@@ -134,9 +120,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/codex-session-index",
       "final_disposition": "runtime-input-not-migrated",
-      "canonical_target": "sources/codex-session-index",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "sources/codex-session-index"
     },
     {
       "id": "codex-archive-registry",
@@ -151,9 +135,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/codex-archive-registry",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "domains/codex/archive/codex-archive-registry",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "domains/codex/archive/codex-archive-registry"
     },
     {
       "id": "knowledge-hub-automation-runs",
@@ -168,9 +150,7 @@
       "review_after": "2026-09-24",
       "check": "rtk test -d sources/knowledge-hub-automation-runs",
       "final_disposition": "hub-native-source",
-      "canonical_target": "registry/automation-runs.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "registry/automation-runs.jsonl"
     },
     {
       "id": "pcr02-project-docs",
@@ -185,9 +165,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-docs",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-project-tools",
@@ -202,9 +180,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-tools",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-project-knowledge",
@@ -219,9 +195,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-knowledge",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-product-test",
@@ -237,9 +211,7 @@
       "check": "rtk test -d sources/pcr02-product-test",
       "final_disposition": "hard-migrated-to-hub",
       "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "artifact_target": "artifacts/vault/pcr02-product-test",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "artifact_target": "artifacts/vault/pcr02-product-test"
     },
     {
       "id": "pcr02-project-scratch",
@@ -254,9 +226,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-scratch",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-project-root-artifacts",
@@ -271,9 +241,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-root-artifacts",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-module-agent-rules",
@@ -288,9 +256,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-module-agent-rules",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "artifacts/manifests/pcr02-agent-rules-body-prune-20260625.jsonl"
     },
     {
       "id": "pcr02-project-agent-config",
@@ -305,9 +271,7 @@
       "review_after": "2026-09-20",
       "check": "rtk test -d sources/pcr02-project-agent-config",
       "final_disposition": "hard-migrated-to-hub",
-      "canonical_target": "sources/pcr02-project-agent-config",
-      "canonical_manifest": "artifacts/manifests/source-hard-migration-20260624.jsonl",
-      "decommission_manifest": "artifacts/manifests/source-hard-decommission-20260624.jsonl"
+      "canonical_target": "sources/pcr02-project-agent-config"
     }
   ]
 }

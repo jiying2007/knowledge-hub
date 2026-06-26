@@ -4,7 +4,7 @@
 
 本轮把 `registry/sources.json` 中 18 个 registered source 全部落到 Hub 内 `sources/<source_id>/` 主控目录，并补齐 PCR02 owner 决策中允许落地的 4 个目标正文。
 
-统一管理面的含义是：每个 source 在 Hub 内都有 `README.md`、`inventory.jsonl`、`coverage.md` 和 `migration-plan.md`，用于说明来源、覆盖状态、迁移边界和后续复核路线；不等于把 Codex history、raw session、source code、binary、log 或外部目录全文复制进长期正文层。
+统一管理面的含义是：每个 source 在 Hub 内都有 `README.md`、`inventory.jsonl`、`coverage.md` 和 `source-policy.md`，用于说明来源、覆盖状态、迁移边界和后续复核路线；不等于把 Codex history、raw session、source code、binary、log 或外部目录全文复制进长期正文层。
 
 ## 本轮落地
 

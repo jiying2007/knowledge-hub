@@ -4,7 +4,7 @@
 
 本轮修复人工新增入口和 source 边界说明的可读性漂移：
 
-- `knowledge-new.sh` 现在能为 `debug-record`、`external-source-note`、`owner-decision-worksheet`、`patent-disclosure` 和 `migration-record` 选择专用模板，并保留常用别名。
+- `knowledge-new.sh` 现在能为 `debug-record`、`external-source-note`、`owner-decision-worksheet`、`patent-disclosure` 和 `audit-record` 选择专用模板，并保留常用别名。
 - `tools/knowledge-regression.sh` 的 `manual-entry-template-selection` 已覆盖这些 kind，防止后续回退到 `templates/item.md`。
 - `README.md`、`tools/README.md` 和 `templates/README.md` 已补中文维护入口，明确 `owner-decision-worksheet` 只是人工签核草稿，不生成 owner decision、不代签、不关闭 gate。
 - `governance/source-boundaries.md` 已从旧 6 类 source 摘要升级为当前 13 个 registered sources 的中文边界入口，PCR02 Level 2 七类 source 的禁止事项单独写清。

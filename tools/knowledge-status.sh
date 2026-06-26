@@ -257,7 +257,6 @@ def parse_date(value):
         return None
 
 items = load_jsonl(root / "registry" / "items.jsonl")
-migrations = load_jsonl(root / "registry" / "migrations.jsonl")
 sources = load_json(root / "registry" / "sources.json").get("sources", [])
 
 def is_blank(value):
@@ -1546,10 +1545,6 @@ result = {
         "boundary_health": check_payload.get("boundary_health", {}),
         "max_body_source_inventory_audit": max_body_source_inventory_audit,
     },
-    "migrations": {
-        "record_count": len(migrations),
-        "by_status": count_by(migrations, "status"),
-    },
     "review_queues": review_queues,
     "owner_gates": {
         "command": shell_command(owner_gates["command"]),
@@ -1618,7 +1613,6 @@ print(f"- today: {today.isoformat()}")
 print(f"- knowledge-check: {result['knowledge_check']['status']} (exit={knowledge_check['exit_code']}, errors={result['knowledge_check']['error_count']}, warnings={result['knowledge_check']['warning_count']})")
 print(f"- registry items: {len(items)}")
 print(f"- registered sources: {len(sources)}")
-print(f"- migrations: {len(migrations)}")
 print(f"- review queues: pending={review_queues['summary']['total_pending_count']}, ai={review_queues['summary']['ai_generated_pending_count']}, external={review_queues['summary']['external_source_pending_count']}, active_or_promotion={review_queue_blocking_count}, max_body_blocking={review_queue_max_body_blocking_count}")
 print(f"- max-body source inventory: {max_body_source_inventory_audit['status']} blockers={max_body_source_inventory_audit['blocker_count']}")
 print(f"- owner gates: open={open_owner_gate_count}, resolved={owner_payload.get('resolved_count', 0)}, active_exposure={active_exposure_count}")
