@@ -25,4 +25,4 @@
 
 ## Rollback
 
-Rollback policy remains `remove-copied-target-only`: remove the 23 copied Knowledge Hub target files and the registry/migration records created by this run. Do not modify source project docs.
+Rollback policy remains `remove-copied-target-only`: remove the 23 copied Knowledge Hub target files and the registry/provenance records created by this run. Do not modify source project docs.

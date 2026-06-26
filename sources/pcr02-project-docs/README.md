@@ -4,10 +4,10 @@
 
 - Source ID: `pcr02-project-docs`
 - Hub source path: `sources/pcr02-project-docs`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs-and-artifacts`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs-and-artifacts`
 - Owner: `pcr02-registry-owner`
 - Review after: `2026-09-20`
 

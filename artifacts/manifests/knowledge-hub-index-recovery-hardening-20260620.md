@@ -10,7 +10,7 @@
 
 | ID | 范围 | 处理结果 |
 |---|---|---|
-| index-plan-source-final-state-fields | `tools/knowledge-index-plan.sh` | `--section source` 输出 owner、review_after、authority、migration_strategy、final_disposition、check/no_check_reason 和 coverage，便于从 source id 恢复治理状态。 |
+| index-plan-source-final-state-fields | `tools/knowledge-index-plan.sh` | `--section source` 输出 owner、review_after、authority、source_strategy、final_disposition、check/no_check_reason 和 coverage，便于从 source id 恢复治理状态。 |
 | index-plan-owner-worksheet-recovery-fields | `tools/knowledge-index-plan.sh` | `--section decision` 的 owner worksheet 行补充 status、owner 和 review_after，并继续明确 `no owner decision generated`。 |
 | status-review-after-command | `tools/knowledge-status.sh`、`README.md`、`tools/README.md` | status JSON/text 和人工最短路径暴露 `rtk bash tools/knowledge-index-plan.sh --section review-date`，把过期复核变成可执行的人工作业入口。 |
 | index-readme-recovery-rules | `indexes/README.md`、`indexes/by-source.md` | 明确 registry/source/migration 是结构化权威，索引是人读导航；source 字段恢复走 read-only planner，不复制一份易漂移字段表。 |

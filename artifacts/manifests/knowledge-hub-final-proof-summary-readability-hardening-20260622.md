@@ -13,7 +13,7 @@
 | 文件 | 变更 |
 |---|---|
 | `tools/knowledge-final-gate.sh` | 新增 `proof_artifacts_20260622` 只读摘要和文本模式摘要行。 |
-| `tools/knowledge-regression.sh` | 扩展 `final-gate-owner-review-blocker`，断言 proof 摘要 5 个主制品全部 registered、paired、migration covered、indexed。 |
+| `tools/knowledge-regression.sh` | 扩展 `final-gate-owner-review-blocker`，断言 proof 摘要 5 个主制品全部 registered、paired、source-policy covered、indexed。 |
 | `tools/README.md` | 中文化 `knowledge-inventory`、copy-first、artifact-ref、capture/promote/retire 等说明。 |
 | `artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md` | Evidence Index 从旧 4 列升级到 6 列。 |
 | `artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md` | Evidence Index 从旧 4 列升级到 6 列。 |
@@ -36,7 +36,7 @@
 |---|---:|---|---|---|---|
 | `rtk bash -n tools/knowledge-final-gate.sh` | 0 | 通过；final gate 新增 proof 摘要逻辑语法可解析。 | `tools/knowledge-final-gate.sh` | Tool | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
 | `rtk bash -n tools/knowledge-regression.sh` | 0 | 通过；回归入口新增断言语法可解析。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
-| `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-22` | 1 | 符合预期；`final_status=needs-owner-review`，`proof_artifacts_20260622.status=pass`，5 个主制品全部 registered/paired/migration covered/indexed。 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
+| `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-22` | 1 | 符合预期；`final_status=needs-owner-review`，`proof_artifacts_20260622.status=pass`，5 个主制品全部 registered/paired/source-policy covered/indexed。 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
 | `rtk rg -n 'read-only inventory\|creates a\|dry-run candidate capture\|dry-run promotion plan\|dry-run retirement plan' tools/README.md` | 1 | 通过；本轮目标英文说明无残留。 | `tools/README.md` | Readability Gate | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
 | `rtk rg -n '^\\| Command \\| Exit Code \\| Result Summary \\| Evidence Path \\|$' artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.md artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.md artifacts/manifests/knowledge-hub-source-boundary-health-20260621.md` | 1 | 通过；三份目标 manifest 不再保留旧 4 列 Evidence Index 表头。 | `artifacts/manifests/*.md` | Readability Gate | `knowledge-hub-final-proof-summary-readability-hardening-20260622` |
 

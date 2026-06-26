@@ -21,7 +21,7 @@
 |---|---|
 | 不生成 owner decision | enforced |
 | 不关闭 owner gate | enforced |
-| 不自动写 registry/index/migration/worksheet | enforced |
+| 不自动写 registry/index/source-policy/worksheet | enforced |
 | 只读 landing plan / landing audit 仍需人工落地 | enforced |
 
 ## Evidence Index

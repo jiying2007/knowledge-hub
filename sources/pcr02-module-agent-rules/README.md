@@ -4,16 +4,16 @@
 
 - Source ID: `pcr02-module-agent-rules`
 - Hub source path: `sources/pcr02-module-agent-rules`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-agent-rules`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-agent-rules`
 - Owner: `pcr02-registry-owner`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；Hub source-docs 中历史 AGENTS 正文副本已剪枝，当前源码仓及独立子仓 AGENTS.md 作为项目本地 Codex 运行控制文件由源项目 Git 管理，不作为 Hub 知识正文双写。
+pcr02-module-agent-rules 的历史 AGENTS 材料已完成终态归位证据登记；Hub source-docs 中历史 AGENTS 正文副本已剪枝，当前源码仓及独立子仓 AGENTS.md 作为项目本地 Codex 运行控制文件由源项目 Git 管理，不作为 Hub 知识正文双写。
 
 ## 边界
 

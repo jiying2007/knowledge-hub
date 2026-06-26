@@ -6,8 +6,8 @@
 - Hub source path: `sources/codex-session-index`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
-- Final disposition: `runtime-input-not-migrated`
-- Migration strategy: `runtime-input-index-primary`
+- Final disposition: `runtime-input-reference-only`
+- Source strategy: `runtime-input-index-primary`
 - Owner: `leiwenjun`
 - Review after: `2026-09-24`
 

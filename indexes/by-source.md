@@ -33,12 +33,12 @@
 | pcr02-product-test | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | artifact/config/interface 只做身份和引用登记，不复制大附件或构建物 |
 | pcr02-project-scratch | pcr02-registry-owner | 2026-09-20 | archive-only-registered | scratch/session/resume archive-only，不写 memory，不进 active facts |
 | pcr02-project-root-artifacts | pcr02-registry-owner | 2026-09-20 | mixed-terminal-coverage | root loose artifact/tool/config 边界，排除子 source 和生成物 |
-| pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | hard-migrated-to-hub | module/local AGENTS 规则进入 Hub source control；未签收前不升级全局规则 |
+| pcr02-module-agent-rules | pcr02-registry-owner | 2026-09-20 | hub-canonical | module/local AGENTS 规则进入 Hub source control；未签收前不升级全局规则 |
 | pcr02-project-agent-config | pcr02-registry-owner | 2026-09-20 | artifact-ref-registered | `.vscode`/`.kilo` 配置和 report-only 自动化只做 artifact/config ref |
 
 ## Source 治理恢复
 
-本索引主表只保留 source id、终态状态、Hub path 和当前策略，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、migration_strategy、final_disposition、check 和 coverage 时，运行：
+本索引主表只保留 source id、终态状态、Hub path 和当前策略，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、source_strategy、final_disposition、check 和 coverage 时，运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
@@ -107,12 +107,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-history`: runtime input；不复制 raw history 行，只在 Hub 生成索引、摘要和候选治理。
 - `codex-raw-sessions`: runtime input；不复制完整 raw session 正文，只做摘要、证据定位和候选。
 - `codex-session-index`: runtime input；跨项目恢复索引必须落成 Hub 摘要或 registry 后才可长期引用。
-- `codex-archive-registry`: 已硬迁移到 `domains/codex/archive/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
+- `codex-archive-registry`: 已终态归位到 `domains/codex/archive/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
 - `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
 - `engineering-archive`: 已归位到 `projects/pcr02/archive/engineering-archive` 终态工程归档目录；旧过渡副本不再保留。
 - `patent-disclosure`: 已归位到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`。
 - `embedded-knowledge`: 已完整迁移到 `domains/embedded/*`；旧过渡快照目录已删除，旧外部路径不再作为 source authority。
-- `codex-archive`: 已硬迁移到 `domains/codex/archive/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
+- `codex-archive`: 已终态归位到 `domains/codex/archive/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
 - `pcr02-project-tools`: tool/diag/memory automation source coverage：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `pcr02-project-tools`: README/AGENTS、diag、runtime diagnostic、memory automation 和生成制品边界：`artifacts/manifests/pcr02-tools-boundary-20260620.md`。
 - `pcr02-project-tools`: 18 个非生成 tool 文件的 source identity：`artifacts/manifests/pcr02-p1-source-identity-20260621.md`。

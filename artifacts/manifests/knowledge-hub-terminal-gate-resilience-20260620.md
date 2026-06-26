@@ -17,7 +17,7 @@
 |---|---|---|
 | Final gate | 识别 `No space left on device`、`cannot create temp file`、`insufficient temp space` 等 regression 环境失败 | 只读分类，不自动清理环境 |
 | Gap map | 环境型 blocker 输出 `gap_type=environment`，`codex_auto_can_complete=false` | 不把环境修复写成知识内容完成 |
-| Decision index | 只对 `registry/decisions.jsonl` 的 `decision_id` 要求在 `indexes/by-decision.md` 中恰好出现一次 | 不把 owner worksheets 或 migration decisions 升级为强门禁 |
+| Decision index | 只对 `registry/decisions.jsonl` 的 `decision_id` 要求在 `indexes/by-decision.md` 中恰好出现一次 | 不把 owner worksheets 或 source-policy decisions 升级为强门禁 |
 | Topic health | `knowledge-index-plan --section topic --json` 与 `registry/topics.json` 对齐 | 空 topic 允许存在，不作为硬失败 |
 | Regression | 新增 4 个回归场景，helper manifest 自检更新为 43 个场景 | 仍只复制临时 fixture，不写真实仓库 |
 
@@ -33,7 +33,7 @@
 ## 决策
 
 - 环境空间不足是执行环境问题，不是知识内容回归；final gate 必须单独暴露。
-- `by-decision` 的强门禁只锁 registry decisions，避免把 owner decision worksheet、migration decision 和历史索引说明误判为必须同步的正式决策 registry。
+- `by-decision` 的强门禁只锁 registry decisions，避免把 owner decision worksheet、source-policy decision 和历史索引说明误判为必须同步的正式决策 registry。
 - topic registry 目前用于规划和健康视图；空 topic 是允许状态，不应阻断终态。
 
 ## 边界

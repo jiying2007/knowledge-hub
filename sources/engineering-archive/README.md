@@ -4,16 +4,16 @@
 
 - Source ID: `engineering-archive`
 - Hub source path: `sources/engineering-archive`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs`
 - Owner: `pcr02-registry-owner`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-engineering-archive 已迁移到 Hub PCR02 终态工程归档目录；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
+engineering-archive 已终态归位到 Hub PCR02 终态工程归档目录；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
 
 ## 边界
 

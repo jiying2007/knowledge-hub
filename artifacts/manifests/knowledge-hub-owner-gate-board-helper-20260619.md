@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | OGB-001 | owner-gated 条目分散在 worksheet、action board、registry 和索引中。 | 人工后续处理时容易漏看 owner、证据字段或 active 暴露状态。 | 新增 `tools/knowledge-owner-gates.sh`，从 worksheet 和 registry 只读生成看板。 |
 | OGB-002 | 自动修复 owner-gated 条目会放大风险。 | 工具可能替 owner 做决策，或误把内容提升为 active。 | 工具只读输出，不创建、不修改、不提交、不提升任何文件。 |
-| OGB-003 | 看板如果按 source 级别聚合，可能误伤同 source 中已迁移低风险文档。 | PCR02 docs 同时包含 copy-first、reference-first、artifact-ref 和 owner-gated 内容。 | 看板按 `source_id + source_path` 汇总，并显示对应 registry item 与 active exposure。 |
+| OGB-003 | 看板如果按 source 级别聚合，可能误伤同 source 中已终态归位低风险文档。 | PCR02 docs 同时包含 copy-first、reference-first、artifact-ref 和 owner-gated 内容。 | 看板按 `source_id + source_path` 汇总，并显示对应 registry item 与 active exposure。 |
 | OGB-004 | active exposure 只作为数字显示时，单独运行看板可能被误判为通过。 | 人工或自动化只跑看板时，严重暴露可能被忽略。 | `active_exposure_count > 0` 时工具返回 `status=needs-fix` 并退出 1。 |
 
 ## 决策
@@ -29,7 +29,7 @@
 
 - 不生成 owner decision。
 - 不迁移 owner-gated 正文。
-- 不自动更新 registry/index/migration。
+- 不自动更新 registry/index/source-policy。
 - 不修改源项目 docs。
 - 不启用自动化。
 - 不写 `~/.codex/memories`。

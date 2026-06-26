@@ -826,7 +826,7 @@ def make_owner_handoff_packet(owner, source_id, owner_open_rows, next_row, comma
                 "step": "7-audit-manual-landing",
                 "command_template": commands.get("landing_audit_command_template", ""),
                 "replace_placeholder_with": local_path,
-                "notes_zh": "人工落地后复核 worksheet、registry、migration 和 index 是否同步；不能把 audit 当 owner approval。",
+                "notes_zh": "人工落地后复核 worksheet、registry、source policy 和 index 是否同步；不能把 audit 当 owner approval。",
             },
         ],
         "must_not": [
@@ -1473,7 +1473,7 @@ def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
                     "landing_jsonl": "追加已人工签收的 owner decision JSONL；保留 reviewed_by、reviewed_at、source_sha256/source_size、evidence_refs 和 status_reason。",
                     "worksheet_jsonl": "把对应 worksheet 行更新为已签收状态，并写入同一组 owner decision 字段；不得由工具代签。",
                     "registry_items": "按 target_decision 更新或新增 registry item，状态不得越过 owner 决策允许范围。",
-                    "registry_migrations": "记录 owner-gated 到目标状态的人工迁移/引用/归档决策。",
+                    "registry_source_policy": "记录 owner-gated 到目标状态的人工迁移/引用/归档决策。",
                     "indexes": [
                         "indexes/by-owner.md",
                         "indexes/by-project.md",
@@ -1492,7 +1492,7 @@ def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
                 ],
                 "must_not": [
                     "不得把本 audit 当作 owner approval",
-                    "不得自动写 worksheet、registry、migration 或 index",
+                    "不得自动写 worksheet、registry、source policy 或 index",
                     "不得关闭未签收 owner gate",
                     "不得把 project-specific 内容提升为团队标准",
                 ],
@@ -2004,7 +2004,7 @@ if landing_audit:
     print()
     print("## Owner Decision Landing Audit")
     print()
-    print("本审计只读列出人工落地后必须核对的 worksheet、registry、migration 和 index 变化；不写文件、不关闭门禁。")
+    print("本审计只读列出人工落地后必须核对的 worksheet、registry、source policy 和 index 变化；不写文件、不关闭门禁。")
     print(f"- status: {landing_audit['status']}")
     print(f"- rows: {landing_audit['row_count']}")
     if landing_audit.get("landing_scope"):

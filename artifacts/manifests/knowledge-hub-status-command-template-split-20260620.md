@@ -17,7 +17,7 @@
 - 不生成 owner decision。
 - 不执行 validate-forms 或 landing-plan。
 - 不修改源项目 docs。
-- 不自动写 registry、index、migration 或迁移正文。
+- 不自动写 registry、index、source policy 或迁移正文。
 - 不启用自动化。
 - 不写 `~/.codex/memories`。
 

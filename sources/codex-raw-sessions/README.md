@@ -6,8 +6,8 @@
 - Hub source path: `sources/codex-raw-sessions`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
-- Final disposition: `runtime-input-not-migrated`
-- Migration strategy: `runtime-input-reference-summary-only`
+- Final disposition: `runtime-input-reference-only`
+- Source strategy: `runtime-input-reference-summary-only`
 - Owner: `leiwenjun`
 - Review after: `2026-09-24`
 

@@ -217,14 +217,14 @@
 - evidence-index-template-applied: Knowledge Hub Evidence Index template alignment is documented by `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.jsonl`.
 - engineering-archive-copy-first-applied: Engineering archive copy-first migration is documented by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.jsonl`; aggregate corpus remains archive-only.
 - patent-disclosure-copy-first-applied: Patent disclosure Markdown copy-first migration is documented by `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.jsonl`; attachment bodies remain artifact references only and legal status remains reviewing.
-- source-coverage-closeout-applied: Registered source coverage is documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`; retired external origins are hard-migrated to Hub source control, Codex runtime inputs remain runtime provenance only, and codex-memories remains no-memory-write.
+- source-coverage-closeout-applied: Registered source coverage is documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`; retired external origins are hub-canonical in Hub source control, Codex runtime inputs remain runtime provenance only, and codex-memories remains no-memory-write.
 - index-plan-helper-applied: Core index planning is assisted by `tools/knowledge-index-plan.sh`; the helper is read-only and does not rewrite `indexes/*.md`.
 - source-coverage-gate-applied: Registered source coverage closeout is enforced by `tools/knowledge-check.sh`; every source must have a terminal classification, decision and risk row.
 - owner-gated-active-gate-applied: Unresolved owner decision worksheet source paths are blocked from `active` registry status by `tools/knowledge-check.sh`; matching is path-level, not whole-source-level.
 - owner-gate-field-active-gate-applied: Explicit owner gate blocking fields such as `owner_gate_verified=false` or blocking `review_status` values are blocked from `active` registry status by `tools/knowledge-check.sh`.
 - owner-gate-board-helper-applied: `tools/knowledge-owner-gates.sh` provides a read-only board for unresolved owner decision worksheet rows, required fields and active exposure.
 - doctor-owner-gates-applied: `tools/knowledge-doctor.sh` supports `--owner-gates <source-id>` to include the owner gate board in the unified read-only diagnostic path.
-- status-dashboard-applied: `tools/knowledge-status.sh` provides a read-only control-plane dashboard for knowledge-check, registry counts, source coverage, migrations, stale review dates and owner gate state.
+- status-dashboard-applied: `tools/knowledge-status.sh` provides a read-only control-plane dashboard for knowledge-check, registry counts, source coverage, source policies, stale review dates and owner gate state.
 - status-strict-gate-applied: `tools/knowledge-status.sh` supports `--strict` as a final-state gate that fails unless status is `ok`.
 - owner-decision-forms-applied: `tools/knowledge-owner-gates.sh` supports `--forms` to print copyable owner decision JSONL skeletons with read-only owner and source identity context for open owner-gated rows.
 - owner-decision-form-validation-applied: `tools/knowledge-owner-gates.sh` supports `--validate-forms <jsonl>` to check filled owner decision JSONL before manual landing.
@@ -291,7 +291,7 @@
 - owner-target-landing-validation-applied: owner 表单拒绝越过 worksheet `target_candidates`，landing plan step 带出 worksheet 验证命令；证据：`artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.jsonl`.
 - owner-ready-command-stability-applied: PCR02 owner-ready、owner gate/status/final gate 人工命令统一使用 cwd-stable `~/knowledge-hub/tools` 入口；证据：`artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
 - final-gap-readability-index-applied: typed gap map、environment gap 词表、governance 中文可读性门禁和 PCR02/source 恢复锚点已压实；证据：`artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
-- owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch`，并同步中文字段和 migration `notes_zh` 规则；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
+- owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch`，并同步中文字段和 source policy `notes_zh` 规则；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
 - reviewing: `knowledge-hub-status-dispatch-notes-zh-20260621`
 - status-dispatch-notes-zh-applied: status 输出 owner_dispatch，final gate 透传 owner_recovery，并阻断 2026-06-21 后缺少 AI provenance 的 registry item；证据：`artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
 - asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，并暴露 source coverage selection/health；证据：`artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.

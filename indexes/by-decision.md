@@ -13,7 +13,7 @@
 - `pcr02-docs-copy-first-migration`: PCR02 docs copy-first 已落地；证据：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`。
 - `pcr02-docs-reference-artifact-ref-migration`: PCR02 docs reference/artifact-ref 已落地；证据：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`。
 - `engineering-archive-copy-first-migration`: PCR02 engineering archive copy-first 已落地；证据：`artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`。
-- `patent-disclosure-copy-first-migration`: patent disclosure Markdown 已迁移；证据：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`。
+- `patent-disclosure-copy-first-migration`: patent disclosure Markdown 已终态归位；证据：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`。
 - `registered-source-coverage-closeout`: registered source coverage 终态边界；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `knowledge-hub-index-source-maintenance-tools`: index/source 人工维护入口；证据：`artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.md`；工具变更不生成 owner decision。
 - `knowledge-hub-final-gate-gap-map`: final gate 自动治理和 gap map；证据：`artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.md`；`complete-except-owner-review` 不生成或替代 owner decision。
@@ -74,7 +74,7 @@
 - `knowledge-hub-simplified-final-version-goal`: 简化终态设计成为当前 Knowledge Hub 硬切换目标；证据：`docs/goals/knowledge-hub-simplified-final-version.md`；去兼容、去冗余、保留人工可维护和授权账本边界。
 - `knowledge-hub-git-automation-permission-20260624`: Git 管理下的 Knowledge Hub 默认允许 AI / Codex 做 Hub 本仓 L1/L2 自动维护和本地 commit；本地 commit 不等于发布、owner approval 或 active promotion；远端 Git 写入和其他高风险动作仍需授权；证据：`artifacts/manifests/knowledge-hub-git-automation-permission-20260624.md`。
 - `knowledge-hub-user-path-boundary-20260624`: Knowledge Hub 持久文本和核心只读工具输出统一使用 `~` 用户路径形式；工具内部只在运行时展开真实路径做只读检查；证据：`artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`。
-- `knowledge-hub-canonical-registry-boundary-20260624`: topic registry、retention rules 和当前治理说明统一使用 `projects/` 与 `notes/personal/`；旧项目/个人目录只保留为历史证据或 migration record；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`。
+- `knowledge-hub-canonical-registry-boundary-20260624`: topic registry、retention rules 和当前治理说明统一使用 `projects/` 与 `notes/personal/`；旧项目/个人目录只保留为历史证据或 provenance record；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`。
 - `knowledge-hub-source-control-unification-20260624`: 18 个 registered source 已建立 Hub 内 sources/<source_id>/ 主控目录，PCR02 owner decision landing 产出的 4 个实际正文目标已落地；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`。
 - `pcr02-owner-decision-worksheet-003 output`: ASAN split-approved 项目内目标：`projects/pcr02/current/runbooks/asan-debug-guide.md`；不得整篇提升团队标准。
 - `pcr02-owner-decision-worksheet-005 output`: DVR proto/sensor 解耦计划 archive-only 目标：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`；不声明 completed。

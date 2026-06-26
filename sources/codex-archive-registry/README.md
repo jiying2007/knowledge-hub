@@ -4,16 +4,16 @@
 
 - Source ID: `codex-archive-registry`
 - Hub source path: `sources/codex-archive-registry`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs-and-artifacts`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs-and-artifacts`
 - Owner: `leiwenjun`
 - Review after: `2026-09-24`
 
 ## Hub 管理方式
 
-codex-archive-registry 已迁移到 Hub Codex archive registry 终态目录；旧 archive registry 不再作为 active source path。
+codex-archive-registry 已终态归位到 Hub Codex archive registry 终态目录；旧 archive registry 不再作为 active source path。
 
 ## 边界
 

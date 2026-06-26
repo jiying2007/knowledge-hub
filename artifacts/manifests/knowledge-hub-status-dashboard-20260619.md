@@ -8,9 +8,9 @@
 
 | ID | 问题 | 风险 | 处理 |
 | --- | --- | --- | --- |
-| KSD-001 | `knowledge-check`、registry 统计、migration 状态、source coverage 和 owner gate 状态分散在多个命令里。 | 长期维护者容易只看单一绿灯，误以为终态已完成。 | 新增 `tools/knowledge-status.sh` 聚合只读状态。 |
+| KSD-001 | `knowledge-check`、registry 统计、source policy 状态、source coverage 和 owner gate 状态分散在多个命令里。 | 长期维护者容易只看单一绿灯，误以为终态已完成。 | 新增 `tools/knowledge-status.sh` 聚合只读状态。 |
 | KSD-002 | PCR02 owner gate open 是真实未闭环，但不应被当作工具失败。 | 维护者可能把 open gate 当成 check 失败，或反过来忽略语义阻塞。 | 状态总览返回 `needs-owner-review` 且退出码 0；active exposure 才返回 1。 |
-| KSD-003 | 终态推进需要能看到 stale review、registry item 数量、source coverage 和 migrations。 | 后续人工新增内容时可能遗漏 review cycle 或 migration 记录。 | dashboard 输出 registry/status、stale review、sources、migrations 和 owner gate 摘要。 |
+| KSD-003 | 终态推进需要能看到 stale review、registry item 数量、source coverage 和 source policies。 | 后续人工新增内容时可能遗漏 review cycle 或 migration 记录。 | dashboard 输出 registry/status、stale review、sources、source policies 和 owner gate 摘要。 |
 
 ## 决策
 
@@ -29,7 +29,7 @@
 - 不关闭 PCR02 owner gates。
 - 不生成 owner decision。
 - 不迁移 owner-gated 正文。
-- 不自动修复 registry、index、migration 或正文。
+- 不自动修复 registry、index、source policy 或正文。
 - 不执行提升、删除、发布、提交或写 memory。
 - 不修改源项目 docs。
 - 不启用自动化。

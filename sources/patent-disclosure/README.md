@@ -4,16 +4,16 @@
 
 - Source ID: `patent-disclosure`
 - Hub source path: `sources/patent-disclosure`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs-and-artifacts`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs-and-artifacts`
 - Owner: `leiwenjun`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-patent-disclosure Markdown 与文档附件已硬迁移到 Hub 专利域和 artifact vault；旧路径只保留 provenance。
+patent-disclosure Markdown 与文档附件已终态归位到 Hub 专利域和 artifact vault；旧路径只保留 provenance。
 
 ## 边界
 

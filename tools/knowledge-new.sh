@@ -37,7 +37,7 @@ Examples:
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md --item-source-id pcr02-project-docs --item-source-path runbooks/example.md
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline lab note awaiting rtk validation"
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind decision --domain governance --owner leiwenjun --id governance-example-decision --path governance/example-decision.md
-  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path sources/example-source --role hub-migrated-source --authority knowledge-hub-canonical --write-policy knowledge-hub-only --check "rtk test -d sources/example-source"
+  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path sources/example-source --role hub-canonical-source --authority knowledge-hub-canonical --write-policy knowledge-hub-only --check "rtk test -d sources/example-source"
   rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id runtime-example --source-path sources/runtime-example --role hub-runtime-input --authority runtime-input-provenance --write-policy runtime-read-only-input --no-check-reason "runtime input; Hub control directory pending"
 
 This command is read-only. It prints a manual checklist and never creates, edits, commits or promotes files.
@@ -266,7 +266,7 @@ validate_source_enum() {
   case "$field" in
     role)
       case "$value" in
-        hub-migrated-source|hub-runtime-input|hub-native-source) return 0 ;;
+        hub-canonical-source|hub-runtime-input|hub-native-source) return 0 ;;
       esac
       ;;
     authority)
@@ -303,7 +303,7 @@ fi
 if [[ "$SOURCE_MODE" == "true" ]]; then
   DISPLAY_SOURCE_ID="${SOURCE_ID:-${ITEM_ID:-<source-id>}}"
   DISPLAY_SOURCE_PATH="${SOURCE_PATH:-sources/${DISPLAY_SOURCE_ID}}"
-  DISPLAY_SOURCE_ROLE="${SOURCE_ROLE:-hub-migrated-source}"
+  DISPLAY_SOURCE_ROLE="${SOURCE_ROLE:-hub-canonical-source}"
   DISPLAY_SOURCE_AUTHORITY="${SOURCE_AUTHORITY:-knowledge-hub-canonical}"
   DISPLAY_SOURCE_STATUS="${SOURCE_STATUS:-registered}"
   DISPLAY_SOURCE_COVERAGE_STATUS="${DISPLAY_SOURCE_STATUS}-pending-classification"
@@ -334,22 +334,22 @@ if [[ "$SOURCE_MODE" == "true" ]]; then
   elif [[ "$SOURCE_OWNER_REGISTRY_STATUS" == "owners-registry-missing" ]]; then
     SOURCE_OWNER_WARNING_LINE="- owner_warning_zh: registry/owners.json 不存在；落盘前请先恢复 owner registry。"
   fi
-  RECOMMENDED_SOURCE_FINAL_DISPOSITION="hard-migrated-to-hub"
-  RECOMMENDED_SOURCE_MIGRATION_STRATEGY="hard-migrated-to-hub-copy-docs"
+  RECOMMENDED_SOURCE_FINAL_DISPOSITION="hub-canonical"
+  RECOMMENDED_SOURCE_STRATEGY="hub-canonical-copy-docs"
   SOURCE_DISPOSITION_REASON_ZH="默认按终态 Hub-only source 处理；path 只能是 sources/<source_id>，当前知识入口只使用 Hub 内路径。"
-  SOURCE_MIGRATION_REASON_ZH="默认通过 Hub source control、canonical target、artifact vault 和 migration manifest 表达迁移状态，不生成旧回源入口。"
+  SOURCE_STRATEGY_REASON_ZH="默认通过 Hub source control、canonical target、artifact vault 和 source policy 表达终态状态，不生成旧回源入口。"
   case "$DISPLAY_SOURCE_ROLE:$DISPLAY_SOURCE_WRITE_POLICY" in
     hub-runtime-input:runtime-read-only-input)
-      RECOMMENDED_SOURCE_FINAL_DISPOSITION="runtime-input-not-migrated"
-      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="runtime-input-index-summary-only"
+      RECOMMENDED_SOURCE_FINAL_DISPOSITION="runtime-input-reference-only"
+      RECOMMENDED_SOURCE_STRATEGY="runtime-input-index-summary-only"
       SOURCE_DISPOSITION_REASON_ZH="运行态输入只登记 Hub control 和 provenance，不复制 raw history/session/memory，不写 memory。"
-      SOURCE_MIGRATION_REASON_ZH="用摘要、候选和人工复核记录表达可用信息，raw 输入不进入正文层。"
+      SOURCE_STRATEGY_REASON_ZH="用摘要、候选和人工复核记录表达可用信息，raw 输入不进入正文层。"
       ;;
     hub-native-source:hub-native-registry)
       RECOMMENDED_SOURCE_FINAL_DISPOSITION="hub-native-source"
-      RECOMMENDED_SOURCE_MIGRATION_STRATEGY="hub-native-ledger"
-      SOURCE_DISPOSITION_REASON_ZH="Hub 原生账本不需要外部迁移；权威正文仍在 Hub registry、manifest 或 automation ledger。"
-      SOURCE_MIGRATION_REASON_ZH="保持 Hub-native control，不制造旧外部 source。"
+      RECOMMENDED_SOURCE_STRATEGY="hub-native-ledger"
+      SOURCE_DISPOSITION_REASON_ZH="Hub 原生账本不需要外部来源；权威正文仍在 Hub registry、manifest 或 automation ledger。"
+      SOURCE_STRATEGY_REASON_ZH="保持 Hub-native control，不制造旧外部 source。"
       ;;
   esac
   CHECK_FIELD=""
@@ -382,17 +382,17 @@ ${SOURCE_OWNER_WARNING_LINE}
 ## 只读推荐提示
 
 - recommended_final_disposition: ${RECOMMENDED_SOURCE_FINAL_DISPOSITION}
-- recommended_migration_strategy: ${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}
+- recommended_source_strategy: ${RECOMMENDED_SOURCE_STRATEGY}
 - disposition_reason_zh: ${SOURCE_DISPOSITION_REASON_ZH}
-- migration_reason_zh: ${SOURCE_MIGRATION_REASON_ZH}
+- source_strategy_reason_zh: ${SOURCE_STRATEGY_REASON_ZH}
 - recommendation_scope_zh: 以上只是人工填写提示，不代表 owner decision，不关闭 owner gate；可复制 JSON 仍默认保守，落盘前必须按 registry/schema.md、coverage manifest 和 owner gate 状态确认。
 
 ## 最小人工步骤
 
-1. 先确认 source 是已硬迁移正文源、运行态输入，还是 Hub 原生账本。
+1. 先确认 source 是 Hub canonical 正文源、运行态输入，还是 Hub 原生账本。
 2. 在 registry/sources.json 增加 source object；path 必须是 sources/<source_id>，旧外部位置只能写入 origin_path。
 3. 在 indexes/by-source.md 的 Knowledge Sources 主表增加一行，并生成 sources/<source_id>/ 控制目录。
-4. 在最新 artifacts/manifests/knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 增加 coverage row，写清 hard-migrated/runtime-input/hub-native 状态、classification、decision、risk、owner、checked_at；没有可执行 check 时写 no_check_reason。
+4. 在最新 artifacts/manifests/knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 增加 coverage row，写清 hub-canonical/runtime-input/hub-native 状态、classification、decision、risk、owner、checked_at；没有可执行 check 时写 no_check_reason。
 5. 如果 source 涉及项目，同步 indexes/by-project.md；涉及主题时同步 indexes/by-topic.md；涉及 owner gate 时补 owner-ready package 或 worksheet。
 6. 运行：
 
@@ -401,11 +401,11 @@ ${SOURCE_OWNER_WARNING_LINE}
 
 ## 枚举速查
 
-- role: hub-migrated-source / hub-runtime-input / hub-native-source
+- role: hub-canonical-source / hub-runtime-input / hub-native-source
 - authority: knowledge-hub-canonical / runtime-input-provenance / knowledge-hub-ledger
 - status: registered / deprecated / retired
 - write_policy: knowledge-hub-only / runtime-read-only-input / hub-native-registry
-- final_disposition 常用值: hard-migrated-to-hub / runtime-input-not-migrated / hub-native-source
+- final_disposition 常用值: hub-canonical / runtime-input-reference-only / hub-native-source
 
 脚本会对已传入的 role、authority、status 和 write_policy 做预校验；final_disposition 仍需落盘前按 \`registry/schema.md\` 人工确认。
 
@@ -414,7 +414,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### registry/sources.json object
 
 \`\`\`json
-{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","origin_path":"<retired-origin-or-empty>","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}","migration_strategy":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","owner":"${JSON_OWNER}","review_after":"${DEFAULT_REVIEW_AFTER}","final_disposition":"${RECOMMENDED_SOURCE_FINAL_DISPOSITION}"${CHECK_FIELD}${NO_CHECK_FIELD}}
+{"id":"${JSON_SOURCE_ID}","path":"${JSON_SOURCE_PATH}","origin_path":"<retired-origin-or-empty>","role":"${JSON_SOURCE_ROLE}","authority":"${JSON_SOURCE_AUTHORITY}","status":"${JSON_SOURCE_STATUS}","write_policy":"${JSON_SOURCE_WRITE_POLICY}","source_strategy":"${RECOMMENDED_SOURCE_STRATEGY}","owner":"${JSON_OWNER}","review_after":"${DEFAULT_REVIEW_AFTER}","final_disposition":"${RECOMMENDED_SOURCE_FINAL_DISPOSITION}"${CHECK_FIELD}${NO_CHECK_FIELD}}
 \`\`\`
 
 ### indexes/by-source.md 主表行
@@ -426,7 +426,7 @@ ${SOURCE_OWNER_WARNING_LINE}
 ### source coverage JSONL row
 
 \`\`\`json
-{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"${RECOMMENDED_SOURCE_MIGRATION_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，当前知识入口只使用 Hub 内路径。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"当前知识入口只使用 Hub 内 source control path；不把外部位置作为 active source path。"}}
+{"id":"SCC-${TODAY_COMPACT}-${JSON_SOURCE_ID}","source_id":"${JSON_SOURCE_ID}","status":"${JSON_SOURCE_COVERAGE_STATUS}","classification":"${RECOMMENDED_SOURCE_STRATEGY}","decision":"新增 source 已进入 Knowledge Hub 终态控制面；path 为 Hub-local，当前知识入口只使用 Hub 内路径。","evidence":"registry/sources.json; indexes/by-source.md; sources/${JSON_SOURCE_ID}/README.md","risk":"source coverage 只代表治理状态，不代表 owner decision 或 active fact。","owner":"${JSON_OWNER}","checked_at":"${TODAY}"${CHECK_FIELD}${NO_CHECK_FIELD},"source_identity":{"type":"hub-source-control","notes":"当前知识入口只使用 Hub 内 source control path；不把外部位置作为 active source path。"}}
 \`\`\`
 
 ## 不要做
@@ -600,7 +600,7 @@ DECISION_INDEX_DRAFT=""
 DECISION_INDEX_STEP=""
 if [[ "$KIND" == "decision" ]]; then
   DECISION_INDEX_STEP="如 kind=decision，必须同步 indexes/by-decision.md，记录 decision id、owner、状态和证据路径。"
-  printf -v DECISION_INDEX_DRAFT '\n# indexes/by-decision.md\n# 决策类条目：在 registry decision、owner worksheet 或 migration decision 入口登记可恢复路径。\n- %s: %s\n' "$DISPLAY_ID" "$DISPLAY_PATH"
+  printf -v DECISION_INDEX_DRAFT '\n# indexes/by-decision.md\n# 决策类条目：在 registry decision、owner worksheet 或 source-policy decision 入口登记可恢复路径。\n- %s: %s\n' "$DISPLAY_ID" "$DISPLAY_PATH"
 fi
 SOURCE_INDEX_DRAFT=""
 SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
@@ -723,5 +723,5 @@ ${DECISION_INDEX_DRAFT}
 
 - 人工可以直接按模板新增内容；脚本不是唯一入口。
 - 自动化默认 report-only。
-- 只在 registry、index、migration 三处留下最小可追溯记录。
+- 只在 registry、index、source policy 三处留下最小可追溯记录。
 EOF

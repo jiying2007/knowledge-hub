@@ -30,7 +30,7 @@
 
 - 不生成 owner decision。
 - 不关闭 owner gate。
-- 不自动修改 registry、migration 或 index。
+- 不自动修改 registry、source policy 或 index。
 - 不迁移 owner-gated source 正文。
 - 不修改源项目 docs。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。

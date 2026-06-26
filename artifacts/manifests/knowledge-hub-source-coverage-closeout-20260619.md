@@ -2,7 +2,7 @@
 
 ## 目标
 
-把 `registry/sources.json` 中 6 个已登记 source 的治理状态收口到控制面，明确哪些已经完成迁移覆盖、哪些只能引用、哪些保持 owner-gated 或 auxiliary-only，避免后续把外部来源误当成已迁移正文或 active fact。
+把 `registry/sources.json` 中 6 个已登记 source 的治理状态收口到控制面，明确哪些已经完成迁移覆盖、哪些只能引用、哪些保持 owner-gated 或 auxiliary-only，避免后续把外部来源误当成已终态归位正文或 active fact。
 
 ## 覆盖矩阵
 

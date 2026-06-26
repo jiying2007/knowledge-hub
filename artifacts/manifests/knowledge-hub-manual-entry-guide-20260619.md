@@ -15,7 +15,7 @@
 | ID | 发现 | 风险 | 本次动作 |
 |---|---|---|---|
 | MEG-001 | `tools/knowledge-new.sh` 只提示 bootstrap 未启用并退出 3 | README 或人工新增入口不友好 | 改为只读人工新增向导 |
-| MEG-002 | 人工新增需同步 registry、index、migration，步骤分散 | 容易漏登记或形成漂移 | 向导输出最小同步清单 |
+| MEG-002 | 人工新增需同步 registry、index、source policy，步骤分散 | 容易漏登记或形成漂移 | 向导输出最小同步清单 |
 | MEG-003 | 直接实现写入生成器会增加维护复杂度 | 自动化入口可能成为新瓶颈 | 本次不写文件、不启用 apply |
 
 ## 已落盘

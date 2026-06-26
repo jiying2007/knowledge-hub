@@ -33,7 +33,7 @@
 - 专利披露 Markdown 正文集：`domains/patents/archive/patent-disclosure`
 - 专利披露附件引用：`domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex 工作流：`domains/codex`
-- Codex archive 硬迁移边界：`domains/codex/archive/codex-archive.ref.md`
+- Codex archive 终态归位边界：`domains/codex/archive/codex-archive.ref.md`
 - 个人笔记：`notes/personal`
 - 治理规则：`governance`
 - 中文长期资产模板：`templates`

@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `superseded-by-terminal-domain-migration`
+- Status: `superseded-by-terminal-domain-canonicalization`
 - Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-25`
 
 ## 决策
 
-embedded-knowledge 的 2026-06-24 hard migration 记录已被 2026-06-25 终态归位取代；当前正文权威为 domains/embedded/*，sources/embedded-knowledge 只保留 source 控制面。
+embedded-knowledge 的 2026-06-24 source canonicalization 记录已被 2026-06-25 终态归位取代；当前正文权威为 domains/embedded/*，sources/embedded-knowledge 只保留 source 控制面。
 
 ## 风险
 

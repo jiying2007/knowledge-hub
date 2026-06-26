@@ -2,7 +2,7 @@
 
 ## 目标
 
-让 `registry/items.jsonl` 中的 `source` 引用保持可追溯，避免长期维护时出现 source id 拼写漂移、migration manifest 失效、hash 字段不可验证或 artifact-ref 元数据不可用。
+让 `registry/items.jsonl` 中的 `source` 引用保持可追溯，避免长期维护时出现 source id 拼写漂移、source manifest 失效、hash 字段不可验证或 artifact-ref 元数据不可用。
 
 ## 问题地图
 

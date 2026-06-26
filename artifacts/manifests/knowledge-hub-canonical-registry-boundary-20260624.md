@@ -16,7 +16,7 @@
 
 ## 边界
 
-- 历史 manifest、历史 migration record 和迁移前证据仍可保留旧路径文本。
+- 历史 manifest、历史 provenance record 和迁移前证据仍可保留旧路径文本。
 - 本次未修改源项目。
 - 本次未写 `~/.codex/memories`。
 - 本次未生成 owner decision。

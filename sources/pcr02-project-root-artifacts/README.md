@@ -4,10 +4,10 @@
 
 - Source ID: `pcr02-project-root-artifacts`
 - Hub source path: `sources/pcr02-project-root-artifacts`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-project-root-shallow`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-project-root-shallow`
 - Owner: `pcr02-registry-owner`
 - Review after: `2026-09-20`
 

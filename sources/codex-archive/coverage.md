@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `hub-canonical`
 - Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-25`
 
 ## 决策
 
-codex-archive 已硬迁移到 Hub Codex archive 终态目录；旧 Codex archive 入口不再作为新增归档或默认查询入口。
+codex-archive 已终态归位到 Hub Codex archive 终态目录；旧 Codex archive 入口不再作为新增归档或默认查询入口。
 
 ## 风险
 

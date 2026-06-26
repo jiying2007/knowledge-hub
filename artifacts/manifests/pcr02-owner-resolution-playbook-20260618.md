@@ -9,7 +9,7 @@
 - `source-identity-match` 只证明源文件字节身份一致，不证明语义有效。
 - owner 决策必须唯一、可追溯、带证据、带 review cycle。
 - `registry/items.jsonl` 的 canonical `status` 继续只使用粗粒度：`active`、`reviewing`、`archived`。
-- owner gate 语义写入 `review_status`、migration row 和 status overlay，不新增伪 canonical status。
+- owner gate 语义写入 `review_status`、source policy row 和 status overlay，不新增伪 canonical status。
 - 历史 migration 只追加，不回写覆盖。
 
 ## 受控状态词
@@ -180,8 +180,8 @@ rtk git diff -- registry/items.jsonl registry/items.jsonl indexes/by-status.md i
 ## 回滚规则
 
 - 未提交落地：只回退本次控制面文件和新建目标条目，不碰源项目 docs。
-- 已提交落地：优先追加 corrective migration row，并把受影响 item 的 `status` / `review_status` 改回上一稳定值。
-- 错误创建目标条目：先取消目标 item 和 indexes 引用，再追加 corrective migration row 说明撤销原因。
+- 已提交落地：优先追加 corrective source policy row，并把受影响 item 的 `status` / `review_status` 改回上一稳定值。
+- 错误创建目标条目：先取消目标 item 和 indexes 引用，再追加 corrective source policy row 说明撤销原因。
 - 禁止用清理源 worktree、删除源文档、写 memory 或回写历史 migration 来“修复”owner gate 错误。
 
 ## 禁止事项

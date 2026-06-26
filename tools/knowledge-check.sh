@@ -224,7 +224,7 @@ ALLOWED_DOMAIN_ROOTS = {
     "codex",
 }
 ALLOWED_SOURCE_ROLES = {
-    "hub-migrated-source",
+    "hub-canonical-source",
     "hub-native-source",
     "hub-runtime-input",
 }
@@ -244,9 +244,9 @@ ALLOWED_SOURCE_WRITE_POLICIES = {
     "runtime-read-only-input",
 }
 ALLOWED_SOURCE_FINAL_DISPOSITIONS = {
-    "hard-migrated-to-hub",
+    "hub-canonical",
     "hub-native-source",
-    "runtime-input-not-migrated",
+    "runtime-input-reference-only",
 }
 ALLOWED_SOURCE_CONTROL_OBJECT_TYPES = {
     "markdown",
@@ -467,18 +467,18 @@ def build_diagnostics(error_items, warning_items):
         (
             "manual-entry",
             "人工新增入口过期",
-            "同步 tools/knowledge-new.sh 和 templates/README.md 中当前 registry/index/migration 门禁提示。",
+            "同步 tools/knowledge-new.sh 和 templates/README.md 中当前 registry/index/source-policy 门禁提示。",
             lambda msg: msg.startswith("manual-entry:"),
         ),
         (
             "item-source-ref",
             "item source 或 artifact 引用异常",
-            "检查 registry/items.jsonl 中 source_id、migration_manifest、source_sha256 或 artifact-ref 元数据。",
+            "检查 registry/items.jsonl 中 source_id、source_manifest、source_sha256 或 artifact-ref 元数据。",
             lambda msg: msg.startswith("items:") and any(
                 token in msg
                 for token in [
                     "source_id",
-                    "migration_manifest",
+                    "source_manifest",
                     "source_sha256",
                     "artifact-ref",
                     "artifact ",
@@ -508,7 +508,7 @@ def build_diagnostics(error_items, warning_items):
         (
             "decision-index",
             "决策索引覆盖异常",
-            "同步 registry/decisions.jsonl 与 indexes/by-decision.md，只要求 registry decision 在决策索引中恰好出现一次，不把 owner worksheet 或 migration decision 当作 registry decision。",
+            "同步 registry/decisions.jsonl 与 indexes/by-decision.md，只要求 registry decision 在决策索引中恰好出现一次，不把 owner worksheet 或 source-policy decision 当作 registry decision。",
             lambda msg: msg.startswith("index:indexes/by-decision.md"),
         ),
         (
@@ -635,7 +635,7 @@ owner_target_health = {
 }
 source_ids = set()
 for source in sources:
-    for field in ["id", "path", "role", "authority", "status", "write_policy", "migration_strategy", "owner", "review_after", "final_disposition"]:
+    for field in ["id", "path", "role", "authority", "status", "write_policy", "source_strategy", "owner", "review_after", "final_disposition"]:
         if not source.get(field):
             errors.append(f"sources:{source.get('id', '<unknown>')} missing {field}")
     source_id = source.get("id", "<unknown>")
@@ -1536,7 +1536,7 @@ if not args.sources_only:
             "owner_registry_status",
             "personal-local",
             "recommended_final_disposition",
-            "recommended_migration_strategy",
+            "recommended_source_strategy",
             "recommendation_scope_zh",
             "--item-source-id",
             "--check",
@@ -1546,7 +1546,7 @@ if not args.sources_only:
         root / "templates" / "README.md": [
             "personal-local",
             "recommended_final_disposition",
-            "recommended_migration_strategy",
+            "recommended_source_strategy",
             "不替代 owner decision",
             "不关闭 owner gate",
             "Evidence Index",
@@ -1563,7 +1563,7 @@ if not args.sources_only:
         "README.md": [
             "日常入口",
             "目录边界",
-            "迁移口径",
+            "Source 处置口径",
             "高风险授权",
             "中文长期资产",
             "新会话恢复",
@@ -1684,13 +1684,13 @@ if not args.sources_only:
             item_source_id = source.get("source_id")
             if item_source_id and item_source_id not in source_ids:
                 errors.append(f"items:{item_id} source_id not registered: {item_source_id}")
-            migration_manifest = source.get("migration_manifest")
-            if migration_manifest:
-                manifest_path = pathlib.Path(str(migration_manifest))
+            source_manifest = source.get("source_manifest")
+            if source_manifest:
+                manifest_path = pathlib.Path(str(source_manifest))
                 if manifest_path.is_absolute():
-                    errors.append(f"items:{item_id} migration_manifest must be relative: {migration_manifest}")
+                    errors.append(f"items:{item_id} source_manifest must be relative: {source_manifest}")
                 elif not (root / manifest_path).exists():
-                    errors.append(f"items:{item_id} migration_manifest missing: {migration_manifest}")
+                    errors.append(f"items:{item_id} source_manifest missing: {source_manifest}")
             source_sha256 = source.get("source_sha256")
             if source_sha256 and not SHA256_RE.fullmatch(str(source_sha256)):
                 errors.append(f"items:{item_id} invalid source_sha256: {source_sha256}")

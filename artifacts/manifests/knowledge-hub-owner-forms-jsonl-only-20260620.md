@@ -23,7 +23,7 @@
 - 不关闭 owner gate。
 - 不自动填 `owner_decision`、`source_sha256` 或 `source_size`。
 - 不修改源项目 docs。
-- 不写 registry、migration 或 index。
+- 不写 registry、source policy 或 index。
 - 不迁移 owner-gated source 正文。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。
 - 不启用自动化。

@@ -26,13 +26,13 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
-需要检查“正文最大迁移”终态时，使用 `max-body` profile：
+需要检查“正文最大收口”终态时，使用 `max-body` profile：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body
 ```
 
-`standard` profile 保持日常自动治理边界：普通 AI / 外部资料人工复核队列是 report-only，不阻断 final gate。`max-body` profile 用于迁移收口：待人工复核队列、`needs-edits` / `defer` 复核结果，以及不安全的 `copy-body` source inventory 都是 blocker。它仍然不代签 owner decision、不提升 active、不写 memory、不修改源项目。
+`standard` profile 保持日常自动治理边界：普通 AI / 外部资料人工复核队列是 report-only，不阻断 final gate。`max-body` profile 用于正文最大收口：待人工复核队列、`needs-edits` / `defer` 复核结果，以及不安全的 `copy-body` source inventory 都是 blocker。它仍然不代签 owner decision、不提升 active、不写 memory、不修改源项目。
 
 ## 目录边界
 
@@ -42,10 +42,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 | `notes/` | 普通长期笔记、个人笔记、学习和研究记录 | L1，registry 可选 |
 | `projects/<project>/` | 项目当前事实、决策、验证和历史归档 | L2，registry 必填 |
 | `domains/` | 跨项目领域知识、专利、Codex 治理材料 | L2，registry 按复用风险决定 |
-| `sources/` | 外部/旧知识源的人读边界、inventory、coverage 和迁移计划 | L2，和 `registry/sources.json` 对齐 |
+| `sources/` | source 人读边界、inventory、coverage 和 source policy | L2，和 `registry/sources.json` 对齐 |
 | `registry/` | 机器账本：items、sources、projects、owners、`registry/authorizations.jsonl`、`registry/automation-runs.jsonl` | L2/L3 |
 | `indexes/` | 可重建导航，不是事实权威 | 可由工具检查 |
-| `artifacts/manifests/` | 高风险迁移、owner gate、自动化和终态证据包 | L3 |
+| `artifacts/manifests/` | 高风险 source 处置、owner gate、自动化和终态证据包 | L3 |
 | `templates/` | 人工维护模板 | 低频维护 |
 | `governance/` | 中文治理规则和边界 | 低频维护 |
 | `tools/` | 检查、检索、诊断和门禁工具 | 变更后跑 regression/final gate |
@@ -57,20 +57,20 @@ domains/projects/**
 domains/personal/**
 ```
 
-旧路径只允许出现在历史 manifest、migration record、旧提交说明和迁移前证据中。
+旧路径只允许出现在 Git 历史、历史 manifest 或明确标记的 provenance 字段中，不作为当前查询、恢复或新增入口。
 
-## 迁移口径
+## Source 处置口径
 
-“完全迁移进来”采用治理全覆盖，不等于复制所有正文。
+“终态落地”采用治理全覆盖，不等于复制所有正文。
 
 - 每个来源、项目、历史会话和自动化链路必须登记、分类、索引和定责。
 - 每个 `registry/sources.json` 中的 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
-- 安全、可读、长期有价值的 Markdown/text 可以迁移为正文。
+- 安全、可读、长期有价值的 Markdown/text 可以落到 canonical 正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
 - `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；当前知识入口只使用 Hub 内路径。
-- Codex archive 已硬迁移到 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
-- PCR02 工程归档已迁移到 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
-- `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不迁移 raw 正文，不直接等于 active fact。
+- Codex archive 当前 canonical 目录是 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
+- PCR02 工程归档当前 canonical 目录是 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
+- `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不复制 raw 正文，不直接等于 active fact。
 
 ## 权威边界
 
@@ -92,7 +92,7 @@ domains/personal/**
 
 - 修改本仓内 Markdown、registry、index、manifest、template 和 tools。
 - 移动、重命名、归并本仓内知识文件。
-- 生成 source coverage、migration record、review queue、automation run record。
+- 生成 source coverage、source policy、review queue、automation run record。
 - 运行 `knowledge-check`、`knowledge-regression`、`knowledge-final-gate`。
 - 门禁全绿后创建本地 commit。
 

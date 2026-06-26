@@ -4,16 +4,16 @@
 
 - Source ID: `codex-archive`
 - Hub source path: `sources/codex-archive`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs`
 - Owner: `leiwenjun`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-codex-archive 已硬迁移到 Hub Codex archive 终态目录；旧 Codex archive 入口不再作为新增归档或默认查询入口。
+codex-archive 已终态归位到 Hub Codex archive 终态目录；旧 Codex archive 入口不再作为新增归档或默认查询入口。
 
 ## 边界
 

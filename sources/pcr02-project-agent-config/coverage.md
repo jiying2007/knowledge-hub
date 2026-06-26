@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: `hard-migrated-control-only`
+- Status: `hub-canonical-control-only`
 - Classification: `retired-origin agent-config`
 - Checked at: `2026-06-24`
 

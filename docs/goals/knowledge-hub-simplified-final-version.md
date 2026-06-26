@@ -11,7 +11,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 将 Knowledge Hub 收敛为 Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高风险治理门禁。
 - 新增和长期维护内容只使用 canonical 目录：`inbox/`、`notes/`、`projects/`、`domains/`、`sources/`、`registry/`、`indexes/`、`artifacts/manifests/`、`templates/`、`governance/`、`tools/`。
 - 项目知识唯一主入口为 `projects/<project>/`；跨项目知识留在 `domains/`；普通和个人笔记进入 `notes/`；资料源边界进入 `sources/` 与 `registry/sources.json`。
-- 每个 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`migration-plan.md`；这是统一管理面，不等于复制 raw 正文。
+- 每个 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`；这是统一管理面，不等于复制 raw 正文。
 - 去掉双主路径、重复索引、残留旧入口、不必要 manifest 和过度 owner gate；即使完全人工维护，也能靠 Markdown、最小 registry、search、check 和 review_after 继续运转。
 - 所有长期文本、registry、index、manifest 和工具输出都使用 `~` 用户路径形式；禁止写入用户专属绝对路径前缀。
 
@@ -26,8 +26,8 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 
 完成标准：
 - README、AGENTS、registry/schema、templates、tools README 与本 goal 语义一致。
-- `domains/projects/**` 和 `domains/personal/**` 不再作为新增内容入口；旧引用仅作为历史证据或迁移记录存在。
-- registry、sources、migrations、indexes 能解释所有 L2/L3 长期资产和高风险动作；`knowledge-check` 能证明 source 主控目录、inventory、owner target 和 raw dump safety 均闭环。
+- `domains/projects/**` 和 `domains/personal/**` 不再作为新增内容入口；旧引用只允许作为 Git 历史或历史 manifest 证据存在。
+- registry、sources、indexes 和 Evidence Index 能解释所有 L2/L3 长期资产和高风险动作；`knowledge-check` 能证明 source 主控目录、inventory、owner target 和 raw dump safety 均闭环。
 - 普通笔记不被强制 registry；高风险动作必须有 manifest/authorization/owner gate/final gate 证据。
 - 核心工具输出不暴露用户专属绝对路径前缀。
 - 运行并通过：
@@ -37,7 +37,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
   - `rtk git diff --check`
 
 非目标：
-- 不追求兼容旧目录作为长期主入口。
+- 不兼容旧目录作为长期主入口。
 - 不复制 raw session/history 全文到正文层。
 - 不把 Obsidian 变成事实权威；Obsidian 只作为阅读和编辑界面，权威仍来自 Markdown 正文、registry、source evidence 和 gate。
 - 不新增复杂流程，除非它替代至少两个现有人工步骤并有回归覆盖。
@@ -47,7 +47,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 
 继续 `~/knowledge-hub` 的去复杂度硬切换。目标是把 Knowledge Hub 收敛为 Obsidian-friendly Markdown Vault、最小 registry 账本和高风险治理门禁：普通内容轻量维护，项目内容统一进入 `projects/`，普通与个人笔记统一进入 `notes/`，跨项目知识进入 `domains/`，source 治理进入 `sources/` 和 `registry/sources.json`，高风险动作才使用 manifest、owner gate、regression 和 final gate。
 
-本目标不要求兼容旧项目/个人路径作为长期主入口。实施时可以硬切换，但必须避免双主本、重复索引、残留旧路径和无审计的高风险动作。AI / Codex 默认可在 Git 可回滚边界内执行 Hub 本仓 L1/L2 维护和本地 commit；owner decision landing、active 状态提升、memory 写入、源项目修改、远端 Git 状态变更和非 report-only 自动化必须具备明确授权、证据闭环和回滚路径。即使某段时间完全由人工维护，也必须能按 Markdown、最小待验证块和后续检查命令继续运转。
+本目标不兼容旧项目/个人路径作为长期主入口。实施时必须硬切换，并避免双主本、重复索引、残留旧路径和无审计的高风险动作。AI / Codex 默认可在 Git 可回滚边界内执行 Hub 本仓 L1/L2 维护和本地 commit；owner decision landing、active 状态提升、memory 写入、源项目修改、远端 Git 状态变更和非 report-only 自动化必须具备明确授权、证据闭环和回滚路径。即使某段时间完全由人工维护，也必须能按 Markdown、最小待验证块和后续检查命令继续运转。
 
 ## 一、最终定位
 
@@ -67,7 +67,7 @@ Knowledge Hub = Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高�
 
 - 普通维护者：写 Markdown、用模板、搜索、跑一次 check。
 - 项目维护者：维护 `projects/<project>/`、registry item、review_after 和证据。
-- 治理维护者：处理 source coverage、owner gate、manifest、migration、final gate。
+- 治理维护者：处理 source coverage、source policy、owner gate、manifest、final gate。
 - AI：先读规则和 status，再 search，再读具体文件，最后 check；高风险动作必须先确认授权、scope、证据、回滚和验收命令。
 
 ## 二、硬切换目录
@@ -85,7 +85,7 @@ knowledge-hub/
       validation/
       archive/
   domains/                # 跨项目领域知识，不放项目正文
-  sources/                # 人读 source 边界、inventory、coverage 和迁移计划
+  sources/                # 人读 source 边界、inventory、coverage 和 source policy
   registry/               # 机器账本
   indexes/                # 可重建导航
   artifacts/
@@ -95,7 +95,7 @@ knowledge-hub/
   tools/                  # 检查、搜索、修复和门禁
 ```
 
-硬迁移映射：
+终态归位映射：
 
 ```text
 domains/projects/<project>/current/     -> projects/<project>/current/
@@ -120,7 +120,7 @@ domains/projects/**
 domains/personal/**
 ```
 
-旧路径只允许出现在历史 manifest、历史 migration record、旧提交说明和迁移前证据中。当前 README、registry、indexes、templates、工具默认输出和新文档必须使用新 canonical path。
+旧路径只允许出现在 Git 历史、历史 manifest 或明确标记为历史证据的旧提交说明中。当前 README、registry、indexes、templates、工具默认输出和新文档必须使用新 canonical path。
 
 ## 三、非目标与禁止事项
 
@@ -186,7 +186,7 @@ inbox/
 
 - L0 只允许短期停留。
 - 转长期时进入 L1/L2/L3。
-- 不转长期时可以归档或删除；删除前必须确认没有 registry、migration、index 或 owner gate 引用。
+- 不转长期时可以归档或删除；删除前必须确认没有 registry、source-policy、index 或 owner gate 引用。
 
 ### L1：普通长期笔记
 
@@ -262,14 +262,13 @@ sources/
 
 ```text
 artifacts/manifests/
-registry/migrations.jsonl
 registry/sources.json
 indexes/
 ```
 
 适用：
 
-- source migration
+- source control / source policy 变更
 - owner-gated 内容
 - owner decision landing
 - 团队标准提升
@@ -283,7 +282,7 @@ indexes/
 要求：
 
 - 必须有 manifest。
-- 必须有 registry/migration/index 证据链。
+- 必须有 registry/index/Evidence Index 证据链。
 - 必须运行 `knowledge-check`。
 - 修改工具、schema、终态门禁或 owner gate 时必须运行 regression/final gate。
 - 必要时使用 subagents 只读复核。
@@ -354,7 +353,7 @@ status=personal 或 reviewing
 权威顺序：
 
 ```text
-registry/sources/manifest > migration record > generated index > ad hoc note
+registry/sources/source-policy/manifest > generated index > Evidence Index > ad hoc note
 ```
 
 终态要求：
@@ -370,7 +369,7 @@ Manifest 只用于 L3 高风险动作。
 
 需要 manifest：
 
-- source migration
+- source control / source policy 变更
 - owner decision landing
 - team standard promotion
 - automation governance
@@ -393,17 +392,16 @@ Manifest 只用于 L3 高风险动作。
 - README 中重复 schema 的字段权威。
 - tools README 中重复人工教程的长流程。
 - templates README 中重复工具行为的说明。
-- 新旧路径双轨说明。
+- 新旧路径双轨说明或兼容旧入口说明。
 - 兼容字段作为新模板默认字段。
 - 历史 proof 字段作为新消费方字段。
 - 无 registry、无 owner、无 evidence 的长期条目。
 
 允许保留：
 
-- 历史 manifest 中的旧路径。
-- migration record 中的旧路径。
-- 旧提交说明。
-- 为迁移审计保留的不可变证据。
+- Git 历史中的旧路径。
+- 已明确标记为历史证据的旧 manifest。
+- 不作为当前入口、默认查询入口或新增归档目的地的 provenance 字段。
 
 ## 七、人工完全维护模式
 
@@ -477,7 +475,7 @@ rtk bash tools/knowledge-search.sh "<关键词>"
 
 使用规则：
 
-- `knowledge-regression.sh` 只用于工具、schema、owner gate、source migration 或 final gate 相关变更。
+- `knowledge-regression.sh` 只用于工具、schema、owner gate、source control 或 final gate 相关变更。
 - `knowledge-final-gate.sh` 只用于高风险收口，不用于每条普通笔记。
 - `knowledge-index-plan.sh` 默认 report-only，不得自动覆盖人工索引。
 
@@ -536,7 +534,7 @@ AI / Codex 允许执行的高风险动作：
 - 当前用户或 owner 明确授权时，可以代签或落地 owner decision，但必须标明这是 AI / Codex 受托执行，并记录授权证据。
 - 当前用户或 owner 明确授权且验证通过时，可以把条目提升为 `active`。
 - 当前用户或仓库 standing delegation 明确授权时，可以写入长期记忆层，但必须先有候选、审查记录和回滚方式。
-- 当前用户明确把源项目纳入 scope 时，可以修改源项目文件；否则只能修改 Knowledge Hub 内的迁移副本、引用、registry、manifest 和 index。
+- 当前用户明确把源项目纳入 scope 时，可以修改源项目文件；否则只能修改 Knowledge Hub 内的 canonical 正文、引用、registry、manifest 和 index。
 - 自动化可以从 `report-only` 升级到 `apply-with-review`，但必须先产出 dry-run、diff、审批点和 rollback path。
 - 当前用户或仓库 standing delegation 明确授权时，可以执行 push、merge、release、tag 或其他远端 Git 状态变更；本地 commit 不需要 L3 授权，但必须在门禁全绿后进行。
 
@@ -594,7 +592,7 @@ local-commit
 - 移动或归并本仓知识文件。
 - 门禁全绿后创建本地 commit。
 
-高风险动作在授权后可以执行，但必须进入 L3 治理：manifest、registry/migration/index 证据、knowledge-check、必要的 regression/final gate。
+高风险动作在授权后可以执行，但必须进入 L3 治理：manifest、registry/index/Evidence Index 证据、knowledge-check、必要的 regression/final gate。
 
 ## 十二、中文长期资产标准
 
@@ -653,8 +651,8 @@ local-commit
 - 移动个人正文。
 - 更新 registry paths。
 - 更新 indexes。
-- 更新 migrations。
-- 保留历史 manifest 旧路径。
+- 更新 source policy、registry 和 index。
+- 不在当前入口保留旧路径。
 - 不保留双正文。
 
 ### 阶段 4：去残留
@@ -689,7 +687,7 @@ local-commit
 
 当前硬切换验收以本次运行的 terminal gate 输出为准；默认不固定旧日期。
 
-2026-06-25 及更早制品只作为历史迁移证据；如果历史制品中仍出现 `needs-owner-review`、`owner-gates-open` 或旧 source 路径，应先判断它是否属于历史 manifest、tombstone、authorization、automation run 或回归负例，不得反向当作有效状态。
+2026-06-25 及更早制品只作为历史证据；如果历史制品中仍出现 `needs-owner-review`、`owner-gates-open` 或旧 source 路径，应先判断它是否属于历史 manifest、authorization、automation run 或回归负例，不得反向当作有效状态。
 
 只改本 goal 时：
 
@@ -710,14 +708,14 @@ rtk bash tools/knowledge-regression.sh --json
 rtk bash tools/knowledge-final-gate.sh --json
 ```
 
-硬迁移后必须增加负向验证：
+硬切换后必须增加负向验证：
 
 - 新 registry item 指向 `domains/projects/**` 应失败。
 - 新 registry item 指向 `domains/personal/**` 应失败。
 - `knowledge-new.sh --domain projects/pcr02` 必须输出 `projects/pcr02/...`。
-- `knowledge-search.sh --domain projects/pcr02` 能找到迁移后的项目内容。
+- `knowledge-search.sh --domain projects/pcr02` 能找到 canonical 项目内容。
 - `indexes/` 中不再把旧路径作为当前入口。
-- 历史 manifest 中旧路径仍允许存在。
+- 当前文档、registry、index、template、tool 输出和 source control 不暴露旧入口。
 
 ## 十六、最终口号
 

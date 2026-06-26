@@ -40,6 +40,6 @@
 - 不修改 PCR02 源项目 docs。
 - 不关闭任何 PCR02 owner gate。
 - 不生成 owner decision。
-- 不自动改 registry/index/migration。
+- 不自动改 registry/index/source-policy。
 - 不启用自动化，不写 memory。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。

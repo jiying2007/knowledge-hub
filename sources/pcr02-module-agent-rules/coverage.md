@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `hub-canonical`
 - Classification: `retired-origin agent-rules plus project-local-runtime-control plus hash-only-provenance`
 - Checked at: `2026-06-25`
 
 ## 决策
 
-pcr02-module-agent-rules 的历史 AGENTS 材料已完成硬迁移证据登记；Hub source-docs 中历史 AGENTS 正文副本已剪枝，当前源码仓及独立子仓 AGENTS.md 作为项目本地 Codex 运行控制文件由源项目 Git 管理，不作为 Hub 知识正文双写。
+pcr02-module-agent-rules 的历史 AGENTS 材料已完成终态归位证据登记；Hub source-docs 中历史 AGENTS 正文副本已剪枝，当前源码仓及独立子仓 AGENTS.md 作为项目本地 Codex 运行控制文件由源项目 Git 管理，不作为 Hub 知识正文双写。
 
 ## 风险
 

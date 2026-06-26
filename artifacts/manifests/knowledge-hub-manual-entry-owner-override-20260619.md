@@ -31,7 +31,7 @@
 
 ## 边界
 
-- 不自动创建正文、registry、migration 或 index。
+- 不自动创建正文、registry、source policy 或 index。
 - 不绕过 owner registry gate；真实落盘后仍由 `knowledge-check` 校验 owner。
 - 不修改 PCR02 源项目 docs。
 - 不关闭 owner gate，不生成 owner decision。

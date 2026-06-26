@@ -17,7 +17,7 @@
 - 不生成 owner decision。
 - 不关闭 owner gate。
 - 不自动填 `owner_decision`、`source_sha256` 或 `source_size`。
-- 不自动写 registry、index、migration 或迁移正文。
+- 不自动写 registry、index、source policy 或迁移正文。
 - 不修改源项目 docs。
 - 不迁移 owner-gated source 正文。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。

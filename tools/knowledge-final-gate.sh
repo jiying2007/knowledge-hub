@@ -747,7 +747,7 @@ def build_maintenance_entry_audit():
             "goal_item": 2,
             "requirement_keys": ["maintenance", "level3"],
             "evidence_checks": [
-                ("README.md", ["迁移口径", "registry/sources.json", "registry/automation-runs.jsonl"]),
+                ("README.md", ["Source 处置口径", "registry/sources.json", "registry/automation-runs.jsonl"]),
                 ("tools/README.md", ["新增一个 source", "source coverage", "knowledge-index-plan.sh --section source"]),
             ],
             "commands": [
@@ -1282,7 +1282,7 @@ source_final_state_required_fields = [
     "authority",
     "status",
     "write_policy",
-    "migration_strategy",
+    "source_strategy",
     "owner",
     "review_after",
     "final_disposition",
@@ -1378,7 +1378,7 @@ def make_source_audit_gaps():
             "codex_auto_can_complete": True,
             "requires_owner_decision": False,
             "fix_action": "为 registered source 补 source coverage row，并同步 source/project/topic 索引锚点。",
-            "write_scope": "artifacts/manifests/*source-coverage*.jsonl、indexes/by-source.md、必要 registry/migration/index。",
+            "write_scope": "artifacts/manifests/*source-coverage*.jsonl、indexes/by-source.md、必要 registry/source-policy/index。",
             "validation_commands": [
                 "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
                 "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
@@ -1395,7 +1395,7 @@ def make_source_audit_gaps():
             "field": field,
             "source_root": "registry/sources.json",
             "evidence": f"registry/sources.json source {source_id} missing final-state field {field}.",
-            "current_impact": "source registry 不能独立说明 owner、review_after、migration_strategy、final_disposition 或 check/no-check 边界。",
+            "current_impact": "source registry 不能独立说明 owner、review_after、source_strategy、final_disposition 或 check/no-check 边界。",
             "codex_auto_can_complete": True,
             "requires_owner_decision": False,
             "fix_action": "补齐 source registry final-state 字段；没有稳定 check 时写 no_check_reason。",

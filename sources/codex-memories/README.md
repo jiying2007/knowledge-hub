@@ -6,8 +6,8 @@
 - Hub source path: `sources/codex-memories`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
-- Final disposition: `runtime-input-not-migrated`
-- Migration strategy: `runtime-input-no-copy-no-memory-write`
+- Final disposition: `runtime-input-reference-only`
+- Source strategy: `runtime-input-no-copy-no-memory-write`
 - Owner: `leiwenjun`
 - Review after: `2026-09-20`
 

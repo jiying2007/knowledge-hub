@@ -80,7 +80,7 @@ Source reference invariants:
 
 - item `source` must be an object.
 - item `source.source_id`, when present, must be registered in `registry/sources.json`.
-- item `source.migration_manifest`, when present, must be a relative existing Knowledge Hub local path.
+- item `source.source_manifest`, when present, must be a relative existing Knowledge Hub local path.
 - item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
 - active item `source.source_id` + `source.source_path` must not match an unresolved owner-gated row in owner decision worksheet manifests.
 - active item must not use `owner_gate_verified=false`.
@@ -215,7 +215,7 @@ Required source fields:
 - `authority`
 - `status`
 - `write_policy`
-- `migration_strategy`
+- `source_strategy`
 - `owner`
 - `review_after`
 - `final_disposition`
@@ -238,7 +238,7 @@ Recommended source fields:
 Allowed source `role`:
 
 ```text
-hub-migrated-source
+hub-canonical-source
 hub-runtime-input
 hub-native-source
 ```
@@ -270,8 +270,8 @@ hub-native-registry
 Allowed source `final_disposition`:
 
 ```text
-hard-migrated-to-hub
-runtime-input-not-migrated
+hub-canonical
+runtime-input-reference-only
 hub-native-source
 ```
 
@@ -280,8 +280,8 @@ Source path invariants:
 - `path` must be a Hub-relative `sources/<source_id>` path and must exist.
 - `origin_path`, when present, is historical provenance only; it must not be used as a default scan path, search source, check command, active index entry, or new archive destination.
 - `check` must validate the Hub control directory or Hub-native ledger; it must not call retired external tools or depend on `~/embedded`, `~/codex/docs/archive`, `~/work`, `~/.codex`, or `/vsdata`.
-- Former external sources use `status=retired`, `role=hub-migrated-source`, `authority=knowledge-hub-canonical`, `write_policy=knowledge-hub-only`, and `final_disposition=hard-migrated-to-hub`.
-- Runtime inputs such as Codex history, raw sessions, session index, and memories use `role=hub-runtime-input` and `final_disposition=runtime-input-not-migrated`; they are not deleted and are not copied as knowledge正文.
+- Former external sources use `status=retired`, `role=hub-canonical-source`, `authority=knowledge-hub-canonical`, `write_policy=knowledge-hub-only`, and `final_disposition=hub-canonical`.
+- Runtime inputs such as Codex history, raw sessions, session index, and memories use `role=hub-runtime-input` and `final_disposition=runtime-input-reference-only`; they are not deleted and are not copied as knowledge正文.
 
 ## authorizations.jsonl
 
@@ -385,7 +385,7 @@ Source/index invariants:
 - source `owner` must be registered in `registry/owners.json`.
 - source `review_after` must use ISO date format: `YYYY-MM-DD`.
 - stale source `review_after` is a warning/status surface, not a blocking error; `knowledge-check --json` should expose the source id in `source_check_health.stale_review_after_ids`, and `knowledge-status --json` should expose `sources.stale_review_after_count` and `sources.stale_review_after_sample`.
-- source `migration_strategy` must explain how the source enters Knowledge Hub control-plane governance without implying copied正文 or active promotion.
+- source `source_strategy` must explain how the source enters Knowledge Hub control-plane governance without implying copied正文 or active promotion.
 - source `final_disposition` must use the allowed enum and describe control-plane disposition, not owner approval.
 - source `check`, when present, records a read-only validation command or inventory command.
 - if source `check` is empty, source registry must record `no_check_reason`; the latest source coverage manifest should also record or reference the reason.

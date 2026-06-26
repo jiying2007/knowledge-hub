@@ -8,7 +8,7 @@
 
 | ID | 问题 | 风险 | 处理 |
 | --- | --- | --- | --- |
-| RPG-001 | `knowledge-check` 重点校验 `items.jsonl`、`migrations.jsonl`、`sources.json`，但没有统一遍历所有 registry 文件。 | `owners.json`、`projects.json`、`topics.json`、`retention.json` 等控制面文件可能损坏却不被默认门禁发现。 | 默认检查时解析所有 `registry/*.json`。 |
+| RPG-001 | `knowledge-check` 重点校验 `items.jsonl`、`source policies.jsonl`、`sources.json`，但没有统一遍历所有 registry 文件。 | `owners.json`、`projects.json`、`topics.json`、`retention.json` 等控制面文件可能损坏却不被默认门禁发现。 | 默认检查时解析所有 `registry/*.json`。 |
 | RPG-002 | `decisions.jsonl`、`promotions.jsonl`、`maintenance-runs.jsonl` 当前可为空，但未来人工追加时可能产生坏行。 | 空文件可通过，坏行应失败。 | 默认检查时逐行解析所有 `registry/*.jsonl`，跳过空行。 |
 | RPG-003 | `--sources-only` 应保持轻量 source 检查语义。 | 若改变语义，旧调用可能变慢或误认为全仓检查。 | registry parse gate 只在非 `--sources-only` 模式运行。 |
 

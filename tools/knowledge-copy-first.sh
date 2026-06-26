@@ -16,7 +16,7 @@ import sys
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
-parser = argparse.ArgumentParser(description="Apply a reviewed copy-first Knowledge Hub migration manifest.")
+parser = argparse.ArgumentParser(description="Apply a reviewed copy-first Knowledge Hub source manifest.")
 parser.add_argument("--manifest", required=True)
 parser.add_argument("--dry-run", action="store_true")
 parser.add_argument("--apply", action="store_true")

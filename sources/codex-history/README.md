@@ -6,8 +6,8 @@
 - Hub source path: `sources/codex-history`
 - Role: `hub-runtime-input`
 - Authority: `runtime-input-provenance`
-- Final disposition: `runtime-input-not-migrated`
-- Migration strategy: `runtime-input-index-summary-only`
+- Final disposition: `runtime-input-reference-only`
+- Source strategy: `runtime-input-index-summary-only`
 - Owner: `leiwenjun`
 - Review after: `2026-09-24`
 

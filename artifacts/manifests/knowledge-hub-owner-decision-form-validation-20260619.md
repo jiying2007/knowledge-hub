@@ -32,7 +32,7 @@
 
 - 不判断 owner 决策语义正确性。
 - 不关闭 owner gate。
-- 不写 worksheet、registry、index、migration 或 memory。
+- 不写 worksheet、registry、index、source policy 或 memory。
 - 不迁移 owner-gated 正文。
 - 不修改源项目 docs。
 - 不启用自动化。

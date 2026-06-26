@@ -26,7 +26,7 @@
 
 - 不生成 owner decision。
 - 不迁移 owner-gated 正文。
-- 不自动修复 registry、index、migration 或正文。
+- 不自动修复 registry、index、source policy 或正文。
 - 不执行 `validation_refs`。
 - 不修改源项目 docs。
 - 不启用自动化。

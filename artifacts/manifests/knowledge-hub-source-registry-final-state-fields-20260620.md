@@ -10,14 +10,14 @@
 
 | ID | Finding | Severity | Evidence | Action | Status |
 |---|---|---|---|---|---|
-| SRFS-001 | `registry/sources.json` 缺少终态目标要求的 `owner`、`review_after`、`migration_strategy` 和 `final_disposition` | P1 | `docs/goals/knowledge-hub-final-state.md` Level 3 | 补齐 13 个 registered source 的维护字段 | applied |
+| SRFS-001 | `registry/sources.json` 缺少终态目标要求的 `owner`、`review_after`、`source_strategy` 和 `final_disposition` | P1 | `docs/goals/knowledge-hub-final-state.md` Level 3 | 补齐 13 个 registered source 的维护字段 | applied |
 | SRFS-002 | 空 `check` 与漏填 `no_check_reason` 不可区分 | P1 | `registry/sources.json`、`registry/schema.md` | `knowledge-check` 要求空 `check` 必须有 `no_check_reason` | applied |
 | SRFS-003 | final gate Level 3 只证明 coverage 覆盖，不直接报告 registry 终态字段缺口 | P1 | `tools/knowledge-final-gate.sh` | 增加 `missing_final_state_fields` | applied |
 | SRFS-004 | 新增 source 向导仍输出旧薄结构 | P2 | `tools/knowledge-new.sh --source` | 输出新字段草稿并补回归断言 | applied |
 
 ## 字段语义
 
-- `migration_strategy`：描述 source 如何进入 Knowledge Hub 控制面，不等于复制正文或提升 active。
+- `source_strategy`：描述 source 如何进入 Knowledge Hub 控制面，不等于复制正文或提升 active。
 - `owner`：source registry 维护责任人，不等于 owner decision 签收人。
 - `review_after`：维护复核日期，格式为 `YYYY-MM-DD`。
 - `final_disposition`：控制面终态处置枚举，不等于语义批准。

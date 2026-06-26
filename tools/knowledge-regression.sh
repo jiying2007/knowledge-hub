@@ -2877,7 +2877,7 @@ def test_final_gap_readability_positive_contracts():
     except Exception as exc:
         missing_readability_fields.append(f"parse-error:{exc}")
     try:
-        source_required_fields = ["owner", "review_after", "migration_strategy", "final_disposition"]
+        source_required_fields = ["owner", "review_after", "source_strategy", "final_disposition"]
         source_data = json.loads(sources_path.read_text())
         for source in source_data.get("sources", []):
             source_id = str(source.get("id", ""))
@@ -4282,7 +4282,7 @@ def test_manual_entry_docs_owner_option():
 def test_manual_entry_offline_docs():
     readme_path = root / "README.md"
     templates_readme_path = root / "templates" / "README.md"
-    legacy_ledger_path = "registry/" + "migrations.jsonl"
+    legacy_ledger_path = "registry/" + "source policies.jsonl"
     legacy_template_kind = "migration" + "-record"
     try:
         readme = readme_path.read_text()
@@ -4814,7 +4814,7 @@ def test_ai_generated_item_provenance_gate():
     )
 
 def test_manual_entry_no_migration_ledger_guide():
-    legacy_ledger_path = "registry/" + "migrations.jsonl"
+    legacy_ledger_path = "registry/" + "source policies.jsonl"
     result = run_cmd(
         root,
         [
@@ -4834,14 +4834,14 @@ def test_manual_entry_no_migration_ledger_guide():
     expect(
         result["exit_code"] == 0
         and legacy_ledger_path not in result["stdout"]
-        and "migration notes" not in result["stdout"]
+        and "source policy notes" not in result["stdout"]
         and "Evidence Index" in result["stdout"],
         "manual-entry-no-migration-ledger-guide",
         "manual entry guide does not expose migration ledger entrypoints",
         {
             "exit_code": result["exit_code"],
-            "has_migrations_jsonl": legacy_ledger_path in result["stdout"],
-            "has_migration_notes": "migration notes" in result["stdout"],
+            "has_source policies_jsonl": legacy_ledger_path in result["stdout"],
+            "has_migration_notes": "source policy notes" in result["stdout"],
             "has_evidence_index": "Evidence Index" in result["stdout"],
             "stdout_sample": result["stdout"][:1600],
         },
@@ -6006,7 +6006,7 @@ def test_final_proof_artifact_as_of_date_selector():
         "notes": "Temporary fixture proving final proof dynamic selector follows --as-of date and preserves 2026-06-22 seed baseline.",
         "notes_zh": "临时 fixture：证明 final proof 动态选择器跟随 --as-of 日期，同时保留 2026-06-22 seed 基线；不生成 owner decision、不关闭 owner gate、不修改源项目、不写 memory。",
     }
-    with (repo / "registry" / "migrations.jsonl").open("a") as fh:
+    with (repo / "registry" / "source policies.jsonl").open("a") as fh:
         fh.write(json.dumps(migration_row, ensure_ascii=False, separators=(",", ":")) + "\n")
     index_appends = {
         "indexes/by-owner.md": f"\n- `{artifact_id}`\n",
@@ -6168,7 +6168,7 @@ def test_index_plan_extended_sections():
         and "pcr02-project-tools" in source_index
         and pcr02_source.get("owner") == "pcr02-registry-owner"
         and pcr02_source.get("review_after") == "2026-09-20"
-        and pcr02_source.get("final_disposition") == "hard-migrated-to-hub"
+        and pcr02_source.get("final_disposition") == "hub-canonical"
         and pcr02_source.get("check", "").startswith("rtk test -d sources/")
         and source_selection.get("strategy") == "filename-yyyymmdd-sort-last"
         and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
@@ -6633,15 +6633,15 @@ def test_status_source_governance_summary():
         and status_boundary_health.get("status") == "pass"
         and status_boundary_health.get("source_project_read") is False
         and len(source_recovery_rows) == 18
-        and pcr02_docs_recovery.get("final_disposition") == "hard-migrated-to-hub"
-        and pcr02_docs_recovery.get("coverage_status") == "hard-migrated-to-hub"
+        and pcr02_docs_recovery.get("final_disposition") == "hub-canonical"
+        and pcr02_docs_recovery.get("coverage_status") == "hub-canonical"
         and "hash-only-provenance" in pcr02_docs_recovery.get("coverage_classification", "")
         and "旧正文副本已按终态剪枝" in pcr02_docs_recovery.get("coverage_decision", "")
         and pcr02_docs_recovery.get("has_check") is True
         and pcr02_docs_recovery.get("has_no_check_reason") is False
         and pcr02_tools_recovery.get("check_contract_status") == "ok"
         and pcr02_tools_recovery.get("has_check") is True
-        and pcr02_tools_recovery.get("coverage_status") == "hard-migrated-to-hub"
+        and pcr02_tools_recovery.get("coverage_status") == "hub-canonical"
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and registry.get("review_after_near_due_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
@@ -7424,7 +7424,7 @@ def test_source_manual_entry_guide():
             "--source-path",
             "sources/example-source",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7440,8 +7440,8 @@ def test_source_manual_entry_guide():
         "source coverage JSONL row",
         '"source_id":"example-source"',
         '"no_check_reason":"classify-first pending source coverage"',
-        '"migration_strategy":"hard-migrated-to-hub-copy-docs"',
-        '"final_disposition":"hard-migrated-to-hub"',
+        '"source_strategy":"hub-canonical-copy-docs"',
+        '"final_disposition":"hub-canonical"',
         "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source",
     ]
     missing_fragments = [fragment for fragment in required_fragments if fragment not in result["stdout"]]
@@ -7476,7 +7476,7 @@ def test_source_manual_entry_enum_guide():
             "--source-path",
             "sources/example-source-enum",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7508,7 +7508,7 @@ def test_source_manual_entry_enum_guide():
     )
     required_fragments = [
         "## 枚举速查",
-        "role: hub-migrated-source",
+        "role: hub-canonical-source",
         "authority: knowledge-hub-canonical",
         "write_policy: knowledge-hub-only",
         "final_disposition 常用值",
@@ -7544,7 +7544,7 @@ def test_source_manual_entry_guide_check_command():
             "--source-path",
             "sources/example-source-check",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7553,7 +7553,7 @@ def test_source_manual_entry_guide_check_command():
             "rtk test -d sources/example-source-check",
         ],
     )
-    registry_object_has_check = '"final_disposition":"hard-migrated-to-hub","check":"rtk test -d sources/example-source-check"}' in result["stdout"]
+    registry_object_has_check = '"final_disposition":"hub-canonical","check":"rtk test -d sources/example-source-check"}' in result["stdout"]
     coverage_row_has_check = '"checked_at":"' in result["stdout"] and '"check":"rtk test -d sources/example-source-check","source_identity"' in result["stdout"]
     json_no_check_reason_absent = '"no_check_reason":' not in result["stdout"]
     expect(
@@ -7587,7 +7587,7 @@ def test_source_manual_entry_status_coverage_sync():
             "--source-path",
             "sources/example-source-retired",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7610,7 +7610,7 @@ def test_source_manual_entry_status_coverage_sync():
             "--source-path",
             "sources/example-source-deprecated",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7652,7 +7652,7 @@ def test_source_manual_entry_unknown_owner_warning():
             "--source-path",
             "sources/example-source-owner-warning",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7689,7 +7689,7 @@ def test_source_manual_entry_requires_check_or_reason():
         "--source-path",
         "/tmp/example-required",
         "--role",
-        "hub-migrated-source",
+        "hub-canonical-source",
         "--authority",
         "knowledge-hub-canonical",
         "--write-policy",
@@ -7827,7 +7827,7 @@ def test_source_manual_entry_role_aware_recommendations():
             "--source-path",
             "sources/example-current-no-check-source",
             "--role",
-            "hub-migrated-source",
+            "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
@@ -7841,15 +7841,15 @@ def test_source_manual_entry_role_aware_recommendations():
         and auxiliary_result["exit_code"] == 0
         and no_check_current_result["exit_code"] == 0
         and "recommended_final_disposition: hub-native-source" in agent_config_result["stdout"]
-        and "recommended_migration_strategy: hub-native-ledger" in agent_config_result["stdout"]
+        and "recommended_source_strategy: hub-native-ledger" in agent_config_result["stdout"]
         and '"final_disposition":"hub-native-source"' in agent_config_result["stdout"]
         and "recommendation_scope_zh: 以上只是人工填写提示，不代表 owner decision，不关闭 owner gate" in agent_config_result["stdout"]
-        and "recommended_final_disposition: runtime-input-not-migrated" in auxiliary_result["stdout"]
-        and "recommended_migration_strategy: runtime-input-index-summary-only" in auxiliary_result["stdout"]
+        and "recommended_final_disposition: runtime-input-reference-only" in auxiliary_result["stdout"]
+        and "recommended_source_strategy: runtime-input-index-summary-only" in auxiliary_result["stdout"]
         and "不写 memory" in auxiliary_result["stdout"]
-        and "recommended_final_disposition: hard-migrated-to-hub" in no_check_current_result["stdout"]
+        and "recommended_final_disposition: hub-canonical" in no_check_current_result["stdout"]
         and "no_check_reason: classify-first pending source coverage" in no_check_current_result["stdout"]
-        and '"final_disposition":"hard-migrated-to-hub"' in no_check_current_result["stdout"],
+        and '"final_disposition":"hub-canonical"' in no_check_current_result["stdout"],
         "source-manual-entry-role-aware-recommendations",
         "source manual entry guide gives role-aware recommendations without replacing conservative copyable JSON",
         {

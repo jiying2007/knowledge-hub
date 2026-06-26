@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `hub-canonical`
 - Classification: `retired-origin copy-docs`
 - Checked at: `2026-06-25`
 
 ## 决策
 
-engineering-archive 已迁移到 Hub PCR02 终态工程归档目录；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
+engineering-archive 已终态归位到 Hub PCR02 终态工程归档目录；旧工程归档路径只作 provenance，旧 source-docs 副本不再保留。
 
 ## 风险
 

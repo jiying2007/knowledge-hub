@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | EIT-001 | `governance/evidence-rules.md` 已要求记录 cwd、date、command、exit_code、scope、result_summary 和 artifact_refs，但没有统一表格。 | 不同条目的验证证据结构不一致，人工复核需要重新解释每份文档。 | 增加 Evidence Index 表格规范。 |
 | EIT-002 | `templates/item.md` 和 `templates/validation-report.md` 仍使用散列表达命令证据。 | 新条目容易只写少数字段，缺少可横向比较的证据索引。 | 模板改为 Evidence Index 表格，并保留 date/cwd/scope 补充字段。 |
-| EIT-003 | `knowledge-new.sh` 的人工向导没有提示写 Evidence Index。 | 人工新增条目可能完成 registry/index/migration，但未留下可审查验证证据。 | 只读向导增加 Evidence Index 步骤和可复制表格。 |
+| EIT-003 | `knowledge-new.sh` 的人工向导没有提示写 Evidence Index。 | 人工新增条目可能完成 registry/index/source-policy，但未留下可审查验证证据。 | 只读向导增加 Evidence Index 步骤和可复制表格。 |
 
 ## 决策
 

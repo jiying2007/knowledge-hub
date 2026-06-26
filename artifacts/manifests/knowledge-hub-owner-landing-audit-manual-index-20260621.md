@@ -2,7 +2,7 @@
 
 ## 结论
 
-本轮把 PCR02 owner gate 人工落地从“有 landing plan”推进到“有只读 landing audit”。`knowledge-owner-gates.sh --landing-audit` 会在 owner 表单通过校验后，显式列出 worksheet、registry、migration 和 index 的人工落点，并提醒 `pcr02-owner-decision-worksheets-20260618.jsonl` 对应行必须进入 resolved / owner-approved / approved / closed 等人工签收状态，否则 owner gate 仍保持 open。
+本轮把 PCR02 owner gate 人工落地从“有 landing plan”推进到“有只读 landing audit”。`knowledge-owner-gates.sh --landing-audit` 会在 owner 表单通过校验后，显式列出 worksheet、registry、source policy 和 index 的人工落点，并提醒 `pcr02-owner-decision-worksheets-20260618.jsonl` 对应行必须进入 resolved / owner-approved / approved / closed 等人工签收状态，否则 owner gate 仍保持 open。
 
 同时补齐两类长期维护入口：
 
@@ -44,5 +44,5 @@
 ## 后续
 
 1. 等真实 owner 填写 `owner-decisions.jsonl` 后，先运行 `--validate-forms`。
-2. 再运行 `--landing-plan` 和 `--landing-audit`，人工核对 worksheet、registry、migration 和 index。
+2. 再运行 `--landing-plan` 和 `--landing-audit`，人工核对 worksheet、registry、source policy 和 index。
 3. 人工落地后运行 `knowledge-owner-gates.sh --status all --json`、`knowledge-check.sh --dry-run --json --diagnostics`、`knowledge-status.sh --strict --json` 和 `knowledge-final-gate.sh --json`。

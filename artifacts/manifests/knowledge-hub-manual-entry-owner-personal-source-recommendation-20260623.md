@@ -6,7 +6,7 @@
 
 - `knowledge-new.sh` 普通 item mode 现在会输出 `owner_registry_status`；未知 item owner 只给 warning，不伪造 owner，也不替代 owner registry。
 - `knowledge-new.sh` 会对 `--domain personal` 或 `domains/personal/` 路径使用 personal-local 安全默认值：`visibility=personal-local`、`status=personal`、`scope=team-general`。显式 domain/path 冲突时会提示不可直接落盘。
-- `knowledge-new.sh --source` 现在按 `role`、`write_policy` 和 check/no-check 状态输出 `recommended_final_disposition`、`recommended_migration_strategy` 与中文理由。
+- `knowledge-new.sh --source` 现在按 `role`、`write_policy` 和 check/no-check 状态输出 `recommended_final_disposition`、`recommended_source_strategy` 与中文理由。
 - source 可复制 JSON 仍保守保持 `final_disposition=owner-gated-pending-decision`，推荐提示不替代 owner decision，不关闭 owner gate。
 - README、tools README、templates README、knowledge-check manual-entry 锚点和 regression helper manifest 已同步新契约。
 

@@ -267,7 +267,7 @@ for source in sources:
         "authority": source.get("authority", ""),
         "status": source.get("status", ""),
         "write_policy": source.get("write_policy", ""),
-        "migration_strategy": source.get("migration_strategy", ""),
+        "source_strategy": source.get("source_strategy", ""),
         "owner": source.get("owner", ""),
         "review_after": source.get("review_after", ""),
         "final_disposition": source.get("final_disposition", ""),
@@ -1287,7 +1287,7 @@ def build_linking_audit():
     pcr02_sources_with_provenance = []
     for source_id, source in pcr02_sources.items():
         has_check_or_reason = bool(str(source.get("check", "")).strip() or str(source.get("no_check_reason", "")).strip())
-        has_provenance = all(str(source.get(field, "")).strip() for field in ["path", "owner", "review_after", "migration_strategy", "final_disposition"]) and has_check_or_reason
+        has_provenance = all(str(source.get(field, "")).strip() for field in ["path", "owner", "review_after", "source_strategy", "final_disposition"]) and has_check_or_reason
         if has_provenance:
             pcr02_sources_with_provenance.append(source_id)
         else:
@@ -1469,7 +1469,7 @@ def print_source():
         print(f"- owner: `{info.get('owner', '')}`")
         print(f"- review_after: `{info.get('review_after', '')}`")
         print(f"- write_policy: `{info.get('write_policy', '')}`")
-        print(f"- migration_strategy: `{info.get('migration_strategy', '')}`")
+        print(f"- source_strategy: `{info.get('source_strategy', '')}`")
         print(f"- final_disposition: `{info.get('final_disposition', '')}`")
         print(f"- check: `{info.get('check', '') or '<no-check-in-source-registry>'}`")
         if info.get("no_check_reason"):

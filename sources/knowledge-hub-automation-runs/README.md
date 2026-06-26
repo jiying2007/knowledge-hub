@@ -7,7 +7,7 @@
 - Role: `hub-native-source`
 - Authority: `knowledge-hub-ledger`
 - Final disposition: `hub-native-source`
-- Migration strategy: `hub-native-automation-run-ledger`
+- Source strategy: `hub-native-automation-run-ledger`
 - Owner: `leiwenjun`
 - Review after: `2026-09-24`
 

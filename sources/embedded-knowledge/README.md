@@ -4,16 +4,16 @@
 
 - Source ID: `embedded-knowledge`
 - Hub source path: `sources/embedded-knowledge`
-- Role: `hub-migrated-source`
+- Role: `hub-canonical-source`
 - Authority: `knowledge-hub-canonical`
-- Final disposition: `hard-migrated-to-hub`
-- Migration strategy: `hard-migrated-to-hub-copy-docs`
+- Final disposition: `hub-canonical`
+- Source strategy: `hub-canonical-copy-docs`
 - Owner: `team-core`
 - Review after: `2026-09-20`
 
 ## Hub 管理方式
 
-embedded-knowledge 的 2026-06-24 hard migration 记录已被 2026-06-25 终态归位取代；当前正文权威为 domains/embedded/*，sources/embedded-knowledge 只保留 source 控制面。
+embedded-knowledge 的 2026-06-24 source canonicalization 记录已被 2026-06-25 终态归位取代；当前正文权威为 domains/embedded/*，sources/embedded-knowledge 只保留 source 控制面。
 
 ## 边界
 

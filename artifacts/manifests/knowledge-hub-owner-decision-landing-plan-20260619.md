@@ -26,7 +26,7 @@
 
 ## 非目标
 
-- 不自动修改 registry、index、migration 或正文。
+- 不自动修改 registry、index、source policy 或正文。
 - 不生成 owner decision。
 - 不判断 owner 决策语义正确性。
 - 不关闭 owner gate。

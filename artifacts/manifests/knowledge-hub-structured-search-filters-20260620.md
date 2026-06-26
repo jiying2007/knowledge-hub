@@ -19,7 +19,7 @@
 ## 参数语义
 
 - `--source`：物理扫描源，例如 `knowledge-hub` 或 `pcr02-project-docs`。
-- `--source-id`：registry item 的 `source.source_id`，用于查询“已迁移或已登记、来源为某 source 的本仓知识条目”。
+- `--source-id`：registry item 的 `source.source_id`，用于查询“已终态归位或已登记、来源为某 source 的本仓知识条目”。
 - `--owner`、`--status`、`--kind`、`--domain`：按 `registry/items.jsonl` 字段过滤；`--domain` 使用前缀匹配。
 - 结构化过滤只对本仓登记条目生效；未登记普通文件在使用结构化过滤时会被排除，避免把原始外部文件误当治理条目。
 

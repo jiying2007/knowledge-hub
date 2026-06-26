@@ -2,13 +2,13 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `hub-canonical`
 - Classification: `retired-origin copy-docs-and-artifacts`
 - Checked at: `2026-06-24`
 
 ## 决策
 
-patent-disclosure Markdown 与文档附件已硬迁移到 Hub 专利域和 artifact vault；旧路径只保留 provenance。
+patent-disclosure Markdown 与文档附件已终态归位到 Hub 专利域和 artifact vault；旧路径只保留 provenance。
 
 ## 风险
 

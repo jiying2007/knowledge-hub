@@ -49,7 +49,7 @@
 
 - `rtk bash -n tools/knowledge-new.sh`：通过。
 - `rtk bash tools/knowledge-new.sh --help`：通过，命令仍声明只读，不创建、不修改、不提交。
-- `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id sample-manual-entry --path governance/sample-manual-entry.md`：通过，输出 registry item 草稿、核心索引提示、migration 草稿和验证命令；registry 草稿默认 `scope=team-general`。
+- `rtk bash tools/knowledge-new.sh --kind decision --domain governance --id sample-manual-entry --path governance/sample-manual-entry.md`：通过，输出 registry item 草稿、核心索引提示、source policy 草稿和验证命令；registry 草稿默认 `scope=team-general`。
 - `rtk bash tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --project pcr02 --id pcr02-sample --path domains/projects/pcr02/current/runbooks/pcr02-sample.md`：通过，registry 草稿默认 `scope=project-specific`。
 - `rtk bash tools/knowledge-regression.sh --json`：通过，manual project entry 回归确认项目域新增向导输出 `indexes/by-project.md`，非项目域新增向导不输出项目索引草稿。
 - `/tmp` 验证：从 governance 示例输出中抽取 registry JSON 草稿后，`jq -e '.scope == "team-general" and .id == "sample-manual-entry"'` 通过。

@@ -30,7 +30,7 @@
 
 ## 边界
 
-- 不自动创建正文、registry、migration 或 index。
+- 不自动创建正文、registry、source policy 或 index。
 - 不把 `indexes/by-project.md` 纳入每条 registry item 的强覆盖门禁。
 - 不修改 PCR02 源项目 docs。
 - 不关闭 owner gate，不生成 owner decision。

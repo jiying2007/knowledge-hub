@@ -638,7 +638,7 @@ def make_status_owner_handoff_packet(owner, source_id, owner_rows, next_owner_ro
             {"step": "4-export-forms", "command": forms, "output_path_hint": local_path, "notes_zh": "导出表单骨架到 stdout；owner 可另存为 .local.jsonl 后手工填写，工具不写该文件。"},
             {"step": "5-validate-filled-forms", "command_template": validate, "replace_placeholder_with": local_path, "notes_zh": "只读校验 owner 填写结果；不通过时不得进入 landing plan。"},
             {"step": "6-plan-manual-landing", "command_template": landing_plan, "replace_placeholder_with": local_path, "notes_zh": "生成 no-write 人工落地计划；仍不写 registry、worksheet、migration 或 index。"},
-            {"step": "7-audit-manual-landing", "command_template": landing_audit, "replace_placeholder_with": local_path, "notes_zh": "人工落地后复核 worksheet、registry、migration 和 index 是否同步；不能把 audit 当 owner approval。"},
+            {"step": "7-audit-manual-landing", "command_template": landing_audit, "replace_placeholder_with": local_path, "notes_zh": "人工落地后复核 worksheet、registry、source policy 和 index 是否同步；不能把 audit 当 owner approval。"},
         ],
         "must_not": [
             "不得把 routing_owner 当 reviewed_by",
@@ -1244,7 +1244,7 @@ for source in sorted(sources, key=lambda row: str(row.get("id", ""))):
         "review_after": str(source.get("review_after", "")),
         "review_after_stale": bool(check_row.get("review_after_stale", source_id in source_stale_review_after_ids)),
         "final_disposition": str(source.get("final_disposition", "")),
-        "migration_strategy": str(source.get("migration_strategy", "")),
+        "source_strategy": str(source.get("source_strategy", "")),
         "check_contract_status": str(check_row.get("check_contract_status", "")),
         "has_check": bool(check_row.get("has_check", bool(source.get("check", "")))),
         "has_no_check_reason": bool(check_row.get("has_no_check_reason", bool(source.get("no_check_reason", "")))),
@@ -1321,7 +1321,7 @@ if open_owner_gate_count:
         )
     if owner_landing_audit_command_templates:
         next_actions.append(
-            "责任人表单校验通过后，按 owner 范围审计 worksheet、registry、migration 和 index 人工落点："
+            "责任人表单校验通过后，按 owner 范围审计 worksheet、registry、source policy 和 index 人工落点："
             f"{owner_landing_audit_command_templates[0]}。"
         )
     if next_owner_gate:

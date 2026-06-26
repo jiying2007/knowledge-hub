@@ -13,7 +13,7 @@
 - `current`: active project-specific design, runbook, spec, index or project-local governance.
 - `decisions`: active project-specific architecture/spec decisions that define current behavior.
 - `validation`: reports, debug records, release notes or analysis evidence that may support future decisions.
-- `archive`: historical plans, completed migration records, session archives or stale implementation plans.
+- `archive`: historical plans, completed provenance records, session archives or stale implementation plans.
 - `personal`: personal/local automation or memory material that must not enter team active indexes without review.
 - `review-required`: missing or incomplete metadata, or active material stored under a historical directory.
 

@@ -15,7 +15,7 @@ import sys
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
-parser = argparse.ArgumentParser(description="Create a reviewed copy-first migration manifest for a registered source.")
+parser = argparse.ArgumentParser(description="Create a reviewed copy-first source manifest for a registered source.")
 parser.add_argument("--source-id", required=True)
 parser.add_argument("--target-prefix", required=True, help="Knowledge Hub relative target directory.")
 parser.add_argument("--bucket", default="archive", choices=["current", "decisions", "archive", "validation"])

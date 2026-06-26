@@ -22,7 +22,7 @@
 
 ## 非目标
 
-- 不自动修复 registry、index、migration、template 或正文。
+- 不自动修复 registry、index、source policy、template 或正文。
 - 不生成索引。
 - 不执行 `validation_refs`。
 - 不改变 `knowledge-check` 默认行为。

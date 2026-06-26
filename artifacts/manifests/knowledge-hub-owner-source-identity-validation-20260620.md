@@ -27,7 +27,7 @@
 
 - 不生成 owner decision。
 - 不关闭 owner gate。
-- 不写 worksheet、registry、index、migration 或 memory。
+- 不写 worksheet、registry、index、source policy 或 memory。
 - 不修改 PCR02 源项目 docs。
 - 不把 PCR02 project-specific 内容提升到 `domains/embedded/standards/`。
 - 不启用自动化。

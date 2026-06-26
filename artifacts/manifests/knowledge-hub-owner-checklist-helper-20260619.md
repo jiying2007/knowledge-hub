@@ -16,7 +16,7 @@
 
 ## 决策
 
-- `--checklist` 只读，不生成 owner decision，不写 registry/index/migration。
+- `--checklist` 只读，不生成 owner decision，不写 registry/index/source-policy。
 - checklist 只汇总已有 intake/worksheet 信息，不新增事实、不替代 owner sign-off。
 - 未找到 intake package 时，worksheet board 仍可工作；对应 checklist 字段为空，由人工继续使用 worksheet 原始字段。
 - 不修改 PCR02 源项目 docs，不关闭 owner gate，不启用自动化，不写 memory。

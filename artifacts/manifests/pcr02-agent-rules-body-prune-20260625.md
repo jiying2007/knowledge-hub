@@ -6,7 +6,7 @@
 
 - 源项目仍需要的本地 Codex 运行规则，由对应源码独立仓 Git 管理。
 - Knowledge Hub 不再把历史 `AGENTS.md` 正文副本作为规则来源、知识正文入口或新增归档入口。
-- Hub 仅保留 `pcr02-agent-rules-body-prune-20260625.jsonl` 中的路径、source_id、sha256、剪枝状态和理由，作为 hard migration 的 hash/provenance 证据。
+- Hub 仅保留 `pcr02-agent-rules-body-prune-20260625.jsonl` 中的路径、source_id、sha256、剪枝状态和理由，作为 source canonicalization 的 hash/provenance 证据。
 
 ## 剪枝范围
 

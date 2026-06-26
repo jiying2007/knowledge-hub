@@ -12,7 +12,7 @@
 
 Subagents were used with `scope_write=NONE`; the main thread performed all file writes.
 
-| slice | files | result | migration decision |
+| slice | files | result | source-policy decision |
 |---|---:|---|---|
 | reference/rules/standards | 3 | reviewed | `README.md` may enter a later reference-first batch; `AGENTS.md` and diag metadata standard remain blocked until owner review and metadata completion. |
 | runbook/personal/artifact | 3 | reviewed | ASAN requires split review, memory curation remains personal/local, `.session` must be artifact-ref only. |

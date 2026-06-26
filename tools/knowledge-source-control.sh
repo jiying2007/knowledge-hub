@@ -59,7 +59,7 @@ coverage_by_source = {
 }
 
 source_type_rules = {
-    "hub-migrated-source": ("markdown", "copy-body"),
+    "hub-canonical-source": ("markdown", "copy-body"),
     "hub-runtime-input": ("archive", "reference-only"),
     "hub-native-source": ("automation-run", "reference-only"),
     "codex-history-source": ("history", "summary-only"),
@@ -95,7 +95,7 @@ for source in sources:
     object_type, disposition = source_type_rules.get(role, ("unknown", "summary-only"))
     if source.get("final_disposition") in {"auxiliary-recall-only", "reference-first-registered", "owner-gated-pending-decision", "artifact-ref-registered"}:
         disposition = "reference-only" if disposition == "copy-body" else disposition
-    if "artifact" in str(source.get("migration_strategy", "")) and disposition == "copy-body":
+    if "artifact" in str(source.get("source_strategy", "")) and disposition == "copy-body":
         disposition = "artifact-ref"
     target_path = f"sources/{source_id}/README.md"
     canonical_target = str(source.get("canonical_target", ""))
@@ -116,7 +116,7 @@ for source in sources:
         "sha256": "",
         "size_bytes": 0,
         "status": "covered",
-        "reason_zh": coverage.get("decision") or source.get("migration_strategy", ""),
+        "reason_zh": coverage.get("decision") or source.get("source_strategy", ""),
         "risk_zh": coverage.get("risk") or "未逐项展开前不得把 source 原文直接提升为 active facts。",
         "checked_at": today,
     }
@@ -130,7 +130,7 @@ for source in sources:
 - Role: `{role}`
 - Authority: `{source.get('authority', '')}`
 - Final disposition: `{source.get('final_disposition', '')}`
-- Migration strategy: `{source.get('migration_strategy', '')}`
+- Source strategy: `{source.get('source_strategy', '')}`
 - Owner: `{source.get('owner', '')}`
 - Review after: `{source.get('review_after', '')}`
 
@@ -166,7 +166,7 @@ for source in sources:
 
 ## 决策
 
-{coverage.get('decision') or first_sentence(source.get('migration_strategy', ''))}
+{coverage.get('decision') or first_sentence(source.get('source_strategy', ''))}
 
 ## 风险
 

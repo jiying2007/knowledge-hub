@@ -2,7 +2,7 @@
 
 ## 结论
 
-- Status: `hard-migrated-to-hub`
+- Status: `hub-canonical`
 - Classification: `retired-origin project-root-shallow hash-only-provenance`
 - Checked at: `2026-06-25`
 

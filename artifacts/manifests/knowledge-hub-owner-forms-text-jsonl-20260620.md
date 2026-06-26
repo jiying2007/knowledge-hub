@@ -14,7 +14,7 @@
   - 不自动填 `owner_decision`。
   - 不自动填 `source_sha256/source_size`。
   - 不关闭 owner gate。
-  - 不写 registry、migration 或 index。
+  - 不写 registry、source policy 或 index。
   - 不提升 active。
 
 ## 边界

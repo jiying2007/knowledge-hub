@@ -35,7 +35,7 @@ capture -> classify -> normalize -> review -> active/archive -> review cycle -> 
 ## 提升规则
 
 - `personal-note` 可提升为 `project-current`，需要 owner 和来源。
-- `project-current` 可关闭为 `project-archive`，需要迁移记录。
+- `project-current` 可关闭为 `project-archive`，需要 source policy、registry/index 和 Evidence Index 说明。
 - `project-archive` 可摘要提升为 `embedded/runbook` 或 `embedded/standard`，需要跨项目复用理由和验证证据。
 - `codex-session` 可提升为 `codex-workflow`，再经审查进入 skill、workflow recipe 或 AGENTS。
 
@@ -43,4 +43,4 @@ capture -> classify -> normalize -> review -> active/archive -> review cycle -> 
 
 - 默认不删除历史正文，先标记 `superseded` 或 `archived`。
 - 删除仅允许用于重复副本、缓存、大文件误入、明确废弃草稿。
-- 删除前必须有 `migrations.jsonl` 或 tombstone 记录。
+- 删除前必须确认没有 registry、source-policy、index、owner gate、authorization 或 manifest 仍把它作为当前入口。
