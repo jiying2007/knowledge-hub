@@ -2200,8 +2200,8 @@ def test_final_gate_owner_review_blocker():
     linking_audit = parsed.get("linking_audit", {})
     linking_summary = linking_audit.get("summary", {})
     proof_artifacts = parsed.get("proof_artifacts", {})
-    legacy_proof_artifacts = parsed.get("proof_artifacts_20260622", {})
-    source_check_snapshot = parsed.get("source_check_execution_snapshot_20260621", {})
+    deprecated_proof_alias_present = "proof_artifacts_20260622" in parsed
+    source_check_snapshot = parsed.get("source_check_execution_snapshot", {})
     source_check_runtime = parsed.get("source_check_runtime", {})
     highest_priority_rules_audit = parsed.get("highest_priority_rules_audit", [])
     rules_by_id = {row.get("rule_id"): row for row in highest_priority_rules_audit}
@@ -2369,7 +2369,7 @@ def test_final_gate_owner_review_blocker():
         and level3_owner_target_health.get("present_count") == 4
         and level3_owner_target_health.get("missing_target_count") == 0
         and "tools/knowledge-check.sh --dry-run --json --diagnostics" in level3.get("evidence_refs", [])
-        and legacy_proof_artifacts == proof_artifacts
+        and "proof_artifacts_20260622" not in parsed
         and proof_artifacts.get("status") == "pass"
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
         and proof_artifacts.get("coverage_sections") == ["Level 1", "Level 2", "Level 3", "七", "七.2", "八", "九"]
@@ -2562,8 +2562,8 @@ def test_final_gate_owner_review_blocker():
             "review_queue_recovery": review_queue_recovery,
             "final_state_audit": final_state_audit,
             "proof_artifacts": proof_artifacts,
-            "proof_artifacts_20260622": legacy_proof_artifacts,
-            "source_check_execution_snapshot_20260621": source_check_snapshot,
+            "deprecated_proof_alias_present": deprecated_proof_alias_present,
+            "source_check_execution_snapshot": source_check_snapshot,
             "source_check_runtime": source_check_runtime,
             "maintenance_entry_audit": maintenance_entry_audit,
             "linking_audit": linking_audit,
@@ -3382,7 +3382,7 @@ def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision
         and any(expected_fragment in error for error in errors)
         and mismatch_diagnostic.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"
         and mismatch_diagnostic.get("actual") == {"owner_decision": owner_decision, "target_decision": target_decision}
-        and "成对兼容" in mismatch_diagnostic.get("action_zh", ""),
+        and "成对一致" in mismatch_diagnostic.get("action_zh", ""),
         case_id,
         "owner form rejects incompatible owner_decision and target_decision pairs",
         {
@@ -4186,12 +4186,46 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "notes/personal/path-mismatch.md",
         ],
     )
+    deprecated_personal_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "personal-note",
+            "--domain",
+            "personal",
+            "--id",
+            "personal-deprecated",
+            "--path",
+            "notes/personal/deprecated.md",
+        ],
+    )
+    deprecated_path_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-new.sh",
+            "--kind",
+            "personal-note",
+            "--domain",
+            "notes",
+            "--id",
+            "personal-deprecated-path",
+            "--path",
+            "domains/personal/deprecated.md",
+        ],
+    )
     expect(
         registered_result["exit_code"] == 0
         and unknown_result["exit_code"] == 0
         and personal_result["exit_code"] == 0
         and inferred_personal_result["exit_code"] == 0
-        and mismatch_result["exit_code"] == 0
+        and mismatch_result["exit_code"] == 2
+        and deprecated_personal_result["exit_code"] == 2
+        and deprecated_path_result["exit_code"] == 2
         and "- owner_registry_status: registered" in registered_result["stdout"]
         and "owner_warning_zh" not in registered_result["stdout"]
         and "- owner_registry_status: unknown-owner" in unknown_result["stdout"]
@@ -4204,21 +4238,26 @@ def test_manual_entry_owner_registry_and_personal_defaults():
         and '"domain":"notes"' in inferred_personal_result["stdout"]
         and '"visibility":"personal-local"' in inferred_personal_result["stdout"]
         and '"status":"personal"' in inferred_personal_result["stdout"]
-        and "目标路径 `notes/personal/path-mismatch.md` 位于 notes/personal/" in mismatch_result["stdout"]
-        and "请改为 `--domain notes`" in mismatch_result["stdout"],
+        and "请改为 --domain notes" in mismatch_result["stderr"]
+        and "domain=personal 已废弃" in deprecated_personal_result["stderr"]
+        and "domains/personal/ 已废弃" in deprecated_path_result["stderr"],
         "manual-entry-owner-registry-and-personal-defaults",
-        "manual entry guide exposes item owner registry status and notes/personal safe defaults",
+        "manual entry guide exposes item owner registry status, notes/personal safe defaults, and rejects deprecated personal entrypoints",
         {
             "registered_exit_code": registered_result["exit_code"],
             "unknown_exit_code": unknown_result["exit_code"],
             "personal_exit_code": personal_result["exit_code"],
             "inferred_personal_exit_code": inferred_personal_result["exit_code"],
             "mismatch_exit_code": mismatch_result["exit_code"],
+            "deprecated_personal_exit_code": deprecated_personal_result["exit_code"],
+            "deprecated_path_exit_code": deprecated_path_result["exit_code"],
             "registered_stdout_sample": registered_result["stdout"][:1200],
             "unknown_stdout_sample": unknown_result["stdout"][:1200],
             "personal_stdout_sample": personal_result["stdout"][:1600],
             "inferred_personal_stdout_sample": inferred_personal_result["stdout"][:1600],
-            "mismatch_stdout_sample": mismatch_result["stdout"][:1600],
+            "mismatch_stderr_sample": mismatch_result["stderr"][:1600],
+            "deprecated_personal_stderr_sample": deprecated_personal_result["stderr"][:800],
+            "deprecated_path_stderr_sample": deprecated_path_result["stderr"][:800],
         },
     )
 
@@ -6069,11 +6108,10 @@ def test_final_proof_artifact_as_of_date_selector():
     except Exception as exc:
         parse_error = str(exc)
     proof_artifacts = parsed.get("proof_artifacts", {}) if isinstance(parsed, dict) else {}
-    legacy_proof_artifacts = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
     expect(
         not parse_error
         and result["exit_code"] == 1
-        and legacy_proof_artifacts == proof_artifacts
+        and "proof_artifacts_20260622" not in parsed
         and proof_artifacts.get("status") == "pass"
         and proof_artifacts.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date"
         and proof_artifacts.get("selection_date") == "2026-06-23"
@@ -6088,7 +6126,7 @@ def test_final_proof_artifact_as_of_date_selector():
             "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
             "selection_mode": proof_artifacts.get("selection_mode"),
             "selection_date": proof_artifacts.get("selection_date"),
-            "alias_equal": legacy_proof_artifacts == proof_artifacts,
+            "legacy_alias_present": "proof_artifacts_20260622" in parsed,
             "dynamic_ids": proof_artifacts.get("dynamic_ids", []),
             "expected_ids": proof_artifacts.get("expected_ids", []),
             "missing_registry": proof_artifacts.get("missing_registry", []),
@@ -6102,7 +6140,7 @@ def test_final_proof_artifact_as_of_date_selector():
         repo,
     )
 
-def test_final_proof_artifacts_stable_alias():
+def test_final_proof_artifacts_stable_key_only():
     result = run_cmd(
         root,
         [
@@ -6119,26 +6157,23 @@ def test_final_proof_artifacts_stable_alias():
     except Exception as exc:
         parse_error = str(exc)
     stable = parsed.get("proof_artifacts", {}) if isinstance(parsed, dict) else {}
-    legacy = parsed.get("proof_artifacts_20260622", {}) if isinstance(parsed, dict) else {}
     expect(
         not parse_error
         and result["exit_code"] == 0
         and parsed.get("final_status") == "ok"
         and stable
-        and legacy
-        and stable == legacy
+        and "proof_artifacts_20260622" not in parsed
         and stable.get("status") == "pass"
         and stable.get("selection_date") == "2026-06-23"
         and stable.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date",
-        "final-proof-artifacts-stable-alias",
-        "final gate exposes stable proof_artifacts alias while keeping legacy date key compatible",
+        "final-proof-artifacts-stable-key-only",
+        "final gate exposes only stable proof_artifacts without legacy date key",
         {
             "exit_code": result["exit_code"],
             "parse_error": parse_error,
             "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
             "stable_present": bool(stable),
-            "legacy_present": bool(legacy),
-            "alias_equal": stable == legacy,
+            "legacy_present": "proof_artifacts_20260622" in parsed,
             "stable_status": stable.get("status"),
             "selection_date": stable.get("selection_date"),
             "stdout_sample": result["stdout"][:1000],
@@ -8324,7 +8359,7 @@ def test_regression_manifest_coverage():
         "final-proof-artifact-discoverability",
         "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
-        "final-proof-artifacts-stable-alias",
+        "final-proof-artifacts-stable-key-only",
         "index-plan-extended-sections",
         "manifest-latest-filename-date-only",
         "manifest-jsonl-profile-gate",
@@ -8519,7 +8554,7 @@ for test_fn in [
     test_final_proof_artifact_discoverability,
     test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,
-    test_final_proof_artifacts_stable_alias,
+    test_final_proof_artifacts_stable_key_only,
     test_index_plan_extended_sections,
     test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,

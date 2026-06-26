@@ -209,6 +209,19 @@ if [[ "$KIND" == "source" ]]; then
   SOURCE_MODE="true"
 fi
 
+if [[ "$DOMAIN" == "personal" ]]; then
+  printf "ERROR domain=personal 已废弃；硬切换后请使用 --domain notes --path notes/personal/<file>.md\n" >&2
+  exit 2
+fi
+if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == domains/personal/* ]]; then
+  printf "ERROR domains/personal/ 已废弃；硬切换后请使用 notes/personal/...\n" >&2
+  exit 2
+fi
+if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == domains/projects/* ]]; then
+  printf "ERROR domains/projects/ 已废弃；硬切换后请使用 projects/<project>/...\n" >&2
+  exit 2
+fi
+
 case "$AI_ROLE" in
   none|drafted|summarized|translated|rewritten|classified|extracted)
     ;;
@@ -552,11 +565,9 @@ if [[ "$DOMAIN" == "notes" && "$TARGET_PATH" == notes/personal/* ]]; then
   STATUS_INDEX_BUCKET="personal"
   PERSONAL_DEFAULT_REASON="- personal_default_reason_zh: personal-local 条目默认不进入团队 active index，不得标记 active，不代表 owner decision。"
 fi
-if [[ "$DOMAIN" == "personal" ]]; then
-  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: `domain=personal` 已废弃；请改用 `--domain notes --path notes/personal/<file>.md`。\n'
-fi
 if [[ -n "$TARGET_PATH" && "$TARGET_PATH" == notes/personal/* && "$DOMAIN" != "notes" ]]; then
-  printf -v PERSONAL_WARNING_BLOCK '\n## 输入提示\n\n- WARNING: 目标路径 `%s` 位于 notes/personal/，但 --domain 为 `%s`；请改为 `--domain notes`。\n' "$TARGET_PATH" "${DOMAIN:-<未指定>}"
+  printf "ERROR 目标路径 %s 位于 notes/personal/，但 --domain 为 %s；请改为 --domain notes。\n" "$TARGET_PATH" "${DOMAIN:-<未指定>}" >&2
+  exit 2
 fi
 JSON_ID="$(json_escape "$DISPLAY_ID")"
 JSON_KIND="$(json_escape "$DISPLAY_KIND")"

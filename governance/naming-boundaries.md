@@ -49,12 +49,12 @@
 
 这些字段用于增强可读性和复核，不替代 registry required fields。
 
-## 兼容规则
+## 历史字段读取边界
 
-- 现有 PCR02 文档中的 `doc_type`、`knowledge_type`、`maturity` 可以作为兼容字段保留。
-- `summary` 等旧字段只作为历史兼容；新条目优先使用 `summary_zh`、`title_zh` 和中文摘要正文。
+- 现有 PCR02 历史文档中的 `doc_type`、`knowledge_type`、`maturity` 只允许作为迁移审计、历史读取或负向回归输入识别。
+- `summary` 等旧字段只允许作为历史材料读取辅助；新条目必须使用 `summary_zh`、`title_zh` 和中文摘要正文。
 - 新模板优先使用 `kind`、`status`、`scope`、`visibility`。
-- 兼容字段不得与 registry 字段冲突；冲突时以 registry 为准。
+- 新模板、registry 新条目、工具默认输出和新消费方不得继续生成或依赖旧字段。历史字段不得与 registry 字段冲突；冲突时以 registry 为准。
 
 ## Review
 

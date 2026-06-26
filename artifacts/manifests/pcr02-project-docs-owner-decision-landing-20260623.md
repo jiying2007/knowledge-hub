@@ -12,11 +12,11 @@
 | --- | --- | --- | --- | --- |
 | `pcr02-owner-decision-worksheet-001` | `AGENTS.md` | `reference-only` | `reference-only` | 仅作为 PCR02 项目本地规则参考，不覆盖 Knowledge Hub 根规则。 |
 | `pcr02-owner-decision-worksheet-002` | `standards/diag-command-metadata-standard.md` | `reference-only` | `reference-only` | 缺运行态 gate evidence，不提升为团队级标准或 project current。 |
-| `pcr02-owner-decision-worksheet-003` | `runbooks/asan-debug-guide.md` | `split-approved` | `domains/projects/pcr02/current/runbooks/asan-debug-guide.md` | PCR02-specific 内容留项目内；团队层 ASAN 仅 candidate-only，另审。 |
+| `pcr02-owner-decision-worksheet-003` | `runbooks/asan-debug-guide.md` | `split-approved` | `projects/pcr02/current/runbooks/asan-debug-guide.md` | PCR02-specific 内容留项目内；团队层 ASAN 仅 candidate-only，另审。 |
 | `pcr02-owner-decision-worksheet-004` | `runbooks/memory-auto-curation-guide.md` | `teamized-report-only` | `report-only-governance-candidate` | `enabled=false`、`writes_memory=false`、`writes_team_active_index=false`。 |
-| `pcr02-owner-decision-worksheet-005` | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `archive-only` | `domains/projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | 缺完成证据，不声明 completed。 |
-| `pcr02-owner-decision-worksheet-006` | `reports/2026-05-29-motor-mcu-debug-record.md` | `archive-only` | `domains/projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md` | 事实、反馈、推断、建议和 open items 未拆分前不进入 validation/current。 |
-| `pcr02-owner-decision-worksheet-007` | `reports/2026-06-16-dvr-record-replay-session-archive.md` | `archive-only` | `domains/projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md` | session handoff、dirty-state、memory candidates 不进入 active facts。 |
+| `pcr02-owner-decision-worksheet-005` | `plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | `archive-only` | `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md` | 缺完成证据，不声明 completed。 |
+| `pcr02-owner-decision-worksheet-006` | `reports/2026-05-29-motor-mcu-debug-record.md` | `archive-only` | `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md` | 事实、反馈、推断、建议和 open items 未拆分前不进入 validation/current。 |
+| `pcr02-owner-decision-worksheet-007` | `reports/2026-06-16-dvr-record-replay-session-archive.md` | `archive-only` | `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md` | session handoff、dirty-state、memory candidates 不进入 active facts。 |
 
 ## 证据
 

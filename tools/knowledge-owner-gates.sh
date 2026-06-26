@@ -1061,6 +1061,11 @@ def is_filled(value):
 def owner_decision_target_mismatch(owner_decision, target_decision):
     owner_decision = str(owner_decision or "")
     target_decision = str(target_decision or "")
+    if target_decision.startswith("domains/projects/") or target_decision.startswith("domains/personal/"):
+        return {
+            "expected": "projects/<project>/...、notes/personal/... 或终止类字面目标",
+            "reason_zh": "硬切换后 owner target 不再兼容 domains/projects 或 domains/personal 旧入口。",
+        }
     if owner_decision == "archive-only":
         if target_decision == "archive-only" or "/archive/" in target_decision:
             return None
@@ -1216,7 +1221,7 @@ def validate_forms_file(path, rows):
                     actual={"owner_decision": owner_decision, "target_decision": target_decision},
                     expected=mismatch["expected"],
                     line_no=index,
-                    action_zh="请保持 owner_decision 与 target_decision 成对兼容；不要把 reference-only/no-migration 与项目落地路径混用。",
+                    action_zh="请保持 owner_decision 与 target_decision 成对一致；不要使用旧 domains/projects/domains/personal 入口，也不要把 reference-only/no-migration 与项目落地路径混用。",
                 )
         for field in row["required_owner_fields"]:
             if not is_filled(form.get(field)):

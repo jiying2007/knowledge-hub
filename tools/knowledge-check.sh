@@ -831,8 +831,16 @@ for row in load_jsonl(owner_target_landing_path):
     skip_decisions = {"reference-only", "no-migration", "report-only-governance-candidate"}
     if owner_decision in {"reference-only", "teamized-report-only"} or target_decision in skip_decisions:
         owner_target_health["skipped_count"] += 1
-    elif target_decision.startswith("domains/projects/"):
-        target_path = "projects/" + target_decision[len("domains/projects/"):]
+    elif target_decision.startswith("domains/projects/") or target_decision.startswith("domains/personal/"):
+        target_status = "legacy-target-rejected"
+        missing = {
+            "worksheet_id": worksheet_id,
+            "target_decision": target_decision,
+            "mapped_target_path": "",
+            "reason": "legacy domains/projects or domains/personal target is not accepted after hard cutover",
+        }
+        owner_target_health["missing_targets"].append(missing)
+        errors.append(f"owner-target:{worksheet_id} legacy target path rejected after hard cutover: {target_decision}")
     elif target_decision.startswith("projects/"):
         target_path = target_decision
     if target_path:

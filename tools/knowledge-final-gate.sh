@@ -1046,8 +1046,7 @@ if args.final_profile != "standard":
     strict_status_command.extend(["--final-profile", args.final_profile])
 strict_status = run_json(strict_status_command)
 proof_artifacts = build_final_proof_artifacts_summary(today.isoformat())
-proof_artifacts_20260622 = proof_artifacts
-source_check_snapshot_20260621 = build_source_check_snapshot_summary()
+source_check_execution_snapshot = build_source_check_snapshot_summary()
 source_check_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
 source_check_runtime_summary = build_source_check_runtime_summary(source_check_runtime)
 index_plan_linking = run_json(["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "linking", "--json"])
@@ -1523,7 +1522,7 @@ final_state_audit = {
             "owner_gate_mutation": bool(check_boundary_health.get("owner_gate_mutation", True)),
             "memory_write": bool(check_boundary_health.get("memory_write", True)),
         },
-        "source_check_execution_snapshot": source_check_snapshot_20260621,
+        "source_check_execution_snapshot": source_check_execution_snapshot,
         "source_check_runtime": source_check_runtime_summary,
         "evidence_refs": [
             "registry/sources.json",
@@ -1694,13 +1693,13 @@ evidence_index.append(
     command_evidence_row(
         f"artifact:{SOURCE_CHECK_SNAPSHOT_ID}",
         0,
-        source_check_snapshot_20260621["status"],
+        source_check_execution_snapshot["status"],
         (
             "PCR02 Level 2 source check 快照可恢复；7 条历史 report-only 结果全部 pass；当前执行证据另见 source_check_runtime。"
-            if source_check_snapshot_20260621["status"] == "pass"
-            else "PCR02 Level 2 source check 快照登记、配对、索引或结果存在缺口；请查看 source_check_execution_snapshot_20260621。"
+            if source_check_execution_snapshot["status"] == "pass"
+            else "PCR02 Level 2 source check 快照登记、配对、索引或结果存在缺口；请查看 source_check_execution_snapshot。"
         ),
-        source_check_snapshot_20260621["jsonl_path"] or source_check_snapshot_20260621["md_path"],
+        source_check_execution_snapshot["jsonl_path"] or source_check_execution_snapshot["md_path"],
         "source-check-snapshot",
         SOURCE_CHECK_SNAPSHOT_ID,
         "",
@@ -1913,8 +1912,7 @@ result = {
     },
     "review_queue_recovery": review_queue_recovery,
     "proof_artifacts": proof_artifacts,
-    "proof_artifacts_20260622": proof_artifacts_20260622,
-    "source_check_execution_snapshot_20260621": source_check_snapshot_20260621,
+    "source_check_execution_snapshot": source_check_execution_snapshot,
     "source_check_runtime": source_check_runtime_summary,
     "maintenance_entry_audit": maintenance_entry_audit,
     "linking_audit": linking_audit,
@@ -2015,7 +2013,7 @@ print(f"- level3_registered_sources: {final_state_audit['level3_registered_sourc
 print(f"- maintenance_entry_audit: {maintenance_entry_audit['status']} {maintenance_entry_audit['passed_entry_count']}/{maintenance_entry_audit['expected_entry_count']}")
 print(f"- linking_audit: {linking_audit.get('status', 'fail')}")
 print(f"- proof_artifacts: {proof_artifacts['status']} registered={proof_artifacts['registered_count']}/{proof_artifacts['expected_count']} paired={proof_artifacts['paired_count']}/{proof_artifacts['expected_count']} indexed={proof_artifacts['indexed_count']}/{proof_artifacts['expected_count']}")
-print(f"- source_check_execution_snapshot_20260621: {source_check_snapshot_20260621['status']} rows={source_check_snapshot_20260621['row_count']}/{source_check_snapshot_20260621['expected_count']} runtime_execution={str(source_check_snapshot_20260621['runtime_execution']).lower()}")
+print(f"- source_check_execution_snapshot: {source_check_execution_snapshot['status']} rows={source_check_execution_snapshot['row_count']}/{source_check_execution_snapshot['expected_count']} runtime_execution={str(source_check_execution_snapshot['runtime_execution']).lower()}")
 print(f"- source_check_runtime: {source_check_runtime_summary['status']} rows={source_check_runtime_summary['passed_count']}/{source_check_runtime_summary['row_count']} report_only={str(source_check_runtime_summary['report_only']).lower()}")
 print(f"- source_control_health: {check_source_control_health.get('status', 'fail')} files={check_source_control_health.get('present_file_count', 0)}/{check_source_control_health.get('required_file_count', 0)} inventory_rows={check_source_control_health.get('inventory_row_count', 0)}")
 print(f"- owner_target_health: {check_owner_target_health.get('status', 'fail')} targets={check_owner_target_health.get('present_count', 0)}/{check_owner_target_health.get('checked_count', 0)}")

@@ -234,26 +234,39 @@ def embedded_knowledge_terminal_target(source_path):
 
 
 def terminal_target(row):
+    target_path = row.get("target_path", "")
+    if "source-docs" in str(target_path):
+        if row.get("_canonical_manifest_row") is True:
+            pass
+        else:
+            status = str(row.get("status", ""))
+            final_disposition = str(row.get("final_disposition", ""))
+            hub_disposition = str(row.get("hub_disposition", ""))
+            if not (
+                status in {"body-pruned-by-policy", "dropped-by-policy", "retired-origin-missing"}
+                or final_disposition in {"hard-migrated-to-hub", "retired"}
+                or hub_disposition in {"hash-only-provenance", "tombstone-only"}
+            ):
+                raise ValueError(
+                    f"legacy source-docs target is rejected after hard cutover: {target_path}"
+                )
     if row.get("source_id") == "embedded-knowledge":
         remapped = embedded_knowledge_terminal_target(row.get("source_path", ""))
         if remapped:
             return remapped
     if row.get("source_id") == "engineering-archive":
-        target_path = row.get("target_path", "")
         old_prefix = "projects/pcr02/archive/source-docs/engineering-archive"
         if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
             return target_path.replace(old_prefix, "projects/pcr02/archive/engineering-archive", 1)
     if row.get("source_id") == "codex-archive":
-        target_path = row.get("target_path", "")
         old_prefix = "domains/codex/archive/source-docs/codex-archive"
         if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
             return target_path.replace(old_prefix, "domains/codex/archive/codex-archive", 1)
     if row.get("source_id") == "codex-archive-registry":
-        target_path = row.get("target_path", "")
         old_prefix = "domains/codex/archive/source-docs/codex-archive-registry"
         if target_path == old_prefix or target_path.startswith(old_prefix + "/"):
             return target_path.replace(old_prefix, "domains/codex/archive/codex-archive-registry", 1)
-    return row.get("target_path", "")
+    return target_path
 
 
 def load_body_prune_rows():
@@ -388,6 +401,7 @@ def previous_manifest_rows(source, source_id):
             continue
         row = json.loads(line)
         if row.get("source_id") == source_id:
+            row["_canonical_manifest_row"] = True
             rows.append(row)
     return rows
 
