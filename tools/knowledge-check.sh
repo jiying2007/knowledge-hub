@@ -580,7 +580,7 @@ def build_diagnostics(error_items, warning_items):
         "warnings": {
             "count": len(warning_items),
             "examples": warning_examples,
-            "action_zh": "warning 不阻断检查，但应按 review_after、兼容参数或外部 source 可用性安排人工复核。",
+            "action_zh": "warning 不阻断检查，但应按 review_after、参数边界或外部 source 可用性安排人工复核。",
         },
     }
 

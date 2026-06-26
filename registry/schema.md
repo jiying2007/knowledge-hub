@@ -98,7 +98,7 @@ Source control directory invariants:
 - `session`、`history`、`source-code`、`binary`、`log` 不能使用 `copy-body`，只能使用摘要、引用、artifact-ref、archive-only、hash-only-provenance 或 exclude。
 - 正文最大迁移 profile 下，`copy-body` 只允许用于 `object_type=markdown` 且 `target_path` 指向 Hub 正文目录 `projects/`、`domains/` 或 `notes/` 下的现存路径；其他正文迁移动作必须改为 summary-only、artifact-ref、reference-only、archive-only 或 exclude。
 - 正文最大迁移 profile 下，`status=pending` 的 inventory row 是 blocker；`covered`、`blocked`、`excluded` 才能表达已分类终态，其中 `blocked` 必须写清 `reason_zh` 和 `risk_zh`。
-- owner decision landing 产生本地 target 时，`knowledge-check` 会把历史 `domains/projects/<project>/...` 目标映射到硬切换后的 `projects/<project>/...` 并要求目标存在。
+- owner decision landing 产生本地 target 时，`knowledge-check` 按硬切换后的 canonical path 校验目标存在；`domains/projects/<project>/...` 与 `domains/personal/...` 不再自动映射，当前 owner decision 不得继续使用旧入口。
 
 Validation reference invariants:
 
