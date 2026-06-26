@@ -46,6 +46,8 @@
 - reviewing: `knowledge-hub-external-source-absorption-rules`
 - reviewing: `knowledge-hub-naming-boundaries`
 - reviewing: `knowledge-hub-ai-content-labeling-rules`
+- reviewing: `knowledge-hub-path-routing-rules`
+- reviewing: `knowledge-hub-path-audit-tool`
 - reviewing: `knowledge-hub-zh-template-set-20260618`
 - reviewing: `knowledge-hub-registry-schema-readability-extension`
 - reviewing: `chinese-developer-long-term-assets-20260618`

@@ -24,6 +24,8 @@
 - `knowledge-hub-external-source-absorption-rules`
 - `knowledge-hub-naming-boundaries`
 - `knowledge-hub-ai-content-labeling-rules`
+- `knowledge-hub-path-routing-rules`
+- `knowledge-hub-path-audit-tool`
 - `knowledge-hub-zh-template-set-20260618`
 - `knowledge-hub-registry-schema-readability-extension`
 - `chinese-developer-long-term-assets-20260618`

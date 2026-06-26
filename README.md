@@ -18,6 +18,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<关键词>" --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
+路径类问题优先看：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope hub --json
+```
+
+人读规则见 `governance/path-routing.md`。新增归档、会话总结和排障记录只写 Hub canonical 路径；旧 `~/embedded/engineering_archive`、`~/codex/docs/archive` 和源项目旧 `docs/` / `knowledge/` / `tools/` 只作历史 provenance。
+
 状态和收口再使用：
 
 ```bash
@@ -71,6 +79,7 @@ domains/personal/**
 - Codex archive 当前 canonical 目录是 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
 - PCR02 工程归档当前 canonical 目录是 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
 - `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不复制 raw 正文，不直接等于 active fact。
+- 全局路径回答和跨仓协同以 `governance/path-routing.md` 为准；发现旧路径召回时先运行 `knowledge-path-audit.sh`，再按 Hub / Codex runtime / memories / historical session 分类处理。
 
 ## 权威边界
 

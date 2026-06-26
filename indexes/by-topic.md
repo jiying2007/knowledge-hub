@@ -16,6 +16,7 @@
 - DVR: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`; `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - motor MCU: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
 - governance: `governance/`; `artifacts/manifests`
+- path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`

@@ -66,3 +66,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
+
+## 跨仓路径路由
+
+“归档路径在哪里”这类问题不再由当前工作区或历史 memory 单独决定。统一先读 `governance/path-routing.md`：
+
+- PCR02 工程归档新增落点：`projects/pcr02/archive/engineering-archive/pcr02/`。
+- Codex archive 新增落点：`domains/codex/archive/codex-archive/`。
+- 旧 `~/embedded/engineering_archive`、`~/codex/docs/archive`、源项目旧 `docs/` / `knowledge/` / `tools/` 只能作为 provenance 或历史证据。
+- memory 和历史 session 中的旧路径命中先用 `tools/knowledge-path-audit.sh` 归类，不直接改写。
