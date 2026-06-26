@@ -24,8 +24,8 @@ Knowledge Hub source metadata and registry provenance are the recovery authority
 - Use this reference when linking PCR02 validation reports to the CI smoke session artifact.
 - Do not treat the referenced script as a team-wide diagnostic standard.
 
-## Open Review
+## Review Boundary
 
-- Confirm the `source://pcr02-project-docs/...` URI format with the PCR02 registry owner.
-- Confirm whether a stable artifact store should replace the local source path.
-- Confirm whether the session script belongs to a validation package, CI fixture, or project-local example set.
+- Keep the `source://pcr02-project-docs/...` URI only as logical provenance for the registered hash and size.
+- Do not read the retired source project path by default and do not treat this artifact reference as executable guidance.
+- Future replacement with a stable artifact store must preserve the SHA256, size and Hub registry provenance before updating this reference.

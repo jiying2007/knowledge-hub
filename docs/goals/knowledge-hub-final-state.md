@@ -5,11 +5,12 @@
 > 本文件保留为历史目标背景，不再作为新增归档、回源扫描或旧目录入口。
 > 旧外部路径只在 `registry/sources.json` 的 `origin_path`、`registry/source-tombstones.jsonl`
 > 和迁移 manifest 中作 provenance。
-> 截至 2026-06-25，PCR02 owner gate 已由
+> 历史记录：截至 2026-06-25，PCR02 owner gate 已由
 > `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
-> 作为 landing 证据收口；当前状态以
+> 作为 landing 证据收口，并曾由
 > `rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-25`
-> 的 `final_status=ok` 为准。本文件内早期 `needs-owner-review` 语句只保留为历史目标和失败恢复背景。
+> 验证 `final_status=ok`。当前状态必须以本次运行的 terminal gate 输出为准。
+> 本文件内早期 `needs-owner-review` 语句只保留为历史目标和失败恢复背景。
 
 本次目标是把 Knowledge Hub 建成长期可维护、跨会话可恢复、跨项目可自动关联、人工可独立维护、AI 可辅助治理、自动化受控的统一知识控制面，并完成所有已登记 source 与 PCR02 关键候选 source 的 source coverage、迁移治理和终态闭环。
 
@@ -67,12 +68,12 @@ Knowledge Hub 只维护 canonical 项目正文、reference、artifact-ref、regi
 
 5. PCR02 project-specific 内容默认只能进入：
 
-以下路径清单是 2026-06 中旬历史治理口径；当前硬切换 canonical 入口已经改为 `projects/pcr02/...`。本段只保留为历史目标背景，不得作为新增内容入口。
+当前硬切换 canonical 入口为 `projects/pcr02/...`。旧 `domains/projects/pcr02/...` 只允许出现在历史 manifest、tombstone 或迁移记录中，不得作为新增内容入口。
 
-- domains/projects/pcr02/current/
-- domains/projects/pcr02/archive/
-- domains/projects/pcr02/decisions/
-- domains/projects/pcr02/validation/
+- projects/pcr02/current/
+- projects/pcr02/archive/
+- projects/pcr02/decisions/
+- projects/pcr02/validation/
 - artifacts/manifests/
 - registry/
 - indexes/
@@ -335,7 +336,7 @@ registry/sources.json 中所有 registered source 必须有 source coverage 状�
 同时核对 PCR02 candidate source 的 Hub source control 与 provenance：
 
 ```bash
-rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of 2026-06-25
+rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json
 rtk bash tools/knowledge-index-plan.sh --section source --json
 rtk bash tools/knowledge-index-plan.sh --section linking --json
 ```
@@ -719,13 +720,13 @@ AI 是辅助维护者，不是唯一维护入口。
 
 人工允许直接创建或修改以下内容：
 
-- domains/projects/<project>/current/
-- domains/projects/<project>/archive/
-- domains/projects/<project>/decisions/
-- domains/projects/<project>/validation/
+- projects/<project>/current/
+- projects/<project>/archive/
+- projects/<project>/decisions/
+- projects/<project>/validation/
 - domains/embedded/ 下已明确属于 team-level 的 runbook / decision / standard
 - domains/patents/
-- domains/personal/
+- notes/personal/
 - artifacts/manifests/
 - registry/items.jsonl
 - registry/migrations.jsonl
@@ -1160,7 +1161,9 @@ rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash tools/knowledge-final-gate.sh --json
 ```
 
-历史 owner-gated 阶段失败恢复说明：如果 final gate 返回 1，但 status 是 needs-owner-review 且唯一 blocker 是 owner-gates-open，可以作为当时的 Codex 自动治理终态；必须在最终说明中明确这是人工语义 blocker，不是工具失败。当前终态以 2026-06-25 `final_status=ok` 验收为准。
+历史 owner-gated 阶段失败恢复说明：如果 final gate 返回 1，但 status 是 needs-owner-review 且唯一 blocker 是 owner-gates-open，可以作为当时的 Codex 自动治理终态；必须在最终说明中明确这是人工语义 blocker，不是工具失败。历史记录中，2026-06-25 曾验收 `final_status=ok`。
+
+当前终态必须重新运行 gate 后确认。
 
 ====================
 十三、最终输出要求
@@ -1224,7 +1227,8 @@ rtk bash tools/knowledge-final-gate.sh --json
 - prog-tool-ci-smoke.session 已登记为 artifact-ref，不复制脚本正文。
 - 7 个 review-required 项已生成 owner-review package，并已通过 `pcr02-project-docs-owner-decision-landing-20260623.md` 收口为 reference-only、archive-only 或 split-approved 等终态决策。
 - 已有 owner-ready package / intake execution / landing / final gate / regression helper 等治理资产。
-- 当前 final gate 应以 2026-06-25 验证为准：`final_status=ok`，不再把 7 个旧 owner gate 当作当前 blocker。
+- 历史记录中，2026-06-25 final gate 曾验证 `final_status=ok`，不再把 7 个旧 owner gate 当作 blocker。
+- 当前状态必须重新运行 gate 后确认。
 
 7 个 PCR02 docs 历史 owner-gated 项：
 

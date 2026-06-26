@@ -143,7 +143,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 如果离线或工具不可用，不能把终态写成 `ok` / `pass`。在相邻维护记录中写 `manual_validation_pending: true`，并记录 owner、日期、当前 `cwd`、阻塞原因和 `required_followup: rtk git diff --check; rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`；恢复后先补跑命令再更新证据。
 
-失败恢复决策树以根 README 为准，本文件只补工具字段和边界。当前 terminal gate 以 `final_status` 为准；2026-06-25 的终态基准是 `ok`，`needs-owner-review` 只作为历史复现分支或未来新 owner blocker 分支处理。简要顺序：
+失败恢复决策树以根 README 为准，本文件只补工具字段和边界。当前 terminal gate 以本次 `knowledge-final-gate.sh --json` 输出的 `final_status` 为准。
+
+历史记录中，2026-06-25 曾验证终态为 `ok`。`needs-owner-review` 只作为历史复现分支或未来新 owner blocker 分支处理。简要顺序：
 
 1. `needs-fix`: 先看 `evidence_index[]`，定位哪条命令不是 `pass` 或 `owner-review`；再看对应 `blockers[]` / `gap_map[]` 的 `fix_action`。
 2. `needs-owner-review`: 只在 `gap_map[]` 唯一项为 `owner-gates-open` 时进入 owner 人工签收路径；从 `owner_recovery.owner_dispatch[]` 选择 owner，先运行 `owner_inbox_json_command`，再按 handoff packet 运行 summary、evidence-readiness、forms-jsonl、validate、landing-plan、landing-audit。

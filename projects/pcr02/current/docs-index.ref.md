@@ -11,7 +11,7 @@
 - Source size: `3010`
 - Source SHA256: `bb1b3ce7a1187d9c0c90ca53ae9a0aa9f0ca31ff5d1b2247369b0284a0243a60`
 - Source owner: `team-core`
-- Source status: `active`
+- Source status: `retired-origin-provenance`
 - Knowledge Hub status: `reviewing`
 - Review after: `2026-09-17`
 
@@ -29,7 +29,7 @@ Use this entry to find the Hub-controlled PCR02 project docs source and to conne
 - Do not promote project-specific docs index rules into `domains/embedded/`.
 - Do not treat historical plans or reports listed by the source README as current execution tasks without fresh verification.
 
-## Open Review
+## Review Boundary
 
-- Confirm `team-core` remains the owner for the project docs index.
-- Confirm whether any migrated source README links should later become individual registry references.
+- `team-core` is retained as the Hub maintenance owner for this project docs index reference.
+- Do not reopen the retired source project README as an active authority. Future link expansion must start from Hub source control, tombstone/hash provenance and canonical `projects/pcr02/` targets.
