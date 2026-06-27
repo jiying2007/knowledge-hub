@@ -45,3 +45,4 @@
 | `20260526-162113-memory-curation.md` | `20260526-162113-memory-curation.md` |
 | `20260531-180713-memory-curation.md` | `20260531-180713-memory-curation.md` |
 | `20260602-132130-codex-adk-hardcut-memory-curation.md` | `20260602-132130-codex-adk-hardcut-memory-curation.md` |
+| `20260627-230744-knowledge-hub-final-hardcut-memory-curation.md` | `20260627-230744-knowledge-hub-final-hardcut-memory-curation.md` |
