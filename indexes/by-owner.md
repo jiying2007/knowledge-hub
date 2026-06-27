@@ -210,6 +210,9 @@
 - `pcr02-project-docs-owner-decision-landing-20260623`
 - `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
 - `knowledge-hub-source-control-unification-20260624`
+- `knowledge-hub-project-routes-20260626`
+- `knowledge-hub-context-tool-20260626`
+- `knowledge-hub-git-remote-route-registry-20260626`
 
 ## pcr02-registry-owner
 
@@ -217,6 +220,7 @@
 
 ## team-core
 
+- `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`
 - `migrated-pcr02-docs-copyfirst-001`
 - `migrated-pcr02-docs-copyfirst-002`
 - `migrated-pcr02-docs-copyfirst-003`

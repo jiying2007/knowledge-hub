@@ -243,3 +243,7 @@
 - 2026-09-17: `pcr02-motor-mcu-debug-record-archive-only-20260624`
 - 2026-09-17: `pcr02-dvr-session-archive-only-20260624`
 - 2026-09-24: `knowledge-hub-source-control-unification-20260624`
+- 2026-09-26: `knowledge-hub-project-routes-20260626`
+- 2026-09-26: `knowledge-hub-context-tool-20260626`
+- 2026-09-26: `knowledge-hub-git-remote-route-registry-20260626`
+- 2026-09-26: `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`

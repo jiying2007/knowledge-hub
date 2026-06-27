@@ -423,3 +423,7 @@
 - owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
 - reviewing: `knowledge-hub-source-control-unification-20260624`
 - source-control-unification-applied: 18 个 registered source 已有 sources/<source_id>/ 主控目录，4 个 PCR02 owner target 已落地，并新增 source-control/owner-target/raw-dump 门禁；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`.
+- reviewing: `knowledge-hub-project-routes-20260626`
+- reviewing: `knowledge-hub-context-tool-20260626`
+- reviewing: `knowledge-hub-git-remote-route-registry-20260626`
+- reviewing: `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`

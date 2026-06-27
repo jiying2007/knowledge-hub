@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "pcr02",
+      "name": "PCR02 Product Group",
+      "type": "product-group",
+      "entry": "projects/pcr02/README.md",
+      "member_project_ids": [
+        "pcr02",
+        "pcr02-ssc305",
+        "xcrz-sigmastar-demo",
+        "pcr02-api",
+        "pcr02-app",
+        "pcr02-hdi",
+        "pcr02-sensor",
+        "pcr02-daemon",
+        "pcr02-cli",
+        "pcr02-cmd-server",
+        "pcr02-proto-c",
+        "pcr02-wifi",
+        "pcr02-mp4",
+        "app-ota",
+        "app-product-test",
+        "app-tool",
+        "app-main"
+      ],
+      "status": "registered"
+    },
+    {
+      "id": "mcu",
+      "name": "MCU Firmware Group",
+      "type": "product-group",
+      "entry": "projects/mcu/README.md",
+      "member_project_ids": [
+        "mcu",
+        "gd32l235",
+        "hc32f072",
+        "mm32spin023c",
+        "firmware-release-tools",
+        "firmware-toolchains",
+        "mm32spin-validator"
+      ],
+      "status": "registered"
+    },
+    {
+      "id": "codex",
+      "name": "Codex Runtime Group",
+      "type": "runtime-group",
+      "entry": "domains/codex/README.md",
+      "member_project_ids": [
+        "codex"
+      ],
+      "status": "registered"
+    },
+    {
+      "id": "agent-tools",
+      "name": "Agent Tooling Group",
+      "type": "tooling-group",
+      "entry": "projects/llm-agent/README.md",
+      "member_project_ids": [
+        "llm-agent",
+        "agent-dev-kit",
+        "llm-tools"
+      ],
+      "status": "registered"
+    },
+    {
+      "id": "embedded-tools",
+      "name": "Embedded Tooling Group",
+      "type": "tooling-group",
+      "entry": "projects/llm-tools/README.md",
+      "member_project_ids": [
+        "llm-tools",
+        "firmware-release-tools",
+        "firmware-toolchains",
+        "sigmastar-flasher",
+        "mm32spin-validator",
+        "ota-packager"
+      ],
+      "status": "registered"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "note": "本文件只描述逻辑 workspace 适配格式，不记录本机真实源码路径。真实机器路径应保存在未纳入 Git 的 local/workspaces.json。",
+  "workspaces": [
+    {
+      "workspace_ref": "workspace://pcr02-ssc305",
+      "env": "PCR02_SSC305_HOME",
+      "path_example": "$PCR02_SSC305_HOME",
+      "repo_id": "pcr02-ssc305"
+    },
+    {
+      "workspace_ref": "workspace://xcrz-sigmastar-demo",
+      "env": "XCRZ_SIGMASTAR_DEMO_HOME",
+      "path_example": "$XCRZ_SIGMASTAR_DEMO_HOME",
+      "repo_id": "xcrz-sigmastar-demo"
+    },
+    {
+      "workspace_ref": "workspace://mcu-root",
+      "env": "MCU_WORKSPACE_HOME",
+      "path_example": "$MCU_WORKSPACE_HOME",
+      "project_group_id": "mcu"
+    },
+    {
+      "workspace_ref": "workspace://llm-agent",
+      "env": "LLM_AGENT_HOME",
+      "path_example": "$LLM_AGENT_HOME",
+      "repo_id": "llm-agent"
+    }
+  ]
+}

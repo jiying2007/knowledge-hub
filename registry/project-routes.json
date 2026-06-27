@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "routes": [
+    {
+      "project_id": "pcr02",
+      "name": "PCR02",
+      "type": "project-group",
+      "group_id": "pcr02",
+      "aliases": [
+        "PCR02",
+        "pcr02",
+        "SigmaStar",
+        "SSC305",
+        "xcrz_sigmastar_demo",
+        "pcr02_ssc305_compile",
+        "pcr02_ssc305_release"
+      ],
+      "repo_refs": [
+        "pcr02-ssc305",
+        "xcrz-sigmastar-demo",
+        "pcr02-api",
+        "pcr02-app",
+        "pcr02-hdi",
+        "pcr02-sensor",
+        "pcr02-daemon",
+        "pcr02-cli",
+        "pcr02-cmd-server",
+        "pcr02-proto-c",
+        "pcr02-wifi",
+        "pcr02-mp4",
+        "app-ota",
+        "app-product-test",
+        "app-tool",
+        "app-main"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-ssc305",
+        "workspace://xcrz-sigmastar-demo"
+      ],
+      "hub_entry": "projects/pcr02/README.md",
+      "current_path": "projects/pcr02/current",
+      "archive_path": "projects/pcr02/archive",
+      "decisions_path": "projects/pcr02/decisions",
+      "validation_path": "projects/pcr02/validation",
+      "default_source_ids": [
+        "engineering-archive",
+        "pcr02-project-docs",
+        "pcr02-project-tools",
+        "pcr02-project-knowledge",
+        "pcr02-project-agent-config",
+        "pcr02-module-agent-rules",
+        "pcr02-project-root-artifacts"
+      ],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "knowledge_preflight": "required-for-project-facts-archive-debug-release-validation-decision-source",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "mcu",
+      "name": "MCU Firmware",
+      "type": "project-group",
+      "group_id": "mcu",
+      "aliases": [
+        "MCU",
+        "mcu",
+        "GD32",
+        "HC32",
+        "MM32",
+        "gd32l235",
+        "hc32f072",
+        "mm32spin023c"
+      ],
+      "repo_refs": [
+        "gd32l235",
+        "hc32f072",
+        "mm32spin023c",
+        "firmware-release-tools",
+        "firmware-toolchains",
+        "mm32spin-validator"
+      ],
+      "workspace_refs": [
+        "workspace://mcu-root"
+      ],
+      "hub_entry": "projects/mcu/README.md",
+      "current_path": "projects/mcu/current",
+      "archive_path": "projects/mcu/archive",
+      "decisions_path": "projects/mcu/decisions",
+      "validation_path": "projects/mcu/validation",
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root"
+      ],
+      "knowledge_preflight": "required-for-mcu-release-validation-debug-source",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "codex",
+      "name": "Codex local runtime",
+      "type": "runtime-domain",
+      "group_id": "codex",
+      "aliases": [
+        "codex",
+        "Codex",
+        "adk",
+        "skill",
+        "workflow"
+      ],
+      "repo_refs": [
+        "codex"
+      ],
+      "workspace_refs": [
+        "~/codex",
+        "~/.codex"
+      ],
+      "hub_entry": "domains/codex/README.md",
+      "current_path": "domains/codex",
+      "archive_path": "domains/codex/archive/codex-archive",
+      "decisions_path": "domains/codex",
+      "validation_path": "domains/codex",
+      "default_source_ids": [
+        "codex-archive",
+        "codex-archive-registry",
+        "codex-history",
+        "codex-raw-sessions",
+        "codex-session-index",
+        "codex-memories"
+      ],
+      "retired_route_ids": [
+        "retired-codex-archive-root"
+      ],
+      "knowledge_preflight": "required-for-codex-archive-session-workflow-memory-skill-governance",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "llm-agent",
+      "name": "Agent tooling",
+      "type": "project-group",
+      "group_id": "agent-tools",
+      "aliases": [
+        "llm_agent",
+        "llm-agent",
+        "agent-dev-kit",
+        "adk",
+        "llm_tools",
+        "llm-tools"
+      ],
+      "repo_refs": [
+        "llm-agent",
+        "agent-dev-kit",
+        "llm-tools"
+      ],
+      "workspace_refs": [
+        "workspace://llm-agent",
+        "workspace://agent-dev-kit",
+        "workspace://llm-tools"
+      ],
+      "hub_entry": "projects/llm-agent/README.md",
+      "current_path": "projects/llm-agent/current",
+      "archive_path": "projects/llm-agent/archive",
+      "decisions_path": "projects/llm-agent/decisions",
+      "validation_path": "projects/llm-agent/validation",
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "knowledge_preflight": "required-for-agent-tooling-workflow-skill-governance",
+      "route_key_policy": "git-remote-first"
+    }
+  ]
+}

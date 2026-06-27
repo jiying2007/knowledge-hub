@@ -322,6 +322,26 @@ OWNER_DECISION_DRAFT_FIELDS = {
     "evidence_refs",
     "status_reason",
 }
+ALLOWED_PROJECT_REGISTRY_STATUSES = {"registered", "deprecated", "retired"}
+ALLOWED_REPOSITORY_LIFECYCLES = {"first-party", "external-reference", "workspace-only", "retired"}
+ALLOWED_COMPONENT_STATUSES = {"registered", "workspace-only", "external-reference", "retired"}
+ALLOWED_REMOTE_KINDS = {"internal-git", "github", "gitee", "external-git", "local-only"}
+ALLOWED_LOGICAL_WORKSPACE_PREFIXES = ("workspace://", "~/knowledge-hub", "~/codex", "~/.codex")
+FORBIDDEN_REGISTRY_PATH_TOKENS = ("/home/", "/vsdata/", "~/work/", "~/embedded", "~/bin/", "/work/", "/bin/")
+
+def contains_forbidden_registry_path(value):
+    text = str(value or "")
+    return any(token in text for token in FORBIDDEN_REGISTRY_PATH_TOKENS)
+
+def is_allowed_workspace_ref(value):
+    text = str(value or "")
+    return text.startswith(ALLOWED_LOGICAL_WORKSPACE_PREFIXES)
+
+def registry_relpath_ok(value):
+    text = str(value or "")
+    if not text:
+        return False
+    return not pathlib.Path(text).is_absolute() and not text.startswith(("./", "../", "~"))
 
 def load_json(path):
     try:
@@ -444,7 +464,7 @@ def build_diagnostics(error_items, warning_items):
             "owner-project-topic-registry",
             "owner/project/topic registry 异常",
             "检查 registry/owners.json、registry/projects.json 或 registry/topics.json 的登记项和枚举。",
-            lambda msg: msg.startswith(("owners:", "projects:", "topics:")),
+            lambda msg: msg.startswith(("owners:", "projects:", "project-groups:", "repositories:", "components:", "project-routes:", "workspaces:", "topics:")),
         ),
         (
             "owner-routing",
@@ -1053,6 +1073,24 @@ boundary_health = {
         "boundary health checks Knowledge Hub manifest/registry/index evidence only and does not read PCR02 source bodies",
     ],
 }
+route_registry_health = {
+    "schema_version": 1,
+    "status": "not-run",
+    "mode": "git-remote-first-route-registry",
+    "project_count": 0,
+    "group_count": 0,
+    "repository_count": 0,
+    "component_count": 0,
+    "route_count": 0,
+    "workspace_example_count": 0,
+    "forbidden_path_hits": [],
+    "missing_entry_paths": [],
+    "invalid_reference_count": 0,
+    "report_only_findings": [
+        "workspace:// refs are logical adapters; local machine paths belong in untracked local/workspaces.json",
+        "~/knowledge-hub, ~/codex and ~/.codex are the only allowed long-term local path conventions",
+    ],
+}
 
 if not args.sources_only:
     for registry_json_path in sorted((root / "registry").glob("*.json")):
@@ -1356,15 +1394,260 @@ if not args.sources_only:
             errors.append(f"owner-routing:{source_id}:{role} missing route for owner worksheet role")
 
     project_ids = set()
+    project_group_ids = set()
+    repository_ids = set()
+    remote_keys = set()
     projects_doc = load_json(root / "registry" / "projects.json")
-    for project in projects_doc.get("projects", []):
+    project_rows = projects_doc.get("projects", [])
+    route_registry_health["project_count"] = len(project_rows)
+    for project in project_rows:
         project_id = project.get("id")
         if not project_id:
             errors.append("projects: missing id")
+            route_registry_health["invalid_reference_count"] += 1
             continue
         if project_id in project_ids:
             errors.append(f"projects:{project_id} duplicate id")
+            route_registry_health["invalid_reference_count"] += 1
         project_ids.add(project_id)
+        for field in ["name", "type", "domain", "entry", "current", "archive", "decisions", "validation", "groups", "repo_boundary", "status"]:
+            if project.get(field) in ("", None, []):
+                errors.append(f"projects:{project_id} missing {field}")
+                route_registry_health["invalid_reference_count"] += 1
+        status = project.get("status")
+        if status and status not in ALLOWED_PROJECT_REGISTRY_STATUSES:
+            errors.append(f"projects:{project_id} invalid status: {status}")
+            route_registry_health["invalid_reference_count"] += 1
+        for field in ["domain", "entry", "current", "archive", "decisions", "validation"]:
+            value = str(project.get(field, ""))
+            if value and contains_forbidden_registry_path(value):
+                route_registry_health["forbidden_path_hits"].append(f"projects:{project_id}:{field}")
+                errors.append(f"projects:{project_id} {field} must not use machine path: {value}")
+            if value and not registry_relpath_ok(value):
+                errors.append(f"projects:{project_id} {field} must be repo-relative: {value}")
+                route_registry_health["invalid_reference_count"] += 1
+        entry = str(project.get("entry", ""))
+        if entry and registry_relpath_ok(entry) and not (root / entry).exists():
+            route_registry_health["missing_entry_paths"].append(entry)
+            errors.append(f"projects:{project_id} entry path missing: {entry}")
+        groups_value = project.get("groups", [])
+        if not isinstance(groups_value, list) or not groups_value:
+            errors.append(f"projects:{project_id} groups must be non-empty list")
+            route_registry_health["invalid_reference_count"] += 1
+
+    project_groups_doc = load_json(root / "registry" / "project-groups.json")
+    group_rows = project_groups_doc.get("groups", [])
+    route_registry_health["group_count"] = len(group_rows)
+    for group in group_rows:
+        group_id = group.get("id")
+        if not group_id:
+            errors.append("project-groups: missing id")
+            route_registry_health["invalid_reference_count"] += 1
+            continue
+        if group_id in project_group_ids:
+            errors.append(f"project-groups:{group_id} duplicate id")
+            route_registry_health["invalid_reference_count"] += 1
+        project_group_ids.add(group_id)
+        for field in ["name", "type", "entry", "member_project_ids", "status"]:
+            if group.get(field) in ("", None, []):
+                errors.append(f"project-groups:{group_id} missing {field}")
+                route_registry_health["invalid_reference_count"] += 1
+        if group.get("status") and group.get("status") not in ALLOWED_PROJECT_REGISTRY_STATUSES:
+            errors.append(f"project-groups:{group_id} invalid status: {group.get('status')}")
+            route_registry_health["invalid_reference_count"] += 1
+        entry = str(group.get("entry", ""))
+        if entry and contains_forbidden_registry_path(entry):
+            route_registry_health["forbidden_path_hits"].append(f"project-groups:{group_id}:entry")
+            errors.append(f"project-groups:{group_id} entry must not use machine path: {entry}")
+        if entry and registry_relpath_ok(entry) and not (root / entry).exists():
+            route_registry_health["missing_entry_paths"].append(entry)
+            errors.append(f"project-groups:{group_id} entry path missing: {entry}")
+        for member_project_id in group.get("member_project_ids", []):
+            if member_project_id not in project_ids:
+                errors.append(f"project-groups:{group_id} unknown member_project_id: {member_project_id}")
+                route_registry_health["invalid_reference_count"] += 1
+
+    for project in project_rows:
+        project_id = project.get("id", "<unknown>")
+        for group_id in project.get("groups", []) if isinstance(project.get("groups", []), list) else []:
+            if group_id not in project_group_ids:
+                errors.append(f"projects:{project_id} unknown group: {group_id}")
+                route_registry_health["invalid_reference_count"] += 1
+
+    repositories_doc = load_json(root / "registry" / "repositories.json")
+    repository_rows = repositories_doc.get("repositories", [])
+    route_registry_health["repository_count"] = len(repository_rows)
+    for repo in repository_rows:
+        repo_id = repo.get("repo_id")
+        if not repo_id:
+            errors.append("repositories: missing repo_id")
+            route_registry_health["invalid_reference_count"] += 1
+            continue
+        if repo_id in repository_ids:
+            errors.append(f"repositories:{repo_id} duplicate repo_id")
+            route_registry_health["invalid_reference_count"] += 1
+        repository_ids.add(repo_id)
+        for field in ["remote_key", "remote_kind", "workspace_ref", "groups", "lifecycle", "status"]:
+            if repo.get(field) in ("", None, []):
+                errors.append(f"repositories:{repo_id} missing {field}")
+                route_registry_health["invalid_reference_count"] += 1
+        project_id = str(repo.get("project_id", ""))
+        lifecycle = str(repo.get("lifecycle", ""))
+        if project_id and project_id not in project_ids:
+            errors.append(f"repositories:{repo_id} unknown project_id: {project_id}")
+            route_registry_health["invalid_reference_count"] += 1
+        if not project_id and lifecycle != "external-reference":
+            errors.append(f"repositories:{repo_id} empty project_id only allowed for external-reference")
+            route_registry_health["invalid_reference_count"] += 1
+        remote_key = str(repo.get("remote_key", ""))
+        if remote_key:
+            if remote_key in remote_keys:
+                errors.append(f"repositories:{repo_id} duplicate remote_key: {remote_key}")
+                route_registry_health["invalid_reference_count"] += 1
+            remote_keys.add(remote_key)
+            if any(token in remote_key for token in ("://", "@", "/home/", "/vsdata/")) or remote_key.endswith(".git") or remote_key.startswith("/"):
+                errors.append(f"repositories:{repo_id} remote_key must be normalized logical key: {remote_key}")
+                route_registry_health["invalid_reference_count"] += 1
+        if repo.get("remote_kind") and repo.get("remote_kind") not in ALLOWED_REMOTE_KINDS:
+            errors.append(f"repositories:{repo_id} invalid remote_kind: {repo.get('remote_kind')}")
+            route_registry_health["invalid_reference_count"] += 1
+        if lifecycle and lifecycle not in ALLOWED_REPOSITORY_LIFECYCLES:
+            errors.append(f"repositories:{repo_id} invalid lifecycle: {lifecycle}")
+            route_registry_health["invalid_reference_count"] += 1
+        if repo.get("status") and repo.get("status") not in ALLOWED_PROJECT_REGISTRY_STATUSES:
+            errors.append(f"repositories:{repo_id} invalid status: {repo.get('status')}")
+            route_registry_health["invalid_reference_count"] += 1
+        workspace_ref = str(repo.get("workspace_ref", ""))
+        if workspace_ref and not is_allowed_workspace_ref(workspace_ref):
+            errors.append(f"repositories:{repo_id} workspace_ref must be logical or allowed local convention: {workspace_ref}")
+            route_registry_health["invalid_reference_count"] += 1
+        if workspace_ref and contains_forbidden_registry_path(workspace_ref):
+            route_registry_health["forbidden_path_hits"].append(f"repositories:{repo_id}:workspace_ref")
+            errors.append(f"repositories:{repo_id} workspace_ref must not use machine path: {workspace_ref}")
+        for group_id in repo.get("groups", []) if isinstance(repo.get("groups", []), list) else []:
+            if group_id not in project_group_ids:
+                errors.append(f"repositories:{repo_id} unknown group: {group_id}")
+                route_registry_health["invalid_reference_count"] += 1
+
+    components_doc = load_json(root / "registry" / "components.json")
+    component_rows = components_doc.get("components", [])
+    route_registry_health["component_count"] = len(component_rows)
+    component_ids = set()
+    for component in component_rows:
+        component_id = component.get("component_id")
+        if not component_id:
+            errors.append("components: missing component_id")
+            route_registry_health["invalid_reference_count"] += 1
+            continue
+        if component_id in component_ids:
+            errors.append(f"components:{component_id} duplicate component_id")
+            route_registry_health["invalid_reference_count"] += 1
+        component_ids.add(component_id)
+        for field in ["parent_project_id", "component_uri", "kind", "relative_path", "status"]:
+            if field not in component or component.get(field) is None:
+                errors.append(f"components:{component_id} missing {field}")
+                route_registry_health["invalid_reference_count"] += 1
+        parent_project_id = str(component.get("parent_project_id", ""))
+        if parent_project_id and parent_project_id not in project_ids:
+            errors.append(f"components:{component_id} unknown parent_project_id: {parent_project_id}")
+            route_registry_health["invalid_reference_count"] += 1
+        component_uri = str(component.get("component_uri", ""))
+        if component_uri and not component_uri.startswith("component://"):
+            errors.append(f"components:{component_id} component_uri must start with component://")
+            route_registry_health["invalid_reference_count"] += 1
+        relative_path = str(component.get("relative_path", ""))
+        if relative_path and (pathlib.Path(relative_path).is_absolute() or relative_path.startswith(("./", "../", "~")) or contains_forbidden_registry_path(relative_path)):
+            errors.append(f"components:{component_id} relative_path must be source-relative logical path: {relative_path}")
+            route_registry_health["invalid_reference_count"] += 1
+        if component.get("status") and component.get("status") not in ALLOWED_COMPONENT_STATUSES:
+            errors.append(f"components:{component_id} invalid status: {component.get('status')}")
+            route_registry_health["invalid_reference_count"] += 1
+
+    project_routes_doc = load_json(root / "registry" / "project-routes.json")
+    route_rows = project_routes_doc.get("routes", [])
+    route_registry_health["route_count"] = len(route_rows)
+    route_keys = set()
+    for route in route_rows:
+        project_id = str(route.get("project_id", ""))
+        route_key = project_id or str(route.get("group_id", "<unknown>"))
+        if route_key in route_keys:
+            errors.append(f"project-routes:{route_key} duplicate route")
+            route_registry_health["invalid_reference_count"] += 1
+        route_keys.add(route_key)
+        for field in ["project_id", "name", "type", "aliases", "repo_refs", "workspace_refs", "hub_entry", "current_path", "archive_path", "decisions_path", "validation_path", "route_key_policy"]:
+            if route.get(field) in ("", None, []):
+                errors.append(f"project-routes:{route_key} missing {field}")
+                route_registry_health["invalid_reference_count"] += 1
+        if project_id and project_id not in project_ids:
+            errors.append(f"project-routes:{route_key} unknown project_id: {project_id}")
+            route_registry_health["invalid_reference_count"] += 1
+        group_id = str(route.get("group_id", ""))
+        if group_id and group_id not in project_group_ids:
+            errors.append(f"project-routes:{route_key} unknown group_id: {group_id}")
+            route_registry_health["invalid_reference_count"] += 1
+        if "cwd_patterns" in route:
+            errors.append(f"project-routes:{route_key} cwd_patterns is forbidden after git-remote-first cutover")
+            route_registry_health["invalid_reference_count"] += 1
+        if str(route.get("engineering_archive_path", "")):
+            errors.append(f"project-routes:{route_key} engineering_archive_path is retired; use archive_path")
+            route_registry_health["invalid_reference_count"] += 1
+        for repo_id in route.get("repo_refs", []) if isinstance(route.get("repo_refs", []), list) else []:
+            if repo_id not in repository_ids:
+                errors.append(f"project-routes:{route_key} unknown repo_ref: {repo_id}")
+                route_registry_health["invalid_reference_count"] += 1
+        for workspace_ref in route.get("workspace_refs", []) if isinstance(route.get("workspace_refs", []), list) else []:
+            if not is_allowed_workspace_ref(workspace_ref):
+                errors.append(f"project-routes:{route_key} invalid workspace_ref: {workspace_ref}")
+                route_registry_health["invalid_reference_count"] += 1
+            if contains_forbidden_registry_path(workspace_ref):
+                route_registry_health["forbidden_path_hits"].append(f"project-routes:{route_key}:workspace_ref")
+                errors.append(f"project-routes:{route_key} workspace_ref must not use machine path: {workspace_ref}")
+        for field in ["hub_entry", "current_path", "archive_path", "decisions_path", "validation_path"]:
+            value = str(route.get(field, ""))
+            if value and contains_forbidden_registry_path(value):
+                route_registry_health["forbidden_path_hits"].append(f"project-routes:{route_key}:{field}")
+                errors.append(f"project-routes:{route_key} {field} must not use machine path: {value}")
+            if value and not registry_relpath_ok(value):
+                errors.append(f"project-routes:{route_key} {field} must be repo-relative: {value}")
+                route_registry_health["invalid_reference_count"] += 1
+        hub_entry = str(route.get("hub_entry", ""))
+        if hub_entry and registry_relpath_ok(hub_entry) and not (root / hub_entry).exists():
+            route_registry_health["missing_entry_paths"].append(hub_entry)
+            errors.append(f"project-routes:{route_key} hub_entry path missing: {hub_entry}")
+
+    workspaces_example_doc = load_json(root / "registry" / "workspaces.example.json")
+    workspace_rows = workspaces_example_doc.get("workspaces", [])
+    route_registry_health["workspace_example_count"] = len(workspace_rows)
+    for index, workspace in enumerate(workspace_rows, 1):
+        workspace_ref = str(workspace.get("workspace_ref", ""))
+        label = workspace_ref or f"row-{index}"
+        if not workspace_ref:
+            errors.append(f"workspaces:{label} missing workspace_ref")
+            route_registry_health["invalid_reference_count"] += 1
+        elif not is_allowed_workspace_ref(workspace_ref):
+            errors.append(f"workspaces:{label} invalid workspace_ref: {workspace_ref}")
+            route_registry_health["invalid_reference_count"] += 1
+        for field in ["path", "path_example"]:
+            value = str(workspace.get(field, ""))
+            if value and contains_forbidden_registry_path(value):
+                route_registry_health["forbidden_path_hits"].append(f"workspaces:{label}:{field}")
+                errors.append(f"workspaces:{label} {field} must not use machine path: {value}")
+        repo_id = str(workspace.get("repo_id", ""))
+        group_id = str(workspace.get("project_group_id", ""))
+        if repo_id and repo_id not in repository_ids:
+            errors.append(f"workspaces:{label} unknown repo_id: {repo_id}")
+            route_registry_health["invalid_reference_count"] += 1
+        if group_id and group_id not in project_group_ids:
+            errors.append(f"workspaces:{label} unknown project_group_id: {group_id}")
+            route_registry_health["invalid_reference_count"] += 1
+
+    route_registry_health["forbidden_path_hits"] = sorted(set(route_registry_health["forbidden_path_hits"]))
+    route_registry_health["missing_entry_paths"] = sorted(set(route_registry_health["missing_entry_paths"]))
+    route_registry_health["status"] = "fail" if (
+        route_registry_health["invalid_reference_count"]
+        or route_registry_health["forbidden_path_hits"]
+        or route_registry_health["missing_entry_paths"]
+    ) else "pass"
 
     topic_ids = set()
     topics_doc = load_json(root / "registry" / "topics.json")
@@ -2140,6 +2423,7 @@ result = {
     "authorization_health": authorization_health,
     "automation_safety_health": automation_safety_health,
     "boundary_health": boundary_health,
+    "route_registry_health": route_registry_health,
     "path_routing_health": path_routing_health,
     "errors": errors,
     "warnings": warnings,

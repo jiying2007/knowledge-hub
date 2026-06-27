@@ -4,10 +4,485 @@
     {
       "id": "pcr02",
       "name": "PCR02",
+      "type": "product-group",
       "domain": "projects/pcr02",
       "entry": "projects/pcr02/README.md",
       "current": "projects/pcr02/current",
       "archive": "projects/pcr02/archive",
+      "decisions": "projects/pcr02/decisions",
+      "validation": "projects/pcr02/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "group",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-ssc305",
+      "name": "PCR02 SSC305 SDK",
+      "type": "git-repository",
+      "domain": "projects/pcr02-ssc305",
+      "entry": "projects/pcr02-ssc305/README.md",
+      "current": "projects/pcr02-ssc305/current",
+      "archive": "projects/pcr02-ssc305/archive",
+      "decisions": "projects/pcr02-ssc305/decisions",
+      "validation": "projects/pcr02-ssc305/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "primary",
+      "status": "registered"
+    },
+    {
+      "id": "xcrz-sigmastar-demo",
+      "name": "XCRZ SigmaStar Demo",
+      "type": "git-repository",
+      "domain": "projects/xcrz-sigmastar-demo",
+      "entry": "projects/xcrz-sigmastar-demo/README.md",
+      "current": "projects/xcrz-sigmastar-demo/current",
+      "archive": "projects/xcrz-sigmastar-demo/archive",
+      "decisions": "projects/xcrz-sigmastar-demo/decisions",
+      "validation": "projects/xcrz-sigmastar-demo/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "primary",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-api",
+      "name": "PCR02 API Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-api",
+      "entry": "projects/pcr02-api/README.md",
+      "current": "projects/pcr02-api/current",
+      "archive": "projects/pcr02-api/archive",
+      "decisions": "projects/pcr02-api/decisions",
+      "validation": "projects/pcr02-api/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-app",
+      "name": "PCR02 App Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-app",
+      "entry": "projects/pcr02-app/README.md",
+      "current": "projects/pcr02-app/current",
+      "archive": "projects/pcr02-app/archive",
+      "decisions": "projects/pcr02-app/decisions",
+      "validation": "projects/pcr02-app/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-hdi",
+      "name": "PCR02 HDI Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-hdi",
+      "entry": "projects/pcr02-hdi/README.md",
+      "current": "projects/pcr02-hdi/current",
+      "archive": "projects/pcr02-hdi/archive",
+      "decisions": "projects/pcr02-hdi/decisions",
+      "validation": "projects/pcr02-hdi/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-sensor",
+      "name": "PCR02 Sensor Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-sensor",
+      "entry": "projects/pcr02-sensor/README.md",
+      "current": "projects/pcr02-sensor/current",
+      "archive": "projects/pcr02-sensor/archive",
+      "decisions": "projects/pcr02-sensor/decisions",
+      "validation": "projects/pcr02-sensor/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-daemon",
+      "name": "PCR02 Daemon App",
+      "type": "git-repository",
+      "domain": "projects/pcr02-daemon",
+      "entry": "projects/pcr02-daemon/README.md",
+      "current": "projects/pcr02-daemon/current",
+      "archive": "projects/pcr02-daemon/archive",
+      "decisions": "projects/pcr02-daemon/decisions",
+      "validation": "projects/pcr02-daemon/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-cli",
+      "name": "PCR02 CLI App",
+      "type": "git-repository",
+      "domain": "projects/pcr02-cli",
+      "entry": "projects/pcr02-cli/README.md",
+      "current": "projects/pcr02-cli/current",
+      "archive": "projects/pcr02-cli/archive",
+      "decisions": "projects/pcr02-cli/decisions",
+      "validation": "projects/pcr02-cli/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-cmd-server",
+      "name": "PCR02 Command Server App",
+      "type": "git-repository",
+      "domain": "projects/pcr02-cmd-server",
+      "entry": "projects/pcr02-cmd-server/README.md",
+      "current": "projects/pcr02-cmd-server/current",
+      "archive": "projects/pcr02-cmd-server/archive",
+      "decisions": "projects/pcr02-cmd-server/decisions",
+      "validation": "projects/pcr02-cmd-server/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-proto-c",
+      "name": "PCR02 Proto C App",
+      "type": "git-repository",
+      "domain": "projects/pcr02-proto-c",
+      "entry": "projects/pcr02-proto-c/README.md",
+      "current": "projects/pcr02-proto-c/current",
+      "archive": "projects/pcr02-proto-c/archive",
+      "decisions": "projects/pcr02-proto-c/decisions",
+      "validation": "projects/pcr02-proto-c/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-wifi",
+      "name": "PCR02 Wi-Fi Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-wifi",
+      "entry": "projects/pcr02-wifi/README.md",
+      "current": "projects/pcr02-wifi/current",
+      "archive": "projects/pcr02-wifi/archive",
+      "decisions": "projects/pcr02-wifi/decisions",
+      "validation": "projects/pcr02-wifi/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "pcr02-mp4",
+      "name": "PCR02 MP4 Module",
+      "type": "git-repository",
+      "domain": "projects/pcr02-mp4",
+      "entry": "projects/pcr02-mp4/README.md",
+      "current": "projects/pcr02-mp4/current",
+      "archive": "projects/pcr02-mp4/archive",
+      "decisions": "projects/pcr02-mp4/decisions",
+      "validation": "projects/pcr02-mp4/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "module",
+      "status": "registered"
+    },
+    {
+      "id": "app-ota",
+      "name": "PCR02 OTA App",
+      "type": "git-repository",
+      "domain": "projects/app-ota",
+      "entry": "projects/app-ota/README.md",
+      "current": "projects/app-ota/current",
+      "archive": "projects/app-ota/archive",
+      "decisions": "projects/app-ota/decisions",
+      "validation": "projects/app-ota/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "app-product-test",
+      "name": "PCR02 Product Test App",
+      "type": "git-repository",
+      "domain": "projects/app-product-test",
+      "entry": "projects/app-product-test/README.md",
+      "current": "projects/app-product-test/current",
+      "archive": "projects/app-product-test/archive",
+      "decisions": "projects/app-product-test/decisions",
+      "validation": "projects/app-product-test/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "app-tool",
+      "name": "PCR02 Tool App",
+      "type": "git-repository",
+      "domain": "projects/app-tool",
+      "entry": "projects/app-tool/README.md",
+      "current": "projects/app-tool/current",
+      "archive": "projects/app-tool/archive",
+      "decisions": "projects/app-tool/decisions",
+      "validation": "projects/app-tool/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "app-main",
+      "name": "PCR02 Main App",
+      "type": "git-repository",
+      "domain": "projects/app-main",
+      "entry": "projects/app-main/README.md",
+      "current": "projects/app-main/current",
+      "archive": "projects/app-main/archive",
+      "decisions": "projects/app-main/decisions",
+      "validation": "projects/app-main/validation",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "application",
+      "status": "registered"
+    },
+    {
+      "id": "mcu",
+      "name": "MCU Firmware Group",
+      "type": "product-group",
+      "domain": "projects/mcu",
+      "entry": "projects/mcu/README.md",
+      "current": "projects/mcu/current",
+      "archive": "projects/mcu/archive",
+      "decisions": "projects/mcu/decisions",
+      "validation": "projects/mcu/validation",
+      "groups": [
+        "mcu"
+      ],
+      "repo_boundary": "group",
+      "status": "registered"
+    },
+    {
+      "id": "gd32l235",
+      "name": "GD32L235 Firmware",
+      "type": "git-repository",
+      "domain": "projects/gd32l235",
+      "entry": "projects/gd32l235/README.md",
+      "current": "projects/gd32l235/current",
+      "archive": "projects/gd32l235/archive",
+      "decisions": "projects/gd32l235/decisions",
+      "validation": "projects/gd32l235/validation",
+      "groups": [
+        "mcu"
+      ],
+      "repo_boundary": "firmware",
+      "status": "registered"
+    },
+    {
+      "id": "hc32f072",
+      "name": "HC32F072 Firmware",
+      "type": "git-repository",
+      "domain": "projects/hc32f072",
+      "entry": "projects/hc32f072/README.md",
+      "current": "projects/hc32f072/current",
+      "archive": "projects/hc32f072/archive",
+      "decisions": "projects/hc32f072/decisions",
+      "validation": "projects/hc32f072/validation",
+      "groups": [
+        "mcu"
+      ],
+      "repo_boundary": "firmware",
+      "status": "registered"
+    },
+    {
+      "id": "mm32spin023c",
+      "name": "MM32SPIN023C Firmware",
+      "type": "git-repository",
+      "domain": "projects/mm32spin023c",
+      "entry": "projects/mm32spin023c/README.md",
+      "current": "projects/mm32spin023c/current",
+      "archive": "projects/mm32spin023c/archive",
+      "decisions": "projects/mm32spin023c/decisions",
+      "validation": "projects/mm32spin023c/validation",
+      "groups": [
+        "mcu"
+      ],
+      "repo_boundary": "firmware",
+      "status": "registered"
+    },
+    {
+      "id": "firmware-release-tools",
+      "name": "Firmware Release Tools",
+      "type": "git-repository",
+      "domain": "projects/firmware-release-tools",
+      "entry": "projects/firmware-release-tools/README.md",
+      "current": "projects/firmware-release-tools/current",
+      "archive": "projects/firmware-release-tools/archive",
+      "decisions": "projects/firmware-release-tools/decisions",
+      "validation": "projects/firmware-release-tools/validation",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
+      "status": "registered"
+    },
+    {
+      "id": "firmware-toolchains",
+      "name": "Firmware Toolchains",
+      "type": "git-repository",
+      "domain": "projects/firmware-toolchains",
+      "entry": "projects/firmware-toolchains/README.md",
+      "current": "projects/firmware-toolchains/current",
+      "archive": "projects/firmware-toolchains/archive",
+      "decisions": "projects/firmware-toolchains/decisions",
+      "validation": "projects/firmware-toolchains/validation",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
+      "status": "registered"
+    },
+    {
+      "id": "codex",
+      "name": "Codex Local Runtime Assets",
+      "type": "runtime-repository",
+      "domain": "domains/codex",
+      "entry": "domains/codex/README.md",
+      "current": "domains/codex/current",
+      "archive": "domains/codex/archive",
+      "decisions": "domains/codex/decisions",
+      "validation": "domains/codex/validation",
+      "groups": [
+        "codex"
+      ],
+      "repo_boundary": "runtime-assets",
+      "status": "registered"
+    },
+    {
+      "id": "llm-agent",
+      "name": "LLM Agent",
+      "type": "git-repository",
+      "domain": "projects/llm-agent",
+      "entry": "projects/llm-agent/README.md",
+      "current": "projects/llm-agent/current",
+      "archive": "projects/llm-agent/archive",
+      "decisions": "projects/llm-agent/decisions",
+      "validation": "projects/llm-agent/validation",
+      "groups": [
+        "agent-tools"
+      ],
+      "repo_boundary": "primary",
+      "status": "registered"
+    },
+    {
+      "id": "agent-dev-kit",
+      "name": "Agent Dev Kit",
+      "type": "git-repository",
+      "domain": "projects/agent-dev-kit",
+      "entry": "projects/agent-dev-kit/README.md",
+      "current": "projects/agent-dev-kit/current",
+      "archive": "projects/agent-dev-kit/archive",
+      "decisions": "projects/agent-dev-kit/decisions",
+      "validation": "projects/agent-dev-kit/validation",
+      "groups": [
+        "agent-tools"
+      ],
+      "repo_boundary": "subrepo",
+      "status": "registered"
+    },
+    {
+      "id": "llm-tools",
+      "name": "LLM Tools",
+      "type": "git-repository",
+      "domain": "projects/llm-tools",
+      "entry": "projects/llm-tools/README.md",
+      "current": "projects/llm-tools/current",
+      "archive": "projects/llm-tools/archive",
+      "decisions": "projects/llm-tools/decisions",
+      "validation": "projects/llm-tools/validation",
+      "groups": [
+        "agent-tools",
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
+      "status": "registered"
+    },
+    {
+      "id": "sigmastar-flasher",
+      "name": "SigmaStar Flasher",
+      "type": "git-repository",
+      "domain": "projects/sigmastar-flasher",
+      "entry": "projects/sigmastar-flasher/README.md",
+      "current": "projects/sigmastar-flasher/current",
+      "archive": "projects/sigmastar-flasher/archive",
+      "decisions": "projects/sigmastar-flasher/decisions",
+      "validation": "projects/sigmastar-flasher/validation",
+      "groups": [
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
+      "status": "registered"
+    },
+    {
+      "id": "mm32spin-validator",
+      "name": "MM32SPIN Validator",
+      "type": "git-repository",
+      "domain": "projects/mm32spin-validator",
+      "entry": "projects/mm32spin-validator/README.md",
+      "current": "projects/mm32spin-validator/current",
+      "archive": "projects/mm32spin-validator/archive",
+      "decisions": "projects/mm32spin-validator/decisions",
+      "validation": "projects/mm32spin-validator/validation",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
+      "status": "registered"
+    },
+    {
+      "id": "ota-packager",
+      "name": "OTA Packager",
+      "type": "git-repository",
+      "domain": "projects/ota-packager",
+      "entry": "projects/ota-packager/README.md",
+      "current": "projects/ota-packager/current",
+      "archive": "projects/ota-packager/archive",
+      "decisions": "projects/ota-packager/decisions",
+      "validation": "projects/ota-packager/validation",
+      "groups": [
+        "embedded-tools"
+      ],
+      "repo_boundary": "tooling",
       "status": "registered"
     }
   ]

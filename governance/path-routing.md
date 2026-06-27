@@ -5,10 +5,30 @@
 ## 总原则
 
 - 新增知识、归档、会话总结、排障记录和 Codex 工作流材料默认写入 `~/knowledge-hub`。
+- 涉及项目事实、归档路径、历史决策、runbook、source 状态、发布验证或排障结论的问题，回答前先做 Hub 上下文预检。
 - 旧外部路径只能作为 `origin_path`、历史 manifest、Git 历史或只读 provenance 出现。
 - 回答路径类问题时，先给 Hub canonical path，再说明旧路径状态；不得把旧路径作为默认落盘目录。
 - 不直接改写 `~/.codex/memories` 或历史 session。需要修正召回口径时，先在 Hub 产出 report-only 审计和 memory candidate，再经授权处理。
 - 不在源项目内新增 `docs/`、`knowledge/`、`tools/` 作为知识入口。项目源码仓只保留本地运行规则和项目自身源码/配置。
+
+## Knowledge Hub Preflight
+
+Codex 在任意项目目录处理以下任务时，应先运行或等价执行 Hub 上下文预检：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用户问题或任务>" --task-type <type> --json
+```
+
+`task-type` 常用值：
+
+- `archive`：归档路径、会话总结、长期沉淀。
+- `debug`：core、GDB、日志、现场排障。
+- `release`：构建、发布、OTA、NAS、版本记录。
+- `decision`：当前策略、owner decision、废弃/保留判断。
+- `runbook`：操作指南、复用流程、排障手册。
+- `source`：source coverage、source 边界、迁移状态。
+
+预检输出的 `route` 是当前项目入口；`ranked_items` 和 `search` 是候选证据；`candidate_recommendation.required=true` 时，完成或中断都必须生成 Hub candidate，或明确说明“本次无可归档结论”。
 
 ## Canonical 路由表
 
@@ -57,6 +77,7 @@ Codex 工作流和会话归档：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope hub --json
+rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope runtime-rules --strict --json
 rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope all --max-matches 200 --json
 ```
 
@@ -66,6 +87,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope all --max-matches
 - `provenance`：registry、source inventory、coverage 或历史 manifest 中的来源证据，允许存在。
 - `runtime-route-candidate`：Codex runtime、memory summary、raw memories 或 live docs 中可能继续影响回答的旧路径，需要进入后续修复队列。
 - `historical-session`：历史 session 记录，默认不可改写，只作为召回风险证据。
+
+`runtime-rules` scope 只检查会实际影响新会话的规则入口，例如全局 Codex AGENTS、`~/codex` source AGENTS、目录级 AGENTS 和重点项目 AGENTS。该 scope 命中旧路径当前入口语义时必须修复；历史 session 和 source provenance 不纳入该 scope 的失败依据。
 
 ## 禁止事项
 

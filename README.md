@@ -18,10 +18,19 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<关键词>" --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
+跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任务或问题>" --task-type general --json
+```
+
+预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
+
 路径类问题优先看：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope hub --json
+rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope runtime-rules --strict --json
 ```
 
 人读规则见 `governance/path-routing.md`。新增归档、会话总结和排障记录只写 Hub canonical 路径；旧 `~/embedded/engineering_archive`、`~/codex/docs/archive` 和源项目旧 `docs/` / `knowledge/` / `tools/` 只作历史 provenance。

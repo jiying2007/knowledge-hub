@@ -1,0 +1,531 @@
+{
+  "schema_version": 1,
+  "repositories": [
+    {
+      "repo_id": "pcr02-ssc305",
+      "project_id": "pcr02-ssc305",
+      "remote_key": "robot/pcr02_ssc305",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-ssc305",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "pcr02_ssc305",
+        "ssc305",
+        "pcr02-release",
+        "pcr02-compile"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "xcrz-sigmastar-demo",
+      "project_id": "xcrz-sigmastar-demo",
+      "remote_key": "robot/xcrz_sigmastar_demo",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://xcrz-sigmastar-demo",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "xcrz_sigmastar_demo",
+        "sigmastar-demo",
+        "gros"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-api",
+      "project_id": "pcr02-api",
+      "remote_key": "embedded/module/api",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-api",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/api",
+        "api"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-app",
+      "project_id": "pcr02-app",
+      "remote_key": "embedded/module/app",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-app",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/app",
+        "app"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-hdi",
+      "project_id": "pcr02-hdi",
+      "remote_key": "embedded/module/hdi",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-hdi",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/hdi",
+        "hdi"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-sensor",
+      "project_id": "pcr02-sensor",
+      "remote_key": "vosen/modules/sensor",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-sensor",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/sensor",
+        "sensor"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-daemon",
+      "project_id": "pcr02-daemon",
+      "remote_key": "embedded/app/daemon",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-daemon",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "daemon"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-cli",
+      "project_id": "pcr02-cli",
+      "remote_key": "embedded/app/cli",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-cli",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "cli"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-cmd-server",
+      "project_id": "pcr02-cmd-server",
+      "remote_key": "embedded/app/cmd_server",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-cmd-server",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "cmd_server",
+        "cmd-server"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-proto-c",
+      "project_id": "pcr02-proto-c",
+      "remote_key": "embedded/app/proto_c",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-proto-c",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "proto_c",
+        "proto-c"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-wifi",
+      "project_id": "pcr02-wifi",
+      "remote_key": "embedded/module/wifi",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-wifi",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/wifi",
+        "wifi"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "pcr02-mp4",
+      "project_id": "pcr02-mp4",
+      "remote_key": "embedded/module/mp4",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://pcr02-mp4",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "modules/mp4",
+        "mp4"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "app-ota",
+      "project_id": "app-ota",
+      "remote_key": "embedded/app/app_ota",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://app-ota",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "app_ota",
+        "ota"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "app-product-test",
+      "project_id": "app-product-test",
+      "remote_key": "embedded/app/app_product_test",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://app-product-test",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "app_product_test",
+        "product-test",
+        "产测"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "app-tool",
+      "project_id": "app-tool",
+      "remote_key": "embedded/app/app_tool",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://app-tool",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "app_tool"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "app-main",
+      "project_id": "app-main",
+      "remote_key": "embedded/app/app_main",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://app-main",
+      "groups": [
+        "pcr02"
+      ],
+      "aliases": [
+        "app_main"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "gd32l235",
+      "project_id": "gd32l235",
+      "remote_key": "robot/gd32l235",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://gd32l235",
+      "groups": [
+        "mcu"
+      ],
+      "aliases": [
+        "gd32",
+        "gd32l235"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "hc32f072",
+      "project_id": "hc32f072",
+      "remote_key": "robot/hc32f072",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://hc32f072",
+      "groups": [
+        "mcu"
+      ],
+      "aliases": [
+        "hc32",
+        "hc32f072"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "mm32spin023c",
+      "project_id": "mm32spin023c",
+      "remote_key": "robot/mm32spin023c",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://mm32spin023c",
+      "groups": [
+        "mcu"
+      ],
+      "aliases": [
+        "mm32",
+        "mm32spin023c"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "firmware-release-tools",
+      "project_id": "firmware-release-tools",
+      "remote_key": "embedded/tools/firmware-release-tools",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://firmware-release-tools",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "aliases": [
+        "release-tools",
+        "firmware-release"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "firmware-toolchains",
+      "project_id": "firmware-toolchains",
+      "remote_key": "embedded/tools/firmware-toolchains",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://firmware-toolchains",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "aliases": [
+        "toolchains",
+        "firmware-toolchains"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "codex",
+      "project_id": "codex",
+      "remote_key": "jiying2007/codex",
+      "remote_kind": "github",
+      "workspace_ref": "~/codex",
+      "groups": [
+        "codex"
+      ],
+      "aliases": [
+        "codex",
+        "codex-assets"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "llm-agent",
+      "project_id": "llm-agent",
+      "remote_key": "jiying2007/test",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://llm-agent",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "llm_agent",
+        "llm-agent",
+        "agent-dev"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "agent-dev-kit",
+      "project_id": "agent-dev-kit",
+      "remote_key": "jiying2007/agent-dev-kit",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://agent-dev-kit",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "agent-dev-kit",
+        "adk"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "llm-tools",
+      "project_id": "llm-tools",
+      "remote_key": "embedded/tools/llm_tools",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://llm-tools",
+      "groups": [
+        "agent-tools",
+        "embedded-tools"
+      ],
+      "aliases": [
+        "llm_tools",
+        "llm-tools"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "sigmastar-flasher",
+      "project_id": "sigmastar-flasher",
+      "remote_key": "embedded/tools/sigmastar-flasher",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://sigmastar-flasher",
+      "groups": [
+        "embedded-tools"
+      ],
+      "aliases": [
+        "sigmastar-flasher",
+        "flasher"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "mm32spin-validator",
+      "project_id": "mm32spin-validator",
+      "remote_key": "embedded/tools/mm32spin-validator",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://mm32spin-validator",
+      "groups": [
+        "mcu",
+        "embedded-tools"
+      ],
+      "aliases": [
+        "mm32spin-validator"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "ota-packager",
+      "project_id": "ota-packager",
+      "remote_key": "embedded/tools/ota-packager",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://ota-packager",
+      "groups": [
+        "embedded-tools"
+      ],
+      "aliases": [
+        "ota-packager"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "scale-engine",
+      "project_id": "",
+      "remote_key": "hongmaple/scale-engine",
+      "remote_kind": "gitee",
+      "workspace_ref": "workspace://scale-engine",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "scale-engine"
+      ],
+      "lifecycle": "external-reference",
+      "status": "registered"
+    },
+    {
+      "repo_id": "openspec",
+      "project_id": "",
+      "remote_key": "fission-ai/openspec",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://openspec",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "openspec"
+      ],
+      "lifecycle": "external-reference",
+      "status": "registered"
+    },
+    {
+      "repo_id": "vibeflow",
+      "project_id": "",
+      "remote_key": "ttttstc/vibeflow",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://vibeflow",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "vibeflow"
+      ],
+      "lifecycle": "external-reference",
+      "status": "registered"
+    },
+    {
+      "repo_id": "superpowers",
+      "project_id": "",
+      "remote_key": "obra/superpowers",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://superpowers",
+      "groups": [
+        "agent-tools"
+      ],
+      "aliases": [
+        "superpowers"
+      ],
+      "lifecycle": "external-reference",
+      "status": "registered"
+    },
+    {
+      "repo_id": "gitlab-bot",
+      "project_id": "",
+      "remote_key": "goodideal/gitlab-bot",
+      "remote_kind": "github",
+      "workspace_ref": "workspace://gitlab-bot",
+      "groups": [
+        "embedded-tools"
+      ],
+      "aliases": [
+        "gitlab-bot"
+      ],
+      "lifecycle": "external-reference",
+      "status": "registered"
+    }
+  ]
+}

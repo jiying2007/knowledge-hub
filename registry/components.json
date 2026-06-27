@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "components": [
+    {
+      "component_id": "mcu-local-workspace",
+      "parent_project_id": "mcu",
+      "component_uri": "component://mcu/local-workspace",
+      "kind": "workspace-aggregate",
+      "relative_path": "",
+      "status": "workspace-only"
+    },
+    {
+      "component_id": "robot-pcr02-local",
+      "parent_project_id": "pcr02",
+      "component_uri": "component://pcr02/robot-pcr02-local",
+      "kind": "workspace-aggregate",
+      "relative_path": "",
+      "status": "workspace-only"
+    },
+    {
+      "component_id": "app-main-local-copy",
+      "parent_project_id": "app-main",
+      "component_uri": "component://app-main/local-copy",
+      "kind": "local-copy",
+      "relative_path": "app_main",
+      "status": "workspace-only"
+    },
+    {
+      "component_id": "pcr02-examples-app",
+      "parent_project_id": "pcr02",
+      "component_uri": "component://pcr02/examples-app",
+      "kind": "reference-example",
+      "relative_path": "examples/App",
+      "status": "external-reference"
+    },
+    {
+      "component_id": "pcr02-eye-anim",
+      "parent_project_id": "pcr02",
+      "component_uri": "component://pcr02/eye-anim",
+      "kind": "reference-demo",
+      "relative_path": "eye_anim",
+      "status": "external-reference"
+    },
+    {
+      "component_id": "pcr02-iford-imssv05c13",
+      "parent_project_id": "pcr02",
+      "component_uri": "component://pcr02/iford-imssv05c13",
+      "kind": "reference-drop",
+      "relative_path": "Iford_IMSSV05C13",
+      "status": "external-reference"
+    }
+  ]
+}

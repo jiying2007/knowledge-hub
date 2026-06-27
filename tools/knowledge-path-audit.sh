@@ -21,9 +21,9 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument(
     "--scope",
-    choices=["hub", "codex", "memories", "sessions", "skills", "all"],
+    choices=["hub", "codex", "memories", "sessions", "skills", "runtime-rules", "all"],
     default="hub",
-    help="Scope to scan. all includes hub, codex, memories, sessions and skill assets.",
+    help="Scope to scan. all includes hub, codex, memories, sessions, runtime rules and Codex live/vendor/source skill assets.",
 )
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--max-matches", type=int, default=100)
@@ -57,15 +57,27 @@ def existing_scopes():
         "memories": home / ".codex" / "memories",
         "sessions": home / ".codex" / "sessions",
     }
+    runtime_rule_values = {
+        "runtime-global-agents": home / ".codex" / "AGENTS.md",
+        "runtime-codex-source-agents": home / "codex" / "src" / "codex-home" / "AGENTS.md",
+        "runtime-codex-repo-agents": home / "codex" / "AGENTS.md",
+        "runtime-vsdata-agents": pathlib.Path("/") / "vsdata" / home.name / "AGENTS.md",
+        "runtime-pcr02-app-agents": home / "work" / "sigmastar" / "pcr02_ssc305" / "SourceCode" / "sdk" / "verify" / "xcrz_sigmastar_demo" / "AGENTS.md",
+        "runtime-pcr02-app-dev-agents": home / "work" / "sigmastar" / "pcr02_ssc305" / "SourceCode" / "sdk" / "verify" / "xcrz_sigmastar_demo_dev" / "AGENTS.md",
+        "runtime-mcu-agents": home / "work" / "mcu" / "AGENTS.md",
+        "runtime-gd32-agents": home / "work" / "mcu" / "gd32l235" / "AGENTS.md",
+        "runtime-hc32-agents": home / "work" / "mcu" / "hc32f072" / "AGENTS.md",
+    }
     skill_values = {
         "skills-live": home / ".codex" / "skills",
         "skills-live-vendor": home / ".codex" / "vendor" / "skills",
         "skills-codex-source": home / "codex" / "src" / "codex-home" / "vendor" / "skills",
-        "skills-vsdata": pathlib.Path("/") / "vsdata" / home.name / "skills",
     }
     if args.scope == "all":
-        combined = {**values, **skill_values}
+        combined = {**values, **runtime_rule_values, **skill_values}
         return {key: path for key, path in combined.items() if path.exists()}
+    if args.scope == "runtime-rules":
+        return {key: path for key, path in runtime_rule_values.items() if path.exists()}
     if args.scope == "skills":
         return {key: path for key, path in skill_values.items() if path.exists()}
     path = values[args.scope]
@@ -91,6 +103,8 @@ def classify(scope, rel_path, line_text):
         return "historical-session"
     if scope == "memories":
         return "memory-superseded" if memory_supersession_active else "runtime-route-candidate"
+    if scope.startswith("runtime-"):
+        return "runtime-route-candidate"
     if scope == "codex" or scope.startswith("skills-"):
         return "runtime-route-candidate"
     if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/migration-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:

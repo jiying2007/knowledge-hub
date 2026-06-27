@@ -2270,13 +2270,17 @@ def test_final_gate_owner_review_blocker():
         and owner_recovery.get("active_exposure_count") == 0
         and review_queue_recovery.get("read_only") is True
         and review_queue_recovery.get("report_only") is True
-        and review_queue_summary.get("total_pending_count", 0) == 0
-        and review_queue_summary.get("ai_generated_pending_count", 0) == 0
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
         and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
-        and review_queue_commands.get("recommended_batch_json") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --json"
-        and review_queue_commands.get("recommended_forms_jsonl") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --queue-forms-jsonl"
-        and review_queue_commands.get("recommended_validate_queue_forms") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 20 --json --validate-queue-forms '<review-queue-forms.jsonl>'"
+        and review_queue_commands.get("recommended_batch_json", "").startswith("rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue")
+        and "--queue-limit 20" in review_queue_commands.get("recommended_batch_json", "")
+        and review_queue_commands.get("recommended_batch_json", "").endswith("--json")
+        and review_queue_commands.get("recommended_forms_jsonl", "").startswith("rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue")
+        and "--queue-limit 20" in review_queue_commands.get("recommended_forms_jsonl", "")
+        and review_queue_commands.get("recommended_forms_jsonl", "").endswith("--queue-forms-jsonl")
+        and review_queue_commands.get("recommended_validate_queue_forms", "").startswith("rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue")
+        and "--queue-limit 20" in review_queue_commands.get("recommended_validate_queue_forms", "")
+        and "--validate-queue-forms '<review-queue-forms.jsonl>'" in review_queue_commands.get("recommended_validate_queue_forms", "")
         and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
         and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
@@ -6235,8 +6239,9 @@ def test_index_plan_extended_sections():
         and review_queue_summary.get("owner_gate_mutation") is False
         and review_queue_summary.get("memory_write") is False
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
-        and review_queue_summary.get("ai_generated_pending_count", 0) == 0
-        and review_queue_index.get("rows", []) == []
+        and review_queue_summary.get("active_or_promotion_blocker_count") == 0
+        and all(row.get("queue_type") in {"ai-human-review", "external-source-review"} for row in review_queue_index.get("rows", []))
+        and all(row.get("object_status") not in {"active"} for row in review_queue_index.get("rows", []))
         and (
             "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
             or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))

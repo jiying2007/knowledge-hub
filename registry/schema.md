@@ -203,6 +203,137 @@ Domain/path invariants:
 - `project-specific` scope must use `projects/<project>` domain.
 - `codex-memory-curation-governance` scope must use `codex` domain.
 
+## project-groups.json
+
+登记产品组、项目组和工具组。项目组只负责聚合，不替代成员 Git 仓库项目的事实边界。
+
+Required fields:
+
+- `id`
+- `name`
+- `type`
+- `entry`
+- `member_project_ids`
+- `status`
+
+Invariants:
+
+- `id` 必须唯一。
+- `entry` 必须是 Knowledge Hub repo-relative path，不能是本机绝对路径。
+- `member_project_ids` 必须指向 `registry/projects.json` 中已登记项目。
+- `status` 只能使用 `registered`、`deprecated` 或 `retired`。
+
+## projects.json
+
+登记 Knowledge Hub 项目入口。项目可以是产品组、Git 仓库项目或 runtime/domain 项目，但长期事实必须落到明确的 `entry`。
+
+Required fields:
+
+- `id`
+- `name`
+- `type`
+- `domain`
+- `entry`
+- `current`
+- `archive`
+- `decisions`
+- `validation`
+- `groups`
+- `repo_boundary`
+- `status`
+
+Invariants:
+
+- `id` 必须唯一。
+- `domain`、`entry`、`current`、`archive`、`decisions`、`validation` 必须是 Hub repo-relative path。
+- `groups` 必须指向 `registry/project-groups.json` 中已登记项目组。
+- `entry` 必须存在。
+- `status` 只能使用 `registered`、`deprecated` 或 `retired`。
+
+## repositories.json
+
+登记 Git 仓库到 Hub 项目的映射，是跨路径、跨机器路由的主要真源。
+
+Required fields:
+
+- `repo_id`
+- `project_id`
+- `remote_key`
+- `remote_kind`
+- `workspace_ref`
+- `groups`
+- `aliases`
+- `lifecycle`
+- `status`
+
+Invariants:
+
+- `repo_id` 必须唯一。
+- `remote_key` 必须是规范化逻辑 key，不包含 scheme、host credential、`.git` 后缀或机器路径。
+- `project_id` 必须指向 `registry/projects.json`；仅 `lifecycle=external-reference` 允许为空。
+- `workspace_ref` 只能使用逻辑引用 `workspace://...`，或保留约定 `~/knowledge-hub`、`~/codex`、`~/.codex`。
+- 不得写入 `/home/...`、`/vsdata/...`、`~/work/...`、`~/bin/...` 等机器路径。
+- `lifecycle` 允许值：`first-party`、`external-reference`、`workspace-only`、`retired`。
+
+## components.json
+
+登记无独立 Git remote、局部源码目录、示例、临时本地聚合或外部参考组件。
+
+Required fields:
+
+- `component_id`
+- `parent_project_id`
+- `component_uri`
+- `kind`
+- `relative_path`
+- `status`
+
+Invariants:
+
+- `component_uri` 必须以 `component://` 开头。
+- `parent_project_id` 必须指向 `registry/projects.json`。
+- `relative_path` 是 source-local 逻辑路径，不能是绝对路径、`~/...`、`./...` 或 `../...`。
+- `status` 允许值：`registered`、`workspace-only`、`external-reference`、`retired`。
+
+## workspaces.example.json
+
+说明本机 workspace 适配格式，不记录真实路径。真实路径应写入未纳入 Git 的 `local/workspaces.json`。
+
+Allowed references:
+
+- `workspace://<logical-name>`
+- `~/knowledge-hub`
+- `~/codex`
+- `~/.codex`
+
+禁止把 `/home/<user>/...`、`/vsdata/<user>/...`、`~/work/...` 或 `~/bin/...` 写入 Git 管理的 registry。
+
+## project-routes.json
+
+登记跨项目组的预检路由。路由只引用 repo、project group 和 Hub 内入口，不直接匹配本机源码路径。
+
+Required fields:
+
+- `project_id`
+- `group_id`
+- `type`
+- `aliases`
+- `repo_refs`
+- `workspace_refs`
+- `hub_entry`
+- `current_path`
+- `archive_path`
+- `decisions_path`
+- `validation_path`
+- `route_key_policy`
+
+Invariants:
+
+- `repo_refs` 必须指向 `registry/repositories.json`。
+- `workspace_refs` 只能使用允许的逻辑 workspace 或保留本地约定。
+- 禁止使用 `cwd_patterns`。
+- 禁止使用 retired `engineering_archive_path` 字段；新增归档统一使用 `archive_path`。
+
 ## sources.json
 
 登记 Knowledge Hub 的 source 控制面。终态下 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只能写入 `origin_path` 作为 provenance，不得作为 active source、check command 或新增归档入口。

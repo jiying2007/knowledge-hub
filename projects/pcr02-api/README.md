@@ -1,0 +1,11 @@
+# PCR02 API Module
+
+- 项目 ID：`pcr02-api`
+- 所属组：`pcr02`
+- 事实边界：以 `registry/repositories.json` 中 `repo_id=pcr02-api` 的 Git remote key 为准。
+- 当前知识：`projects/pcr02-api/current/`
+- 决策：`projects/pcr02-api/decisions/`
+- 验证：`projects/pcr02-api/validation/`
+- 归档：`projects/pcr02-api/archive/`
+
+本入口只记录 API 模块长期事实、接口约束、验证和历史结论；不迁移源码仓内部临时文档或构建产物。
