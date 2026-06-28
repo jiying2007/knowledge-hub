@@ -58,10 +58,10 @@
 | `2026-07-16` | 24 | `migrated-pcr02-docs-copyfirst-021` | `team-core` | `reviewing` | `domains/projects/pcr02/validation/reports/2026-05-08-sigmastar-aov-lightsensor-analysis-report.md` |
 | `2026-07-16` | 24 | `migrated-pcr02-docs-copyfirst-022` | `team-core` | `reviewing` | `domains/projects/pcr02/validation/reports/2026-05-14-prog-tool-terminal-release-report.md` |
 | `2026-07-16` | 24 | `migrated-pcr02-docs-copyfirst-023` | `team-core` | `archived` | `domains/projects/pcr02/archive/reports/2026-05-17-session-archive-report.md` |
-| `2026-07-16` | 24 | `pcr02-copy-first-applied-20260616` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-copy-first-applied-20260616.md` |
-| `2026-07-16` | 24 | `pcr02-copy-first-dry-run-20260616` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-copy-first-dry-run-20260616.md` |
-| `2026-07-16` | 24 | `pcr02-project-docs-classification-20260616` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-project-docs-classification-20260616.md` |
-| `2026-07-16` | 24 | `source-inventory-20260616` | `leiwenjun` | `reviewing` | `artifacts/manifests/source-inventory-20260616.md` |
+| `2026-07-16` | 24 | `pcr02-copy-first-applied-20260616` | `leiwenjun` | `retired-process` | `registry/retired-process-ledger.jsonl` |
+| `2026-07-16` | 24 | `pcr02-copy-first-dry-run-20260616` | `leiwenjun` | `retired-process` | `registry/retired-process-ledger.jsonl` |
+| `2026-07-16` | 24 | `pcr02-project-docs-classification-20260616` | `leiwenjun` | `retired-process` | `registry/retired-process-ledger.jsonl` |
+| `2026-07-16` | 24 | `source-inventory-20260616` | `leiwenjun` | `retired-process` | `registry/retired-process-ledger.jsonl` |
 | `2026-07-17` | 25 | `pcr02-review-required-resolution-20260617` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-review-required-resolution-20260617.md` |
 | `2026-07-18` | 26 | `pcr02-owner-decision-worksheets-20260618` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md` |
 | `2026-07-18` | 26 | `pcr02-owner-review-follow-up-20260618` | `leiwenjun` | `reviewing` | `artifacts/manifests/pcr02-owner-review-follow-up-20260618.md` |

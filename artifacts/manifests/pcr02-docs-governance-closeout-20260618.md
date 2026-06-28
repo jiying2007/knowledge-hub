@@ -18,7 +18,7 @@
 
 | 类别 | 数量 | 当前归宿 | 证据 |
 | --- | ---: | --- | --- |
-| copy-first 已执行 | 23 | 已复制到 `domains/projects/pcr02/**`，registry 状态为 `reviewing` 或 `archived`，非 active。 | `pcr02-copy-first-dry-run-20260616.jsonl`、`pcr02-copy-first-applied-20260616.md` |
+| copy-first 已执行 | 23 | 已落到 Hub 内 PCR02 canonical/archive 目标，registry 状态为 `reviewing` 或 `archived`，非 active。 | `artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`、`sources/pcr02-project-docs/inventory.jsonl` |
 | README reference-first | 1 | `domains/projects/pcr02/current/docs-index.ref.md`，source README 仍是正文权威。 | `pcr02-reference-artifact-ref-applied-20260618.jsonl` |
 | prog-tool session artifact-ref | 1 | `domains/projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`，不复制脚本正文。 | `pcr02-reference-artifact-ref-applied-20260618.jsonl` |
 | owner-gated closeout | 7 | 已全部形成 owner-gated / archive-only / report-only / split-boundary 治理包。 | ASAN、memory、DVR/motor、remaining owner gates manifest |
@@ -42,9 +42,6 @@
 
 以下关键治理产物均已登记到 `registry/items.jsonl`，并存在对应文件：
 
-- `pcr02-project-docs-classification-20260616`
-- `pcr02-copy-first-dry-run-20260616`
-- `pcr02-copy-first-applied-20260616`
 - `pcr02-review-required-resolution-20260617`
 - `pcr02-reference-artifact-ref-applied-20260618`
 - `pcr02-owner-review-package-20260618`
@@ -55,8 +52,10 @@
 - `pcr02-dvr-motor-closeout-targets-20260618`
 - `pcr02-remaining-owner-gates-20260618`
 - `pcr02-docs-governance-closeout-20260618`
+- `pcr02-project-docs-owner-decision-landing-20260623`
+- `knowledge-hub-source-control-unification-20260624`
 
-`registry/items.jsonl` 已覆盖从 read-only classification、copy-first dry-run/apply、reference/artifact-ref、owner package、follow-up、worksheets 到后续 split/closeout/gate 的治理演进链路。
+`registry/items.jsonl` 已覆盖从早期 classification/copy-first 过程，到 reference/artifact-ref、owner package、follow-up、worksheets、owner decision landing、source-control unification 和后续 split/closeout/gate 的治理演进链路；成熟态不再保留 20260616 过程 manifest 文件作为当前树文件。
 
 ### 本轮索引修补
 

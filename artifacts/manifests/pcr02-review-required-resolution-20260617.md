@@ -4,7 +4,7 @@
 
 - Source id: `pcr02-project-docs`
 - Source root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
-- Classification baseline: `artifacts/manifests/pcr02-project-docs-classification-20260616.md`
+- Classification baseline: superseded by `artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`, `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`, and `sources/pcr02-project-docs/inventory.jsonl`
 - Machine-readable blocked manifest: `artifacts/manifests/pcr02-review-required-resolution-20260617.jsonl`
 - Mode: review plan only. No source files were copied, moved, deleted, renamed, edited, or promoted.
 

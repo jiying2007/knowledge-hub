@@ -36,7 +36,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 | --- | --- | --- | --- | --- | --- |
 | `rtk sed -n '1,260p' registry/sources.json` | 0 | 复核 6 个 registered source 的 role、authority、write_policy 和 check。 | `registry/sources.json` | Knowledge Hub | source coverage |
-| `rtk sed -n '1,240p' artifacts/manifests/source-inventory-20260616.md` | 0 | 复核 source inventory baseline、risk notes 和 priority plan。 | `artifacts/manifests/source-inventory-20260616.md` | Knowledge Hub | source inventory |
+| `rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 复核 source registry、source 主控目录和最新 source coverage health。 | `registry/sources.json`、`sources/<source_id>/inventory.jsonl` | Knowledge Hub | source control |
 | `rtk rg -n "embedded-knowledge|codex-archive|codex-memories|source-index|memory auto" artifacts/manifests indexes registry README.md governance -g '*.md' -g '*.jsonl' -g '*.json'` | 0 | 复核 existing control-plane references 与 no-memory-write 边界。 | `artifacts/manifests`、`indexes`、`registry` | Knowledge Hub | source coverage |
 | `subagent: source-coverage-review` | 0 | 只读复核 6 个 source 覆盖状态；确认 PCR02、engineering、patent 覆盖闭合，embedded/codex/memories 保持外部或辅助边界。 | 本会话子代理回执 | Subagent | source coverage |
 | `subagent: codex-memory-boundary-review` | 0 | 只读复核 codex-archive reference-first 与 codex-memories auxiliary/no-memory-write 边界。 | 本会话子代理回执 | Subagent | codex/memory boundary |

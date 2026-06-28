@@ -10,7 +10,7 @@
 
 | ID | 发现 | 级别 | 证据 | 处理 |
 | --- | --- | --- | --- | --- |
-| KHD-20260619-001 | `indexes/by-owner.md` 未覆盖全部 registry item。 | P1 | 只读核对发现缺 26 个 item，其中包含 `source-inventory-20260616`、23 个 copy-first item、`pcr02-docs-index-reference-20260618`、`pcr02-prog-tool-ci-smoke-session-ref-20260618`。 | 已按 owner 从 `registry/items.jsonl` 补齐。 |
+| KHD-20260619-001 | `indexes/by-owner.md` 未覆盖全部 registry item。 | P1 | 只读核对曾发现缺 26 个 item；其中迁移过程 item 已在成熟态退役，当前以 `registry/retired-process-ledger.jsonl` 和 source-control 证据恢复。 | 已按 owner 从 `registry/items.jsonl` 补齐；迁移过程 item 后续不再作为当前索引目标。 |
 | KHD-20260619-002 | `indexes/by-review-date.md` 未覆盖全部 registry item。 | P1 | 只读核对发现缺 37 个 item，主要集中在 2026-07-16 和 2026-09-18 review bucket。 | 已按 `review_after` 从 `registry/items.jsonl` 补齐。 |
 | KHD-20260619-003 | `tools/knowledge-check.sh` 过去不校验索引覆盖，无法防止 registry/index 再次漂移。 | P1 | 原门禁只检查 registry 基础字段、路径、secret pattern 和 source path。 | 已增加 `by-owner`、`by-review-date`、`by-status` 覆盖检查；`by-status` 支持现有 range 语法。 |
 
@@ -28,14 +28,14 @@
 
 ```bash
 rtk bash tools/knowledge-check.sh --dry-run --json
-rtk bash tools/knowledge-search.sh "source-inventory-20260616" --json
+rtk bash tools/knowledge-search.sh "source control unification" --json
 rtk git diff --check
 ```
 
 预期结果：
 
 - `knowledge-check` 返回 `pass`，无 errors/warnings。
-- `source-inventory-20260616` 可在 `registry/items.jsonl`、`indexes/by-status.md`、`indexes/by-review-date.md`、`indexes/by-owner.md` 中检索到。
+- source inventory 终态证据可通过 `registry/sources.json`、`sources/<source_id>/inventory.jsonl` 和 `knowledge-hub-source-control-unification-20260624` 恢复。
 - diff 无 whitespace error。
 
 ## 剩余风险
