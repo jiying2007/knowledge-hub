@@ -25,7 +25,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任�
 ```
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
-上下文预算可用 `--context-budget small|normal|deep` 控制；输出中的 `context.current`、`context.recent`、`context.related` 和 `why_selected` 用于解释 AI 为什么选中这些材料，不代表条目已提升 active 或 owner 已签收。
+上下文预算可用 `--context-budget small|normal|deep` 控制；输出中的 `canonical_paths`、`context.current`、`context.recent`、`context.related`、`context.search_fallback` 和 `why_selected` 用于解释 AI 为什么选中这些材料，不代表条目已提升 active 或 owner 已签收。
 
 路径类问题优先看：
 

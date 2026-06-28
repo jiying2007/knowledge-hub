@@ -1932,6 +1932,9 @@ result = {
             "result_count": knowledge_regression["payload"].get("result_count", 0),
             "suite": knowledge_regression["payload"].get("suite", args.regression_suite),
             "full_result_count": knowledge_regression["payload"].get("full_result_count", 0),
+            "selected_test_count": knowledge_regression["payload"].get("selected_test_count", 0),
+            "full_test_count": knowledge_regression["payload"].get("full_test_count", 0),
+            "slowest_results": knowledge_regression["payload"].get("slowest_results", []),
             "skipped_for_self_test": bool(knowledge_regression["payload"].get("skipped_for_self_test", False)),
             "inner_final_gate_regression_stub": bool(knowledge_regression["payload"].get("inner_final_gate_regression_stub", False)),
             "failed_ids": [

@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -272,6 +273,8 @@ def cleanup_temp_roots():
         shutil.rmtree(temp_root, ignore_errors=True)
 
 def run_test(fn):
+    started_at = time.monotonic()
+    before_count = len(results)
     try:
         fn()
     except Exception as exc:
@@ -287,6 +290,10 @@ def run_test(fn):
             },
         )
     finally:
+        duration_sec = round(time.monotonic() - started_at, 3)
+        for result in results[before_count:]:
+            result["duration_sec"] = duration_sec
+            result["test_fn"] = fn.__name__
         cleanup_temp_roots()
 
 def record(test_id, title, status, details, repo=None):
@@ -8146,6 +8153,10 @@ def test_knowledge_context_budget_explainability():
     context = parsed.get("context", {})
     ranked_items = parsed.get("ranked_items", [])
     first_item = ranked_items[0] if ranked_items else {}
+    canonical_paths = parsed.get("canonical_paths", {})
+    context_canonical_paths = context.get("canonical_paths", {})
+    search = parsed.get("search", {})
+    search_fallback = context.get("search_fallback", [])
     expect(
         result["exit_code"] == 0
         and parsed.get("schema_version") == 2
@@ -8153,8 +8164,12 @@ def test_knowledge_context_budget_explainability():
         and context.get("budget") == "small"
         and context.get("effective_limit") == 4
         and parsed.get("route", {}).get("project_id") == "pcr02"
+        and canonical_paths.get("archive") == "projects/pcr02/archive"
+        and context_canonical_paths.get("archive") == "projects/pcr02/archive"
         and isinstance(context.get("current"), list)
         and isinstance(context.get("risks"), list)
+        and search.get("fallback_count", 0) >= 1
+        and any(row.get("fallback_term") == "ota" for row in search_fallback)
         and first_item.get("why_selected")
         and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", []),
         "knowledge-context-budget-explainability",
@@ -8163,7 +8178,9 @@ def test_knowledge_context_budget_explainability():
             "exit_code": result["exit_code"],
             "context_budget": parsed.get("context_budget"),
             "route": parsed.get("route", {}),
+            "canonical_paths": canonical_paths,
             "context": context,
+            "search": search,
             "first_item": first_item,
             "stdout_sample": result["stdout"][:1200],
             "stderr_sample": result["stderr"][:500],
@@ -8541,7 +8558,22 @@ output = {
     "today": today.isoformat(),
     "as_of_source": today_source,
     "suite": args.suite,
-    "full_result_count": len(full_tests),
+    "selected_test_count": len(selected_tests),
+    "full_test_count": len(full_tests),
+    "full_result_count": len(results) if args.suite == "full" else len(full_tests),
+    "slowest_results": sorted(
+        [
+            {
+                "id": result.get("id", ""),
+                "test_fn": result.get("test_fn", ""),
+                "duration_sec": result.get("duration_sec", 0),
+                "status": result.get("status", ""),
+            }
+            for result in results
+        ],
+        key=lambda row: row["duration_sec"],
+        reverse=True,
+    )[:10],
     "kept_temp": args.keep_temp,
     "result_count": len(results),
     "results": results,

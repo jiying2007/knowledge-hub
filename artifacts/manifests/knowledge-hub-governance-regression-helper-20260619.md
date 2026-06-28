@@ -126,7 +126,7 @@
 | knowledge-search-kind-alias-filters | 当前搜索入口支持模板 kind 别名归一到 registry kind | `--kind validation-report` 会归一为 `validation` 过滤，并在 JSON 中暴露 `kind_normalized`，避免模板别名和 registry 枚举割裂 |
 | knowledge-search-registry-metadata-fallback | 临时副本新增正文不含关键词、registry metadata 含关键词的 item 后运行结构化搜索 | `knowledge-search.sh` 必须通过 registry metadata fallback 返回 `match=registry-metadata` 的 item，避免只登记在 registry 的长期入口无法被关键词发现 |
 | knowledge-search-invalid-filters | 当前搜索入口拒绝非法枚举过滤值和非正 limit | `--status not-a-status`、`--kind not-a-kind` 和 `--limit 0` 非零退出，并提示允许值或正整数要求，避免无效过滤静默退化为全文搜索 |
-| knowledge-context-budget-explainability | 当前上下文预检输出预算内可解释知识包 | `knowledge-context.sh --context-budget small --json` 必须输出 route、`context.current/recent/related/risks`、`ranked_items[].why_selected` 和旧路径风险说明，且不写文件 |
+| knowledge-context-budget-explainability | 当前上下文预检输出预算内可解释知识包 | `knowledge-context.sh --context-budget small --json` 必须输出 route、`canonical_paths`、`context.current/recent/related/risks/search_fallback`、`ranked_items[].why_selected` 和旧路径风险说明；精确全文无命中时要执行 route-scoped fallback，且不写文件 |
 | stable-governance-command-examples | 治理文档和模板保持稳定命令示例 | README、tools README、templates、governance 和 indexes 不得退回 repo-relative `rtk bash tools/...`、短 `knowledge-check --dry-run` 或弱 validation_refs 示例 |
 | final-proof-artifact-discoverability | 当前终态 proof/gate/recovery 主制品可从 registry、文件配对和核心索引发现 | 终态 proof 主项必须有 `.md/.jsonl` 配对，出现在 registry/items、by-owner、by-status、by-review-date、by-topic 和 by-decision，且索引引用不得指向不存在文件 |
 | final-proof-decision-index-recovery-contract | 终态 proof 可发现性覆盖 by-decision 决策恢复索引 | `tools/knowledge-final-gate.sh` 的 proof 索引清单必须包含 `indexes/by-decision.md`，且 2026-06-23 终态治理 proof 在 by-decision 中有中文决策/边界锚点 |

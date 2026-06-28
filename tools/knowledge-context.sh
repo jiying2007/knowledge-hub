@@ -366,10 +366,12 @@ ranked.sort(key=lambda pair: (-pair[0], pair[1].get("id", "")))
 
 
 def search_matches():
-    cmd = [
+    base_cmd = [
         "rtk",
         "bash",
         str(root / "tools" / "knowledge-search.sh"),
+    ]
+    cmd = base_cmd + [
         args.query,
         "--json",
         "--limit",
@@ -379,9 +381,48 @@ def search_matches():
     if completed.returncode not in (0, 1):
         return {"error": completed.stderr.strip(), "results": []}
     try:
-        return json.loads(completed.stdout)
+        payload = json.loads(completed.stdout)
     except Exception:
         return {"error": "knowledge-search output was not valid JSON", "results": []}
+    if payload.get("results"):
+        payload["fallback_terms"] = []
+        return payload
+    fallback_terms = [
+        term for term in query_terms
+        if term not in {"pcr02", "归档", "路径", "where", "archive"}
+    ][:4]
+    if not fallback_terms:
+        payload["fallback_terms"] = []
+        return payload
+    merged = []
+    seen = set()
+    for term in fallback_terms:
+        fallback_cmd = base_cmd + [term, "--json", "--limit", str(args.limit)]
+        if best_route and best_route.get("project_id"):
+            fallback_cmd.extend(["--domain", f"projects/{best_route.get('project_id')}"])
+        fallback = subprocess.run(fallback_cmd, cwd=str(root), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if fallback.returncode not in (0, 1):
+            continue
+        try:
+            fallback_payload = json.loads(fallback.stdout)
+        except Exception:
+            continue
+        for result in fallback_payload.get("results", []):
+            key = (result.get("path", ""), result.get("line", 0), result.get("item_id", ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            row = dict(result)
+            row["fallback_term"] = term
+            merged.append(row)
+            if len(merged) >= effective_limit:
+                break
+        if len(merged) >= effective_limit:
+            break
+    payload["fallback_terms"] = fallback_terms
+    payload["fallback_results"] = merged
+    payload["fallback_count"] = len(merged)
+    return payload
 
 
 search_payload = search_matches()
@@ -411,7 +452,15 @@ if matched_repo:
     }
 
 route_summary = None
+canonical_paths = {}
 if best_route:
+    canonical_paths = {
+        "hub_entry": best_route.get("hub_entry"),
+        "current": best_route.get("current_path"),
+        "archive": best_route.get("archive_path"),
+        "decisions": best_route.get("decisions_path"),
+        "validation": best_route.get("validation_path"),
+    }
     route_summary = {
         "project_id": best_route.get("project_id"),
         "group_id": best_route.get("group_id"),
@@ -479,9 +528,11 @@ context_summary = {
     "budget": args.context_budget,
     "effective_limit": effective_limit,
     "selection_order": ["route", "current", "recent", "related", "risk"],
+    "canonical_paths": canonical_paths,
     "current": current_context[:effective_limit],
     "recent": recent_context[:effective_limit],
     "related": related_context[:effective_limit],
+    "search_fallback": search_payload.get("fallback_results", [])[:effective_limit],
     "risks": [
         "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
         "memory、raw session、raw log、core、binary 不能高于 Hub 当前事实。",
@@ -503,6 +554,7 @@ payload = {
     },
     "repo_route": repo_summary,
     "route": route_summary,
+    "canonical_paths": canonical_paths,
     "workspace_ref": workspace_ref,
     "workspace_match": workspace_match or {},
     "git_remotes_detected": git_remotes,
