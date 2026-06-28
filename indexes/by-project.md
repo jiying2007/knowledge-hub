@@ -44,13 +44,13 @@
 - Owner resolution playbook: `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md`
 - Owner resolution schema: `artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`
 - Owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
-- AGENTS owner-ready package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
-- Diag metadata owner-ready package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
-- ASAN owner-ready package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
-- Memory auto-curation owner-ready package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
-- DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
-- Motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
-- DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
+- AGENTS historical owner signoff package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
+- Diag metadata historical owner signoff package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
+- ASAN historical owner signoff package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
+- Memory auto-curation historical owner signoff package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
+- DVR plan historical owner signoff package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
+- Motor MCU historical owner signoff package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
+- DVR session archive historical owner signoff package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - Source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/source-policy.md`
 - ASAN project-local target：`projects/pcr02/current/runbooks/asan-debug-guide.md`

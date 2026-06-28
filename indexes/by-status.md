@@ -122,13 +122,13 @@
 - reviewing: `knowledge-hub-final-gate-20260620`
 - reviewing: `pcr02-owner-decision-intake-execution-20260620`
 - reviewing: `knowledge-hub-regression-temp-cleanup-20260620`
-- reviewing: `pcr02-agents-owner-ready-package-20260620`
-- reviewing: `pcr02-diag-owner-ready-package-20260620`
-- reviewing: `pcr02-asan-owner-ready-package-20260620`
-- reviewing: `pcr02-memory-auto-curation-owner-ready-package-20260620`
-- reviewing: `pcr02-dvr-plan-owner-ready-package-20260620`
-- reviewing: `pcr02-motor-mcu-owner-ready-package-20260620`
-- reviewing: `pcr02-dvr-session-archive-owner-ready-package-20260620`
+- archived: `pcr02-agents-owner-ready-package-20260620`
+- archived: `pcr02-diag-owner-ready-package-20260620`
+- archived: `pcr02-asan-owner-ready-package-20260620`
+- archived: `pcr02-memory-auto-curation-owner-ready-package-20260620`
+- archived: `pcr02-dvr-plan-owner-ready-package-20260620`
+- archived: `pcr02-motor-mcu-owner-ready-package-20260620`
+- archived: `pcr02-dvr-session-archive-owner-ready-package-20260620`
 - reviewing: `knowledge-hub-owner-ready-coverage-status-20260620`
 - reviewing: `knowledge-hub-owner-landing-ready-gate-20260620`
 - reviewing: `knowledge-hub-owner-forms-text-jsonl-20260620`
@@ -257,13 +257,13 @@
 - pcr02-root-artifacts-boundary-applied: PCR02 root loose artifacts are registered as mixed artifact/archive/tool/config boundary by `artifacts/manifests/pcr02-root-artifacts-boundary-20260620.jsonl`; historical and current scan counts are kept separate.
 - pcr02-module-agent-rules-boundary-applied: PCR02 AGENTS/local rules are registered as owner-gated project/module-local references by `artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.jsonl`; no rule body is promoted.
 - pcr02-agent-config-boundary-applied: PCR02 `.vscode` and `.kilo` agent config are registered as config/artifact/report-only automation boundaries by `artifacts/manifests/pcr02-agent-config-boundary-20260620.jsonl`; no setup, npm, node or script execution is enabled.
-- owner-ready-no-decision: PCR02 `AGENTS.md` has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-001` remains open.
-- owner-ready-no-decision: PCR02 diag metadata has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-002` remains open.
-- owner-ready-no-decision: PCR02 ASAN runbook has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-003` remains open.
-- owner-ready-no-decision: PCR02 memory auto-curation has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-004` remains open.
-- owner-ready-no-decision: PCR02 DVR plan has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-005` remains open.
-- owner-ready-no-decision: PCR02 motor MCU debug record has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-006` remains open.
-- owner-ready-no-decision: PCR02 DVR session archive has a single-item owner-ready signoff package at `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.jsonl`; no owner decision is generated and `pcr02-owner-decision-worksheet-007` remains open.
+- archived-owner-signoff-package: PCR02 `AGENTS.md` historical signoff package at `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 diag metadata historical signoff package at `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 ASAN runbook historical signoff package at `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 memory auto-curation historical signoff package at `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 DVR plan historical signoff package at `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 motor MCU debug record historical signoff package at `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
+- archived-owner-signoff-package: PCR02 DVR session archive historical signoff package at `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.jsonl` is superseded by `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
 - owner-ready-coverage-status-ready: Knowledge Hub owner-ready coverage status is recorded at `artifacts/manifests/knowledge-hub-owner-ready-coverage-status-20260620.jsonl`; it validates 7/7 owner-ready packages but no owner gate is resolved by this status alone.
 - owner-landing-ready-gate-applied: `tools/knowledge-owner-gates.sh` now requires owner-ready package strong validation for landing-plan output before emitting manual landing steps; documented by `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.jsonl`.
 - owner-forms-text-jsonl-applied: `tools/knowledge-owner-gates.sh` now prints copyable owner decision JSONL skeleton rows in text mode for `--forms`; documented by `artifacts/manifests/knowledge-hub-owner-forms-text-jsonl-20260620.jsonl`.

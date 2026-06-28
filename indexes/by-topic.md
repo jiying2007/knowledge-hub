@@ -10,11 +10,11 @@
 - knowledge: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
-- diag: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`; `projects/pcr02/current/runbooks/diag-usage-guide.md`
-- ASAN: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
-- memory auto-curation: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`; `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
-- DVR: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`; `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
-- motor MCU: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
+- diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/pcr02/current/runbooks/diag-usage-guide.md`
+- ASAN: `projects/pcr02/current/runbooks/asan-debug-guide.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- memory auto-curation: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- DVR: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- motor MCU: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
 - governance: `governance/`; `artifacts/manifests`
 - path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
@@ -148,13 +148,13 @@
 - Knowledge Hub final gate: `artifacts/manifests/knowledge-hub-final-gate-20260620.md`
 - PCR02 owner decision intake execution: `artifacts/manifests/pcr02-owner-decision-intake-execution-20260620.md`
 - Knowledge Hub regression temp cleanup: `artifacts/manifests/knowledge-hub-regression-temp-cleanup-20260620.md`
-- PCR02 AGENTS owner-ready package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
-- PCR02 diag metadata owner-ready package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
-- PCR02 ASAN owner-ready package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
-- PCR02 memory auto-curation owner-ready package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
-- PCR02 DVR plan owner-ready package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
-- PCR02 motor MCU owner-ready package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
-- PCR02 DVR session archive owner-ready package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
+- PCR02 AGENTS historical owner signoff package: `artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`
+- PCR02 diag metadata historical owner signoff package: `artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`
+- PCR02 ASAN historical owner signoff package: `artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`
+- PCR02 memory auto-curation historical owner signoff package: `artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`
+- PCR02 DVR plan historical owner signoff package: `artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`
+- PCR02 motor MCU historical owner signoff package: `artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`
+- PCR02 DVR session archive historical owner signoff package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Knowledge Hub owner-ready coverage status: `artifacts/manifests/knowledge-hub-owner-ready-coverage-status-20260620.md`
 - Knowledge Hub owner landing ready gate: `artifacts/manifests/knowledge-hub-owner-landing-ready-gate-20260620.md`
 - Knowledge Hub owner forms text JSONL: `artifacts/manifests/knowledge-hub-owner-forms-text-jsonl-20260620.md`

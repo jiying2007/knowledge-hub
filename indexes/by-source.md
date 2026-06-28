@@ -67,19 +67,19 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 ## Source 专项审查制品
 
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN 拆分目标证据：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`。
-- `pcr02-project-docs/runbooks/asan-debug-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/runbooks/asan-debug-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
-- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/runbooks/memory-auto-curation-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU 事实拆分和 archive-only 边界：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
-- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md`: DVR session archive-only 元数据和 memory-candidate 排除：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
-- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/reports/2026-06-16-dvr-record-replay-session-archive.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/AGENTS.md`: PCR02 project-local docs rule 已由 landing 确认为 `reference-only`；历史证据：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
-- `pcr02-project-docs/AGENTS.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/AGENTS.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-agents-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/standards/diag-command-metadata-standard.md`: PCR02 diag metadata 已由 landing 确认为 `reference-only`；历史证据边界：`artifacts/manifests/pcr02-remaining-owner-gates-20260618.md`。
-- `pcr02-project-docs/standards/diag-command-metadata-standard.md owner-ready package`: 单项 owner 签收材料：`artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`。
+- `pcr02-project-docs/standards/diag-command-metadata-standard.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-diag-owner-ready-package-20260620.md`。
 - `pcr02-project-docs`: 32/32 docs 治理覆盖和 registry/index 收口：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
 - `pcr02-project-docs owner gates`: 旧 owner decision action board 已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代；历史行动板：`artifacts/manifests/pcr02-owner-action-board-20260618.md`。
 - `pcr02-project-docs owner intake`: 旧中文 owner 签收字段包已由 landing 取代；历史 intake：`artifacts/manifests/pcr02-owner-intake-package-20260618.md`。

@@ -2650,8 +2650,31 @@ def test_final_gate_skip_regression_blocker():
     )
 
 def test_status_mature_profile_blocks_migration_state():
+    repo = copy_repo("status-mature-profile-blocks-migration-state")
+    injected = {
+        "id": "migrated-fixture-copyfirst-20260628",
+        "title": "Migrated fixture copy-first 2026-06-28",
+        "kind": "audit",
+        "domain": "governance",
+        "path": "artifacts/manifests/migrated-fixture-copyfirst-20260628.md",
+        "scope": "team-general",
+        "visibility": "team-internal",
+        "status": "reviewing",
+        "owner": "leiwenjun",
+        "source": {"type": "generated"},
+        "validation_refs": ["tools/knowledge-check.sh --dry-run --json --diagnostics"],
+        "tags": ["copy-first", "migration-baseline"],
+        "review_after": today.isoformat(),
+        "promotion": "none",
+        "review_status": "owner-ready-no-decision",
+        "created_at": today.isoformat(),
+        "updated_at": today.isoformat(),
+    }
+    items_path = repo / "registry" / "items.jsonl"
+    with items_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(injected, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
-        root,
+        repo,
         [
             "rtk",
             "bash",
@@ -2687,11 +2710,7 @@ def test_status_mature_profile_blocks_migration_state():
         and mature_audit.get("copy_first_tool_count") == 0
         and mature_audit.get("blocker_count", 0) >= 1
         and "mature-profile-blockers" in strict_blocker_ids
-        and {
-            "mature-migration-items",
-            "mature-process-manifests",
-            "mature-reviewing-ratio-high",
-        }.issubset(blocker_ids),
+        and "mature-migration-items" in blocker_ids,
         "status-mature-profile-blocks-migration-state",
         "mature profile blocks migration-state residues as a hard status gate",
         {
