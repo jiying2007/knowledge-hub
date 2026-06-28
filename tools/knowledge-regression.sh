@@ -2642,6 +2642,61 @@ def test_final_gate_skip_regression_blocker():
         },
     )
 
+def test_status_mature_profile_blocks_migration_state():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-status.sh",
+            "--strict",
+            "--json",
+            "--final-profile",
+            "mature",
+            "--as-of",
+            today.isoformat(),
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    mature_audit = parsed.get("sources", {}).get("mature_audit", {})
+    blocker_ids = {
+        blocker.get("id")
+        for blocker in mature_audit.get("blockers", [])
+        if isinstance(blocker, dict)
+    }
+    strict_blocker_ids = {
+        blocker.get("id")
+        for blocker in parsed.get("strict_blockers", [])
+        if isinstance(blocker, dict)
+    }
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("status") == "needs-fix"
+        and mature_audit.get("status") == "needs-fix"
+        and mature_audit.get("copy_first_tool_count") == 0
+        and mature_audit.get("blocker_count", 0) >= 1
+        and "mature-profile-blockers" in strict_blocker_ids
+        and {
+            "mature-migration-items",
+            "mature-process-manifests",
+            "mature-closed-sources-in-current-registry",
+            "mature-reviewing-ratio-high",
+        }.issubset(blocker_ids),
+        "status-mature-profile-blocks-migration-state",
+        "mature profile blocks migration-state residues as a hard status gate",
+        {
+            "exit_code": result["exit_code"],
+            "status": parsed.get("status"),
+            "strict_blocker_ids": sorted(strict_blocker_ids),
+            "mature_audit": mature_audit,
+            "stdout_sample": result["stdout"][:1200],
+        },
+    )
+
 def test_final_gate_empty_child_json_blocker():
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         expect(
@@ -8428,6 +8483,7 @@ full_tests = [
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
     test_final_gate_skip_regression_blocker,
+    test_status_mature_profile_blocks_migration_state,
     test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
     test_final_gate_source_final_state_field_gap,
@@ -8538,6 +8594,7 @@ quick_test_names = {
     "test_no_user_absolute_path_persisted",
     "test_user_path_redaction_in_tool_outputs",
     "test_stable_governance_command_examples",
+    "test_status_mature_profile_blocks_migration_state",
 }
 
 selected_tests = (

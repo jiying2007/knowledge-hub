@@ -19,7 +19,7 @@ argv = sys.argv[2:]
 parser = argparse.ArgumentParser(description="Run the read-only Knowledge Hub final-state gate.")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for knowledge-check/status review_after checks.")
-parser.add_argument("--final-profile", choices=["standard", "max-body"], default="standard", help="Terminal profile forwarded to knowledge-status --strict.")
+parser.add_argument("--final-profile", choices=["standard", "max-body", "mature"], default="standard", help="Terminal profile forwarded to knowledge-status --strict.")
 parser.add_argument(
     "--regression-suite",
     choices=["quick", "full"],
@@ -1956,6 +1956,7 @@ result = {
             "status": strict_payload.get("status", "<missing>"),
             "strict_blocker_count": len(strict_payload.get("strict_blockers", [])),
             "parse_error": strict_status["parse_error"],
+            "mature_audit": strict_payload.get("sources", {}).get("mature_audit", {}),
         },
         "source_check_runtime": source_check_runtime_summary,
         "index_plan_linking": {

@@ -622,7 +622,7 @@ Required topic fields:
 Manifest profile invariants:
 
 - 2026-06-21 之前的历史 manifest 不反向强制改写。
-- copy-first、artifact-ref、owner worksheet、owner form 和 source coverage 清单按各自类型字段保持兼容，不为美化字段而改变语义。
+- artifact-ref、owner worksheet、owner form、source coverage 和 mature closeout 清单按各自类型字段保持兼容，不为美化字段而改变语义。copy-first 只作为历史迁移 provenance，不再作为成熟态新增或默认工具入口。
 - source coverage row 继续遵守 source coverage 字段要求。
 - owner worksheet/form 结构门禁不得生成 owner decision，不得关闭 owner gate。
 - 机器清单可以保留英文 key，但 `summary_zh`、`notes_zh`、`decision`、`risk` 或相邻 Markdown 必须给中文维护者足够上下文。

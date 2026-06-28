@@ -24,7 +24,7 @@ parser.add_argument("--json", action="store_true")
 parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 parser.add_argument("--review-queue-limit", type=int, default=20, help="Maximum rows per review queue sample in JSON/text output.")
-parser.add_argument("--final-profile", choices=["standard", "max-body"], default="standard", help="Terminal profile. standard keeps ordinary review queues report-only; max-body blocks on any pending human review and unsafe source inventory.")
+parser.add_argument("--final-profile", choices=["standard", "max-body", "mature"], default="standard", help="Terminal profile. standard keeps ordinary review queues report-only; max-body blocks on any pending human review and unsafe source inventory; mature also rejects migration-era residues.")
 args = parser.parse_args(argv)
 if args.review_queue_limit < 1:
     parser.error("--review-queue-limit must be a positive integer")
@@ -1195,12 +1195,173 @@ max_body_source_inventory_audit = build_max_body_source_inventory_audit()
 
 owner_gates_failed = owner_gates["exit_code"] != 0
 review_queue_blocking_count = int(review_queues.get("summary", {}).get("active_or_promotion_blocker_count", 0) or 0)
-review_queue_max_body_blocking_count = int(review_queues.get("summary", {}).get("total_pending_count", 0) or 0) if args.final_profile == "max-body" else 0
-max_body_source_inventory_blocking_count = int(max_body_source_inventory_audit.get("blocker_count", 0) or 0) if args.final_profile == "max-body" else 0
+max_body_like_profile = args.final_profile in {"max-body", "mature"}
+review_queue_max_body_blocking_count = int(review_queues.get("summary", {}).get("total_pending_count", 0) or 0) if max_body_like_profile else 0
+max_body_source_inventory_blocking_count = int(max_body_source_inventory_audit.get("blocker_count", 0) or 0) if max_body_like_profile else 0
+
+MATURE_MIGRATION_PATTERNS = [
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in [
+        r"\bmigrated-",
+        r"copy-?first",
+        r"copyfirst",
+        r"migration-baseline",
+        r"migration-applied",
+        r"migration-dry-run",
+        r"source-docs",
+        r"owner-ready-no-decision",
+    ]
+]
+MATURE_PROCESS_MANIFEST_PATTERNS = [
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in [
+        r"copy-?first",
+        r"source-inventory-\d{8}",
+        r"project-docs-classification-\d{8}",
+    ]
+]
+MATURE_ALLOWED_PROCESS_MANIFEST_NAMES = {
+    "knowledge-hub-governance-regression-helper-20260619.md",
+}
+MATURE_REVIEWING_MAX_RATIO = 0.10
+
+def mature_text_matches(*values):
+    text_parts = []
+    for value in values:
+        if isinstance(value, list):
+            text_parts.extend(str(item) for item in value)
+        elif value is not None:
+            text_parts.append(str(value))
+    haystack = " ".join(text_parts)
+    return any(pattern.search(haystack) for pattern in MATURE_MIGRATION_PATTERNS)
+
+def build_mature_audit():
+    migration_item_hits = []
+    long_lived_reviewing = []
+    archived_migration_hits = []
+    for item in items:
+        item_id = str(item.get("id", ""))
+        status_value = str(item.get("status", ""))
+        hit = mature_text_matches(
+            item_id,
+            item.get("path", ""),
+            item.get("tags", []),
+            item.get("review_status", ""),
+            item.get("summary_zh", ""),
+        )
+        if hit:
+            migration_item_hits.append({
+                "id": item_id,
+                "status": status_value,
+                "kind": item.get("kind", ""),
+                "domain": item.get("domain", ""),
+                "path": item.get("path", ""),
+                "review_status": item.get("review_status", ""),
+                "tags": item.get("tags", []),
+            })
+            if status_value == "archived":
+                archived_migration_hits.append(item_id)
+        if status_value == "reviewing":
+            long_lived_reviewing.append({
+                "id": item_id,
+                "domain": item.get("domain", ""),
+                "path": item.get("path", ""),
+                "review_after": item.get("review_after", ""),
+                "review_status": item.get("review_status", ""),
+            })
+
+    process_manifest_hits = []
+    manifests_root = root / "artifacts" / "manifests"
+    if manifests_root.exists():
+        for path in sorted(manifests_root.iterdir()):
+            if not path.is_file():
+                continue
+            name = path.name
+            if name in MATURE_ALLOWED_PROCESS_MANIFEST_NAMES:
+                continue
+            if any(pattern.search(name) for pattern in MATURE_PROCESS_MANIFEST_PATTERNS):
+                process_manifest_hits.append(display_path(path))
+
+    copy_first_tools = [
+        display_path(path)
+        for path in sorted((root / "tools").glob("knowledge-copy-first*.sh"))
+        if path.exists()
+    ]
+    source_current_closed = [
+        {
+            "id": str(source.get("id", "")),
+            "status": source.get("status", ""),
+            "final_disposition": source.get("final_disposition", ""),
+            "canonical_target": source.get("canonical_target", ""),
+        }
+        for source in sources
+        if str(source.get("status", "")) == "retired"
+    ]
+
+    reviewing_count = len(long_lived_reviewing)
+    item_count = len(items)
+    reviewing_ratio = round(reviewing_count / item_count, 4) if item_count else 0
+    blockers = []
+    if migration_item_hits:
+        blockers.append({
+            "id": "mature-migration-items",
+            "count": len(migration_item_hits),
+            "summary_zh": "成熟态不允许 migration/copy-first/migrated/source-docs 等迁移态条目留在当前 registry。",
+            "sample": migration_item_hits[:20],
+        })
+    if process_manifest_hits:
+        blockers.append({
+            "id": "mature-process-manifests",
+            "count": len(process_manifest_hits),
+            "summary_zh": "成熟态不保留 copy-first、classification 或 source-inventory 迁移过程 manifest 作为当前树文件。",
+            "sample": process_manifest_hits[:20],
+        })
+    if copy_first_tools:
+        blockers.append({
+            "id": "mature-copy-first-tools",
+            "count": len(copy_first_tools),
+            "summary_zh": "成熟态不暴露 copy-first 迁移工具入口；外部资料吸收统一走 source/intake/review/promote。",
+            "sample": copy_first_tools,
+        })
+    if source_current_closed:
+        blockers.append({
+            "id": "mature-closed-sources-in-current-registry",
+            "count": len(source_current_closed),
+            "summary_zh": "成熟态不把已关闭迁移来源保留在 registry/sources.json 当前 source 主列表。",
+            "sample": source_current_closed[:20],
+        })
+    if reviewing_ratio > MATURE_REVIEWING_MAX_RATIO:
+        blockers.append({
+            "id": "mature-reviewing-ratio-high",
+            "count": reviewing_count,
+            "summary_zh": "成熟态要求 reviewing 只是短期状态，不能作为迁移残留长期容器。",
+            "reviewing_ratio": reviewing_ratio,
+            "max_ratio": MATURE_REVIEWING_MAX_RATIO,
+            "sample": long_lived_reviewing[:20],
+        })
+    return {
+        "status": "pass" if not blockers else "needs-fix",
+        "profile": "mature",
+        "item_count": item_count,
+        "migration_item_count": len(migration_item_hits),
+        "archived_migration_item_count": len(archived_migration_hits),
+        "process_manifest_count": len(process_manifest_hits),
+        "copy_first_tool_count": len(copy_first_tools),
+        "closed_source_count": len(source_current_closed),
+        "reviewing_count": reviewing_count,
+        "reviewing_ratio": reviewing_ratio,
+        "reviewing_max_ratio": MATURE_REVIEWING_MAX_RATIO,
+        "blocker_count": len(blockers),
+        "blockers": blockers,
+        "notes_zh": "mature profile 要求迁移态从当前工作模型消失；封存 closeout 只能显式审计查询，不参与默认 search/context/routing。",
+    }
+
+mature_audit = build_mature_audit()
+mature_blocking_count = int(mature_audit.get("blocker_count", 0) or 0) if args.final_profile == "mature" else 0
 
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count or review_queue_max_body_blocking_count or max_body_source_inventory_blocking_count:
+elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count or review_queue_max_body_blocking_count or max_body_source_inventory_blocking_count or mature_blocking_count:
     status = "needs-fix"
 elif open_owner_gate_count:
     status = "needs-owner-review"
@@ -1380,6 +1541,10 @@ if args.final_profile == "max-body" and max_body_source_inventory_blocking_count
     next_actions.append(
         "max-body 终态要求 source inventory 无 pending，且 copy-body 仅限 canonical Markdown 正文；先查看 `max_body_source_inventory_audit.blockers`。"
     )
+if args.final_profile == "mature" and mature_blocking_count:
+    next_actions.append(
+        "mature 终态要求迁移态从当前 registry、manifest、source 主列表和工具入口消失；先查看 `mature_audit.blockers`。"
+    )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
 
@@ -1472,6 +1637,15 @@ if max_body_source_inventory_blocking_count:
         "blockers": max_body_source_inventory_audit.get("blockers", []),
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json --final-profile max-body"],
     })
+if mature_blocking_count:
+    strict_blockers.append({
+        "id": "mature-profile-blockers",
+        "severity": "blocker",
+        "count": mature_blocking_count,
+        "summary_zh": "mature profile 仍发现迁移态 registry、manifest、source 或工具入口残留。",
+        "blockers": mature_audit.get("blockers", []),
+        "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json --final-profile mature"],
+    })
 if open_owner_gate_count:
     owner_commands = list(summary_commands)
     owner_commands.extend(owner_summary_commands)
@@ -1544,6 +1718,7 @@ result = {
         "source_check_report_command": source_check_report_command,
         "boundary_health": check_payload.get("boundary_health", {}),
         "max_body_source_inventory_audit": max_body_source_inventory_audit,
+        "mature_audit": mature_audit,
     },
     "review_queues": review_queues,
     "owner_gates": {

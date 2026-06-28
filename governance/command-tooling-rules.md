@@ -24,7 +24,6 @@ Knowledge Hub 的命令和工具必须保守、可复查、可回滚。用户和
 - `knowledge-capture.sh`
 - `knowledge-promote.sh`
 - `knowledge-retire.sh`
-- `knowledge-copy-first.sh`
 
 写入计划工具默认 dry-run。`--apply` 只能在 reviewed manifest、owner、rollback policy、hash 校验和验证命令齐备时由人工触发。
 
