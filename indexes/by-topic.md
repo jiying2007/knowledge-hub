@@ -20,7 +20,7 @@
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
-- patent: `domains/patents`; `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
+- patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
 
 ## 领域入口
@@ -30,7 +30,6 @@
 - 项目当前事实：`projects/*/current`
 - 项目历史归档：`projects/*/archive`
 - 专利材料：`domains/patents`
-- 专利披露 copy-first applied：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`
 - 专利披露 Markdown 正文集：`domains/patents/archive/patent-disclosure`
 - 专利披露附件引用：`domains/patents/artifacts/patent-disclosure-artifacts.ref.md`
 - Codex 工作流：`domains/codex`
@@ -129,7 +128,6 @@
 - Knowledge Hub doctor helper: `artifacts/manifests/knowledge-hub-doctor-helper-20260619.md`
 - Knowledge Hub README maintenance path sync: `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.md`
 - Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
-- Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
 - Engineering archive PCR02 archive corpus: `projects/pcr02/archive/engineering-archive`
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - PCR02 Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`

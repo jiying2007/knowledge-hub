@@ -8,23 +8,19 @@
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
-- reviewing: `migrated-pcr02-docs-copyfirst-001`
-- reviewing: `migrated-pcr02-docs-copyfirst-002`
-- reviewing: `migrated-pcr02-docs-copyfirst-003`
-- reviewing: `migrated-pcr02-docs-copyfirst-004`
-- reviewing: `migrated-pcr02-docs-copyfirst-005`
-- reviewing: `migrated-pcr02-docs-copyfirst-006`
-- reviewing: `migrated-pcr02-docs-copyfirst-007`
-- reviewing: `migrated-pcr02-docs-copyfirst-008`
-- reviewing: `migrated-pcr02-docs-copyfirst-009`
-- reviewing: `migrated-pcr02-docs-copyfirst-010`
-- reviewing: `migrated-pcr02-docs-copyfirst-011`
-- reviewing: `migrated-pcr02-docs-copyfirst-012`
-- reviewing: `migrated-pcr02-docs-copyfirst-013`
-- reviewing: `migrated-pcr02-docs-copyfirst-019`
-- reviewing: `migrated-pcr02-docs-copyfirst-020`
-- reviewing: `migrated-pcr02-docs-copyfirst-021`
-- reviewing: `migrated-pcr02-docs-copyfirst-022`
+- reviewing: `pcr02-diag-command-architecture-final`
+- reviewing: `pcr02-hdi-api-app-functional-overview`
+- reviewing: `pcr02-module-catalog`
+- reviewing: `pcr02-core-module-design`
+- reviewing: `pcr02-project-detailed-design`
+- reviewing: `pcr02-project-overview-design`
+- reviewing: `pcr02-diag-v4-hybrid-refcount-discovery-spec`
+- reviewing: `pcr02-third-party-libraries-reference`
+- reviewing: `pcr02-diag-usage-guide`
+- reviewing: `pcr02-irlight-sw-threshold-calibration`
+- reviewing: `pcr02-prog-tool-usage-guide`
+- reviewing: `pcr02-build-and-deploy-guide`
+- reviewing: `pcr02-debug-tools-guide`
 - archived: `pcr02-review-required-resolution-20260617`
 - reviewing: `pcr02-docs-index-reference-20260618`
 - reviewing: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
@@ -83,7 +79,7 @@
 - reviewing: `knowledge-hub-doctor-helper-20260619`
 - reviewing: `knowledge-hub-readme-maintenance-path-sync-20260619`
 - reviewing: `knowledge-hub-evidence-index-template-20260619`
-- reviewing: `patent-disclosure-markdown-corpus-20260619`
+- reviewing: `patent-disclosure-canonical-archive-corpus`
 - reviewing: `patent-disclosure-artifact-ref-manifest-20260619`
 - reviewing: `knowledge-hub-source-coverage-closeout-20260619`
 - reviewing: `embedded-knowledge-owner-review-gate-20260619`
@@ -171,13 +167,17 @@
 - reviewing: `knowledge-hub-owner-dispatch-readability-sync-20260621`
 - reviewing: `knowledge-hub-terminal-contract-template-sync-20260621`
 - reviewing: `knowledge-hub-asof-coverage-contract-20260621`
-- archived: `migrated-pcr02-docs-copyfirst-014`
-- archived: `migrated-pcr02-docs-copyfirst-015`
-- archived: `migrated-pcr02-docs-copyfirst-016`
-- archived: `migrated-pcr02-docs-copyfirst-017`
-- archived: `migrated-pcr02-docs-copyfirst-018`
-- archived: `migrated-pcr02-docs-copyfirst-023`
-- archived: `engineering-archive-pcr02-archive-corpus-20260619`
+- archived: `pcr02-v1-deep-analysis-plan-archive-20260506`
+- archived: `pcr02-v1-migration-execution-plan-archive-20260506`
+- archived: `pcr02-irlight-optimization-plan-archive-20260508`
+- archived: `pcr02-diag-v4-hybrid-refcount-discovery-plan-archive-20260510`
+- archived: `pcr02-diag-ut-hard-switch-progress-archive-20260513`
+- archived: `pcr02-v1-deep-analysis-validation-report-20260506`
+- archived: `pcr02-v1-migration-final-validation-report-20260507`
+- archived: `pcr02-aov-lightsensor-analysis-validation-report-20260508`
+- archived: `pcr02-prog-tool-terminal-release-validation-report-20260514`
+- archived: `pcr02-session-archive-report-20260517`
+- archived: `pcr02-engineering-archive-corpus`
 - archived-owner-review-plan: PCR02 review-required、owner review、worksheet、action board、intake、source preflight 和早期 closeout 包均为 landing 前历史证据；终态 owner decision 由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl` 记录。
 - archived-owner-target-evidence: ASAN、memory auto-curation、DVR plan、motor MCU 和 DVR session 的 2026-06-18 目标包仅保留为历史证据；终态目标见 `projects/pcr02/current/`、`projects/pcr02/archive/` 和 `indexes/by-decision.md`。
 - final-maintenance-closure-applied: Knowledge Hub final maintenance closure records final gate diff-check evidence, owner forms target candidates, status text owner commands and offline manual defaults by `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.jsonl`; PCR02 Level 1 owner gates were later landed on 2026-06-23.
@@ -210,8 +210,8 @@
 - doctor-helper-applied: Knowledge Hub read-only doctor helper is documented by `artifacts/manifests/knowledge-hub-doctor-helper-20260619.jsonl`.
 - readme-maintenance-path-sync-applied: Knowledge Hub README maintenance path sync is documented by `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.jsonl`.
 - evidence-index-template-applied: Knowledge Hub Evidence Index template alignment is documented by `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.jsonl`.
-- engineering-archive-copy-first-applied: Engineering archive copy-first migration is documented by `artifacts/manifests/engineering-archive-copy-first-applied-20260619.jsonl`; aggregate corpus remains archive-only.
-- patent-disclosure-copy-first-applied: Patent disclosure Markdown copy-first migration is documented by `artifacts/manifests/patent-disclosure-copy-first-applied-20260619.jsonl`; attachment bodies remain artifact references only and legal status remains reviewing.
+- engineering-archive-corpus-materialized: Engineering archive corpus is materialized at `projects/pcr02/archive/engineering-archive`; aggregate corpus remains archive-only.
+- patent-disclosure-corpus-materialized: Patent disclosure Markdown corpus is materialized at `domains/patents/archive/patent-disclosure`; attachment bodies remain artifact references only and legal status remains reviewing.
 - source-coverage-closeout-applied: Registered source coverage is documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`; retired external origins are hub-canonical in Hub source control, Codex runtime inputs remain runtime provenance only, and codex-memories remains no-memory-write.
 - index-plan-helper-applied: Core index planning is assisted by `tools/knowledge-index-plan.sh`; the helper is read-only and does not rewrite `indexes/*.md`.
 - source-coverage-gate-applied: Registered source coverage closeout is enforced by `tools/knowledge-check.sh`; every source must have a terminal classification, decision and risk row.

@@ -10,10 +10,10 @@
 - `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
 - `pcr02-owner-decision-worksheet-007`: DVR record/replay session archive 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`。
 - `pcr02-project-docs-owner-decision-landing-20260623`: PCR02 project docs 7 条 owner gate 已按人工授权落地；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。决策边界为 AGENTS/diag `reference-only`、ASAN `split-approved`、memory auto-curation `teamized-report-only`、DVR plan/motor MCU/DVR session archive `archive-only`；不复制源项目正文、不提升到 embedded standards、不写 memory。
-- `pcr02-docs-copy-first-migration`: PCR02 docs copy-first 已落地；证据：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`。
+- `pcr02-docs-canonical-materialized`: PCR02 docs canonical 条目已落到 `projects/pcr02/`；历史迁移过程证据已封存，不作为当前入口。
 - `pcr02-docs-reference-artifact-ref-migration`: PCR02 docs reference/artifact-ref 已落地；证据：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`。
-- `engineering-archive-copy-first-migration`: PCR02 engineering archive copy-first 已落地；证据：`artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`。
-- `patent-disclosure-copy-first-migration`: patent disclosure Markdown 已终态归位；证据：`artifacts/manifests/patent-disclosure-copy-first-applied-20260619.md`。
+- `engineering-archive-corpus-materialized`: PCR02 engineering archive corpus 已归位到 `projects/pcr02/archive/engineering-archive`，保持 archive-only。
+- `patent-disclosure-corpus-materialized`: patent disclosure Markdown corpus 已归位到 `domains/patents/archive/patent-disclosure`；法律状态和附件 vault 仍需后续复核闭环。
 - `registered-source-coverage-closeout`: registered source coverage 终态边界；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`。
 - `knowledge-hub-index-source-maintenance-tools`: index/source 人工维护入口；证据：`artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.md`；工具变更不生成 owner decision。
 - `knowledge-hub-final-gate-gap-map`: final gate 自动治理和 gap map；证据：`artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.md`；`complete-except-owner-review` 不生成或替代 owner decision。

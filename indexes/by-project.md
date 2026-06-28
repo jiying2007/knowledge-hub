@@ -15,9 +15,7 @@
 - validation 恢复锚点：`projects/pcr02/validation/`
 - manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
 - 决策目录：`projects/pcr02/decisions/`；7 条 PCR02 project docs owner gate 已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 落地，恢复入口在 `indexes/by-decision.md`。
-- 分类基线：`artifacts/manifests/pcr02-project-docs-classification-20260616.md`
-- copy-first dry-run manifest：`artifacts/manifests/pcr02-copy-first-dry-run-20260616.md`
-- copy-first applied 报告：`artifacts/manifests/pcr02-copy-first-applied-20260616.md`
+- PCR02 docs canonical 条目：`projects/pcr02/current/`、`projects/pcr02/decisions/`、`projects/pcr02/archive/`、`projects/pcr02/validation/`
 - review-required 历史处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
 - reference/artifact-ref applied 报告：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
 - owner-review 历史 package：`artifacts/manifests/pcr02-owner-review-package-20260618.md`
@@ -69,5 +67,4 @@
 - Owner routing recovery: `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`
 - Docs index reference: `projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
-- Engineering archive copy-first applied: `artifacts/manifests/engineering-archive-copy-first-applied-20260619.md`
 - Engineering archive corpus: `projects/pcr02/archive/engineering-archive`
