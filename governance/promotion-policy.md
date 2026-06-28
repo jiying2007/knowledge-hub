@@ -7,6 +7,16 @@ personal -> project-current -> project-archive -> embedded-runbook -> embedded-s
 codex-session -> codex-workflow -> skill/workflow/AGENTS candidate
 ```
 
+Hub 统一按 L1 到 L5 沉淀：
+
+- L1 输入候选：只做分类、去敏和价值判断。
+- L2 单次会话/事件：记录单次结论、证据和风险。
+- L3 项目阶段知识：服务同项目后续复用。
+- L4 领域复用知识：沉淀跨项目 runbook、模式和工作流。
+- L5 当前权威规则：当前事实、决策、标准、AGENTS、workflow 或 skill 候选。
+
+任何 L1/L2 材料都不得自动提升为 L5；必须先有 owner、来源、验证、review_after、secret scan 和对应门禁结果。
+
 ## 必填条件（Requirements）
 
 - 明确复用场景。

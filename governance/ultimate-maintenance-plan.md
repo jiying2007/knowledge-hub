@@ -32,6 +32,35 @@
 capture -> classify -> normalize -> review -> active/archive -> review cycle -> supersede/retire
 ```
 
+生命周期状态只描述 Hub 内部治理阶段，不等于新增目录层级：
+
+- `capture`：临时输入、会话结论、排障片段或外部材料摘要，只能作为候选。
+- `classify`：确认项目、domain、topic、owner、敏感性和是否需要归档。
+- `normalize`：按模板补齐中文摘要、证据、边界、验证和回滚信息。
+- `review`：进入 owner、source、promotion 或 final gate；AI 只能生成待审材料。
+- `active`：通过 review 后成为当前事实、决策、runbook、standard 或 workflow。
+- `archive`：保留历史证据、阶段结论、已关闭排障或过期材料。
+- `supersede/retire`：由新条目替代或退役；删除只用于重复、缓存、误入和明确废弃草稿。
+
+## 层级沉淀模型
+
+长期知识按“从输入到稳定规则”的层级沉淀，低层材料不得自动升级为高层权威：
+
+| 层级 | Hub 语义 | 典型落点 | 提升门槛 |
+|---|---|---|---|
+| L1 输入候选 | 临时输入、摘录、会话候选、review queue | `inbox/`、`manifests/*queue*`、候选 worksheet | 分类、去敏、确认是否值得保留 |
+| L2 单次会话/事件 | 单次排障、发布、复盘或研究结论 | `projects/<project>/archive/`、`domains/codex/archive/` | 有证据、范围、结论和剩余风险 |
+| L3 项目阶段知识 | 项目日报、阶段总结、验证批次、专题归档 | `projects/<project>/validation/`、`projects/<project>/archive/` | 能服务后续同项目工作 |
+| L4 领域复用知识 | 跨项目模式、稳定 runbook、反复出现的问题 | `domains/embedded/runbooks/`、`domains/codex/` | 跨项目复用理由和验证证据 |
+| L5 当前权威规则 | 当前事实、决策、标准、AGENTS、workflow、skill 候选 | `projects/<project>/current/`、`decisions/`、`standards/`、`governance/` | owner/review/check/final gate 全部闭环 |
+
+约束：
+
+- L1/L2 不能直接变成 L5；必须经过归一化、review、owner 和验证门禁。
+- 原始会话、raw log、memory 和外部材料不能作为长期正文直接落盘；只能提炼为摘要、证据索引或候选。
+- 不依赖向量数据库、自动热度衰减或自动遗忘来决定权威性；权威性由 registry、owner、status、review_after 和门禁结果决定。
+- AI 可以生成候选、报告和差异分析；不得自动签署 owner decision、写 memory、提升 active 或删除历史证据。
+
 ## 提升规则
 
 - `personal-note` 可提升为 `project-current`，需要 owner 和来源。

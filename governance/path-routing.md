@@ -30,6 +30,23 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 
 预检输出的 `route` 是当前项目入口；`ranked_items` 和 `search` 是候选证据；`candidate_recommendation.required=true` 时，完成或中断都必须生成 Hub candidate，或明确说明“本次无可归档结论”。
 
+## 上下文装配原则
+
+`knowledge-context.sh` 或等价预检应输出“预算内、可解释、可追溯”的上下文，而不是把搜索结果无差别塞给会话。
+
+推荐装配顺序：
+
+1. `goal`：用户当前任务和任务类型。
+2. `route`：项目入口、逻辑 URI、工作区映射和 canonical path。
+3. `current`：当前事实、有效决策、owner 状态和 review_after。
+4. `recent`：最近相关会话、归档摘要、验证记录或排障记录。
+5. `related`：按项目、source、topic、component、状态和时效排序的候选材料。
+6. `risk`：must-not、旧路径禁用、owner gate、敏感信息和未验证边界。
+
+排序说明必须能回答“为什么选中这些材料”：优先当前项目、当前事实、有效决策、已验证 runbook 和最近相关证据；降低 archive-only、superseded、source-only、未审候选和历史 provenance 的权重。上下文预算不足时，先保留 `route/current/risk`，再压缩 `recent/related`。
+
+预检只提供候选和解释，不代表已归档、已提升或已通过 owner review。需要长期沉淀时，仍按 `governance/ultimate-maintenance-plan.md` 的 L1-L5 层级和 `governance/promotion-policy.md` 执行。
+
 ## Canonical 路由表
 
 | 语境 | 旧口径 | 终态回答和新增落点 |
