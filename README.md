@@ -93,6 +93,7 @@ domains/personal/**
 
 - 每个来源、项目、历史会话和自动化链路必须登记、分类、索引和定责。
 - `registry/sources.json` 只保留当前 source 主表；已关闭来源进入 `registry/retired-sources.jsonl`，仅作 provenance ledger。
+- `registry/retired-process-ledger.jsonl` 只保留迁移过程账本、dry-run、applied、classification 和 source inventory 的封存线索；它不是当前知识入口，不参与默认新增、提升或 owner gate。
 - 每个 current 或 retired source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
 - 安全、可读、长期有价值的 Markdown/text 可以落到 canonical 正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。

@@ -1,9 +1,5 @@
 # By Review Date
 
-- 2026-07-16: `source-inventory-20260616`
-- 2026-07-16: `pcr02-project-docs-classification-20260616`
-- 2026-07-16: `pcr02-copy-first-dry-run-20260616`
-- 2026-07-16: `pcr02-copy-first-applied-20260616`
 - 2026-07-16: `migrated-pcr02-docs-copyfirst-001`
 - 2026-07-16: `migrated-pcr02-docs-copyfirst-002`
 - 2026-07-16: `migrated-pcr02-docs-copyfirst-003`
@@ -28,7 +24,6 @@
 - 2026-07-16: `migrated-pcr02-docs-copyfirst-022`
 - 2026-07-16: `migrated-pcr02-docs-copyfirst-023`
 - 2026-07-17: `pcr02-review-required-resolution-20260617`
-- 2026-07-18: `pcr02-reference-artifact-ref-applied-20260618`
 - 2026-07-18: `pcr02-owner-review-package-20260618`
 - 2026-07-18: `pcr02-owner-review-follow-up-20260618`
 - 2026-07-18: `pcr02-owner-decision-worksheets-20260618`
@@ -86,9 +81,7 @@
 - 2026-09-19: `knowledge-hub-doctor-helper-20260619`
 - 2026-09-19: `knowledge-hub-readme-maintenance-path-sync-20260619`
 - 2026-09-19: `knowledge-hub-evidence-index-template-20260619`
-- 2026-09-19: `engineering-archive-copy-first-applied-20260619`
 - 2026-09-19: `engineering-archive-pcr02-archive-corpus-20260619`
-- 2026-09-19: `patent-disclosure-copy-first-applied-20260619`
 - 2026-09-19: `patent-disclosure-markdown-corpus-20260619`
 - 2026-09-19: `patent-disclosure-artifact-ref-manifest-20260619`
 - 2026-09-19: `knowledge-hub-source-coverage-closeout-20260619`

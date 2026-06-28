@@ -342,6 +342,8 @@ Invariants:
 
 item `source.source_id` 指向 all-source registry。`indexes/by-source.md`、source coverage 和 source-control 目录可以覆盖 all-source；成熟态 current source 检查只能扫描 `registry/sources.json`。
 
+`registry/retired-process-ledger.jsonl` 是迁移过程账本封存清单，用于保存已经退出 `registry/items.jsonl` 的 dry-run、applied、classification、source-inventory 等过程 item。它不是 item registry、source registry 或 active index，不得作为新增知识入口、owner approval、active promotion 或默认查询路由；只能在人工审计迁移来源和回滚历史时显式读取。
+
 登记 Knowledge Hub 的 source 控制面。终态下 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只能写入 `origin_path` 作为 provenance，不得作为 active source、check command 或新增归档入口。
 
 Required source fields:

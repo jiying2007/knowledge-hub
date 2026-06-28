@@ -8,10 +8,6 @@
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
-- reviewing: `source-inventory-20260616`
-- reviewing: `pcr02-project-docs-classification-20260616`
-- reviewing: `pcr02-copy-first-dry-run-20260616`
-- reviewing: `pcr02-copy-first-applied-20260616`
 - reviewing: `migrated-pcr02-docs-copyfirst-001`
 - reviewing: `migrated-pcr02-docs-copyfirst-002`
 - reviewing: `migrated-pcr02-docs-copyfirst-003`
@@ -30,7 +26,6 @@
 - reviewing: `migrated-pcr02-docs-copyfirst-021`
 - reviewing: `migrated-pcr02-docs-copyfirst-022`
 - archived: `pcr02-review-required-resolution-20260617`
-- reviewing: `pcr02-reference-artifact-ref-applied-20260618`
 - reviewing: `pcr02-docs-index-reference-20260618`
 - reviewing: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
 - archived: `pcr02-owner-review-package-20260618`
@@ -88,8 +83,6 @@
 - reviewing: `knowledge-hub-doctor-helper-20260619`
 - reviewing: `knowledge-hub-readme-maintenance-path-sync-20260619`
 - reviewing: `knowledge-hub-evidence-index-template-20260619`
-- reviewing: `engineering-archive-copy-first-applied-20260619`
-- reviewing: `patent-disclosure-copy-first-applied-20260619`
 - reviewing: `patent-disclosure-markdown-corpus-20260619`
 - reviewing: `patent-disclosure-artifact-ref-manifest-20260619`
 - reviewing: `knowledge-hub-source-coverage-closeout-20260619`

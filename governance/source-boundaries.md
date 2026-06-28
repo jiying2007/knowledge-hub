@@ -1,6 +1,6 @@
 # Source 边界（Source Boundaries）
 
-本文件是 Knowledge Hub source 边界的人读入口，用于快速判断“能不能迁移、能不能引用、能不能提升、需要谁复核”。当前 source 字段权威以 `registry/sources.json` 为准，已关闭来源以 `registry/retired-sources.jsonl` 为 provenance ledger，检索导航以 `indexes/by-source.md` 为准；本文件不重复维护 owner、review_after、check 等完整 registry 字段。
+本文件是 Knowledge Hub source 边界的人读入口，用于快速判断“能不能迁移、能不能引用、能不能提升、需要谁复核”。当前 source 字段权威以 `registry/sources.json` 为准，已关闭来源以 `registry/retired-sources.jsonl` 为 provenance ledger，迁移过程账本封存到 `registry/retired-process-ledger.jsonl`，检索导航以 `indexes/by-source.md` 为准；本文件不重复维护 owner、review_after、check 等完整 registry 字段。
 
 ## Registered Sources
 
