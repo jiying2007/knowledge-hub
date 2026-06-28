@@ -25,6 +25,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任�
 ```
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
+上下文预算可用 `--context-budget small|normal|deep` 控制；输出中的 `context.current`、`context.recent`、`context.related` 和 `why_selected` 用于解释 AI 为什么选中这些材料，不代表条目已提升 active 或 owner 已签收。
 
 路径类问题优先看：
 
@@ -43,13 +44,16 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
+`knowledge-final-gate.sh --json` 默认使用 quick regression，适合日常收口和提交前快速证明。
+
 需要检查“正文最大收口”终态时，使用 `max-body` profile：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression
 ```
 
 `standard` profile 保持日常自动治理边界：普通 AI / 外部资料人工复核队列是 report-only，不阻断 final gate。`max-body` profile 用于正文最大收口：待人工复核队列、`needs-edits` / `defer` 复核结果，以及不安全的 `copy-body` source inventory 都是 blocker。它仍然不代签 owner decision、不提升 active、不写 memory、不修改源项目。
+`--full-regression` 是终态证明和高风险脚本改动后的重门禁；日常查询和普通维护优先使用 search/context/check/status。
 
 ## 目录边界
 

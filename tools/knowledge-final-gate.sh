@@ -20,7 +20,16 @@ parser = argparse.ArgumentParser(description="Run the read-only Knowledge Hub fi
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for knowledge-check/status review_after checks.")
 parser.add_argument("--final-profile", choices=["standard", "max-body"], default="standard", help="Terminal profile forwarded to knowledge-status --strict.")
+parser.add_argument(
+    "--regression-suite",
+    choices=["quick", "full"],
+    default="quick",
+    help="Run quick regression by default; use full for terminal proof.",
+)
+parser.add_argument("--full-regression", action="store_true", help="Shortcut for --regression-suite full.")
 args = parser.parse_args(argv)
+if args.full_regression:
+    args.regression_suite = "full"
 
 def resolve_today():
     if args.as_of:
@@ -976,11 +985,13 @@ knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-ru
 git_diff_check = run_text(["rtk", "git", "diff", "--check"])
 if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
     knowledge_regression = {
-        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of {today.isoformat()}",
+        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite {args.regression_suite} --as-of {today.isoformat()}",
         "exit_code": 0,
         "payload": {
             "status": "pass",
             "result_count": 1,
+            "suite": args.regression_suite,
+            "full_result_count": 1,
             "results": [
                 {
                     "id": "inner-final-gate-regression-stub",
@@ -996,14 +1007,14 @@ if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
     }
 elif os.environ.get("KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION") == "1":
     knowledge_regression = {
-        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of {today.isoformat()}",
+        "command": f"rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite {args.regression_suite} --as-of {today.isoformat()}",
         "exit_code": 0,
-        "payload": {"status": "pass", "result_count": 0, "results": [], "skipped_for_self_test": True},
+        "payload": {"status": "pass", "result_count": 0, "suite": args.regression_suite, "full_result_count": 0, "results": [], "skipped_for_self_test": True},
         "parse_error": "",
         "stderr": "",
     }
 else:
-    knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--as-of", today.isoformat()])
+    knowledge_regression = run_json(["rtk", "bash", "tools/knowledge-regression.sh", "--json", "--suite", args.regression_suite, "--as-of", today.isoformat()])
 strict_status_command = ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()]
 if args.final_profile != "standard":
     strict_status_command.extend(["--final-profile", args.final_profile])
@@ -1829,6 +1840,7 @@ result = {
     "root": display_path(root),
     "read_only": True,
     "final_profile": args.final_profile,
+    "regression_suite": args.regression_suite,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "today": today.isoformat(),
     "as_of_source": today_source,
@@ -1918,6 +1930,8 @@ result = {
             "exit_code": knowledge_regression["exit_code"],
             "status": knowledge_regression["payload"].get("status", "<missing>"),
             "result_count": knowledge_regression["payload"].get("result_count", 0),
+            "suite": knowledge_regression["payload"].get("suite", args.regression_suite),
+            "full_result_count": knowledge_regression["payload"].get("full_result_count", 0),
             "skipped_for_self_test": bool(knowledge_regression["payload"].get("skipped_for_self_test", False)),
             "inner_final_gate_regression_stub": bool(knowledge_regression["payload"].get("inner_final_gate_regression_stub", False)),
             "failed_ids": [

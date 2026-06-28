@@ -24,6 +24,12 @@ parser = argparse.ArgumentParser(description="Run lightweight Knowledge Hub gove
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--keep-temp", action="store_true", help="Keep temporary fixture repositories for inspection.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for date-sensitive fixture commands.")
+parser.add_argument(
+    "--suite",
+    choices=["quick", "full"],
+    default="full",
+    help="Run quick smoke coverage for day-to-day gates or the full fixture suite for terminal proof.",
+)
 args = parser.parse_args(argv)
 
 results = []
@@ -2701,7 +2707,7 @@ def test_final_gate_default_regression_path():
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("result_count", 0) >= 1
         and checks.get("knowledge_regression", {}).get("skipped_for_self_test") is False
-        and "knowledge-regression.sh --json --as-of" in regression_command
+        and "knowledge-regression.sh --json --suite quick --as-of" in regression_command
         and checks.get("git_diff_check", {}).get("status") == "pass"
         and checks.get("knowledge_status_strict", {}).get("status") == "ok"
         and checks.get("knowledge_status_strict", {}).get("exit_code") == 0,
@@ -8117,6 +8123,53 @@ def test_knowledge_search_invalid_filters():
         },
     )
 
+def test_knowledge_context_budget_explainability():
+    result = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "PCR02 OTA 归档路径",
+        "--task-type",
+        "archive",
+        "--context-budget",
+        "small",
+        "--json",
+    ])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    context = parsed.get("context", {})
+    ranked_items = parsed.get("ranked_items", [])
+    first_item = ranked_items[0] if ranked_items else {}
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("schema_version") == 2
+        and parsed.get("context_budget") == "small"
+        and context.get("budget") == "small"
+        and context.get("effective_limit") == 4
+        and parsed.get("route", {}).get("project_id") == "pcr02"
+        and isinstance(context.get("current"), list)
+        and isinstance(context.get("risks"), list)
+        and first_item.get("why_selected")
+        and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", []),
+        "knowledge-context-budget-explainability",
+        "knowledge-context emits budgeted explainable context for project routing",
+        {
+            "exit_code": result["exit_code"],
+            "context_budget": parsed.get("context_budget"),
+            "route": parsed.get("route", {}),
+            "context": context,
+            "first_item": first_item,
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+    )
+
 def test_regression_manifest_coverage():
     manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
     try:
@@ -8252,6 +8305,7 @@ def test_regression_manifest_coverage():
         "knowledge-search-kind-alias-filters",
         "knowledge-search-registry-metadata-fallback",
         "knowledge-search-invalid-filters",
+        "knowledge-context-budget-explainability",
         "stable-governance-command-examples",
         "regression-manifest-coverage",
     ]
@@ -8323,7 +8377,7 @@ def test_regression_manifest_coverage():
         },
     )
 
-for test_fn in [
+full_tests = [
     test_baseline,
     test_governance_goal_path_allowed,
     test_pcr02_level2_source_coverage,
@@ -8445,9 +8499,37 @@ for test_fn in [
     test_knowledge_search_kind_alias_filters,
     test_knowledge_search_registry_metadata_fallback,
     test_knowledge_search_invalid_filters,
+    test_knowledge_context_budget_explainability,
     test_stable_governance_command_examples,
     test_regression_manifest_coverage,
-]:
+]
+
+quick_test_names = {
+    "test_baseline",
+    "test_governance_goal_path_allowed",
+    "test_pcr02_level2_source_coverage",
+    "test_pcr02_level2_boundary_manifests",
+    "test_boundary_health_internal_evidence",
+    "test_status_wrong_bucket",
+    "test_source_control_directory_gate",
+    "test_owner_target_existence_gate",
+    "test_review_queue_json_contract",
+    "test_source_check_health_contract",
+    "test_knowledge_search_structured_filters",
+    "test_knowledge_search_invalid_filters",
+    "test_knowledge_context_budget_explainability",
+    "test_no_user_absolute_path_persisted",
+    "test_user_path_redaction_in_tool_outputs",
+    "test_stable_governance_command_examples",
+}
+
+selected_tests = (
+    [test_fn for test_fn in full_tests if test_fn.__name__ in quick_test_names]
+    if args.suite == "quick"
+    else full_tests
+)
+
+for test_fn in selected_tests:
     run_test(test_fn)
 
 status = "pass" if all(result["status"] == "pass" for result in results) else "fail"
@@ -8458,6 +8540,8 @@ output = {
     "writes_real_repo": False,
     "today": today.isoformat(),
     "as_of_source": today_source,
+    "suite": args.suite,
+    "full_result_count": len(full_tests),
     "kept_temp": args.keep_temp,
     "result_count": len(results),
     "results": results,

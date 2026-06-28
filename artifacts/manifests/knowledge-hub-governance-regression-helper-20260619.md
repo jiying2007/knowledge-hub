@@ -4,7 +4,7 @@
 
 新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会记录为结构化 failure result，并在 `--json` / final gate 路径输出 JSON，避免 final gate 只能看到空输出或残留临时目录。
 
-当前 clean-slate 版本覆盖 126 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
+当前 clean-slate 版本覆盖 127 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
 
 ## 覆盖范围
 
@@ -126,6 +126,7 @@
 | knowledge-search-kind-alias-filters | 当前搜索入口支持模板 kind 别名归一到 registry kind | `--kind validation-report` 会归一为 `validation` 过滤，并在 JSON 中暴露 `kind_normalized`，避免模板别名和 registry 枚举割裂 |
 | knowledge-search-registry-metadata-fallback | 临时副本新增正文不含关键词、registry metadata 含关键词的 item 后运行结构化搜索 | `knowledge-search.sh` 必须通过 registry metadata fallback 返回 `match=registry-metadata` 的 item，避免只登记在 registry 的长期入口无法被关键词发现 |
 | knowledge-search-invalid-filters | 当前搜索入口拒绝非法枚举过滤值和非正 limit | `--status not-a-status`、`--kind not-a-kind` 和 `--limit 0` 非零退出，并提示允许值或正整数要求，避免无效过滤静默退化为全文搜索 |
+| knowledge-context-budget-explainability | 当前上下文预检输出预算内可解释知识包 | `knowledge-context.sh --context-budget small --json` 必须输出 route、`context.current/recent/related/risks`、`ranked_items[].why_selected` 和旧路径风险说明，且不写文件 |
 | stable-governance-command-examples | 治理文档和模板保持稳定命令示例 | README、tools README、templates、governance 和 indexes 不得退回 repo-relative `rtk bash tools/...`、短 `knowledge-check --dry-run` 或弱 validation_refs 示例 |
 | final-proof-artifact-discoverability | 当前终态 proof/gate/recovery 主制品可从 registry、文件配对和核心索引发现 | 终态 proof 主项必须有 `.md/.jsonl` 配对，出现在 registry/items、by-owner、by-status、by-review-date、by-topic 和 by-decision，且索引引用不得指向不存在文件 |
 | final-proof-decision-index-recovery-contract | 终态 proof 可发现性覆盖 by-decision 决策恢复索引 | `tools/knowledge-final-gate.sh` 的 proof 索引清单必须包含 `indexes/by-decision.md`，且 2026-06-23 终态治理 proof 在 by-decision 中有中文决策/边界锚点 |
@@ -151,7 +152,7 @@
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|
 | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json` | 0 | 通过；105 个回归场景全部 pass，覆盖 governance goal path explainability、PCR02 Level 2 source coverage、7 个 PCR02 Level 2 source boundary manifests、boundary_health 内部证据健康面和负向 source_id 篡改、status 负向 fixture、owner gate 负向 fixture、owner handoff packet、owner form 聚焦、owner forms 文本 JSONL 输出、owner forms 纯 JSONL 输出、owner forms target candidates、owner forms 纯 JSONL 互斥保护、owner checklist、owner form 上下文、owner source identity 上下文、owner prefill candidates、owner evidence readiness、owner inbox 字段分组与安全命令、owner source identity 过期拒绝、owner target_decision 候选目标门禁、owner decision/target 成对兼容门禁、owner decision/target 合法终止组合正向门禁、owner routing_owner 代签 reviewed_by 拒绝、owner guardrail/decision enum/target_candidates 篡改拒绝、owner summary、owner by-owner summary、owner next-open 聚焦、status next owner gate、status text owner summary/review_after commands、owner-gates 子命令非零阻断、final gate owner blocker、final gate evidence index、final gate strict 非 owner blocker、final gate skip regression blocker、final gate empty child JSON blocker、final gate default regression path、final gate typed registry gap、final gate source coverage selection、final gate 当前 source-check 证据和高优先级规则审计、final gate source-check runtime 失败 blocker、final gap/readability 正向契约、final gate git diff check、final gate automatic governance/gap map、final state Level 1/2/3 audit summary、final gate owner_recovery、final proof as-of 日期选择、owner landing plan / landing audit 执行目录、动态 worksheet 文件、worksheet 验证命令和人工 delta、owner-ready missing/invalid/duplicate/repo-relative-command landing gate、manual entry by-project/by-source/by-decision 条件索引提示、manual entry 已登记 source 绑定、unknown source 拒绝、owner 文档可发现性、owner registry 状态与 personal-local 默认值、offline manual defaults、README 5 条最短路径和终态检查离线 fallback、人工新增 diagnostics 默认验证、人工新增可读性字段、归档类人工入口默认 archived、离线待验证模板占位、governance audit 可读性 gate、AI provenance gate、source policy notes_zh gate、migration 条件提示、模板选择和 registry kind 映射、模板必备章节、indexes README 维护规则、index planner 核心 section 派生视图、coverage decision/risk、manifest filename-date-only latest 与 unpaired 分类、manifest JSONL 轻量 profile gate（2026-06-21 及之后）、模板可读性字段 gate、终态 proof 主制品可发现性、topic/decision 索引规划健康、decision registry 强门禁、空 topic 允许、status source governance summary、source_check_health 静态契约和非 rtk 负向门禁、source-check report-only helper、source-check unsafe runtime 拒绝、review_after near-due report、review_after 分组 JSON 契约、automation report-only/no-memory 硬门禁、source coverage 日期文件名选择、source coverage duplicate source_id warning、review_after as-of 固定日期复现、stale item/source review_after warning/status surface、source 新增向导、source 新增向导 review_after 默认复核周期、source 枚举速查和非法枚举预校验、source check 命令分支、source status coverage 同步、source unknown owner warning、source check/no-check 二选一、source check 文档优先路径、source role-aware 推荐提示、knowledge-search 结构化过滤、structured filters 排除未登记 raw file、kind alias 归一过滤、registry metadata-only fallback、无效 filter/limit 拒绝、治理文档稳定命令示例和 regression manifest 自检 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-25` | 0 | 历史验证记录；后续 clean-slate 版本已删除 source canonicalization 兼容测试和 migration ledger 测试，当前以 126 个回归场景为准。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --as-of 2026-06-25` | 0 | 历史验证记录；后续 clean-slate 版本已删除 source canonicalization 兼容测试和 migration ledger 测试，当前以 127 个回归场景为准。 | `tools/knowledge-regression.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` | 0 | 通过；0 errors、0 warnings，确认新增 helper 和文档登记后全仓门禁通过 | `tools/knowledge-check.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind audit --domain governance --id sample-regression --path artifacts/manifests/sample-regression.md` | 0 | 通过；人工新增向导输出短 canonical status 行示例 | `tools/knowledge-new.sh` | Tool | `knowledge-hub-governance-regression-helper-20260619` |
 
@@ -177,6 +178,7 @@
 - `knowledge-search-structured-filters-exclude-unregistered-raw`
 - `knowledge-search-kind-alias-filters`
 - `knowledge-search-registry-metadata-fallback`
+- `knowledge-context-budget-explainability`
 - `final-proof-artifact-as-of-date-selector`
 - `manual-entry-registered-source-binding`
 - `source-manual-entry-enum-guide`

@@ -33,7 +33,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 运行并通过：
   - `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`
   - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`
-  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json`
+  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression`
   - `rtk git diff --check`
 
 非目标：
@@ -475,8 +475,8 @@ rtk bash tools/knowledge-search.sh "<关键词>"
 
 使用规则：
 
-- `knowledge-regression.sh` 只用于工具、schema、owner gate、source control 或 final gate 相关变更。
-- `knowledge-final-gate.sh` 只用于高风险收口，不用于每条普通笔记。
+- `knowledge-regression.sh --suite quick` 用于日常 final gate smoke；`--suite full` 用于工具、schema、owner gate、source control 或 final gate 相关变更后的终态证明。
+- `knowledge-final-gate.sh --json` 默认 quick regression；正文最大收口和高风险收口使用 `--final-profile max-body --full-regression`，不用于每条普通笔记。
 - `knowledge-index-plan.sh` 默认 report-only，不得自动覆盖人工索引。
 
 ## 九、Obsidian 协作
@@ -705,7 +705,7 @@ rtk bash -n tools/knowledge-search.sh
 rtk bash -n tools/knowledge-index-plan.sh
 rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash tools/knowledge-regression.sh --json
-rtk bash tools/knowledge-final-gate.sh --json
+rtk bash tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression
 ```
 
 硬切换后必须增加负向验证：

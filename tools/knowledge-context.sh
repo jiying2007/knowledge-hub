@@ -28,10 +28,19 @@ parser.add_argument(
 )
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--limit", type=int, default=8)
+parser.add_argument(
+    "--context-budget",
+    choices=["small", "normal", "deep"],
+    default="normal",
+    help="Control context size while preserving route/current/risk fields.",
+)
 args = parser.parse_args(argv)
 
 if args.limit < 1:
     parser.error("--limit must be >= 1")
+
+budget_defaults = {"small": 4, "normal": 8, "deep": 16}
+effective_limit = min(args.limit, budget_defaults[args.context_budget])
 
 registry_dir = root / "registry"
 routes_path = registry_dir / "project-routes.json"
@@ -281,7 +290,7 @@ active_project_ids = route_project_ids(best_route)
 active_source_ids = set(best_route.get("default_source_ids", [])) if best_route else set()
 
 
-def item_score(item):
+def item_score_reasons(item):
     haystack = "\n".join(
         str(value)
         for value in [
@@ -296,40 +305,63 @@ def item_score(item):
         ]
     ).lower()
     score = 0
+    reasons = []
     for term in query_terms:
         if term in haystack:
             score += 1
+            reasons.append(f"query-term:{term}")
     domain = item.get("domain", "")
     route_matched = False
     for project_id in active_project_ids:
         if domain == f"projects/{project_id}" or domain.startswith(f"projects/{project_id}/"):
             score += 2
             route_matched = True
+            reasons.append(f"project:{project_id}")
             break
     if source_id(item) in active_source_ids:
         score += 1
         route_matched = True
+        reasons.append(f"source:{source_id(item)}")
     if best_route and active_project_ids and not route_matched:
-        return 0
+        return 0, []
     if score <= 0 and not route_matched:
-        return 0
+        return 0, []
     if args.task_type == "debug" and item.get("kind") == "debug-record":
         score += 2
+        reasons.append("task-kind:debug-record")
     if args.task_type == "runbook" and item.get("kind") == "runbook":
         score += 2
+        reasons.append("task-kind:runbook")
     if args.task_type == "decision" and item.get("kind") == "decision":
         score += 2
+        reasons.append("task-kind:decision")
     if args.task_type == "validation" and item.get("kind") == "validation":
         score += 2
-    return score
+        reasons.append("task-kind:validation")
+    status = item.get("status", "")
+    if status == "active":
+        score += 3
+        reasons.append("status:active")
+    elif status == "reviewing":
+        reasons.append("status:reviewing")
+    elif status in {"archived", "retired", "superseded"}:
+        score -= 1
+        reasons.append(f"status:{status}-lower-priority")
+    kind = item.get("kind", "")
+    if kind in {"project-current", "decision", "runbook", "standard", "validation"}:
+        score += 1
+        reasons.append(f"consumer-kind:{kind}")
+    elif kind == "audit":
+        reasons.append("audit-evidence")
+    return score, reasons
 
 
 ranked = []
 for item in items:
-    score = item_score(item)
+    score, reasons = item_score_reasons(item)
     if score <= 0:
         continue
-    ranked.append((score, item))
+    ranked.append((score, item, reasons))
 ranked.sort(key=lambda pair: (-pair[0], pair[1].get("id", "")))
 
 
@@ -397,12 +429,74 @@ if best_route:
         "matched_by": best_matches,
     }
 
+ranked_rows = []
+for score, item, reasons in ranked[:effective_limit]:
+    ranked_rows.append({
+        "score": score,
+        "why_selected": reasons,
+        "id": item.get("id", ""),
+        "title": item.get("title", ""),
+        "kind": item.get("kind", ""),
+        "domain": item.get("domain", ""),
+        "path": item.get("path", ""),
+        "status": item.get("status", ""),
+        "source_id": source_id(item),
+        "owner": item.get("owner", ""),
+        "review_after": item.get("review_after", ""),
+        "summary_zh": item.get("summary_zh", ""),
+    })
+
+
+def public_context_row(row):
+    return {
+        "score": row["score"],
+        "id": row["id"],
+        "title": row["title"],
+        "kind": row["kind"],
+        "domain": row["domain"],
+        "path": row["path"],
+        "status": row["status"],
+        "source_id": row["source_id"],
+        "why_selected": row["why_selected"],
+    }
+
+
+current_kinds = {"project-current", "decision", "runbook", "standard", "validation"}
+recent_kinds = {"debug-record", "project-archive"}
+current_context = []
+recent_context = []
+related_context = []
+for row in ranked_rows:
+    public_row = public_context_row(row)
+    if row["kind"] in current_kinds or row["status"] == "active":
+        current_context.append(public_row)
+    elif row["kind"] in recent_kinds or row["status"] == "archived":
+        recent_context.append(public_row)
+    else:
+        related_context.append(public_row)
+
+context_summary = {
+    "budget": args.context_budget,
+    "effective_limit": effective_limit,
+    "selection_order": ["route", "current", "recent", "related", "risk"],
+    "current": current_context[:effective_limit],
+    "recent": recent_context[:effective_limit],
+    "related": related_context[:effective_limit],
+    "risks": [
+        "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
+        "memory、raw session、raw log、core、binary 不能高于 Hub 当前事实。",
+        "owner gate、active promotion、memory write 和 source project write 必须有授权和证据。",
+    ],
+    "notes_zh": "context 是只读候选装配；why_selected 解释排序原因，不代表条目已提升 active 或 owner 已签收。",
+}
+
 payload = {
     "schema_version": 2,
     "read_only": True,
     "cwd": args.cwd,
     "query": args.query,
     "task_type": args.task_type,
+    "context_budget": args.context_budget,
     "knowledge_preflight": {
         "required": args.task_type in {"debug", "archive", "release", "decision", "runbook", "source", "validation", "session"},
         "source_of_truth": "registry/repositories.json plus registry/project-groups.json, registry/project-routes.json, registry/items.jsonl and knowledge-search",
@@ -412,19 +506,8 @@ payload = {
     "workspace_ref": workspace_ref,
     "workspace_match": workspace_match or {},
     "git_remotes_detected": git_remotes,
-    "ranked_items": [
-        {
-            "score": score,
-            "id": item.get("id", ""),
-            "title": item.get("title", ""),
-            "kind": item.get("kind", ""),
-            "domain": item.get("domain", ""),
-            "path": item.get("path", ""),
-            "status": item.get("status", ""),
-            "source_id": source_id(item),
-        }
-        for score, item in ranked[: args.limit]
-    ],
+    "context": context_summary,
+    "ranked_items": [public_context_row(row) for row in ranked_rows],
     "search": search_payload,
     "candidate_recommendation": candidate_recommendation,
     "guardrails_zh": [
