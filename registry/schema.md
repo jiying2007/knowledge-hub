@@ -79,7 +79,7 @@ Date invariants:
 Source reference invariants:
 
 - item `source` must be an object.
-- item `source.source_id`, when present, must be registered in `registry/sources.json`.
+- item `source.source_id`, when present, must be registered in either `registry/sources.json` current sources or `registry/retired-sources.jsonl` provenance ledger.
 - item `source.source_manifest`, when present, must be a relative existing Knowledge Hub local path.
 - item `source.source_sha256`, when present, must be a lowercase 64-character SHA256 hex string.
 - active item `source.source_id` + `source.source_path` must not match an unresolved owner-gated row in owner decision worksheet manifests.
@@ -89,7 +89,7 @@ Source reference invariants:
 
 Source control directory invariants:
 
-- 每个 `registry/sources.json` 中的 registered source 必须有 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
+- 每个 current 或 retired source 必须有 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
 - `inventory.jsonl` 每行至少包含：`id`、`source_id`、`source_path`、`object_type`、`hub_disposition`、`target_path`、`status`、`reason_zh`、`risk_zh`、`checked_at`。
 - `object_type` 允许值：`markdown`、`session`、`history`、`tool`、`source-code`、`config`、`artifact`、`binary`、`log`、`archive`、`manifest`、`automation-run`、`unknown`。
 - `hub_disposition` 允许值：`copy-body`、`summary-only`、`artifact-ref`、`reference-only`、`archive-only`、`hash-only-provenance`、`exclude`。
@@ -334,7 +334,13 @@ Invariants:
 - 禁止使用 `cwd_patterns`。
 - 禁止使用 retired `engineering_archive_path` 字段；新增归档统一使用 `archive_path`。
 
-## sources.json
+## sources.json and retired-sources.jsonl
+
+`registry/sources.json` 是当前 source 主表，只保留仍参与默认 source 恢复、上下文路由或新增入口的 source。
+
+`registry/retired-sources.jsonl` 是历史 source provenance ledger。它保存已经硬切到 Hub canonical 位置、但仍被 registry item、coverage、source-control、owner gate 或历史审计引用的 source 元数据。retired source 不应重新出现在 current source 主表；如需按旧 source id 审计，工具应显式读取 current + retired 的 all-source view。
+
+item `source.source_id` 指向 all-source registry。`indexes/by-source.md`、source coverage 和 source-control 目录可以覆盖 all-source；成熟态 current source 检查只能扫描 `registry/sources.json`。
 
 登记 Knowledge Hub 的 source 控制面。终态下 `path` 必须指向 Hub 内 `sources/<source_id>`；旧外部路径只能写入 `origin_path` 作为 provenance，不得作为 active source、check command 或新增归档入口。
 

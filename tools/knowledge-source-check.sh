@@ -82,9 +82,20 @@ def load_sources():
         payload = json.loads(sources_path.read_text())
     except Exception as exc:
         return {}, [f"cannot read registry/sources.json: {exc}"]
-    rows = payload.get("sources", [])
-    if not isinstance(rows, list):
-        return {}, ["registry/sources.json field sources is not a list"]
+    current_rows = payload.get("sources", [])
+    try:
+        retired_rows = [
+            json.loads(line)
+            for line in (root / "registry" / "retired-sources.jsonl").read_text().splitlines()
+            if line.strip()
+        ]
+    except FileNotFoundError:
+        retired_rows = []
+    except Exception as exc:
+        return {}, [f"cannot read registry/retired-sources.jsonl: {exc}"]
+    if not isinstance(current_rows, list):
+        return {}, ["registry/sources.json field sources must be a list"]
+    rows = current_rows + retired_rows
     return {str(row.get("id", "")): row for row in rows if row.get("id")}, []
 
 sources_by_id, errors = load_sources()

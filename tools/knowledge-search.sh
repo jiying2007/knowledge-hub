@@ -173,6 +173,11 @@ sources_path = root / "registry" / "sources.json"
 if sources_path.exists():
     data = json.loads(sources_path.read_text())
     sources.extend(data.get("sources", []))
+retired_sources_path = root / "registry" / "retired-sources.jsonl"
+if retired_sources_path.exists():
+    for line in retired_sources_path.read_text().splitlines():
+        if line.strip():
+            sources.append(json.loads(line))
 
 allowed_suffixes = {".md", ".txt", ".json", ".jsonl", ".csv"}
 results = []

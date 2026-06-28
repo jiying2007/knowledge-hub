@@ -150,7 +150,7 @@ def read_jsonl(path, label):
         errors.append(f"cannot read {label}: {exc}")
     return rows
 
-sources = read_json_array(sources_path, "sources")
+sources = read_json_array(sources_path, "sources") + read_jsonl(root / "registry" / "retired-sources.jsonl", "registry/retired-sources.jsonl")
 projects = read_json_array(projects_path, "projects")
 topics = read_json_array(topics_path, "topics")
 decisions = read_jsonl(decisions_path, "registry/decisions.jsonl")

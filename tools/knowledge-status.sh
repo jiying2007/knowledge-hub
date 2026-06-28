@@ -257,7 +257,10 @@ def parse_date(value):
         return None
 
 items = load_jsonl(root / "registry" / "items.jsonl")
-sources = load_json(root / "registry" / "sources.json").get("sources", [])
+sources_payload = load_json(root / "registry" / "sources.json")
+current_sources = sources_payload.get("sources", [])
+retired_sources = load_jsonl(root / "registry" / "retired-sources.jsonl")
+sources = current_sources + retired_sources
 
 def is_blank(value):
     if value is None:
@@ -1294,7 +1297,7 @@ def build_mature_audit():
             "final_disposition": source.get("final_disposition", ""),
             "canonical_target": source.get("canonical_target", ""),
         }
-        for source in sources
+        for source in current_sources
         if str(source.get("status", "")) == "retired"
     ]
 

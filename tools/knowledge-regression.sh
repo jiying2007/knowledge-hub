@@ -369,6 +369,7 @@ def test_pcr02_level2_source_coverage():
         "pcr02-project-agent-config",
     }
     sources_path = root / "registry" / "sources.json"
+    retired_sources_path = root / "registry" / "retired-sources.jsonl"
     by_source_path = root / "indexes" / "by-source.md"
     coverage_paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
     source_ids = set()
@@ -377,7 +378,13 @@ def test_pcr02_level2_source_coverage():
     coverage_path = coverage_paths[-1] if coverage_paths else None
     errors = []
     try:
-        source_ids = {item.get("id", "") for item in json.loads(sources_path.read_text()).get("sources", [])}
+        current_source_rows = json.loads(sources_path.read_text()).get("sources", [])
+        retired_source_rows = [
+            json.loads(line)
+            for line in retired_sources_path.read_text().splitlines()
+            if line.strip()
+        ]
+        source_ids = {item.get("id", "") for item in current_source_rows + retired_source_rows}
     except Exception as exc:
         errors.append(f"sources parse: {exc}")
     try:
@@ -2683,7 +2690,6 @@ def test_status_mature_profile_blocks_migration_state():
         and {
             "mature-migration-items",
             "mature-process-manifests",
-            "mature-closed-sources-in-current-registry",
             "mature-reviewing-ratio-high",
         }.issubset(blocker_ids),
         "status-mature-profile-blocks-migration-state",
@@ -6764,13 +6770,19 @@ def test_source_check_health_contract():
     source_check_health = parsed.get("source_check_health", {}) if isinstance(parsed, dict) else {}
 
     repo = copy_repo("source-check-health-non-rtk")
-    sources_path = repo / "registry" / "sources.json"
-    sources_doc = json.loads(sources_path.read_text())
-    for source in sources_doc.get("sources", []):
+    retired_sources_path = repo / "registry" / "retired-sources.jsonl"
+    retired_sources = [
+        json.loads(line)
+        for line in retired_sources_path.read_text().splitlines()
+        if line.strip()
+    ]
+    for source in retired_sources:
         if source.get("id") == "pcr02-project-tools":
             source["check"] = str(source.get("check", "")).replace("rtk ", "bash ", 1)
             break
-    sources_path.write_text(json.dumps(sources_doc, ensure_ascii=False, indent=2) + "\n")
+    retired_sources_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in retired_sources) + "\n"
+    )
     bad_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     bad_parsed = {}
     bad_parse_error = ""

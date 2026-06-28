@@ -51,7 +51,7 @@ def first_sentence(value):
         return ""
     return text.split("。", 1)[0] + ("。" if "。" in text else "")
 
-sources = load_json(root / "registry" / "sources.json").get("sources", [])
+sources = load_json(root / "registry" / "sources.json").get("sources", []) + load_jsonl(root / "registry" / "retired-sources.jsonl")
 coverage_path = select_source_coverage()
 coverage_by_source = {
     row.get("source_id"): row

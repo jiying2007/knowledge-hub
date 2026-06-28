@@ -604,7 +604,13 @@ def build_diagnostics(error_items, warning_items):
     }
 
 sources_path = root / "registry" / "sources.json"
-sources = load_json(sources_path).get("sources", [])
+sources_payload = load_json(sources_path)
+current_sources = sources_payload.get("sources", [])
+retired_sources = load_jsonl(root / "registry" / "retired-sources.jsonl")
+if not isinstance(current_sources, list):
+    errors.append("sources: sources must be a list")
+    current_sources = []
+sources = current_sources + retired_sources
 owner_ids_for_sources = {
     owner.get("id", "")
     for owner in load_json(root / "registry" / "owners.json").get("owners", [])

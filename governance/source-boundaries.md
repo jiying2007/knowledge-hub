@@ -1,10 +1,10 @@
 # Source 边界（Source Boundaries）
 
-本文件是 Knowledge Hub source 边界的人读入口，用于快速判断“能不能迁移、能不能引用、能不能提升、需要谁复核”。字段权威以 `registry/sources.json` 为准，检索导航以 `indexes/by-source.md` 为准；本文件不重复维护 owner、review_after、check 等完整 registry 字段。
+本文件是 Knowledge Hub source 边界的人读入口，用于快速判断“能不能迁移、能不能引用、能不能提升、需要谁复核”。当前 source 字段权威以 `registry/sources.json` 为准，已关闭来源以 `registry/retired-sources.jsonl` 为 provenance ledger，检索导航以 `indexes/by-source.md` 为准；本文件不重复维护 owner、review_after、check 等完整 registry 字段。
 
 ## Registered Sources
 
-当前 source 数量以 `registry/sources.json`、`indexes/by-source.md` 和 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json` 为准。`registry/sources.json.path` 只允许指向 Hub 内 `sources/<source_id>`；旧外部目录仅可通过 `origin_path` 作为 provenance 保留，不再作为 active source、默认查询入口、fallback 或新增归档目的地。下表是最近审计快照，不作为固定数量契约。
+当前 source 数量以 `registry/sources.json` current 主表、`registry/retired-sources.jsonl` provenance ledger、`indexes/by-source.md` 和 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json` 为准。source registry 的 `path` 只允许指向 Hub 内 `sources/<source_id>`；旧外部目录仅可通过 `origin_path` 作为 provenance 保留，不再作为 active source、默认查询入口、fallback 或新增归档目的地。下表是最近审计快照，不作为固定数量契约。
 
 | 分组 | source_id | 边界摘要 |
 |---|---|---|

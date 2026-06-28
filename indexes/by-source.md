@@ -1,5 +1,7 @@
 # Knowledge Sources
 
+本页覆盖 current source 主表和 retired source provenance ledger。当前主表只在 `registry/sources.json`；已关闭来源在 `registry/retired-sources.jsonl`，仅用于历史 source_id、coverage、source-control 和 owner gate 审计恢复。
+
 | Source | Status | Hub Path | Current Policy |
 | --- | --- | --- | --- |
 | embedded-knowledge | retired | `sources/embedded-knowledge` | Hub-only source control |
@@ -23,7 +25,7 @@
 
 ## PCR02 Source 边界速查
 
-下表是 `registry/sources.json` 的人工可读摘要，只用于快速恢复 PCR02 source 的 owner、复核时间和最终治理边界；权威字段仍以 registry 为准。
+下表是 `registry/retired-sources.jsonl` 中 PCR02 retired source 的人工可读摘要，只用于快速恢复 owner、复核时间和最终治理边界；权威字段仍以 registry ledger 为准。
 
 | Source | Owner | Review After | Final Disposition | Boundary |
 | --- | --- | --- | --- | --- |
@@ -38,7 +40,7 @@
 
 ## Source 治理恢复
 
-本索引主表只保留 source id、终态状态、Hub path 和当前策略，避免和 `registry/sources.json` 重复维护。需要恢复 owner、review_after、authority、write_policy、source_strategy、final_disposition、check 和 coverage 时，运行：
+本索引主表只保留 source id、终态状态、Hub path 和当前策略，避免和 source registry 重复维护。需要恢复 owner、review_after、authority、write_policy、source_strategy、final_disposition、check 和 coverage 时，运行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source
@@ -59,8 +61,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - 最新 source check 快照证据和核心索引可读性硬化：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`。
 - 最新 owner/source/subagent 边界加固：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`。
 - 最新 source 主控目录统一收口：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`。
-- 每个 source 的 Hub 内管理面位于 `sources/<source_id>/`，至少包含 `README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
-- `registry/sources.json` 的 `path` 必须指向 `sources/<source_id>`；当前知识入口只使用 Hub 内路径，旧外部路径不作为 active source、check command 或新增归档入口。
+- 每个 current/retired source 的 Hub 内管理面位于 `sources/<source_id>/`，至少包含 `README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
+- current/retired source registry 的 `path` 必须指向 `sources/<source_id>`；当前知识入口只使用 Hub 内路径，旧外部路径不作为 active source、check command 或新增归档入口。
 
 ## Source 专项审查制品
 

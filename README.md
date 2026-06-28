@@ -70,7 +70,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 | `notes/` | 普通长期笔记、个人笔记、学习和研究记录 | L1，registry 可选 |
 | `projects/<project>/` | 项目当前事实、决策、验证和历史归档 | L2，registry 必填 |
 | `domains/` | 跨项目领域知识、专利、Codex 治理材料 | L2，registry 按复用风险决定 |
-| `sources/` | source 人读边界、inventory、coverage 和 source policy | L2，和 `registry/sources.json` 对齐 |
+| `sources/` | source 人读边界、inventory、coverage 和 source policy | L2，和 current/retired source registry 对齐 |
 | `registry/` | 机器账本：items、sources、projects、owners、`registry/authorizations.jsonl`、`registry/automation-runs.jsonl` | L2/L3 |
 | `indexes/` | 可重建导航，不是事实权威 | 可由工具检查 |
 | `artifacts/manifests/` | 高风险 source 处置、owner gate、自动化和终态证据包 | L3 |
@@ -92,10 +92,11 @@ domains/personal/**
 “终态落地”采用治理全覆盖，不等于复制所有正文。
 
 - 每个来源、项目、历史会话和自动化链路必须登记、分类、索引和定责。
-- 每个 `registry/sources.json` 中的 registered source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
+- `registry/sources.json` 只保留当前 source 主表；已关闭来源进入 `registry/retired-sources.jsonl`，仅作 provenance ledger。
+- 每个 current 或 retired source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
 - 安全、可读、长期有价值的 Markdown/text 可以落到 canonical 正文。
 - raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
-- `registry/sources.json` 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；当前知识入口只使用 Hub 内路径。
+- current/retired source registry 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；当前知识入口只使用 Hub 内路径，retired source 不作为默认新增入口。
 - Codex archive 当前 canonical 目录是 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
 - PCR02 工程归档当前 canonical 目录是 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
 - `~/.codex/history.jsonl`、`~/.codex/sessions/**`、`~/.codex/memories/**` 只作为运行态输入或辅助召回 provenance，不复制 raw 正文，不直接等于 active fact。

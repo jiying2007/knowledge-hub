@@ -1514,9 +1514,10 @@ def make_landing_audit(form_validation, rows, blocked, owner_ready_errors):
     }
 
 sources_payload = load_json(root / "registry" / "sources.json")
+sources_rows = list(sources_payload.get("sources", [])) + load_jsonl(root / "registry" / "retired-sources.jsonl")
 source_roots = {
     str(source.get("id", "")): str(source.get("path", ""))
-    for source in sources_payload.get("sources", [])
+    for source in sources_rows
     if isinstance(source, dict)
 }
 
