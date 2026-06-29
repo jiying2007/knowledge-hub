@@ -12,7 +12,7 @@
 |---|---|---|
 | baseline-knowledge-check | 当前仓库全量 `knowledge-check` | 通过 |
 | governance-goal-path-allowed | 当前终态目标规格作为 governance item 可解释 | `docs/goals/knowledge-hub-final-state.md` 可由 `knowledge-check --explain` 解释，避免目标 SSOT 路径漂移 |
-| pcr02-level2-source-coverage | PCR02 Level 2 source 同时完成 registry、by-source 和 latest coverage JSONL 覆盖 | 7 个 Level 2 source 均出现在 `registry/sources.json`、`indexes/by-source.md` 和 `knowledge-hub-source-coverage-closeout-20260620.jsonl` |
+| pcr02-level2-source-coverage | PCR02 Level 2 source 同时完成 all-source registry、by-source 和 latest coverage JSONL 覆盖 | 7 个 Level 2 source 均出现在 `registry/sources.json` current sources 或 `registry/retired-sources.jsonl` provenance ledger、`indexes/by-source.md` 和 latest `knowledge-hub-source-coverage-closeout-*.jsonl` |
 | pcr02-level2-boundary-manifests | PCR02 Level 2 source 具备具体边界 manifest | 7 个 PCR02 Level 2 source 均有 Markdown/JSONL 边界清单、registry item、by-source 和 by-project 索引 |
 | boundary-health-internal-evidence | 当前 `knowledge-check` 输出 PCR02 Level 2 boundary 内部证据健康面 | `boundary_health.status=pass`，7 组 boundary manifest、registry item、source coverage、by-source 和 by-project 引用齐全；负向 fixture 篡改 source_id 时必须失败 |
 | status-wrong-bucket | 临时副本把 active item 放入 `- reviewing:` | `knowledge-check` 失败并报告 wrong status bucket |

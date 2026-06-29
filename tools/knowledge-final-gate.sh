@@ -1280,7 +1280,9 @@ check_source_check_health = knowledge_check["payload"].get("source_check_health"
 check_source_control_health = knowledge_check["payload"].get("source_control_health", {})
 check_owner_target_health = knowledge_check["payload"].get("owner_target_health", {})
 check_boundary_health = knowledge_check["payload"].get("boundary_health", {})
-source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
+current_source_registry = load_json(root / "registry" / "sources.json").get("sources", [])
+retired_source_registry = load_jsonl(root / "registry" / "retired-sources.jsonl")
+source_registry = current_source_registry + retired_source_registry
 source_registry_ids = {
     str(source.get("id", ""))
     for source in source_registry
@@ -1347,13 +1349,13 @@ def make_source_audit_gaps():
             "gap_id": f"level2-source-missing:{source_id}",
             "gap_type": "registry",
             "source_id": source_id,
-            "source_root": "registry/sources.json",
-            "evidence": f"PCR02 Level 2 source {source_id} is missing from registry/sources.json.",
+            "source_root": "registry/sources.json + registry/retired-sources.jsonl",
+            "evidence": f"PCR02 Level 2 source {source_id} is missing from current/retired source registry.",
             "current_impact": "PCR02 候选 source 不能从 source registry 恢复，Level 2 source coverage 不完整。",
             "codex_auto_can_complete": True,
             "requires_owner_decision": False,
-            "fix_action": "补 registry/sources.json source object，并同步 by-source、source coverage manifest 和 registry/index 证据。",
-            "write_scope": "registry/sources.json、indexes/by-source.md、artifacts/manifests/*source-coverage*.jsonl 和对应 manifest/registry/index。",
+            "fix_action": "按 source 当前/退休状态补 registry/sources.json 或 registry/retired-sources.jsonl source object，并同步 by-source、source coverage manifest 和 registry/index 证据。",
+            "write_scope": "registry/sources.json 或 registry/retired-sources.jsonl、indexes/by-source.md、artifacts/manifests/*source-coverage*.jsonl 和对应 manifest/registry/index。",
             "validation_commands": [
                 "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --sources-only --json",
                 "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
@@ -1500,6 +1502,7 @@ final_state_audit = {
         "source_check_runtime": source_check_runtime_summary,
         "evidence_refs": [
             "registry/sources.json",
+            "registry/retired-sources.jsonl",
             latest_coverage_manifest,
             "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md",
             "artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.md",
@@ -1548,13 +1551,14 @@ final_state_audit = {
         },
         "evidence_refs": [
             "registry/sources.json",
+            "registry/retired-sources.jsonl",
             latest_coverage_manifest,
             "sources/<source_id>/",
             "artifacts/manifests/knowledge-hub-source-control-unification-20260624.md",
             "tools/knowledge-check.sh --dry-run --json --diagnostics",
         ],
         "summary_zh": (
-            "registry/sources.json 中 registered source 已由最新 source coverage manifest 覆盖，且 source registry 终态字段已补齐。"
+            "current/retired source registry 中 registered source 已由最新 source coverage manifest 覆盖，且 source registry 终态字段已补齐。"
             if level3_status == "complete"
             else "registered source coverage 或 source registry 终态字段仍有缺口，需按 missing_* 字段修复。"
         ),

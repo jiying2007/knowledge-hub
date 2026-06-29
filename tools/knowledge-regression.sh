@@ -2869,10 +2869,10 @@ def test_final_gate_source_final_state_field_gap():
         )
         return
     repo = copy_repo("final-gate-source-field-gap")
-    sources_path = repo / "registry" / "sources.json"
-    data = json.loads(sources_path.read_text())
+    sources_path = repo / "registry" / "retired-sources.jsonl"
+    rows = [json.loads(line) for line in sources_path.read_text().splitlines() if line.strip()]
     target_found = False
-    for source in data.get("sources", []):
+    for source in rows:
         if source.get("id") == "pcr02-project-tools":
             source.pop("final_disposition", None)
             target_found = True
@@ -2886,7 +2886,9 @@ def test_final_gate_source_final_state_field_gap():
             repo,
         )
         return
-    sources_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    sources_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+    )
     run_cmd(repo, ["rtk", "git", "init"])
     result = run_cmd(
         repo,
@@ -3000,6 +3002,7 @@ def test_final_gap_readability_positive_contracts():
         pass
     items_path = root / "registry" / "items.jsonl"
     sources_path = root / "registry" / "sources.json"
+    retired_sources_path = root / "registry" / "retired-sources.jsonl"
     readability_fields = [
         "summary_zh",
         "primary_language",
@@ -3025,7 +3028,12 @@ def test_final_gap_readability_positive_contracts():
     try:
         source_required_fields = ["owner", "review_after", "source_strategy", "final_disposition"]
         source_data = json.loads(sources_path.read_text())
-        for source in source_data.get("sources", []):
+        retired_source_rows = [
+            json.loads(line)
+            for line in retired_sources_path.read_text().splitlines()
+            if line.strip()
+        ]
+        for source in source_data.get("sources", []) + retired_source_rows:
             source_id = str(source.get("id", ""))
             for field in source_required_fields:
                 if not str(source.get(field, "")).strip():
