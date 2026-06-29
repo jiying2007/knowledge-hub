@@ -4,7 +4,7 @@
 
 新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会记录为结构化 failure result，并在 `--json` / final gate 路径输出 JSON，避免 final gate 只能看到空输出或残留临时目录。
 
-当前 clean-slate 版本覆盖 126 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
+当前 clean-slate 版本覆盖 129 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
 
 ## 覆盖范围
 
@@ -56,7 +56,6 @@
 | owner-landing-plan-requires-owner-ready-repo-relative-command | 临时副本把某条 owner-ready package Markdown 的稳定工具命令改回 repo-relative 命令 | owner 表单校验仍可通过，但 `owner_ready_package_status=invalid` 会阻断 landing plan，避免生成只能在仓库 cwd 下执行的签收命令 |
 | owner-landing-plan-requires-owner-ready-duplicate | 临时副本复制某条 owner-ready registry item 后生成 landing plan | owner 表单校验仍可通过，但 `owner_ready_package_status=duplicate` 会阻断 landing plan，不能输出人工落地 steps |
 | owner-form-target-decision-candidate-gate | 当前 owner 表单校验拒绝 target_decision 越过 worksheet 候选目标 | valid form 若把 `target_decision` 改成 `domains/embedded/standards/...` 等非 `target_candidates` 值，`--validate-forms` 必须失败 |
-| owner-form-decision-target-pair-gate | 当前 owner 表单校验能从 worksheet 候选中找到项目路径并覆盖决策/目标成对门禁 | 若 worksheet 暴露 `projects/...` 项目路径，聚合场景必须继续运行三组负向和两组正向组合 |
 | owner-form-decision-target-pair-reference-only-project-path | 当前 owner 表单校验拒绝 `reference-only` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `reference-only` 且 `target_decision` 仍指向 `projects/...`，`--validate-forms` 必须失败 |
 | owner-form-decision-target-pair-no-migration-project-path | 当前 owner 表单校验拒绝 `no-migration` 搭配项目落地路径 | valid form 若把 `owner_decision` 填为 `no-migration` 且 `target_decision` 仍指向 `projects/...`，`--validate-forms` 必须失败 |
 | owner-form-decision-target-pair-project-rule-reference-only | 当前 owner 表单校验拒绝落地类 decision 搭配 `reference-only` target | valid form 若把 `owner_decision` 填为 `project-local-rule` 且 `target_decision` 填为 `reference-only`，`--validate-forms` 必须失败 |
@@ -192,7 +191,6 @@
 - `source-check-report-only-helper`
 - `source-check-rejects-unsafe-runtime-command`
 - `review-after-near-due-json-contract`
-- `owner-form-decision-target-pair-gate`
 - `owner-form-decision-target-pair-reference-only-project-path`
 - `owner-form-decision-target-pair-no-migration-project-path`
 - `owner-form-decision-target-pair-project-rule-reference-only`

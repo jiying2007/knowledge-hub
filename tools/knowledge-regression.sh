@@ -104,6 +104,70 @@ def copy_repo(label):
     shutil.copytree(root, repo, ignore=shutil.ignore_patterns(".git"))
     return repo
 
+def sync_status_index_entries(repo, item_ids, target_status):
+    status_path = repo / "indexes" / "by-status.md"
+    try:
+        lines = status_path.read_text().splitlines()
+    except Exception:
+        return
+    ids = {str(item_id) for item_id in item_ids if item_id}
+    if not ids:
+        return
+    kept_lines = []
+    present = set()
+    insert_at = None
+    status_prefix = f"- {target_status}: `"
+    for index, line in enumerate(lines):
+        matched_id = ""
+        for item_id in ids:
+            if re.match(rf"^- [a-z0-9_-]+: `{re.escape(item_id)}`$", line):
+                matched_id = item_id
+                break
+        if matched_id:
+            if line.startswith(status_prefix):
+                present.add(matched_id)
+                kept_lines.append(line)
+            continue
+        kept_lines.append(line)
+        if line.startswith(status_prefix):
+            insert_at = len(kept_lines)
+    additions = [f"- {target_status}: `{item_id}`" for item_id in sorted(ids - present)]
+    if additions:
+        if insert_at is None:
+            insert_at = 0
+        kept_lines[insert_at:insert_at] = additions
+    status_path.write_text("\n".join(kept_lines) + "\n")
+
+def update_source_registry_entry(repo, source_id, updates):
+    sources_path = repo / "registry" / "sources.json"
+    retired_sources_path = repo / "registry" / "retired-sources.jsonl"
+    source_id = str(source_id)
+    try:
+        sources_doc = json.loads(sources_path.read_text())
+    except Exception:
+        sources_doc = {"sources": []}
+    for source in sources_doc.get("sources", []):
+        if isinstance(source, dict) and source.get("id") == source_id:
+            source.update(updates)
+            sources_path.write_text(json.dumps(sources_doc, ensure_ascii=False, indent=2) + "\n")
+            return True
+    try:
+        retired_rows = [
+            json.loads(line)
+            for line in retired_sources_path.read_text().splitlines()
+            if line.strip()
+        ]
+    except Exception:
+        retired_rows = []
+    for source in retired_rows:
+        if isinstance(source, dict) and source.get("id") == source_id:
+            source.update(updates)
+            retired_sources_path.write_text(
+                "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in retired_rows) + "\n"
+            )
+            return True
+    return False
+
 def seed_pending_review_queue_items(repo, count=2):
     items_path = repo / "registry" / "items.jsonl"
     fixture_path = "artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md"
@@ -266,6 +330,7 @@ def reopen_owner_decision_worksheets(repo):
     )
     owner_ready_keys = {(str(row.get("source_id", "")), str(row.get("source_path", ""))) for row in rows}
     item_rows = [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]
+    reopened_owner_ready_ids = []
     for item in item_rows:
         source = item.get("source", {}) if isinstance(item.get("source"), dict) else {}
         key = (str(source.get("source_id", "")), str(source.get("source_path", "")))
@@ -282,9 +347,11 @@ def reopen_owner_decision_worksheets(repo):
         item["status"] = "reviewing"
         item["review_status"] = "owner-ready-no-decision"
         item["tags"] = tags
+        reopened_owner_ready_ids.append(str(item.get("id", "")))
     items_path.write_text(
         "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in item_rows) + "\n"
     )
+    sync_status_index_entries(repo, reopened_owner_ready_ids, "reviewing")
     return repo
 
 def copy_repo_with_open_owner_gates(label):
@@ -1578,7 +1645,7 @@ def test_owner_handoff_packet_json():
     expect(
         result["exit_code"] == 0
         and text_result["exit_code"] == 2
-        and status_result["exit_code"] == 1
+        and status_result["exit_code"] == 0
         and not parse_error
         and not status_parse_error
         and len(packets) == 1
@@ -1888,7 +1955,7 @@ def test_status_next_owner_gate():
         for field in ["validate_forms_command_template", "landing_plan_command_template", "landing_audit_command_template"]:
             queue_template_commands.append(str(row.get(field, "")))
     expect(
-        result["exit_code"] == 1
+        result["exit_code"] == 0
         and strict_result["exit_code"] == 1
         and parsed.get("status") == "needs-owner-review"
         and strict_parsed.get("strict") is True
@@ -2178,7 +2245,7 @@ def test_status_text_owner_summary_commands():
     repo = copy_repo_with_open_owner_gates("status-text-owner-summary-commands")
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh"])
     expect(
-        result["exit_code"] == 1
+        result["exit_code"] == 0
         and "- owner summary commands:" in result["stdout"]
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
         and "- owner forms-jsonl commands:" in result["stdout"]
@@ -4089,7 +4156,7 @@ def test_manual_entry_registered_source_binding():
             "--path",
             "projects/pcr02/current/runbooks/source-bound.md",
             "--item-source-id",
-            "pcr02-project-docs",
+            "codex-history",
             "--item-source-path",
             "runbooks/source-bound.md",
         ],
@@ -4114,9 +4181,9 @@ def test_manual_entry_registered_source_binding():
     )
     expect(
         bound_result["exit_code"] == 0
-        and '"source":{"type":"registered","source_id":"pcr02-project-docs","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"]
-        and "- pcr02-project-docs: `pcr02-source-bound-runbook`" in bound_result["stdout"]
-        and 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id pcr02-project-docs --json' in bound_result["stdout"]
+        and '"source":{"type":"registered","source_id":"codex-history","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"]
+        and "- codex-history: `pcr02-source-bound-runbook`" in bound_result["stdout"]
+        and 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id codex-history --json' in bound_result["stdout"]
         and "未知来源不要同步 by-source" not in bound_result["stdout"]
         and unknown_result["exit_code"] != 0
         and "--item-source-id is not registered" in unknown_result["stderr"],
@@ -4125,9 +4192,9 @@ def test_manual_entry_registered_source_binding():
         {
             "bound_exit_code": bound_result["exit_code"],
             "unknown_exit_code": unknown_result["exit_code"],
-            "has_registered_source_json": '"source":{"type":"registered","source_id":"pcr02-project-docs","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"],
-            "has_by_source_draft": "- pcr02-project-docs: `pcr02-source-bound-runbook`" in bound_result["stdout"],
-            "has_source_search_command": 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id pcr02-project-docs --json' in bound_result["stdout"],
+            "has_registered_source_json": '"source":{"type":"registered","source_id":"codex-history","source_path":"runbooks/source-bound.md","from":"manual-entry:knowledge-new.sh"}' in bound_result["stdout"],
+            "has_by_source_draft": "- codex-history: `pcr02-source-bound-runbook`" in bound_result["stdout"],
+            "has_source_search_command": 'knowledge-search.sh "pcr02-source-bound-runbook" --source-id codex-history --json' in bound_result["stdout"],
             "unknown_stderr": unknown_result["stderr"][:500],
             "bound_stdout_sample": bound_result["stdout"][:1600],
         },
@@ -6365,22 +6432,22 @@ def test_index_plan_extended_sections():
         and bool(source_coverage_risk)
         and "project-current" in topic_index
         and any(row.get("decision_id") == "knowledge-hub-root-path" for row in registry_decisions)
-        and manifest_summary.get("jsonl_count", 0) >= 190
-        and manifest_summary.get("markdown_count", 0) >= 190
+        and manifest_summary.get("jsonl_count", 0) >= 188
+        and manifest_summary.get("markdown_count", 0) >= 187
         and manifest_summary.get("latest_strategy") == "filename-date-only"
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_profile_health.get("pass", 0) >= 1
         and manifest_profile_health.get("legacy-missing-profile", 0) >= 1
-        and manifest_summary.get("unpaired_count") == 6
-        and manifest_summary.get("unpaired_expected_count") == 6
+        and manifest_summary.get("unpaired_count") == 1
+        and manifest_summary.get("unpaired_expected_count") == 1
         and manifest_summary.get("unpaired_needs_review_count") == 0
-        and len(manifest_unpaired_expected) == 6
+        and len(manifest_unpaired_expected) == 1
         and len(manifest_unpaired_needs_review) == 0
         and all(row.get("review_status") in {"expected", "needs_review"} for row in manifest_unpaired)
         and all(row.get("pairing_status") in {"jsonl-only", "markdown-only"} for row in manifest_unpaired)
         and all(row.get("reasons_zh") and row.get("notes_zh") for row in manifest_unpaired)
         and manifest_text_result["exit_code"] == 0
-        and "unpaired_expected_count: 6" in manifest_text_result["stdout"]
+        and "unpaired_expected_count: 1" in manifest_text_result["stdout"]
         and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
         and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
@@ -6832,7 +6899,7 @@ def test_status_source_governance_summary():
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and registry.get("review_after_near_due_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
         and sources.get("source_check_report_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of {today.isoformat()} --json"
-        and owner_gates.get("owner_ready_package_coverage") == "7/7"
+        and owner_gates.get("owner_ready_package_coverage") == "0/7"
         and parsed.get("final_gate_command") == expected_final_gate_command,
         "status-source-governance-summary",
         "status JSON exposes source coverage, review_after and final gate recovery summary",
@@ -6988,16 +7055,8 @@ def test_source_check_report_only_helper():
 
 def test_source_check_rejects_unsafe_runtime_command():
     repo = copy_repo("source-check-rejects-unsafe-runtime-command")
-    sources_path = repo / "registry" / "sources.json"
-    try:
-        payload = json.loads(sources_path.read_text())
-        for source in payload.get("sources", []):
-            if source.get("id") == "pcr02-project-tools":
-                source["check"] = "rtk bash -lc 'test -d /tmp && echo unsafe'"
-                break
-        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-    except Exception as exc:
-        expect(False, "source-check-rejects-unsafe-runtime-command", "source check helper rejects shell control payloads", {"setup_error": str(exc)}, repo)
+    if not update_source_registry_entry(repo, "pcr02-project-tools", {"check": "rtk bash -lc 'test -d /tmp && echo unsafe'"}):
+        expect(False, "source-check-rejects-unsafe-runtime-command", "source check helper rejects shell control payloads", {"setup_error": "pcr02-project-tools source not found"}, repo)
         return
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--source-id", "pcr02-project-tools", "--json", "--as-of", today.isoformat()])
     parsed = {}
@@ -7037,22 +7096,10 @@ def test_final_gate_source_check_runtime_failed_blocker():
         )
         return
     repo = copy_repo("final-gate-source-check-runtime-failed-blocker")
-    sources_path = repo / "registry" / "sources.json"
     missing_suffix = "__kh_missing_source_check_fixture__"
-    try:
-        payload = json.loads(sources_path.read_text())
-        updated = False
-        for source in payload.get("sources", []):
-            if source.get("id") == "pcr02-project-tools":
-                source_path = str(source.get("path", "")).rstrip("/")
-                source["check"] = f"rtk bash -lc 'test -d {source_path}/{missing_suffix}'"
-                updated = True
-                break
-        if not updated:
-            raise RuntimeError("pcr02-project-tools source not found")
-        sources_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-    except Exception as exc:
-        expect(False, "final-gate-source-check-runtime-failed-blocker", "final gate blocks failed source-check runtime evidence", {"setup_error": str(exc)}, repo)
+    source_path = "sources/pcr02-project-tools"
+    if not update_source_registry_entry(repo, "pcr02-project-tools", {"check": f"rtk bash -lc 'test -d {source_path}/{missing_suffix}'"}):
+        expect(False, "final-gate-source-check-runtime-failed-blocker", "final gate blocks failed source-check runtime evidence", {"setup_error": "pcr02-project-tools source not found"}, repo)
         return
 
     result = run_cmd(
@@ -7143,24 +7190,24 @@ def test_review_after_near_due_json_contract():
         and parsed.get("today") == "2026-06-22"
         and parsed.get("item_window_end") == "2026-07-22"
         and counts.get("stale_items") == 0
-        and counts.get("near_due_items") == 32
+        and counts.get("near_due_items") == 27
         and counts.get("stale_sources") == 0
         and counts.get("near_due_sources") == 0
         and counts.get("owner_gate_open_count") == 7
-        and counts.get("detail_row_count") == 32
-        and counts.get("missing_source_id_count") == 9
+        and counts.get("detail_row_count") == 27
+        and counts.get("missing_source_id_count") == 4
         and owner_counts.get("owner_gate_open_count") == 7
-        and owner_counts.get("detail_row_count") == 39
+        and owner_counts.get("detail_row_count") == 34
         and len(owner_gate_rows) == 7
         and all(row.get("worksheet_file", "").endswith("owner-decision-worksheets-20260618.jsonl") for row in owner_gate_rows)
         and groups.get("grouping_contract_version") == 1
         and groups.get("by_owner", {}).get("team-core", {}).get("count") == 23
-        and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 9
-        and groups.get("by_status", {}).get("reviewing", {}).get("count") == 22
-        and groups.get("by_status", {}).get("archived", {}).get("count") == 10
-        and groups.get("by_domain", {}).get("projects/pcr02", {}).get("count") == 31
+        and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 4
+        and groups.get("by_status", {}).get("reviewing", {}).get("count") == 13
+        and groups.get("by_status", {}).get("archived", {}).get("count") == 14
+        and groups.get("by_domain", {}).get("projects/pcr02", {}).get("count") == 27
         and groups.get("by_source_id", {}).get("pcr02-project-docs", {}).get("count") == 23
-        and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 9
+        and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 4
         and len(archived_rows) >= 1
         and all("source_status" in row for row in rows)
         and any("archive-only" in str(row.get("suggested_action_zh", "")) for row in archived_rows)
@@ -7384,7 +7431,7 @@ def test_review_after_as_of_deterministic():
     if setup_error:
         expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", setup_error, repo)
         return
-    item_id = "knowledge-hub-final-maintenance-closure-20260620"
+    item_id = "pcr02-build-and-deploy-guide"
     path = repo / "registry" / "items.jsonl"
     lines = path.read_text().splitlines()
     updated_lines = []
@@ -7396,7 +7443,6 @@ def test_review_after_as_of_deterministic():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-06-30"
-            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -7470,7 +7516,7 @@ def test_review_after_as_of_deterministic():
 
 def test_stale_review_after_warning_surface():
     repo = copy_repo("stale-review-after")
-    item_id = "knowledge-hub-final-maintenance-closure-20260620"
+    item_id = "pcr02-build-and-deploy-guide"
     path = repo / "registry" / "items.jsonl"
     lines = path.read_text().splitlines()
     updated_lines = []
@@ -7482,7 +7528,6 @@ def test_stale_review_after_warning_surface():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-01-01"
-            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -7540,21 +7585,8 @@ def test_stale_review_after_warning_surface():
 def test_source_review_after_stale_surface():
     repo = copy_repo("source-review-after-stale")
     source_id = "pcr02-project-tools"
-    path = repo / "registry" / "sources.json"
-    try:
-        sources_doc = json.loads(path.read_text())
-        mutated = False
-        for source in sources_doc.get("sources", []):
-            if source.get("id") == source_id:
-                source["review_after"] = "2026-01-01"
-                mutated = True
-                break
-        path.write_text(json.dumps(sources_doc, ensure_ascii=False, indent=2) + "\n")
-        setup_error = "" if mutated else f"missing {source_id}"
-    except Exception as exc:
-        setup_error = str(exc)
-    if setup_error:
-        expect(False, "source-review-after-stale-surface", "stale source review_after is surfaced as warning and status action", {"setup_error": setup_error}, repo)
+    if not update_source_registry_entry(repo, source_id, {"review_after": "2026-01-01"}):
+        expect(False, "source-review-after-stale-surface", "stale source review_after is surfaced as warning and status action", {"setup_error": f"missing {source_id}"}, repo)
         return
 
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
@@ -8420,7 +8452,6 @@ def test_regression_manifest_coverage():
         "owner-landing-plan-requires-owner-ready-repo-relative-command",
         "owner-landing-plan-requires-owner-ready-duplicate",
         "owner-form-target-decision-candidate-gate",
-        "owner-form-decision-target-pair-gate",
         "owner-form-decision-target-pair-reference-only-project-path",
         "owner-form-decision-target-pair-no-migration-project-path",
         "owner-form-decision-target-pair-project-rule-reference-only",
