@@ -207,14 +207,24 @@ OWNER_DECISION_FIELD_NAMES = {
 
 def reopen_owner_decision_worksheets(repo):
     worksheet_path = repo / "artifacts" / "manifests" / "pcr02-owner-decision-worksheets-20260618.jsonl"
+    items_path = repo / "registry" / "items.jsonl"
     sources_path = repo / "registry" / "sources.json"
+    retired_sources_path = repo / "registry" / "retired-sources.jsonl"
     try:
         sources_doc = json.loads(sources_path.read_text())
     except Exception:
         sources_doc = {}
+    try:
+        retired_sources = [
+            json.loads(line)
+            for line in retired_sources_path.read_text().splitlines()
+            if line.strip()
+        ]
+    except Exception:
+        retired_sources = []
     source_roots = {
         str(source.get("id", "")): str(source.get("path", ""))
-        for source in sources_doc.get("sources", [])
+        for source in list(sources_doc.get("sources", [])) + retired_sources
         if isinstance(source, dict)
     }
     rows = []
@@ -253,6 +263,27 @@ def reopen_owner_decision_worksheets(repo):
         rows.append(row)
     worksheet_path.write_text(
         "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+    )
+    owner_ready_keys = {(str(row.get("source_id", "")), str(row.get("source_path", ""))) for row in rows}
+    item_rows = [json.loads(line) for line in items_path.read_text().splitlines() if line.strip()]
+    for item in item_rows:
+        source = item.get("source", {}) if isinstance(item.get("source"), dict) else {}
+        key = (str(source.get("source_id", "")), str(source.get("source_path", "")))
+        if key not in owner_ready_keys or "owner-ready-package" not in str(item.get("path", "")):
+            continue
+        tags = [
+            str(tag)
+            for tag in item.get("tags", [])
+            if tag not in {"historical-signoff-package", "owner-decision-evidence", "superseded"}
+        ]
+        for required_tag in ["owner-gate", "owner-ready"]:
+            if required_tag not in tags:
+                tags.append(required_tag)
+        item["status"] = "reviewing"
+        item["review_status"] = "owner-ready-no-decision"
+        item["tags"] = tags
+    items_path.write_text(
+        "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in item_rows) + "\n"
     )
     return repo
 
@@ -634,7 +665,7 @@ def test_status_noncanonical_only():
     item_id = "knowledge-hub-owner-status-gate-hardening-20260619"
     path = repo / "indexes" / "by-status.md"
     text = path.read_text()
-    old = f"- reviewing: `{item_id}`"
+    old = f"- archived: `{item_id}`"
     new = f"- noncanonical-note: `{item_id}`"
     if old not in text:
         expect(False, "status-noncanonical-only", "noncanonical status mention is not enough", {"setup_error": f"missing {old}"}, repo)
@@ -1547,7 +1578,7 @@ def test_owner_handoff_packet_json():
     expect(
         result["exit_code"] == 0
         and text_result["exit_code"] == 2
-        and status_result["exit_code"] == 0
+        and status_result["exit_code"] == 1
         and not parse_error
         and not status_parse_error
         and len(packets) == 1
@@ -1857,7 +1888,7 @@ def test_status_next_owner_gate():
         for field in ["validate_forms_command_template", "landing_plan_command_template", "landing_audit_command_template"]:
             queue_template_commands.append(str(row.get(field, "")))
     expect(
-        result["exit_code"] == 0
+        result["exit_code"] == 1
         and strict_result["exit_code"] == 1
         and parsed.get("status") == "needs-owner-review"
         and strict_parsed.get("strict") is True
@@ -2147,7 +2178,7 @@ def test_status_text_owner_summary_commands():
     repo = copy_repo_with_open_owner_gates("status-text-owner-summary-commands")
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh"])
     expect(
-        result["exit_code"] == 0
+        result["exit_code"] == 1
         and "- owner summary commands:" in result["stdout"]
         and "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --summary" in result["stdout"]
         and "- owner forms-jsonl commands:" in result["stdout"]
