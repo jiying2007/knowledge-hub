@@ -746,6 +746,47 @@ def make_owner_ready_coverage(rows):
     coverage["owner_ready_package_coverage"] = f"{coverage['owner_ready_package_count']}/{len(rows)}"
     return coverage
 
+def make_owner_ready_blocking_context(rows):
+    open_rows = [row for row in rows if row.get("status") == "open"]
+    open_coverage = make_owner_ready_coverage(open_rows)
+    blocking_missing = open_coverage["owner_ready_missing_count"]
+    blocking_invalid = open_coverage["owner_ready_invalid_count"]
+    blocking_duplicate = open_coverage["owner_ready_duplicate_count"]
+    has_blocking = bool(blocking_missing or blocking_invalid or blocking_duplicate)
+    if not open_rows:
+        status = "not-applicable-no-open-owner-gates"
+        note = (
+            "owner-ready package 覆盖只阻断 open owner gate；当前没有 open owner gate，"
+            "历史 owner-ready package 缺失或被 owner decision landing 取代不再阻断。"
+        )
+    elif has_blocking:
+        status = "blocked-open-owner-gates"
+        note = (
+            "owner-ready package 覆盖只阻断 open owner gate；当前仍有 open owner gate 缺少、"
+            "无效或重复 owner-ready package，landing 前必须先修复。"
+        )
+    else:
+        status = "pass-open-owner-gates"
+        note = (
+            "owner-ready package 覆盖只阻断 open owner gate；当前 open owner gate 的"
+            " owner-ready package 覆盖有效。"
+        )
+    return {
+        "owner_ready_blocking_scope": "open-owner-gates-only",
+        "owner_ready_blocking_status": status,
+        "owner_ready_missing_blocking": bool(blocking_missing),
+        "owner_ready_invalid_blocking": bool(blocking_invalid),
+        "owner_ready_duplicate_blocking": bool(blocking_duplicate),
+        "owner_ready_blocking_counts": {
+            "open_row_count": len(open_rows),
+            "missing": blocking_missing,
+            "invalid": blocking_invalid,
+            "duplicate": blocking_duplicate,
+            "coverage": open_coverage["owner_ready_package_coverage"],
+        },
+        "owner_ready_status_note_zh": note,
+    }
+
 def _safe_slug(value):
     text = str(value).strip().lower()
     chars = []
@@ -1001,6 +1042,7 @@ def make_owner_summary(rows):
     source_identity_counts = {}
     owner_counts = {}
     owner_ready_coverage = make_owner_ready_coverage(rows)
+    owner_ready_blocking_context = make_owner_ready_blocking_context(rows)
     for row in rows:
         identity_status = row.get("observed_source_identity", {}).get("identity_status", "unavailable")
         source_identity_counts[identity_status] = source_identity_counts.get(identity_status, 0) + 1
@@ -1039,6 +1081,7 @@ def make_owner_summary(rows):
         "resolved_count": sum(1 for row in rows if row["status"] == "resolved"),
         "active_exposure_count": sum(len(row["active_registry_items"]) for row in rows),
         **owner_ready_coverage,
+        **owner_ready_blocking_context,
         "source_identity_counts": dict(sorted(source_identity_counts.items())),
         "owner_counts": dict(sorted(owner_counts.items())),
         "owner_dispatch": make_owner_dispatch(rows),
@@ -1698,6 +1741,7 @@ open_count = sum(1 for row in rows if row["status"] == "open")
 resolved_count = sum(1 for row in rows if row["status"] == "resolved")
 active_exposure_count = sum(len(row["active_registry_items"]) for row in rows)
 owner_ready_coverage = make_owner_ready_coverage(rows)
+owner_ready_blocking_context = make_owner_ready_blocking_context(rows)
 owner_review_status = "needs-owner-review" if open_count else "complete"
 owner_gate_status = "owner-gates-open" if open_count else "owner-gates-complete"
 result_status = "blocked" if errors else "needs-fix" if active_exposure_count else "ok"
@@ -1729,6 +1773,7 @@ result = {
     "resolved_count": resolved_count,
     "active_exposure_count": active_exposure_count,
     **owner_ready_coverage,
+    **owner_ready_blocking_context,
     "errors": errors,
     "rows": rows,
 }
@@ -1838,6 +1883,8 @@ print(f"- owner-ready packages: {owner_ready_coverage['owner_ready_package_cover
 print(f"- owner-ready missing: {owner_ready_coverage['owner_ready_missing_count']}")
 print(f"- owner-ready invalid: {owner_ready_coverage['owner_ready_invalid_count']}")
 print(f"- owner-ready duplicate: {owner_ready_coverage['owner_ready_duplicate_count']}")
+print(f"- owner-ready blocking status: {owner_ready_blocking_context['owner_ready_blocking_status']}")
+print(f"- owner-ready note: {owner_ready_blocking_context['owner_ready_status_note_zh']}")
 if args.source_id:
     print(f"- source_id: {args.source_id}")
 if args.owner:

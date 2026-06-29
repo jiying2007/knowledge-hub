@@ -23,25 +23,25 @@
 - reviewing: `pcr02-debug-tools-guide`
 - archived: `pcr02-review-required-resolution-20260617`
 - reviewing: `pcr02-docs-index-reference-20260618`
-- reviewing: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
+- archived: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
 - archived: `pcr02-owner-review-package-20260618`
 - archived: `pcr02-owner-review-follow-up-20260618`
 - archived: `pcr02-owner-decision-worksheets-20260618`
-- reviewing: `knowledge-hub-chinese-readability-rules`
-- reviewing: `knowledge-hub-glossary-rules`
-- reviewing: `knowledge-hub-evidence-rules`
-- reviewing: `knowledge-hub-commit-changelog-pr-rules`
-- reviewing: `knowledge-hub-owner-review-rules`
-- reviewing: `knowledge-hub-debug-record-rules`
-- reviewing: `knowledge-hub-command-tooling-rules`
-- reviewing: `knowledge-hub-external-source-absorption-rules`
-- reviewing: `knowledge-hub-naming-boundaries`
-- reviewing: `knowledge-hub-ai-content-labeling-rules`
-- reviewing: `knowledge-hub-path-routing-rules`
+- active: `knowledge-hub-chinese-readability-rules`
+- active: `knowledge-hub-glossary-rules`
+- active: `knowledge-hub-evidence-rules`
+- active: `knowledge-hub-commit-changelog-pr-rules`
+- active: `knowledge-hub-owner-review-rules`
+- active: `knowledge-hub-debug-record-rules`
+- active: `knowledge-hub-command-tooling-rules`
+- active: `knowledge-hub-external-source-absorption-rules`
+- active: `knowledge-hub-naming-boundaries`
+- active: `knowledge-hub-ai-content-labeling-rules`
+- active: `knowledge-hub-path-routing-rules`
 - reviewing: `knowledge-hub-path-audit-tool`
-- reviewing: `knowledge-hub-zh-template-set-20260618`
-- reviewing: `knowledge-hub-registry-schema-readability-extension`
-- reviewing: `chinese-developer-long-term-assets-20260618`
+- active: `knowledge-hub-zh-template-set-20260618`
+- active: `knowledge-hub-registry-schema-readability-extension`
+- archived: `chinese-developer-long-term-assets-20260618`
 - archived: `pcr02-asan-split-targets-20260618`
 - archived: `memory-auto-curation-report-only-governance-20260618`
 - archived: `pcr02-dvr-motor-closeout-targets-20260618`
@@ -51,8 +51,8 @@
 - archived: `pcr02-governance-handoff-20260618`
 - archived: `pcr02-owner-intake-package-20260618`
 - archived: `pcr02-owner-source-identity-preflight-20260618`
-- reviewing: `pcr02-owner-resolution-playbook-20260618`
-- reviewing: `pcr02-owner-resolution-schema-20260618`
+- archived: `pcr02-owner-resolution-playbook-20260618`
+- archived: `pcr02-owner-resolution-schema-20260618`
 - archived: `knowledge-hub-index-drift-remediation-20260619`
 - archived: `knowledge-hub-stale-index-gate-20260619`
 - archived: `knowledge-hub-index-path-gate-20260619`
@@ -79,12 +79,12 @@
 - archived: `knowledge-hub-doctor-helper-20260619`
 - archived: `knowledge-hub-readme-maintenance-path-sync-20260619`
 - archived: `knowledge-hub-evidence-index-template-20260619`
-- reviewing: `patent-disclosure-canonical-archive-corpus`
-- reviewing: `patent-disclosure-artifact-ref-manifest-20260619`
+- archived: `patent-disclosure-canonical-archive-corpus`
+- archived: `patent-disclosure-artifact-ref-manifest-20260619`
 - archived: `knowledge-hub-source-coverage-closeout-20260619`
-- reviewing: `embedded-knowledge-owner-review-gate-20260619`
+- archived: `embedded-knowledge-owner-review-gate-20260619`
 - reviewing: `codex-archive-reference-boundary-20260619`
-- reviewing: `codex-memories-auxiliary-boundary-20260619`
+- archived: `codex-memories-auxiliary-boundary-20260619`
 - archived: `knowledge-hub-index-plan-helper-20260619`
 - archived: `knowledge-hub-source-coverage-gate-20260619`
 - archived: `knowledge-hub-owner-gated-active-gate-20260619`
@@ -120,7 +120,7 @@
 - archived: `knowledge-hub-status-strict-blockers-20260620`
 - archived: `knowledge-hub-owner-source-identity-validation-20260620`
 - archived: `knowledge-hub-final-gate-20260620`
-- reviewing: `pcr02-owner-decision-intake-execution-20260620`
+- archived: `pcr02-owner-decision-intake-execution-20260620`
 - archived: `knowledge-hub-regression-temp-cleanup-20260620`
 - archived: `pcr02-agents-owner-ready-package-20260620`
 - archived: `pcr02-diag-owner-ready-package-20260620`
@@ -130,11 +130,11 @@
 - archived: `pcr02-motor-mcu-owner-ready-package-20260620`
 - archived: `pcr02-dvr-session-archive-owner-ready-package-20260620`
 - archived: `knowledge-hub-owner-ready-coverage-status-20260620`
-- reviewing: `knowledge-hub-owner-landing-ready-gate-20260620`
+- archived: `knowledge-hub-owner-landing-ready-gate-20260620`
 - archived: `knowledge-hub-owner-forms-text-jsonl-20260620`
 - archived: `knowledge-hub-owner-forms-jsonl-only-20260620`
 - archived: `knowledge-hub-status-owner-forms-jsonl-command-20260620`
-- reviewing: `knowledge-hub-status-owner-landing-command-20260620`
+- archived: `knowledge-hub-status-owner-landing-command-20260620`
 - archived: `knowledge-hub-status-command-template-split-20260620`
 - archived: `knowledge-hub-owner-placeholder-quoting-20260620`
 - reviewing: `knowledge-hub-final-state-goal-20260620`
@@ -152,21 +152,21 @@
 - archived: `knowledge-hub-terminal-gate-resilience-20260620`
 - archived: `knowledge-hub-structured-search-filters-20260620`
 - archived: `knowledge-hub-manual-entry-readability-fields-20260620`
-- reviewing: `pcr02-tools-boundary-20260620`
-- reviewing: `pcr02-knowledge-secret-config-boundary-20260620`
-- reviewing: `pcr02-product-test-artifact-config-interface-boundary-20260620`
-- reviewing: `pcr02-scratch-archive-boundary-20260620`
-- reviewing: `pcr02-root-artifacts-boundary-20260620`
-- reviewing: `pcr02-module-agent-rules-boundary-20260620`
-- reviewing: `pcr02-agent-config-boundary-20260620`
-- reviewing: `knowledge-hub-source-check-coverage-draft-20260621`
-- reviewing: `knowledge-hub-source-check-docs-search-limit-20260621`
-- reviewing: `knowledge-hub-owner-target-landing-validation-20260621`
-- reviewing: `knowledge-hub-owner-ready-command-stability-20260621`
-- reviewing: `knowledge-hub-final-gap-readability-index-20260621`
-- reviewing: `knowledge-hub-owner-dispatch-readability-sync-20260621`
-- reviewing: `knowledge-hub-terminal-contract-template-sync-20260621`
-- reviewing: `knowledge-hub-asof-coverage-contract-20260621`
+- archived: `pcr02-tools-boundary-20260620`
+- archived: `pcr02-knowledge-secret-config-boundary-20260620`
+- archived: `pcr02-product-test-artifact-config-interface-boundary-20260620`
+- archived: `pcr02-scratch-archive-boundary-20260620`
+- archived: `pcr02-root-artifacts-boundary-20260620`
+- archived: `pcr02-module-agent-rules-boundary-20260620`
+- archived: `pcr02-agent-config-boundary-20260620`
+- archived: `knowledge-hub-source-check-coverage-draft-20260621`
+- archived: `knowledge-hub-source-check-docs-search-limit-20260621`
+- archived: `knowledge-hub-owner-target-landing-validation-20260621`
+- archived: `knowledge-hub-owner-ready-command-stability-20260621`
+- archived: `knowledge-hub-final-gap-readability-index-20260621`
+- archived: `knowledge-hub-owner-dispatch-readability-sync-20260621`
+- archived: `knowledge-hub-terminal-contract-template-sync-20260621`
+- archived: `knowledge-hub-asof-coverage-contract-20260621`
 - archived: `pcr02-v1-deep-analysis-plan-archive-20260506`
 - archived: `pcr02-v1-migration-execution-plan-archive-20260506`
 - archived: `pcr02-irlight-optimization-plan-archive-20260508`
@@ -287,124 +287,124 @@
 - owner-ready-command-stability-applied: PCR02 owner-ready、owner gate/status/final gate 人工命令统一使用 cwd-stable `~/knowledge-hub/tools` 入口；证据：`artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.jsonl`.
 - final-gap-readability-index-applied: typed gap map、environment gap 词表、governance 中文可读性门禁和 PCR02/source 恢复锚点已压实；证据：`artifacts/manifests/knowledge-hub-final-gap-readability-index-20260621.jsonl`.
 - owner-dispatch-readability-sync-applied: `knowledge-owner-gates.sh --summary` 输出只读 `owner_dispatch`，并同步中文字段和 source policy `notes_zh` 规则；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.jsonl`.
-- reviewing: `knowledge-hub-status-dispatch-notes-zh-20260621`
+- archived: `knowledge-hub-status-dispatch-notes-zh-20260621`
 - status-dispatch-notes-zh-applied: status 输出 owner_dispatch，final gate 透传 owner_recovery，并阻断 2026-06-21 后缺少 AI provenance 的 registry item；证据：`artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.jsonl`.
 - asof-coverage-contract-applied: `knowledge-check/status/final-gate/regression` 支持固定日期复现，并暴露 source coverage selection/health；证据：`artifacts/manifests/knowledge-hub-asof-coverage-contract-20260621.jsonl`.
-- reviewing: `knowledge-hub-owner-routing-recovery-20260621`
+- archived: `knowledge-hub-owner-routing-recovery-20260621`
 - owner-routing-recovery-applied: `registry/owner-routing.json` 登记只读分派路由，owner/status/final gate 透传 `owner_route`；证据：`artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.jsonl`.
-- reviewing: `knowledge-hub-manifest-profile-index-plan-20260621`
+- archived: `knowledge-hub-manifest-profile-index-plan-20260621`
 - manifest-profile-index-plan-applied: manifest 恢复视图、governance JSONL 轻量 profile gate 和长期模板可读性字段 gate 已压实；证据：`artifacts/manifests/knowledge-hub-manifest-profile-index-plan-20260621.jsonl`.
-- reviewing: `knowledge-hub-source-selection-owner-warning-20260621`
+- archived: `knowledge-hub-source-selection-owner-warning-20260621`
 - source-selection-owner-warning-applied: latest coverage 只从 `knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl` 选择，未知 source owner 输出 warning；证据：`artifacts/manifests/knowledge-hub-source-selection-owner-warning-20260621.jsonl`.
-- reviewing: `knowledge-hub-owner-evidence-readiness-20260621`
+- archived: `knowledge-hub-owner-evidence-readiness-20260621`
 - owner-evidence-readiness-applied: `--evidence-readiness` 输出只读 owner 证据准备度，正式 owner 字段仍需人工填写；证据：`artifacts/manifests/knowledge-hub-owner-evidence-readiness-20260621.jsonl`.
-- reviewing: `knowledge-hub-owner-landing-audit-manual-index-20260621`
+- archived: `knowledge-hub-owner-landing-audit-manual-index-20260621`
 - owner-landing-audit-manual-index-applied: `--landing-audit` 输出只读落地审计，并提示 by-source/by-decision 和 unpaired manifest 分类；证据：`artifacts/manifests/knowledge-hub-owner-landing-audit-manual-index-20260621.jsonl`.
-- reviewing: `knowledge-hub-source-boundary-health-20260621`
+- archived: `knowledge-hub-source-boundary-health-20260621`
 - source-boundary-health-applied: `knowledge-check/status/final-gate` 输出只读 source check 静态契约和 PCR02 Level 2 boundary 内部证据链；证据：`artifacts/manifests/knowledge-hub-source-boundary-health-20260621.jsonl`.
-- reviewing: `pcr02-product-test-artifact-config-interface-identity-20260621`
+- archived: `pcr02-product-test-artifact-config-interface-identity-20260621`
 - product-test-identity-preflight-applied: PCR02 product-test 73 个非生成物文件的 source identity 已只读登记，`.git/**` 与 `.o/.d` 保持排除；证据：`artifacts/manifests/pcr02-product-test-artifact-config-interface-identity-20260621.jsonl`.
-- reviewing: `pcr02-p1-source-identity-20260621`
+- archived: `pcr02-p1-source-identity-20260621`
 - p1-source-identity-preflight-applied: PCR02 agent-config、tools、root-artifacts 三个 P1 source 的 44 个当前文件已只读登记；证据：`artifacts/manifests/pcr02-p1-source-identity-20260621.jsonl`.
-- reviewing: `knowledge-hub-owner-landing-index-completeness-20260621`
+- archived: `knowledge-hub-owner-landing-index-completeness-20260621`
 - owner-landing-index-completeness-applied: owner landing plan/audit 显式输出 by-source 与 by-decision 人工索引落点；不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-owner-landing-index-completeness-20260621.jsonl`.
-- reviewing: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
+- archived: `knowledge-hub-final-gate-regression-skip-blocker-20260621`
 - final-gate-regression-skip-blocker-applied: final gate 将 regression self-test skip 作为 blocker，不允许作为终态证据；证据：`artifacts/manifests/knowledge-hub-final-gate-regression-skip-blocker-20260621.jsonl`.
-- reviewing: `pcr02-p2-archive-rule-identity-20260621`
+- archived: `pcr02-p2-archive-rule-identity-20260621`
 - p2-archive-rule-identity-preflight-applied: PCR02 module-agent-rules 与 scratch 两个 P2 source 的 16 个当前文件已只读登记；规则 owner-gated，scratch archive-only；证据：`artifacts/manifests/pcr02-p2-archive-rule-identity-20260621.jsonl`.
-- reviewing: `knowledge-hub-manual-entry-source-boundary-sync-20260621`
+- archived: `knowledge-hub-manual-entry-source-boundary-sync-20260621`
 - manual-entry-source-boundary-sync-applied: 人工新增入口补齐专用模板映射、README 示例、回归覆盖和 13 个 source 中文边界；证据：`artifacts/manifests/knowledge-hub-manual-entry-source-boundary-sync-20260621.jsonl`.
-- reviewing: `pcr02-level2-source-check-execution-snapshot-20260621`
+- archived: `pcr02-level2-source-check-execution-snapshot-20260621`
 - level2-source-check-execution-snapshot-applied: PCR02 Level 2 七个 source check report-only 手动快照 exit_code=0；只证明路径/文件存在；证据：`artifacts/manifests/pcr02-level2-source-check-execution-snapshot-20260621.jsonl`.
-- reviewing: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
+- archived: `knowledge-hub-manual-recovery-boundary-hardening-20260621`
 - manual-recovery-boundary-hardening-applied: 新会话恢复、人工归档默认状态、source 枚举速查、离线模板和 PCR02 边界可读性已压实；证据：`artifacts/manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.jsonl`.
-- reviewing: `knowledge-hub-owner-automation-template-hardening-20260621`
+- archived: `knowledge-hub-owner-automation-template-hardening-20260621`
 - owner-automation-template-hardening-applied: owner 表单拒绝 routing_owner 代签，maintenance-run 强制 report-only/no-memory；证据：`artifacts/manifests/knowledge-hub-owner-automation-template-hardening-20260621.jsonl`.
-- reviewing: `knowledge-hub-source-review-template-entry-hardening-20260622`
+- archived: `knowledge-hub-source-review-template-entry-hardening-20260622`
 - source-review-template-entry-hardening-applied: source review_after 过期 warning/status surface、低复杂度入口和模板字段矩阵已补齐；证据：`artifacts/manifests/knowledge-hub-source-review-template-entry-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
+- archived: `knowledge-hub-owner-handoff-final-gate-hardening-20260622`
 - owner-handoff-final-gate-hardening-applied: `owner_dispatch[]` 输出只读分派包，final gate 暴露 source coverage selection 和非 owner blocker 分类；证据：`artifacts/manifests/knowledge-hub-owner-handoff-final-gate-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-gate-evidence-recovery-20260622`
+- archived: `knowledge-hub-final-gate-evidence-recovery-20260622`
 - final-gate-evidence-recovery-applied: final gate 输出命令级 `evidence_index` 和 owner-blocker provenance，并补终态失败恢复路径；证据：`artifacts/manifests/knowledge-hub-final-gate-evidence-recovery-20260622.jsonl`.
-- reviewing: `knowledge-hub-recovery-search-manual-hardening-20260622`
+- archived: `knowledge-hub-recovery-search-manual-hardening-20260622`
 - recovery-search-manual-hardening-applied: manifest latest 恢复、source coverage duplicate warning、结构化搜索过滤和 manual diagnostics 已由 85 个回归覆盖；证据：`artifacts/manifests/knowledge-hub-recovery-search-manual-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-proof-maintenance-hardening-20260622`
+- archived: `knowledge-hub-final-proof-maintenance-hardening-20260622`
 - final-proof-maintenance-hardening-applied: final gate Level 1 来源字段、status source recovery rows 和 regression helper 表格自检已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-maintenance-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-owner-queue-command-hardening-20260622`
+- archived: `knowledge-hub-owner-queue-command-hardening-20260622`
 - owner-queue-command-hardening-applied: status dashboard 的 owner queue、命令边界和稳定命令示例已压实；证据：`artifacts/manifests/knowledge-hub-owner-queue-command-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
+- archived: `knowledge-hub-final-recovery-discoverability-hardening-20260622`
 - final-recovery-discoverability-hardening-applied: final gate owner_recovery 队列、proof 制品可发现性、tools README 中文说明和旧 Evidence Index 表头已压实；证据：`artifacts/manifests/knowledge-hub-final-recovery-discoverability-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-proof-summary-readability-hardening-20260622`
+- archived: `knowledge-hub-final-proof-summary-readability-hardening-20260622`
 - final-proof-summary-readability-hardening-applied: final gate proof 摘要、owner-review blocker 断言、tools README 中文说明和旧 Evidence Index 六列表头已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-summary-readability-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-source-check-snapshot-evidence-readability-20260622`
+- archived: `knowledge-hub-source-check-snapshot-evidence-readability-20260622`
 - source-check-snapshot-evidence-readability-applied: status/final gate 输出 PCR02 Level 2 source check 快照只读摘要，核心 source/decision/status 索引中文化；证据：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.jsonl`.
-- reviewing: `knowledge-hub-review-after-near-due-snapshot-20260622`
+- archived: `knowledge-hub-review-after-near-due-snapshot-20260622`
 - review-after-near-due-snapshot-applied: 30 天 review_after 预警快照覆盖 2026-07-16 到 2026-07-18 的 32 个首批复核项；仅作人工提醒，不自动改日期、不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.jsonl`.
-- reviewing: `knowledge-hub-report-only-maintenance-tools-20260622`
+- archived: `knowledge-hub-report-only-maintenance-tools-20260622`
 - report-only-maintenance-tools-registered: 登记 `knowledge-review-after.sh` 与 `knowledge-source-check.sh` 两个 report-only 维护入口；证据：`artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.jsonl`.
-- reviewing: `knowledge-hub-owner-inbox-final-gate-audit-20260622`
+- archived: `knowledge-hub-owner-inbox-final-gate-audit-20260622`
 - owner-inbox-final-gate-audit-applied: 新增 owner-inbox 单屏人工复核入口，并让 final gate 输出当前 source-check 运行证据和高优先级规则审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.jsonl`.
-- reviewing: `knowledge-hub-manual-source-kind-contract-20260622`
+- archived: `knowledge-hub-manual-source-kind-contract-20260622`
 - manual-source-kind-contract-applied: 人工新增条目的 source 绑定和 registry/search kind 契约已压实，并补齐 93 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.jsonl`.
-- reviewing: `knowledge-hub-offline-manifest-profile-hardening-20260622`
+- archived: `knowledge-hub-offline-manifest-profile-hardening-20260622`
 - offline-manifest-profile-hardening-applied: 离线人工维护 fallback、source 默认复核周期和 2026-06-21 及之后 manifest profile gate 已压实，并补齐 94 项回归覆盖；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
+- archived: `knowledge-hub-final-proof-runtime-recovery-hardening-20260622`
 - final-proof-runtime-recovery-hardening-applied: 终态 proof 主制品契约扩展到 10 项，source-check runtime 失败 blocker、manifest 恢复视图和 owner 表单 diagnostics 已压实；证据：`artifacts/manifests/knowledge-hub-final-proof-runtime-recovery-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
+- archived: `knowledge-hub-owner-target-manifest-recovery-hardening-20260622`
 - owner-target-manifest-recovery-hardening-applied: owner 表单新增保守 decision/target 成对兼容门禁，manifest 文本恢复视图显示 profile_health、summary_source 和 evidence_source；证据：`artifacts/manifests/knowledge-hub-owner-target-manifest-recovery-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-review-after-topic-owner-hardening-20260622`
+- archived: `knowledge-hub-review-after-topic-owner-hardening-20260622`
 - review-after-topic-owner-hardening-applied: review_after 分组报告、by-topic 优先恢复速查、owner form target_candidates 防篡改和合法终止组合回归已压实；证据：`artifacts/manifests/knowledge-hub-review-after-topic-owner-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-owner-status-review-proof-hardening-20260622`
+- archived: `knowledge-hub-owner-status-review-proof-hardening-20260622`
 - owner-status-review-proof-hardening-applied: owner queue 覆盖状态、review_after worksheet 恢复和 final proof 动态发现已压实；证据：`artifacts/manifests/knowledge-hub-owner-status-review-proof-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-proof-search-runtime-hardening-20260622`
+- archived: `knowledge-hub-proof-search-runtime-hardening-20260622`
 - proof-search-runtime-hardening-applied: final proof as-of 日期选择和 registry metadata-only 搜索 fallback 已压实，回归覆盖扩展到 103 项；证据：`artifacts/manifests/knowledge-hub-proof-search-runtime-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-maintenance-linking-audit-hardening-20260622`
+- archived: `knowledge-hub-maintenance-linking-audit-hardening-20260622`
 - maintenance-linking-audit-hardening-applied: final gate 顶层 maintenance_entry_audit 与 linking_audit 已压实，index-plan 新增 linking 恢复视图；证据：`artifacts/manifests/knowledge-hub-maintenance-linking-audit-hardening-20260622.jsonl`.
-- reviewing: `knowledge-hub-final-proof-date-rollover-hardening-20260623`
+- archived: `knowledge-hub-final-proof-date-rollover-hardening-20260623`
 - final-proof-date-rollover-hardening-applied: final proof 日期滚动保留 2026-06-22 baseline 动态 proof，并继续叠加当前 as-of 日期 proof；README 低复杂度维护入口已压缩；证据：`artifacts/manifests/knowledge-hub-final-proof-date-rollover-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`
+- archived: `knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623`
 - owner-inbox-linking-maintenance-hardening-applied: owner-inbox 已成为 owner 分派第一步只读入口，linking/project 恢复和人工维护最短路径锚点已纳入保活检查；证据：`artifacts/manifests/knowledge-hub-owner-inbox-linking-maintenance-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
+- archived: `knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623`
 - manual-entry-owner-personal-source-recommendation-applied: `knowledge-new.sh` 已暴露 item owner registry 状态、personal-local 默认值和 source role-aware 推荐提示；证据：`artifacts/manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.jsonl`.
-- reviewing: `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
+- archived: `knowledge-hub-proof-alias-owner-coverage-hardening-20260623`
 - proof-alias-owner-coverage-hardening-applied: final gate 已提供稳定 `proof_artifacts` 字段，owner validate/landing 已暴露分批覆盖提示，终态 goal 最短路径口径已统一；证据：`artifacts/manifests/knowledge-hub-proof-alias-owner-coverage-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-ready-status-source-hardening-20260623`
+- archived: `knowledge-hub-owner-ready-status-source-hardening-20260623`
 - owner-ready-status-source-hardening-applied: owner-ready 状态来源已收口到 owner-gates 逐行强校验字段，status owner queue 不再从 registry_items 推断 covered；证据：`artifacts/manifests/knowledge-hub-owner-ready-status-source-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-archive-form-readability-hardening-20260623`
+- archived: `knowledge-hub-owner-archive-form-readability-hardening-20260623`
 - owner-archive-form-readability-hardening-applied: archive-only owner 表单已允许明确 archive 路径并拒绝非 archive 目标，final gate 维护入口文案和本地 owner JSONL 草稿边界已加固；证据：`artifacts/manifests/knowledge-hub-owner-archive-form-readability-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-final-state-handoff-supersede-20260623`
+- archived: `knowledge-hub-final-state-handoff-supersede-20260623`
 - final-state-handoff-supersede-applied: 旧 final-state handoff 已有当前恢复口径的 supersede 锚点，final proof 可发现性扩展到 by-decision；证据：`artifacts/manifests/knowledge-hub-final-state-handoff-supersede-20260623.jsonl`.
-- reviewing: `knowledge-hub-review-queue-topic-readability-20260623`
+- archived: `knowledge-hub-review-queue-topic-readability-20260623`
 - review-queue-topic-readability-applied: AI / external source 人工复核队列已从 registry 派生为只读 report-only 视图，by-topic 首屏恢复入口与历史治理台账已拆分；证据：`artifacts/manifests/knowledge-hub-review-queue-topic-readability-20260623.jsonl`.
-- reviewing: `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
+- archived: `knowledge-hub-offline-review-queue-claiming-hardening-20260623`
 - offline-review-queue-claiming-hardening-applied: 离线人工维护 follow-up 命令已统一为完整 rtk 命令，review queue 已支持过滤/分页领取；证据：`artifacts/manifests/knowledge-hub-offline-review-queue-claiming-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
+- archived: `knowledge-hub-owner-dispatch-regression-count-hardening-20260623`
 - owner-dispatch-regression-count-hardening-applied: owner_dispatch 已按 source_id + owner 隔离只读分派范围，历史 manifest 固定回归数量已补当次捕获口径；证据：`artifacts/manifests/knowledge-hub-owner-dispatch-regression-count-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
+- archived: `knowledge-hub-owner-handoff-profile-advisory-hardening-20260623`
 - owner-handoff-profile-advisory-hardening-applied: owner handoff one-shot JSON 入口已可从 status 发现，manifest profile boundary 缺失已改为 advisory 恢复提示；证据：`artifacts/manifests/knowledge-hub-owner-handoff-profile-advisory-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
+- archived: `knowledge-hub-review-queue-recovery-packet-hardening-20260623`
 - review-queue-recovery-packet-hardening-applied: review queue 已提供 row-level 诊断命令、批次恢复包和 final gate 结构化恢复字段，manifest advisory 已有中文 next action；证据：`artifacts/manifests/knowledge-hub-review-queue-recovery-packet-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-review-queue-forms-jsonl-hardening-20260623`
+- archived: `knowledge-hub-review-queue-forms-jsonl-hardening-20260623`
 - review-queue-forms-jsonl-hardening-applied: review queue 已提供 JSONL-only 人工填写前表单骨架，status/final gate 已暴露推荐批次和表单命令，分页恢复命令漂移已修复；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-review-queue-forms-validation-hardening-20260623`
+- archived: `knowledge-hub-review-queue-forms-validation-hardening-20260623`
 - review-queue-forms-validation-hardening-applied: review queue 已提供人工填回 JSONL 的 report-only 校验入口，覆盖必填人工字段、日期、decision 枚举、queue id 和 guardrail；证据：`artifacts/manifests/knowledge-hub-review-queue-forms-validation-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-offline-maintenance-audit-hardening-20260623`
+- archived: `knowledge-hub-offline-maintenance-audit-hardening-20260623`
 - offline-maintenance-audit-hardening-applied: final gate 的 `maintenance_entry_audit` 已显式覆盖 8 类长期维护入口和 1 个离线维护包；证据：`artifacts/manifests/knowledge-hub-offline-maintenance-audit-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-final-gate-requirement-map-hardening-20260623`
+- archived: `knowledge-hub-final-gate-requirement-map-hardening-20260623`
 - final-gate-requirement-map-hardening-applied: final gate JSON 已新增顶层 `summary`、证据 `requirement_refs` / `section_refs`、`linking_audit.summary` 和 `proof_artifacts.coverage_sections`，终态证据可直接映射到目标章节；证据：`artifacts/manifests/knowledge-hub-final-gate-requirement-map-hardening-20260623.jsonl`.
-- reviewing: `pcr02-project-docs-owner-decision-landing-20260623`
+- archived: `pcr02-project-docs-owner-decision-landing-20260623`
 - owner-decision-landing-applied: PCR02 project docs 7 条 owner gate 已按人工授权落地，当前 owner-gates 显示 `open_count=0`、`resolved_count=7`；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl`.
-- reviewing: `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
+- archived: `knowledge-hub-owner-source-subagent-boundary-hardening-20260623`
 - owner-source-subagent-boundary-hardening-applied: owner/source/subagent 边界已显性化，source identity read policy、status handoff notes、subagent 单写者审计和 owner decision 草稿泄漏 warning 已纳入工具与回归；证据：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.jsonl`.
-- reviewing: `knowledge-hub-simplified-main-source-coverage-20260624`
+- archived: `knowledge-hub-simplified-main-source-coverage-20260624`
 - simplified-main-source-coverage-applied: source coverage 已扩展为 18 个来源，新增 Codex history、raw sessions、session index、archive registry 和 automation run ledger，Hub 成为跨项目/跨会话历史与自动化主库入口；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`.
 - reviewing: `knowledge-hub-simplified-final-version-goal`
 - current-goal-under-review: 简化终态设计文档已登记为当前 Knowledge Hub 硬切换目标；证据：`docs/goals/knowledge-hub-simplified-final-version.md`.
-- reviewing: `knowledge-hub-git-automation-permission-20260624`
+- archived: `knowledge-hub-git-automation-permission-20260624`
 - git-automation-permission-applied: Git 管理下 Hub 本仓 L1/L2 自动维护和本地 commit 默认允许；远端 Git 写入、owner decision、active、memory、源项目写入和非 report-only 自动化仍需授权；证据：`artifacts/manifests/knowledge-hub-git-automation-permission-20260624.jsonl`.
-- reviewing: `knowledge-hub-user-path-boundary-20260624`
+- archived: `knowledge-hub-user-path-boundary-20260624`
 - user-path-boundary-applied: 长期文本、registry、index、manifest 和核心工具输出统一使用 `~` 用户路径形式；证据：`artifacts/manifests/knowledge-hub-user-path-boundary-20260624.jsonl`.
-- reviewing: `knowledge-hub-canonical-registry-boundary-20260624`
+- archived: `knowledge-hub-canonical-registry-boundary-20260624`
 - canonical-registry-boundary-applied: current topic registry、retention rules 和治理说明已收敛到 `projects/` 与 `notes/personal/`，旧项目/个人目录不得重新成为 current registry 入口；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.jsonl`.
 - reviewing: `pcr02-asan-debug-guide-project-local-20260624`
 - owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；团队级 ASAN 方法论仍需另行重写和复核；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
@@ -414,7 +414,7 @@
 - owner-approved-archive-only-target-materialized: motor MCU debug record 已按 archive-only 落地；事实、反馈、推断、建议和 open items 未拆分前不提升验证结论；证据：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`.
 - archived: `pcr02-dvr-session-archive-only-20260624`
 - owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
-- reviewing: `knowledge-hub-source-control-unification-20260624`
+- archived: `knowledge-hub-source-control-unification-20260624`
 - source-control-unification-applied: 18 个 registered source 已有 sources/<source_id>/ 主控目录，4 个 PCR02 owner target 已落地，并新增 source-control/owner-target/raw-dump 门禁；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`.
 - reviewing: `knowledge-hub-project-routes-20260626`
 - reviewing: `knowledge-hub-context-tool-20260626`

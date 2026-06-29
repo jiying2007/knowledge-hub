@@ -4,7 +4,7 @@
 
 新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会记录为结构化 failure result，并在 `--json` / final gate 路径输出 JSON，避免 final gate 只能看到空输出或残留临时目录。
 
-当前 clean-slate 版本覆盖 127 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
+当前 clean-slate 版本覆盖 126 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
 
 ## 覆盖范围
 
@@ -18,6 +18,7 @@
 | status-wrong-bucket | 临时副本把 active item 放入 `- reviewing:` | `knowledge-check` 失败并报告 wrong status bucket |
 | status-noncanonical-only | 临时副本只把 item 写入非 canonical 说明行 | `knowledge-check` 失败并报告 by-status missing item |
 | owner-partial-resolved | 临时副本只填 `owner_decision` 并把 worksheet 状态改为 `owner-approved` | owner gate 仍保持 open，不能 resolved |
+| owner-ready-missing-nonblocking-after-resolution | 当前仓库 resolved owner gate 的历史 owner-ready package 缺口语义 | owner gate 已 complete 且没有 open gate 时，`owner_ready_missing_count` 可保留历史覆盖缺口，但 `owner_ready_missing_blocking=false`，并输出 open-only blocking 说明 |
 | owner-single-form | 当前仓库按单个 `worksheet_id` 输出 owner form | 只输出 1 条 row 和 1 条 decision form |
 | owner-forms-text-jsonl-output | 当前仓库按单个 `worksheet_id` 以文本模式输出 owner form | `--forms` 非 JSON 输出直接打印 1 条可复制 JSONL skeleton，包含 `worksheet_id`、`source_path`、`owner_decision` 和 `observed_source_identity` |
 | owner-forms-jsonl-single-output | 当前仓库按单个 `worksheet_id` 输出纯 JSONL owner form | `--forms-jsonl` 只输出 1 行 JSONL，不包含 Markdown、包裹对象或验证提示，且不自动填 owner 决策字段 |
@@ -38,6 +39,7 @@
 | status-owner-gates-exit-code-blocker | 临时副本让 owner-gates 输出可解析 JSON 但返回非零 | `knowledge-status --strict --json` 必须返回 `needs-fix`，并输出 `owner-gates-command-failed` blocker |
 | final-gate-owner-review-blocker | 当前终态 gate 聚合 check、regression、`rtk git diff --check`、strict status、命令级 evidence index、结构化 gap map、owner recovery、Level 1/2/3 审计摘要和 proof 主制品可发现性摘要 | `knowledge-check`、`knowledge-regression` 与 `git_diff_check` 必须通过；当前只因 `owner-gates-open` 返回 `needs-owner-review`，并输出 `automatic_governance.status=complete-except-owner-review`、`automatic_governance.owner_blocker_source`、`evidence_index`、`owner_recovery`、稳定字段 `proof_artifacts`、`final_state_audit` 与 owner gap map，且不得输出日期化 proof alias |
 | final-gate-skip-regression-blocker | 显式设置 `KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1` 让 regression 自测短路 | final gate 必须返回 `needs-fix`，并输出 `knowledge-regression-skipped` blocker，避免终态验收被环境变量绕过 |
+| status-mature-profile-blocks-migration-state | mature profile 对迁移状态残留执行硬门禁 | 临时副本注入 copy-first/migration-baseline reviewing item 后，`knowledge-status --final-profile mature` 必须返回 `needs-fix`，并暴露 `mature-migration-items` blocker |
 | final-gate-empty-child-json-blocker | 临时副本让 child gate exit 0 但 stdout 为空 | final gate 必须返回 `needs-fix`，并把空 JSON 输出归为 unparseable blocker，不能把静默成功当作通过 |
 | final-gate-default-regression-path | 当前终态 gate 默认路径真实执行 regression | 非自测路径下 final gate 返回 `needs-owner-review` 时，`checks.knowledge_regression.status=pass`、`skipped_for_self_test=false`，避免只覆盖 recursion skip 分支 |
 | final-gate-source-final-state-field-gap | 临时副本移除某个 registered source 的 `final_disposition` 字段后运行 final gate | final gate 必须输出 `registry` typed gap，带 source_id、field、可自动修复标记和无需 owner decision 标记，避免非 owner/source 缺口被压成泛化 `final-gate` |

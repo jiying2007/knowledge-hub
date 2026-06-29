@@ -680,6 +680,55 @@ def test_owner_partial_resolved():
         repo,
     )
 
+def test_owner_ready_missing_nonblocking_after_resolution():
+    result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-owner-gates.sh",
+            "--source-id",
+            "pcr02-project-docs",
+            "--status",
+            "all",
+            "--json",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    blocking_counts = parsed.get("owner_ready_blocking_counts", {})
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("owner_gate_status") == "owner-gates-complete"
+        and parsed.get("open_count") == 0
+        and parsed.get("resolved_count") == 7
+        and parsed.get("owner_ready_blocking_scope") == "open-owner-gates-only"
+        and parsed.get("owner_ready_blocking_status") == "not-applicable-no-open-owner-gates"
+        and parsed.get("owner_ready_missing_blocking") is False
+        and parsed.get("owner_ready_invalid_blocking") is False
+        and parsed.get("owner_ready_duplicate_blocking") is False
+        and blocking_counts.get("open_row_count") == 0
+        and "不再阻断" in parsed.get("owner_ready_status_note_zh", ""),
+        "owner-ready-missing-nonblocking-after-resolution",
+        "resolved owner gates do not treat superseded owner-ready package gaps as blockers",
+        {
+            "exit_code": result["exit_code"],
+            "owner_gate_status": parsed.get("owner_gate_status"),
+            "open_count": parsed.get("open_count"),
+            "resolved_count": parsed.get("resolved_count"),
+            "owner_ready_package_coverage": parsed.get("owner_ready_package_coverage"),
+            "owner_ready_missing_count": parsed.get("owner_ready_missing_count"),
+            "owner_ready_blocking_status": parsed.get("owner_ready_blocking_status"),
+            "owner_ready_missing_blocking": parsed.get("owner_ready_missing_blocking"),
+            "owner_ready_blocking_counts": blocking_counts,
+            "owner_ready_status_note_zh": parsed.get("owner_ready_status_note_zh", ""),
+            "stdout_sample": result["stdout"][:1000],
+        },
+    )
+
 def test_owner_single_form():
     repo = copy_repo_with_open_owner_gates("owner-single-form")
     result = run_cmd(
@@ -8291,6 +8340,7 @@ def test_regression_manifest_coverage():
         "status-wrong-bucket",
         "status-noncanonical-only",
         "owner-partial-resolved",
+        "owner-ready-missing-nonblocking-after-resolution",
         "owner-single-form",
         "owner-forms-text-jsonl-output",
         "owner-forms-jsonl-single-output",
@@ -8316,6 +8366,7 @@ def test_regression_manifest_coverage():
         "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
         "final-gate-skip-regression-blocker",
+        "status-mature-profile-blocks-migration-state",
         "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
         "final-gate-source-final-state-field-gap",
@@ -8489,6 +8540,7 @@ full_tests = [
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,
+    test_owner_ready_missing_nonblocking_after_resolution,
     test_owner_single_form,
     test_owner_forms_text_jsonl_output,
     test_owner_forms_jsonl_single_output,
