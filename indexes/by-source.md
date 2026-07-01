@@ -67,6 +67,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 ## Source 专项审查制品
 
 - `pcr02-project-docs/runbooks/asan-debug-guide.md`: ASAN 拆分目标证据：`artifacts/manifests/pcr02-asan-split-targets-20260618.md`。
+- `pcr02-project-docs/runbooks/asan-debug-guide.md team active runbook`: 团队级 ASAN 方法论已去项目化落到 `domains/embedded/runbooks/asan-debug-guide.md` 并提升为 active，证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.md`。
+- `pcr02-project-docs/runbooks/asan-debug-guide.md team owner-ready`: 团队级 ASAN 方法论的前置审查包已由 active promotion 消解，证据：`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`。
+- `team ASAN non-PCR02 evidence follow-up`: 非 PCR02 实操验证尚未在 Hub 中找到，已登记后续证据验收标准：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`。
+- `team ASAN non-PCR02 validation template`: 后续非 PCR02 项目验证记录优先使用 `templates/asan-validation-report.md`，确保构建、运行、符号化、复测、资源和回退证据完整。
 - `pcr02-project-docs/runbooks/asan-debug-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。

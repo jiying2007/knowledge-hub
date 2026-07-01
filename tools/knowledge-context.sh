@@ -177,6 +177,25 @@ def route_for_repo(repo):
     return None
 
 
+def alias_route_for_query(query_text):
+    query = query_text.lower()
+    selected_route = None
+    selected_score = 0
+    selected_matches = []
+    for route in routes:
+        score = 0
+        matches = []
+        for alias in route.get("aliases", []):
+            if alias.lower() in query:
+                score += 20 + len(alias)
+                matches.append({"type": "alias", "value": alias})
+        if score > selected_score:
+            selected_route = route
+            selected_score = score
+            selected_matches = matches
+    return selected_route, selected_score, selected_matches
+
+
 def workspace_ref_for_cwd(cwd_text):
     cwd = safe_resolve(cwd_text)
     for workspace in local_workspaces:
@@ -210,39 +229,55 @@ for remote in git_remotes:
         break
 
 workspace_ref, workspace_match = workspace_ref_for_cwd(args.cwd)
-best_route = route_for_repo(matched_repo)
-best_matches = []
-best_score = 0
+repo_route = route_for_repo(matched_repo)
+workspace_route = None
+workspace_matches = []
 
-if matched_repo:
-    best_score += 100
-    best_matches.append({
+repo_matches = []
+if matched_repo and repo_route:
+    repo_matches.append({
         "type": "git-remote",
         "remote": matched_remote.get("remote"),
         "remote_key": matched_remote.get("remote_key"),
         "repo_id": matched_repo.get("repo_id"),
     })
-if workspace_ref and not best_route:
+if workspace_ref and not repo_route:
     for route in routes:
         if workspace_ref in route.get("workspace_refs", []):
-            best_route = route
-            best_score += 60
-            best_matches.append({"type": "workspace-ref", "value": workspace_ref})
+            workspace_route = route
+            workspace_matches.append({"type": "workspace-ref", "value": workspace_ref})
             break
 
-query_lower = args.query.lower()
-if not best_route:
-    for route in routes:
-        score = 0
-        matches = []
-        for alias in route.get("aliases", []):
-            if alias.lower() in query_lower:
-                score += 20 + len(alias)
-                matches.append({"type": "alias", "value": alias})
-        if score > best_score:
-            best_route = route
-            best_score = score
-            best_matches = matches
+query_route, query_score, query_matches = alias_route_for_query(args.query)
+
+
+def select_route():
+    cwd_route = repo_route or workspace_route
+    cwd_matches = repo_matches if repo_route else workspace_matches
+    if cwd_route:
+        if (
+            query_route
+            and query_route is not cwd_route
+            and cwd_route.get("route_key_policy") == "control-plane-query-aware"
+        ):
+            return query_route, query_matches + [{
+                "type": "control-plane-query-aware",
+                "cwd_project_id": cwd_route.get("project_id"),
+                "query_score": query_score,
+            }]
+        return cwd_route, cwd_matches
+    if query_route:
+        return query_route, query_matches
+    return None, []
+
+
+best_route, best_matches = select_route()
+route_selection = {
+    "cwd_route_project_id": (repo_route or workspace_route or {}).get("project_id"),
+    "query_route_project_id": (query_route or {}).get("project_id"),
+    "query_score": query_score,
+    "selected_project_id": (best_route or {}).get("project_id"),
+}
 
 
 def load_items():
@@ -286,8 +321,38 @@ def route_project_ids(route):
     return ids
 
 
+def item_domain_from_project_domain(domain):
+    if not domain:
+        return ""
+    if domain.startswith("domains/"):
+        return domain.split("/", 1)[1]
+    return domain
+
+
+def route_domain_refs(route):
+    if not route:
+        return set()
+    explicit = {
+        str(value)
+        for value in route.get("domain_refs", [])
+        if isinstance(value, str) and value
+    }
+    if explicit:
+        return explicit
+    refs = set()
+    for project_id in route_project_ids(route):
+        project = project_by_id.get(project_id, {})
+        domain = item_domain_from_project_domain(project.get("domain", ""))
+        if domain:
+            refs.add(domain)
+        elif project_id:
+            refs.add(f"projects/{project_id}")
+    return refs
+
+
 active_project_ids = route_project_ids(best_route)
 active_source_ids = set(best_route.get("default_source_ids", [])) if best_route else set()
+active_domain_refs = route_domain_refs(best_route)
 
 
 def item_score_reasons(item):
@@ -312,17 +377,17 @@ def item_score_reasons(item):
             reasons.append(f"query-term:{term}")
     domain = item.get("domain", "")
     route_matched = False
-    for project_id in active_project_ids:
-        if domain == f"projects/{project_id}" or domain.startswith(f"projects/{project_id}/"):
+    for domain_ref in active_domain_refs:
+        if domain == domain_ref or domain.startswith(f"{domain_ref}/"):
             score += 2
             route_matched = True
-            reasons.append(f"project:{project_id}")
+            reasons.append(f"domain:{domain_ref}")
             break
     if source_id(item) in active_source_ids:
         score += 1
         route_matched = True
         reasons.append(f"source:{source_id(item)}")
-    if best_route and active_project_ids and not route_matched:
+    if best_route and (active_project_ids or active_domain_refs) and not route_matched:
         return 0, []
     if score <= 0 and not route_matched:
         return 0, []
@@ -398,8 +463,8 @@ def search_matches():
     seen = set()
     for term in fallback_terms:
         fallback_cmd = base_cmd + [term, "--json", "--limit", str(args.limit)]
-        if best_route and best_route.get("project_id"):
-            fallback_cmd.extend(["--domain", f"projects/{best_route.get('project_id')}"])
+        for domain_ref in sorted(active_domain_refs):
+            fallback_cmd.extend(["--domain", domain_ref])
         fallback = subprocess.run(fallback_cmd, cwd=str(root), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if fallback.returncode not in (0, 1):
             continue
@@ -472,6 +537,7 @@ if best_route:
         "validation_path": best_route.get("validation_path"),
         "repo_refs": best_route.get("repo_refs", []),
         "workspace_refs": best_route.get("workspace_refs", []),
+        "domain_refs": sorted(active_domain_refs),
         "default_source_ids": best_route.get("default_source_ids", []),
         "retired_route_ids": best_route.get("retired_route_ids", []),
         "route_key_policy": best_route.get("route_key_policy", "git-remote-first"),
@@ -529,6 +595,7 @@ context_summary = {
     "effective_limit": effective_limit,
     "selection_order": ["route", "current", "recent", "related", "risk"],
     "canonical_paths": canonical_paths,
+    "domain_refs": sorted(active_domain_refs),
     "current": current_context[:effective_limit],
     "recent": recent_context[:effective_limit],
     "related": related_context[:effective_limit],
@@ -554,6 +621,7 @@ payload = {
     },
     "repo_route": repo_summary,
     "route": route_summary,
+    "route_selection": route_selection,
     "canonical_paths": canonical_paths,
     "workspace_ref": workspace_ref,
     "workspace_match": workspace_match or {},

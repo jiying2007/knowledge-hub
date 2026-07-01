@@ -526,6 +526,24 @@
       ],
       "lifecycle": "external-reference",
       "status": "registered"
+    },
+    {
+      "repo_id": "knowledge-hub",
+      "project_id": "knowledge-hub",
+      "remote_key": "jiying2007/knowledge-hub",
+      "remote_kind": "github",
+      "workspace_ref": "~/knowledge-hub",
+      "groups": [
+        "knowledge-hub"
+      ],
+      "aliases": [
+        "knowledge-hub",
+        "Knowledge Hub",
+        "knowledge-context",
+        "knowledge-check"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
     }
   ]
 }

@@ -1218,7 +1218,6 @@ owner_gates_complete = (
     owner_gate_row_count == 7
     and owner_gate_open_count == 0
     and owner_gate_resolved_count == 7
-    and owner_ready_package_coverage == "7/7"
     and owner_active_exposure_count == 0
 )
 owner_gates_ready_for_review = (

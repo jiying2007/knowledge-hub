@@ -169,6 +169,42 @@
       ],
       "knowledge_preflight": "required-for-agent-tooling-workflow-skill-governance",
       "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "knowledge-hub",
+      "name": "Knowledge Hub",
+      "type": "knowledge-control-plane",
+      "group_id": "knowledge-hub",
+      "aliases": [
+        "Knowledge Hub",
+        "knowledge-hub",
+        "knowledge context",
+        "knowledge-context",
+        "knowledge check",
+        "knowledge-check",
+        "Hub 自举"
+      ],
+      "repo_refs": [
+        "knowledge-hub"
+      ],
+      "workspace_refs": [
+        "~/knowledge-hub"
+      ],
+      "hub_entry": "README.md",
+      "current_path": "governance",
+      "archive_path": "artifacts/manifests",
+      "decisions_path": "registry",
+      "validation_path": "tools",
+      "domain_refs": [
+        "root",
+        "governance"
+      ],
+      "default_source_ids": [
+        "knowledge-hub-automation-runs"
+      ],
+      "retired_route_ids": [],
+      "knowledge_preflight": "required-for-knowledge-hub-governance-routing-validation",
+      "route_key_policy": "control-plane-query-aware"
     }
   ]
 }

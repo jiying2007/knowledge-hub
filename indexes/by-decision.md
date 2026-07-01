@@ -5,6 +5,7 @@
 - `pcr02-owner-decision-worksheet-001`: PCR02 docs `AGENTS.md` 已由 2026-06-23 landing 确认为 `reference-only`；源项目本地 Codex 运行规则继续由源项目管理，Hub 不复制正文。
 - `pcr02-owner-decision-worksheet-002`: PCR02 diag command metadata 已由 2026-06-23 landing 确认为 `reference-only`；不提升为 `domains/embedded/standards/`。
 - `pcr02-owner-decision-worksheet-003`: ASAN runbook 已由 2026-06-23 landing 确认为 `split-approved`；项目内目标为 `projects/pcr02/current/runbooks/asan-debug-guide.md`。
+- `embedded-asan-active-promotion-20260629`: 团队级 ASAN runbook 已由 2026-06-29 用户授权提升为 `active`；目标为 `domains/embedded/runbooks/asan-debug-guide.md`，不提升到 `domains/embedded/standards/`，不修改源项目，不写 memory。
 - `pcr02-owner-decision-worksheet-004`: memory auto-curation 已由 2026-06-23 landing 确认为 `teamized-report-only`；保持 no-memory-write 和 report-only 边界。
 - `pcr02-owner-decision-worksheet-005`: DVR proto/sensor 解耦计划已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
 - `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
@@ -45,6 +46,8 @@
 - `knowledge-hub-source-check-snapshot-evidence-readability`: status/final gate 快照摘要和核心索引可读性硬化；证据：`artifacts/manifests/knowledge-hub-source-check-snapshot-evidence-readability-20260622.md`；不实时执行 source check。
 - `knowledge-hub-review-after-near-due-snapshot-20260622`: review_after near-due 快照；证据：`artifacts/manifests/knowledge-hub-review-after-near-due-snapshot-20260622.md`；只作人工提醒，不自动修改 review_after、不生成 owner decision、不关闭 owner gate、不写 memory。
 - `knowledge-hub-report-only-maintenance-tools-20260622`: report-only 维护工具登记；证据：`artifacts/manifests/knowledge-hub-report-only-maintenance-tools-20260622.md`；工具不写文件、不生成 owner decision、不关闭 owner gate、不写 memory。
+- `knowledge-hub-operational-maturity-20260701`: 长期运营成熟态状态入口；证据：`governance/status/knowledge-hub-operational-maturity.md`；只记录成熟态状态、运营节奏和剩余风险，不替代 final gate、不生成 owner decision、不提升 active、不写 memory。
+- `knowledge-hub-review-after-operation-plan-20260701`: 2026-07 review_after 运营计划；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`；仅作 report-only 批次计划，不自动修改 review_after、不关闭 owner gate、不生成 owner decision、不写 memory。
 - `knowledge-hub-owner-inbox-final-gate-audit-20260622`: owner inbox 和 final gate 审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.md`；owner inbox 只读，不生成 owner decision、不关闭 owner gate、不写 memory。
 - `knowledge-hub-manual-source-kind-contract-20260622`: manual source 和 kind 契约加固；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.md`；人工向导不代签 owner decision、不关闭 owner gate、不写 memory。
 - `knowledge-hub-offline-manifest-profile-hardening-20260622`: offline maintenance 和 manifest profile 加固；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.md`；离线 fallback 不生成 owner decision、不关闭 owner gate、不写 memory。

@@ -26,6 +26,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任�
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
 上下文预算可用 `--context-budget small|normal|deep` 控制；输出中的 `canonical_paths`、`context.current`、`context.recent`、`context.related`、`context.search_fallback` 和 `why_selected` 用于解释 AI 为什么选中这些材料，不代表条目已提升 active 或 owner 已签收。
+在 `~/knowledge-hub` 内自举维护时，`repo_route` 表示当前 cwd 属于 Knowledge Hub 仓库，`route` 表示 query 目标；如果 query 明确命中 PCR02、agent-dev-kit 等项目别名，预检仍应路由到目标项目。检查 Hub 自身治理上下文可用：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd ~/knowledge-hub --query "增强 Knowledge Hub 自举体验" --task-type general --context-budget small --json
+```
 
 路径类问题优先看：
 
@@ -61,6 +66,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 `mature` profile 在 `max-body` 基础上进一步阻断迁移态残留：`migrated-*` 条目、copy-first / migration 过程 manifest、copy-first 工具入口、已关闭迁移 source 留在当前 source 主列表，以及长期滞留的高比例 `reviewing`。成熟态只允许保留不可误用的封存审计摘要；封存材料不得参与默认 search、context 或 routing。
 `--full-regression` 是终态证明和高风险脚本改动后的重门禁；日常查询和普通维护优先使用 search/context/check/status。
+
+长期运营成熟态入口见 `governance/status/knowledge-hub-operational-maturity.md`。该状态页把日常、周度和 release gate 命令、搜索验收、review_after 运营节奏和剩余风险固定为可审查产物；2026-07 近期待复核批次见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`。这些产物只作状态和运营计划，不自动修改 `review_after`、不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目。
 
 ## 目录边界
 

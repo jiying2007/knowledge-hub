@@ -25,6 +25,13 @@
       "env": "LLM_AGENT_HOME",
       "path_example": "$LLM_AGENT_HOME",
       "repo_id": "llm-agent"
+    },
+    {
+      "workspace_ref": "~/knowledge-hub",
+      "env": "KNOWLEDGE_HUB_HOME",
+      "path_example": "~/knowledge-hub",
+      "repo_id": "knowledge-hub",
+      "note": "允许的保留本地约定；不要改成 /home/... 机器绝对路径。"
     }
   ]
 }

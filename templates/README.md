@@ -32,6 +32,7 @@
 | `runbook` | `runbook` | `runbook.md` | 操作手册 |
 | `decision` | `decision` | `decision.md` | 决策记录 |
 | `validation` / `validation-report` | `validation` | `validation-report.md` | 验证报告 |
+| `asan-validation` / `asan-validation-report` | `validation` | `asan-validation-report.md` | ASAN 项目实操验证报告 |
 | `owner-decision-worksheet` / `owner-worksheet` | `owner-decision-worksheet` | `owner-decision-worksheet.md` | owner 签核草稿入口 |
 | `debug-record` | `debug-record` | `debug-record.md` | 排障记录 |
 | `external-source-note` / `external-source` | `external-source-note` | `external-source-note.md` | 外部资料吸收记录 |
@@ -43,6 +44,8 @@
 `knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
 
 `promotion` 是 registry 当前允许的枚举值，目前只能为 `none`；`promotion_decision` 是人读决策说明，用于写清“不提升、候选、拒绝、待 owner review”等背景。`promotion_decision` 不能替代 owner decision，也不能绕过 active / team-level promotion 门禁。
+
+ASAN 项目实操验证优先使用 `asan-validation-report.md`，可作为“非 PCR02 ASAN 验证模板”或“非 PCR02 ASAN 项目实操验证报告”入口检索。该模板只用于项目本地验证记录，必须写清项目、二进制、构建参数、BuildID 或符号匹配、`ASAN_OPTIONS`、ASAN report 或 negative reproduction、修复复测、资源开销和回退路径。没有真实运行证据时只能保留 `manual-entry-pending-review` 或不可判定结论，不得写成团队级 active 证据。
 
 离线人工新增条目时，默认使用 `source.type=manual`、`source.from=field-debug / meeting / code-review / lab-test / owner-decision / design-review`、`status=reviewing` 和 `review_status=manual-entry-pending-review`，并在 `validation_refs` 或正文 Evidence Index 中保留 `manual_validation_pending: true`。完成工具复核前不得把条目写成 active fact、owner decision 或 promoted 标准。
 

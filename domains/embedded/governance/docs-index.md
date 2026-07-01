@@ -64,7 +64,7 @@ validation_refs: []
 - `docs/architecture/sigmastar-media-ai-dataflow.md`
 - `docs/runbooks/sigmastar-platform-development-workflow.md`
 - `docs/runbooks/sigmastar-archive-artifact-guide.md`
-- `docs/runbooks/asan-debug-guide.md`
+- `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论；active promotion 证据见 `artifacts/manifests/embedded-asan-active-promotion-20260629.md`）
 - `docs/runbooks/asan-offline-symbolize-guide.md`
 - `docs/runbooks/gdb-debug-guide.md`
 - `docs/runbooks/core-dump-capture-guide.md`

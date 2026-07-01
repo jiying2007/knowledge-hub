@@ -11,14 +11,16 @@
 - product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
 - diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/pcr02/current/runbooks/diag-usage-guide.md`
-- ASAN: `projects/pcr02/current/runbooks/asan-debug-guide.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- ASAN: `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论）；`templates/asan-validation-report.md`（非 PCR02 项目验证模板）；`artifacts/manifests/embedded-asan-active-promotion-20260629.md`（active promotion 证据）；`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`（非 PCR02 实操证据增强项）；`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`（前置审查包）；`projects/pcr02/current/runbooks/asan-debug-guide.md`（PCR02 project-local）；`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - memory auto-curation: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- PCR02 归档路径: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`; `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
 - DVR: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
 - motor MCU: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
 - governance: `governance/`; `artifacts/manifests`
 - path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
+- operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `tools/knowledge-review-after.sh`; mature final gate 使用 `tools/knowledge-final-gate.sh`
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
@@ -89,7 +91,7 @@
 - Knowledge Hub owner summary helper: `artifacts/manifests/knowledge-hub-owner-summary-helper-20260620.md`
 - Knowledge Hub status owner summary command: `artifacts/manifests/knowledge-hub-status-owner-summary-command-20260620.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
-- ASAN / AddressSanitizer: `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
+- ASAN / AddressSanitizer: `domains/embedded/runbooks/asan-debug-guide.md`; `templates/asan-validation-report.md`; `artifacts/manifests/embedded-asan-active-promotion-20260629.md`; `artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`; `artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.md`; `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
 - PCR02 debug runbooks: `projects/pcr02/current/runbooks`
 - Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
@@ -245,6 +247,7 @@
 - Knowledge Hub 用户路径边界加固: `artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`
 - Knowledge Hub canonical registry 边界加固: `artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`
 - Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
+- Knowledge Hub operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`
 - PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
 - PCR02 ASAN project-local target: `projects/pcr02/current/runbooks/asan-debug-guide.md`
 - PCR02 DVR archive targets: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`

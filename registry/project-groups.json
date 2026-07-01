@@ -79,6 +79,16 @@
         "ota-packager"
       ],
       "status": "registered"
+    },
+    {
+      "id": "knowledge-hub",
+      "name": "Knowledge Hub Control Plane",
+      "type": "knowledge-control-plane",
+      "entry": "README.md",
+      "member_project_ids": [
+        "knowledge-hub"
+      ],
+      "status": "registered"
     }
   ]
 }

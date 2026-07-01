@@ -240,3 +240,9 @@
 - 2026-09-26: `knowledge-hub-context-tool-20260626`
 - 2026-09-26: `knowledge-hub-git-remote-route-registry-20260626`
 - 2026-09-26: `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`
+- 2026-09-29: `embedded-asan-debug-guide-20260629`
+- 2026-09-29: `embedded-asan-team-owner-ready-package-20260629`
+- 2026-09-29: `embedded-asan-active-promotion-20260629`
+- 2026-09-29: `embedded-asan-non-pcr02-evidence-followup-20260629`
+- 2026-10-01: `knowledge-hub-operational-maturity-20260701`
+- 2026-10-01: `knowledge-hub-review-after-operation-plan-20260701`

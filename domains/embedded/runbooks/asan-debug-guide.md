@@ -1,237 +1,165 @@
 ---
-title: ASAN 调试指导（项目通用）
+title: ASAN 调试方法论（团队级）
 doc_type: runbook
-knowledge_type: pitfall
-maturity: verified
+knowledge_type: debug-methodology
+maturity: active
 status: active
 owner: team-core
 created: 2026-05-12
-last_updated: 2026-05-12
-tags: [asan, memory, debug]
+last_updated: 2026-06-29
+tags: [asan, address-sanitizer, memory, debug, methodology]
 related: [asan-offline-symbolize-guide.md, crash-triage-checklist.md]
-validation_refs: [tools/debug/asan-log-symbolize.sh, build/compile.mk]
+validation_refs: [domains/embedded/runbooks/asan-offline-symbolize-guide.md, domains/embedded/runbooks/crash-triage-checklist.md, domains/embedded/tools/debug/README.md]
 ---
 
-# ASAN 调试指导（项目通用）
+# ASAN 调试方法论（团队级）
 
-## 1. 目的
+## 1. 定位
 
-本文用于本项目的 AddressSanitizer（ASAN）调试，覆盖：
+本文是团队级 AddressSanitizer（ASAN）排障方法论，用于把不同项目里的内存越界、use-after-free、栈/堆破坏和相关崩溃收敛成同一套可复核流程。
 
-- 如何开启 ASAN 编译
-- 如何验证 ASAN 是否生效
-- 运行期建议参数
-- 崩溃后的标准定位流程
-- 项目内常见注意事项
+本文只定义跨项目方法，不绑定具体芯片、产品、二进制名、构建变量、部署目录或动态库路径。项目里的 ASAN 开关、镜像布局、运行目录和库安装方式必须记录在项目本地 runbook 中。
 
-离线地址符号化与快速归因，参考：
+项目特例参考：
 
-- [asan-offline-symbolize-guide.md](asan-offline-symbolize-guide.md)
+- PCR02 项目本地 ASAN runbook：`projects/pcr02/current/runbooks/asan-debug-guide.md`
+- PCR02 owner decision 边界：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 
----
+上述 PCR02 文档只能作为项目特例参考，不作为团队默认命令或路径。
 
-## 2. 如何开启 ASAN（本项目）
+## 2. 适用条件
 
-### 2.1 开关规则
+优先使用 ASAN 的场景：
 
-根据 `build/build.mk`：
+- 崩溃点疑似来自内存越界、释放后使用、重复释放、栈破坏或堆元数据破坏。
+- 普通 core dump 只能看到次生崩溃，无法定位首发写坏点。
+- 问题可在 debug、diagnostic、SIL/HIL 或受控现场环境中复现。
+- 目标系统有足够 RAM、存储和日志落盘空间承受 ASAN 运行时开销。
 
-- `DEBUG_ASAN=1` 的条件是：`DEBUG` 按位与 `256` 非 0，或按位与 `1` 非 0。
-- 即常用值：`DEBUG=256` 或 `DEBUG=1`。
+不适合直接使用 ASAN 的场景：
 
-根据 `build/compile.mk`，开启后会自动追加：
+- 当前环境无法替换目标二进制或运行时库。
+- 实时性、内存占用或 flash 余量对业务路径影响不可接受。
+- 只能拿到 release stripped binary，且没有匹配符号、BuildID 或可复现路径。
+- 目标问题是协议状态、设备时序、电源、文件系统损坏等非内存访问问题。
 
-- `-fsanitize=address`
-- `-fno-omit-frame-pointer`
-- `-fsanitize-recover=address`
-- `-funwind-tables`
+## 3. 开启前检查
 
-### 2.2 常用构建命令
+每次开启 ASAN 前先确认四件事：
 
-全量构建（推荐）：
+1. 构建系统能为目标模块追加 `-fsanitize=address`。
+2. 编译时保留可回溯栈帧，至少包含 `-fno-omit-frame-pointer` 或等价 unwind 支持。
+3. 目标运行环境能加载匹配的 ASAN runtime。
+4. 产物和符号文件能通过 BuildID、版本号或制品 hash 对齐。
 
-```bash
-make -j8 DEBUG=256
-```
-
-构建并安装：
+通用检查命令示例：
 
 ```bash
-make -j8 DEBUG=256 && make install
+readelf -d <target-binary> | rg -i 'asan|sanitizer'
+readelf -n <target-binary> | rg -i 'build.id|buildid'
 ```
 
-仅编译某模块对象（示例）：
-
-```bash
-make modules/hdi_obj_all DEBUG=256 -j4
-```
-
-### 2.3 支持环境变量方式
-
-除了命令行传参，也支持通过环境变量控制：
-
-```bash
-export DEBUG=256
-make -j8
-make install
-```
-
-临时环境变量写法：
-
-```bash
-DEBUG=256 make -j8
-```
-
----
-
-## 3. 如何确认 ASAN 已生效
-
-### 3.1 看构建产物路径
-
-开启 ASAN 后，构建系统会走 `debug` 相对目录逻辑（`TARGET_REL_FOLDER := debug`）。
-
-### 3.2 看运行时依赖
-
-在目标程序上检查是否依赖 `libasan`：
-
-```bash
-readelf -d /customer/bin/prog_pcr02 | rg -i asan
-```
-
-或在本地产物检查：
-
-```bash
-readelf -d release/bin/prog_pcr02 | rg -i asan
-```
-
-### 3.3 看启动日志
-
-发生内存问题时，日志应出现：
-
-- `AddressSanitizer: ...`
-- `SUMMARY: AddressSanitizer: ...`
-
----
+如果 `readelf -d` 看不到 ASAN runtime 依赖，先回到构建配置确认 sanitizer flags 是否真正进入目标模块，而不是只进入了部分静态库或测试程序。
 
 ## 4. 运行期建议
 
-### 4.1 建议环境变量
+首轮定位建议以“首发错误清晰”为目标，不追求一次收集所有问题。
+
+推荐基础参数：
 
 ```bash
-export ASAN_OPTIONS='abort_on_error=1:halt_on_error=1:detect_leaks=0:log_path=/tmp/asan:symbolize=1'
+export ASAN_OPTIONS='abort_on_error=1:halt_on_error=1:detect_leaks=0:symbolize=1:log_path=<writable-log-prefix>'
 ```
 
-说明：
+参数取舍：
 
-- `abort_on_error=1`：首个错误即中止，便于保留首发现场。
-- `halt_on_error=1`：避免继续运行产生次生噪音。
-- `detect_leaks=0`：嵌入式场景通常先聚焦崩溃/越界。
-- `log_path`：把日志落盘，避免串口丢失。
-- `symbolize=1`：开启 ASAN 自带符号化流程（前提是符号与工具链可用）。
+- `abort_on_error=1` 与 `halt_on_error=1`：首错即停，减少次生日志污染。
+- `detect_leaks=0`：嵌入式现场优先定位越界和非法访问；泄漏检测可在资源允许时单独打开。
+- `symbolize=1`：优先让 ASAN 输出函数名和源码行号。
+- `log_path=<writable-log-prefix>`：把报告写入可持久化位置，避免串口、syslog 或 watchdog 截断。
 
-### 4.2 可选符号化器
+如果目标机没有可用 symbolizer，可先保留原始 PC、SP、BuildID 和 ASAN 报告，再在主机侧离线符号化。
 
-如需更稳定的符号化，可显式指定：
+离线符号化参考：
 
-```bash
-export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer
-```
-
-若环境没有 `llvm-symbolizer`，不影响 ASAN 检测本身，但可读栈信息会变差。
-
----
+- `domains/embedded/runbooks/asan-offline-symbolize-guide.md`
+- `domains/embedded/tools/debug/README.md`
 
 ## 5. 标准定位流程
 
-### Step 1：只看首发错误
+### Step 1: 固定首发错误
 
-优先抓第一条 ASAN 报错，不要先看后续连锁日志。
+只以第一条 `ERROR: AddressSanitizer` 和第一段 `SUMMARY: AddressSanitizer` 为主证据。后续崩溃、断言、重启和 watchdog 日志通常是次生结果。
 
-### Step 2：确认二进制与符号匹配
+记录最小现场：
 
-检查 BuildID：
+- ASAN 错误类型，例如 heap-buffer-overflow、stack-use-after-return、use-after-free。
+- 访问方向和大小，例如 read/write、访问字节数。
+- 首发栈帧 `#0` 到模块入口的最短调用链。
+- 目标二进制 BuildID、构建版本、运行参数和复现步骤。
 
-```bash
-readelf -n /customer/bin/prog_pcr02 | rg -i build.id
-readelf -n release/bin/prog_pcr02 | rg -i build.id
-```
+### Step 2: 校验符号匹配
 
-BuildID 必须一致。
-
-### Step 3：从 ASAN 栈直接提取定位信息
-
-优先使用 ASAN 报告内自带的函数名和源码行号（`#0/#1/...` 栈帧）。
-
-若没有行号，先确认：
-
-- 是否使用 ASAN 构建
-- 是否带调试符号
-- `ASAN_OPTIONS` 中是否开启 `symbolize=1`
-- 是否设置了 `ASAN_SYMBOLIZER_PATH`
-
-### Step 4：建立最小调用链
-
-至少保留：
-
-- 崩溃函数 + 行号
-- 直接调用者
-- 模块入口
-- 进程入口
-
-### Step 5：最小修复并复现
-
-- 先修必崩点
-- 控制改动范围
-- 复现同一路径验证是否消失
-
----
-
-## 6. 项目内注意事项
-
-1. 开启 ASAN 后不要混用旧的 release 包进行符号化。
-2. 构建脚本在 `DEBUG_ASAN=1` 时会避免对可执行和库做 strip，有助于回溯。
-3. 考虑固件分区容量，`libs/3rdparty/libasan` 默认不预置到固件镜像；使用 ASAN 时需手动将 `libasan` 拷贝到目标机 `/customer/lib`。
-4. 建议同时拷贝版本文件和符号链接，避免动态链接器找不到 `libasan.so.6`。
-5. `-fsanitize-recover=address` 已开启，若希望首错即停，务必配 `ASAN_OPTIONS=abort_on_error=1`。
-6. 线程多、日志量大时，优先落盘日志（`log_path`），避免串口截断。
-
----
-
-## 7. 常用命令速查
-
-开启 ASAN 全量构建：
+定位前必须确认运行二进制和符号文件匹配。优先用 BuildID，其次用制品 hash、版本 manifest 或构建日志交叉确认。
 
 ```bash
-make -j8 DEBUG=256
+readelf -n <runtime-binary> | rg -i 'build.id|buildid'
+readelf -n <symbolized-binary> | rg -i 'build.id|buildid'
 ```
 
-安装：
+BuildID 不一致时，不得用当前源码行号直接下结论，只能把结果标记为“符号不匹配，需要重取制品”。
 
-```bash
-make install
-```
+### Step 3: 收敛最小调用链
 
-环境变量方式：
+从 ASAN 报告中提取：
 
-```bash
-export DEBUG=256
-make -j8
-```
+- 崩溃函数和源码行号。
+- 直接调用者。
+- 模块边界入口。
+- 线程或任务入口。
+- 触发输入、设备事件、协议包或定时器来源。
 
-检查 ASAN 依赖：
+如果 ASAN 只给出地址没有行号，先检查 symbolizer、debug info、strip 行为和 BuildID，不要先改业务逻辑。
 
-```bash
-readelf -d /customer/bin/prog_pcr02 | rg -i asan
-```
+### Step 4: 判断错误类别
 
-部署 `libasan` 到目标机（示例）：
+常见分类：
 
-```bash
-cp -av libs/3rdparty/libasan/libasan.so* /customer/lib/
-```
+- 越界读写：优先检查数组长度、协议字段长度、DMA/缓冲区大小和字符串终止。
+- use-after-free：优先检查对象生命周期、异步回调、跨线程 ownership 和失败路径释放顺序。
+- double-free：优先检查错误处理分支、goto cleanup、引用计数和重复 close。
+- stack-use-after-return：优先检查返回局部变量地址、延迟回调和栈上临时 buffer。
+- global-buffer-overflow：优先检查静态表、枚举值范围和配置数组长度。
 
-建议运行参数：
+分类后只做最小修复，不在同一笔修复里重构无关路径。
 
-```bash
-export ASAN_OPTIONS='abort_on_error=1:halt_on_error=1:detect_leaks=0:log_path=/tmp/asan:symbolize=1'
-```
+### Step 5: 复现并回归
+
+修复后至少保留三类证据：
+
+- 同一路径复现不再出现原始 ASAN 报告。
+- BuildID 或制品版本与修复构建一致。
+- 没有新增更早的 ASAN 报告、启动失败或 watchdog 重启。
+
+如果原问题依赖现场设备、时序或长时间运行，应记录复现窗口、运行时长和未覆盖风险。
+
+## 6. 嵌入式注意事项
+
+- ASAN 构建通常显著增加体积、内存占用和启动时间，不能默认进入 production 镜像。
+- 运行时库部署必须与工具链 ABI 匹配；不匹配时可能表现为启动失败，而不是 ASAN 报告。
+- 多线程系统中，首发 ASAN 报告比后续线程异常更可信。
+- watchdog 可能截断 ASAN 报告；必要时使用 debug profile 或临时延长 watchdog 窗口，但必须记录回滚方式。
+- stripped binary 只能用于运行，不适合作为符号化依据；保留未 strip 符号产物或独立 debug symbols。
+- 现场日志中不得只保存截图；应保存原始 ASAN 文本、二进制版本、BuildID 和复现步骤。
+
+## 7. 交付清单
+
+ASAN 排障结论进入 Knowledge Hub 或项目 runbook 前，至少包含：
+
+- 问题类型和首发 ASAN 摘要。
+- 运行二进制与符号文件的匹配证据。
+- 最小调用链和触发条件。
+- 修复说明、复现结果和剩余风险。
+- 项目本地命令、路径和镜像布局的引用，而不是写入团队级方法论正文。
+
+团队级本文当前状态为 `active`。本次 active promotion 依据 2026-06-29 用户明确授权、去项目化检查和 Hub final gate 证据闭环；仍不得仅凭单一项目 owner decision 自动提升到 `domains/embedded/standards/`，也不得把项目本地命令、路径或二进制名写成团队默认。

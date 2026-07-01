@@ -2933,10 +2933,20 @@ def test_final_gate_default_regression_path():
     except Exception:
         pass
     checks = parsed.get("checks", {})
+    final_gate_summary = parsed.get("summary", {})
+    final_state_audit = parsed.get("final_state_audit", {})
+    level1 = final_state_audit.get("level1_pcr02_docs", {})
     regression_command = checks.get("knowledge_regression", {}).get("command", "")
     expect(
         result["exit_code"] == 0
         and parsed.get("final_status") == "ok"
+        and final_gate_summary.get("level1_status") == "complete"
+        and final_gate_summary.get("level1_owner_gate_open_count") == 0
+        and level1.get("status") == "complete"
+        and level1.get("owner_gate_open_count") == 0
+        and level1.get("owner_gate_resolved_count") == 7
+        and level1.get("owner_gate_count_matches_expected") is True
+        and level1.get("owner_gate_terminal_status") == "owner-gates-complete"
         and checks.get("knowledge_regression", {}).get("status") == "pass"
         and checks.get("knowledge_regression", {}).get("exit_code") == 0
         and checks.get("knowledge_regression", {}).get("result_count", 0) >= 1
@@ -2950,6 +2960,8 @@ def test_final_gate_default_regression_path():
         {
             "exit_code": result["exit_code"],
             "final_status": parsed.get("final_status"),
+            "summary": final_gate_summary,
+            "level1": level1,
             "regression_command": regression_command,
             "checks": checks,
             "stdout_sample": result["stdout"][:1200],
@@ -4734,6 +4746,28 @@ def test_owner_target_existence_gate():
         "owner-target-existence-gate",
         "knowledge-check rejects missing owner decision landing target documents",
         {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
+        repo,
+    )
+
+def test_owner_target_materialization_read_only_no_source_dependency():
+    repo = copy_repo("owner-target-materialization-read-only-no-source-dependency")
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-pcr02-owner-targets.sh", "--json"])
+    parsed = {}
+    parse_error = ""
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception as exc:
+        parse_error = str(exc)
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("status") == "planned"
+        and parsed.get("read_only") is True
+        and parsed.get("target_present_count") == 4
+        and parsed.get("blocked_count") == 0
+        and all(row.get("source_identity_source") == "owner-decision-landing-manifest" for row in parsed.get("results", [])),
+        "owner-target-materialization-read-only-no-source-dependency",
+        "knowledge-pcr02-owner-targets read-only mode uses landing manifest identity and does not require retired origin source files",
+        {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000], "parse_error": parse_error},
         repo,
     )
 
@@ -8393,6 +8427,204 @@ def test_knowledge_context_budget_explainability():
         },
     )
 
+def test_knowledge_context_self_route():
+    result = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "增强 Knowledge Hub 自举体验",
+        "--task-type",
+        "general",
+        "--context-budget",
+        "small",
+        "--json",
+    ])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    route = parsed.get("route", {})
+    repo_route = parsed.get("repo_route", {})
+    context = parsed.get("context", {})
+    domain_refs = set(route.get("domain_refs", []))
+    current_ids = {row.get("id", "") for row in context.get("current", [])}
+    expect(
+        result["exit_code"] == 0
+        and repo_route.get("repo_id") == "knowledge-hub"
+        and route.get("project_id") == "knowledge-hub"
+        and parsed.get("workspace_ref") == "~/knowledge-hub"
+        and {"root", "governance"}.issubset(domain_refs)
+        and parsed.get("canonical_paths", {}).get("hub_entry") == "README.md"
+        and (
+            "knowledge-hub-root" in current_ids
+            or any(str(row.get("domain", "")) == "governance" for row in context.get("current", []))
+        ),
+        "knowledge-context-self-route",
+        "knowledge-context resolves Knowledge Hub cwd to self route without losing root/governance context",
+        {
+            "exit_code": result["exit_code"],
+            "repo_route": repo_route,
+            "route": route,
+            "route_selection": parsed.get("route_selection", {}),
+            "context": context,
+            "stdout_sample": result["stdout"][:1200],
+            "stderr_sample": result["stderr"][:500],
+        },
+    )
+
+def test_knowledge_context_control_plane_query_override():
+    pcr02 = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "PCR02 OTA 归档路径",
+        "--task-type",
+        "archive",
+        "--context-budget",
+        "small",
+        "--json",
+    ])
+    llm_agent = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "agent-dev-kit lock gitlink 检查",
+        "--task-type",
+        "validation",
+        "--context-budget",
+        "small",
+        "--json",
+    ])
+    parsed_pcr02 = {}
+    parsed_llm = {}
+    try:
+        parsed_pcr02 = json.loads(pcr02["stdout"])
+    except Exception:
+        pass
+    try:
+        parsed_llm = json.loads(llm_agent["stdout"])
+    except Exception:
+        pass
+    expect(
+        pcr02["exit_code"] == 0
+        and llm_agent["exit_code"] == 0
+        and parsed_pcr02.get("repo_route", {}).get("repo_id") == "knowledge-hub"
+        and parsed_llm.get("repo_route", {}).get("repo_id") == "knowledge-hub"
+        and parsed_pcr02.get("route", {}).get("project_id") == "pcr02"
+        and parsed_llm.get("route", {}).get("project_id") == "llm-agent"
+        and parsed_pcr02.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub"
+        and parsed_llm.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub",
+        "knowledge-context-control-plane-query-override",
+        "Knowledge Hub control-plane cwd preserves query alias routing for project targets",
+        {
+            "pcr02_exit_code": pcr02["exit_code"],
+            "llm_agent_exit_code": llm_agent["exit_code"],
+            "pcr02_route": parsed_pcr02.get("route", {}),
+            "llm_agent_route": parsed_llm.get("route", {}),
+            "pcr02_selection": parsed_pcr02.get("route_selection", {}),
+            "llm_agent_selection": parsed_llm.get("route_selection", {}),
+            "pcr02_stdout_sample": pcr02["stdout"][:800],
+            "llm_agent_stdout_sample": llm_agent["stdout"][:800],
+        },
+    )
+
+def test_knowledge_context_control_plane_alias_ambiguity():
+    result = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "Knowledge Hub PCR02 OTA 归档路径",
+        "--task-type",
+        "archive",
+        "--context-budget",
+        "small",
+        "--json",
+    ])
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    route = parsed.get("route", {})
+    route_selection = parsed.get("route_selection", {})
+    matched_by = route.get("matched_by", [])
+    expect(
+        result["exit_code"] == 0
+        and parsed.get("repo_route", {}).get("repo_id") == "knowledge-hub"
+        and route.get("project_id") == "pcr02"
+        and route_selection.get("cwd_route_project_id") == "knowledge-hub"
+        and route_selection.get("query_route_project_id") == "pcr02"
+        and route_selection.get("selected_project_id") == "pcr02"
+        and route_selection.get("query_score", 0) > 0
+        and any(row.get("type") == "control-plane-query-aware" for row in matched_by),
+        "knowledge-context-control-plane-alias-ambiguity",
+        "Knowledge Hub control-plane query with mixed Hub and project aliases selects target project",
+        {
+            "exit_code": result["exit_code"],
+            "route": route,
+            "route_selection": route_selection,
+            "matched_by": matched_by,
+            "stdout_sample": result["stdout"][:1000],
+            "stderr_sample": result["stderr"][:500],
+        },
+    )
+
+def test_embedded_asan_methodology_deprojectized():
+    asan_path = root / "domains" / "embedded" / "runbooks" / "asan-debug-guide.md"
+    try:
+        text = asan_path.read_text()
+    except Exception as exc:
+        text = ""
+        read_error = str(exc)
+    else:
+        read_error = ""
+    banned = [
+        "DEBUG=256",
+        "prog_pcr02",
+        "/customer/bin",
+        "release/bin/prog_pcr02",
+        "libs/3rdparty/libasan",
+    ]
+    required = [
+        "AddressSanitizer",
+        "ASAN_OPTIONS",
+        "-fsanitize=address",
+        "BuildID",
+        "asan-offline-symbolize-guide.md",
+        "团队级本文当前状态为 `active`",
+        "不得仅凭单一项目 owner decision 自动提升到 `domains/embedded/standards/`",
+    ]
+    banned_hits = [token for token in banned if token in text]
+    missing_required = [token for token in required if token not in text]
+    expect(
+        not read_error
+        and not banned_hits
+        and not missing_required
+        and "status: active" in text
+        and "projects/pcr02/current/runbooks/asan-debug-guide.md" in text,
+        "embedded-asan-methodology-deprojectized",
+        "team-level ASAN methodology stays deprojectized with active runbook boundaries",
+        {
+            "read_error": read_error,
+            "banned_hits": banned_hits,
+            "missing_required": missing_required,
+            "path": str(asan_path),
+        },
+    )
+
 def test_regression_manifest_coverage():
     manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
     try:
@@ -8476,6 +8708,7 @@ def test_regression_manifest_coverage():
         "source-control-directory-gate",
         "source-control-raw-copy-body-gate",
         "owner-target-existence-gate",
+        "owner-target-materialization-read-only-no-source-dependency",
         "owner-decision-draft-leak-warning",
         "manual-entry-offline-package-consistency",
         "manual-entry-validation-diagnostics-default",
@@ -8530,6 +8763,10 @@ def test_regression_manifest_coverage():
         "knowledge-search-registry-metadata-fallback",
         "knowledge-search-invalid-filters",
         "knowledge-context-budget-explainability",
+        "knowledge-context-self-route",
+        "knowledge-context-control-plane-query-override",
+        "knowledge-context-control-plane-alias-ambiguity",
+        "embedded-asan-methodology-deprojectized",
         "stable-governance-command-examples",
         "regression-manifest-coverage",
     ]
@@ -8672,6 +8909,7 @@ full_tests = [
     test_source_control_directory_gate,
     test_source_control_raw_copy_body_gate,
     test_owner_target_existence_gate,
+    test_owner_target_materialization_read_only_no_source_dependency,
     test_owner_decision_draft_leak_warning,
     test_manual_entry_offline_package_consistency,
     test_manual_entry_validation_diagnostics_default,
@@ -8726,6 +8964,10 @@ full_tests = [
     test_knowledge_search_registry_metadata_fallback,
     test_knowledge_search_invalid_filters,
     test_knowledge_context_budget_explainability,
+    test_knowledge_context_self_route,
+    test_knowledge_context_control_plane_query_override,
+    test_knowledge_context_control_plane_alias_ambiguity,
+    test_embedded_asan_methodology_deprojectized,
     test_stable_governance_command_examples,
     test_regression_manifest_coverage,
 ]
@@ -8739,11 +8981,16 @@ quick_test_names = {
     "test_status_wrong_bucket",
     "test_source_control_directory_gate",
     "test_owner_target_existence_gate",
+    "test_owner_target_materialization_read_only_no_source_dependency",
     "test_review_queue_json_contract",
     "test_source_check_health_contract",
     "test_knowledge_search_structured_filters",
     "test_knowledge_search_invalid_filters",
     "test_knowledge_context_budget_explainability",
+    "test_knowledge_context_self_route",
+    "test_knowledge_context_control_plane_query_override",
+    "test_knowledge_context_control_plane_alias_ambiguity",
+    "test_embedded_asan_methodology_deprojectized",
     "test_no_user_absolute_path_persisted",
     "test_user_path_redaction_in_tool_outputs",
     "test_stable_governance_command_examples",

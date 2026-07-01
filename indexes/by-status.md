@@ -407,7 +407,19 @@
 - archived: `knowledge-hub-canonical-registry-boundary-20260624`
 - canonical-registry-boundary-applied: current topic registry、retention rules 和治理说明已收敛到 `projects/` 与 `notes/personal/`，旧项目/个人目录不得重新成为 current registry 入口；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.jsonl`.
 - reviewing: `pcr02-asan-debug-guide-project-local-20260624`
-- owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；团队级 ASAN 方法论仍需另行重写和复核；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
+- owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；该行描述 2026-06-24 项目内目标落地状态，团队级 ASAN 方法论后续已在 2026-06-29 独立提升 active；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
+- active: `embedded-asan-debug-guide-20260629`
+- active-promotion-applied: 团队级 ASAN 方法论已去项目化落到 `domains/embedded/runbooks/asan-debug-guide.md`，并按 2026-06-29 用户授权提升 active；证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl`.
+- archived: `embedded-asan-team-owner-ready-package-20260629`
+- active-promotion-superseded: 团队级 ASAN 方法论的 team review 准备包已由 active promotion 消解；该包保留为前置审查证据；证据：`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.jsonl`.
+- archived: `embedded-asan-active-promotion-20260629`
+- active-promotion-recorded: 团队级 ASAN active promotion 的授权、边界和回滚证据已登记；证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl`.
+- reviewing: `embedded-asan-non-pcr02-evidence-followup-20260629`
+- non-pcr02-evidence-followup-open: 非 PCR02 ASAN 实操证据增强项已登记；当前 Hub 检索未发现真实非 PCR02 验证记录，该项不阻塞 `embedded-asan-debug-guide-20260629` active 状态；证据：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.jsonl`.
+- archived: `knowledge-hub-operational-maturity-20260701`
+- operational-maturity-recorded: Knowledge Hub 长期运营成熟态状态页已落地，明确日常/周度/release 节奏、成熟条件、搜索验收和剩余运营风险；证据：`governance/status/knowledge-hub-operational-maturity.md`.
+- archived: `knowledge-hub-review-after-operation-plan-20260701`
+- review-after-operation-plan-recorded: 2026-07 review_after 近期待复核队列已拆成 P1/P2/P3 report-only 运营批次；不自动改 review_after、不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.jsonl`.
 - archived: `pcr02-dvr-plan-archive-only-20260624`
 - owner-approved-archive-only-target-materialized: DVR proto/sensor 解耦计划已按 archive-only 落地；缺 completed 证据，不声明完成；证据：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`.
 - archived: `pcr02-motor-mcu-debug-record-archive-only-20260624`

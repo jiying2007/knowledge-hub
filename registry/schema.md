@@ -331,6 +331,8 @@ Invariants:
 
 - `repo_refs` 必须指向 `registry/repositories.json`。
 - `workspace_refs` 只能使用允许的逻辑 workspace 或保留本地约定。
+- `domain_refs` 可选；用于非 `projects/<project_id>` 的控制面或运行时域路由，例如 `root`、`governance`、`codex`。未显式填写时，工具按 `projects/<project_id>` 或项目 `domain` 派生。
+- `route_key_policy=control-plane-query-aware` 只允许用于 Knowledge Hub 这类控制面路由：当前 cwd 属于控制面时，query 明确命中其他项目 alias 则路由到目标项目，否则回到控制面自身。
 - 禁止使用 `cwd_patterns`。
 - 禁止使用 retired `engineering_archive_path` 字段；新增归档统一使用 `archive_path`。
 

@@ -484,6 +484,22 @@
       ],
       "repo_boundary": "tooling",
       "status": "registered"
+    },
+    {
+      "id": "knowledge-hub",
+      "name": "Knowledge Hub",
+      "type": "knowledge-control-plane",
+      "domain": "root",
+      "entry": "README.md",
+      "current": "governance",
+      "archive": "artifacts/manifests",
+      "decisions": "registry",
+      "validation": "tools",
+      "groups": [
+        "knowledge-hub"
+      ],
+      "repo_boundary": "control-plane",
+      "status": "registered"
     }
   ]
 }

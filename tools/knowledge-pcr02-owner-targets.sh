@@ -24,6 +24,25 @@ args = parser.parse_args(argv)
 today = args.as_of or dt.date.today().isoformat()
 home = pathlib.Path.home()
 source_root = home / "work" / "sigmastar" / "pcr02_ssc305" / "SourceCode" / "sdk" / "verify" / "xcrz_sigmastar_demo" / "docs"
+landing_manifest_path = root / "artifacts" / "manifests" / "pcr02-project-docs-owner-decision-landing-20260623.jsonl"
+
+def load_landing_rows():
+    rows = {}
+    if not landing_manifest_path.exists():
+        return rows
+    for line in landing_manifest_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except Exception:
+            continue
+        worksheet_id = str(row.get("worksheet_id", ""))
+        if worksheet_id:
+            rows[worksheet_id] = row
+    return rows
+
+landing_rows = load_landing_rows()
 
 targets = [
     {
@@ -65,13 +84,31 @@ targets = [
 ]
 
 results = []
+blocked = []
 for item in targets:
     source_file = source_root / item["source_path"]
     target_file = root / item["target_path"]
-    source_text = source_file.read_text()
-    source_bytes = source_file.read_bytes()
-    source_hash = hashlib.sha256(source_bytes).hexdigest()
-    header = f"""---
+    source_exists = source_file.exists()
+    landing_row = landing_rows.get(item["worksheet_id"], {})
+    source_hash = str(landing_row.get("source_sha256", ""))
+    source_size = landing_row.get("source_size", 0)
+    source_text = ""
+
+    if args.apply:
+        if not source_exists:
+            blocked.append({
+                "worksheet_id": item["worksheet_id"],
+                "source_path": item["source_path"],
+                "reason": "source file missing; retired origin is unavailable for re-materialization",
+            })
+        else:
+            source_bytes = source_file.read_bytes()
+            source_text = source_bytes.decode()
+            source_hash = hashlib.sha256(source_bytes).hexdigest()
+            source_size = len(source_bytes)
+
+    if args.apply and source_exists:
+        header = f"""---
 title: {item['title']}
 doc_type: owner-approved-target
 status: {item['status']}
@@ -104,9 +141,9 @@ generated_at: {today}
 ## 原始正文
 
 """
-    content = header + source_text.rstrip() + "\n"
+        content = header + source_text.rstrip() + "\n"
     exists_before = target_file.exists()
-    if args.apply:
+    if args.apply and source_exists:
         target_file.parent.mkdir(parents=True, exist_ok=True)
         target_file.write_text(content)
     results.append({
@@ -114,16 +151,26 @@ generated_at: {today}
         "source_path": item["source_path"],
         "target_path": item["target_path"],
         "exists_before": exists_before,
-        "written": bool(args.apply),
+        "target_exists": target_file.exists(),
+        "written": bool(args.apply and source_exists),
+        "source_available": source_exists,
         "source_sha256": source_hash,
-        "source_size": len(source_bytes),
+        "source_size": source_size,
+        "source_identity_source": "runtime-source-file" if args.apply and source_exists else "owner-decision-landing-manifest",
     })
 
 payload = {
-    "status": "applied" if args.apply else "planned",
+    "status": "blocked" if blocked else ("applied" if args.apply else "planned"),
     "read_only": not args.apply,
     "target_count": len(targets),
-    "written_count": len(targets) if args.apply else 0,
+    "written_count": sum(1 for row in results if row["written"]),
+    "target_present_count": sum(1 for row in results if row["target_exists"]),
+    "source_available_count": sum(1 for row in results if row["source_available"]),
+    "blocked_count": len(blocked),
+    "blocked": blocked,
+    "landing_manifest": str(landing_manifest_path.relative_to(root)),
+    "source_root": str(source_root).replace(str(home), "~", 1),
+    "notes_zh": "默认只读模式只检查 Hub 内目标存在性，并从 owner decision landing manifest 读取 source identity；不会读取 retired origin 正文。--apply 需要 retired origin source 文件仍可用，否则返回 blocked。",
     "results": results,
 }
 
@@ -132,5 +179,13 @@ if args.json:
 else:
     print(f"status: {payload['status']}")
     for result in results:
-        print(f"{result['target_path']}: {'written' if args.apply else 'planned'}")
+        if result["written"]:
+            action = "written"
+        elif result["target_exists"]:
+            action = "present"
+        else:
+            action = "missing"
+        print(f"{result['target_path']}: {action}")
+if blocked:
+    sys.exit(1)
 PY

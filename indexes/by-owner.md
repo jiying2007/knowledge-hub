@@ -3,6 +3,9 @@
 ## leiwenjun
 
 - `knowledge-hub-root`
+- `embedded-asan-active-promotion-20260629`
+- `knowledge-hub-operational-maturity-20260701`
+- `knowledge-hub-review-after-operation-plan-20260701`
 - `knowledge-hub-simplified-main-source-coverage-20260624`
 - `knowledge-hub-ultimate-maintenance-plan`
 - `pcr02-review-required-resolution-20260617`
@@ -245,6 +248,9 @@
 - `knowledge-hub-user-path-boundary-20260624`
 - `knowledge-hub-canonical-registry-boundary-20260624`
 - `pcr02-asan-debug-guide-project-local-20260624`
+- `embedded-asan-team-owner-ready-package-20260629`
+- `embedded-asan-debug-guide-20260629`
+- `embedded-asan-non-pcr02-evidence-followup-20260629`
 - `pcr02-dvr-plan-archive-only-20260624`
 - `pcr02-motor-mcu-debug-record-archive-only-20260624`
 - `pcr02-dvr-session-archive-only-20260624`
