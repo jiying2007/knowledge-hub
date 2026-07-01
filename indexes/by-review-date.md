@@ -246,3 +246,4 @@
 - 2026-09-29: `embedded-asan-non-pcr02-evidence-followup-20260629`
 - 2026-10-01: `knowledge-hub-operational-maturity-20260701`
 - 2026-10-01: `knowledge-hub-review-after-operation-plan-20260701`
+- 2026-10-01: `knowledge-hub-complete-delivery-closure-20260701`

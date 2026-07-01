@@ -2,14 +2,15 @@
 
 ## 结论
 
-本记录登记团队级 ASAN 方法论的后续证据增强项：补充至少一个非 PCR02 项目的 ASAN 实操验证记录。
+本记录登记团队级 ASAN 方法论的后续证据增强项：补充至少一个非 PCR02 项目的 ASAN 实操验证记录。2026-07-01 完整交付闭环后，本记录不再作为 Knowledge Hub mature 交付剩余风险；它只保留为未来真实外部项目证据采集入口。
 
 当前结论：
 
 - `domains/embedded/runbooks/asan-debug-guide.md` 已按 2026-06-29 用户授权提升为 `active`。
 - 本 follow-up 不是 validation evidence，不证明已有非 PCR02 项目跑通过 ASAN。
 - 2026-06-29 在 Knowledge Hub 本仓检索到的 ASAN 材料主要是团队 runbook、PCR02 project-local runbook、ASAN split / active promotion 证据和通用调试辅助文档；未发现可归档为非 PCR02 项目实操验证的记录。
-- 非 PCR02 实操记录是成熟度增强项，不再阻塞当前 active 状态。
+- 非 PCR02 实操记录是成熟度增强项，不再阻塞当前 active 状态，也不阻塞 Knowledge Hub 完整交付闭环。
+- `knowledge-hub-complete-delivery-closure-20260701` 只关闭本 follow-up 的运营阻塞身份，不证明已有非 PCR02 项目跑通过 ASAN。
 - 后续项目实操记录应优先使用 `templates/asan-validation-report.md`，确保构建、运行、符号化、修复复测、资源开销和回退证据一次性收齐。
 
 ## Scope
@@ -20,7 +21,7 @@
 | target_path | `domains/embedded/runbooks/asan-debug-guide.md` |
 | followup_item | `embedded-asan-non-pcr02-evidence-followup-20260629` |
 | owner | `team-core` |
-| status | `reviewing` |
+| status | `archived` |
 | review_after | `2026-09-29` |
 
 ## 后续证据验收标准
@@ -49,6 +50,7 @@
 | --- | ---: | --- | --- | --- | --- |
 | `rtk rg -n "ASAN\|AddressSanitizer\|asan\|sanitize\|sanitizer" domains projects notes artifacts registry indexes sources README.md tools -g '!*.git/*'` | 0 | 命中 ASAN 相关材料，但未发现可归档为非 PCR02 项目实操验证的记录；命中范围主要是团队 runbook、PCR02 project-local runbook、ASAN split / active promotion 证据和通用调试辅助文档。 | `domains/embedded/runbooks/asan-debug-guide.md`; `projects/pcr02/current/runbooks/asan-debug-guide.md`; `artifacts/manifests/*asan*` | Audit | `embedded-asan-non-pcr02-evidence-followup-20260629` |
 | `rtk test -f templates/asan-validation-report.md` | 0 | 非 PCR02 ASAN 项目实操验证模板已落地，可作为后续证据采集入口。 | `templates/asan-validation-report.md` | Template | `embedded-asan-non-pcr02-evidence-followup-20260629` |
+| `rtk bash tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-01` | pending | 完整交付闭环后执行，验证本 follow-up 不再作为 mature 交付阻塞。 | `tools/knowledge-final-gate.sh` | Final Gate | `knowledge-hub-complete-delivery-closure-20260701` |
 
 ## 下一步建议
 

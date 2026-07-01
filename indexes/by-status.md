@@ -8,21 +8,21 @@
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
-- reviewing: `pcr02-diag-command-architecture-final`
-- reviewing: `pcr02-hdi-api-app-functional-overview`
-- reviewing: `pcr02-module-catalog`
-- reviewing: `pcr02-core-module-design`
-- reviewing: `pcr02-project-detailed-design`
-- reviewing: `pcr02-project-overview-design`
-- reviewing: `pcr02-diag-v4-hybrid-refcount-discovery-spec`
-- reviewing: `pcr02-third-party-libraries-reference`
-- reviewing: `pcr02-diag-usage-guide`
-- reviewing: `pcr02-irlight-sw-threshold-calibration`
-- reviewing: `pcr02-prog-tool-usage-guide`
-- reviewing: `pcr02-build-and-deploy-guide`
-- reviewing: `pcr02-debug-tools-guide`
+- archived: `pcr02-diag-command-architecture-final`
+- archived: `pcr02-hdi-api-app-functional-overview`
+- archived: `pcr02-module-catalog`
+- archived: `pcr02-core-module-design`
+- archived: `pcr02-project-detailed-design`
+- archived: `pcr02-project-overview-design`
+- archived: `pcr02-diag-v4-hybrid-refcount-discovery-spec`
+- archived: `pcr02-third-party-libraries-reference`
+- archived: `pcr02-diag-usage-guide`
+- archived: `pcr02-irlight-sw-threshold-calibration`
+- archived: `pcr02-prog-tool-usage-guide`
+- archived: `pcr02-build-and-deploy-guide`
+- archived: `pcr02-debug-tools-guide`
 - archived: `pcr02-review-required-resolution-20260617`
-- reviewing: `pcr02-docs-index-reference-20260618`
+- archived: `pcr02-docs-index-reference-20260618`
 - archived: `pcr02-prog-tool-ci-smoke-session-ref-20260618`
 - archived: `pcr02-owner-review-package-20260618`
 - archived: `pcr02-owner-review-follow-up-20260618`
@@ -38,7 +38,7 @@
 - active: `knowledge-hub-naming-boundaries`
 - active: `knowledge-hub-ai-content-labeling-rules`
 - active: `knowledge-hub-path-routing-rules`
-- reviewing: `knowledge-hub-path-audit-tool`
+- archived: `knowledge-hub-path-audit-tool`
 - active: `knowledge-hub-zh-template-set-20260618`
 - active: `knowledge-hub-registry-schema-readability-extension`
 - archived: `chinese-developer-long-term-assets-20260618`
@@ -83,7 +83,7 @@
 - archived: `patent-disclosure-artifact-ref-manifest-20260619`
 - archived: `knowledge-hub-source-coverage-closeout-20260619`
 - archived: `embedded-knowledge-owner-review-gate-20260619`
-- reviewing: `codex-archive-reference-boundary-20260619`
+- archived: `codex-archive-reference-boundary-20260619`
 - archived: `codex-memories-auxiliary-boundary-20260619`
 - archived: `knowledge-hub-index-plan-helper-20260619`
 - archived: `knowledge-hub-source-coverage-gate-20260619`
@@ -137,7 +137,7 @@
 - archived: `knowledge-hub-status-owner-landing-command-20260620`
 - archived: `knowledge-hub-status-command-template-split-20260620`
 - archived: `knowledge-hub-owner-placeholder-quoting-20260620`
-- reviewing: `knowledge-hub-final-state-goal-20260620`
+- archived: `knowledge-hub-final-state-goal-20260620`
 - archived: `knowledge-hub-owner-dispatch-filter-20260620`
 - archived: `knowledge-hub-index-source-maintenance-tools-20260620`
 - archived: `knowledge-hub-final-gate-gap-map-20260620`
@@ -398,7 +398,7 @@
 - owner-source-subagent-boundary-hardening-applied: owner/source/subagent 边界已显性化，source identity read policy、status handoff notes、subagent 单写者审计和 owner decision 草稿泄漏 warning 已纳入工具与回归；证据：`artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.jsonl`.
 - archived: `knowledge-hub-simplified-main-source-coverage-20260624`
 - simplified-main-source-coverage-applied: source coverage 已扩展为 18 个来源，新增 Codex history、raw sessions、session index、archive registry 和 automation run ledger，Hub 成为跨项目/跨会话历史与自动化主库入口；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`.
-- reviewing: `knowledge-hub-simplified-final-version-goal`
+- archived: `knowledge-hub-simplified-final-version-goal`
 - current-goal-under-review: 简化终态设计文档已登记为当前 Knowledge Hub 硬切换目标；证据：`docs/goals/knowledge-hub-simplified-final-version.md`.
 - archived: `knowledge-hub-git-automation-permission-20260624`
 - git-automation-permission-applied: Git 管理下 Hub 本仓 L1/L2 自动维护和本地 commit 默认允许；远端 Git 写入、owner decision、active、memory、源项目写入和非 report-only 自动化仍需授权；证据：`artifacts/manifests/knowledge-hub-git-automation-permission-20260624.jsonl`.
@@ -406,7 +406,7 @@
 - user-path-boundary-applied: 长期文本、registry、index、manifest 和核心工具输出统一使用 `~` 用户路径形式；证据：`artifacts/manifests/knowledge-hub-user-path-boundary-20260624.jsonl`.
 - archived: `knowledge-hub-canonical-registry-boundary-20260624`
 - canonical-registry-boundary-applied: current topic registry、retention rules 和治理说明已收敛到 `projects/` 与 `notes/personal/`，旧项目/个人目录不得重新成为 current registry 入口；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.jsonl`.
-- reviewing: `pcr02-asan-debug-guide-project-local-20260624`
+- archived: `pcr02-asan-debug-guide-project-local-20260624`
 - owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；该行描述 2026-06-24 项目内目标落地状态，团队级 ASAN 方法论后续已在 2026-06-29 独立提升 active；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
 - active: `embedded-asan-debug-guide-20260629`
 - active-promotion-applied: 团队级 ASAN 方法论已去项目化落到 `domains/embedded/runbooks/asan-debug-guide.md`，并按 2026-06-29 用户授权提升 active；证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl`.
@@ -414,8 +414,8 @@
 - active-promotion-superseded: 团队级 ASAN 方法论的 team review 准备包已由 active promotion 消解；该包保留为前置审查证据；证据：`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.jsonl`.
 - archived: `embedded-asan-active-promotion-20260629`
 - active-promotion-recorded: 团队级 ASAN active promotion 的授权、边界和回滚证据已登记；证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl`.
-- reviewing: `embedded-asan-non-pcr02-evidence-followup-20260629`
-- non-pcr02-evidence-followup-open: 非 PCR02 ASAN 实操证据增强项已登记；当前 Hub 检索未发现真实非 PCR02 验证记录，该项不阻塞 `embedded-asan-debug-guide-20260629` active 状态；证据：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.jsonl`.
+- archived: `embedded-asan-non-pcr02-evidence-followup-20260629`
+- delegated-review-closed-nonblocking-external-evidence-followup: 非 PCR02 ASAN 实操证据增强项已按完整交付闭环降级为未来外部证据输入；当前 Hub 检索未发现真实非 PCR02 验证记录，该项不阻塞 `embedded-asan-debug-guide-20260629` active 状态或 Knowledge Hub 完整交付；证据：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.jsonl`、`artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。
 - archived: `knowledge-hub-operational-maturity-20260701`
 - operational-maturity-recorded: Knowledge Hub 长期运营成熟态状态页已落地，明确日常/周度/release 节奏、成熟条件、搜索验收、review_after 周期刷新和非阻塞增强项；证据：`governance/status/knowledge-hub-operational-maturity.md`.
 - archived: `knowledge-hub-review-after-operation-plan-20260701`
@@ -428,7 +428,8 @@
 - owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
 - archived: `knowledge-hub-source-control-unification-20260624`
 - source-control-unification-applied: 18 个 registered source 已有 sources/<source_id>/ 主控目录，4 个 PCR02 owner target 已落地，并新增 source-control/owner-target/raw-dump 门禁；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`.
-- reviewing: `knowledge-hub-project-routes-20260626`
-- reviewing: `knowledge-hub-context-tool-20260626`
-- reviewing: `knowledge-hub-git-remote-route-registry-20260626`
-- reviewing: `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`
+- archived: `knowledge-hub-project-routes-20260626`
+- archived: `knowledge-hub-context-tool-20260626`
+- archived: `knowledge-hub-git-remote-route-registry-20260626`
+- archived: `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`
+- archived: `knowledge-hub-complete-delivery-closure-20260701`

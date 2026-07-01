@@ -247,7 +247,7 @@
 - Knowledge Hub 用户路径边界加固: `artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`
 - Knowledge Hub canonical registry 边界加固: `artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`
 - Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
-- Knowledge Hub operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`
+- Knowledge Hub operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`; `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`
 - PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
 - PCR02 ASAN project-local target: `projects/pcr02/current/runbooks/asan-debug-guide.md`
 - PCR02 DVR archive targets: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`

@@ -169,6 +169,21 @@ def update_source_registry_entry(repo, source_id, updates):
     return False
 
 def seed_review_after_near_due_fixture(repo):
+    reviewing_fixture_ids = {
+        "pcr02-diag-command-architecture-final",
+        "pcr02-hdi-api-app-functional-overview",
+        "pcr02-module-catalog",
+        "pcr02-core-module-design",
+        "pcr02-project-detailed-design",
+        "pcr02-project-overview-design",
+        "pcr02-diag-v4-hybrid-refcount-discovery-spec",
+        "pcr02-third-party-libraries-reference",
+        "pcr02-diag-usage-guide",
+        "pcr02-irlight-sw-threshold-calibration",
+        "pcr02-prog-tool-usage-guide",
+        "pcr02-build-and-deploy-guide",
+        "pcr02-debug-tools-guide",
+    }
     fixture_dates = {
         "2026-07-16": {
             "pcr02-diag-command-architecture-final",
@@ -219,6 +234,7 @@ def seed_review_after_near_due_fixture(repo):
         item_id = row.get("id")
         if item_id in date_by_id:
             row["review_after"] = date_by_id[item_id]
+            row["status"] = "reviewing" if item_id in reviewing_fixture_ids else "archived"
             row["updated_at"] = "2026-07-01"
             updated.add(item_id)
         rows.append(row)
@@ -228,6 +244,8 @@ def seed_review_after_near_due_fixture(repo):
     items_path.write_text(
         "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
     )
+    sync_status_index_entries(repo, reviewing_fixture_ids, "reviewing")
+    sync_status_index_entries(repo, set(date_by_id) - reviewing_fixture_ids, "archived")
     return len(updated)
 
 def seed_pending_review_queue_items(repo, count=2):
@@ -2446,6 +2464,7 @@ def test_final_gate_owner_review_blocker():
     proof_baseline_dynamic_ids = proof_artifacts.get("baseline_dynamic_ids", [])
     proof_selection_dynamic_ids = proof_artifacts.get("selection_dynamic_ids", [])
     proof_baseline_selection_overlap_ids = proof_artifacts.get("baseline_selection_overlap_ids", [])
+    expected_closure_proof_id = "knowledge-hub-complete-delivery-closure-20260701"
     expected_source_check_runtime_command = (
         f"rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of {parsed.get('today')}"
     )
@@ -2618,8 +2637,11 @@ def test_final_gate_owner_review_blocker():
         and proof_artifacts.get("baseline_selection_overlap_count") == len(proof_baseline_selection_overlap_ids)
         and proof_baseline_selection_overlap_ids == []
         and proof_artifacts.get("baseline_dynamic_count") == 0
-        and proof_artifacts.get("dynamic_count") == 0
-        and proof_artifacts.get("selection_dynamic_count") == 0
+        and proof_dynamic_ids == [expected_closure_proof_id]
+        and proof_selection_dynamic_ids == [expected_closure_proof_id]
+        and expected_closure_proof_id in proof_expected_ids
+        and proof_artifacts.get("dynamic_count") == 1
+        and proof_artifacts.get("selection_dynamic_count") == 1
         and "knowledge-hub-review-after-topic-owner-hardening-20260622" not in proof_expected_ids
         and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
@@ -7542,6 +7564,7 @@ def test_review_after_as_of_deterministic():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-06-30"
+            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -7550,6 +7573,7 @@ def test_review_after_as_of_deterministic():
         expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", {"setup_error": f"missing {item_id}"}, repo)
         return
     path.write_text("\n".join(updated_lines) + "\n")
+    sync_status_index_entries(repo, [item_id], "reviewing")
 
     past_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-01"])
     future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
@@ -7627,6 +7651,7 @@ def test_stale_review_after_warning_surface():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-01-01"
+            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -7635,6 +7660,7 @@ def test_stale_review_after_warning_surface():
         expect(False, "stale-review-after-warning-surface", "stale review_after is surfaced as warning and status action", {"setup_error": f"missing {item_id}"}, repo)
         return
     path.write_text("\n".join(updated_lines) + "\n")
+    sync_status_index_entries(repo, [item_id], "reviewing")
 
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])

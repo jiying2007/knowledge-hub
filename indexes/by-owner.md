@@ -209,6 +209,7 @@
 - `knowledge-hub-project-routes-20260626`
 - `knowledge-hub-context-tool-20260626`
 - `knowledge-hub-git-remote-route-registry-20260626`
+- `knowledge-hub-complete-delivery-closure-20260701`
 
 ## pcr02-registry-owner
 

@@ -2,9 +2,9 @@
 
 ## 结论
 
-Knowledge Hub 已达到治理控制面和成熟态门禁可交付状态：registry、索引、source control、owner gate、review queue、review_after 周期刷新、final gate、search/context/status/check 工具链都有可验证入口，且 `mature` profile 能阻断迁移态残留和高比例 `reviewing` 滞留。
+Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、source control、owner gate、review queue、review_after 周期刷新、final gate、search/context/status/check 工具链都有可验证入口，且 `mature` profile 能阻断迁移态残留和高比例 `reviewing` 滞留。
 
-长期运营成熟态尚未等同于“无人值守完成态”。2026-07-01 已按用户“修复剩余运营风险”的指令，将 2026-07-16 到 2026-07-18 的 27 个近期待复核项执行运营排期刷新，下一复核窗口为 2026-10-16 到 2026-10-18；该动作只更新 Hub 内 `review_after` 排期，不代表 owner 内容复核、source 事实确认或 active 提升。本页是运营状态入口，不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目。
+2026-07-01 已按用户选择的“授权代办闭环”完成运营尾巴收口：Hub 内部治理 review 可由本次授权代办关闭；外部项目事实、owner decision、实机验证证据不由 Codex 代签。2026-07-16 到 2026-07-18 的 27 个近期待复核项已执行运营排期刷新，下一复核窗口为 2026-10-16 到 2026-10-18；剩余 24 个 `reviewing` 语义尾巴已按证据边界归档闭环。该闭环不代表 owner 内容复核、source 事实确认、active 提升或 ASAN 非 PCR02 实机验证。本页是运营状态入口，不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目。
 
 ## 当前基线
 
@@ -16,7 +16,7 @@ Knowledge Hub 已达到治理控制面和成熟态门禁可交付状态：regist
 | 工具入口 | 22 | search/status/check/context/final gate 等稳定 shell 入口 |
 | registered source | 18 | 已有 Hub 内 source 主控目录 |
 | 30 天 near-due item | 0 | 27 个 2026-07 near-due item 已刷新到 2026-10-16..2026-10-18 |
-| reviewing item | 24 | `mature` profile 阈值内，但需持续消化 |
+| reviewing item | 0 | 2026-07-01 已按授权代办闭环收口；外部证据型事项转为非阻塞运营输入 |
 | review queue pending | 0 | 普通 AI/external review queue 已清零 |
 | owner gate open | 0 | PCR02 owner gate 当前无打开项 |
 
@@ -61,10 +61,10 @@ rtk bash ~/codex/scripts/final-ready.sh
 ## 2026-07 运营重点
 
 1. 2026-07-01 已刷新 PCR02 近期待复核批次：23 个 `team-core` 条目延后至 2026-10-16，1 个 2026-07-17 条目延后至 2026-10-17，3 个 2026-07-18 条目延后至 2026-10-18。
-2. 后续仍需在 2026-10 窗口前安排真实 owner/content review，尤其是 13 个 `team-core` current/reviewing 条目；本次刷新不是内容复核。
+2. 2026-10 窗口前仍可安排真实 owner/content review；本次闭环只关闭 Hub 内部 review 尾巴，不替代 owner 内容复核。
 3. 10 个 PCR02 archive-only 条目仍只作为历史证据，不提升 active fact。
 4. 4 个历史 owner-review artifact 只作为人工复核提示，不自动补 `source_id`，不反推出 owner approval。
-5. ASAN 非 PCR02 实操证据保持为增强跟踪项，不伪造跨项目验证结论，不再作为成熟态剩余运营阻塞。
+5. ASAN 非 PCR02 实操证据保持为外部增强输入，不伪造跨项目验证结论，不再作为成熟态或完整交付剩余运营阻塞。
 6. 正式交付前保持 Git 快照、远端推送和门禁输出可追溯。
 
 ## 搜索验收查询
@@ -98,12 +98,13 @@ rtk bash ~/codex/scripts/final-ready.sh
 ## 剩余风险
 
 - 已无 2026-07 30 天窗口内 near-due 运营阻塞；下一批 review_after 责任转移到 2026-10 窗口。
-- ASAN 团队级 runbook 已 active；非 PCR02 项目实操证据仍是增强项，已由 `embedded-asan-non-pcr02-evidence-followup-20260629` 跟踪，不作为成熟态交付阻塞。
+- ASAN 团队级 runbook 已 active；非 PCR02 项目实操证据仍是未来外部证据输入，已由 `embedded-asan-non-pcr02-evidence-followup-20260629` 和 `knowledge-hub-complete-delivery-closure-20260701` 固定边界，不作为完整交付阻塞。
 - 完整交付仍需本地 Git 快照和远端 push 证据；本页只描述 Hub 成熟态运营，不代表 owner approval 或 source project write 授权。
 - 本页不改变任何源项目、远端仓库、owner decision 或 memory 状态。
 
 ## 下一步
 
-1. 在 2026-10-16 前安排 P1 current/reviewing 内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
+1. 在 2026-10-16 前按运营节奏安排内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
 2. 每次 review_after 批次处理后运行 `knowledge-check.sh --dry-run --json --diagnostics` 和 `knowledge-status.sh --strict --final-profile mature`。
 3. release 前运行 mature full final gate，并将实际输出写入交付说明或对应 manifest。
+4. 新增真实 ASAN 非 PCR02 实机验证时，按 `templates/asan-validation-report.md` 生成项目本地验证记录，再回链到本 closeout。
