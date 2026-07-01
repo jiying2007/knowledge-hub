@@ -417,9 +417,9 @@
 - reviewing: `embedded-asan-non-pcr02-evidence-followup-20260629`
 - non-pcr02-evidence-followup-open: 非 PCR02 ASAN 实操证据增强项已登记；当前 Hub 检索未发现真实非 PCR02 验证记录，该项不阻塞 `embedded-asan-debug-guide-20260629` active 状态；证据：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.jsonl`.
 - archived: `knowledge-hub-operational-maturity-20260701`
-- operational-maturity-recorded: Knowledge Hub 长期运营成熟态状态页已落地，明确日常/周度/release 节奏、成熟条件、搜索验收和剩余运营风险；证据：`governance/status/knowledge-hub-operational-maturity.md`.
+- operational-maturity-recorded: Knowledge Hub 长期运营成熟态状态页已落地，明确日常/周度/release 节奏、成熟条件、搜索验收、review_after 周期刷新和非阻塞增强项；证据：`governance/status/knowledge-hub-operational-maturity.md`.
 - archived: `knowledge-hub-review-after-operation-plan-20260701`
-- review-after-operation-plan-recorded: 2026-07 review_after 近期待复核队列已拆成 P1/P2/P3 report-only 运营批次；不自动改 review_after、不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.jsonl`.
+- review-after-operation-plan-recorded: 2026-07 review_after 近期待复核队列已拆成 P1/P2/P3 并按用户授权刷新到 2026-10；不把排期刷新当作 owner 内容复核，不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.jsonl`.
 - archived: `pcr02-dvr-plan-archive-only-20260624`
 - owner-approved-archive-only-target-materialized: DVR proto/sensor 解耦计划已按 archive-only 落地；缺 completed 证据，不声明完成；证据：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`.
 - archived: `pcr02-motor-mcu-debug-record-archive-only-20260624`

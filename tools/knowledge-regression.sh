@@ -168,6 +168,68 @@ def update_source_registry_entry(repo, source_id, updates):
             return True
     return False
 
+def seed_review_after_near_due_fixture(repo):
+    fixture_dates = {
+        "2026-07-16": {
+            "pcr02-diag-command-architecture-final",
+            "pcr02-hdi-api-app-functional-overview",
+            "pcr02-module-catalog",
+            "pcr02-core-module-design",
+            "pcr02-project-detailed-design",
+            "pcr02-project-overview-design",
+            "pcr02-diag-v4-hybrid-refcount-discovery-spec",
+            "pcr02-third-party-libraries-reference",
+            "pcr02-diag-usage-guide",
+            "pcr02-irlight-sw-threshold-calibration",
+            "pcr02-prog-tool-usage-guide",
+            "pcr02-build-and-deploy-guide",
+            "pcr02-debug-tools-guide",
+            "pcr02-v1-deep-analysis-plan-archive-20260506",
+            "pcr02-v1-migration-execution-plan-archive-20260506",
+            "pcr02-irlight-optimization-plan-archive-20260508",
+            "pcr02-diag-v4-hybrid-refcount-discovery-plan-archive-20260510",
+            "pcr02-diag-ut-hard-switch-progress-archive-20260513",
+            "pcr02-v1-deep-analysis-validation-report-20260506",
+            "pcr02-v1-migration-final-validation-report-20260507",
+            "pcr02-aov-lightsensor-analysis-validation-report-20260508",
+            "pcr02-prog-tool-terminal-release-validation-report-20260514",
+            "pcr02-session-archive-report-20260517",
+        },
+        "2026-07-17": {
+            "pcr02-review-required-resolution-20260617",
+        },
+        "2026-07-18": {
+            "pcr02-owner-review-package-20260618",
+            "pcr02-owner-review-follow-up-20260618",
+            "pcr02-owner-decision-worksheets-20260618",
+        },
+    }
+    date_by_id = {
+        item_id: review_after
+        for review_after, item_ids in fixture_dates.items()
+        for item_id in item_ids
+    }
+    items_path = repo / "registry" / "items.jsonl"
+    rows = []
+    updated = set()
+    for line in items_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        item_id = row.get("id")
+        if item_id in date_by_id:
+            row["review_after"] = date_by_id[item_id]
+            row["updated_at"] = "2026-07-01"
+            updated.add(item_id)
+        rows.append(row)
+    missing = sorted(set(date_by_id) - updated)
+    if missing:
+        raise RuntimeError("near-due fixture target ids missing: " + ",".join(missing))
+    items_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+    )
+    return len(updated)
+
 def seed_pending_review_queue_items(repo, count=2):
     items_path = repo / "registry" / "items.jsonl"
     fixture_path = "artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md"
@@ -7191,6 +7253,7 @@ def test_final_gate_source_check_runtime_failed_blocker():
 
 def test_review_after_near_due_json_contract():
     repo = copy_repo_with_open_owner_gates("review-after-near-due-json-contract")
+    seeded_count = seed_review_after_near_due_fixture(repo)
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30"])
     owner_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-after.sh", "--json", "--as-of", "2026-06-22", "--window-days", "30", "--include-owner-gates"])
     parsed = {}
@@ -7223,6 +7286,7 @@ def test_review_after_near_due_json_contract():
         and parsed.get("report_only") is True
         and parsed.get("today") == "2026-06-22"
         and parsed.get("item_window_end") == "2026-07-22"
+        and seeded_count == 27
         and counts.get("stale_items") == 0
         and counts.get("near_due_items") == 27
         and counts.get("stale_sources") == 0
@@ -7254,6 +7318,7 @@ def test_review_after_near_due_json_contract():
             "parse_error": parse_error,
             "owner_parse_error": owner_parse_error,
             "status": parsed.get("status"),
+            "seeded_count": seeded_count,
             "counts": counts,
             "owner_counts": owner_counts,
             "groups": groups,
