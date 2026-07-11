@@ -2969,6 +2969,40 @@ def test_final_gate_mature_review_queue_owner_review_blocker():
     if setup_error:
         expect(False, "final-gate-mature-review-queue-owner-review-blocker", "mature final gate reports review queue as owner-review", setup_error, repo)
         return
+    fixture_item_id = "knowledge-hub-complete-delivery-closure-20260701"
+    items_path = repo / "registry" / "items.jsonl"
+    rows = []
+    fixture_updated = False
+    for line in items_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row.get("id") == fixture_item_id:
+            row["status"] = "archived"
+            row["generated_by_ai"] = True
+            row.setdefault("ai_role", "classified")
+            row.setdefault("ai_model_or_tool", "Codex")
+            row.setdefault("ai_generated_at", "2026-07-01")
+            row["human_reviewed_by"] = ""
+            row["human_reviewed_at"] = ""
+            row["review_basis"] = ""
+            row["human_review_decision"] = ""
+            row["review_status"] = "ai-generated-pending-human-review"
+            row["updated_at"] = today.isoformat()
+            fixture_updated = True
+        rows.append(row)
+    if not fixture_updated:
+        expect(
+            False,
+            "final-gate-mature-review-queue-owner-review-blocker",
+            "mature final gate review queue fixture target item exists",
+            {"missing_fixture_item_id": fixture_item_id},
+            repo,
+        )
+        return
+    items_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n"
+    )
     result = run_cmd(
         repo,
         [
@@ -2994,6 +3028,9 @@ def test_final_gate_mature_review_queue_owner_review_blocker():
         {},
     )
     review_queue_recovery = parsed.get("review_queue_recovery", {})
+    review_queue_summary = review_queue_recovery.get("summary", {})
+    if not isinstance(review_queue_summary, dict):
+        review_queue_summary = {}
     evidence_index = parsed.get("evidence_index", [])
     evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index if isinstance(row, dict)}
     checks = parsed.get("checks", {})
@@ -3014,6 +3051,8 @@ def test_final_gate_mature_review_queue_owner_review_blocker():
         and review_queue_recovery.get("final_profile") == "mature"
         and review_queue_recovery.get("blocking_final_gate") is True
         and review_queue_recovery.get("owner_review_blocking") is True
+        and review_queue_summary.get("total_pending_count", 0) > 0
+        and review_queue_summary.get("ai_generated_pending_count", 0) > 0
         and review_queue_recovery.get("standard_blocking_final_gate") is False
         and review_queue_recovery.get("max_body_blocking_final_gate") is True
         and "mature profile 将普通 AI/外部资料待复核项作为 owner-review 阻断" in review_queue_recovery.get("notes_zh", "")
