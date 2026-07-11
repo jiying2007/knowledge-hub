@@ -24,6 +24,14 @@
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
+- PCR02 /customer ro SD upgrade 历史阶段：`projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
+- OpenAI local runtime boundary 历史治理：`artifacts/manifests/codex-openai-local-runtime-boundary-20260524.md`; `codex-openai-local-runtime-boundary-20260524`
+- Codex token efficiency roadmap 覆盖审计：`artifacts/manifests/codex-token-efficiency-roadmap-coverage-20260710.md`; `codex-token-efficiency-roadmap-coverage-20260710`
+- Codex archive memory-curation file-level audit：`artifacts/manifests/codex-archive-memory-curation-file-level-audit-20260710.md`; `codex-archive-memory-curation-file-level-audit-20260710`
+- Codex ADK hardcut source-to-live 覆盖审计：`artifacts/manifests/codex-adk-hardcut-source-to-live-audit-20260710.md`; `codex-adk-hardcut-source-to-live-audit-20260710`
+- Codex Knowledge Hub final hardcut tombstone audit：`artifacts/manifests/codex-knowledge-hub-final-hardcut-tombstone-audit-20260710.md`; `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
+- Codex archive 已迁移旧源删除执行：`artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`
+- Codex archive covered/tombstone 删除执行：`artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.md`; `codex-archive-removal-execution-20260710-covered-tombstone-001-003`
 
 ## 领域入口
 
@@ -252,3 +260,51 @@
 - PCR02 ASAN project-local target: `projects/pcr02/current/runbooks/asan-debug-guide.md`
 - PCR02 DVR archive targets: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
 - PCR02 motor MCU archive target: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- PCR02 prog_pcr02 high-load monitoring: `projects/pcr02/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
+- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/pcr02/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 Codex history backfill engineering findings: `projects/pcr02/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
+- PCR02 SIGBUS core/debug tools historical session: `projects/pcr02/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
+- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
+- Codex archive selective backfill audit: `artifacts/manifests/codex-archive-selective-backfill-audit-20260709.md`; `codex-archive-selective-backfill-audit-20260709`
+- Codex archive phased migration removal: `artifacts/manifests/codex-archive-phased-migration-removal-20260709.md`; `codex-archive-phased-migration-removal-20260709`
+- llm_tools Windows builder runbook: `projects/llm-tools/current/runbooks/windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
+- llm_tools release governance archive: `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md`; `llm-tools-release-governance-archive-20260516`
+- Sigmastar dual-screen animation analysis: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
+- Codex archive migration preflight: `artifacts/manifests/codex-archive-migration-preflight-20260709.md`; `codex-archive-migration-preflight-20260709`
+- Codex archive removal preflight: `artifacts/manifests/codex-archive-removal-preflight-20260710.md`; `codex-archive-removal-preflight-20260710`
+- Codex archive extract-first preflight: `artifacts/manifests/codex-archive-extract-first-preflight-20260710.md`; `codex-archive-extract-first-preflight-20260710`
+- Codex OpenAI local runtime boundary historical freshness gate: `artifacts/manifests/codex-openai-local-runtime-boundary-20260524.md`; `codex-openai-local-runtime-boundary-20260524`
+- Codex token efficiency roadmap coverage audit: `artifacts/manifests/codex-token-efficiency-roadmap-coverage-20260710.md`; `codex-token-efficiency-roadmap-coverage-20260710`
+- Codex archive memory-curation file-level audit: `artifacts/manifests/codex-archive-memory-curation-file-level-audit-20260710.md`; `codex-archive-memory-curation-file-level-audit-20260710`
+- Codex ADK hardcut source-to-live coverage audit: `artifacts/manifests/codex-adk-hardcut-source-to-live-audit-20260710.md`; `codex-adk-hardcut-source-to-live-audit-20260710`
+- Codex Knowledge Hub final hardcut tombstone audit: `artifacts/manifests/codex-knowledge-hub-final-hardcut-tombstone-audit-20260710.md`; `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
+- firmware-release-tools NAS release sync historical session: `projects/firmware-release-tools/archive/release/2026-05-18-nas-release-sync-session.md`; `firmware-release-tools-nas-release-sync-session-20260518`
+- Codex archive removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710.md`; `codex-archive-removal-execution-20260710`
+- Codex archive migrated extract-first removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`
+- Codex archive covered/tombstone removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.md`; `codex-archive-removal-execution-20260710-covered-tombstone-001-003`
+- Codex archive token/patent removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-token-patent-004-006.md`; `codex-archive-removal-execution-20260710-token-patent-004-006`
+- Codex archive session-wrap removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-session-wrap-caef-001-004-009.md`; `codex-archive-removal-execution-20260710-session-wrap-caef-001-004-009`
+- Codex archive session-wrap covered removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-session-wrap-covered-018-026.md`; `codex-archive-removal-execution-20260710-session-wrap-covered-018-026`
+- Codex archive PCR02 session-wrap removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-pcr02-session-wrap-027-031.md`; `codex-archive-removal-execution-20260710-pcr02-session-wrap-027-031`
+- Codex archive session-wrap final removal execution: `artifacts/manifests/codex-archive-removal-execution-20260710-session-wrap-final-032-037.md`; `codex-archive-removal-execution-20260710-session-wrap-final-032-037`
+- llm_tools three-repo governance historical session: `projects/llm-tools/archive/release/2026-05-17-llm-tools-three-repo-governance-session.md`; `llm-tools-three-repo-governance-session-20260517`
+- MCU GD32/HC32 Codex maintenance historical session: `projects/mcu/archive/2026-05-17-gd32-hc32-codex-maintenance-session.md`; `mcu-gd32-hc32-codex-maintenance-session-20260517`
+- Codex archive Knowledge legacy coverage audit: `artifacts/manifests/codex-archive-knowledge-legacy-coverage-20260710.md`; `codex-archive-knowledge-legacy-coverage-20260710`
+- Codex WeChat absorption final handoff coverage audit: `artifacts/manifests/codex-wechat-absorption-final-handoff-coverage-20260710.md`; `codex-wechat-absorption-final-handoff-coverage-20260710`
+- MCU GD32L235 app_boot_v1 refactor historical session: `projects/mcu/archive/2026-05-24-gd32l235-app-boot-refactor-session.md`; `mcu-gd32l235-app-boot-refactor-session-20260524`
+- llm_tools normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`
+- llm_tools v1.0.0 release memory review: `projects/llm-tools/archive/release/2026-05-19-llm-tools-v1-release-memory-review.md`; `llm-tools-v1-release-memory-review-20260519`
+- MCU memory-curation coverage: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`
+- PCR02 SSC305 2026-05-19 release validation: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
+- Codex archive memory-curation coverage: `artifacts/manifests/codex-archive-memory-curation-coverage-20260711.md`; `codex-archive-memory-curation-coverage-20260711`
+- Codex archive memory-curation removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-memory-curation.md`; `codex-archive-removal-execution-20260711-memory-curation`
+- Codex archive remaining blockers scan: `artifacts/manifests/codex-archive-remaining-blockers-scan-20260711.md`; `codex-archive-remaining-blockers-scan-20260711`
+- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
+- PCR02 core/GDB triage historical debug record: `projects/pcr02/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
+- PCR02 DVR protocol sync build fix: `projects/pcr02/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
+- PCR02 regular OTA customer partition guard delta: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
+- PCR02 IR light/player/WiFi debug summary: `projects/pcr02/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+- MCU release NAS guard governance: `projects/mcu/archive/2026-06-29-mcu-release-nas-guard-governance.md`; `mcu-release-nas-guard-governance-20260629`
+- Codex archive final body coverage: `artifacts/manifests/codex-archive-final-body-coverage-20260711.md`; `codex-archive-final-body-coverage-20260711`
+- Codex archive final bodies removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.md`; `codex-archive-removal-execution-20260711-final-bodies`
+- Codex archive corpus deletion readiness: `artifacts/manifests/codex-archive-corpus-deletion-readiness-20260711.md`; `codex-archive-corpus-deletion-readiness-20260711`

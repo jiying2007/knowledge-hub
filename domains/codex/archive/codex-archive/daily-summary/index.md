@@ -7,4 +7,10 @@
 
 | Item | Path |
 | --- | --- |
-| `20260510-094820-codex-v2-knowledge-archive-summary.md` | `20260510-094820-codex-v2-knowledge-archive-summary.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260510-094820-codex-v2-knowledge-archive-summary.md` | `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-044` |
+| `20260708-211900-engineering-archive-summary.md` | `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-045` |

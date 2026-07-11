@@ -68,3 +68,42 @@
 - Docs index reference: `projects/pcr02/current/docs-index.ref.md`
 - CI smoke session artifact reference: `projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
 - Engineering archive corpus: `projects/pcr02/archive/engineering-archive`
+- PCR02 prog_pcr02 high-load monitoring: `projects/pcr02/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
+- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/pcr02/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 Codex history backfill engineering findings: `projects/pcr02/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
+- PCR02 /customer ro SD upgrade historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
+- PCR02 SIGBUS core/debug tools historical session: `projects/pcr02/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
+- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
+- PCR02 SSC305 2026-05-19 release validation historical record: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
+- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
+- PCR02 core/GDB triage historical debug record: `projects/pcr02/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
+- PCR02 DVR protocol sync build fix historical record: `projects/pcr02/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
+- PCR02 regular OTA customer partition guard historical delta: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
+- PCR02 IR light/player/WiFi debug summary from 2026-07-08 daily split: `projects/pcr02/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+
+## Firmware Release Tools
+
+- Project entry: `projects/firmware-release-tools/README.md`
+- NAS release sync historical session: `projects/firmware-release-tools/archive/release/2026-05-18-nas-release-sync-session.md`; `firmware-release-tools-nas-release-sync-session-20260518`
+- MCU memory-curation coverage includes firmware-release-tools NAS governance history: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`
+
+## MCU
+
+- GD32/HC32 Codex maintenance historical session: `projects/mcu/archive/2026-05-17-gd32-hc32-codex-maintenance-session.md`; `mcu-gd32-hc32-codex-maintenance-session-20260517`
+- MCU memory-curation coverage historical record: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`
+- GD32L235 app_boot_v1 refactor historical session: `projects/mcu/archive/2026-05-24-gd32l235-app-boot-refactor-session.md`; `mcu-gd32l235-app-boot-refactor-session-20260524`
+- MCU release NAS guard governance historical record: `projects/mcu/archive/2026-06-29-mcu-release-nas-guard-governance.md`; `mcu-release-nas-guard-governance-20260629`
+
+## LLM Tools
+
+- Windows builder runbook: `projects/llm-tools/current/runbooks/windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
+- Release governance archive: `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md`; `llm-tools-release-governance-archive-20260516`
+- Three-repo governance historical session: `projects/llm-tools/archive/release/2026-05-17-llm-tools-three-repo-governance-session.md`; `llm-tools-three-repo-governance-session-20260517`
+- Normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`
+- v1.0.0 release memory review historical record: `projects/llm-tools/archive/release/2026-05-19-llm-tools-v1-release-memory-review.md`; `llm-tools-v1-release-memory-review-20260519`
+- Migrated old source deletion tombstone: `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`
+
+## XCRZ SigmaStar Demo
+
+- Dual-screen animation historical analysis: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
+- Migrated old source deletion tombstone: `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`

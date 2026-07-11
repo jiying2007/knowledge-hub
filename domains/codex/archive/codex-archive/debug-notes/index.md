@@ -7,4 +7,11 @@
 
 | Item | Path |
 | --- | --- |
-| `20260516-222503-windows-builder-runbook.md` | `20260516-222503-windows-builder-runbook.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260516-222503-windows-builder-runbook.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.jsonl#CARE-20260710-004` |
+| `20260623-075032-pcr02-core-gdb-triage.md` | `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-042` |
+| `20260630-034504-pcr02-dvr-protocol-sync-build-fix.md` | `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-043` |

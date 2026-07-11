@@ -268,7 +268,7 @@ set sysroot /tools/toolchain/gcc-11.1.0-20210608-sigmastar-glibc-x86_64_arm-linu
 set auto-solib-add off
 set solib-search-path /customer/lib
 symbol-file out/arm/app/prog_pcr02.debug
-target remote <TARGET_IP>:2345
+target remote 172.16.16.27:2345
 sharedlibrary
 ```
 

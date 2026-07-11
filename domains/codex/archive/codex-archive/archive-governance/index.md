@@ -7,4 +7,9 @@
 
 | Item | Path |
 | --- | --- |
-| `20260519-221757-archive-quality-remediation.md` | `20260519-221757-archive-quality-remediation.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260519-221757-archive-quality-remediation.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.jsonl#CARE-20260710-008` |

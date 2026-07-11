@@ -7,5 +7,10 @@
 
 | Item | Path |
 | --- | --- |
-| `20260510-000000-diag-command-architecture-v4-conclusion.md` | `20260510-000000-diag-command-architecture-v4-conclusion.md` |
-| `20260511-112520-codex-token-optimization-roadmap.md` | `20260511-112520-codex-token-optimization-roadmap.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260510-000000-diag-command-architecture-v4-conclusion.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.jsonl#CARE-20260710-009` |
+| `20260511-112520-codex-token-optimization-roadmap.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-token-patent-004-006.jsonl#CARE-20260710-010` |

@@ -6,7 +6,7 @@ maturity: verified
 status: active
 owner: team-core
 created: 2026-05-18
-last_updated: 2026-05-18
+last_updated: 2026-07-02
 tags: [pcr02, tools, debug, knowledge]
 related: [project-build-and-deploy-guide.md, ../architecture/project-overview-design.md]
 validation_refs: [../../tools/debug/project-knowledge-debug.sh, sources/pcr02-project-tools/README.md, artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl]
@@ -86,14 +86,26 @@ rtk bash tools/debug/project-knowledge-debug.sh core-fastpass --core out/arm/app
 rtk bash tools/debug/project-knowledge-debug.sh core-match --core out/arm/app/core-xxxx
 ```
 
-## 4. Hub 知识入口
+## 4. PCR02 离线 Core GDB 选择
+
+PCR02/SigmaStar SSC305 的 glibc ARM Linux core 默认使用以下交叉 GDB：
+
+```bash
+/tools/toolchain/gcc-11.1.0-20210608-sigmastar-glibc-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-gdb
+```
+
+使用 GDB 前先确认该路径可执行，并确认它能读取 core 的 ARM registers。不要优先使用 `/usr/bin/gdb`、`arm-none-eabi-gdb` 或旧 `/opt/gcc-linaro.../arm-linux-gnueabihf-gdb`，这些候选在 PCR02 core 调试中可能出现 host/target ABI 不匹配、无法读取寄存器、缺少运行库或 DWARF 兼容性不足。
+
+若用户在问题中给出 GDB 路径，以用户路径为硬约束；若该 GDB 启动失败或无法读取 core，需要先报告阻塞原因，再尝试替代路径。任何源码行级结论前，必须先完成 core、设备 `/customer/bin/prog_pcr02`、本地二进制、debug symbol 和关键 shared library 的 BuildID/MD5 匹配。
+
+## 5. Hub 知识入口
 
 - `domains/embedded/`
 - `projects/pcr02/current/`
 - `sources/pcr02-project-tools/README.md`
 - 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl`
 
-## 5. 边界
+## 6. 边界
 
 1. 项目 wrapper 只设置默认参数与调用入口。
 2. 公共脚本增强必须先进入 Knowledge Hub source control 或对应源项目的明确变更流程；不得把旧团队知识库路径当作默认写入目标。

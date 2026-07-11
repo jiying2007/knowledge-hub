@@ -7,4 +7,10 @@
 
 | Item | Path |
 | --- | --- |
-| `20260514-102409-dual-screen-animation-analysis.md` | `20260514-102409-dual-screen-animation-analysis.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260514-102409-dual-screen-animation-analysis.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.jsonl#CARE-20260710-006` |
+| `20260630-103933-media-monotonic-pts-mp4-impact.md` | `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-041` |

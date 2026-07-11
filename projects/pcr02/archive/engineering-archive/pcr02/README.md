@@ -32,8 +32,15 @@ The 2026-06-18 pad-drive update records that six-line 4mA improved but did not e
 - [PCR02 OTA ubia resize and customer SquashFS migration](ota-release/pcr02-ota-ubia-resize-customer-squashfs-20260529/README.md)
 - [PCR02 Vehicle OTA orchestration](ota-release/pcr02_vehicle_ota_orchestration_20260606.md)
 - [PCR02 regular OTA preserve partitions](ota-release/pcr02_regular_ota_preserve_partitions_20260613.md)
+- [PCR02 regular OTA customer partition guard](ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md)
 
 Use this topic for OTA packaging, vehicle OTA, SOC release to NAS, migration packages, release gates, and post-release artifact manifests.
+
+## Media Timing
+
+- [PCR02 media monotonic PTS 对 DVR/MP4 的影响归档](media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md)
+
+Use this topic for MI_SYS PTS bootstrap, monotonic/wall-clock boundaries, DVR frame PTS, MP4 muxer timing, and media pipeline latency diagnostics.
 
 ## Partition and Storage Policy
 
@@ -88,6 +95,7 @@ Use this topic for board-side command checklists and repeated validation recipes
 
 - [PCR02 IMSSV05C13 SDK migration session wrap](session/pcr02_imssv05c13_migration_session_wrap_20260601.md)
 - [PCR02 IMSSV05C13 memory candidates](session/pcr02_imssv05c13_memory_candidates_20260601.md)
+- [PCR02 GROS、SSC305 build hardcut 与 HDI warning zero 历史归档](session/pcr02_build_gros_hdi_history_20260517_20260521.md)
 
 Use this topic for handoff notes, current-session conclusions, memory candidates, and acceptance blockers that should not be mixed into stable release decisions yet.
 

@@ -5,6 +5,7 @@
 ## 当前入口
 
 - 当前事实和 runbook：`projects/pcr02/current/`
+- 第三方库编译优化基线：`projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md`
 - 当前项目决策：`projects/pcr02/decisions/`
 - 验证记录和可复跑证据：`projects/pcr02/validation/`
 - 历史归档和工程排障材料：`projects/pcr02/archive/`

@@ -7,5 +7,10 @@
 
 | Item | Path |
 | --- | --- |
-| `20260530-215617-patent_skill_archive_note_20260530215400.md` | `20260530-215617-patent_skill_archive_note_20260530215400.md` |
-| `20260530-220612-patent_skill_archive_note_20260530215400.md` | `20260530-220612-patent_skill_archive_note_20260530215400.md` |
+
+## Tombstones
+
+| Source | Tombstone |
+| --- | --- |
+| `20260530-215617-patent_skill_archive_note_20260530215400.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-token-patent-004-006.jsonl#CARE-20260710-011` |
+| `20260530-220612-patent_skill_archive_note_20260530215400.md` | `artifacts/manifests/codex-archive-removal-execution-20260710-token-patent-004-006.jsonl#CARE-20260710-012` |
