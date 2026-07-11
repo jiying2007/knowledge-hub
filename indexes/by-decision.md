@@ -86,3 +86,4 @@
 - `pcr02-owner-decision-worksheet-005 output`: DVR proto/sensor 解耦计划 archive-only 目标：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`；不声明 completed。
 - `pcr02-owner-decision-worksheet-006 output`: motor MCU debug record archive-only 目标：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`；不提升验证结论。
 - `pcr02-owner-decision-worksheet-007 output`: DVR record/replay session archive-only 目标：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`；memory candidates 不写 memory、不进 active facts。
+- `knowledge-hub-archived-summary-full-closeout-20260711`: archived summary_zh 全量缺口收口；证据：`artifacts/manifests/knowledge-hub-archived-summary-full-closeout-20260711.md`；只补 registry 可读摘要，不改变 archived 状态、不生成 owner decision、不提升 active、不写 memory。

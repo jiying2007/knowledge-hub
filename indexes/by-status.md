@@ -490,3 +490,4 @@
 - archived: `codex-archive-final-body-coverage-20260711`
 - archived: `codex-archive-removal-execution-20260711-final-bodies`
 - archived: `codex-archive-corpus-deletion-readiness-20260711`
+- archived: `knowledge-hub-archived-summary-full-closeout-20260711`

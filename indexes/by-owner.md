@@ -2,6 +2,7 @@
 
 ## leiwenjun
 
+- `knowledge-hub-archived-summary-full-closeout-20260711`
 - `knowledge-hub-root`
 - `embedded-asan-active-promotion-20260629`
 - `knowledge-hub-operational-maturity-20260701`
