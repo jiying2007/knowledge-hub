@@ -6,6 +6,8 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 
 2026-07-01 已按用户选择的“授权代办闭环”完成运营尾巴收口：Hub 内部治理 review 可由本次授权代办关闭；外部项目事实、owner decision、实机验证证据不由 Codex 代签。2026-07-16 到 2026-07-18 的 27 个近期待复核项已执行运营排期刷新，下一复核窗口为 2026-10-16 到 2026-10-18；剩余 24 个 `reviewing` 语义尾巴已按证据边界归档闭环。该闭环不代表 owner 内容复核、source 事实确认、active 提升或 ASAN 非 PCR02 实机验证。本页是运营状态入口，不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目。
 
+2026-07-11 已完成 mature closeout 增量治理：registry 增至 306 条，`active=16`、`archived=275`、`reviewing=15`，三类状态 `summary_zh` 缺口均为 0；普通 AI/external review queue pending 为 0，stale `review_after` 为 0，mature audit blocker 为 0。`reviewing` 比例约 4.90%，低于 mature profile 的 10% 阈值；后续按周度 triage 运营，不由 Codex 自动 archive、active promotion 或 owner decision 代签。
+
 ## 当前基线
 
 | 指标 | 当前值 | 说明 |
@@ -20,6 +22,19 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 | review queue pending | 0 | 普通 AI/external review queue 已清零 |
 | owner gate open | 0 | PCR02 owner gate 当前无打开项 |
 
+## 2026-07-11 增量基线
+
+| 指标 | 当前值 | 说明 |
+|---|---:|---|
+| registry item | 306 | 2026-07-11 P1/P2 hardening 登记后的 registry 总数 |
+| active item | 16 | `summary_zh` 缺口为 0 |
+| archived item | 275 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening 账本已登记，缺口为 0 |
+| reviewing item | 15 | 比例约 4.90%，低于 mature 阈值；只进入周度 triage |
+| review queue pending | 0 | 普通 AI/external review queue 已清零 |
+| stale review_after | 0 | item/source stale 均为 0 |
+| mature blocker | 0 | mature audit `status=pass` |
+| full regression baseline | 136 个回归场景 | 新增 summary backfill archived-only contract 后，以 `slowest_results` 做性能趋势记录 |
+
 ## 终态成熟条件
 
 - 目标成熟：Hub 是统一知识控制面，能回答“事实在哪、依据是什么、谁负责、何时复核、如何回滚”。
@@ -33,15 +48,17 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 ### Daily
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --as-of 2026-07-11
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-01 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
 ```
 
 ### Weekly
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-01 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11 --skip-final-gate
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Knowledge Hub mature" --json --limit 8
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "成熟态" --json --limit 8
@@ -54,7 +71,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 归档路径" --json -
 ```bash
 rtk git status --short
 rtk git diff --check
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-01
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-11
 rtk bash ~/codex/scripts/final-ready.sh
 ```
 
@@ -83,6 +100,7 @@ rtk bash ~/codex/scripts/final-ready.sh
 
 - 日常使用 `knowledge-status.sh`、`knowledge-check.sh`、`knowledge-search.sh` 和 `knowledge-context.sh`。
 - `knowledge-final-gate.sh --full-regression` 只作为 release 级或高风险脚本改动后的重门禁。
+- 每次 high-risk tool/regression 改动后，将 full regression 的 `selected_test_count`、`result_count`、`slowest_results[0:10]` 和总耗时摘要写入相邻 manifest 或交付说明；不保存大段 raw JSON。
 - 若 full final gate 超过 3 分钟，先记录 `slowest_results`、命令环境和当次变更范围，再决定是否优化工具或拆分回归。
 - 搜索性能优先看首屏相关性和 fallback 行为，不以全文扫描替代 registry/query 契约。
 
@@ -105,6 +123,6 @@ rtk bash ~/codex/scripts/final-ready.sh
 ## 下一步
 
 1. 在 2026-10-16 前按运营节奏安排内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
-2. 每次 review_after 批次处理后运行 `knowledge-check.sh --dry-run --json --diagnostics` 和 `knowledge-status.sh --strict --final-profile mature`。
+2. 每周运行 health summary 与 review_after 30 天窗口；发现 near-due 时先分类为 owner/content/source/tooling，再决定刷新排期、补证、归档或走 owner gate。
 3. release 前运行 mature full final gate，并将实际输出写入交付说明或对应 manifest。
 4. 新增真实 ASAN 非 PCR02 实机验证时，按 `templates/asan-validation-report.md` 生成项目本地验证记录，再回链到本 closeout。

@@ -6241,6 +6241,134 @@ def test_review_queue_apply_tool_contract():
         repo,
     )
 
+def test_summary_backfill_archived_only_contract():
+    repo = copy_repo("summary-backfill")
+    items_path = repo / "registry" / "items.jsonl"
+    target_archived = "knowledge-hub-archived-summary-full-closeout-20260711"
+    target_active = "knowledge-hub-root"
+    target_reviewing = "pcr02-camera-raw-preview-virtual-stream-architecture-20260711"
+    artifact_id = "knowledge-hub-summary-backfill-regression-closeout-20260711"
+    md_path = repo / "artifacts" / "manifests" / f"{artifact_id}.md"
+    jsonl_path = repo / "artifacts" / "manifests" / f"{artifact_id}.jsonl"
+
+    rows = []
+    seen = set()
+    for line in items_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row.get("id") in {target_archived, target_active, target_reviewing}:
+            row.pop("summary_zh", None)
+            seen.add(row.get("id"))
+        rows.append(row)
+    items_path.write_text("\n".join(json.dumps(row, ensure_ascii=False, separators=(",", ":")) for row in rows) + "\n")
+    before_hash = hashlib.sha256(items_path.read_bytes()).hexdigest()
+
+    dry_run = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-summary-backfill.sh",
+            "--as-of",
+            today.isoformat(),
+            "--artifact-id",
+            artifact_id,
+            "--json",
+        ],
+    )
+    after_dry_hash = hashlib.sha256(items_path.read_bytes()).hexdigest()
+    dry_md_exists = md_path.exists()
+    dry_jsonl_exists = jsonl_path.exists()
+    apply_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-summary-backfill.sh",
+            "--apply",
+            "--as-of",
+            today.isoformat(),
+            "--artifact-id",
+            artifact_id,
+            "--json",
+        ],
+    )
+
+    parse_errors = []
+    try:
+        dry_payload = json.loads(dry_run["stdout"])
+    except Exception as exc:
+        dry_payload = {}
+        parse_errors.append(f"dry_run: {exc}")
+    try:
+        apply_payload = json.loads(apply_result["stdout"])
+    except Exception as exc:
+        apply_payload = {}
+        parse_errors.append(f"apply: {exc}")
+
+    items_by_id = {}
+    for line in items_path.read_text().splitlines():
+        if line.strip():
+            row = json.loads(line)
+            items_by_id[row.get("id")] = row
+
+    index_texts = {
+        "by-owner": (repo / "indexes" / "by-owner.md").read_text(),
+        "by-status": (repo / "indexes" / "by-status.md").read_text(),
+        "by-review-date": (repo / "indexes" / "by-review-date.md").read_text(),
+        "by-decision": (repo / "indexes" / "by-decision.md").read_text(),
+    }
+    index_refs_present = all(artifact_id in text for text in index_texts.values())
+    artifact_json = {}
+    try:
+        artifact_json = json.loads(jsonl_path.read_text())
+    except Exception as exc:
+        parse_errors.append(f"artifact_jsonl: {exc}")
+
+    expect(
+        seen == {target_archived, target_active, target_reviewing}
+        and dry_run["exit_code"] == 0
+        and dry_payload.get("mode") == "dry-run"
+        and dry_payload.get("selected_count") == 1
+        and dry_payload.get("updated_ids") == [target_archived]
+        and before_hash == after_dry_hash
+        and not dry_md_exists
+        and not dry_jsonl_exists
+        and apply_result["exit_code"] == 0
+        and apply_payload.get("mode") == "apply"
+        and apply_payload.get("selected_count") == 1
+        and apply_payload.get("updated_ids") == [target_archived]
+        and items_by_id.get(target_archived, {}).get("summary_zh")
+        and not items_by_id.get(target_active, {}).get("summary_zh")
+        and not items_by_id.get(target_reviewing, {}).get("summary_zh")
+        and items_by_id.get(artifact_id, {}).get("status") == "archived"
+        and md_path.exists()
+        and jsonl_path.exists()
+        and artifact_json.get("artifact_id") == artifact_id
+        and artifact_json.get("selected_count") == 1
+        and index_refs_present
+        and not parse_errors,
+        "summary-backfill-archived-only-contract",
+        "summary backfill dry-run is no-write and apply only updates archived missing summaries",
+        {
+            "seen": sorted(seen),
+            "dry_exit_code": dry_run["exit_code"],
+            "apply_exit_code": apply_result["exit_code"],
+            "dry_payload": dry_payload,
+            "apply_payload": apply_payload,
+            "before_hash": before_hash,
+            "after_dry_hash": after_dry_hash,
+            "dry_md_exists": dry_md_exists,
+            "dry_jsonl_exists": dry_jsonl_exists,
+            "active_summary_present": bool(items_by_id.get(target_active, {}).get("summary_zh")),
+            "reviewing_summary_present": bool(items_by_id.get(target_reviewing, {}).get("summary_zh")),
+            "index_refs_present": index_refs_present,
+            "parse_errors": parse_errors,
+        },
+        repo,
+    )
+
 def test_final_proof_artifact_discoverability():
     selector_date = today.isoformat()
     selector_suffix = selector_date.replace("-", "")
@@ -8948,6 +9076,7 @@ def test_regression_manifest_coverage():
         "by-topic-first-screen-readability-contract",
         "review-queue-json-contract",
         "review-queue-apply-tool-contract",
+        "summary-backfill-archived-only-contract",
         "final-proof-artifact-discoverability",
         "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
@@ -9150,6 +9279,7 @@ full_tests = [
     test_by_topic_first_screen_readability_contract,
     test_review_queue_json_contract,
     test_review_queue_apply_tool_contract,
+    test_summary_backfill_archived_only_contract,
     test_final_proof_artifact_discoverability,
     test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,

@@ -8,6 +8,7 @@
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
+- archived: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - archived: `pcr02-diag-command-architecture-final`
 - archived: `pcr02-hdi-api-app-functional-overview`
 - archived: `pcr02-module-catalog`

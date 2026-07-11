@@ -12,9 +12,22 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 ## 低复杂度入口速查
 
+日常维护 5 条短命令：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --owner <owner> --id <id> --path <path>
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<关键词>" --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+```
+
+短命令只做首屏维护和日常巡检；终态验收仍以 `knowledge-final-gate.sh --json` 为准。
+
 | 层级 | 使用场景 | 稳定入口 | 边界 |
 |---|---|---|---|
 | 日常路径 | 人工新增、检索、索引计划和全仓检查 | `knowledge-new.sh`、`knowledge-search.sh`、`knowledge-index-plan.sh`、`knowledge-check.sh --dry-run --json --diagnostics` | 只输出草稿或检查结果，不自动落盘、不伪造 source/owner/evidence |
+| 健康首屏 | 总数、summary 缺口、review queue、stale review、mature blocker 和当前 final gate 摘要 | `knowledge-health-summary.sh --json --as-of 2026-07-11` | 只读；默认会运行 mature final gate quick regression 以给出当前 gate 状态；`--skip-final-gate` 只看 status dashboard |
 | 上下文预检 | 从 cwd 和任务文本解析项目、Hub 入口、候选知识和写入建议 | `knowledge-context.sh --cwd "$PWD" --query "如何分析 core" --task-type debug --context-budget normal --json` | 只读；用于其他项目会话先查 Hub，不读取 raw session 全文；`context.current/recent/related` 和 `why_selected` 只解释候选排序，不代表 active promotion |
 | 人工复核 | 查看、校验和机械落地 AI 生成内容及外部资料待复核队列 | `knowledge-status.sh --json --review-queue-limit 10`、`knowledge-index-plan.sh --section review-queue --json`、`knowledge-index-plan.sh --section review-queue --queue-forms-jsonl`、`knowledge-index-plan.sh --section review-queue --validate-queue-forms <jsonl> --json`、`knowledge-review-queue-apply.sh --forms <jsonl> --dry-run\|--apply --json` | 队列和表单骨架只读；apply 只允许机械落地真实人工填写的 human review 字段，不生成 review 结论、不代签 owner gate、不提升 active、不写 memory、不修改源项目 |
 | owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --owner-inbox`、`--forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
@@ -27,6 +40,7 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
   - 主要输出：JSON 中包含 `source_coverage_selection`、`source_coverage_health`、`source_check_health`、`boundary_health` 和 `--diagnostics` 中文错误分组，便于在 pass 状态下继续审计 latest closeout、source check/no-check 静态契约和 PCR02 Level 2 boundary 内部证据链。
   - 不会做什么：`source_check_health` 不执行 registry check 命令；`boundary_health` 不读取 PCR02 源项目正文；本工具不修复文件、不关闭 owner gate、不写 memory。
 - `knowledge-check.sh`、`knowledge-status.sh` 和 `knowledge-final-gate.sh` 支持 `--as-of YYYY-MM-DD`；未传时可用环境变量 `KNOWLEDGE_TODAY=YYYY-MM-DD` 固定日期，再未设置时才使用系统日期。`--as-of` 用于复现 `review_after` 过期判断和终态证据，不生成 owner decision，不改变 registry。
+- `knowledge-health-summary.sh`: 只读健康首屏入口。它汇总 registry 总数、各状态 `summary_zh` 缺口、review queue pending、stale review_after、owner gate open、mature audit blocker 和当前 final gate 摘要；默认运行 `knowledge-final-gate.sh --json --final-profile mature` 的 quick regression，`--skip-final-gate` 可用于只看 status dashboard。它不写 registry/index/manifest，不生成 owner decision、不提升 active、不关闭 owner gate、不写 memory、不修改源项目。
 - registry item 和 registered source 的 stale `review_after` 只是 warning/status surface，不是阻断错误；日期格式非法和 `updated_at < created_at` 仍是错误。
 - `knowledge-review-after.sh`: 只读复核排期报告入口。它按 `--as-of` 和 `--window-days` 输出 stale / near-due registry item、source 统计和 owner gate open 计数；near-due 只是人工提醒，不作为 blocking gate，不自动修改 `review_after`，不关闭 owner gate。
 - `knowledge-source-check.sh`: 只读 source availability 报告入口。首版只支持 `--scope pcr02-level2`，只执行 allowlist 中 `rtk test -d/-f ...` 或 `rtk bash -lc 'test -d/-f ...'` 的路径存在性检查；相对路径必须留在 Hub 根目录下。它不读取 PCR02 source 正文，不运行项目脚本，不改变 `knowledge-check` 的 `source_check_health.mode=static-registry-only` 和 `executed=false` 语义。

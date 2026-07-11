@@ -2,6 +2,7 @@
 
 ## leiwenjun
 
+- `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - `knowledge-hub-archived-summary-full-closeout-20260711`
 - `knowledge-hub-root`
 - `embedded-asan-active-promotion-20260629`

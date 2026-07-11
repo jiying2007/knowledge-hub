@@ -10,13 +10,17 @@ Knowledge Hub = Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高�
 
 ## 日常入口
 
-普通维护只需要三类动作：
+普通维护优先使用 5 条短命令：
 
 ```bash
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --owner <owner> --id <id> --path <path>
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<关键词>" --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
+
+这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；正式收口仍以 `knowledge-final-gate.sh` 为 terminal gate。
 
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
@@ -44,6 +48,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope runtime-rules --s
 状态和收口再使用：
 
 ```bash
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json

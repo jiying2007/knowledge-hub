@@ -305,3 +305,4 @@
 - 2026-10-11: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - 2026-10-11: `knowledge-hub-summary-gap-governance-20260711`
 - 2026-10-11: `knowledge-hub-archived-summary-full-closeout-20260711`
+- 2026-10-11: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
