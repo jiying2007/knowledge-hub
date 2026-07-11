@@ -177,6 +177,6 @@ Recommended query terms for future retrieval:
 - Archive path: `projects/pcr02/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_hardware_pdf_reference_index_20260711.md`.
 - Sanitization: no secrets, credentials, raw binary bodies, or complete PDF reproduction; only extracted engineering facts and source hashes.
 - Provenance: local PDF metadata and SHA256; text extracted with `pdftotext`; page imagery checked with `pdftoppm`.
-- Verification: `rtk pdfinfo`, `rtk sha256sum`, `rtk pdftotext -layout`, `rtk pdftoppm`; Hub consistency check still required after registry entry.
+- Verification: `rtk pdfinfo`, `rtk sha256sum`, `rtk pdftotext -layout`, targeted PDF text cross-checks for wake/power/SDIO/rail/schematic-page signals, `rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 EVT2 MCU SoC 协同" --json`, `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`, and `rtk git -C ~/knowledge-hub diff --check`.
 - Memory candidate: no direct memory write; this note should be retrieved from Knowledge Hub.
-- Gate result: needs Hub registry entry and `knowledge-check` before final closeout.
+- Gate result: pass for archive registration and Hub consistency as of 2026-07-11; board-level validation remains out of scope.

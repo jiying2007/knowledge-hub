@@ -11,6 +11,7 @@
 - reviewing: `pcr02-evt2-hardware-pdf-reference-index-20260711`
 - reviewing: `pcr02-evt2-mcu-soc-contract-index-20260711`
 - archived: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
+- archived: `knowledge-hub-long-term-operations-plan-20260711`
 - archived: `pcr02-diag-command-architecture-final`
 - archived: `pcr02-hdi-api-app-functional-overview`
 - archived: `pcr02-module-catalog`

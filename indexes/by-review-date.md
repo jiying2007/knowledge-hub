@@ -311,3 +311,4 @@
 - 2026-10-11: `knowledge-hub-archived-summary-full-closeout-20260711`
 - 2026-10-11: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - 2026-10-11: `knowledge-hub-operational-tooling-hardening-20260711`
+- 2026-10-11: `knowledge-hub-long-term-operations-plan-20260711`

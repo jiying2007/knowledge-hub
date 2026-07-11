@@ -300,6 +300,6 @@ Recommended query terms:
 - Archive path: `projects/pcr02/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_mcu_soc_contract_index_20260711.md`.
 - Sanitization: no secrets, credentials, full logs, vendor binary bodies, or full source reproduction; only extracted engineering facts and code constants.
 - Provenance: source docs and code read locally through `rtk`; DOCX text extracted from local document XML for targeted fields.
-- Verification: Hub registry and consistency checks required after this file is registered.
+- Verification: targeted recheck against GD32L235 IO DOCX, motor serial DOCX, `protocol.h`, `protocol.c`, `system_handler.c`, `ota_handler.c`, `Common/iap_shared.h`, GD32L235/MM32SPIN023C AGENTS and release metadata; `rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 EVT2 MCU SoC 协同" --json`, `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`, and `rtk git -C ~/knowledge-hub diff --check`.
 - Memory candidate: no direct memory write; retrieve this note from Knowledge Hub.
-- Gate result: needs registry entry, index updates, `knowledge-search`, and `knowledge-check` before final closeout.
+- Gate result: pass for archive registration and Hub consistency as of 2026-07-11; board/runtime/build/release validation remains out of scope.

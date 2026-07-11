@@ -10,6 +10,8 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 
 同日继续补齐长期运营工具：registry 增至 311 条，新增 ST77912/PCR02 EVT2 硬件与 MCU/SoC contract reviewing 候选，`active=16`、`archived=276`、`reviewing=19`，`reviewing` 比例约 6.11%，仍低于 mature 阈值。新增 `knowledge-orphan-files.sh`、`knowledge-reviewing-triage.sh`、`knowledge-regression-trend.sh`，并把 changed-only orphan 与 reviewing triage 接入 health summary；这些工具只读/report-only，不改变 owner、active、memory 或源项目状态。
 
+随后将长期运营优化计划固化为 `knowledge-hub-long-term-operations-plan-20260711`，registry 增至 312 条，`active=16`、`archived=277`、`reviewing=19`，`reviewing` 比例约 6.09%。该计划固定 daily/weekly/monthly/release 节奏、reviewing 处置规则、full regression 趋势摘要和远端发布授权边界；仍不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目。
+
 ## 当前基线
 
 | 指标 | 当前值 | 说明 |
@@ -28,14 +30,14 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 
 | 指标 | 当前值 | 说明 |
 |---|---:|---|
-| registry item | 311 | 2026-07-11 运营工具增强和 PCR02 reviewing 候选登记后的 registry 总数 |
+| registry item | 312 | 2026-07-11 运营工具增强、PCR02 reviewing 候选和长期运营计划登记后的 registry 总数 |
 | active item | 16 | `summary_zh` 缺口为 0 |
-| archived item | 276 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening 和运营工具增强账本已登记，缺口为 0 |
-| reviewing item | 19 | 比例约 6.11%，低于 mature 阈值；只进入周度 triage |
+| archived item | 277 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening、运营工具增强和长期运营计划账本已登记，缺口为 0 |
+| reviewing item | 19 | 比例约 6.09%，低于 mature 阈值；只进入周度 triage |
 | review queue pending | 0 | 普通 AI/external review queue 已清零 |
 | stale review_after | 0 | item/source stale 均为 0 |
 | mature blocker | 0 | mature audit `status=pass` |
-| full regression baseline | 136+ 个回归场景 | 新增运营工具回归后，以 `knowledge-regression-trend.sh` 和 `slowest_results` 做性能趋势记录 |
+| full regression baseline | 140 个回归结果场景 | 新增运营工具回归后，以 `knowledge-regression-trend.sh` 和 `slowest_results` 做性能趋势记录 |
 
 ## 终态成熟条件
 
