@@ -4,7 +4,7 @@
 
 新增 `tools/knowledge-regression.sh` 作为轻量回归入口。它只复制当前仓库到 `/tmp`，只修改临时副本，并验证关键治理门禁不会退化。2026-06-20 起，每个临时 fixture 默认逐场景清理；低空间或内部异常会记录为结构化 failure result，并在 `--json` / final gate 路径输出 JSON，避免 final gate 只能看到空输出或残留临时目录。
 
-当前 clean-slate 版本覆盖 136 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
+当前 clean-slate 版本覆盖 140 个回归场景；已删除 source canonicalization 兼容路径、migration ledger 和 provenance record 模板相关测试。
 
 ## 覆盖范围
 
@@ -95,6 +95,10 @@
 | review-queue-json-contract | 当前 status 和 index-plan 暴露 AI/外部资料人工复核队列 | `knowledge-status.sh --json` 与 `knowledge-index-plan.sh --section review-queue --json` 的队列计数一致，队列为 read-only/report-only，不写 memory、不关闭 owner gate、不自动 active |
 | review-queue-apply-tool-contract | review queue 人工表单应用入口 | `knowledge-review-queue-apply.sh` 只机械落地已校验人工字段，拒绝 owner gate 字段；`needs-edits` 仍保留 max-body blocker |
 | summary-backfill-archived-only-contract | archived 摘要回填专项 fixture | `knowledge-summary-backfill.sh` dry-run 不写 registry 或 manifest；`--apply` 只补 archived missing `summary_zh`，不触碰 active/reviewing missing，且生成 closeout manifest 并同步 owner/status/review-date/decision 核心索引 |
+| orphan-files-advisory-contract | orphan 文件检查工具契约 | `knowledge-orphan-files.sh --all` 必须报告未登记 Markdown；`--strict` 在存在 missing registry 时返回非零，避免新增正文孤岛 |
+| reviewing-triage-json-contract | reviewing 周期 triage 工具契约 | `knowledge-reviewing-triage.sh` 必须输出 read-only/report-only、bucket、recommended_action 和 must-not 边界，不生成 owner decision 或 active promotion |
+| regression-trend-from-json-contract | 回归趋势摘要工具契约 | `knowledge-regression-trend.sh --from-json` 必须从既有 regression JSON 生成 compact trend，不重跑 full，不保存大段 raw JSON |
+| health-summary-operational-fields | 健康首屏运营字段契约 | `knowledge-health-summary.sh --skip-final-gate` 必须暴露 changed orphan 和 reviewing triage 字段，保持只读 |
 | index-plan-extended-sections | 当前索引规划器覆盖核心索引维护面 | `knowledge-index-plan.sh --section project/source/topic/decision/manifest/linking/review-queue --json` 均输出 read-only planned 结果，并包含 `by_project`、`by_source`、`by_topic`、`by_decision`、`by_manifest`、`linking_audit` 和 `by_review_queue` 派生视图；source 视图带 owner/review_after/final_disposition/check/no_check_reason 和 coverage decision/risk，owner worksheet 视图带 owner/status/review_after/真实 `owner_decision:*` 状态，manifest 视图带 Markdown/JSONL 配对、行数、证据计数、filename-date-only latest 策略、排除 `.local.jsonl` 草稿和 unpaired `expected` / `needs_review` 只读分类，review queue 视图必须保持 read-only/report-only 且不能产生 active/promotion blocker |
 | manifest-latest-filename-date-only | 临时副本新增两个 row 日期与文件名日期相反的 manifest | `knowledge-index-plan.sh --section manifest --json` 必须只按文件名 `YYYYMMDD` 排 latest，row 内日期只作为 `row_date`，避免旧文件凭 checked_at 抢占最新恢复依据 |
 | manifest-jsonl-profile-gate | 临时副本移除 2026-06-21 及之后 governance manifest JSONL 的中文摘要和证据字段 | `knowledge-check` 必须失败，避免新增治理 manifest 只留下难读或无证据的 JSONL 行 |
@@ -156,6 +160,8 @@
 - 作为提交前可选回归入口，覆盖最容易造成终态漂移的 owner/status 门禁。
 
 ## Evidence Index
+
+说明：下方 Evidence Index 保留日期化历史捕获口径；当前 live 回归数量以本文件顶部结论和覆盖范围表为准，为 140 个回归场景。
 
 | Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
 |---|---:|---|---|---|---|

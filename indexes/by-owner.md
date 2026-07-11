@@ -12,6 +12,10 @@
 - `knowledge-hub-ultimate-maintenance-plan`
 - `knowledge-hub-summary-gap-governance-20260711`
 - `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
+- `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`
+- `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`
+- `pcr02-evt2-hardware-pdf-reference-index-20260711`
+- `pcr02-evt2-mcu-soc-contract-index-20260711`
 - `pcr02-review-required-resolution-20260617`
 - `pcr02-owner-review-package-20260618`
 - `pcr02-owner-review-follow-up-20260618`
@@ -314,3 +318,4 @@
 - `codex-archive-final-body-coverage-20260711`
 - `codex-archive-removal-execution-20260711-final-bodies`
 - `codex-archive-corpus-deletion-readiness-20260711`
+- `knowledge-hub-operational-tooling-hardening-20260711`

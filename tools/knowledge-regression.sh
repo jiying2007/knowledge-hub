@@ -6369,6 +6369,207 @@ def test_summary_backfill_archived_only_contract():
         repo,
     )
 
+def test_orphan_files_advisory_contract():
+    repo = copy_repo("orphan-files")
+    orphan_rel = "projects/pcr02/archive/debug/orphan-regression-fixture.md"
+    orphan_path = repo / orphan_rel
+    orphan_path.parent.mkdir(parents=True, exist_ok=True)
+    orphan_path.write_text("# Orphan regression fixture\n\nThis file intentionally has no registry item.\n")
+
+    advisory = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-orphan-files.sh",
+            "--all",
+            "--json",
+            "--limit",
+            "500",
+        ],
+    )
+    strict = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-orphan-files.sh",
+            "--all",
+            "--strict",
+            "--json",
+            "--limit",
+            "500",
+        ],
+    )
+    parse_errors = []
+    try:
+        advisory_payload = json.loads(advisory["stdout"])
+    except Exception as exc:
+        advisory_payload = {}
+        parse_errors.append(f"advisory: {exc}")
+    try:
+        strict_payload = json.loads(strict["stdout"])
+    except Exception as exc:
+        strict_payload = {}
+        parse_errors.append(f"strict: {exc}")
+
+    expect(
+        advisory["exit_code"] == 0
+        and strict["exit_code"] == 1
+        and advisory_payload.get("mode") == "all"
+        and advisory_payload.get("status") == "needs-fix"
+        and orphan_rel in advisory_payload.get("missing_registry", [])
+        and strict_payload.get("strict") is True
+        and orphan_rel in strict_payload.get("missing_registry", [])
+        and not parse_errors,
+        "orphan-files-advisory-contract",
+        "orphan file helper reports unregistered Markdown and strict mode exits non-zero",
+        {
+            "advisory_exit_code": advisory["exit_code"],
+            "strict_exit_code": strict["exit_code"],
+            "advisory_payload": advisory_payload,
+            "strict_payload": strict_payload,
+            "parse_errors": parse_errors,
+        },
+        repo,
+    )
+
+def test_reviewing_triage_json_contract():
+    command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-reviewing-triage.sh",
+        "--json",
+        "--as-of",
+        today.isoformat(),
+    ]
+    result = run_cmd(root, command)
+    parse_error = ""
+    try:
+        payload = json.loads(result["stdout"])
+    except Exception as exc:
+        payload = {}
+        parse_error = str(exc)
+    expect(
+        result["exit_code"] == 0
+        and payload.get("read_only") is True
+        and payload.get("report_only") is True
+        and payload.get("reviewing_count", 0) >= 1
+        and isinstance(payload.get("by_bucket"), dict)
+        and isinstance(payload.get("by_recommended_action"), dict)
+        and "不提升 active" in payload.get("must_not", [])
+        and not parse_error,
+        "reviewing-triage-json-contract",
+        "reviewing triage helper emits read-only grouped queue without owner mutations",
+        {
+            "exit_code": result["exit_code"],
+            "reviewing_count": payload.get("reviewing_count"),
+            "by_bucket": payload.get("by_bucket"),
+            "by_recommended_action": payload.get("by_recommended_action"),
+            "parse_error": parse_error,
+        },
+    )
+
+def test_regression_trend_from_json_contract():
+    repo = copy_repo("regression-trend")
+    fixture_rel = "artifacts/manifests/regression-trend-fixture.json"
+    fixture_path = repo / fixture_rel
+    fixture_payload = {
+        "status": "pass",
+        "suite": "full",
+        "selected_test_count": 2,
+        "full_test_count": 2,
+        "result_count": 2,
+        "full_result_count": 2,
+        "slowest_results": [
+            {
+                "id": "slow-fixture",
+                "test_fn": "test_slow_fixture",
+                "duration_sec": 1.23,
+                "status": "pass",
+            }
+        ],
+        "results": [
+            {"id": "fast-fixture", "status": "pass"},
+            {"id": "slow-fixture", "status": "pass"},
+        ],
+    }
+    fixture_path.write_text(json.dumps(fixture_payload, ensure_ascii=False, indent=2))
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-regression-trend.sh",
+            "--from-json",
+            fixture_rel,
+            "--json",
+        ],
+    )
+    parse_error = ""
+    try:
+        payload = json.loads(result["stdout"])
+    except Exception as exc:
+        payload = {}
+        parse_error = str(exc)
+    expect(
+        result["exit_code"] == 0
+        and payload.get("read_only") is True
+        and payload.get("regression_status") == "pass"
+        and payload.get("selected_test_count") == 2
+        and payload.get("result_count") == 2
+        and payload.get("failed_count") == 0
+        and payload.get("slowest_results", [{}])[0].get("id") == "slow-fixture"
+        and not parse_error,
+        "regression-trend-from-json-contract",
+        "regression trend helper compacts existing regression JSON without rerunning full suite",
+        {
+            "exit_code": result["exit_code"],
+            "payload": payload,
+            "parse_error": parse_error,
+        },
+        repo,
+    )
+
+def test_health_summary_operational_fields():
+    command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-health-summary.sh",
+        "--json",
+        "--as-of",
+        today.isoformat(),
+        "--skip-final-gate",
+    ]
+    result = run_cmd(root, command)
+    parse_error = ""
+    try:
+        payload = json.loads(result["stdout"])
+    except Exception as exc:
+        payload = {}
+        parse_error = str(exc)
+    orphan = payload.get("changed_orphan_files", {})
+    triage = payload.get("reviewing_triage", {})
+    expect(
+        result["exit_code"] == 0
+        and payload.get("read_only") is True
+        and payload.get("health_status") in {"ok", "needs-fix"}
+        and orphan.get("parse_error", "") == ""
+        and "missing_registry_count" in orphan
+        and triage.get("parse_error", "") == ""
+        and "reviewing_count" in triage
+        and not parse_error,
+        "health-summary-operational-fields",
+        "health summary exposes changed-only orphan and reviewing triage fields",
+        {
+            "exit_code": result["exit_code"],
+            "health_status": payload.get("health_status"),
+            "changed_orphan_files": orphan,
+            "reviewing_triage": triage,
+            "parse_error": parse_error,
+        },
+    )
+
 def test_final_proof_artifact_discoverability():
     selector_date = today.isoformat()
     selector_suffix = selector_date.replace("-", "")
@@ -9077,6 +9278,10 @@ def test_regression_manifest_coverage():
         "review-queue-json-contract",
         "review-queue-apply-tool-contract",
         "summary-backfill-archived-only-contract",
+        "orphan-files-advisory-contract",
+        "reviewing-triage-json-contract",
+        "regression-trend-from-json-contract",
+        "health-summary-operational-fields",
         "final-proof-artifact-discoverability",
         "final-proof-decision-index-recovery-contract",
         "final-proof-artifact-as-of-date-selector",
@@ -9280,6 +9485,10 @@ full_tests = [
     test_review_queue_json_contract,
     test_review_queue_apply_tool_contract,
     test_summary_backfill_archived_only_contract,
+    test_orphan_files_advisory_contract,
+    test_reviewing_triage_json_contract,
+    test_regression_trend_from_json_contract,
+    test_health_summary_operational_fields,
     test_final_proof_artifact_discoverability,
     test_final_proof_decision_index_recovery_contract,
     test_final_proof_artifact_as_of_date_selector,
@@ -9338,6 +9547,10 @@ quick_test_names = {
     "test_owner_target_existence_gate",
     "test_owner_target_materialization_read_only_no_source_dependency",
     "test_review_queue_json_contract",
+    "test_orphan_files_advisory_contract",
+    "test_reviewing_triage_json_contract",
+    "test_regression_trend_from_json_contract",
+    "test_health_summary_operational_fields",
     "test_source_check_health_contract",
     "test_knowledge_search_structured_filters",
     "test_knowledge_search_invalid_filters",

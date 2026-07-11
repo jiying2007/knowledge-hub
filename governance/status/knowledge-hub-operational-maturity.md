@@ -8,6 +8,8 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 
 2026-07-11 已完成 mature closeout 增量治理：registry 增至 306 条，`active=16`、`archived=275`、`reviewing=15`，三类状态 `summary_zh` 缺口均为 0；普通 AI/external review queue pending 为 0，stale `review_after` 为 0，mature audit blocker 为 0。`reviewing` 比例约 4.90%，低于 mature profile 的 10% 阈值；后续按周度 triage 运营，不由 Codex 自动 archive、active promotion 或 owner decision 代签。
 
+同日继续补齐长期运营工具：registry 增至 311 条，新增 ST77912/PCR02 EVT2 硬件与 MCU/SoC contract reviewing 候选，`active=16`、`archived=276`、`reviewing=19`，`reviewing` 比例约 6.11%，仍低于 mature 阈值。新增 `knowledge-orphan-files.sh`、`knowledge-reviewing-triage.sh`、`knowledge-regression-trend.sh`，并把 changed-only orphan 与 reviewing triage 接入 health summary；这些工具只读/report-only，不改变 owner、active、memory 或源项目状态。
+
 ## 当前基线
 
 | 指标 | 当前值 | 说明 |
@@ -26,14 +28,14 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 
 | 指标 | 当前值 | 说明 |
 |---|---:|---|
-| registry item | 306 | 2026-07-11 P1/P2 hardening 登记后的 registry 总数 |
+| registry item | 311 | 2026-07-11 运营工具增强和 PCR02 reviewing 候选登记后的 registry 总数 |
 | active item | 16 | `summary_zh` 缺口为 0 |
-| archived item | 275 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening 账本已登记，缺口为 0 |
-| reviewing item | 15 | 比例约 4.90%，低于 mature 阈值；只进入周度 triage |
+| archived item | 276 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening 和运营工具增强账本已登记，缺口为 0 |
+| reviewing item | 19 | 比例约 6.11%，低于 mature 阈值；只进入周度 triage |
 | review queue pending | 0 | 普通 AI/external review queue 已清零 |
 | stale review_after | 0 | item/source stale 均为 0 |
 | mature blocker | 0 | mature audit `status=pass` |
-| full regression baseline | 136 个回归场景 | 新增 summary backfill archived-only contract 后，以 `slowest_results` 做性能趋势记录 |
+| full regression baseline | 136+ 个回归场景 | 新增运营工具回归后，以 `knowledge-regression-trend.sh` 和 `slowest_results` 做性能趋势记录 |
 
 ## 终态成熟条件
 
@@ -52,6 +54,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-0
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --as-of 2026-07-11
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json
 ```
 
 ### Weekly
@@ -59,6 +62,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --wi
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11 --skip-final-gate
 rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json --as-of 2026-07-11
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Knowledge Hub mature" --json --limit 8
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "成熟态" --json --limit 8
@@ -71,7 +75,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 归档路径" --json -
 ```bash
 rtk git status --short
 rtk git diff --check
+rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json --strict
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-11 --json
 rtk bash ~/codex/scripts/final-ready.sh
 ```
 
@@ -100,7 +106,7 @@ rtk bash ~/codex/scripts/final-ready.sh
 
 - 日常使用 `knowledge-status.sh`、`knowledge-check.sh`、`knowledge-search.sh` 和 `knowledge-context.sh`。
 - `knowledge-final-gate.sh --full-regression` 只作为 release 级或高风险脚本改动后的重门禁。
-- 每次 high-risk tool/regression 改动后，将 full regression 的 `selected_test_count`、`result_count`、`slowest_results[0:10]` 和总耗时摘要写入相邻 manifest 或交付说明；不保存大段 raw JSON。
+- 每次 high-risk tool/regression 改动后，用 `knowledge-regression-trend.sh` 将 full regression 的 `selected_test_count`、`result_count`、`slowest_results[0:10]` 和失败 ID 压缩进相邻 manifest 或交付说明；不保存大段 raw JSON。
 - 若 full final gate 超过 3 分钟，先记录 `slowest_results`、命令环境和当次变更范围，再决定是否优化工具或拆分回归。
 - 搜索性能优先看首屏相关性和 fallback 行为，不以全文扫描替代 registry/query 契约。
 

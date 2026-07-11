@@ -8,6 +8,8 @@
 
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
+- reviewing: `pcr02-evt2-hardware-pdf-reference-index-20260711`
+- reviewing: `pcr02-evt2-mcu-soc-contract-index-20260711`
 - archived: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - archived: `pcr02-diag-command-architecture-final`
 - archived: `pcr02-hdi-api-app-functional-overview`
@@ -441,6 +443,8 @@
 - reviewing: `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - reviewing: `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
 - reviewing: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
+- reviewing: `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`
+- reviewing: `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`
 - reviewing: `pcr02-prog-pcr02-high-load-third-capture-20260702`
 - reviewing: `pcr02-prog-pcr02-high-load-debug-runbook-20260702`
 - reviewing: `pcr02-prog-pcr02-source-hot-thread-capture-20260702`
@@ -492,3 +496,4 @@
 - archived: `codex-archive-removal-execution-20260711-final-bodies`
 - archived: `codex-archive-corpus-deletion-readiness-20260711`
 - archived: `knowledge-hub-archived-summary-full-closeout-20260711`
+- archived: `knowledge-hub-operational-tooling-hardening-20260711`

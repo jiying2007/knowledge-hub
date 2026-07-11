@@ -1,5 +1,7 @@
 # By Review Date
 
+- 2026-10-11: `pcr02-evt2-hardware-pdf-reference-index-20260711`
+- 2026-10-11: `pcr02-evt2-mcu-soc-contract-index-20260711`
 - 2026-10-16: `pcr02-diag-command-architecture-final`
 - 2026-10-16: `pcr02-hdi-api-app-functional-overview`
 - 2026-10-16: `pcr02-module-catalog`
@@ -303,6 +305,9 @@
 - 2026-10-11: `pcr02-irlight-player-wifi-debug-summary-20260708`
 - 2026-10-11: `mcu-release-nas-guard-governance-20260629`
 - 2026-10-11: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
+- 2026-10-11: `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`
+- 2026-10-11: `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`
 - 2026-10-11: `knowledge-hub-summary-gap-governance-20260711`
 - 2026-10-11: `knowledge-hub-archived-summary-full-closeout-20260711`
 - 2026-10-11: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
+- 2026-10-11: `knowledge-hub-operational-tooling-hardening-20260711`

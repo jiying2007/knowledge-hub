@@ -141,10 +141,34 @@ source_summary = status_payload.get("sources", {})
 mature_audit = source_summary.get("mature_audit", {})
 owner_gates = status_payload.get("owner_gates", {})
 
+orphan_result = run_cmd(
+    [
+        "rtk",
+        "bash",
+        "tools/knowledge-orphan-files.sh",
+        "--json",
+    ]
+)
+orphan_payload = orphan_result["parsed"] if isinstance(orphan_result["parsed"], dict) else {}
+
+triage_result = run_cmd(
+    [
+        "rtk",
+        "bash",
+        "tools/knowledge-reviewing-triage.sh",
+        "--json",
+        "--as-of",
+        args.as_of,
+    ]
+)
+triage_payload = triage_result["parsed"] if isinstance(triage_result["parsed"], dict) else {}
+
 health_status = "ok"
 if status_result["exit_code"] != 0 or status_result["parse_error"]:
     health_status = "needs-fix"
 elif registry["summary_gap_total"]:
+    health_status = "needs-fix"
+elif orphan_payload.get("missing_registry_count", 0):
     health_status = "needs-fix"
 elif not args.skip_final_gate and final_gate.get("final_status") != "ok":
     health_status = "needs-fix"
@@ -167,6 +191,24 @@ output = {
         "stale_item_count": status_payload.get("registry", {}).get("stale_review_after_count", 0),
         "stale_source_count": source_summary.get("stale_review_after_count", 0),
         "near_due_command": status_payload.get("registry", {}).get("review_after_near_due_command", ""),
+    },
+    "changed_orphan_files": {
+        "command": orphan_result["command"],
+        "exit_code": orphan_result["exit_code"],
+        "status": orphan_payload.get("status", "unparseable"),
+        "checked_count": orphan_payload.get("checked_count", 0),
+        "missing_registry_count": orphan_payload.get("missing_registry_count", 0),
+        "missing_registry": orphan_payload.get("missing_registry", []),
+        "parse_error": orphan_result["parse_error"],
+    },
+    "reviewing_triage": {
+        "command": triage_result["command"],
+        "exit_code": triage_result["exit_code"],
+        "reviewing_count": triage_payload.get("reviewing_count", 0),
+        "near_due_count": triage_payload.get("near_due_count", 0),
+        "by_bucket": triage_payload.get("by_bucket", {}),
+        "by_recommended_action": triage_payload.get("by_recommended_action", {}),
+        "parse_error": triage_result["parse_error"],
     },
     "owner_gates": {
         "open_count": owner_gates.get("open_count", 0),
@@ -209,6 +251,17 @@ else:
         "- stale_review_after: "
         f"items={output['review_after']['stale_item_count']} "
         f"sources={output['review_after']['stale_source_count']}"
+    )
+    print(
+        "- changed_orphan_files: "
+        f"missing_registry={output['changed_orphan_files']['missing_registry_count']} "
+        f"checked={output['changed_orphan_files']['checked_count']}"
+    )
+    print(
+        "- reviewing_triage: "
+        f"count={output['reviewing_triage']['reviewing_count']} "
+        f"near_due={output['reviewing_triage']['near_due_count']} "
+        f"buckets={output['reviewing_triage']['by_bucket']}"
     )
     print(
         "- mature: "

@@ -21,6 +21,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；正式收口仍以 `knowledge-final-gate.sh` 为 terminal gate。
+`knowledge-health-summary.sh` 会聚合 changed-only orphan 文件检查和 reviewing triage；新增或修改长期正文后，如需单独确认可运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`。
 
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
@@ -71,6 +72,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 `mature` profile 在 `max-body` 基础上进一步阻断迁移态残留：`migrated-*` 条目、copy-first / migration 过程 manifest、copy-first 工具入口、已关闭迁移 source 留在当前 source 主列表，以及长期滞留的高比例 `reviewing`。成熟态只允许保留不可误用的封存审计摘要；封存材料不得参与默认 search、context 或 routing。
 `--full-regression` 是终态证明和高风险脚本改动后的重门禁；日常查询和普通维护优先使用 search/context/check/status。
+高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-11 --json` 生成 compact 趋势摘要，避免把 full regression 大段 JSON 写进交付说明。
 
 长期运营成熟态入口见 `governance/status/knowledge-hub-operational-maturity.md`。该状态页把日常、周度和 release gate 命令、搜索验收、review_after 运营节奏和剩余风险固定为可审查产物；2026-07 近期待复核批次已在 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 中按运营周期刷新到 2026-10，完整交付闭环见 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。该闭环只收口 Hub 内治理 review 和运营尾巴，不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目、不伪造外部实机证据。
 
