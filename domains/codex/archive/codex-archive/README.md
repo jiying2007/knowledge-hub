@@ -1,69 +1,31 @@
-# Knowledge Archive
+# 旧 Codex Archive 封存索引
 
-`docs/archive/` 保存长期可复用、已脱敏、可追溯的知识材料，不保存 Codex 原始运行态。
+本目录是旧 `~/codex/docs/archive` 迁移后的封存索引区。旧正文、同名 `.meta.json` 和旧 `_registry/` 已不再作为 Knowledge Hub 的正文层或新增入口；保留的 topic `index.md` 只用于 tombstone / provenance 导航，帮助追溯旧文件被删除、迁移、覆盖或保留的原因。
 
-## 结构
+## 当前权威入口
 
-```text
-docs/archive/
-  _registry/
-    projects.json
-    workstreams.jsonl
-    sessions.jsonl
-    topics.json
-    schema.md
-  <topic>/
-    index.md
-    <archive>.md
-    <archive>.md.meta.json
-```
+新增或复核 Codex 治理、会话总结、工作流、归档审计和长期经验时，不再写入本目录。按内容类型进入当前 canonical 位置：
 
-目录仍按 topic 分组；项目、会话、工作流、状态等身份信息写入 registry 与 meta v2，避免多项目并行时按目录形成知识孤岛。
+- Codex 治理和工作流：`domains/codex/`
+- 高风险迁移、删除、覆盖和审计证据：`artifacts/manifests/`
+- 项目事实和项目历史：`projects/<project>/current/`、`projects/<project>/archive/`、`projects/<project>/decisions/`
+- 团队级嵌入式 runbook / 方法论：`domains/embedded/`
+- 普通个人或临时笔记：`notes/`
 
-归档入口：
+## 保留内容
 
-```bash
-rtk bash scripts/archive-note.sh /path/to/note.md \
-  --topic session-wrap \
-  --project pcr02-ssc305 \
-  --workstream build-hardcut \
-  --session 20260518-223733-pcr02-ssc305-build-hardcut \
-  --status closed \
-  --memory-action archive-only \
-  --tag build
-```
+- topic `index.md`：记录旧文件名、tombstone、迁移目标或删除执行 manifest。
+- `codex-archive.ref.md`：记录旧 archive 的 source / provenance 边界。
+- 删除和迁移证据：以 `artifacts/manifests/codex-archive-*` 为准。
 
-查询入口：
+本目录不再保存旧正文，不再要求 `.meta.json`，也不再使用旧 `schema_version=2` archive meta 作为当前 registry。旧来源路径只作 provenance，不作为 active source、默认查询入口或新增归档目标。
+
+## 查询和门禁
 
 ```bash
-rtk bash scripts/archive-search.sh "构建" --project pcr02-ssc305 --json
-rtk bash scripts/archive-search.sh "" --open-only --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Codex archive"
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression
 ```
 
-门禁入口：
-
-```bash
-rtk bash scripts/archive-check.sh
-```
-
-约定：
-
-- 先脱敏，再归档。
-- 默认复制，只有明确迁移时使用 `--move`。
-- 每个 topic 目录维护 `index.md`；每条归档材料必须有同名 `.meta.json`，且使用 `schema_version=2`。
-- 归档正文必须位于 `docs/archive/<topic>/` 一层，不再按项目、知识类型或工具名继续嵌套子目录。
-- 归档文件名使用 `YYYYMMDD-HHMMSS-slug.md`；不允许 date-only 文件名，slug 不得再次包含 `YYYY-MM-DD`、`YYYYMMDD` 或重复时间前缀。
-- meta 中的 `destination` 与 `metadata` 使用仓库相对路径，`archive_id` 必须等于正文文件 stem。
-- Topic index 的标题只描述 topic，不得被单条归档材料标题覆盖。
-- 不归档原始 secrets、auth、`.codex/sessions`、logs、cache、tmp 和本机私有运行态。
-- 允许归档脱敏后的 `session-wrap`、日报、调研结论、排障总结和治理报告。
-- 项目专属材料必须在 meta 中标记 `scope=project-specific` 与 `project_id`，且 `project_id` 必须存在于 `_registry/projects.json`。
-- 未显式传 `--project` 时，`archive-note` 会按 `--source-repo`、source path、当前 cwd 的顺序匹配 project registry；嵌套路径采用最近匹配原则。
-- `status=open` 必须有 `owner` 与 `next_action`，用于恢复会话和继续推进。
-- 近重复历史材料先标记 `governance_status=superseded` 与 `superseded_by`；删除或迁移必须另行显式确认。
-
-## 记忆边界
-
-- `docs/archive/` 保存脱敏长期材料。
-- `~/.codex/memories` 只保存人工确认后的短小稳定记忆。
-- `memory_action=archive-only` 是默认值；只有经过审查的材料才能标记为 `candidate`、`promote-to-agents` 或 `write-to-memory`。
+旧正文删除、迁移目标调整或 tombstone 更新必须保留授权、hash、rollback 和验证命令；不得因为本目录存在 topic index 就把旧 archive 视为仍可写入的知识库正文层。

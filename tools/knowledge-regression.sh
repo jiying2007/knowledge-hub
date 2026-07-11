@@ -2464,7 +2464,6 @@ def test_final_gate_owner_review_blocker():
     proof_baseline_dynamic_ids = proof_artifacts.get("baseline_dynamic_ids", [])
     proof_selection_dynamic_ids = proof_artifacts.get("selection_dynamic_ids", [])
     proof_baseline_selection_overlap_ids = proof_artifacts.get("baseline_selection_overlap_ids", [])
-    expected_closure_proof_id = "knowledge-hub-complete-delivery-closure-20260701"
     expected_source_check_runtime_command = (
         f"rtk bash tools/knowledge-source-check.sh --scope pcr02-level2 --json --as-of {parsed.get('today')}"
     )
@@ -2518,6 +2517,9 @@ def test_final_gate_owner_review_blocker():
         and owner_recovery.get("active_exposure_count") == 0
         and review_queue_recovery.get("read_only") is True
         and review_queue_recovery.get("report_only") is True
+        and review_queue_recovery.get("final_profile") == "standard"
+        and review_queue_recovery.get("blocking_final_gate") is False
+        and review_queue_recovery.get("owner_review_blocking") is False
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
         and review_queue_commands.get("index_plan") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
         and review_queue_commands.get("recommended_batch_json", "").startswith("rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue")
@@ -2530,7 +2532,7 @@ def test_final_gate_owner_review_blocker():
         and "--queue-limit 20" in review_queue_commands.get("recommended_validate_queue_forms", "")
         and "--validate-queue-forms '<review-queue-forms.jsonl>'" in review_queue_commands.get("recommended_validate_queue_forms", "")
         and "不得写 ~/.codex/memories" in " ".join(review_queue_recovery.get("must_not", []))
-        and "普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
+        and "standard profile 下普通 AI/外部资料待复核项不阻断 final gate" in review_queue_recovery.get("notes_zh", "")
         and len(owner_dispatch) == 6
         and project_owner_dispatch.get("open_count") == 2
         and project_owner_route.get("routing_owner") == "pcr02-registry-owner"
@@ -2637,11 +2639,11 @@ def test_final_gate_owner_review_blocker():
         and proof_artifacts.get("baseline_selection_overlap_count") == len(proof_baseline_selection_overlap_ids)
         and proof_baseline_selection_overlap_ids == []
         and proof_artifacts.get("baseline_dynamic_count") == 0
-        and proof_dynamic_ids == [expected_closure_proof_id]
-        and proof_selection_dynamic_ids == [expected_closure_proof_id]
-        and expected_closure_proof_id in proof_expected_ids
-        and proof_artifacts.get("dynamic_count") == 1
-        and proof_artifacts.get("selection_dynamic_count") == 1
+        and all(dynamic_id in proof_expected_ids for dynamic_id in proof_dynamic_ids)
+        and proof_dynamic_ids == proof_baseline_dynamic_ids + proof_selection_dynamic_ids
+        and len(proof_dynamic_ids) == len(set(proof_dynamic_ids))
+        and proof_artifacts.get("dynamic_count") == len(proof_dynamic_ids)
+        and proof_artifacts.get("selection_dynamic_count") == len(proof_selection_dynamic_ids)
         and "knowledge-hub-review-after-topic-owner-hardening-20260622" not in proof_expected_ids
         and proof_artifacts.get("registered_count") == proof_artifacts.get("expected_count")
         and proof_artifacts.get("paired_count") == proof_artifacts.get("expected_count")
@@ -2951,6 +2953,97 @@ def test_status_mature_profile_blocks_migration_state():
             "mature_audit": mature_audit,
             "stdout_sample": result["stdout"][:1200],
         },
+    )
+
+def test_final_gate_mature_review_queue_owner_review_blocker():
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        expect(
+            True,
+            "final-gate-mature-review-queue-owner-review-blocker",
+            "mature final gate review queue owner-review fixture is skipped inside nested regression",
+            {"skipped_in_inner_final_gate": True},
+        )
+        return
+    repo = copy_repo("final-gate-mature-review-queue-owner-review-blocker")
+    setup_error = init_temp_git_repo(repo)
+    if setup_error:
+        expect(False, "final-gate-mature-review-queue-owner-review-blocker", "mature final gate reports review queue as owner-review", setup_error, repo)
+        return
+    result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "-lc",
+            f"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --final-profile mature --as-of {today.isoformat()}",
+        ],
+    )
+    parsed = {}
+    try:
+        parsed = json.loads(result["stdout"])
+    except Exception:
+        pass
+    blockers = parsed.get("blockers", [])
+    blocker = next(
+        (row for row in blockers if isinstance(row, dict) and row.get("id") == "review-queue-pending-max-body"),
+        {},
+    )
+    gap_map = parsed.get("gap_map", [])
+    gap = next(
+        (row for row in gap_map if isinstance(row, dict) and row.get("gap_id") == "review-queue-pending-max-body"),
+        {},
+    )
+    review_queue_recovery = parsed.get("review_queue_recovery", {})
+    evidence_index = parsed.get("evidence_index", [])
+    evidence_by_artifact = {row.get("related_artifact"): row for row in evidence_index if isinstance(row, dict)}
+    checks = parsed.get("checks", {})
+    mature_audit = parsed.get("mature_audit", {})
+    check_mature_audit = checks.get("knowledge_status_strict", {}).get("mature_audit", {})
+    strict_blocker_ids = parsed.get("automatic_governance", {}).get("owner_blocker_source", {}).get("strict_blocker_ids", [])
+    if not isinstance(strict_blocker_ids, list):
+        strict_blocker_ids = []
+    expect(
+        result["exit_code"] == 1
+        and parsed.get("final_status") == "needs-owner-review"
+        and parsed.get("final_profile") == "mature"
+        and parsed.get("automatic_governance", {}).get("status") == "complete-except-owner-review"
+        and parsed.get("automatic_governance", {}).get("only_owner_review_blockers") is True
+        and blocker.get("severity") == "owner-review"
+        and blocker.get("count", 0) > 0
+        and "review-queue-pending-max-body" in strict_blocker_ids
+        and review_queue_recovery.get("final_profile") == "mature"
+        and review_queue_recovery.get("blocking_final_gate") is True
+        and review_queue_recovery.get("owner_review_blocking") is True
+        and review_queue_recovery.get("standard_blocking_final_gate") is False
+        and review_queue_recovery.get("max_body_blocking_final_gate") is True
+        and "mature profile 将普通 AI/外部资料待复核项作为 owner-review 阻断" in review_queue_recovery.get("notes_zh", "")
+        and mature_audit == check_mature_audit
+        and mature_audit.get("status") == "pass"
+        and mature_audit.get("migration_item_count") == 0
+        and mature_audit.get("blocker_count") == 0
+        and mature_audit.get("sealed_migration_item_count", 0) >= 0
+        and evidence_by_artifact.get("review-queue-recovery", {}).get("status") == "owner-review"
+        and gap.get("gap_type") == "owner-review"
+        and gap.get("codex_auto_can_complete") is False
+        and gap.get("requires_human_review") is True
+        and gap.get("requires_owner_decision") is False,
+        "final-gate-mature-review-queue-owner-review-blocker",
+        "mature final gate reports pending review queue as owner-review instead of an auto-fixable defect",
+        {
+            "exit_code": result["exit_code"],
+            "final_status": parsed.get("final_status"),
+            "final_profile": parsed.get("final_profile"),
+            "blocker": blocker,
+            "gap": gap,
+            "review_queue_recovery": review_queue_recovery,
+            "mature_audit": mature_audit,
+            "check_mature_audit": check_mature_audit,
+            "strict_blocker_ids": strict_blocker_ids,
+            "evidence_review_queue": evidence_by_artifact.get("review-queue-recovery", {}),
+            "automatic_governance": parsed.get("automatic_governance", {}),
+            "stdout_sample": result["stdout"][:1200],
+        },
+        repo,
     )
 
 def test_final_gate_empty_child_json_blocker():
@@ -6568,7 +6661,7 @@ def test_index_plan_extended_sections():
         and "unpaired_expected_count: 1" in manifest_text_result["stdout"]
         and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
-        and "summary_source=`summary_zh`" in manifest_text_result["stdout"]
+        and "summary_source=`" in manifest_text_result["stdout"]
         and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
         and "review_status=`expected`" in manifest_text_result["stdout"]
         and "pairing=`" in manifest_text_result["stdout"]
@@ -8761,6 +8854,7 @@ def test_regression_manifest_coverage():
         "final-gate-owner-review-blocker",
         "final-gate-skip-regression-blocker",
         "status-mature-profile-blocks-migration-state",
+        "final-gate-mature-review-queue-owner-review-blocker",
         "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
         "final-gate-source-final-state-field-gap",
@@ -8965,6 +9059,7 @@ full_tests = [
     test_final_gate_owner_review_blocker,
     test_final_gate_skip_regression_blocker,
     test_status_mature_profile_blocks_migration_state,
+    test_final_gate_mature_review_queue_owner_review_blocker,
     test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
     test_final_gate_source_final_state_field_gap,

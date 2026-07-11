@@ -192,6 +192,8 @@ def blocker_gap_type(blocker):
     blocker_id = str(blocker.get("id", "") or "")
     if blocker_id == "owner-gates-open":
         return "owner-review"
+    if blocker.get("severity") == "owner-review":
+        return "owner-review"
     if blocker.get("severity") == "environment":
         return "environment"
     if blocker_id.startswith("knowledge-regression"):
@@ -1163,6 +1165,8 @@ else:
 def blocker_to_gap(blocker):
     blocker_id = str(blocker.get("id", "") or "<missing>")
     is_owner_gate = blocker_id == "owner-gates-open"
+    is_review_queue_owner_review = blocker_id == "review-queue-pending-max-body"
+    is_owner_review = blocker.get("severity") == "owner-review"
     is_environment = blocker.get("severity") == "environment"
     gap_type = blocker_gap_type(blocker)
     return {
@@ -1174,15 +1178,22 @@ def blocker_to_gap(blocker):
         "current_impact": (
             "剩余人工 owner decision 未签收；Codex 不得代签、不得关闭 gate。"
             if is_owner_gate
+            else "普通 AI/外部资料人工复核队列未清零；Codex 不得代填 human_reviewed_by、不得代签 review_basis。"
+            if is_review_queue_owner_review
+            else "剩余人工复核门禁未闭环；Codex 只能提供表单、校验和只读证据，不得代签。"
+            if is_owner_review
             else "宿主临时空间或执行环境不足，当前无法形成可信终态回归证据。"
             if is_environment
             else "终态 gate 存在非 owner blocker，必须先修复工具、registry、index、manifest 或回归。"
         ),
-        "codex_auto_can_complete": False if (is_owner_gate or is_environment) else True,
+        "codex_auto_can_complete": False if (is_owner_review or is_environment) else True,
         "requires_owner_decision": bool(is_owner_gate),
+        "requires_human_review": bool(is_owner_review),
         "fix_action": (
             "人工 owner 填写 owner decision JSONL 后，先运行 validate-forms，再生成 landing-plan。"
             if is_owner_gate
+            else "人工导出 review queue 表单、填写复核字段、运行 validate-queue-forms，再用 review queue apply dry-run/落地。"
+            if is_review_queue_owner_review
             else "释放 /tmp 或配置可用临时空间后，重跑 knowledge-regression 和 knowledge-final-gate。"
             if is_environment
             else "按 blocker command 修复对应门禁，然后重跑 knowledge-final-gate。"
@@ -1190,6 +1201,8 @@ def blocker_to_gap(blocker):
         "write_scope": (
             "owner decision JSONL 由人工提供；Codex 只允许在校验通过后按 landing-plan 落地。"
             if is_owner_gate
+            else "review queue 表单由人工提供；Codex 只允许运行校验和受控 apply，不得代填人工复核字段。"
+            if is_review_queue_owner_review
             else "环境修复不修改 Knowledge Hub 内容；只清理可重建缓存或调整临时目录。"
             if is_environment
             else "按具体 blocker 限定；共享 registry/index/tool 由主 agent 串行修改。"
@@ -1232,16 +1245,35 @@ review_queue_summary = (
     if isinstance(review_queue_payload.get("summary", {}), dict)
     else {}
 )
+review_queue_total_pending_count = int(review_queue_summary.get("total_pending_count", 0) or 0)
+review_queue_active_or_promotion_blocker_count = int(review_queue_summary.get("active_or_promotion_blocker_count", 0) or 0)
+review_queue_profile_blocks_final_gate = bool(review_queue_payload.get("blocking_final_gate", False))
+review_queue_owner_review_blocking = (
+    review_queue_profile_blocks_final_gate
+    and review_queue_total_pending_count > 0
+    and review_queue_active_or_promotion_blocker_count == 0
+)
+if review_queue_active_or_promotion_blocker_count:
+    review_queue_notes_zh = "只读 review queue 恢复入口；存在 active/promotion 类条目未完成人工复核，必须先补复核证据或降级为 reviewing/report-only。不回填 human_reviewed_by，不提升 active，不关闭 owner gate。"
+elif review_queue_owner_review_blocking:
+    review_queue_notes_zh = f"只读 review queue 恢复入口；{args.final_profile} profile 将普通 AI/外部资料待复核项作为 owner-review 阻断，需要人工导出表单、填写、校验并通过 review queue apply 落地。不回填 human_reviewed_by，不提升 active，不关闭 owner gate。"
+else:
+    review_queue_notes_zh = "只读 review queue 恢复入口；standard profile 下普通 AI/外部资料待复核项不阻断 final gate，只有 active/promotion 未人工复核时才由 knowledge-status --strict 变成 blocker。不回填 human_reviewed_by，不提升 active，不关闭 owner gate。"
+
 review_queue_recovery = {
     "status": str(review_queue_payload.get("status", "")),
     "read_only": bool(review_queue_payload.get("read_only", False)),
     "report_only": bool(review_queue_payload.get("report_only", False)),
-    "blocking_final_gate": bool(review_queue_payload.get("blocking_final_gate", False)),
+    "final_profile": str(review_queue_payload.get("final_profile", args.final_profile) or args.final_profile),
+    "blocking_final_gate": review_queue_profile_blocks_final_gate,
+    "owner_review_blocking": review_queue_owner_review_blocking,
+    "standard_blocking_final_gate": bool(review_queue_payload.get("standard_blocking_final_gate", False)),
+    "max_body_blocking_final_gate": bool(review_queue_payload.get("max_body_blocking_final_gate", False)),
     "summary": {
-        "total_pending_count": int(review_queue_summary.get("total_pending_count", 0) or 0),
+        "total_pending_count": review_queue_total_pending_count,
         "ai_generated_pending_count": int(review_queue_summary.get("ai_generated_pending_count", 0) or 0),
         "external_source_pending_count": int(review_queue_summary.get("external_source_pending_count", 0) or 0),
-        "active_or_promotion_blocker_count": int(review_queue_summary.get("active_or_promotion_blocker_count", 0) or 0),
+        "active_or_promotion_blocker_count": review_queue_active_or_promotion_blocker_count,
         "by_priority": review_queue_summary.get("by_priority", {}),
         "by_owner": review_queue_summary.get("by_owner", {}),
     },
@@ -1265,14 +1297,27 @@ review_queue_recovery = {
     "must_not": review_queue_payload.get("must_not", [])
     if isinstance(review_queue_payload.get("must_not", []), list)
     else [],
-    "notes_zh": "只读 review queue 恢复入口；普通 AI/外部资料待复核项不阻断 final gate，只有 active/promotion 未人工复核时才由 knowledge-status --strict 变成 blocker。不回填 human_reviewed_by，不提升 active，不关闭 owner gate。",
+    "notes_zh": review_queue_notes_zh,
 }
 strict_blocker_ids = [
     str(blocker.get("id", ""))
     for blocker in strict_payload.get("strict_blockers", [])
     if isinstance(blocker, dict) and blocker.get("id")
 ]
+strict_owner_review_blocker_ids = [
+    str(blocker.get("id", ""))
+    for blocker in strict_payload.get("strict_blockers", [])
+    if isinstance(blocker, dict)
+    and blocker.get("severity") == "owner-review"
+    and blocker.get("id")
+]
+strict_owner_review_blocker_summary = ", ".join(strict_owner_review_blocker_ids) if strict_owner_review_blocker_ids else "owner-review"
 status_owner_blocker_source = strict_payload.get("owner_blocker_source", {})
+mature_audit_payload = {}
+if isinstance(strict_payload.get("sources", {}), dict):
+    raw_mature_audit = strict_payload.get("sources", {}).get("mature_audit", {})
+    if isinstance(raw_mature_audit, dict):
+        mature_audit_payload = raw_mature_audit
 check_source_coverage_health = knowledge_check["payload"].get("source_coverage_health", {})
 check_source_coverage_selection = knowledge_check["payload"].get("source_coverage_selection", {})
 check_source_check_health = knowledge_check["payload"].get("source_check_health", {})
@@ -1633,7 +1678,7 @@ evidence_index = [
             else "fail"
         ),
         (
-            "knowledge-status --strict 仅剩 owner-gates-open；这是人工 owner decision blocker，不是工具失败。"
+            f"knowledge-status --strict 仅剩 owner-review blocker（{strict_owner_review_blocker_summary}）；这是人工 owner decision 或人工复核 blocker，不是工具失败。"
             if only_owner_review_blockers
             else "knowledge-status --strict 通过。"
             if not strict_status["parse_error"] and strict_status["exit_code"] == 0
@@ -1654,7 +1699,7 @@ if status_owner_blocker_source:
             0,
             "owner-review" if only_owner_review_blockers else "not-applicable",
             (
-                "owner blocker provenance 已由 knowledge-status --strict 提供；owner gate 数量、owner-ready 覆盖和 active exposure 可追溯到 owner_gates 字段。"
+                "owner-review blocker provenance 已由 knowledge-status --strict 提供；owner gate 可追溯到 owner_gates 字段，review queue 阻断可追溯到 review_queues 字段。"
                 if only_owner_review_blockers
                 else "当前终态不是纯 owner-review blocker；owner blocker provenance 仅作为辅助上下文。"
             ),
@@ -1778,13 +1823,21 @@ evidence_index.append(
     command_evidence_row(
         "runtime:review_queue_recovery",
         0 if review_queue_recovery["read_only"] and review_queue_recovery["report_only"] else 1,
-        "pass"
-        if review_queue_recovery["read_only"]
-        and review_queue_recovery["report_only"]
-        and review_queue_recovery["summary"]["active_or_promotion_blocker_count"] == 0
-        else "fail",
         (
-            "review queue 可结构化恢复；普通 AI/外部资料待复核项保持 report-only，不阻断 owner-review 终态。"
+            "owner-review"
+            if review_queue_recovery["read_only"]
+            and review_queue_recovery["report_only"]
+            and review_queue_recovery["owner_review_blocking"]
+            else "pass"
+            if review_queue_recovery["read_only"]
+            and review_queue_recovery["report_only"]
+            and review_queue_recovery["summary"]["active_or_promotion_blocker_count"] == 0
+            else "fail"
+        ),
+        (
+            f"review queue 可结构化恢复；{args.final_profile} profile 下普通 AI/外部资料待复核项是 owner-review 阻断，需要人工复核闭环。"
+            if review_queue_recovery["owner_review_blocking"]
+            else "review queue 可结构化恢复；standard profile 下普通 AI/外部资料待复核项保持 report-only，不阻断 final gate。"
             if review_queue_recovery["summary"]["active_or_promotion_blocker_count"] == 0
             else "review queue 存在 active/promotion 未人工复核项，应由 knowledge-status --strict 作为非 owner blocker 处理。"
         ),
@@ -1869,7 +1922,7 @@ result = {
             "notes_zh": "owner gate 数量、owner-ready 覆盖和 active exposure 均来自 strict status 的 owner_gates；final gate 不自行关闭或生成 owner decision。",
         },
         "summary_zh": (
-            "Codex 自动治理已闭环；剩余事项是人工 owner decision，不能由 Codex 代签。"
+            "Codex 自动治理已闭环；剩余事项是人工 owner decision 或人工复核，不能由 Codex 代签。"
             if automatic_governance_status == "complete-except-owner-review"
             else "终态完全通过。"
             if automatic_governance_status == "complete"
@@ -1888,6 +1941,7 @@ result = {
         "notes_zh": "只读 owner 恢复队列；用于恢复人工分派、表单导出和 landing-plan 入口，不生成 owner decision，不关闭 gate。",
     },
     "review_queue_recovery": review_queue_recovery,
+    "mature_audit": mature_audit_payload,
     "proof_artifacts": proof_artifacts,
     "source_check_execution_snapshot": source_check_execution_snapshot,
     "source_check_runtime": source_check_runtime_summary,
@@ -1959,7 +2013,7 @@ result = {
             "status": strict_payload.get("status", "<missing>"),
             "strict_blocker_count": len(strict_payload.get("strict_blockers", [])),
             "parse_error": strict_status["parse_error"],
-            "mature_audit": strict_payload.get("sources", {}).get("mature_audit", {}),
+            "mature_audit": mature_audit_payload,
         },
         "source_check_runtime": source_check_runtime_summary,
         "index_plan_linking": {

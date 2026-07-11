@@ -459,6 +459,10 @@ def build_review_queues(items, sources):
     owner_counts = collections.Counter(str(row.get("owner", "") or "<missing-owner>") for row in all_rows)
     active_or_promotion_rows = [row for row in all_rows if row.get("priority") == "P0"]
     recommended_row = ai_rows[0] if ai_rows else (external_rows[0] if external_rows else {})
+    profile_blocks_all_pending = args.final_profile in {"max-body", "mature"}
+    standard_blocking_final_gate = bool(active_or_promotion_rows)
+    max_body_blocking_final_gate = bool(all_rows)
+    profile_blocking_final_gate = bool(standard_blocking_final_gate or (profile_blocks_all_pending and all_rows))
 
     def review_queue_command(json_mode=False, forms_jsonl=False, validate_queue_forms_path=""):
         parts = [
@@ -481,13 +485,18 @@ def build_review_queues(items, sources):
             parts.extend(["--validate-queue-forms", validate_queue_forms_path])
         return " ".join(parts)
 
+    status_json_command = f"rtk bash ~/knowledge-hub/tools/knowledge-status.sh --as-of {today.isoformat()} --json"
+    if args.final_profile != "standard":
+        status_json_command = status_json_command + f" --final-profile {args.final_profile}"
+
     return {
         "status": "needs-human-review" if all_rows else "clear",
         "read_only": True,
         "report_only": True,
-        "standard_blocking_final_gate": bool(active_or_promotion_rows),
-        "max_body_blocking_final_gate": bool(all_rows),
-        "blocking_final_gate": bool(active_or_promotion_rows),
+        "final_profile": args.final_profile,
+        "standard_blocking_final_gate": standard_blocking_final_gate,
+        "max_body_blocking_final_gate": max_body_blocking_final_gate,
+        "blocking_final_gate": profile_blocking_final_gate,
         "queue_source": "registry/items.jsonl + registry/sources.json",
         "sample_limit": args.review_queue_limit,
         "summary": {
@@ -501,7 +510,7 @@ def build_review_queues(items, sources):
         "ai_generated_pending": ai_rows[:args.review_queue_limit],
         "external_source_pending": external_rows[:args.review_queue_limit],
         "commands": {
-            "status_json": f"rtk bash ~/knowledge-hub/tools/knowledge-status.sh --as-of {today.isoformat()} --json",
+            "status_json": status_json_command,
             "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json",
             "recommended_batch_json": review_queue_command(json_mode=True),
             "recommended_forms_jsonl": review_queue_command(forms_jsonl=True),
@@ -1238,8 +1247,39 @@ def mature_text_matches(*values):
     haystack = " ".join(text_parts)
     return any(pattern.search(haystack) for pattern in MATURE_MIGRATION_PATTERNS)
 
+def mature_sealed_migration_item(item):
+    status_value = str(item.get("status", ""))
+    path_value = str(item.get("path", ""))
+    review_status = str(item.get("review_status", ""))
+    tags = item.get("tags", [])
+    if not isinstance(tags, list):
+        tags = []
+    tag_set = {str(tag) for tag in tags}
+    if status_value != "archived":
+        return False
+    if "/current/" in path_value or path_value.startswith("projects/") and "/archive/" not in path_value and not path_value.startswith("artifacts/manifests/"):
+        return False
+    if "owner-ready-no-decision" in review_status or "delete-blocked" in review_status or review_status.endswith("-open"):
+        return False
+    sealed_tags = {
+        "archive-only",
+        "deleted-tombstoned",
+        "historical-session",
+        "historical-release",
+        "historical-policy",
+        "historical-analysis",
+        "historical-code-analysis",
+        "historical-memory-curation",
+        "no-active-promotion",
+        "tombstone",
+        "delete-execution",
+        "coverage-audit",
+    }
+    return bool(tag_set & sealed_tags) or path_value.startswith("artifacts/manifests/")
+
 def build_mature_audit():
     migration_item_hits = []
+    sealed_migration_hits = []
     long_lived_reviewing = []
     archived_migration_hits = []
     for item in items:
@@ -1253,7 +1293,7 @@ def build_mature_audit():
             item.get("summary_zh", ""),
         )
         if hit:
-            migration_item_hits.append({
+            item_ref = {
                 "id": item_id,
                 "status": status_value,
                 "kind": item.get("kind", ""),
@@ -1261,7 +1301,11 @@ def build_mature_audit():
                 "path": item.get("path", ""),
                 "review_status": item.get("review_status", ""),
                 "tags": item.get("tags", []),
-            })
+            }
+            if mature_sealed_migration_item(item):
+                sealed_migration_hits.append(item_ref)
+                continue
+            migration_item_hits.append(item_ref)
             if status_value == "archived":
                 archived_migration_hits.append(item_id)
         if status_value == "reviewing":
@@ -1348,6 +1392,8 @@ def build_mature_audit():
         "item_count": item_count,
         "migration_item_count": len(migration_item_hits),
         "archived_migration_item_count": len(archived_migration_hits),
+        "sealed_migration_item_count": len(sealed_migration_hits),
+        "sealed_migration_item_sample": sealed_migration_hits[:20],
         "process_manifest_count": len(process_manifest_hits),
         "copy_first_tool_count": len(copy_first_tools),
         "closed_source_count": len(source_current_closed),
@@ -1356,17 +1402,28 @@ def build_mature_audit():
         "reviewing_max_ratio": MATURE_REVIEWING_MAX_RATIO,
         "blocker_count": len(blockers),
         "blockers": blockers,
-        "notes_zh": "mature profile 要求迁移态从当前工作模型消失；封存 closeout 只能显式审计查询，不参与默认 search/context/routing。",
+        "notes_zh": "mature profile 要求迁移态从当前工作模型消失；已归档且不可误用的 archive-only/tombstone/no-active-promotion 迁移证据计入 sealed_migration_item_count，只作 provenance，不视为当前残留。",
     }
 
 mature_audit = build_mature_audit()
 mature_blocking_count = int(mature_audit.get("blocker_count", 0) or 0) if args.final_profile == "mature" else 0
 
+fix_blocking = (
+    knowledge_check["exit_code"] != 0
+    or owner_gates_failed
+    or active_exposure_count
+    or owner_ready_row_schema_errors
+    or review_queue_blocking_count
+    or max_body_source_inventory_blocking_count
+    or mature_blocking_count
+)
+owner_review_blocking = open_owner_gate_count or review_queue_max_body_blocking_count
+
 if errors:
     status = "blocked"
-elif knowledge_check["exit_code"] != 0 or owner_gates_failed or active_exposure_count or owner_ready_row_schema_errors or review_queue_blocking_count or review_queue_max_body_blocking_count or max_body_source_inventory_blocking_count or mature_blocking_count:
+elif fix_blocking:
     status = "needs-fix"
-elif open_owner_gate_count:
+elif owner_review_blocking:
     status = "needs-owner-review"
 else:
     status = "ok"
@@ -1536,13 +1593,13 @@ if review_queues.get("summary", {}).get("total_pending_count", 0):
         "复核 AI 生成和外部资料的人工复核队列；先运行："
         f"{review_queues.get('commands', {}).get('index_plan', '')}。"
     )
-if args.final_profile == "max-body" and review_queue_max_body_blocking_count:
+if max_body_like_profile and review_queue_max_body_blocking_count:
     next_actions.append(
-        "max-body 终态要求 AI/外部资料复核队列清零；先导出表单、人工填写、校验，再用 review queue apply 工具落地。"
+        f"{args.final_profile} 终态要求 AI/外部资料复核队列清零；这是人工复核阻断，不是工具失败。先导出表单、人工填写、校验，再用 review queue apply 工具落地。"
     )
-if args.final_profile == "max-body" and max_body_source_inventory_blocking_count:
+if max_body_like_profile and max_body_source_inventory_blocking_count:
     next_actions.append(
-        "max-body 终态要求 source inventory 无 pending，且 copy-body 仅限 canonical Markdown 正文；先查看 `max_body_source_inventory_audit.blockers`。"
+        f"{args.final_profile} 终态要求 source inventory 无 pending，且 copy-body 仅限 canonical Markdown 正文；先查看 `max_body_source_inventory_audit.blockers`。"
     )
 if args.final_profile == "mature" and mature_blocking_count:
     next_actions.append(
@@ -1621,9 +1678,9 @@ if review_queue_blocking_count:
 if review_queue_max_body_blocking_count:
     strict_blockers.append({
         "id": "review-queue-pending-max-body",
-        "severity": "blocker",
+        "severity": "owner-review",
         "count": review_queue_max_body_blocking_count,
-        "summary_zh": "max-body 终态要求 AI/外部资料人工复核队列清零；普通待复核项在该 profile 下也是终态 blocker。",
+        "summary_zh": f"{args.final_profile} 终态要求 AI/外部资料人工复核队列清零；普通待复核项在该 profile 下属于 owner-review 阻断，不能由工具代签或自动清零。",
         "commands": [
             review_queues.get("commands", {}).get("recommended_batch_json", ""),
             review_queues.get("commands", {}).get("recommended_forms_jsonl", ""),
@@ -1676,6 +1733,19 @@ if open_owner_gate_count:
         "commands": owner_commands,
         "command_templates": owner_command_templates,
     })
+
+owner_review_strict_blocker_ids = [
+    str(blocker.get("id", ""))
+    for blocker in strict_blockers
+    if isinstance(blocker, dict)
+    and blocker.get("severity") == "owner-review"
+    and blocker.get("id")
+]
+owner_blocker_source["strict_blocker_ids"] = owner_review_strict_blocker_ids
+owner_blocker_source["review_queue_pending_count_field"] = "review_queues.summary.total_pending_count"
+owner_blocker_source["review_queue_blocking_final_gate_field"] = "review_queues.blocking_final_gate"
+owner_blocker_source["review_queue_profile_field"] = "review_queues.final_profile"
+owner_blocker_source["notes_zh"] = "owner-review blocker 来源于本 status 输出的 owner_gates 与 review_queues；owner gate 数量、owner-ready 覆盖和 active exposure 来自 owner_gates，review queue 终态阻断按 final_profile 判定。本结构只解释 blocker 来源，不生成 owner decision，不关闭 gate，不代签人工复核。"
 
 result = {
     "schema_version": 1,

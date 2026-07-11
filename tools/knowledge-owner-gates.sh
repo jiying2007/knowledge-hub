@@ -112,6 +112,16 @@ def _is_filled(value):
         return bool(value)
     return True
 
+def source_path_values(value):
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item)]
+    if value:
+        return [str(value)]
+    return []
+
+def source_path_matches(value, expected):
+    return str(expected) in source_path_values(value)
+
 def is_resolved(row):
     state_text = " ".join(
         str(row.get(field, ""))
@@ -309,7 +319,7 @@ def inspect_owner_ready_item(row, item):
     check("registry_tags_owner_gate_ready", "owner-gate" in tags and "owner-ready" in tags, "registry tags must include owner-gate and owner-ready")
     check("registry_source_type_generated", source.get("type") == "generated", "registry source.type must be generated")
     check("registry_source_id_match", source.get("source_id") == row["source_id"], "registry source_id must match worksheet")
-    check("registry_source_path_match", source.get("source_path") == row["source_path"], "registry source_path must match worksheet")
+    check("registry_source_path_match", source_path_matches(source.get("source_path"), row["source_path"]), "registry source_path must match worksheet")
     check("artifact_path_owner_ready_package", path_value.startswith("artifacts/manifests/") and "owner-ready-package" in pathlib.Path(path_value).name, "artifact path must point to an owner-ready package manifest")
     check("artifact_markdown_exists", md_path.is_file(), "owner-ready package markdown must exist")
     check("artifact_jsonl_exists", jsonl_path.is_file(), "owner-ready package jsonl must exist")
@@ -347,7 +357,7 @@ def inspect_owner_ready_item(row, item):
     check("package_classification_match", package.get("classification") == "single-owner-ready-package", "package classification must be single-owner-ready-package")
     check("package_worksheet_id_match", package.get("worksheet_id") == row["id"], "package worksheet_id must match worksheet")
     check("package_source_id_match", package.get("source_id") == row["source_id"], "package source_id must match worksheet")
-    check("package_source_path_match", package.get("source_path") == row["source_path"], "package source_path must match worksheet")
+    check("package_source_path_match", source_path_matches(package.get("source_path"), row["source_path"]), "package source_path must match worksheet")
     check("package_decision_owner_ready", package.get("decision") == "owner-ready-no-decision", "package decision must be owner-ready-no-decision")
     check("package_status_reviewing", package.get("status") == "reviewing", "package status must be reviewing")
     check("package_open_gate_remains", package.get("open_gate_remains") is True, "package open_gate_remains must be true")
@@ -1631,10 +1641,9 @@ active_by_source_path = {}
 for item in items:
     source = item.get("source") if isinstance(item.get("source"), dict) else {}
     source_id = source.get("source_id")
-    source_path = source.get("source_path")
-    if not source_id or not source_path:
+    source_paths = source_path_values(source.get("source_path"))
+    if not source_id or not source_paths:
         continue
-    key = (source_id, source_path)
     item_ref = {
         "id": item.get("id", ""),
         "kind": item.get("kind", ""),
@@ -1644,9 +1653,11 @@ for item in items:
         "tags": item.get("tags", []),
         "source": source,
     }
-    items_by_source_path.setdefault(key, []).append(item_ref)
-    if item.get("status") == "active":
-        active_by_source_path.setdefault(key, []).append(item_ref)
+    for source_path in source_paths:
+        key = (source_id, source_path)
+        items_by_source_path.setdefault(key, []).append(item_ref)
+        if item.get("status") == "active":
+            active_by_source_path.setdefault(key, []).append(item_ref)
 
 worksheet_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
 if not worksheet_paths:
@@ -1658,10 +1669,9 @@ intake_by_source_path = {}
 for intake_path in intake_paths:
     for intake in load_jsonl(intake_path):
         worksheet_id = str(intake.get("next_worksheet", ""))
-        source_path = str(intake.get("source_path", ""))
         if worksheet_id:
             intake_by_worksheet[worksheet_id] = intake
-        if source_path:
+        for source_path in source_path_values(intake.get("source_path", "")):
             intake_by_source_path[source_path] = intake
 
 rows = []

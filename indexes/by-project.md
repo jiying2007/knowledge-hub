@@ -96,7 +96,7 @@
 
 ## LLM Tools
 
-- Windows builder runbook: `projects/llm-tools/current/runbooks/windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
+- Windows builder runbook 候选归档: `projects/llm-tools/archive/release/2026-07-09-windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
 - Release governance archive: `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md`; `llm-tools-release-governance-archive-20260516`
 - Three-repo governance historical session: `projects/llm-tools/archive/release/2026-05-17-llm-tools-three-repo-governance-session.md`; `llm-tools-three-repo-governance-session-20260517`
 - Normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`

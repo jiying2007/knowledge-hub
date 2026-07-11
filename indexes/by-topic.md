@@ -267,7 +267,7 @@
 - PCR02 GROS/SSC305/HDI historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
 - Codex archive selective backfill audit: `artifacts/manifests/codex-archive-selective-backfill-audit-20260709.md`; `codex-archive-selective-backfill-audit-20260709`
 - Codex archive phased migration removal: `artifacts/manifests/codex-archive-phased-migration-removal-20260709.md`; `codex-archive-phased-migration-removal-20260709`
-- llm_tools Windows builder runbook: `projects/llm-tools/current/runbooks/windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
+- llm_tools Windows builder runbook 候选归档: `projects/llm-tools/archive/release/2026-07-09-windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
 - llm_tools release governance archive: `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md`; `llm-tools-release-governance-archive-20260516`
 - Sigmastar dual-screen animation analysis: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
 - Codex archive migration preflight: `artifacts/manifests/codex-archive-migration-preflight-20260709.md`; `codex-archive-migration-preflight-20260709`

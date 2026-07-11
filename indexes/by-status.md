@@ -445,7 +445,7 @@
 - archived: `pcr02-codex-history-backfill-engineering-findings-20260709`
 - archived: `codex-archive-selective-backfill-audit-20260709`
 - reviewing: `codex-archive-phased-migration-removal-20260709`
-- reviewing: `llm-tools-windows-builder-runbook-20260709`
+- archived: `llm-tools-windows-builder-runbook-20260709`
 - archived: `llm-tools-release-governance-archive-20260516`
 - archived: `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
 - reviewing: `codex-archive-migration-preflight-20260709`
