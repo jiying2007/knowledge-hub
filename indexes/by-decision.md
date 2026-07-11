@@ -11,6 +11,7 @@
 - `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
 - `pcr02-owner-decision-worksheet-007`: DVR record/replay session archive 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`。
 - `pcr02-project-docs-owner-decision-landing-20260623`: PCR02 project docs 7 条 owner gate 已按人工授权落地；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。决策边界为 AGENTS/diag `reference-only`、ASAN `split-approved`、memory auto-curation `teamized-report-only`、DVR plan/motor MCU/DVR session archive `archive-only`；不复制源项目正文、不提升到 embedded standards、不写 memory。
+- `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`: PCR02 camera RAW_PREVIEW 虚拟流架构 decision candidate；证据：`projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`；仅归档架构候选和实现边界，不生成 owner decision、不声明 release、不提升 active。
 - `pcr02-docs-canonical-materialized`: PCR02 docs canonical 条目已落到 `projects/pcr02/`；历史迁移过程证据已封存，不作为当前入口。
 - `pcr02-docs-reference-artifact-ref-migration`: PCR02 docs reference/artifact-ref 已落地；证据：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`。
 - `engineering-archive-corpus-materialized`: PCR02 engineering archive corpus 已归位到 `projects/pcr02/archive/engineering-archive`，保持 archive-only。
@@ -49,6 +50,7 @@
 - `knowledge-hub-operational-maturity-20260701`: 长期运营成熟态状态入口；证据：`governance/status/knowledge-hub-operational-maturity.md`；记录成熟态状态、运营节奏、review_after 周期刷新和非阻塞增强项，不替代 final gate、不生成 owner decision、不提升 active、不写 memory。
 - `knowledge-hub-review-after-operation-plan-20260701`: 2026-07 review_after 运营计划；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`；已按用户授权刷新排期到 2026-10，不把排期刷新当作 owner 内容复核，不关闭 owner gate、不生成 owner decision、不写 memory。
 - `knowledge-hub-complete-delivery-closure-20260701`: 2026-07 完整交付闭环；证据：`artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`；采用授权代办闭环，只关闭 Hub 内部治理 review 尾巴，不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目、不伪造 ASAN 非 PCR02 实机验证。
+- `knowledge-hub-summary-gap-governance-20260711`: summary_zh 缺口治理策略；证据：`artifacts/manifests/knowledge-hub-summary-gap-governance-20260711.md`；active/reviewing 缺口清零，archived 长尾按非阻断维护债分批处理，不批量生成未经原文复核的 AI 摘要。
 - `knowledge-hub-owner-inbox-final-gate-audit-20260622`: owner inbox 和 final gate 审计；证据：`artifacts/manifests/knowledge-hub-owner-inbox-final-gate-audit-20260622.md`；owner inbox 只读，不生成 owner decision、不关闭 owner gate、不写 memory。
 - `knowledge-hub-manual-source-kind-contract-20260622`: manual source 和 kind 契约加固；证据：`artifacts/manifests/knowledge-hub-manual-source-kind-contract-20260622.md`；人工向导不代签 owner decision、不关闭 owner gate、不写 memory。
 - `knowledge-hub-offline-manifest-profile-hardening-20260622`: offline maintenance 和 manifest profile 加固；证据：`artifacts/manifests/knowledge-hub-offline-manifest-profile-hardening-20260622.md`；离线 fallback 不生成 owner decision、不关闭 owner gate、不写 memory。

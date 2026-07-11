@@ -436,8 +436,10 @@
 - archived: `knowledge-hub-complete-delivery-closure-20260701`
 - archived: `pcr02-nfs-app-share-runbook-20260702`
 - archived: `pcr02-prog-pcr02-core-gdb-selection-20260702`
+- archived: `knowledge-hub-summary-gap-governance-20260711`
 - reviewing: `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - reviewing: `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- reviewing: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - reviewing: `pcr02-prog-pcr02-high-load-third-capture-20260702`
 - reviewing: `pcr02-prog-pcr02-high-load-debug-runbook-20260702`
 - reviewing: `pcr02-prog-pcr02-source-hot-thread-capture-20260702`

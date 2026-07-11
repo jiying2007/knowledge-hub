@@ -8,6 +8,8 @@
 - `knowledge-hub-review-after-operation-plan-20260701`
 - `knowledge-hub-simplified-main-source-coverage-20260624`
 - `knowledge-hub-ultimate-maintenance-plan`
+- `knowledge-hub-summary-gap-governance-20260711`
+- `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - `pcr02-review-required-resolution-20260617`
 - `pcr02-owner-review-package-20260618`
 - `pcr02-owner-review-follow-up-20260618`

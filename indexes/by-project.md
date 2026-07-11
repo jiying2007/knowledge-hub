@@ -70,6 +70,7 @@
 - Engineering archive corpus: `projects/pcr02/archive/engineering-archive`
 - PCR02 prog_pcr02 high-load monitoring: `projects/pcr02/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/pcr02/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 camera RAW_PREVIEW virtual stream architecture decision candidate: `projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`; `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`; reviewing candidate only, no owner-signed active rule or release claim
 - PCR02 Codex history backfill engineering findings: `projects/pcr02/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
 - PCR02 /customer ro SD upgrade historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
 - PCR02 SIGBUS core/debug tools historical session: `projects/pcr02/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`

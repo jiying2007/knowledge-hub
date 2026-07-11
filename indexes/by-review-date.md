@@ -302,3 +302,5 @@
 - 2026-10-11: `pcr02-regular-ota-customer-partition-guard-20260625`
 - 2026-10-11: `pcr02-irlight-player-wifi-debug-summary-20260708`
 - 2026-10-11: `mcu-release-nas-guard-governance-20260629`
+- 2026-10-11: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
+- 2026-10-11: `knowledge-hub-summary-gap-governance-20260711`
