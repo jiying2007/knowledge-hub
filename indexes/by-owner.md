@@ -3,6 +3,8 @@
 ## leiwenjun
 
 - `knowledge-hub-p1-p2-maintenance-hardening-20260711`
+- `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
+- `knowledge-hub-operational-audit-20260713`
 - `knowledge-hub-long-term-operations-plan-20260711`
 - `knowledge-hub-archived-summary-full-closeout-20260711`
 - `knowledge-hub-root`
@@ -14,7 +16,9 @@
 - `knowledge-hub-summary-gap-governance-20260711`
 - `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`
+- `pcr02-st77912-fbtft-54m25fps-implementation-20260711`
 - `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`
+- `pcr02-owner-ready-validation-paths-20260713`
 - `pcr02-evt2-hardware-pdf-reference-index-20260711`
 - `pcr02-evt2-mcu-soc-contract-index-20260711`
 - `pcr02-review-required-resolution-20260617`

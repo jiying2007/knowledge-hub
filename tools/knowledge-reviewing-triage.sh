@@ -65,9 +65,17 @@ def bucket_for(row):
 
 def action_for(row):
     tags = set(row.get("tags", []) or [])
+    evidence_refs = row.get("evidence_refs", []) or []
+    validation_refs = row.get("validation_refs", []) or []
+    has_human_review = bool(row.get("human_reviewed_by") and row.get("human_review_decision"))
+    has_evidence = bool(evidence_refs or validation_refs or row.get("evidence_strength"))
     if row.get("decision_status") == "candidate" or "decision-candidate" in tags:
+        if has_human_review and has_evidence:
+            return "owner-ready-validation-pending"
         return "owner-review-and-validation"
     if "manual-validation-pending" in tags:
+        if has_human_review and has_evidence:
+            return "evidence-backed-validation-pending"
         return "evidence-needed"
     if "archive-ready" in tags:
         return "archive-ready-check"

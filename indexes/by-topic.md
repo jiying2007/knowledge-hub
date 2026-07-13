@@ -22,6 +22,7 @@
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
 - operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `tools/knowledge-review-after.sh`; mature final gate 使用 `tools/knowledge-final-gate.sh`
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
+- PCR02 owner-ready validation: `artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`; `pcr02-owner-ready-validation-paths-20260713`
 - patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
 - PCR02 /customer ro SD upgrade 历史阶段：`projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
@@ -53,6 +54,8 @@
 
 本段只登记对恢复、审计或终态证明有长期导航价值的制品摘要；完整 manifest 恢复以 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section manifest --json` 为准。
 
+- Knowledge Hub P1/P2/P3 optimization closeout: `artifacts/manifests/knowledge-hub-p1-p2-p3-optimization-closeout-20260711.md`; `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
+- Knowledge Hub operational audit 2026-07-13: `artifacts/manifests/knowledge-hub-operational-audit-20260713.md`; `knowledge-hub-operational-audit-20260713`
 - Knowledge Hub index drift remediation: `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.md`
 - Knowledge Hub stale index gate: `artifacts/manifests/knowledge-hub-stale-index-gate-20260619.md`
 - Knowledge Hub index path gate: `artifacts/manifests/knowledge-hub-index-path-gate-20260619.md`

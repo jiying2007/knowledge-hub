@@ -11,6 +11,9 @@
 - reviewing: `pcr02-evt2-hardware-pdf-reference-index-20260711`
 - reviewing: `pcr02-evt2-mcu-soc-contract-index-20260711`
 - archived: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
+- archived: `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
+- archived: `knowledge-hub-operational-audit-20260713`
+- reviewing: `pcr02-owner-ready-validation-paths-20260713`
 - archived: `knowledge-hub-long-term-operations-plan-20260711`
 - archived: `pcr02-diag-command-architecture-final`
 - archived: `pcr02-hdi-api-app-functional-overview`
@@ -441,6 +444,7 @@
 - archived: `pcr02-nfs-app-share-runbook-20260702`
 - archived: `pcr02-prog-pcr02-core-gdb-selection-20260702`
 - archived: `knowledge-hub-summary-gap-governance-20260711`
+- archived: `pcr02-st77912-fbtft-54m25fps-implementation-20260711`
 - reviewing: `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - reviewing: `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
 - reviewing: `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`

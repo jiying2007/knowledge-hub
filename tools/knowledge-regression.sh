@@ -6,6 +6,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
+import concurrent.futures
 import datetime as dt
 import hashlib
 import json
@@ -16,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -35,8 +37,11 @@ args = parser.parse_args(argv)
 
 results = []
 temp_roots = []
+test_context = threading.local()
 temp_dir = pathlib.Path(tempfile.gettempdir()).resolve()
 min_tmp_free_bytes = int(os.environ.get("KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES", str(4 * 1024 * 1024)))
+default_jobs = min(4, os.cpu_count() or 1) if args.suite == "full" else 1
+regression_jobs = max(1, int(os.environ.get("KNOWLEDGE_REGRESSION_JOBS", str(default_jobs))))
 
 def resolve_today():
     if args.as_of:
@@ -99,9 +104,21 @@ def copy_repo(label):
             f"insufficient temp space in {temp_dir}: free={free_bytes} required={min_tmp_free_bytes}"
         )
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix=f"kh-regression-{label}-"))
-    temp_roots.append(temp_root)
+    current_temp_roots = getattr(test_context, "temp_roots", temp_roots)
+    current_temp_roots.append(temp_root)
     repo = temp_root / "repo"
-    shutil.copytree(root, repo, ignore=shutil.ignore_patterns(".git"))
+
+    def ignore_fixture_paths(directory, names):
+        ignored = set()
+        directory_path = pathlib.Path(directory).resolve()
+        if directory_path == root:
+            ignored.update({".git", ".tmp", ".codex"})
+        if directory_path == root / "artifacts":
+            ignored.add("vault")
+        ignored.update(name for name in names if name in {"__pycache__", ".pytest_cache"})
+        return ignored
+
+    shutil.copytree(root, repo, ignore=ignore_fixture_paths)
     return repo
 
 def sync_status_index_entries(repo, item_ids, target_status):
@@ -446,13 +463,15 @@ def init_temp_git_repo(repo):
 def cleanup_temp_roots():
     if args.keep_temp:
         return
-    while temp_roots:
-        temp_root = temp_roots.pop()
+    current_temp_roots = getattr(test_context, "temp_roots", temp_roots)
+    while current_temp_roots:
+        temp_root = current_temp_roots.pop()
         shutil.rmtree(temp_root, ignore_errors=True)
 
 def run_test(fn):
     started_at = time.monotonic()
-    before_count = len(results)
+    test_context.records = []
+    test_context.temp_roots = []
     try:
         fn()
     except Exception as exc:
@@ -469,21 +488,28 @@ def run_test(fn):
         )
     finally:
         duration_sec = round(time.monotonic() - started_at, 3)
-        for result in results[before_count:]:
+        records = list(getattr(test_context, "records", []))
+        for result in records:
             result["duration_sec"] = duration_sec
             result["test_fn"] = fn.__name__
         cleanup_temp_roots()
+        test_context.records = []
+        test_context.temp_roots = []
+    return records
 
 def record(test_id, title, status, details, repo=None):
-    results.append(
-        {
-            "id": test_id,
-            "title": title,
-            "status": status,
-            "details": details,
-            "fixture_repo": str(repo) if repo and args.keep_temp else "",
-        }
-    )
+    row = {
+        "id": test_id,
+        "title": title,
+        "status": status,
+        "details": details,
+        "fixture_repo": str(repo) if repo and args.keep_temp else "",
+    }
+    records = getattr(test_context, "records", None)
+    if records is None:
+        results.append(row)
+    else:
+        records.append(row)
 
 def expect(condition, test_id, title, details, repo=None):
     record(test_id, title, "pass" if condition else "fail", details, repo)
@@ -3218,7 +3244,7 @@ def test_final_gate_source_final_state_field_gap():
     run_cmd(repo, ["rtk", "git", "init"])
     result = run_cmd(
         repo,
-        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     parsed = {}
     try:
@@ -3272,7 +3298,7 @@ def test_final_gate_strict_status_nonowner_blocker():
     )
     result = run_cmd(
         repo,
-        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     parsed = {}
     try:
@@ -6855,7 +6881,7 @@ def test_final_proof_artifact_as_of_date_selector():
             "rtk",
             "bash",
             "-lc",
-            "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23",
+            "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-23",
         ],
     )
     parsed = {}
@@ -7687,7 +7713,7 @@ def test_final_gate_source_check_runtime_failed_blocker():
             "rtk",
             "bash",
             "-lc",
-            "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-22",
+            "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-22",
         ],
     )
     parsed = {}
@@ -7884,7 +7910,7 @@ def test_source_coverage_date_filename_selection():
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     index_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
-    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
     parse_errors = []
     parsed = {}
     status_parsed = {}
@@ -8040,7 +8066,7 @@ def test_review_after_as_of_deterministic():
     future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
     past_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-06-01"])
     future_status = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json", "--as-of", "2026-07-01"])
-    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01"])
+    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01"])
     parsed = {}
     parse_errors = {}
     for name, result in [
@@ -9571,8 +9597,19 @@ selected_tests = (
     else full_tests
 )
 
-for test_fn in selected_tests:
-    run_test(test_fn)
+serial_tail_test_names = {"test_regression_manifest_coverage"}
+parallel_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ not in serial_tail_test_names]
+serial_tail_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ in serial_tail_test_names]
+
+if regression_jobs == 1:
+    for test_fn in selected_tests:
+        results.extend(run_test(test_fn))
+else:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=regression_jobs) as executor:
+        for test_results in executor.map(run_test, parallel_tests):
+            results.extend(test_results)
+    for test_fn in serial_tail_tests:
+        results.extend(run_test(test_fn))
 
 status = "pass" if all(result["status"] == "pass" for result in results) else "fail"
 output = {
@@ -9583,6 +9620,7 @@ output = {
     "today": today.isoformat(),
     "as_of_source": today_source,
     "suite": args.suite,
+    "jobs": regression_jobs,
     "selected_test_count": len(selected_tests),
     "full_test_count": len(full_tests),
     "full_result_count": len(results) if args.suite == "full" else len(full_tests),

@@ -4,40 +4,37 @@
 
 Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、source control、owner gate、review queue、review_after 周期刷新、final gate、search/context/status/check 工具链都有可验证入口，且 `mature` profile 能阻断迁移态残留和高比例 `reviewing` 滞留。
 
-2026-07-01 已按用户选择的“授权代办闭环”完成运营尾巴收口：Hub 内部治理 review 可由本次授权代办关闭；外部项目事实、owner decision、实机验证证据不由 Codex 代签。2026-07-16 到 2026-07-18 的 27 个近期待复核项已执行运营排期刷新，下一复核窗口为 2026-10-16 到 2026-10-18；剩余 24 个 `reviewing` 语义尾巴已按证据边界归档闭环。该闭环不代表 owner 内容复核、source 事实确认、active 提升或 ASAN 非 PCR02 实机验证。本页是运营状态入口，不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目。
+截至 2026-07-13 当前 live baseline，P1/P2/P3 优化、运营审计和 PCR02 owner-ready 验证路径已落为 Hub 控制面资产：3 条 PCR02 decision candidate 不再被粗粒度标成 `owner-review-and-validation`，而是进入 `owner-ready-validation-pending`；2 条 PCR02 EVT2 source-audit 不再被标成 `evidence-needed`，而是进入 `evidence-backed-validation-pending`；18 条 2026-08-09..2026-08-11 Codex archive near-due item 已按 archive-only/provenance 边界复核并刷新到 2026-11-09..2026-11-11；full regression 去掉无用 fixture 复制、减少嵌套回归并支持 full suite 最多 4 worker 并行；本页把当前基线和历史基线拆开。
 
-2026-07-11 已完成 mature closeout 增量治理：registry 增至 306 条，`active=16`、`archived=275`、`reviewing=15`，三类状态 `summary_zh` 缺口均为 0；普通 AI/external review queue pending 为 0，stale `review_after` 为 0，mature audit blocker 为 0。`reviewing` 比例约 4.90%，低于 mature profile 的 10% 阈值；后续按周度 triage 运营，不由 Codex 自动 archive、active promotion 或 owner decision 代签。
-
-同日继续补齐长期运营工具：registry 增至 311 条，新增 ST77912/PCR02 EVT2 硬件与 MCU/SoC contract reviewing 候选，`active=16`、`archived=276`、`reviewing=19`，`reviewing` 比例约 6.11%，仍低于 mature 阈值。新增 `knowledge-orphan-files.sh`、`knowledge-reviewing-triage.sh`、`knowledge-regression-trend.sh`，并把 changed-only orphan 与 reviewing triage 接入 health summary；这些工具只读/report-only，不改变 owner、active、memory 或源项目状态。
-
-随后将长期运营优化计划固化为 `knowledge-hub-long-term-operations-plan-20260711`，registry 增至 312 条，`active=16`、`archived=277`、`reviewing=19`，`reviewing` 比例约 6.09%。该计划固定 daily/weekly/monthly/release 节奏、reviewing 处置规则、full regression 趋势摘要和远端发布授权边界；仍不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目。
+当前状态仍是运营成熟，不是 owner 代签。本页不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目，不代表板级老化、EMI、HIL、发布或远端状态已签收。
 
 ## 当前基线
 
 | 指标 | 当前值 | 说明 |
 |---|---:|---|
-| registry item | 246 | 以 2026-07-01 运营状态登记后的门禁输出为基线 |
-| Markdown 文档 | 588 | 知识正文、索引、治理材料和 manifest |
-| JSONL 台账 | 221 | registry、manifest、授权和运行记录 |
-| 工具入口 | 22 | search/status/check/context/final gate 等稳定 shell 入口 |
-| registered source | 18 | 已有 Hub 内 source 主控目录 |
-| 30 天 near-due item | 0 | 27 个 2026-07 near-due item 已刷新到 2026-10-16..2026-10-18 |
-| reviewing item | 0 | 2026-07-01 已按授权代办闭环收口；外部证据型事项转为非阻塞运营输入 |
-| review queue pending | 0 | 普通 AI/external review queue 已清零 |
-| owner gate open | 0 | PCR02 owner gate 当前无打开项 |
-
-## 2026-07-11 增量基线
-
-| 指标 | 当前值 | 说明 |
-|---|---:|---|
-| registry item | 312 | 2026-07-11 运营工具增强、PCR02 reviewing 候选和长期运营计划登记后的 registry 总数 |
+| registry item | 316 | 2026-07-13 operational audit 和 PCR02 owner-ready validation paths 登记后的 live 总数 |
 | active item | 16 | `summary_zh` 缺口为 0 |
-| archived item | 277 | 125 条 archived 长尾摘要已全量回填，P1/P2 hardening、运营工具增强和长期运营计划账本已登记，缺口为 0 |
-| reviewing item | 19 | 比例约 6.09%，低于 mature 阈值；只进入周度 triage |
+| archived item | 280 | 125 条 archived 长尾摘要已全量回填，P1/P2/P3 closeout、ST77912 implementation evidence 和 2026-07-13 operational audit 已登记 |
+| reviewing item | 20 | 比例约 6.33%，低于 mature profile 10% 阈值；只进入周度 triage |
 | review queue pending | 0 | 普通 AI/external review queue 已清零 |
 | stale review_after | 0 | item/source stale 均为 0 |
+| 30-day near-due item | 0 | 18 条 Codex archive near-due item 已刷新到 2026-11-09..2026-11-11 |
 | mature blocker | 0 | mature audit `status=pass` |
-| full regression baseline | 140 个回归结果场景 | 新增运营工具回归后，以 `knowledge-regression-trend.sh` 和 `slowest_results` 做性能趋势记录 |
+| changed orphan file | 0 | 当前变更文件均已通过 registry/index 覆盖 |
+| reviewing triage | 3 owner-ready + 3 evidence-backed + 14 keep-reviewing | P1 五条已从粗粒度待办转为可执行 validation pending；新增 PCR02 validation paths 作为 evidence-backed validation pending |
+| owner gate open | 0 | PCR02 owner gate 当前无打开项 |
+| full regression baseline | 140 个回归结果场景 | 2026-07-13 mature full gate `final_status=ok`，full regression `failed_ids=[]`；后续性能只盯 slowest 10，不泛化重构 |
+
+## 历史基线
+
+| 日期/阶段 | registry | active | archived | reviewing | 说明 |
+|---|---:|---:|---:|---:|---|
+| 2026-07-01 运营尾巴收口 | 246 | 未单列 | 未单列 | 0 | 27 个 2026-07 near-due item 刷新到 2026-10-16..2026-10-18；Hub 内部 review 尾巴闭环，但不代表外部 owner/content/source 签收 |
+| 2026-07-11 mature closeout 增量 | 306 | 16 | 275 | 15 | summary 缺口、普通 review queue、stale review_after 和 mature blocker 均清零 |
+| 2026-07-11 长期运营工具增强 | 311 | 16 | 276 | 19 | 新增 orphan、reviewing triage、regression trend，并把 changed-only orphan 与 reviewing triage 接入 health summary |
+| 2026-07-11 长期运营计划固化 | 312 | 16 | 277 | 19 | 固定 daily/weekly/monthly/release 节奏、reviewing 处置规则、full regression 趋势摘要和远端发布授权边界 |
+| 2026-07-11 P1/P2/P3 优化闭环 | 314 | 16 | 279 | 19 | P1 五条改为 owner-ready/evidence-backed validation pending，P2 将 mature release gate 压到 55 秒，P3 拆清当前/历史基线 |
+| 2026-07-13 运营审计与验证路径 | 316 | 16 | 280 | 20 | 18 条 Codex archive near-due 刷新到 2026-11；新增 PCR02 owner-ready validation paths；mature full gate 通过 |
 
 ## 终态成熟条件
 
@@ -52,19 +49,19 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 ### Daily
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json
 ```
 
 ### Weekly
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11 --skip-final-gate
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
-rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-13 --skip-final-gate
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Knowledge Hub mature" --json --limit 8
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "成熟态" --json --limit 8
@@ -78,8 +75,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 归档路径" --json -
 rtk git status --short
 rtk git diff --check
 rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json --strict
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-11
-rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-11 --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-13 --json
 rtk bash ~/codex/scripts/final-ready.sh
 ```
 
@@ -108,7 +105,8 @@ rtk bash ~/codex/scripts/final-ready.sh
 
 - 日常使用 `knowledge-status.sh`、`knowledge-check.sh`、`knowledge-search.sh` 和 `knowledge-context.sh`。
 - `knowledge-final-gate.sh --full-regression` 只作为 release 级或高风险脚本改动后的重门禁。
-- 每次 high-risk tool/regression 改动后，用 `knowledge-regression-trend.sh` 将 full regression 的 `selected_test_count`、`result_count`、`slowest_results[0:10]` 和失败 ID 压缩进相邻 manifest 或交付说明；不保存大段 raw JSON。
+- 每次 high-risk tool/regression 改动后，用 `knowledge-regression-trend.sh` 将 full regression 的 `jobs`、`selected_test_count`、`result_count`、`slowest_results[0:10]` 和失败 ID 压缩进相邻 manifest 或交付说明；不保存大段 raw JSON。
+- full regression 当前默认最多 4 worker 并行；如需诊断并行互扰，可临时用 `KNOWLEDGE_REGRESSION_JOBS=1` 回退串行。
 - 若 full final gate 超过 3 分钟，先记录 `slowest_results`、命令环境和当次变更范围，再决定是否优化工具或拆分回归。
 - 搜索性能优先看首屏相关性和 fallback 行为，不以全文扫描替代 registry/query 契约。
 
@@ -120,17 +118,20 @@ rtk bash ~/codex/scripts/final-ready.sh
 | `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-01` | 退出码 0；errors=0；warnings=0 |
 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-01` | 退出码 0；final_status=ok；full regression 通过；blockers=[]；gap_map=[] |
 | `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-01 --window-days 30 --json` | 退出码 0；near_due_items=0；stale_items=0；owner_gate_open_count=0 |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-13 --json` | 退出码 0；regression_status=pass；result_count=140；failed_ids=[]；slowest 10 已记录到 `knowledge-hub-operational-audit-20260713` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13` | 退出码 0；final_status=ok；full regression 通过；blockers=[]；gap_map=[] |
+| `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json` | 退出码 0；刷新前 near_due_items=18；已按 2026-07-13 operational audit 刷新到 2026-11 窗口 |
 
 ## 剩余风险
 
-- 已无 2026-07 30 天窗口内 near-due 运营阻塞；下一批 review_after 责任转移到 2026-10 窗口。
+- 已无 2026-07-13 30 天窗口内 near-due 运营阻塞；18 条 Codex archive near-due 已按 archive-only/provenance 边界刷新到 2026-11 窗口。
 - ASAN 团队级 runbook 已 active；非 PCR02 项目实操证据仍是未来外部证据输入，已由 `embedded-asan-non-pcr02-evidence-followup-20260629` 和 `knowledge-hub-complete-delivery-closure-20260701` 固定边界，不作为完整交付阻塞。
 - 完整交付仍需本地 Git 快照和远端 push 证据；本页只描述 Hub 成熟态运营，不代表 owner approval 或 source project write 授权。
 - 本页不改变任何源项目、远端仓库、owner decision 或 memory 状态。
 
 ## 下一步
 
-1. 在 2026-10-16 前按运营节奏安排内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
+1. 在 2026-10-13 前复核 PCR02 owner-ready validation paths；在 2026-10-16 前按运营节奏安排 PCR02 内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
 2. 每周运行 health summary 与 review_after 30 天窗口；发现 near-due 时先分类为 owner/content/source/tooling，再决定刷新排期、补证、归档或走 owner gate。
 3. release 前运行 mature full final gate，并将实际输出写入交付说明或对应 manifest。
 4. 新增真实 ASAN 非 PCR02 实机验证时，按 `templates/asan-validation-report.md` 生成项目本地验证记录，再回链到本 closeout。
