@@ -3,7 +3,7 @@ title: SW 光敏（软光敏）阈值标定流程
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12

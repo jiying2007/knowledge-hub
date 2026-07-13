@@ -5,6 +5,9 @@
 - 2026-10-11: `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
 - 2026-10-13: `knowledge-hub-operational-audit-20260713`
 - 2026-10-13: `pcr02-owner-ready-validation-paths-20260713`
+- 2026-10-13: `pcr02-thirdparty-build-optimization-baseline-20260710`
+- 2026-10-13: `knowledge-hub-obsidian-integration-20260713`
+- 2026-10-13: `knowledge-hub-comprehensive-maturity-remediation-20260713`
 - 2026-10-16: `pcr02-diag-command-architecture-final`
 - 2026-10-16: `pcr02-hdi-api-app-functional-overview`
 - 2026-10-16: `pcr02-module-catalog`

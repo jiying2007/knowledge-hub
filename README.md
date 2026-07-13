@@ -13,15 +13,15 @@ Knowledge Hub = Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高�
 普通维护优先使用 5 条短命令：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind <kind> --domain <domain> --owner <owner> --id <id> --path <path>
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<关键词>" --json
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-11 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；正式收口仍以 `knowledge-final-gate.sh` 为 terminal gate。
-`knowledge-health-summary.sh` 会聚合 changed-only orphan 文件检查和 reviewing triage；新增或修改长期正文后，如需单独确认可运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`。
+`knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查和 reviewing triage；新增或修改长期正文后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的冻结路径清单覆盖；集合覆盖不创建 active 条目。
 
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
@@ -49,7 +49,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope runtime-rules --s
 状态和收口再使用：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-11
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
@@ -72,7 +72,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 
 `mature` profile 在 `max-body` 基础上进一步阻断迁移态残留：`migrated-*` 条目、copy-first / migration 过程 manifest、copy-first 工具入口、已关闭迁移 source 留在当前 source 主列表，以及长期滞留的高比例 `reviewing`。成熟态只允许保留不可误用的封存审计摘要；封存材料不得参与默认 search、context 或 routing。
 `--full-regression` 是终态证明和高风险脚本改动后的重门禁；日常查询和普通维护优先使用 search/context/check/status。
-高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-11 --json` 生成 compact 趋势摘要，避免把 full regression 大段 JSON 写进交付说明。
+高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 生成 compact 趋势摘要，避免把 full regression 大段 JSON 写进交付说明。需要复现历史证据时再显式传 `--as-of YYYY-MM-DD`。
 
 长期运营成熟态入口见 `governance/status/knowledge-hub-operational-maturity.md`。该状态页把日常、周度和 release gate 命令、搜索验收、review_after 运营节奏和剩余风险固定为可审查产物；2026-07 近期待复核批次已在 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 中按运营周期刷新到 2026-10，完整交付闭环见 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。该闭环只收口 Hub 内治理 review 和运营尾巴，不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目、不伪造外部实机证据。
 
@@ -88,6 +88,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile ma
 | `registry/` | 机器账本：items、sources、projects、owners、`registry/authorizations.jsonl`、`registry/automation-runs.jsonl` | L2/L3 |
 | `indexes/` | 可重建导航，不是事实权威 | 可由工具检查 |
 | `artifacts/manifests/` | 高风险 source 处置、owner gate、自动化和终态证据包 | L3 |
+| `artifacts/vault/` | 经批准的不可变附件副本；必须有 manifest、size、SHA256 和边界说明 | L3，禁止无清单落盘 |
 | `templates/` | 人工维护模板 | 低频维护 |
 | `governance/` | 中文治理规则和边界 | 低频维护 |
 | `tools/` | 检查、检索、诊断和门禁工具 | 变更后跑 regression/final gate |
@@ -110,7 +111,7 @@ domains/personal/**
 - `registry/retired-process-ledger.jsonl` 只保留迁移过程账本、dry-run、applied、classification 和 source inventory 的封存线索；它不是当前知识入口，不参与默认新增、提升或 owner gate。
 - 每个 current 或 retired source 必须有 Hub 内 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`。
 - 安全、可读、长期有价值的 Markdown/text 可以落到 canonical 正文。
-- raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref。
+- raw log、binary、SDK、release artifact、源码包、raw session、history jsonl 默认只登记引用、摘要、hash 或 artifact-ref；只有经 owner 确认、体量受控且纳入 vault manifest 完整性门禁的不可变附件才允许进入 `artifacts/vault/`。
 - current/retired source registry 中的 `path` 必须指向 Hub 内 `sources/<source_id>`；当前知识入口只使用 Hub 内路径，retired source 不作为默认新增入口。
 - Codex archive 当前 canonical 目录是 `domains/codex/archive/codex-archive/`；新归档和新索引只写 Knowledge Hub 终态目录。
 - PCR02 工程归档当前 canonical 目录是 `projects/pcr02/archive/engineering-archive/pcr02/`；PCR02 新归档、会话总结和排障材料只写 Knowledge Hub 终态目录。
@@ -123,6 +124,8 @@ domains/personal/**
 - 项目决策：`projects/<project>/decisions/`
 - 项目验证：`projects/<project>/validation/`
 - 项目历史：`projects/<project>/archive/`
+
+目录位置和生命周期是两个维度。`current/`、`decisions/` 可保留 owner 已选定的 canonical 落点，但条目是否 active、reviewing 或 archived 始终以 registry 为准；路径名称不得被解释为隐式 active promotion。
 - 普通和个人笔记：`notes/`
 - 跨项目嵌入式知识：`domains/embedded/`
 - 专利材料：`domains/patents/`
@@ -255,7 +258,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 
 ## Obsidian
 
-Obsidian 是阅读和手工编辑客户端，不是治理权威。
+Obsidian 是阅读和手工编辑客户端，不是治理权威。直接把 `~/knowledge-hub` 作为 vault 打开，首屏使用 [`indexes/obsidian-home.md`](indexes/obsidian-home.md)，完整边界见 [`governance/obsidian-integration.md`](governance/obsidian-integration.md)。
 
 推荐主要阅读：
 
@@ -266,4 +269,4 @@ Obsidian 是阅读和手工编辑客户端，不是治理权威。
 - `indexes/`
 - `templates/`
 
-普通使用者不需要日常阅读 `registry/`、`artifacts/manifests/` 和 `tools/`。
+`.obsidian/` 已整体忽略，主题、布局和插件保持本机私有。建议在 Obsidian 中排除 `.git/`、`.tmp/`、`registry/`、`artifacts/manifests/`、`sources/` 和 `tools/`；新附件先进入 `inbox/attachments/`。普通使用者不需要日常阅读控制面目录，Properties 中的 `status`、`owner`、`review_after` 只能镜像 registry。

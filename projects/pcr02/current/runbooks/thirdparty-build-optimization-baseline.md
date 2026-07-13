@@ -1,12 +1,19 @@
 ---
 title: PCR02 SSC305 第三方库编译优化基线
+id: pcr02-thirdparty-build-optimization-baseline-20260710
+kind: runbook
+domain: projects/pcr02
+path: projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md
+scope: project-specific
+visibility: team-internal
 doc_type: runbook
 knowledge_type: build
 maturity: verified
-status: active
+status: reviewing
 owner: team-core
+review_after: 2026-10-13
 created: 2026-07-10
-last_updated: 2026-07-10
+last_updated: 2026-07-13
 tags: [pcr02, ssc305, thirdparty, build, optimization, cortex-a7, neon, hard-float, libyuv]
 related: [project-build-and-deploy-guide.md, project-debug-tools-guide.md]
 validation_refs:
@@ -14,6 +21,8 @@ validation_refs:
   - sigdoc/customer/Common/Development/alkaid_defconfig_zh.html
   - workspace://xcrz-sigmastar-demo/3rdparty/build/build_sh/common/env.sh
   - workspace://xcrz-sigmastar-demo/build/compile.mk
+promotion: none
+review_status: manual-entry-pending-owner-and-source-project-validation
 ---
 
 # PCR02 SSC305 第三方库编译优化基线

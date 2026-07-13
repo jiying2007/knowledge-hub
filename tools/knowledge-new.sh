@@ -604,11 +604,13 @@ if [[ "$KIND" == "decision" ]]; then
 fi
 SOURCE_INDEX_DRAFT=""
 SOURCE_INDEX_STEP="若 source.from 或后续人工 source_id 指向 registry/sources.json 中的已登记 source，必须同步 indexes/by-source.md。"
+# shellcheck disable=SC2016  # Markdown backticks must remain literal in the generated draft.
 printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 条件索引：本次未提供 --item-source-id；未知来源不要同步 by-source，也不要复制 `<source-id>` 占位行。\n# 后续确认 source_id 已存在于 registry/sources.json 后，再按真实 source_id 追加，或重新运行 --item-source-id 生成草稿：\n# - <真实-source-id>: `%s`\n' "$DISPLAY_ID"
 SOURCE_OBJECT_JSON="{\"type\":\"manual\",\"from\":\"${JSON_SOURCE_FROM}\"}"
 SOURCE_SEARCH_COMMAND="rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"${ITEM_ID:-<id>}\" --json"
 if [[ -n "$ITEM_SOURCE_ID" ]]; then
   SOURCE_INDEX_STEP="已提供 --item-source-id，必须同步 indexes/by-source.md，并确认该 source 仍处于 registry/sources.json 管理范围。"
+  # shellcheck disable=SC2016  # Markdown backticks must remain literal in the generated draft.
   printf -v SOURCE_INDEX_DRAFT '\n# indexes/by-source.md\n# 已登记 source 条目：按真实 source_id 增加可恢复引用，不复制 source 正文。\n- %s: `%s`\n' "$ITEM_SOURCE_ID" "$DISPLAY_ID"
   SOURCE_SEARCH_COMMAND="rtk bash ~/knowledge-hub/tools/knowledge-search.sh \"${ITEM_ID:-<id>}\" --source-id ${ITEM_SOURCE_ID} --json"
   if [[ -n "$ITEM_SOURCE_PATH" ]]; then
@@ -621,6 +623,7 @@ VALIDATION_REFS_JSON='["rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-
 MANUAL_VALIDATION_BLOCK=""
 if [[ "$MANUAL_VALIDATION_PENDING" == "true" ]]; then
   VALIDATION_REFS_JSON="[\"manual_validation_pending: true\",\"reason: ${JSON_MANUAL_VALIDATION_REASON}\",\"required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\"]"
+  # shellcheck disable=SC2016  # Markdown code fences must remain literal in the generated draft.
   printf -v MANUAL_VALIDATION_BLOCK '\n### 人工待验证说明\n\n```yaml\nmanual_validation_pending: true\nmanual_validation_reason: %s\nrequired_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics\n```\n' "$MANUAL_VALIDATION_REASON"
 fi
 

@@ -3,7 +3,7 @@ title: PCR02 第三方库引用基线
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13

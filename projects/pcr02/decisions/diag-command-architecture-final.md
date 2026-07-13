@@ -3,7 +3,7 @@ title: PCR02 诊断命令架构终版（唯一主文档）
 doc_type: architecture
 knowledge_type: decision
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-13

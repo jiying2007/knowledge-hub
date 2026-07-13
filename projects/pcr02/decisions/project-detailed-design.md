@@ -3,7 +3,7 @@ title: PCR02 项目详细设计
 doc_type: architecture
 knowledge_type: decision
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13

@@ -4,6 +4,7 @@
 tmp/
 
 # Editor and OS noise
+.obsidian/
 .DS_Store
 Thumbs.db
 *~

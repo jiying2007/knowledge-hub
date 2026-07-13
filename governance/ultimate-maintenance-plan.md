@@ -9,7 +9,7 @@
 1. 内容正文只维护一份。
 2. 所有知识都有 `id`、`owner`、`scope`、`status`、`source` 和 `review_after`。
 3. 项目、团队、个人、专利、Codex 会话、外部制品属于不同 domain。
-4. Git 只保存轻量文本、索引、规则和工具；大文件只保存 URI、size、hash 和摘要。
+4. Git 默认只保存轻量文本、索引、规则和工具；大文件只保存 URI、size、hash 和摘要。唯一例外是 owner 批准、体量受控且纳入 `artifacts/vault/` 逐文件 size/hash 完整性门禁的不可变附件集。
 5. 自动化只能生成报告和候选；提升、删除、发布、写 memory 必须人工确认。
 
 ## 权威等级

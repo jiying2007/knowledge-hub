@@ -1,8 +1,8 @@
 ---
 title: DVR 录像回放解耦会话归档
 doc_type: owner-approved-target
-status: archive-only
-owner: leiwenjun
+status: archived
+owner: team-core
 source_id: pcr02-project-docs
 source_path: reports/2026-06-16-dvr-record-replay-session-archive.md
 source_sha256: 266a1c2706da87b39d9e4b204ccece61b0ec9c7a95183c64324e95f606c1dadc

@@ -3,7 +3,7 @@ title: HDI API APP 模块功能总览
 doc_type: architecture
 knowledge_type: model
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13

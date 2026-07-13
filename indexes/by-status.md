@@ -14,6 +14,9 @@
 - archived: `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
 - archived: `knowledge-hub-operational-audit-20260713`
 - reviewing: `pcr02-owner-ready-validation-paths-20260713`
+- reviewing: `pcr02-thirdparty-build-optimization-baseline-20260710`
+- reviewing: `knowledge-hub-obsidian-integration-20260713`
+- archived: `knowledge-hub-comprehensive-maturity-remediation-20260713`
 - archived: `knowledge-hub-long-term-operations-plan-20260711`
 - archived: `pcr02-diag-command-architecture-final`
 - archived: `pcr02-hdi-api-app-functional-overview`

@@ -3,7 +3,7 @@ title: PCR02 Diag V4 终态设计（Hybrid RefCount + 发现先行）
 doc_type: spec
 knowledge_type: decision
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-10
 last_updated: 2026-05-12

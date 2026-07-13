@@ -3,7 +3,7 @@ title: prog_pcr02 core 调试的 GDB 选择经验
 doc_type: debug-note
 knowledge_type: incident-learning
 maturity: candidate
-status: draft
+status: archived
 owner: team-core
 created: 2026-07-02
 last_updated: 2026-07-02

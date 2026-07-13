@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -180,20 +181,116 @@ if retired_sources_path.exists():
             sources.append(json.loads(line))
 
 allowed_suffixes = {".md", ".txt", ".json", ".jsonl", ".csv"}
-results = []
+query_terms = re.findall(r"[a-z0-9_./:+-]+|[\u4e00-\u9fff]+", query)
+if not query_terms:
+    query_terms = [query]
+
+def terms_match(haystack):
+    return all(term in haystack for term in query_terms)
+
+def path_priority(relative):
+    normalized = relative.replace("\\", "/")
+    if normalized == "README.md":
+        return 100, "root-entry"
+    if normalized.startswith("projects/") and any(
+        segment in normalized for segment in ("/current/", "/decisions/", "/validation/")
+    ):
+        return 120, "project-canonical"
+    if normalized.startswith("domains/embedded/") and any(
+        segment in normalized for segment in ("/runbooks/", "/standards/", "/architecture/")
+    ):
+        return 115, "domain-canonical"
+    if normalized.startswith("projects/") and "/archive/" in normalized:
+        return 70, "project-archive"
+    if normalized.startswith("governance/status/"):
+        return 80, "governance-status"
+    if normalized.startswith("governance/"):
+        return 65, "governance"
+    if normalized.startswith("indexes/"):
+        return 45, "derived-index"
+    if normalized.startswith("tools/"):
+        return 25, "tooling"
+    if normalized.startswith("artifacts/manifests/"):
+        return 5, "historical-manifest"
+    if normalized.startswith("registry/"):
+        return 0, "registry-ledger"
+    return 40, "body"
+
+def status_priority(status):
+    return {"active": 80, "reviewing": 50, "draft": 25, "archived": 10}.get(status, 0)
+
+def score_candidate(relative, suffix, body_haystack, item):
+    metadata_haystack = registry_metadata_haystack(item) if item else ""
+    combined = metadata_haystack + "\n" + body_haystack
+    if not terms_match(combined):
+        return None
+    title = str(item.get("title", "")).lower() if item else ""
+    item_id = str(item.get("id", "")).lower() if item else ""
+    path_text = str(item.get("path", relative)).lower() if item else relative.lower()
+    summary = str(item.get("summary_zh", "")).lower() if item else ""
+    tags = "\n".join(str(tag).lower() for tag in item.get("tags", [])) if item and isinstance(item.get("tags"), list) else ""
+    score, path_reason = path_priority(relative)
+    reasons = [path_reason]
+    if item:
+        score += 300 + status_priority(str(item.get("status", "")))
+        reasons.extend(["registry-backed", f"status:{item.get('status', '')}"])
+    if query and query in title:
+        score += 160
+        reasons.append("exact-title")
+    elif title and terms_match(title):
+        score += 110
+        reasons.append("title-tokens")
+    if query and query in item_id:
+        score += 135
+        reasons.append("exact-id")
+    elif item_id and terms_match(item_id):
+        score += 90
+        reasons.append("id-tokens")
+    if tags and terms_match(tags):
+        score += 90
+        reasons.append("tag-tokens")
+    if summary and terms_match(summary):
+        score += 65
+        reasons.append("summary-tokens")
+    if path_text and terms_match(path_text):
+        score += 55
+        reasons.append("path-tokens")
+    if query and query in body_haystack:
+        score += 40
+        reasons.append("exact-body")
+    elif terms_match(body_haystack):
+        score += 20
+        reasons.append("body-tokens")
+    if suffix in {".json", ".jsonl"}:
+        score -= 45
+        reasons.append("structured-ledger-penalty")
+    if relative.startswith("artifacts/manifests/"):
+        score -= 55
+        reasons.append("historical-penalty")
+    if relative.startswith("registry/"):
+        score -= 100
+        reasons.append("registry-noise-penalty")
+    return score, reasons
+
+candidates = []
 seen = set()
-result_item_ids = set()
 for source in sources:
     sid = source.get("id", "")
     if args.source and sid not in args.source:
         continue
     base = pathlib.Path(str(source.get("path", "")).replace("~", str(pathlib.Path.home()))).expanduser()
+    if not base.is_absolute():
+        base = root / base
     if not base.exists():
         continue
     for path in base.rglob("*"):
-        if len(results) >= args.limit:
-            break
         if not path.is_file() or path.suffix.lower() not in allowed_suffixes:
+            continue
+        try:
+            relative = path.resolve().relative_to(root).as_posix()
+        except Exception:
+            relative = path.name
+        if any(part in {".git", ".tmp", ".cache"} for part in path.parts):
             continue
         key = str(path.resolve())
         if key in seen:
@@ -208,50 +305,79 @@ for source in sources:
         if has_structured_filters() and not matching_items:
             continue
         lower = text.lower()
-        index = lower.find(query)
-        if index < 0:
+        item_candidates = matching_items if matching_items else (items if items else [{}])
+        scored_items = []
+        for item in item_candidates:
+            scored = score_candidate(relative, path.suffix.lower(), lower, item)
+            if scored is not None:
+                scored_items.append((scored[0], scored[1], item))
+        if not scored_items:
             continue
+        score, reasons, item = max(scored_items, key=lambda row: (row[0], str(row[2].get("id", ""))))
+        indexes = [lower.find(term) for term in query_terms if lower.find(term) >= 0]
+        index = min(indexes) if indexes else -1
         line_no = lower[:index].count("\n") + 1
-        line = text.splitlines()[line_no - 1][:240] if text.splitlines() else ""
-        item = matching_items[0] if matching_items else (items[0] if items else {})
+        lines = text.splitlines()
+        line = lines[line_no - 1][:240] if index >= 0 and lines else ""
+        if index < 0:
+            line_no = 1
+            line = f"registry metadata: {item.get('summary_zh') or item.get('title') or item.get('id', '')}"[:240]
         result = {
             "source": sid,
             "path": display_path(path),
             "line": line_no,
             "preview": line,
+            "score": score,
+            "match": "body-and-metadata" if index >= 0 and item else "body" if index >= 0 else "registry-metadata",
+            "match_kind": reasons[0],
+            "why_selected": reasons,
         }
         if item:
             result.update(metadata_for_item(item))
-            if item.get("id"):
-                result_item_ids.add(str(item.get("id")))
-        results.append(result)
-    if len(results) >= args.limit:
-        break
+        candidates.append(result)
 
 metadata_fallback_enabled = not args.source or "knowledge-hub" in args.source
-if metadata_fallback_enabled and len(results) < args.limit:
+result_item_ids = {
+    str(row.get("item_id", "")) for row in candidates if row.get("item_id")
+}
+if metadata_fallback_enabled:
     for item in registry_items:
-        if len(results) >= args.limit:
-            break
         item_id = str(item.get("id", ""))
         if item_id and item_id in result_item_ids:
             continue
         if not item_matches_filters(item):
             continue
-        if query not in registry_metadata_haystack(item):
+        metadata_haystack = registry_metadata_haystack(item)
+        if not terms_match(metadata_haystack):
             continue
         path_text = str(item.get("path", ""))
+        relative = path_text or "README.md"
+        scored = score_candidate(relative, pathlib.Path(relative).suffix.lower(), "", item)
+        if scored is None:
+            continue
+        score, reasons = scored
         result = {
             "source": "knowledge-hub",
             "path": display_path((root / path_text).resolve()) if path_text else display_path(root),
             "line": 1,
             "preview": f"registry metadata: {item.get('summary_zh') or item.get('title') or item_id}"[:240],
             "match": "registry-metadata",
+            "score": score,
+            "match_kind": reasons[0],
+            "why_selected": reasons,
         }
         result.update(metadata_for_item(item))
-        if item_id:
-            result_item_ids.add(item_id)
-        results.append(result)
+        candidates.append(result)
+
+candidates.sort(
+    key=lambda row: (
+        -int(row.get("score", 0)),
+        str(row.get("path", "")),
+        str(row.get("item_id", "")),
+    )
+)
+results = candidates[: args.limit]
+total_matches = len(candidates)
 
 if args.json:
     filters = {
@@ -263,7 +389,15 @@ if args.json:
         "domain": args.domain,
         "source_id": args.source_id,
     }
-    print(json.dumps({"query": args.query, "count": len(results), "filters": filters, "results": results}, ensure_ascii=False, indent=2))
+    print(json.dumps({
+        "query": args.query,
+        "query_terms": query_terms,
+        "count": len(results),
+        "total_matches": total_matches,
+        "ranking": "registry-metadata-plus-canonical-path-and-status-v1",
+        "filters": filters,
+        "results": results,
+    }, ensure_ascii=False, indent=2))
 else:
     print(f"query: {args.query}")
     print(f"count: {len(results)}")

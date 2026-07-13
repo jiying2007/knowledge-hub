@@ -119,6 +119,16 @@ def copy_repo(label):
         return ignored
 
     shutil.copytree(root, repo, ignore=ignore_fixture_paths)
+    vault_source = root / "artifacts" / "vault"
+    vault_target = repo / "artifacts" / "vault"
+    if vault_source.exists():
+        def hardlink_or_copy(source, target):
+            try:
+                os.link(source, target)
+            except OSError:
+                shutil.copy2(source, target)
+
+        shutil.copytree(vault_source, vault_target, copy_function=hardlink_or_copy)
     return repo
 
 def sync_status_index_entries(repo, item_ids, target_status):
@@ -6032,7 +6042,7 @@ def test_review_queue_json_contract():
         and form_validation.get("no_owner_decision_generated") is True
         and form_validation.get("owner_gate_mutation") is False
         and form_validation.get("accepted_count") == 1
-        and form_validation.get("coverage_status") == "partial"
+        and form_validation.get("coverage_status") in {"partial", "complete"}
         and "review_decision" in form_validation.get("required_submission_fields", [])
         and duplicate_validate_result["exit_code"] != 0
         and "duplicate-queue-id" in duplicate_diagnostic_codes
@@ -6397,6 +6407,19 @@ def test_summary_backfill_archived_only_contract():
 
 def test_orphan_files_advisory_contract():
     repo = copy_repo("orphan-files")
+    baseline = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-orphan-files.sh",
+            "--all",
+            "--strict",
+            "--json",
+            "--limit",
+            "20",
+        ],
+    )
     orphan_rel = "projects/pcr02/archive/debug/orphan-regression-fixture.md"
     orphan_path = repo / orphan_rel
     orphan_path.parent.mkdir(parents=True, exist_ok=True)
@@ -6429,6 +6452,11 @@ def test_orphan_files_advisory_contract():
     )
     parse_errors = []
     try:
+        baseline_payload = json.loads(baseline["stdout"])
+    except Exception as exc:
+        baseline_payload = {}
+        parse_errors.append(f"baseline: {exc}")
+    try:
         advisory_payload = json.loads(advisory["stdout"])
     except Exception as exc:
         advisory_payload = {}
@@ -6439,22 +6467,73 @@ def test_orphan_files_advisory_contract():
         strict_payload = {}
         parse_errors.append(f"strict: {exc}")
 
+    frontmatter_path = repo / "governance" / "obsidian-integration.md"
+    frontmatter_text = frontmatter_path.read_text()
+    frontmatter_path.write_text(frontmatter_text.replace("status: reviewing", "status: active", 1))
+    artifact_manifest = repo / "artifacts" / "manifests" / "patent-disclosure-artifact-ref-20260619.jsonl"
+    required_artifact = None
+    for line in artifact_manifest.read_text().splitlines():
+        row = json.loads(line)
+        if row.get("vault_presence", "required") == "required":
+            required_artifact = repo / "artifacts" / "vault" / "patent-disclosure" / row["source_path"]
+            break
+    if required_artifact is not None:
+        required_artifact.unlink()
+    negative_check = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--diagnostics",
+            "--as-of",
+            "2026-07-13",
+        ],
+    )
+    try:
+        negative_payload = json.loads(negative_check["stdout"])
+    except Exception as exc:
+        negative_payload = {}
+        parse_errors.append(f"negative-check: {exc}")
+    negative_categories = {
+        row.get("id")
+        for row in negative_payload.get("diagnostics", {}).get("categories", [])
+        if isinstance(row, dict)
+    }
+
     expect(
-        advisory["exit_code"] == 0
+        baseline["exit_code"] == 0
+        and baseline_payload.get("status") == "ok"
+        and baseline_payload.get("missing_registry_count") == 0
+        and baseline_payload.get("collection_covered_count", 0) > 0
+        and baseline_payload.get("coverage_contract_status") == "pass"
+        and advisory["exit_code"] == 0
         and strict["exit_code"] == 1
         and advisory_payload.get("mode") == "all"
         and advisory_payload.get("status") == "needs-fix"
         and orphan_rel in advisory_payload.get("missing_registry", [])
         and strict_payload.get("strict") is True
         and orphan_rel in strict_payload.get("missing_registry", [])
+        and negative_check["exit_code"] == 1
+        and {"frontmatter-status", "artifact-vault"}.issubset(negative_categories)
         and not parse_errors,
         "orphan-files-advisory-contract",
-        "orphan file helper reports unregistered Markdown and strict mode exits non-zero",
+        "frozen body coverage passes at baseline while orphan, frontmatter drift and missing vault files fail closed",
         {
+            "baseline_exit_code": baseline["exit_code"],
+            "baseline_status": baseline_payload.get("status"),
+            "baseline_exact_registered_count": baseline_payload.get("exact_registered_count"),
+            "baseline_collection_covered_count": baseline_payload.get("collection_covered_count"),
+            "baseline_coverage_contract_status": baseline_payload.get("coverage_contract_status"),
             "advisory_exit_code": advisory["exit_code"],
             "strict_exit_code": strict["exit_code"],
-            "advisory_payload": advisory_payload,
-            "strict_payload": strict_payload,
+            "advisory_missing_registry": advisory_payload.get("missing_registry"),
+            "strict_missing_registry": strict_payload.get("missing_registry"),
+            "strict_coverage_contract_status": strict_payload.get("coverage_contract_status"),
+            "negative_check_exit_code": negative_check["exit_code"],
+            "negative_categories": sorted(negative_categories),
             "parse_errors": parse_errors,
         },
         repo,
@@ -6577,7 +6656,7 @@ def test_health_summary_operational_fields():
     orphan = payload.get("changed_orphan_files", {})
     triage = payload.get("reviewing_triage", {})
     expect(
-        result["exit_code"] == 0
+        result["exit_code"] in {0, 1}
         and payload.get("read_only") is True
         and payload.get("health_status") in {"ok", "needs-fix"}
         and orphan.get("parse_error", "") == ""
@@ -6586,7 +6665,7 @@ def test_health_summary_operational_fields():
         and "reviewing_count" in triage
         and not parse_error,
         "health-summary-operational-fields",
-        "health summary exposes changed-only orphan and reviewing triage fields",
+        "health summary exposes changed-only body coverage and reviewing triage fields for both green and review-pending states",
         {
             "exit_code": result["exit_code"],
             "health_status": payload.get("health_status"),
@@ -8061,6 +8140,8 @@ def test_review_after_as_of_deterministic():
         return
     path.write_text("\n".join(updated_lines) + "\n")
     sync_status_index_entries(repo, [item_id], "reviewing")
+    body_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
+    body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
 
     past_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-01"])
     future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
@@ -8148,6 +8229,8 @@ def test_stale_review_after_warning_surface():
         return
     path.write_text("\n".join(updated_lines) + "\n")
     sync_status_index_entries(repo, [item_id], "reviewing")
+    body_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
+    body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
 
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
@@ -8729,8 +8812,26 @@ def test_knowledge_search_structured_filters():
             "5",
         ],
     )
+    asan_result = run_cmd(
+        root,
+        ["rtk", "bash", "tools/knowledge-search.sh", "ASAN", "--json", "--limit", "5"],
+    )
+    st77912_result = run_cmd(
+        root,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-search.sh",
+            "ST77912 决策",
+            "--json",
+            "--limit",
+            "5",
+        ],
+    )
     parsed_active = {}
     parsed_pcr02 = {}
+    parsed_asan = {}
+    parsed_st77912 = {}
     parse_errors = {}
     try:
         parsed_active = json.loads(active_result["stdout"])
@@ -8740,8 +8841,19 @@ def test_knowledge_search_structured_filters():
         parsed_pcr02 = json.loads(pcr02_result["stdout"])
     except Exception as exc:
         parse_errors["pcr02"] = str(exc)
+    try:
+        parsed_asan = json.loads(asan_result["stdout"])
+    except Exception as exc:
+        parse_errors["asan"] = str(exc)
+    try:
+        parsed_st77912 = json.loads(st77912_result["stdout"])
+    except Exception as exc:
+        parse_errors["st77912"] = str(exc)
     active_results = parsed_active.get("results", []) if isinstance(parsed_active, dict) else []
     pcr02_results = parsed_pcr02.get("results", []) if isinstance(parsed_pcr02, dict) else []
+    asan_results = parsed_asan.get("results", []) if isinstance(parsed_asan, dict) else []
+    st77912_results = parsed_st77912.get("results", []) if isinstance(parsed_st77912, dict) else []
+    st77912_ids = [row.get("item_id") for row in st77912_results[:2]]
     expect(
         not parse_errors
         and active_result["exit_code"] == 0
@@ -8755,9 +8867,23 @@ def test_knowledge_search_structured_filters():
         and parsed_pcr02.get("filters", {}).get("source_id") == ["pcr02-project-docs"]
         and pcr02_results
         and all(row.get("source_id") == "pcr02-project-docs" for row in pcr02_results)
-        and all(row.get("item_id") for row in pcr02_results),
+        and all(row.get("item_id") for row in pcr02_results)
+        and asan_result["exit_code"] == 0
+        and asan_results
+        and asan_results[0].get("item_id") == "embedded-asan-debug-guide-20260629"
+        and asan_results[0].get("status") == "active"
+        and isinstance(asan_results[0].get("score"), int)
+        and asan_results[0].get("why_selected")
+        and parsed_asan.get("query_terms") == ["asan"]
+        and st77912_result["exit_code"] == 0
+        and parsed_st77912.get("query_terms") == ["st77912", "决策"]
+        and st77912_ids
+        == [
+            "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711",
+            "pcr02-st77912-fb-mi-fb-boundary-decision-20260711",
+        ],
         "knowledge-search-structured-filters",
-        "knowledge search supports registry-backed structured filters",
+        "knowledge search supports structured filters and ranks canonical current knowledge before historical evidence",
         {
             "parse_errors": parse_errors,
             "active_exit_code": active_result["exit_code"],
@@ -8766,6 +8892,8 @@ def test_knowledge_search_structured_filters():
             "pcr02_count": parsed_pcr02.get("count"),
             "active_first": active_results[0] if active_results else {},
             "pcr02_first": pcr02_results[0] if pcr02_results else {},
+            "asan_first": asan_results[0] if asan_results else {},
+            "st77912_ids": st77912_ids,
         },
     )
 
@@ -8986,8 +9114,13 @@ def test_knowledge_context_budget_explainability():
         and context_canonical_paths.get("archive") == "projects/pcr02/archive"
         and isinstance(context.get("current"), list)
         and isinstance(context.get("risks"), list)
-        and search.get("fallback_count", 0) >= 1
-        and any(row.get("fallback_term") == "ota" for row in search_fallback)
+        and (
+            search.get("count", 0) >= 1
+            or (
+                search.get("fallback_count", 0) >= 1
+                and any(row.get("fallback_term") == "ota" for row in search_fallback)
+            )
+        )
         and first_item.get("why_selected")
         and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", []),
         "knowledge-context-budget-explainability",

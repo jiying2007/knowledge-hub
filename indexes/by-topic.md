@@ -23,6 +23,8 @@
 - operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `tools/knowledge-review-after.sh`; mature final gate 使用 `tools/knowledge-final-gate.sh`
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - PCR02 owner-ready validation: `artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`; `pcr02-owner-ready-validation-paths-20260713`
+- PCR02 third-party build optimization: `projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`
+- Obsidian: `indexes/obsidian-home.md`; `governance/obsidian-integration.md`; `knowledge-hub-obsidian-integration-20260713`
 - patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
 - PCR02 /customer ro SD upgrade 历史阶段：`projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
@@ -56,6 +58,7 @@
 
 - Knowledge Hub P1/P2/P3 optimization closeout: `artifacts/manifests/knowledge-hub-p1-p2-p3-optimization-closeout-20260711.md`; `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
 - Knowledge Hub operational audit 2026-07-13: `artifacts/manifests/knowledge-hub-operational-audit-20260713.md`; `knowledge-hub-operational-audit-20260713`
+- Knowledge Hub comprehensive maturity remediation 2026-07-13: `artifacts/manifests/knowledge-hub-comprehensive-maturity-remediation-20260713.md`; `knowledge-hub-comprehensive-maturity-remediation-20260713`
 - Knowledge Hub index drift remediation: `artifacts/manifests/knowledge-hub-index-drift-remediation-20260619.md`
 - Knowledge Hub stale index gate: `artifacts/manifests/knowledge-hub-stale-index-gate-20260619.md`
 - Knowledge Hub index path gate: `artifacts/manifests/knowledge-hub-index-path-gate-20260619.md`

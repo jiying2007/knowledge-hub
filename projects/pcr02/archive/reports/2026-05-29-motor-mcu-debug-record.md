@@ -1,8 +1,8 @@
 ---
 title: 电机 MCU 调试详细记录
 doc_type: owner-approved-target
-status: archive-only
-owner: leiwenjun
+status: archived
+owner: team-core
 source_id: pcr02-project-docs
 source_path: reports/2026-05-29-motor-mcu-debug-record.md
 source_sha256: 2ebdb26b56f3bd7a3561fd4f6a0aaf05389044e34530a10743d4032434fde734

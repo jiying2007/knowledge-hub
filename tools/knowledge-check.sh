@@ -7,10 +7,12 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 exec rtk python3 - "$ROOT" "$@" <<'PY'
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -80,6 +82,29 @@ def iter_text_files(scan_roots, suffixes=TEXT_FILE_SUFFIXES):
             if not path.is_file() or path.suffix.lower() not in suffixes:
                 continue
             yield path
+
+def frontmatter_scalar(path, field):
+    try:
+        lines = path.read_text(errors="ignore").splitlines()
+    except Exception:
+        return ""
+    if not lines or lines[0].strip() != "---":
+        return ""
+    pattern = re.compile(rf"^{re.escape(field)}:\s*(.*?)\s*$")
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        match = pattern.match(line)
+        if match:
+            return match.group(1).strip().strip("\"'")
+    return ""
+
+def file_sha256(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 EXPECTED_BOUNDARY_MANIFESTS = {
     "pcr02-tools-boundary-20260620": {
@@ -518,6 +543,24 @@ def build_diagnostics(error_items, warning_items):
             "item 字段、枚举或边界异常",
             "检查 registry/items.jsonl 中对应 item 的必填字段、枚举、domain/path/scope/visibility 边界。",
             lambda msg: msg.startswith("items:"),
+        ),
+        (
+            "frontmatter-status",
+            "正文 frontmatter 与 registry 状态不一致",
+            "以 registry/items.jsonl 为生命周期权威；不得自动提升 active。由 owner 确认后，将正文 status 调整为 registry 状态，或按授权更新 registry。",
+            lambda msg: msg.startswith("frontmatter-status:"),
+        ),
+        (
+            "body-coverage",
+            "长期正文缺少精确登记或冻结集合覆盖",
+            "检查 registry/body-coverage.json 的路径清单 hash；新增 L2 正文应精确登记，历史 corpus 只能通过显式集合覆盖，不能用宽泛前缀静默吞掉新文件。",
+            lambda msg: msg.startswith("body-coverage:"),
+        ),
+        (
+            "artifact-vault",
+            "附件 vault 完整性异常",
+            "核对 patent artifact manifest 与 artifacts/vault 的 path、size、sha256；缺失附件必须明确标成 external-reference-only，不能宣称本地存在。",
+            lambda msg: msg.startswith("artifact-vault:"),
         ),
         (
             "core-index",
@@ -1096,6 +1139,47 @@ route_registry_health = {
         "workspace:// refs are logical adapters; local machine paths belong in untracked local/workspaces.json",
         "~/knowledge-hub, ~/codex and ~/.codex are the only allowed long-term local path conventions",
     ],
+}
+frontmatter_status_health = {
+    "status": "not-run",
+    "checked_item_count": 0,
+    "declared_status_count": 0,
+    "mismatch_count": 0,
+    "invalid_status_count": 0,
+    "owner_mismatch_count": 0,
+    "review_after_mismatch_count": 0,
+    "rows": [],
+    "notes_zh": "registry/items.jsonl 是 status、owner、review_after 权威；正文 frontmatter 声明这些字段时只能镜像同一值。",
+}
+body_coverage_health = {
+    "status": "not-run",
+    "mode": "exact-item-or-frozen-collection",
+    "coverage_registry": "registry/body-coverage.json",
+    "checked_count": 0,
+    "exact_registered_count": 0,
+    "collection_covered_count": 0,
+    "missing_registry_count": 0,
+    "coverage_contract_status": "not-run",
+    "coverage_errors": [],
+    "missing_registry": [],
+}
+artifact_vault_health = {
+    "status": "not-run",
+    "manifest": "artifacts/manifests/patent-disclosure-artifact-ref-20260619.jsonl",
+    "vault_root": "artifacts/vault/patent-disclosure",
+    "row_count": 0,
+    "expected_row_count": 181,
+    "required_present_count": 0,
+    "external_reference_only_count": 0,
+    "missing_required_count": 0,
+    "hash_mismatch_count": 0,
+    "size_mismatch_count": 0,
+    "extra_file_count": 0,
+    "duplicate_id_count": 0,
+    "duplicate_path_count": 0,
+    "invalid_identity_count": 0,
+    "symlink_count": 0,
+    "errors": [],
 }
 
 if not args.sources_only:
@@ -2022,6 +2106,52 @@ if not args.sources_only:
             errors.append(f"items:{item_id} path must be relative: {rel_path}")
         elif not (root / rel_path).exists():
             errors.append(f"items:{item_id} path missing: {rel_path}")
+        elif rel_path.suffix.lower() == ".md":
+            frontmatter_status_health["checked_item_count"] += 1
+            declared_status = frontmatter_scalar(root / rel_path, "status")
+            if declared_status:
+                frontmatter_status_health["declared_status_count"] += 1
+                row = {
+                    "item_id": item_id,
+                    "path": rel_path.as_posix(),
+                    "registry_status": str(item.get("status", "")),
+                    "frontmatter_status": declared_status,
+                    "status": "pass",
+                }
+                if declared_status not in ALLOWED_ITEM_STATUSES:
+                    row["status"] = "invalid-frontmatter-status"
+                    frontmatter_status_health["invalid_status_count"] += 1
+                    errors.append(
+                        f"frontmatter-status:{item_id} invalid status {declared_status}: {rel_path.as_posix()}"
+                    )
+                elif declared_status != str(item.get("status", "")):
+                    row["status"] = "mismatch"
+                    frontmatter_status_health["mismatch_count"] += 1
+                    errors.append(
+                        f"frontmatter-status:{item_id} registry={item.get('status', '')} "
+                        f"frontmatter={declared_status}: {rel_path.as_posix()}"
+                    )
+                frontmatter_status_health["rows"].append(row)
+            for field, counter in (
+                ("owner", "owner_mismatch_count"),
+                ("review_after", "review_after_mismatch_count"),
+            ):
+                declared_value = frontmatter_scalar(root / rel_path, field)
+                registry_value = str(item.get(field, ""))
+                if declared_value and declared_value != registry_value:
+                    frontmatter_status_health[counter] += 1
+                    frontmatter_status_health["rows"].append({
+                        "item_id": item_id,
+                        "path": rel_path.as_posix(),
+                        "field": field,
+                        "registry_value": registry_value,
+                        "frontmatter_value": declared_value,
+                        "status": "mismatch",
+                    })
+                    errors.append(
+                        f"frontmatter-status:{item_id} field={field} registry={registry_value} "
+                        f"frontmatter={declared_value}: {rel_path.as_posix()}"
+                    )
         path_text = str(item.get("path", ""))
         if domain == "root" and path_text not in {"README.md", "AGENTS.md"}:
             errors.append(f"items:{item_id} root domain path outside root docs: {path_text}")
@@ -2090,6 +2220,162 @@ if not args.sources_only:
                 errors.append(
                     f"items:{item_id} ai-generated item missing provenance fields: {','.join(missing_provenance)}"
                 )
+
+    frontmatter_status_health["status"] = (
+        "pass"
+        if not frontmatter_status_health["mismatch_count"]
+        and not frontmatter_status_health["invalid_status_count"]
+        and not frontmatter_status_health["owner_mismatch_count"]
+        and not frontmatter_status_health["review_after_mismatch_count"]
+        else "fail"
+    )
+
+    body_coverage_command = [
+        "rtk",
+        "bash",
+        "tools/knowledge-orphan-files.sh",
+        "--all",
+        "--strict",
+        "--json",
+        "--limit",
+        "50",
+    ]
+    body_coverage_run = subprocess.run(
+        body_coverage_command,
+        cwd=root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        body_coverage_payload = json.loads(body_coverage_run.stdout)
+    except Exception as exc:
+        body_coverage_payload = {}
+        errors.append(f"body-coverage:unable to parse orphan helper JSON: {exc}")
+    if body_coverage_payload:
+        body_coverage_health.update(body_coverage_payload)
+    if body_coverage_run.returncode != 0:
+        if body_coverage_payload.get("coverage_errors"):
+            for message in body_coverage_payload.get("coverage_errors", [])[:10]:
+                errors.append(f"body-coverage:{message}")
+        if body_coverage_payload.get("missing_registry"):
+            for path in body_coverage_payload.get("missing_registry", [])[:10]:
+                errors.append(f"body-coverage:missing exact or collection coverage: {path}")
+        if not body_coverage_payload.get("coverage_errors") and not body_coverage_payload.get("missing_registry"):
+            errors.append(
+                "body-coverage:strict helper failed without structured findings: "
+                + body_coverage_run.stderr.strip()[:300]
+            )
+
+    artifact_manifest_path = root / artifact_vault_health["manifest"]
+    artifact_vault_root = root / artifact_vault_health["vault_root"]
+    artifact_errors = []
+    artifact_expected_paths = set()
+    if not artifact_manifest_path.exists():
+        artifact_errors.append("artifact manifest is missing")
+    elif not artifact_vault_root.is_dir():
+        artifact_errors.append("artifact vault root is missing")
+    else:
+        artifact_rows = load_jsonl(artifact_manifest_path)
+        artifact_vault_health["row_count"] = len(artifact_rows)
+        if len(artifact_rows) != artifact_vault_health["expected_row_count"]:
+            artifact_errors.append(
+                "artifact identity row count mismatch: "
+                f"expected {artifact_vault_health['expected_row_count']}, actual {len(artifact_rows)}"
+            )
+        seen_artifact_ids = set()
+        for row in artifact_rows:
+            artifact_id = str(row.get("id", "")).strip()
+            source_path = str(row.get("source_path", "")).strip()
+            presence = str(row.get("vault_presence", "required")).strip() or "required"
+            expected_size = row.get("size")
+            expected_hash = str(row.get("sha256", ""))
+            identity_invalid = False
+            if not artifact_id:
+                artifact_errors.append("artifact row has missing id")
+                identity_invalid = True
+                artifact_id = "<unknown>"
+            elif artifact_id in seen_artifact_ids:
+                artifact_vault_health["duplicate_id_count"] += 1
+                artifact_errors.append(f"duplicate artifact id: {artifact_id}")
+                identity_invalid = True
+            seen_artifact_ids.add(artifact_id)
+            source_parts = pathlib.PurePosixPath(source_path).parts
+            if (
+                not source_path
+                or pathlib.Path(source_path).is_absolute()
+                or source_path.startswith(("../", "./", "~/"))
+                or "\\" in source_path
+                or pathlib.PurePosixPath(source_path).as_posix() != source_path
+                or ".." in source_parts
+            ):
+                artifact_errors.append(f"{artifact_id} invalid source_path: {source_path}")
+                artifact_vault_health["invalid_identity_count"] += 1
+                continue
+            if source_path in artifact_expected_paths:
+                artifact_vault_health["duplicate_path_count"] += 1
+                artifact_errors.append(f"duplicate artifact source_path: {source_path}")
+                identity_invalid = True
+            artifact_expected_paths.add(source_path)
+            if not isinstance(expected_size, int) or expected_size <= 0:
+                artifact_errors.append(f"{artifact_id} invalid size: {expected_size}")
+                identity_invalid = True
+            if len(expected_hash) != 64 or any(ch not in "0123456789abcdef" for ch in expected_hash):
+                artifact_errors.append(f"{artifact_id} invalid sha256: {expected_hash}")
+                identity_invalid = True
+            if identity_invalid:
+                artifact_vault_health["invalid_identity_count"] += 1
+            target = artifact_vault_root / source_path
+            if presence == "external-reference-only":
+                artifact_vault_health["external_reference_only_count"] += 1
+                if target.exists():
+                    artifact_errors.append(
+                        f"{artifact_id} is marked external-reference-only but exists in vault"
+                    )
+                continue
+            if presence != "required":
+                artifact_errors.append(f"{artifact_id} invalid vault_presence: {presence}")
+                continue
+            if target.is_symlink():
+                artifact_vault_health["symlink_count"] += 1
+                artifact_errors.append(f"{artifact_id} vault file must not be a symlink: {source_path}")
+                continue
+            if not target.is_file():
+                artifact_vault_health["missing_required_count"] += 1
+                artifact_errors.append(f"{artifact_id} required vault file is missing: {source_path}")
+                continue
+            artifact_vault_health["required_present_count"] += 1
+            actual_size = target.stat().st_size
+            if not isinstance(expected_size, int) or actual_size != expected_size:
+                artifact_vault_health["size_mismatch_count"] += 1
+                artifact_errors.append(
+                    f"{artifact_id} size mismatch: expected {expected_size}, actual {actual_size}"
+                )
+            actual_hash = file_sha256(target)
+            if expected_hash != actual_hash:
+                artifact_vault_health["hash_mismatch_count"] += 1
+                artifact_errors.append(
+                    f"{artifact_id} sha256 mismatch: expected {expected_hash}, actual {actual_hash}"
+                )
+        vault_entries = list(artifact_vault_root.rglob("*"))
+        unexpected_symlinks = [
+            path.relative_to(artifact_vault_root).as_posix()
+            for path in vault_entries
+            if path.is_symlink()
+        ]
+        artifact_vault_health["symlink_count"] = len(unexpected_symlinks)
+        artifact_errors.extend(f"vault symlink is forbidden: {path}" for path in unexpected_symlinks[:20])
+        actual_paths = {
+            path.relative_to(artifact_vault_root).as_posix()
+            for path in vault_entries
+            if path.is_file() and not path.is_symlink()
+        }
+        extra_paths = sorted(actual_paths - artifact_expected_paths)
+        artifact_vault_health["extra_file_count"] = len(extra_paths)
+        artifact_errors.extend(f"unregistered vault file: {path}" for path in extra_paths[:20])
+    artifact_vault_health["errors"] = artifact_errors
+    artifact_vault_health["status"] = "pass" if not artifact_errors else "fail"
+    errors.extend(f"artifact-vault:{message}" for message in artifact_errors)
 
     def expand_range_ids(text, path):
         expanded = set()
@@ -2431,6 +2717,9 @@ result = {
     "boundary_health": boundary_health,
     "route_registry_health": route_registry_health,
     "path_routing_health": path_routing_health,
+    "frontmatter_status_health": frontmatter_status_health,
+    "body_coverage_health": body_coverage_health,
+    "artifact_vault_health": artifact_vault_health,
     "errors": errors,
     "warnings": warnings,
     "dry_run": bool(args.dry_run),

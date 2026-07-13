@@ -1,8 +1,8 @@
 ---
 title: PCR02 ASAN 调试指导
 doc_type: owner-approved-target
-status: project-local-current
-owner: leiwenjun
+status: archived
+owner: team-core
 source_id: pcr02-project-docs
 source_path: runbooks/asan-debug-guide.md
 source_sha256: d65cf6796eac2c306b6bd0fa101450a1307d5c49ba7b7640e6a329d4263d8e88

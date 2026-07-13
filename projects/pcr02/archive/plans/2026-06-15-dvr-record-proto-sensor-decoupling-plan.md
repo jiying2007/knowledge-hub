@@ -1,8 +1,8 @@
 ---
 title: DVR 录像回放 proto/sensor 解耦设计与实施计划
 doc_type: owner-approved-target
-status: archive-only
-owner: leiwenjun
+status: archived
+owner: team-core
 source_id: pcr02-project-docs
 source_path: plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
 source_sha256: 9134247182e7578eec8c2bb4d702ffaed6c75359039d549b679f058bf8532cb3

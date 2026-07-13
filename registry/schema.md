@@ -76,6 +76,22 @@ Date invariants:
 - `updated_at` must be the same date as or later than `created_at`.
 - stale `review_after` is a warning, not an error; it should guide human review without blocking unrelated maintenance.
 
+Markdown frontmatter mirror invariants:
+
+- 已登记 Markdown 正文若声明 `status`、`owner`、`review_after`，这些字段必须与 `registry/items.jsonl` 一致。历史正文不强制批量补 frontmatter；一旦声明就进入漂移门禁。
+- registry 是生命周期和责任字段权威；`current/`、`decisions/` 等 canonical 路径不隐含 active 状态。
+- frontmatter 漂移必须修正文镜像或 registry 事实，不能通过改变目录名掩盖。
+
+## body-coverage.json
+
+`registry/body-coverage.json` 仅为冻结历史语料和领域/治理基线提供集合级正文路径覆盖，避免对低价值索引页机械创建 item。精确 `items.jsonl` path 始终优先。
+
+- 每个 collection 必须包含唯一 `id`、规范化 `path_prefix`、`coverage_mode`、已登记 `owner`、ISO `review_after`、正整数 `expected_markdown_count`、小写 64 位 `inventory_sha256` 和中文 `reason_zh`。
+- `coverage_mode` 只允许 `archive-corpus`、`domain-baseline`、`governance-baseline`。
+- inventory hash 只对该前缀下纳入正文扫描范围的 repo-relative Markdown 路径排序后计算；正文内容变化不改变集合身份，路径新增、删除或改名会使门禁失败。
+- 集合覆盖不创建 registry item，不赋予 status，不生成 owner decision 或 promotion，也不替代新增当前事实、决策、验证和治理规范的逐条登记。
+- `knowledge-orphan-files.sh --all --strict --json` 是集合契约的直接验证入口；`knowledge-check` 会复用该结果。
+
 Source reference invariants:
 
 - item `source` must be an object.
@@ -636,6 +652,12 @@ Manifest profile invariants:
 - source coverage row 继续遵守 source coverage 字段要求。
 - owner worksheet/form 结构门禁不得生成 owner decision，不得关闭 owner gate。
 - 机器清单可以保留英文 key，但 `summary_zh`、`notes_zh`、`decision`、`risk` 或相邻 Markdown 必须给中文维护者足够上下文。
+
+Artifact vault invariants:
+
+- vault 清单行默认 `vault_presence=required`，对应 `artifacts/vault/<collection>/<source_path>` 必须存在且 size/SHA256 完全一致。
+- `vault_presence=external-reference-only` 只允许文件不在本地 vault 时使用，必须在清单或相邻 Markdown 写明原因；若同路径文件实际存在则视为边界漂移。
+- vault 不允许清单外额外文件；raw log、core、SDK、release binary、源码包和 secret 不得进入。
 
 ## Safety invariants
 

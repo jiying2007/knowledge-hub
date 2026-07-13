@@ -3,7 +3,7 @@ title: PCR02 构建与部署手册
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13

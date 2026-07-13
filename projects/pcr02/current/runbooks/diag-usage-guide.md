@@ -3,7 +3,7 @@ title: Diag 测试使用指南
 doc_type: runbook
 knowledge_type: guideline
 maturity: active
-status: active
+status: archived
 owner: team-core
 created: 2026-05-26
 last_updated: 2026-06-09

@@ -3,7 +3,7 @@ title: prog_tool 使用说明
 doc_type: runbook
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-14

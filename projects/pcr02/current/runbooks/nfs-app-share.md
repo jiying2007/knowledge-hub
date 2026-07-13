@@ -1,7 +1,7 @@
 ---
 title: PCR02 app NFS 共享挂载手册
 doc_type: runbook
-status: project-local-current
+status: archived
 owner: leiwenjun
 source_id: local-runtime-config
 source_path: ~/nfs/README-nfs-app.md

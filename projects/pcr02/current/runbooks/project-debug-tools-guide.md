@@ -3,7 +3,7 @@ title: PCR02 项目调试工具入口
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: active
+status: archived
 owner: team-core
 created: 2026-05-18
 last_updated: 2026-07-02

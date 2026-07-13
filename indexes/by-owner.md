@@ -5,6 +5,8 @@
 - `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
 - `knowledge-hub-operational-audit-20260713`
+- `knowledge-hub-obsidian-integration-20260713`
+- `knowledge-hub-comprehensive-maturity-remediation-20260713`
 - `knowledge-hub-long-term-operations-plan-20260711`
 - `knowledge-hub-archived-summary-full-closeout-20260711`
 - `knowledge-hub-root`
@@ -231,6 +233,7 @@
 
 ## team-core
 
+- `pcr02-thirdparty-build-optimization-baseline-20260710`
 - `pcr02-core-sensor-in0-935-1782474660-gdb-session-20260626`
 - `pcr02-prog-pcr02-core-gdb-selection-20260702`
 - `pcr02-diag-command-architecture-final`

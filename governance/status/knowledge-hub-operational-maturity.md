@@ -2,28 +2,29 @@
 
 ## 结论
 
-Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、source control、owner gate、review queue、review_after 周期刷新、final gate、search/context/status/check 工具链都有可验证入口，且 `mature` profile 能阻断迁移态残留和高比例 `reviewing` 滞留。
+Knowledge Hub 的结构和自动治理已达到长期运营成熟态：registry、索引、source control、owner gate、review queue、review_after、正文/附件完整性、search/context/status/check/final gate 都有可验证入口，且 `mature` profile 能阻断迁移态残留、高比例 `reviewing` 和未完成人工复核的内容候选。
 
 截至 2026-07-13 当前 live baseline，P1/P2/P3 优化、运营审计和 PCR02 owner-ready 验证路径已落为 Hub 控制面资产：3 条 PCR02 decision candidate 不再被粗粒度标成 `owner-review-and-validation`，而是进入 `owner-ready-validation-pending`；2 条 PCR02 EVT2 source-audit 不再被标成 `evidence-needed`，而是进入 `evidence-backed-validation-pending`；18 条 2026-08-09..2026-08-11 Codex archive near-due item 已按 archive-only/provenance 边界复核并刷新到 2026-11-09..2026-11-11；full regression 去掉无用 fixture 复制、减少嵌套回归并支持 full suite 最多 4 worker 并行；本页把当前基线和历史基线拆开。
 
-当前状态仍是运营成熟，不是 owner 代签。本页不替代 final gate，不生成 owner decision，不关闭 owner gate，不提升 active，不写 memory，不修改源项目，不代表板级老化、EMI、HIL、发布或远端状态已签收。
+2026-07-13 全面治理新增了 Obsidian reviewing 规范和 archived audit candidate。用户明确授权复核后，3 条 AI/official-doc review queue row 已 3/3 校验并机械落地，两个 item 分别保持 `reviewing` 和 `archived`；mature terminal gate 已恢复 `final_status=ok`。本页不替代 owner decision，不提升 active，不写 memory，不修改源项目，不代表板级老化、EMI、HIL、发布或远端状态已签收。
 
 ## 当前基线
 
 | 指标 | 当前值 | 说明 |
 |---|---:|---|
-| registry item | 316 | 2026-07-13 operational audit 和 PCR02 owner-ready validation paths 登记后的 live 总数 |
+| registry item | 319 | 新增第三方编译基线、Obsidian 集成规范和全面成熟度 audit candidate 后的 live 总数 |
 | active item | 16 | `summary_zh` 缺口为 0 |
-| archived item | 280 | 125 条 archived 长尾摘要已全量回填，P1/P2/P3 closeout、ST77912 implementation evidence 和 2026-07-13 operational audit 已登记 |
-| reviewing item | 20 | 比例约 6.33%，低于 mature profile 10% 阈值；只进入周度 triage |
-| review queue pending | 0 | 普通 AI/external review queue 已清零 |
+| archived item | 281 | 历史长尾摘要已收口，并新增全面成熟度 archived audit candidate |
+| reviewing item | 22 | 比例约 6.90%，低于 mature profile 10% 阈值；新增第三方编译基线和 Obsidian 规范 |
+| review queue pending | 0 | 两个新增 candidate 的 3 条 queue row 已按 `auth-20260713-knowledge-hub-obsidian-audit-review` 完成受托复核 |
 | stale review_after | 0 | item/source stale 均为 0 |
 | 30-day near-due item | 0 | 18 条 Codex archive near-due item 已刷新到 2026-11-09..2026-11-11 |
 | mature blocker | 0 | mature audit `status=pass` |
-| changed orphan file | 0 | 当前变更文件均已通过 registry/index 覆盖 |
-| reviewing triage | 3 owner-ready + 3 evidence-backed + 14 keep-reviewing | P1 五条已从粗粒度待办转为可执行 validation pending；新增 PCR02 validation paths 作为 evidence-backed validation pending |
+| full body coverage | 80 exact + 132 frozen collection + 0 missing | 212 份长期 Markdown 全覆盖；12 个集合 path inventory hash 全部通过 |
+| artifact vault | 181 identity = 178 present + 3 external-only | missing/hash/size/extra/duplicate/symlink 均为 0 |
+| reviewing triage | 3 owner-ready + 3 evidence-backed + 16 keep-reviewing | owner/实机验证和 Hub 内容复核保持分离；本轮 Hub review queue 已清零 |
 | owner gate open | 0 | PCR02 owner gate 当前无打开项 |
-| full regression baseline | 140 个回归结果场景 | 2026-07-13 mature full gate `final_status=ok`，full regression `failed_ids=[]`；后续性能只盯 slowest 10，不泛化重构 |
+| full regression baseline | 140 个回归结果场景 | 137 test function、4 worker、`failed_ids=[]`；后续性能只盯 slowest 10，不泛化重构 |
 
 ## 历史基线
 
@@ -35,6 +36,7 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 | 2026-07-11 长期运营计划固化 | 312 | 16 | 277 | 19 | 固定 daily/weekly/monthly/release 节奏、reviewing 处置规则、full regression 趋势摘要和远端发布授权边界 |
 | 2026-07-11 P1/P2/P3 优化闭环 | 314 | 16 | 279 | 19 | P1 五条改为 owner-ready/evidence-backed validation pending，P2 将 mature release gate 压到 55 秒，P3 拆清当前/历史基线 |
 | 2026-07-13 运营审计与验证路径 | 316 | 16 | 280 | 20 | 18 条 Codex archive near-due 刷新到 2026-11；新增 PCR02 owner-ready validation paths；mature full gate 通过 |
+| 2026-07-13 全面成熟度与 Obsidian 治理 | 319 | 16 | 281 | 22 | 正文、frontmatter、vault、搜索和 Obsidian 呈现层落地；2 个新 candidate 已授权复核，mature full gate 最终通过 |
 
 ## 终态成熟条件
 
@@ -49,19 +51,19 @@ Knowledge Hub 已达到长期运营成熟完整交付态：registry、索引、s
 ### Daily
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
 rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json
 ```
 
 ### Weekly
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --as-of 2026-07-13 --skip-final-gate
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json
-rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --skip-final-gate
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Knowledge Hub mature" --json --limit 8
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "成熟态" --json --limit 8
@@ -74,9 +76,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 归档路径" --json -
 ```bash
 rtk git status --short
 rtk git diff --check
-rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json --strict
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-13 --json
+rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression
+rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json
 rtk bash ~/codex/scripts/final-ready.sh
 ```
 
@@ -121,10 +123,15 @@ rtk bash ~/codex/scripts/final-ready.sh
 | `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-13 --json` | 退出码 0；regression_status=pass；result_count=140；failed_ids=[]；slowest 10 已记录到 `knowledge-hub-operational-audit-20260713` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13` | 退出码 0；final_status=ok；full regression 通过；blockers=[]；gap_map=[] |
 | `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json` | 退出码 0；刷新前 near_due_items=18；已按 2026-07-13 operational audit 刷新到 2026-11 窗口 |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13` | 退出码 0；errors=0；warnings=0；正文 80 exact + 132 collection；vault 178 present + 3 external-only |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-13` | 退出码 0；137 test function；140 result；jobs=4；failed_ids=[] |
+| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13`（授权复核前） | 退出码 1；`final_status=needs-owner-review`；唯一 blocker=`review-queue-pending-max-body` |
+| 同上（`auth-20260713-knowledge-hub-obsidian-audit-review` 复核后） | 退出码 0；`final_status=ok`；automatic=`complete`；check/regression pass；140/140；blockers=[]；gap_count=0 |
 
 ## 剩余风险
 
 - 已无 2026-07-13 30 天窗口内 near-due 运营阻塞；18 条 Codex archive near-due 已按 archive-only/provenance 边界刷新到 2026-11 窗口。
+- Obsidian 规范和全面成熟度审计已按用户明确授权完成受托复核；该结论只接受为 review record，不是 owner decision、active promotion 或外部发布授权。
 - ASAN 团队级 runbook 已 active；非 PCR02 项目实操证据仍是未来外部证据输入，已由 `embedded-asan-non-pcr02-evidence-followup-20260629` 和 `knowledge-hub-complete-delivery-closure-20260701` 固定边界，不作为完整交付阻塞。
 - 完整交付仍需本地 Git 快照和远端 push 证据；本页只描述 Hub 成熟态运营，不代表 owner approval 或 source project write 授权。
 - 本页不改变任何源项目、远端仓库、owner decision 或 memory 状态。
