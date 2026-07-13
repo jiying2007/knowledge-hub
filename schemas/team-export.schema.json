@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/team-export.schema.json",
+  "title": "Knowledge Hub local team export result",
+  "type": "object",
+  "required": ["schema_version", "status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["ready", "blocked", "exported"]},
+    "policy": {"type": "string"},
+    "file_count": {"type": "integer", "minimum": 0},
+    "manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "secret_scan": {"type": "object"},
+    "link_closure": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "exported"}}, "required": ["status"]},
+      "then": {"required": ["file_count", "manifest_sha256", "secret_scan", "link_closure"]}
+    }
+  ],
+  "additionalProperties": true
+}

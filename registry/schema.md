@@ -1,3 +1,30 @@
+---
+title: Registry 中文可读性与证据字段扩展
+summary_zh: 登记 registry/schema 中面向中文可读性、证据强度、AI provenance、人审状态和边界声明的字段扩展。该 active 条目只约束 registry 字段语义，不允许用字段补充伪造人工复核或绕过 owner
+  gate。
+tags:
+- registry
+- schema
+- readability
+- evidence
+- ai-provenance
+id: knowledge-hub-registry-schema-readability-extension
+kind: standard
+domain: governance
+path: registry/schema.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- Registry 中文可读性与证据字段扩展
+related:
+- indexes/obsidian-home.md
+---
+
 # Registry Schema
 
 ## items.jsonl
@@ -61,7 +88,7 @@ reject
 defer
 ```
 
-`human_review_decision` 记录真实人工复核结论，不等同于 owner decision、active promotion 或 source 项目授权。`needs-edits` 和 `defer` 表示复核未闭环，在 `knowledge-status.sh --strict --final-profile max-body` 中仍是 blocker。
+`human_review_decision` 记录真实人工复核结论，不等同于 owner decision、active promotion 或 source 项目授权。`needs-edits` 和 `defer` 表示复核未闭环，在 product strict status 中仍是 blocker。
 
 Recommended external-source fields:
 
@@ -315,6 +342,8 @@ Invariants:
 
 说明本机 workspace 适配格式，不记录真实路径。真实路径应写入未纳入 Git 的 `local/workspaces.json`。
 
+本机映射通过 `knowledge-workspace-discover.sh --plan --json` 只读发现；`--apply` 只能事务化写入 `local/workspaces.json`。该文件遵循 `schemas/local-workspaces.schema.json`，其中 `path`、`alternate_paths`、`git_ref` 和 `git_head` 都是 machine-local 派生证据，不得复制到 tracked registry、managed Markdown、团队导出或 owner decision。
+
 Allowed references:
 
 - `workspace://<logical-name>`
@@ -323,6 +352,13 @@ Allowed references:
 - `~/.codex`
 
 禁止把 `/home/<user>/...`、`/vsdata/<user>/...`、`~/work/...` 或 `~/bin/...` 写入 Git 管理的 registry。
+
+发现规则：
+
+- 只接受与 `repositories.json.remote_key` 规范化后完全一致的 Git remote，不按目录名或模糊字符串猜测。
+- 重复 remote 必须保留确定性选中结果和 `alternate_paths` 诊断；候选副本不自动删除或修改。
+- `source_evidence` 仅证明本机路径、根级入口和 HEAD 可读取，不证明构建、测试、设备、发布或 owner gate 已通过。
+- 无映射或 fresh clone 时必须安全降级为 `unmapped`/pending，不能改变 tracked 文档内容或生成伪 current。
 
 ## project-routes.json
 
@@ -488,6 +524,30 @@ Authorization invariants:
 - `evidence_refs` must reference an existing local path, command-shaped evidence, or current-session explicit user instruction.
 - `rollback_path` and `validation_commands` must be non-empty for write actions.
 - AI / Codex may be executor, but must not pretend to be a human reviewer unless the authorization explicitly says it is acting on behalf of that owner.
+
+## lifecycle-events.jsonl
+
+登记 `capture`、`promote` 和 `retire` 的可审计生命周期事件。该账本记录实际 apply 结果；dry-run 不得写入。`capture` 可在无高风险授权时创建 `draft`、`reviewing` 或 `personal`，但不得直接创建 `active`。`promote` 和 `retire` 必须引用匹配、未过期且处于 `active` 状态的 authorization，并提供真实 review form、预期正文 hash 和事务 journal。
+
+Required lifecycle event fields:
+
+- `event_id`
+- `event_type`
+- `item_id`
+- `before_status`
+- `after_status`
+- `authorization_id`
+- `executed_by`
+- `executed_at`
+- `evidence_refs`
+
+Lifecycle invariants:
+
+- `capture` 的 `authorization_id` 可以为空；其他事件不得为空。
+- `promote` 仅支持 `reviewing -> active`，且 authorization 必须允许 `active-promotion`。
+- `retire` 只支持 schema 明确允许的终态转换，不移动正文、不删除历史证据。
+- registry、正文 frontmatter、核心索引、authorization 消费状态和 lifecycle event 必须在同一 recoverable transaction 内更新。
+- `.tmp/transactions/<transaction_id>/journal.json` 是本地恢复证据，不作为长期正文或发布制品。
 
 ## automation-runs.jsonl
 

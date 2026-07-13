@@ -1,3 +1,28 @@
+---
+title: 外部资料吸收规范
+summary_zh: 规定外部资料、文章、网页、GitHub 项目和 AI 摘要进入 Hub 前的来源、摘要、复核、证据和提升边界。该 active 规范不允许未核验资料直接成为 active fact，也不允许绕过 owner review。
+tags:
+- governance
+- external-source
+- absorption
+- zh-cn
+id: knowledge-hub-external-source-absorption-rules
+kind: standard
+domain: governance
+path: governance/external-source-absorption.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 外部资料吸收规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 外部资料吸收规范
 
 ## 目标

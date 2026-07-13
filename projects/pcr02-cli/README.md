@@ -7,3 +7,14 @@
 - 决策：`projects/pcr02-cli/decisions/`
 - 验证：`projects/pcr02-cli/validation/`
 - 归档：`projects/pcr02-cli/archive/`
+
+<!-- knowledge-hub-project-readiness:start -->
+## 成熟度工作台
+
+以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+
+- [项目画像候选](current/project-profile.md)
+- [维护 runbook](current/runbooks/maintenance-entry.md)
+- [权威边界决策候选](decisions/project-boundary-decision-candidate.md)
+- [readiness validation](validation/project-readiness.md)
+<!-- knowledge-hub-project-readiness:end -->

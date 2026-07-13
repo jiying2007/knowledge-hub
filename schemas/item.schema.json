@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/item.schema.json",
+  "title": "Knowledge Hub registry item",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "kind",
+    "domain",
+    "path",
+    "scope",
+    "visibility",
+    "status",
+    "owner",
+    "source",
+    "review_after",
+    "validation_refs",
+    "review_status",
+    "created_at",
+    "updated_at",
+    "promotion",
+    "tags"
+  ],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "title": {"type": "string", "minLength": 1},
+    "kind": {
+      "enum": [
+        "standard", "runbook", "architecture", "decision", "project-current",
+        "project-archive", "validation", "audit", "patent", "debug-record",
+        "external-source-note", "owner-decision-worksheet", "patent-disclosure",
+        "codex-session", "codex-workflow", "personal-note", "artifact-ref",
+        "authorization", "automation-run"
+      ]
+    },
+    "domain": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "pattern": "^(?!/|\\./|\\.\\./).+"},
+    "scope": {"enum": ["team-general", "project-specific", "codex-memory-curation-governance"]},
+    "visibility": {"enum": ["team-internal", "personal-local"]},
+    "status": {"enum": ["draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"]},
+    "owner": {"type": "string", "minLength": 1},
+    "source": {"type": "object"},
+    "review_after": {"type": "string", "format": "date"},
+    "validation_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "review_status": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date"},
+    "updated_at": {"type": "string", "format": "date"},
+    "promotion": {"const": "none"},
+    "tags": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "generated_by_ai": {"type": "boolean"},
+    "ai_role": {"type": "string"},
+    "ai_model_or_tool": {"type": "string", "minLength": 1},
+    "ai_generated_at": {"type": "string", "format": "date"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"enum": ["active", "reviewing"]}}, "required": ["status"]},
+      "then": {"properties": {"validation_refs": {"minItems": 1}}}
+    }
+  ],
+  "additionalProperties": true
+}

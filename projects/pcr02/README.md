@@ -33,3 +33,14 @@
 - 验证记录写入 `validation/`。
 - owner 签收或决策写入 `decisions/` 或对应 owner-gate manifest。
 - raw log、core、SDK 包和 release binary 不写入正文层；只登记摘要、hash、路径或 artifact-ref。
+
+<!-- knowledge-hub-project-readiness:start -->
+## 成熟度工作台
+
+以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+
+- [项目画像候选](current/project-profile.md)
+- [维护 runbook](current/runbooks/maintenance-entry.md)
+- [权威边界决策候选](decisions/project-boundary-decision-candidate.md)
+- [readiness validation](validation/project-readiness.md)
+<!-- knowledge-hub-project-readiness:end -->

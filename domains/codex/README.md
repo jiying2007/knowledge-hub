@@ -9,3 +9,14 @@
 - 归档：`domains/codex/archive/`
 
 Codex 历史、raw session 和 memory 只作为 runtime input 或 provenance，不直接复制为长期正文；需要长期保留时，先形成摘要、registry item 或人工复核候选。
+
+<!-- knowledge-hub-project-readiness:start -->
+## 成熟度工作台
+
+以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+
+- [项目画像候选](current/project-profile.md)
+- [维护 runbook](current/runbooks/maintenance-entry.md)
+- [权威边界决策候选](decisions/project-boundary-decision-candidate.md)
+- [readiness validation](validation/project-readiness.md)
+<!-- knowledge-hub-project-readiness:end -->

@@ -15,7 +15,8 @@
         "pcr02"
       ],
       "repo_boundary": "group",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "aggregate-group"
     },
     {
       "id": "pcr02-ssc305",
@@ -31,7 +32,8 @@
         "pcr02"
       ],
       "repo_boundary": "primary",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "xcrz-sigmastar-demo",
@@ -47,7 +49,8 @@
         "pcr02"
       ],
       "repo_boundary": "primary",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-api",
@@ -63,7 +66,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-app",
@@ -79,7 +83,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-hdi",
@@ -95,7 +100,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-sensor",
@@ -111,7 +117,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-daemon",
@@ -127,7 +134,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-cli",
@@ -143,7 +151,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-cmd-server",
@@ -159,7 +168,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-proto-c",
@@ -175,7 +185,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-wifi",
@@ -191,7 +202,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "pcr02-mp4",
@@ -207,7 +219,8 @@
         "pcr02"
       ],
       "repo_boundary": "module",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "app-ota",
@@ -223,7 +236,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "app-product-test",
@@ -239,7 +253,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "app-tool",
@@ -255,7 +270,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "app-main",
@@ -271,7 +287,8 @@
         "pcr02"
       ],
       "repo_boundary": "application",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "mcu",
@@ -287,7 +304,8 @@
         "mcu"
       ],
       "repo_boundary": "group",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "aggregate-group"
     },
     {
       "id": "gd32l235",
@@ -303,7 +321,8 @@
         "mcu"
       ],
       "repo_boundary": "firmware",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "hc32f072",
@@ -319,7 +338,8 @@
         "mcu"
       ],
       "repo_boundary": "firmware",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "mm32spin023c",
@@ -335,7 +355,8 @@
         "mcu"
       ],
       "repo_boundary": "firmware",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "firmware-release-tools",
@@ -352,7 +373,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "firmware-toolchains",
@@ -369,7 +391,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "codex",
@@ -385,7 +408,8 @@
         "codex"
       ],
       "repo_boundary": "runtime-assets",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "runtime-assets"
     },
     {
       "id": "llm-agent",
@@ -401,7 +425,8 @@
         "agent-tools"
       ],
       "repo_boundary": "primary",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "agent-dev-kit",
@@ -417,7 +442,8 @@
         "agent-tools"
       ],
       "repo_boundary": "subrepo",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "llm-tools",
@@ -434,7 +460,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "sigmastar-flasher",
@@ -450,7 +477,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "mm32spin-validator",
@@ -467,7 +495,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "ota-packager",
@@ -483,7 +512,8 @@
         "embedded-tools"
       ],
       "repo_boundary": "tooling",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "software-tool"
     },
     {
       "id": "knowledge-hub",
@@ -491,15 +521,16 @@
       "type": "knowledge-control-plane",
       "domain": "root",
       "entry": "README.md",
-      "current": "governance",
-      "archive": "artifacts/manifests",
-      "decisions": "registry",
-      "validation": "tools",
+      "current": "governance/product/current",
+      "archive": "governance/product/archive",
+      "decisions": "governance/product/decisions",
+      "validation": "governance/product/validation",
       "groups": [
         "knowledge-hub"
       ],
       "repo_boundary": "control-plane",
-      "status": "registered"
+      "status": "registered",
+      "evidence_profile": "control-plane"
     }
   ]
 }

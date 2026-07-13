@@ -1,3 +1,29 @@
+---
+title: 中文长期资产模板集
+summary_zh: 登记 Hub 中文长期资产模板集，覆盖决策、排障、外部资料、owner review、commit/changelog/PR 等常见写作入口。该 active 条目只说明模板控制面，不自动生成 owner decision、不提升事实、不替代
+  registry 必填字段。
+tags:
+- templates
+- zh-cn
+- long-term-assets
+- governance
+id: knowledge-hub-zh-template-set-20260618
+kind: standard
+domain: governance
+path: templates/README.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 中文长期资产模板集
+related:
+- indexes/obsidian-home.md
+---
+
 # Templates
 
 新增 Knowledge Hub 条目时优先使用本目录模板。模板的人读部分默认简体中文；命令、路径、协议字段、API 名称和代码标识保留原样。
@@ -28,11 +54,13 @@
 
 | 输入 kind | registry kind | 推荐模板 | 用途 |
 |---|---|---|---|
+| inbox / 待分类输入 | 初始为 `project-current` 或人工改为实际 kind | `inbox-note.md` | Obsidian/Markdown 手工捕获，完成分类前保持 draft |
 | `item` 或未知 kind | 需人工从 schema 选择 | `item.md` | 通用知识条目 |
 | `runbook` | `runbook` | `runbook.md` | 操作手册 |
 | `decision` | `decision` | `decision.md` | 决策记录 |
 | `validation` / `validation-report` | `validation` | `validation-report.md` | 验证报告 |
 | `asan-validation` / `asan-validation-report` | `validation` | `asan-validation-report.md` | ASAN 项目实操验证报告 |
+| Obsidian 本机 GUI 验收 | `audit` | `obsidian-runtime-acceptance.md` | 生成忽略提交的本机运行态 JSON；不改变 registry 或 product lifecycle |
 | `owner-decision-worksheet` / `owner-worksheet` | `owner-decision-worksheet` | `owner-decision-worksheet.md` | owner 签核草稿入口 |
 | `debug-record` | `debug-record` | `debug-record.md` | 排障记录 |
 | `external-source-note` / `external-source` | `external-source-note` | `external-source-note.md` | 外部资料吸收记录 |

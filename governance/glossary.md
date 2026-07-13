@@ -1,3 +1,28 @@
+---
+title: 中文术语表规范
+summary_zh: 定义 Hub 内中文术语、英文技术标识和中英边界的维护规则，避免同义词漂移、翻译口径冲突和检索噪音。该 active 规范只提供术语控制面，不替代证据、registry 字段或项目 owner 签收。
+tags:
+- governance
+- zh-cn
+- glossary
+- terminology
+id: knowledge-hub-glossary-rules
+kind: standard
+domain: governance
+path: governance/glossary.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 中文术语表规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 中文术语表规范
 
 ## 目标

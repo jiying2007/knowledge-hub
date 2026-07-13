@@ -27,6 +27,8 @@ summary_zh: 记录 Knowledge Hub 全面成熟度治理：补正文冻结覆盖�
 
 # Knowledge Hub 全面成熟度治理与 Obsidian 集成审计
 
+> 历史基线说明：本记录封存的是 2026-07-13 较早阶段的治理闭环结论。后续产品化实现新增 31 项目 readiness、共享事务内核、FTS 检索、导出、恢复演练和产品成熟度门禁后，当前结论以 [Knowledge Hub 产品成熟度全面实现审计](knowledge-hub-product-maturity-implementation-20260713.md) 为准。本记录中的 `mature final_status=ok` 只证明当时的治理 profile，不再作为“目标、架构、功能、性能、维护和项目真实证据已全面终态成熟”的依据。
+
 ## 结论
 
 Knowledge Hub 的目标架构已经收敛为“Markdown 唯一正文 + registry 权威账本 + gate 控制高风险动作 + Obsidian 可选呈现层”。本轮把此前“控制面成熟、全正文和附件边界仍有缺口”的状态推进到可验证闭环。

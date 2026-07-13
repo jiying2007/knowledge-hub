@@ -1,3 +1,30 @@
+---
+title: Knowledge Hub 全局路径路由规则
+summary_zh: 统一归档路径、会话总结、Codex archive、memory 和历史 session 的终态路由，要求新增内容写入 Knowledge Hub canonical 路径，旧外部路径仅作 provenance。
+tags:
+- governance
+- path-routing
+- archive
+- codex
+- pcr02
+- source-boundary
+id: knowledge-hub-path-routing-rules
+kind: standard
+domain: governance
+path: governance/path-routing.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-26'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- Knowledge Hub 全局路径路由规则
+related:
+- indexes/obsidian-home.md
+---
+
 # 全局路径路由（Path Routing）
 
 本文件定义 Knowledge Hub 终态下“归档路径在哪里”“会话总结写哪里”“旧路径还能不能用”的统一回答口径。它约束新增内容和自动化路由；历史会话、Git 历史和 provenance 字段只保留事实证据，不作为新增入口。

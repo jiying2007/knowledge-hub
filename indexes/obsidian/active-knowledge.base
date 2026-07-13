@@ -1,0 +1,28 @@
+filters:
+  and:
+    - file.ext == "md"
+    - status == "active"
+properties:
+  file.name:
+    displayName: 文档
+  owner:
+    displayName: Owner
+  review_after:
+    displayName: 复核日期
+  aliases:
+    displayName: 别名
+  related:
+    displayName: 相关材料
+views:
+  - type: table
+    name: Active 长期知识
+    order:
+      - file.name
+      - kind
+      - owner
+      - review_after
+      - aliases
+      - related
+    sort:
+      - property: review_after
+        direction: ASC

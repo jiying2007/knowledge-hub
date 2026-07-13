@@ -87,12 +87,21 @@
 - PCR02 DVR protocol sync build fix historical record: `projects/pcr02/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
 - PCR02 regular OTA customer partition guard historical delta: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
 - PCR02 IR light/player/WiFi debug summary from 2026-07-08 daily split: `projects/pcr02/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+- PCR02 项目画像候选: `projects/pcr02/current/project-profile.md`; `pcr02-readiness-profile-20260713`
+- PCR02 维护入口: `projects/pcr02/current/runbooks/maintenance-entry.md`; `pcr02-readiness-runbook-20260713`
+- PCR02 权威与维护边界决策候选: `projects/pcr02/decisions/project-boundary-decision-candidate.md`; `pcr02-readiness-decision-20260713`
+- PCR02 readiness validation: `projects/pcr02/validation/project-readiness.md`; `pcr02-readiness-validation-20260713`
+- PCR02 Video/Audio 共享内存使用说明: `projects/pcr02/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
 
 ## Firmware Release Tools
 
 - Project entry: `projects/firmware-release-tools/README.md`
 - NAS release sync historical session: `projects/firmware-release-tools/archive/release/2026-05-18-nas-release-sync-session.md`; `firmware-release-tools-nas-release-sync-session-20260518`
 - MCU memory-curation coverage includes firmware-release-tools NAS governance history: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`
+- Firmware Release Tools 项目画像候选: `projects/firmware-release-tools/current/project-profile.md`; `firmware-release-tools-readiness-profile-20260713`
+- Firmware Release Tools 维护入口: `projects/firmware-release-tools/current/runbooks/maintenance-entry.md`; `firmware-release-tools-readiness-runbook-20260713`
+- Firmware Release Tools 权威与维护边界决策候选: `projects/firmware-release-tools/decisions/project-boundary-decision-candidate.md`; `firmware-release-tools-readiness-decision-20260713`
+- Firmware Release Tools readiness validation: `projects/firmware-release-tools/validation/project-readiness.md`; `firmware-release-tools-readiness-validation-20260713`
 
 ## MCU
 
@@ -109,8 +118,193 @@
 - Normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`
 - v1.0.0 release memory review historical record: `projects/llm-tools/archive/release/2026-05-19-llm-tools-v1-release-memory-review.md`; `llm-tools-v1-release-memory-review-20260519`
 - Migrated old source deletion tombstone: `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`
+- LLM Tools 项目画像候选: `projects/llm-tools/current/project-profile.md`; `llm-tools-readiness-profile-20260713`
+- LLM Tools 维护入口: `projects/llm-tools/current/runbooks/maintenance-entry.md`; `llm-tools-readiness-runbook-20260713`
+- LLM Tools 权威与维护边界决策候选: `projects/llm-tools/decisions/project-boundary-decision-candidate.md`; `llm-tools-readiness-decision-20260713`
+- LLM Tools readiness validation: `projects/llm-tools/validation/project-readiness.md`; `llm-tools-readiness-validation-20260713`
 
 ## XCRZ SigmaStar Demo
 
 - Dual-screen animation historical analysis: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
 - Migrated old source deletion tombstone: `artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`; `codex-archive-removal-execution-20260710-migrated-extract-first`
+- XCRZ SigmaStar Demo 项目画像候选: `projects/xcrz-sigmastar-demo/current/project-profile.md`; `xcrz-sigmastar-demo-readiness-profile-20260713`
+- XCRZ SigmaStar Demo 维护入口: `projects/xcrz-sigmastar-demo/current/runbooks/maintenance-entry.md`; `xcrz-sigmastar-demo-readiness-runbook-20260713`
+- XCRZ SigmaStar Demo 权威与维护边界决策候选: `projects/xcrz-sigmastar-demo/decisions/project-boundary-decision-candidate.md`; `xcrz-sigmastar-demo-readiness-decision-20260713`
+- XCRZ SigmaStar Demo readiness validation: `projects/xcrz-sigmastar-demo/validation/project-readiness.md`; `xcrz-sigmastar-demo-readiness-validation-20260713`
+- PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+
+## PCR02 SSC305 SDK
+
+- PCR02 SSC305 SDK 项目画像候选: `projects/pcr02-ssc305/current/project-profile.md`; `pcr02-ssc305-readiness-profile-20260713`
+- PCR02 SSC305 SDK 维护入口: `projects/pcr02-ssc305/current/runbooks/maintenance-entry.md`; `pcr02-ssc305-readiness-runbook-20260713`
+- PCR02 SSC305 SDK 权威与维护边界决策候选: `projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md`; `pcr02-ssc305-readiness-decision-20260713`
+- PCR02 SSC305 SDK readiness validation: `projects/pcr02-ssc305/validation/project-readiness.md`; `pcr02-ssc305-readiness-validation-20260713`
+
+## PCR02 API Module
+
+- PCR02 API Module 项目画像候选: `projects/pcr02-api/current/project-profile.md`; `pcr02-api-readiness-profile-20260713`
+- PCR02 API Module 维护入口: `projects/pcr02-api/current/runbooks/maintenance-entry.md`; `pcr02-api-readiness-runbook-20260713`
+- PCR02 API Module 权威与维护边界决策候选: `projects/pcr02-api/decisions/project-boundary-decision-candidate.md`; `pcr02-api-readiness-decision-20260713`
+- PCR02 API Module readiness validation: `projects/pcr02-api/validation/project-readiness.md`; `pcr02-api-readiness-validation-20260713`
+
+## PCR02 App Module
+
+- PCR02 App Module 项目画像候选: `projects/pcr02-app/current/project-profile.md`; `pcr02-app-readiness-profile-20260713`
+- PCR02 App Module 维护入口: `projects/pcr02-app/current/runbooks/maintenance-entry.md`; `pcr02-app-readiness-runbook-20260713`
+- PCR02 App Module 权威与维护边界决策候选: `projects/pcr02-app/decisions/project-boundary-decision-candidate.md`; `pcr02-app-readiness-decision-20260713`
+- PCR02 App Module readiness validation: `projects/pcr02-app/validation/project-readiness.md`; `pcr02-app-readiness-validation-20260713`
+
+## PCR02 HDI Module
+
+- PCR02 HDI Module 项目画像候选: `projects/pcr02-hdi/current/project-profile.md`; `pcr02-hdi-readiness-profile-20260713`
+- PCR02 HDI Module 维护入口: `projects/pcr02-hdi/current/runbooks/maintenance-entry.md`; `pcr02-hdi-readiness-runbook-20260713`
+- PCR02 HDI Module 权威与维护边界决策候选: `projects/pcr02-hdi/decisions/project-boundary-decision-candidate.md`; `pcr02-hdi-readiness-decision-20260713`
+- PCR02 HDI Module readiness validation: `projects/pcr02-hdi/validation/project-readiness.md`; `pcr02-hdi-readiness-validation-20260713`
+
+## PCR02 Sensor Module
+
+- PCR02 Sensor Module 项目画像候选: `projects/pcr02-sensor/current/project-profile.md`; `pcr02-sensor-readiness-profile-20260713`
+- PCR02 Sensor Module 维护入口: `projects/pcr02-sensor/current/runbooks/maintenance-entry.md`; `pcr02-sensor-readiness-runbook-20260713`
+- PCR02 Sensor Module 权威与维护边界决策候选: `projects/pcr02-sensor/decisions/project-boundary-decision-candidate.md`; `pcr02-sensor-readiness-decision-20260713`
+- PCR02 Sensor Module readiness validation: `projects/pcr02-sensor/validation/project-readiness.md`; `pcr02-sensor-readiness-validation-20260713`
+
+## PCR02 Daemon App
+
+- PCR02 Daemon App 项目画像候选: `projects/pcr02-daemon/current/project-profile.md`; `pcr02-daemon-readiness-profile-20260713`
+- PCR02 Daemon App 维护入口: `projects/pcr02-daemon/current/runbooks/maintenance-entry.md`; `pcr02-daemon-readiness-runbook-20260713`
+- PCR02 Daemon App 权威与维护边界决策候选: `projects/pcr02-daemon/decisions/project-boundary-decision-candidate.md`; `pcr02-daemon-readiness-decision-20260713`
+- PCR02 Daemon App readiness validation: `projects/pcr02-daemon/validation/project-readiness.md`; `pcr02-daemon-readiness-validation-20260713`
+
+## PCR02 CLI App
+
+- PCR02 CLI App 项目画像候选: `projects/pcr02-cli/current/project-profile.md`; `pcr02-cli-readiness-profile-20260713`
+- PCR02 CLI App 维护入口: `projects/pcr02-cli/current/runbooks/maintenance-entry.md`; `pcr02-cli-readiness-runbook-20260713`
+- PCR02 CLI App 权威与维护边界决策候选: `projects/pcr02-cli/decisions/project-boundary-decision-candidate.md`; `pcr02-cli-readiness-decision-20260713`
+- PCR02 CLI App readiness validation: `projects/pcr02-cli/validation/project-readiness.md`; `pcr02-cli-readiness-validation-20260713`
+
+## PCR02 Command Server App
+
+- PCR02 Command Server App 项目画像候选: `projects/pcr02-cmd-server/current/project-profile.md`; `pcr02-cmd-server-readiness-profile-20260713`
+- PCR02 Command Server App 维护入口: `projects/pcr02-cmd-server/current/runbooks/maintenance-entry.md`; `pcr02-cmd-server-readiness-runbook-20260713`
+- PCR02 Command Server App 权威与维护边界决策候选: `projects/pcr02-cmd-server/decisions/project-boundary-decision-candidate.md`; `pcr02-cmd-server-readiness-decision-20260713`
+- PCR02 Command Server App readiness validation: `projects/pcr02-cmd-server/validation/project-readiness.md`; `pcr02-cmd-server-readiness-validation-20260713`
+
+## PCR02 Proto C App
+
+- PCR02 Proto C App 项目画像候选: `projects/pcr02-proto-c/current/project-profile.md`; `pcr02-proto-c-readiness-profile-20260713`
+- PCR02 Proto C App 维护入口: `projects/pcr02-proto-c/current/runbooks/maintenance-entry.md`; `pcr02-proto-c-readiness-runbook-20260713`
+- PCR02 Proto C App 权威与维护边界决策候选: `projects/pcr02-proto-c/decisions/project-boundary-decision-candidate.md`; `pcr02-proto-c-readiness-decision-20260713`
+- PCR02 Proto C App readiness validation: `projects/pcr02-proto-c/validation/project-readiness.md`; `pcr02-proto-c-readiness-validation-20260713`
+
+## PCR02 Wi-Fi Module
+
+- PCR02 Wi-Fi Module 项目画像候选: `projects/pcr02-wifi/current/project-profile.md`; `pcr02-wifi-readiness-profile-20260713`
+- PCR02 Wi-Fi Module 维护入口: `projects/pcr02-wifi/current/runbooks/maintenance-entry.md`; `pcr02-wifi-readiness-runbook-20260713`
+- PCR02 Wi-Fi Module 权威与维护边界决策候选: `projects/pcr02-wifi/decisions/project-boundary-decision-candidate.md`; `pcr02-wifi-readiness-decision-20260713`
+- PCR02 Wi-Fi Module readiness validation: `projects/pcr02-wifi/validation/project-readiness.md`; `pcr02-wifi-readiness-validation-20260713`
+
+## PCR02 MP4 Module
+
+- PCR02 MP4 Module 项目画像候选: `projects/pcr02-mp4/current/project-profile.md`; `pcr02-mp4-readiness-profile-20260713`
+- PCR02 MP4 Module 维护入口: `projects/pcr02-mp4/current/runbooks/maintenance-entry.md`; `pcr02-mp4-readiness-runbook-20260713`
+- PCR02 MP4 Module 权威与维护边界决策候选: `projects/pcr02-mp4/decisions/project-boundary-decision-candidate.md`; `pcr02-mp4-readiness-decision-20260713`
+- PCR02 MP4 Module readiness validation: `projects/pcr02-mp4/validation/project-readiness.md`; `pcr02-mp4-readiness-validation-20260713`
+
+## PCR02 OTA App
+
+- PCR02 OTA App 项目画像候选: `projects/app-ota/current/project-profile.md`; `app-ota-readiness-profile-20260713`
+- PCR02 OTA App 维护入口: `projects/app-ota/current/runbooks/maintenance-entry.md`; `app-ota-readiness-runbook-20260713`
+- PCR02 OTA App 权威与维护边界决策候选: `projects/app-ota/decisions/project-boundary-decision-candidate.md`; `app-ota-readiness-decision-20260713`
+- PCR02 OTA App readiness validation: `projects/app-ota/validation/project-readiness.md`; `app-ota-readiness-validation-20260713`
+
+## PCR02 Product Test App
+
+- PCR02 Product Test App 项目画像候选: `projects/app-product-test/current/project-profile.md`; `app-product-test-readiness-profile-20260713`
+- PCR02 Product Test App 维护入口: `projects/app-product-test/current/runbooks/maintenance-entry.md`; `app-product-test-readiness-runbook-20260713`
+- PCR02 Product Test App 权威与维护边界决策候选: `projects/app-product-test/decisions/project-boundary-decision-candidate.md`; `app-product-test-readiness-decision-20260713`
+- PCR02 Product Test App readiness validation: `projects/app-product-test/validation/project-readiness.md`; `app-product-test-readiness-validation-20260713`
+
+## PCR02 Tool App
+
+- PCR02 Tool App 项目画像候选: `projects/app-tool/current/project-profile.md`; `app-tool-readiness-profile-20260713`
+- PCR02 Tool App 维护入口: `projects/app-tool/current/runbooks/maintenance-entry.md`; `app-tool-readiness-runbook-20260713`
+- PCR02 Tool App 权威与维护边界决策候选: `projects/app-tool/decisions/project-boundary-decision-candidate.md`; `app-tool-readiness-decision-20260713`
+- PCR02 Tool App readiness validation: `projects/app-tool/validation/project-readiness.md`; `app-tool-readiness-validation-20260713`
+
+## PCR02 Main App
+
+- PCR02 Main App 项目画像候选: `projects/app-main/current/project-profile.md`; `app-main-readiness-profile-20260713`
+- PCR02 Main App 维护入口: `projects/app-main/current/runbooks/maintenance-entry.md`; `app-main-readiness-runbook-20260713`
+- PCR02 Main App 权威与维护边界决策候选: `projects/app-main/decisions/project-boundary-decision-candidate.md`; `app-main-readiness-decision-20260713`
+- PCR02 Main App readiness validation: `projects/app-main/validation/project-readiness.md`; `app-main-readiness-validation-20260713`
+
+## MCU Firmware Group
+
+- MCU Firmware Group 项目画像候选: `projects/mcu/current/project-profile.md`; `mcu-readiness-profile-20260713`
+- MCU Firmware Group 维护入口: `projects/mcu/current/runbooks/maintenance-entry.md`; `mcu-readiness-runbook-20260713`
+- MCU Firmware Group 权威与维护边界决策候选: `projects/mcu/decisions/project-boundary-decision-candidate.md`; `mcu-readiness-decision-20260713`
+- MCU Firmware Group readiness validation: `projects/mcu/validation/project-readiness.md`; `mcu-readiness-validation-20260713`
+
+## GD32L235 Firmware
+
+- GD32L235 Firmware 项目画像候选: `projects/gd32l235/current/project-profile.md`; `gd32l235-readiness-profile-20260713`
+- GD32L235 Firmware 维护入口: `projects/gd32l235/current/runbooks/maintenance-entry.md`; `gd32l235-readiness-runbook-20260713`
+- GD32L235 Firmware 权威与维护边界决策候选: `projects/gd32l235/decisions/project-boundary-decision-candidate.md`; `gd32l235-readiness-decision-20260713`
+- GD32L235 Firmware readiness validation: `projects/gd32l235/validation/project-readiness.md`; `gd32l235-readiness-validation-20260713`
+- GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
+
+## HC32F072 Firmware
+
+- HC32F072 Firmware 项目画像候选: `projects/hc32f072/current/project-profile.md`; `hc32f072-readiness-profile-20260713`
+- HC32F072 Firmware 维护入口: `projects/hc32f072/current/runbooks/maintenance-entry.md`; `hc32f072-readiness-runbook-20260713`
+- HC32F072 Firmware 权威与维护边界决策候选: `projects/hc32f072/decisions/project-boundary-decision-candidate.md`; `hc32f072-readiness-decision-20260713`
+- HC32F072 Firmware readiness validation: `projects/hc32f072/validation/project-readiness.md`; `hc32f072-readiness-validation-20260713`
+
+## MM32SPIN023C Firmware
+
+- MM32SPIN023C Firmware 项目画像候选: `projects/mm32spin023c/current/project-profile.md`; `mm32spin023c-readiness-profile-20260713`
+- MM32SPIN023C Firmware 维护入口: `projects/mm32spin023c/current/runbooks/maintenance-entry.md`; `mm32spin023c-readiness-runbook-20260713`
+- MM32SPIN023C Firmware 权威与维护边界决策候选: `projects/mm32spin023c/decisions/project-boundary-decision-candidate.md`; `mm32spin023c-readiness-decision-20260713`
+- MM32SPIN023C Firmware readiness validation: `projects/mm32spin023c/validation/project-readiness.md`; `mm32spin023c-readiness-validation-20260713`
+
+## Firmware Toolchains
+
+- Firmware Toolchains 项目画像候选: `projects/firmware-toolchains/current/project-profile.md`; `firmware-toolchains-readiness-profile-20260713`
+- Firmware Toolchains 维护入口: `projects/firmware-toolchains/current/runbooks/maintenance-entry.md`; `firmware-toolchains-readiness-runbook-20260713`
+- Firmware Toolchains 权威与维护边界决策候选: `projects/firmware-toolchains/decisions/project-boundary-decision-candidate.md`; `firmware-toolchains-readiness-decision-20260713`
+- Firmware Toolchains readiness validation: `projects/firmware-toolchains/validation/project-readiness.md`; `firmware-toolchains-readiness-validation-20260713`
+
+## LLM Agent
+
+- LLM Agent 项目画像候选: `projects/llm-agent/current/project-profile.md`; `llm-agent-readiness-profile-20260713`
+- LLM Agent 维护入口: `projects/llm-agent/current/runbooks/maintenance-entry.md`; `llm-agent-readiness-runbook-20260713`
+- LLM Agent 权威与维护边界决策候选: `projects/llm-agent/decisions/project-boundary-decision-candidate.md`; `llm-agent-readiness-decision-20260713`
+- LLM Agent readiness validation: `projects/llm-agent/validation/project-readiness.md`; `llm-agent-readiness-validation-20260713`
+
+## Agent Dev Kit
+
+- Agent Dev Kit 项目画像候选: `projects/agent-dev-kit/current/project-profile.md`; `agent-dev-kit-readiness-profile-20260713`
+- Agent Dev Kit 维护入口: `projects/agent-dev-kit/current/runbooks/maintenance-entry.md`; `agent-dev-kit-readiness-runbook-20260713`
+- Agent Dev Kit 权威与维护边界决策候选: `projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md`; `agent-dev-kit-readiness-decision-20260713`
+- Agent Dev Kit readiness validation: `projects/agent-dev-kit/validation/project-readiness.md`; `agent-dev-kit-readiness-validation-20260713`
+
+## SigmaStar Flasher
+
+- SigmaStar Flasher 项目画像候选: `projects/sigmastar-flasher/current/project-profile.md`; `sigmastar-flasher-readiness-profile-20260713`
+- SigmaStar Flasher 维护入口: `projects/sigmastar-flasher/current/runbooks/maintenance-entry.md`; `sigmastar-flasher-readiness-runbook-20260713`
+- SigmaStar Flasher 权威与维护边界决策候选: `projects/sigmastar-flasher/decisions/project-boundary-decision-candidate.md`; `sigmastar-flasher-readiness-decision-20260713`
+- SigmaStar Flasher readiness validation: `projects/sigmastar-flasher/validation/project-readiness.md`; `sigmastar-flasher-readiness-validation-20260713`
+
+## MM32SPIN Validator
+
+- MM32SPIN Validator 项目画像候选: `projects/mm32spin-validator/current/project-profile.md`; `mm32spin-validator-readiness-profile-20260713`
+- MM32SPIN Validator 维护入口: `projects/mm32spin-validator/current/runbooks/maintenance-entry.md`; `mm32spin-validator-readiness-runbook-20260713`
+- MM32SPIN Validator 权威与维护边界决策候选: `projects/mm32spin-validator/decisions/project-boundary-decision-candidate.md`; `mm32spin-validator-readiness-decision-20260713`
+- MM32SPIN Validator readiness validation: `projects/mm32spin-validator/validation/project-readiness.md`; `mm32spin-validator-readiness-validation-20260713`
+
+## OTA Packager
+
+- OTA Packager 项目画像候选: `projects/ota-packager/current/project-profile.md`; `ota-packager-readiness-profile-20260713`
+- OTA Packager 维护入口: `projects/ota-packager/current/runbooks/maintenance-entry.md`; `ota-packager-readiness-runbook-20260713`
+- OTA Packager 权威与维护边界决策候选: `projects/ota-packager/decisions/project-boundary-decision-candidate.md`; `ota-packager-readiness-decision-20260713`
+- OTA Packager readiness validation: `projects/ota-packager/validation/project-readiness.md`; `ota-packager-readiness-validation-20260713`

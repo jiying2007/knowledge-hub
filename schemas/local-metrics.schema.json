@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/local-metrics.schema.json",
+  "title": "Knowledge Hub privacy-preserving local metrics result",
+  "type": "object",
+  "required": ["schema_version", "status", "privacy", "adoption"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"type": "string"},
+    "privacy": {"type": "object", "required": ["raw_query_stored"]},
+    "adoption": {"type": "object", "required": ["ready"]}
+  },
+  "additionalProperties": true
+}

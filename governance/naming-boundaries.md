@@ -1,3 +1,28 @@
+---
+title: 中英文命名边界
+summary_zh: 定义中文标题、英文路径、registry id、tag、术语和模板字段的命名边界，防止混用、旧名残留和检索漂移。该 active 规范只约束命名维护，不改变既有项目事实或 owner decision。
+tags:
+- governance
+- naming
+- zh-cn
+- registry
+id: knowledge-hub-naming-boundaries
+kind: standard
+domain: governance
+path: governance/naming-boundaries.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 中英文命名边界
+related:
+- indexes/obsidian-home.md
+---
+
 # 中英文命名边界
 
 ## 目标

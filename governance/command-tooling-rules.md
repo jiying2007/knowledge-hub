@@ -1,3 +1,30 @@
+---
+title: 命令与工具入口规范
+summary_zh: 约束 Hub 命令、工具入口、report-only 行为、rtk 包装和证据采集方式，降低维护时的误写、越权和不可复现风险。该 active 规范不授权自动发布、删除、远端 Git 写入、owner gate 关闭或
+  memory 写入。
+tags:
+- governance
+- tools
+- rtk
+- report-only
+- zh-cn
+id: knowledge-hub-command-tooling-rules
+kind: standard
+domain: governance
+path: governance/command-tooling-rules.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 命令与工具入口规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 命令与工具入口规范
 
 ## 目标

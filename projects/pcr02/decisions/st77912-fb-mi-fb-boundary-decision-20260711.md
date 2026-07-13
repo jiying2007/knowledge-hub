@@ -11,56 +11,75 @@ owner: leiwenjun
 source:
   type: manual
   from: Codex analysis of PCR02 framebuffer mapping between fb_st77912 and SigmaStar mi_fb
-review_after: 2026-10-11
+review_after: '2026-10-11'
 created_at: 2026-07-11
-updated_at: 2026-07-11
+updated_at: '2026-07-13'
 promotion: none
 promotion_decision: none; PCR02 framebuffer/mi_fb 边界项目本地决策候选，需要 owner review 和固件变更后的目标设备复核后才能提升 active
 tags:
-  - pcr02
-  - st77912
-  - framebuffer
-  - fbdev
-  - fbtft
-  - mi_fb
-  - sstar-fb
-  - display
-  - decision-candidate
-  - manual-validation-pending
-  - no-active-promotion
+- pcr02
+- st77912
+- framebuffer
+- fbdev
+- fbtft
+- mi_fb
+- sstar-fb
+- display
+- decision-candidate
+- manual-validation-pending
+- no-active-promotion
 related:
-  - pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711
+- pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 validation_refs:
-  - "manual_validation_pending: true"
-  - "reason: requires owner review and optional target-device confirmation after firmware changes"
-summary_zh: "PCR02 当前双小屏使用 `/dev/fb0` 和 `/dev/fb1`，二者在设备侧识别为 `fb_st77912`，由 Linux fbtft/ST77912 驱动管理；`/config/config.json` 中的 `mi_fb` 配置属于 SigmaStar MI_FB/SStar FB 路径，不控制当前双小屏。当前运行态 `/proc/fb` 中 `/dev/fb2` 才是 `SStar FB0`。"
-review_status: manual-entry-pending-review
+- projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
+summary_zh: PCR02 当前双小屏使用 `/dev/fb0` 和 `/dev/fb1`，二者在设备侧识别为 `fb_st77912`，由 Linux fbtft/ST77912 驱动管理；`/config/config.json`
+  中的 `mi_fb` 配置属于 SigmaStar MI_FB/SStar FB 路径，不控制当前双小屏。当前运行态 `/proc/fb` 中 `/dev/fb2` 才是 `SStar FB0`。
+review_status: human-reviewed-accepted
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
 evidence_strength: source-code-plus-device-observation-pending-owner-review
 evidence_refs:
-  - device:/proc/fb
-  - device:/sys/class/graphics/fb0/name
-  - device:/sys/class/graphics/fb1/name
-  - SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.h
-  - SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.cpp
-  - SourceCode/kernel/arch/arm/boot/dts/iford.dtsi
-  - SourceCode/kernel/drivers/staging/fbtft/fb_st77912.c
-  - SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
-  - SourceCode/sdk/linux/init/fb/fb_init.c
-  - SourceCode/project/board/iford/SSC029A-S01A/config/config.json
+- device:/proc/fb
+- device:/sys/class/graphics/fb0/name
+- device:/sys/class/graphics/fb1/name
+- SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.h
+- SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.cpp
+- SourceCode/kernel/arch/arm/boot/dts/iford.dtsi
+- SourceCode/kernel/drivers/staging/fbtft/fb_st77912.c
+- SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
+- SourceCode/sdk/linux/init/fb/fb_init.c
+- SourceCode/project/board/iford/SSC029A-S01A/config/config.json
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: 2026-07-11
-human_reviewed_by:
-human_reviewed_at:
-review_basis:
-decision_owner: leiwenjun
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+decision_owner: unassigned
 decision_status: candidate
 decision_date: 2026-07-11
+aliases:
+- PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
+manual_validation_pending: true
+review_scope: content-review-record-only-not-owner-approval
+owner_roles_required:
+- PCR02 product decision owner
+- display/BSP owner
+- application owner
+- release owner
+evidence_readiness:
+  owner: pending-real-owner-assignment-and-decision
+  source: pending-current-commit-and-artifact-identity
+  device: pending-real-device-or-lab-evidence
+  release: pending-release-and-rollback-evidence
+  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 ---
 
 # PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
@@ -156,3 +175,38 @@ info->var.yres_virtual = info->var.yres
 - owner：leiwenjun
 - review_after：2026-10-11
 - 下一次复核内容：owner review、目标设备固件变更后的 `/proc/fb` 和 `/sys/class/graphics/fb*/name` 复核、是否需要把该候选提升为 active。
+
+<!-- pcr02-owner-device-release-validation:start -->
+## Owner、实机与发布验证门禁
+
+> 本节定义真实验证路径，不表示任何命令已经执行，也不是 owner decision、active promotion 或 release 授权。
+
+### 1. Owner 决策路径
+
+- `decision_owner=unassigned`；既有内容复核记录只证明候选可读，不证明 framebuffer 边界已被产品 owner 接受。
+- owner 必须确认适用硬件/固件版本，并对 `/dev/fb0`、`/dev/fb1`、`/dev/fb2` 的角色、应用依赖和未来失效条件作出明确决定。
+
+### 2. Source 与运行态证据
+
+- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、kernel/DTS/config commit、应用 commit 和构建制品 SHA256。
+- 在同一目标制品上保存 `/proc/fb`、`/sys/class/graphics/fb*/name`、geometry/stride/smem_len，以及应用进程实际打开节点的 `/proc/<pid>/fd` 或等价证据。
+- 将 `DisplayProvider` 节点配置、两个 ST77912 DTS 节点、fbtft 驱动注册和 `mi_fb` 配置引用到确切 commit/line；目录存在或旧会话输出不能替代当前 source identity。
+
+### 3. 端到端边界验证
+
+- 分别向 `/dev/fb0`、`/dev/fb1` 和 `/dev/fb2` 写入可区分的确定性测试图，确认物理输出目标和日志链路。
+- 覆盖冷启动、重启、模块/驱动初始化顺序变化和发布配置，确认 framebuffer 编号未漂移；若编号可能变化，应用必须改用稳定身份发现或显式失败。
+- 验证 `mi_fb` 参数变化只影响 SStar FB 路径，不被误报为 ST77912 双屏优化；验证 fbtft/SPI 参数变化能在双小屏观察到预期效果。
+
+### 4. Release 与回滚
+
+- 发布说明必须列出 display provider、DTS/fbtft、SStar FB/MI_FB 的边界，并标明适用 commit 与设备版本。
+- 回滚到上一制品后重复 `/proc/fb`、sysfs、应用打开节点和三路测试图检查；不能只证明系统启动。
+- owner、source、目标设备和 release 证据未闭环时保持 `reviewing`，不得因当前一次 `/proc/fb` 观察自动提升 active。
+
+### 证据落地契约
+
+- 证据记录必须包含 `owner_identity`、`source_commit`、`artifact_sha256`、`device_identity`、`environment`、`commands`、`exit_codes`、`result_summary`、`rollback_result` 和可恢复引用。
+- raw log、视频、截图和二进制只保存在受控外部制品位置；Hub 正文只保存脱敏摘要、hash 和引用。
+- 最终复核命令：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13`。
+<!-- pcr02-owner-device-release-validation:end -->

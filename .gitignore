@@ -2,6 +2,10 @@
 .cache/
 .tmp/
 tmp/
+local/workspaces.json
+local/obsidian-runtime-acceptance.json
+__pycache__/
+*.py[cod]
 
 # Editor and OS noise
 .obsidian/

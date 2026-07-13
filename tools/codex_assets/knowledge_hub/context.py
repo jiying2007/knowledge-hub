@@ -1,0 +1,749 @@
+"""Project-aware Knowledge Hub context assembly."""
+
+from __future__ import annotations
+
+import fcntl
+import hashlib
+import json
+import os
+import pathlib
+import re
+import time
+import urllib.parse
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
+
+from .common import compact_json, load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
+from .search import SearchFilters, query_terms, search
+
+
+TASK_TYPES = {"debug", "archive", "release", "decision", "runbook", "source", "validation", "session", "general"}
+BUDGET_LIMITS = {"small": 4, "normal": 8, "deep": 16}
+TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
+    "debug": {"debug-record": 10, "runbook": 5, "validation": 3, "project-archive": 2},
+    "archive": {"project-archive": 10, "codex-session": 7, "audit": 4, "debug-record": 3},
+    "release": {"validation": 10, "runbook": 8, "project-current": 6, "decision": 5, "project-archive": 2},
+    "decision": {"decision": 10, "architecture": 6, "validation": 4, "audit": 2},
+    "runbook": {"runbook": 10, "standard": 5, "validation": 3},
+    "source": {"artifact-ref": 10, "external-source-note": 8, "project-current": 5, "audit": 4},
+    "validation": {"validation": 10, "debug-record": 5, "runbook": 3, "project-archive": 2},
+    "session": {"codex-session": 10, "project-archive": 6, "debug-record": 3},
+    "general": {"project-current": 5, "runbook": 4, "decision": 4, "architecture": 3, "standard": 3},
+}
+
+
+def normalize_remote_key(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if re.match(r"^[^/@:]+@[^/:]+:.+", text):
+        text = text.split(":", 1)[1]
+    else:
+        parsed = urllib.parse.urlparse(text)
+        if parsed.scheme and parsed.path:
+            text = parsed.path
+    text = text.strip().strip("/")
+    if text.endswith(".git"):
+        text = text[:-4]
+    return text.lower()
+
+
+def _safe_resolve(value: str) -> pathlib.Path:
+    try:
+        return pathlib.Path(value).expanduser().resolve(strict=False)
+    except OSError:
+        return pathlib.Path(value).expanduser()
+
+
+def find_git_config(cwd_text: str) -> Tuple[Optional[pathlib.Path], Optional[pathlib.Path]]:
+    cwd = _safe_resolve(cwd_text)
+    for directory in [cwd] + list(cwd.parents):
+        git_entry = directory / ".git"
+        if git_entry.is_dir() and (git_entry / "config").exists():
+            return git_entry / "config", directory
+        if not git_entry.is_file():
+            continue
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if not content.startswith("gitdir:"):
+            continue
+        gitdir = pathlib.Path(content.split(":", 1)[1].strip())
+        if not gitdir.is_absolute():
+            gitdir = directory / gitdir
+        if (gitdir / "config").exists():
+            return gitdir / "config", directory
+    return None, None
+
+
+def remote_urls_from_config(config_path: Optional[pathlib.Path]) -> List[Dict[str, str]]:
+    if not config_path:
+        return []
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    rows: List[Dict[str, str]] = []
+    current_remote = ""
+    for line in text.splitlines():
+        section = re.match(r'\s*\[remote\s+"([^"]+)"\]\s*', line)
+        if section:
+            current_remote = section.group(1)
+            continue
+        if line.startswith("["):
+            current_remote = ""
+            continue
+        match = re.match(r"\s*url\s*=\s*(.+?)\s*$", line)
+        if match and current_remote:
+            rows.append(
+                {"remote": current_remote, "url": match.group(1), "remote_key": normalize_remote_key(match.group(1))}
+            )
+    return sorted(rows, key=lambda row: (0 if row["remote"] == "origin" else 1, row["remote"]))
+
+
+def _route_for_repo(repo: Optional[Mapping[str, Any]], routes: Sequence[Mapping[str, Any]], projects: Mapping[str, Mapping[str, Any]]) -> Optional[Mapping[str, Any]]:
+    if not repo:
+        return None
+    repo_id = repo.get("repo_id")
+    project_id = str(repo.get("project_id", ""))
+    groups = set(repo.get("groups", []))
+    for route in routes:
+        if project_id and route.get("project_id") == project_id:
+            return route
+    for route in routes:
+        if repo_id in route.get("repo_refs", []) or route.get("group_id") in groups:
+            return route
+    project = projects.get(project_id, {})
+    for group_id in project.get("groups", []):
+        for route in routes:
+            if route.get("group_id") == group_id:
+                return route
+    return None
+
+
+def _query_route(
+    query: str,
+    routes: Sequence[Mapping[str, Any]],
+    exclude_project_id: str = "",
+) -> Tuple[Optional[Mapping[str, Any]], int, List[Dict[str, Any]]]:
+    selection = _query_route_selection(query, routes, exclude_project_id=exclude_project_id)
+    return selection["route"], selection["score"], selection["matches"]
+
+
+def _phrase_matches(query: str, phrase: str, identifier: bool = False) -> bool:
+    normalized_query = " ".join(query.casefold().split())
+    normalized_phrase = " ".join(phrase.casefold().split())
+    if not normalized_phrase:
+        return False
+    if not re.search(r"[a-z0-9]", normalized_phrase):
+        return normalized_phrase in normalized_query
+    boundary_chars = r"a-z0-9_-"
+    pattern = r"(?<![{}]){}(?![{}])".format(
+        boundary_chars,
+        re.escape(normalized_phrase),
+        boundary_chars,
+    )
+    if re.search(pattern, normalized_query):
+        return True
+    if identifier:
+        alternative = normalized_phrase.replace("-", "_")
+        if alternative != normalized_phrase:
+            alternative_pattern = r"(?<![{}]){}(?![{}])".format(
+                boundary_chars,
+                re.escape(alternative),
+                boundary_chars,
+            )
+            return bool(re.search(alternative_pattern, normalized_query))
+    return False
+
+
+def _query_route_selection(
+    query: str,
+    routes: Sequence[Mapping[str, Any]],
+    exclude_project_id: str = "",
+) -> Dict[str, Any]:
+    alias_owners: Dict[str, Set[str]] = {}
+    alias_display: Dict[str, str] = {}
+    for route in routes:
+        project_id = str(route.get("project_id", ""))
+        if exclude_project_id and project_id == exclude_project_id:
+            continue
+        for alias in route.get("aliases", []):
+            normalized = " ".join(str(alias).casefold().split())
+            if normalized:
+                alias_owners.setdefault(normalized, set()).add(project_id)
+                alias_display.setdefault(normalized, str(alias))
+    ambiguous_aliases = [
+        (alias, owners)
+        for alias, owners in alias_owners.items()
+        if len(owners) > 1 and _phrase_matches(query, alias_display[alias])
+    ]
+    candidates: List[Dict[str, Any]] = []
+    for route in routes:
+        if exclude_project_id and route.get("project_id") == exclude_project_id:
+            continue
+        score = 0
+        matches: List[Dict[str, Any]] = []
+        project_id = str(route.get("project_id", ""))
+        if project_id and _phrase_matches(query, project_id, identifier=True):
+            score = 10000 + len(project_id)
+            matches.append({"type": "project-id", "value": route.get("project_id")})
+        seen_aliases: Set[str] = set()
+        for alias in route.get("aliases", []):
+            normalized = str(alias).casefold()
+            if normalized in seen_aliases:
+                continue
+            seen_aliases.add(normalized)
+            if normalized == project_id.casefold():
+                continue
+            if score < 10000 and _phrase_matches(query, str(alias)):
+                score = max(score, 100 + len(normalized))
+                matches.append({"type": "alias", "value": alias})
+        for alias in route.get("topic_aliases", []):
+            normalized = str(alias).casefold()
+            if normalized and _phrase_matches(query, str(alias)):
+                score = max(score, 500 + len(normalized))
+                matches.append({"type": "topic-alias", "value": alias})
+        if score:
+            candidates.append(
+                {
+                    "route": route,
+                    "project_id": route.get("project_id"),
+                    "score": score,
+                    "matches": matches,
+                }
+            )
+    candidates.sort(key=lambda row: (-row["score"], str(row["project_id"])))
+    if not candidates:
+        return {
+            "status": "unresolved",
+            "route": None,
+            "score": 0,
+            "matches": [],
+            "candidates": [],
+        }
+    best_score = candidates[0]["score"]
+    public_candidates = [
+        {
+            "project_id": row["project_id"],
+            "score": row["score"],
+            "matches": row["matches"],
+        }
+        for row in candidates[:10]
+    ]
+    if best_score < 500 and ambiguous_aliases:
+        project_ids = sorted(
+            {
+                project_id
+                for _, owners in ambiguous_aliases
+                for project_id in owners
+            }
+        )
+        return {
+            "status": "ambiguous",
+            "route": None,
+            "score": best_score,
+            "matches": [
+                {
+                    "type": "ambiguous-alias",
+                    "values": sorted(alias_display[alias] for alias, _ in ambiguous_aliases),
+                    "project_ids": project_ids,
+                }
+            ],
+            "candidates": public_candidates,
+        }
+    best = [row for row in candidates if row["score"] == best_score]
+    if len(best) > 1:
+        project_ids = [str(row["project_id"]) for row in best]
+        return {
+            "status": "ambiguous",
+            "route": None,
+            "score": best_score,
+            "matches": [{"type": "ambiguous", "project_ids": project_ids}],
+            "candidates": public_candidates,
+        }
+    return {
+        "status": "selected",
+        "route": best[0]["route"],
+        "score": best_score,
+        "matches": best[0]["matches"],
+        "candidates": public_candidates,
+    }
+
+
+def _expand_workspace_ref(value: str) -> Optional[pathlib.Path]:
+    if value.startswith("~/"):
+        return pathlib.Path(value).expanduser()
+    return None
+
+
+def _workspace_for_cwd(
+    cwd_text: str,
+    local_workspaces: Sequence[Mapping[str, Any]],
+    repositories: Sequence[Mapping[str, Any]],
+    routes: Sequence[Mapping[str, Any]],
+) -> Tuple[str, Dict[str, Any]]:
+    cwd = _safe_resolve(cwd_text)
+    for workspace in local_workspaces:
+        path = str(workspace.get("path", ""))
+        if not path:
+            continue
+        base = _safe_resolve(path)
+        if cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/"):
+            return str(workspace.get("workspace_ref", "")), dict(workspace)
+    for repo in repositories:
+        base = _expand_workspace_ref(str(repo.get("workspace_ref", "")))
+        if base and (cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/")):
+            return str(repo.get("workspace_ref", "")), {"repo_id": repo.get("repo_id")}
+    for route in routes:
+        for workspace_ref in route.get("workspace_refs", []):
+            base = _expand_workspace_ref(str(workspace_ref))
+            if base and (cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/")):
+                return str(workspace_ref), {"project_id": route.get("project_id")}
+    return "", {}
+
+
+def _route_project_ids(
+    route: Optional[Mapping[str, Any]],
+    group_by_id: Mapping[str, Mapping[str, Any]],
+    repo_by_id: Mapping[str, Mapping[str, Any]],
+) -> Set[str]:
+    if not route:
+        return set()
+    ids = {str(route.get("project_id"))} if route.get("project_id") else set()
+    if route.get("route_scope") == "project":
+        return ids
+    group = group_by_id.get(str(route.get("group_id", "")), {})
+    ids.update(str(value) for value in group.get("member_project_ids", []))
+    for repo_id in route.get("repo_refs", []):
+        project_id = repo_by_id.get(str(repo_id), {}).get("project_id")
+        if project_id:
+            ids.add(str(project_id))
+    return ids
+
+
+def _route_domains(
+    route: Optional[Mapping[str, Any]],
+    project_ids: Set[str],
+    projects: Mapping[str, Mapping[str, Any]],
+) -> Set[str]:
+    if not route:
+        return set()
+    explicit = {str(value) for value in route.get("domain_refs", []) if str(value)}
+    if explicit:
+        return explicit
+    result: Set[str] = set()
+    for project_id in project_ids:
+        domain = str(projects.get(project_id, {}).get("domain", ""))
+        if domain.startswith("domains/"):
+            domain = domain.split("/", 1)[1]
+        result.add(domain or "projects/{}".format(project_id))
+    return result
+
+
+def _route_matches_domain(domain: str, refs: Iterable[str]) -> Optional[str]:
+    for ref in refs:
+        if domain == ref or domain.startswith(ref + "/"):
+            return ref
+    return None
+
+
+def _rank_item(
+    item: Mapping[str, Any],
+    terms: Sequence[str],
+    task_type: str,
+    domain_refs: Set[str],
+    source_ids: Set[str],
+    route_selected: bool,
+) -> Tuple[int, List[str]]:
+    haystack = "\n".join(
+        str(value)
+        for value in (
+            item.get("id", ""),
+            item.get("title", ""),
+            item.get("path", ""),
+            item.get("domain", ""),
+            item.get("kind", ""),
+            item.get("summary_zh", ""),
+            source_id(item),
+            " ".join(str(tag) for tag in item.get("tags", []) if isinstance(tag, str)),
+        )
+    ).lower()
+    score = 0
+    reasons: List[str] = []
+    for term in terms:
+        if term in haystack:
+            score += 3
+            reasons.append("query-term:{}".format(term))
+    matched_domain = _route_matches_domain(str(item.get("domain", "")), domain_refs)
+    route_matched = bool(matched_domain)
+    if matched_domain:
+        score += 6
+        reasons.append("domain:{}".format(matched_domain))
+    item_source = source_id(item)
+    if item_source and item_source in source_ids:
+        score += 3
+        route_matched = True
+        reasons.append("source:{}".format(item_source))
+    if route_selected and not route_matched:
+        return 0, []
+    if not route_matched and not reasons:
+        return 0, []
+    kind = str(item.get("kind", ""))
+    kind_weight = TASK_KIND_WEIGHTS.get(task_type, {}).get(kind, 0)
+    if kind_weight:
+        score += kind_weight
+        reasons.append("task-kind:{}:{}".format(task_type, kind))
+    status = str(item.get("status", ""))
+    status_weight = {"active": 9, "reviewing": 4, "draft": 1, "personal": -2, "archived": -4, "superseded": -8, "rejected": -10}.get(status, 0)
+    score += status_weight
+    reasons.append("status:{}".format(status))
+    if str(item.get("path", "")).startswith("artifacts/manifests/"):
+        score -= 3
+        reasons.append("manifest-evidence-lower-priority")
+    return score, reasons
+
+
+def _public_item(score: int, item: Mapping[str, Any], reasons: Sequence[str]) -> Dict[str, Any]:
+    source = item.get("source") if isinstance(item.get("source"), dict) else {}
+    return {
+        "score": score,
+        "id": item.get("id", ""),
+        "title": item.get("title", ""),
+        "kind": item.get("kind", ""),
+        "domain": item.get("domain", ""),
+        "path": item.get("path", ""),
+        "status": item.get("status", ""),
+        "source_id": source_id(item),
+        "source_type": source.get("type", ""),
+        "tags": item.get("tags", []),
+        "evidence_strength": item.get("evidence_strength", ""),
+        "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
+        "why_selected": list(reasons),
+    }
+
+
+def _current_exclusion_reason(row: Mapping[str, Any]) -> str:
+    status = str(row.get("status", ""))
+    if status in {"archived", "superseded", "rejected"}:
+        return "terminal-status"
+    if str(row.get("kind", "")) in {"audit", "artifact-ref", "project-archive", "codex-session"}:
+        return "audit-or-provenance-kind"
+    path = str(row.get("path", ""))
+    if path.startswith("artifacts/manifests/") or "/archive/" in path:
+        return "historical-path"
+    tags = {str(value) for value in row.get("tags", []) if isinstance(value, str)}
+    if tags.intersection({"archive-only", "provenance", "tombstone", "historical-session", "historical-release"}):
+        return "historical-tag"
+    if str(row.get("source_type", "")) in {"retired-source-provenance", "artifact-ref", "archive"}:
+        return "provenance-source"
+    return ""
+
+
+def assemble_context(
+    root: pathlib.Path,
+    cwd: str,
+    query: str,
+    task_type: str = "general",
+    limit: int = 8,
+    context_budget: str = "normal",
+) -> Dict[str, Any]:
+    started = time.monotonic()
+    if task_type not in TASK_TYPES:
+        raise ValueError("unsupported task type")
+    if context_budget not in BUDGET_LIMITS:
+        raise ValueError("unsupported context budget")
+    if limit < 1:
+        raise ValueError("limit must be >= 1")
+    effective_limit = min(limit, BUDGET_LIMITS[context_budget])
+    routes = route_rows(root)
+    repositories = repository_rows(root)
+    projects_list = project_rows(root)
+    projects = {str(row.get("id")): row for row in projects_list if row.get("id")}
+    repo_by_id = {str(row.get("repo_id")): row for row in repositories if row.get("repo_id")}
+    repo_by_remote = {str(row.get("remote_key", "")).lower(): row for row in repositories if row.get("remote_key")}
+    groups_list = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
+    group_by_id = {str(row.get("id")): row for row in groups_list if row.get("id")}
+    local_workspaces = list((load_json(root / "local/workspaces.json", {}) or {}).get("workspaces", []))
+
+    git_config, git_root = find_git_config(cwd)
+    git_remotes = remote_urls_from_config(git_config)
+    matched_repo: Optional[Mapping[str, Any]] = None
+    matched_remote: Optional[Mapping[str, Any]] = None
+    for remote in git_remotes:
+        if remote["remote_key"] in repo_by_remote:
+            matched_repo = repo_by_remote[remote["remote_key"]]
+            matched_remote = remote
+            break
+    workspace_ref, workspace_match = _workspace_for_cwd(cwd, local_workspaces, repositories, routes)
+    repo_route = _route_for_repo(matched_repo, routes, projects)
+    workspace_route: Optional[Mapping[str, Any]] = None
+    workspace_matches: List[Dict[str, Any]] = []
+    if workspace_ref and not repo_route:
+        for route in routes:
+            if workspace_ref in route.get("workspace_refs", []):
+                workspace_route = route
+                workspace_matches.append({"type": "workspace-ref", "value": workspace_ref})
+                break
+    repo_matches: List[Dict[str, Any]] = []
+    if matched_repo and repo_route and matched_remote:
+        repo_matches.append(
+            {
+                "type": "git-remote",
+                "remote": matched_remote.get("remote"),
+                "remote_key": matched_remote.get("remote_key"),
+                "repo_id": matched_repo.get("repo_id"),
+            }
+        )
+    cwd_route = repo_route or workspace_route
+    query_selection = _query_route_selection(query, routes)
+    initial_query_selection = query_selection
+    query_route = query_selection["route"]
+    query_score = query_selection["score"]
+    query_matches = query_selection["matches"]
+    if cwd_route and cwd_route.get("route_key_policy") == "control-plane-query-aware":
+        target_selection = _query_route_selection(
+            query,
+            routes,
+            exclude_project_id=str(cwd_route.get("project_id", "")),
+        )
+        if (
+            target_selection["status"] == "unresolved"
+            and (initial_query_selection.get("route") or {}).get("project_id")
+            == cwd_route.get("project_id")
+        ):
+            query_selection = initial_query_selection
+        else:
+            query_selection = target_selection
+        query_route = query_selection["route"]
+        query_score = query_selection["score"]
+        query_matches = query_selection["matches"]
+    best_route = cwd_route
+    best_matches = repo_matches if repo_route else workspace_matches
+    selection_source = "cwd" if cwd_route else "none"
+    if query_selection["status"] == "ambiguous":
+        best_route = None
+        best_matches = query_matches
+        selection_source = "global-ambiguous-query"
+    elif (
+        cwd_route
+        and cwd_route.get("route_key_policy") == "control-plane-query-aware"
+        and query_selection["status"] == "unresolved"
+    ):
+        best_route = None
+        best_matches = []
+        selection_source = "global-unresolved-query"
+    elif cwd_route and query_route and query_route is not cwd_route and cwd_route.get("route_key_policy") == "control-plane-query-aware":
+        best_route = query_route
+        best_matches = query_matches + [
+            {"type": "control-plane-query-aware", "cwd_project_id": cwd_route.get("project_id"), "query_score": query_score}
+        ]
+        selection_source = "query"
+    elif not cwd_route and query_route:
+        best_route, best_matches = query_route, query_matches
+        selection_source = "query"
+
+    project_ids = _route_project_ids(best_route, group_by_id, repo_by_id)
+    domain_refs = _route_domains(best_route, project_ids, projects)
+    default_source_ids = set(str(value) for value in (best_route or {}).get("default_source_ids", []))
+    terms = query_terms(query)
+    ranked: List[Tuple[int, Mapping[str, Any], List[str]]] = []
+    for item in registry_items(root):
+        score, reasons = _rank_item(item, terms, task_type, domain_refs, default_source_ids, bool(best_route))
+        if score > 0:
+            ranked.append((score, item, reasons))
+    ranked.sort(key=lambda row: (-row[0], str(row[1].get("id", ""))))
+    ranked_rows = [_public_item(score, item, reasons) for score, item, reasons in ranked[:effective_limit]]
+
+    search_filters = SearchFilters(domains=sorted(domain_refs)) if domain_refs else SearchFilters()
+    search_payload = search(root, query, limit=limit, filters=search_filters)
+    search_payload["fallback_terms"] = []
+    search_payload["fallback_results"] = []
+    search_payload["fallback_count"] = 0
+    if not search_payload["results"]:
+        ignored = {"pcr02", "归档", "路径", "where", "archive"}
+        fallback_terms = [term for term in terms if term not in ignored][:4]
+        merged: List[Dict[str, Any]] = []
+        seen: Set[Tuple[str, int, str]] = set()
+        for term in fallback_terms:
+            fallback = search(root, term, limit=limit, filters=search_filters)
+            for result in fallback["results"]:
+                key = (str(result.get("path", "")), int(result.get("line", 0)), str(result.get("item_id", "")))
+                if key in seen:
+                    continue
+                seen.add(key)
+                row = dict(result)
+                row["fallback_term"] = term
+                merged.append(row)
+                if len(merged) >= effective_limit:
+                    break
+            if len(merged) >= effective_limit:
+                break
+        search_payload["fallback_terms"] = fallback_terms
+        search_payload["fallback_results"] = merged
+        search_payload["fallback_count"] = len(merged)
+        search_payload["zero_hit"]["degraded_terms"] = fallback_terms
+
+    current: List[Dict[str, Any]] = []
+    recent: List[Dict[str, Any]] = []
+    related: List[Dict[str, Any]] = []
+    current_kinds = {"project-current", "decision", "runbook", "standard", "validation", "architecture"}
+    recent_kinds = {"debug-record", "project-archive", "codex-session"}
+    terminal_statuses = {"archived", "superseded", "rejected"}
+    current_exclusions: List[Dict[str, Any]] = []
+    readiness_current_count = 0
+    for row in ranked_rows:
+        exclusion = _current_exclusion_reason(row)
+        if exclusion:
+            current_exclusions.append({"id": row.get("id", ""), "reason": exclusion})
+        if row["status"] in terminal_statuses:
+            recent.append(row)
+        elif not exclusion and (row["status"] == "active" or (row["status"] in {"reviewing", "draft"} and row["kind"] in current_kinds)):
+            is_readiness = "project-readiness" in {
+                str(value) for value in row.get("tags", [])
+            }
+            if is_readiness and readiness_current_count >= 1:
+                related.append(row)
+            else:
+                current.append(row)
+                readiness_current_count += int(is_readiness)
+        elif row["kind"] in recent_kinds:
+            recent.append(row)
+        else:
+            related.append(row)
+
+    canonical_paths: Dict[str, Any] = {}
+    route_summary: Optional[Dict[str, Any]] = None
+    if best_route:
+        canonical_paths = {
+            "hub_entry": best_route.get("hub_entry"),
+            "current": best_route.get("current_path"),
+            "archive": best_route.get("archive_path"),
+            "decisions": best_route.get("decisions_path"),
+            "validation": best_route.get("validation_path"),
+        }
+        route_summary = {
+            "project_id": best_route.get("project_id"),
+            "group_id": best_route.get("group_id"),
+            "name": best_route.get("name"),
+            "hub_entry": best_route.get("hub_entry"),
+            "current_path": best_route.get("current_path"),
+            "archive_path": best_route.get("archive_path"),
+            "decisions_path": best_route.get("decisions_path"),
+            "validation_path": best_route.get("validation_path"),
+            "repo_refs": best_route.get("repo_refs", []),
+            "workspace_refs": best_route.get("workspace_refs", []),
+            "domain_refs": sorted(domain_refs),
+            "default_source_ids": best_route.get("default_source_ids", []),
+            "retired_route_ids": best_route.get("retired_route_ids", []),
+            "route_key_policy": best_route.get("route_key_policy", "git-remote-first"),
+            "matched_by": best_matches,
+        }
+    repo_summary: Optional[Dict[str, Any]] = None
+    if matched_repo:
+        repo_summary = {
+            "repo_id": matched_repo.get("repo_id"),
+            "project_id": matched_repo.get("project_id"),
+            "remote_key": matched_repo.get("remote_key"),
+            "workspace_ref": matched_repo.get("workspace_ref"),
+            "groups": matched_repo.get("groups", []),
+            "lifecycle": matched_repo.get("lifecycle"),
+            "git_root_detected": str(git_root) if git_root else "",
+            "git_config_detected": str(git_config) if git_config else "",
+        }
+    candidate_required = task_type in {"debug", "release", "decision", "validation", "session"}
+    risks = [
+        "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
+        "memory、raw session、raw log、core、binary 不能高于 Hub 当前事实。",
+        "owner gate、active promotion、memory write 和 source project write 必须有授权和证据。",
+    ]
+    payload: Dict[str, Any] = {
+        "schema_version": 2,
+        "read_only": True,
+        "cwd": cwd,
+        "query": query,
+        "task_type": task_type,
+        "context_budget": context_budget,
+        "knowledge_preflight": {
+            "required": task_type in TASK_TYPES - {"general"},
+            "source_of_truth": "registry/repositories.json plus registry/project-groups.json, registry/project-routes.json, registry/items.jsonl and indexed knowledge-search",
+        },
+        "repo_route": repo_summary,
+        "route": route_summary,
+        "route_selection": {
+            "status": (
+                "ambiguous"
+                if query_selection["status"] == "ambiguous"
+                else "selected"
+                if best_route
+                else "unresolved"
+            ),
+            "selection_source": selection_source,
+            "cwd_route_project_id": (cwd_route or {}).get("project_id"),
+            "query_route_project_id": (query_route or {}).get("project_id"),
+            "query_score": query_score,
+            "selected_project_id": (best_route or {}).get("project_id"),
+            "candidates": query_selection["candidates"],
+        },
+        "canonical_paths": canonical_paths,
+        "workspace_ref": workspace_ref or None,
+        "workspace_match": workspace_match,
+        "git_remotes_detected": git_remotes,
+        "context": {
+            "budget": context_budget,
+            "effective_limit": effective_limit,
+            "selection_order": ["route", "current", "recent", "related", "risk"],
+            "canonical_paths": canonical_paths,
+            "domain_refs": sorted(domain_refs),
+            "current": current[:effective_limit],
+            "recent": recent[:effective_limit],
+            "related": related[:effective_limit],
+            "search_fallback": search_payload.get("fallback_results", [])[:effective_limit],
+            "current_exclusions": current_exclusions,
+            "risks": risks,
+            "notes_zh": "context 是只读候选装配；状态分类优先于 kind，archived/superseded/rejected 不会进入 current。why_selected 不代表 active 或 owner 签收。",
+        },
+        "ranked_items": ranked_rows,
+        "search": search_payload,
+        "candidate_recommendation": {
+            "required": candidate_required,
+            "reason_zh": "该任务类型可能产生长期项目事实、证据或会话结论；完成或中断时应写 Hub candidate，或明确无可归档结论。"
+            if candidate_required
+            else "普通查询不强制生成 Hub candidate。",
+            "allowed_kinds": ["debug-record", "validation", "decision", "runbook", "codex-session"] if candidate_required else [],
+        },
+        "guardrails_zh": [
+            "Hub 当前路由优先于 memory、raw session 和旧 archive 入口。",
+            "Git remote key 是跨机器长期路由键；本机源码路径只允许出现在未纳管 local/workspaces.json。",
+            "raw session、raw log、core、binary 不复制进正文；只写摘要、证据引用和 registry item。",
+            "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
+        ],
+    }
+    payload["latency_ms"] = round((time.monotonic() - started) * 1000, 2)
+    return payload
+
+
+def record_context_telemetry(root: pathlib.Path, payload: Mapping[str, Any], enabled: bool = True) -> None:
+    if not enabled or os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {"0", "false", "off", "no"}:
+        return
+    query = str(payload.get("query", ""))
+    row = {
+        "schema_version": 2,
+        "sample_kind": "interactive",
+        "recorded_at": utc_timestamp(),
+        "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
+        "task_type": payload.get("task_type", ""),
+        "selected_project_id": (payload.get("route") or {}).get("project_id", ""),
+        "current_count": len((payload.get("context") or {}).get("current", [])),
+        "recent_count": len((payload.get("context") or {}).get("recent", [])),
+        "latency_ms": payload.get("latency_ms", 0),
+        "raw_query_stored": False,
+    }
+    path = root / ".cache/knowledge-hub/context-telemetry.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        handle.write(compact_json(row) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)

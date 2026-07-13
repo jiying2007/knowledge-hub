@@ -1,3 +1,29 @@
+---
+title: Owner Review 规范
+summary_zh: 定义 owner review、owner gate、owner decision、delegated review 和 archive-only 处理边界，防止把 AI 处理或治理证据误当 owner 签收。该 active
+  规范只约束复核流程，不代填 reviewed_by、不自动关闭 gate。
+tags:
+- governance
+- owner-review
+- decision-gate
+- zh-cn
+id: knowledge-hub-owner-review-rules
+kind: standard
+domain: governance
+path: governance/owner-review-rules.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- Owner Review 规范
+related:
+- indexes/obsidian-home.md
+---
+
 # Owner Review 规范
 
 ## 目标

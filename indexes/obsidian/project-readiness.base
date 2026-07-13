@@ -1,0 +1,33 @@
+filters:
+  and:
+    - file.ext == "md"
+    - tags.contains("project-readiness")
+properties:
+  file.name:
+    displayName: 文档
+  project_id:
+    displayName: 项目
+  readiness_slot:
+    displayName: 能力槽位
+  status:
+    displayName: 状态
+  review_after:
+    displayName: 复核日期
+  decision_owner:
+    displayName: 决策 owner
+views:
+  - type: table
+    name: 项目成熟度入口
+    order:
+      - file.name
+      - project_id
+      - readiness_slot
+      - kind
+      - status
+      - review_after
+      - decision_owner
+    sort:
+      - property: project_id
+        direction: ASC
+      - property: readiness_slot
+        direction: ASC

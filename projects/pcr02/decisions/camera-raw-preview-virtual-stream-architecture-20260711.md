@@ -7,19 +7,57 @@ status: reviewing
 maturity: candidate
 owner: leiwenjun
 created_at: 2026-07-11
-updated_at: 2026-07-11
-review_after: 2026-10-11
+updated_at: '2026-07-13'
+review_after: '2026-10-11'
 tags:
-  - pcr02
-  - camera
-  - raw-preview
-  - virtual-stream
-  - lcd-preview
-  - qr-scan
-  - vision-rgb
-  - android-camera-hal
-  - shm
-  - libyuv
+- pcr02
+- camera
+- raw-preview
+- virtual-stream
+- lcd-preview
+- qr-scan
+- vision-rgb
+- android-camera-hal
+- shm
+- libyuv
+- decision-candidate
+- manual-validation-pending
+- no-active-promotion
+summary_zh: 归档 PCR02 camera RAW_PREVIEW 单物理采集流加虚拟流 fan-out 架构：底层统一 640x360 NV12 RAW_PREVIEW，上层按需生成 LCD_PREVIEW、QR_SCAN 和 VISION_RGB。该条目是
+  decision candidate 和 implementation archive，不是 release note、owner-signed active rule 或源项目事实签收。
+path: projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
+scope: project-specific
+visibility: team-internal
+review_status: delegated-review-closed-candidate-boundary
+promotion: none
+aliases:
+- PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
+related:
+- projects/pcr02/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+decision_owner: unassigned
+decision_status: candidate
+manual_validation_pending: true
+review_scope: content-review-record-only-not-owner-approval
+owner_roles_required:
+- PCR02 product decision owner
+- camera/media owner
+- protocol/API owner
+- application/AI owner
+- release owner
+evidence_readiness:
+  owner: pending-real-owner-assignment-and-decision
+  source: pending-current-commit-and-artifact-identity
+  device: pending-real-device-or-lab-evidence
+  release: pending-release-and-rollback-evidence
+  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+validation_refs:
+- projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
 ---
 
 # PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
@@ -213,3 +251,50 @@ Potential project-local memory candidate for human review:
 - Verification: proto generation, full build, diff whitespace check and targeted source scans.
 - Memory Candidate: yes, human review required; not written to memory.
 - Gate Result: pass as archive candidate; release gate still needs `pcr02/dep.mk` P1 closure.
+
+<!-- pcr02-owner-device-release-validation:start -->
+## Owner、实机与发布验证门禁
+
+> 本节定义真实验证路径，不表示任何命令已经执行，也不是 owner decision、active promotion 或 release 授权。
+
+### 1. Owner 决策路径
+
+- `decision_owner=unassigned`。既有 proto/build 通过和 review record 不等于架构 owner、协议 owner 或 release owner 签收。
+- owner 必须确认单物理 RAW_PREVIEW + 三虚拟流 fan-out、旧 DS1/DS2 alias 生命周期、SHM padded payload 契约、消费者兼容边界和回滚方案。
+
+### 2. Source、构建与制品身份
+
+- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、proto 生成器版本、依赖版本、dirty 状态及明确 source file list。
+- 复跑 proto 生成、目标构建和定向测试，保存命令、返回码、关键日志摘要及目标镜像/应用/协议制品 SHA256。
+- 单独关闭 `pcr02/dep.mk` 发布打包风险，证明目标镜像实际包含预期应用和库；源码 build pass 不能替代镜像内容验证。
+
+### 3. 实机功能与并发矩阵
+
+| 场景 | 必填检查 |
+|---|---|
+| 单消费者 | `LCD_PREVIEW`、`QR_SCAN`、`VISION_RGB` 分别启停，验证格式、尺寸、stride、frame size、颜色和释放 |
+| 双/三消费者 | 逐组合并发，验证一个消费者阻塞/退出不会卡住其他流或泄漏 physical reader refcount |
+| 兼容客户端 | 旧 `DS1_RAW`/`DS2_RAW` alias 与新枚举互操作，未知/重复订阅返回码稳定 |
+| SHM 契约 | `VISION_RGB` valid 640x360 区域正确，640x640 readable tail 为确定性黑色，无越界和旧帧泄漏 |
+| 消费链路 | LCD、QR、AI、diag/product test 使用实际发布二进制端到端读取，不只调用 producer 单测 |
+
+每个场景记录设备/固件、帧计数、首帧延迟、持续帧率、drop/timeout、CPU、RSS/SHM、图像正确性和关键日志。长跑时长与通过阈值由 owner 在执行前按产品要求填写。
+
+### 4. 故障、恢复与 soak
+
+- 覆盖消费者异常退出、重复 acquire/release、producer 重启、SHM reader 超时、camera source 短暂失败和系统休眠/唤醒。
+- 检查 physical source refcount 回到零、SHM 无陈旧敏感帧、恢复后 metadata/stream id/stride 正确，并执行 ASAN 或适用内存诊断。
+- soak 结果必须关联 source commit、设备、负载、时长和失败计数；“运行一段时间正常”不构成发布证据。
+
+### 5. Release 与回滚
+
+- release owner 核对协议兼容、镜像内容、应用消费者 smoke、升级/降级路径和发布说明；记录制品 hash 与目标设备验收。
+- 回滚制品必须能恢复旧 DS1/DS2 行为或明确拒绝新客户端，并验证升级后产生的 SHM/配置不会破坏旧版本。
+- 缺少 owner、实机并发/soak、镜像内容或回滚证据时保持 `reviewing`，不得按 implementation archive 自动提升 active。
+
+### 证据落地契约
+
+- 证据记录必须包含 `owner_identity`、`source_commit`、`artifact_sha256`、`device_identity`、`environment`、`commands`、`exit_codes`、`result_summary`、`rollback_result` 和可恢复引用。
+- raw log、视频、截图和二进制只保存在受控外部制品位置；Hub 正文只保存脱敏摘要、hash 和引用。
+- 最终复核命令：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13`。
+<!-- pcr02-owner-device-release-validation:end -->

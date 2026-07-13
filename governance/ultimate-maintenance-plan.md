@@ -1,3 +1,27 @@
+---
+title: Knowledge Hub long-term maintenance plan
+summary_zh: Knowledge Hub 长期维护计划，约束 registry、index、source、owner gate、review_after、automation 和验证门禁的运营节奏。该 active 条目只作为 Hub
+  维护标准，不自动关闭 owner gate、不提升项目事实、不写 memory、不发布远端状态。
+tags:
+- governance
+- maintenance
+id: knowledge-hub-ultimate-maintenance-plan
+kind: standard
+domain: governance
+path: governance/ultimate-maintenance-plan.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-16'
+review_status: active-control-plane-accepted
+promotion: none
+aliases:
+- Knowledge Hub long-term maintenance plan
+related:
+- indexes/obsidian-home.md
+---
+
 # Knowledge Hub 长期维护终极方案
 
 ## 目标

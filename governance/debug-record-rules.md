@@ -1,3 +1,28 @@
+---
+title: 排障记录规范
+summary_zh: 规定排障记录中事实、观察、推断、根因、验证、未决项和下一步的分层写法，避免 raw log 或未经证实结论进入长期事实。该 active 规范不证明具体故障已修复，也不替代实机/回归验证。
+tags:
+- governance
+- debug-record
+- evidence
+- zh-cn
+id: knowledge-hub-debug-record-rules
+kind: standard
+domain: governance
+path: governance/debug-record-rules.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 排障记录规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 排障记录规范
 
 ## 目标

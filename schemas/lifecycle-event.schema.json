@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/lifecycle-event.schema.json",
+  "title": "Knowledge Hub lifecycle event",
+  "type": "object",
+  "required": [
+    "event_id", "event_type", "item_id", "before_status", "after_status",
+    "authorization_id", "executed_by", "executed_at", "evidence_refs"
+  ],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "event_type": {"enum": ["capture", "promote", "retire"]},
+    "item_id": {"type": "string", "minLength": 1},
+    "before_status": {"type": "string", "minLength": 1},
+    "after_status": {"enum": ["draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"]},
+    "authorization_id": {"type": "string"},
+    "executed_by": {"type": "string", "minLength": 1},
+    "executed_at": {"type": "string", "format": "date-time"},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": true
+}

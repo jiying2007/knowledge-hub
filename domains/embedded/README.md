@@ -39,7 +39,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "embedded" --json --limit 10
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product
 ```
 
 如果需要恢复历史来源、迁移证据或 owner 边界，优先查看 `sources/embedded-knowledge/`、`registry/source-tombstones.jsonl` 和 `indexes/by-source.md`。

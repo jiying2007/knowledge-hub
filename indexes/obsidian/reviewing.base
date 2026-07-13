@@ -1,0 +1,28 @@
+filters:
+  and:
+    - file.ext == "md"
+    - status == "reviewing"
+properties:
+  file.name:
+    displayName: 文档
+  owner:
+    displayName: Hub 维护人
+  decision_owner:
+    displayName: 决策 owner
+  review_after:
+    displayName: 复核日期
+  manual_validation_pending:
+    displayName: 人工验证待办
+views:
+  - type: table
+    name: Reviewing 队列
+    order:
+      - file.name
+      - kind
+      - owner
+      - decision_owner
+      - manual_validation_pending
+      - review_after
+    sort:
+      - property: review_after
+        direction: ASC

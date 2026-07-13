@@ -33,8 +33,10 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 运行并通过：
   - `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`
   - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`
-  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression`
+  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression`
   - `rtk git diff --check`
+- 技术候选与发布完成分开：前者看 `gate_status`，后者还必须有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。
+- 31/31 项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-owner-review`。
 
 非目标：
 - 不兼容旧目录作为长期主入口。
@@ -476,7 +478,7 @@ rtk bash tools/knowledge-search.sh "<关键词>"
 使用规则：
 
 - `knowledge-regression.sh --suite quick` 用于日常 final gate smoke；`--suite full` 用于工具、schema、owner gate、source control 或 final gate 相关变更后的终态证明。
-- `knowledge-final-gate.sh --json` 默认 quick regression；正文最大收口和高风险收口使用 `--final-profile max-body --full-regression`，不用于每条普通笔记。
+- `knowledge-final-gate.sh --json --final-profile product` 默认 quick regression；高风险收口使用 `--full-regression`，不用于每条普通笔记。
 - `knowledge-index-plan.sh` 默认 report-only，不得自动覆盖人工索引。
 
 ## 九、Obsidian 协作
@@ -705,7 +707,7 @@ rtk bash -n tools/knowledge-search.sh
 rtk bash -n tools/knowledge-index-plan.sh
 rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash tools/knowledge-regression.sh --json
-rtk bash tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression
+rtk bash tools/knowledge-final-gate.sh --json --final-profile product --full-regression
 ```
 
 硬切换后必须增加负向验证：

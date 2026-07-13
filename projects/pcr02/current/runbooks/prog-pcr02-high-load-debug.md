@@ -7,13 +7,31 @@ status: reviewing
 owner: leiwenjun
 created_at: 2026-07-02
 updated_at: 2026-07-02
-review_after: 2026-10-02
+review_after: '2026-10-02'
 tags:
-  - pcr02
-  - prog_pcr02
-  - high-load
-  - runtime-debug
-  - adb
+- pcr02
+- prog_pcr02
+- high-load
+- runtime-debug
+- adb
+- runbook
+- thread-analysis
+- reviewing-followup
+- candidate-runbook
+- no-active-promotion
+summary_zh: 沉淀 PCR02 prog_pcr02 高负载现场只读调试手段：ADB 低扰动 10 分钟采集、线程 CPU jiffies 排序、上下文切换排序、wchan/state 判断、热点 TID 定向复采、源码级聚合计数建议和
+  DDR/MIU 证据缺口边界。
+path: projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md
+scope: project-specific
+visibility: team-internal
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- PCR02 prog_pcr02 高负载调试手段
+related:
+- projects/pcr02/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 ---
 
 # PCR02 prog_pcr02 高负载调试手段

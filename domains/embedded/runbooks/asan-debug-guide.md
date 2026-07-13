@@ -7,9 +7,34 @@ status: active
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-06-29
-tags: [asan, address-sanitizer, memory, debug, methodology]
-related: [asan-offline-symbolize-guide.md, crash-triage-checklist.md]
-validation_refs: [domains/embedded/runbooks/asan-offline-symbolize-guide.md, domains/embedded/runbooks/crash-triage-checklist.md, domains/embedded/tools/debug/README.md]
+tags:
+- asan
+- address-sanitizer
+- memory
+- debug
+- methodology
+- embedded
+- team-runbook
+related:
+- asan-offline-symbolize-guide.md
+- crash-triage-checklist.md
+validation_refs:
+- domains/embedded/runbooks/asan-offline-symbolize-guide.md
+- domains/embedded/runbooks/crash-triage-checklist.md
+- domains/embedded/tools/debug/README.md
+summary_zh: 团队级 ASAN 调试方法论，已从 PCR02 project-local runbook 的 split-approved 边界中去项目化重写，并按 2026-06-29 用户明确授权提升为 active；项目命令和路径必须留在项目本地
+  runbook，不提升到 embedded standards。
+id: embedded-asan-debug-guide-20260629
+kind: runbook
+domain: embedded
+path: domains/embedded/runbooks/asan-debug-guide.md
+scope: team-general
+visibility: team-internal
+review_after: '2026-09-29'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- ASAN 调试方法论（团队级）
 ---
 
 # ASAN 调试方法论（团队级）

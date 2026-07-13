@@ -1,0 +1,79 @@
+---
+id: firmware-release-tools-readiness-runbook-20260713
+title: Firmware Release Tools 维护入口
+kind: runbook
+domain: projects/firmware-release-tools
+scope: project-specific
+visibility: team-internal
+status: reviewing
+owner: leiwenjun
+review_after: '2026-10-13'
+review_status: ai-generated-project-readiness-pending-owner-and-real-validation
+promotion: none
+tags:
+- firmware-release-tools
+- project-readiness
+- runbook
+- ai-generated
+- owner-review-pending
+- manual-validation-pending
+- no-active-promotion
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-13'
+manual_validation_pending: true
+decision_owner: unassigned
+summary_zh: 定义 Firmware Release Tools 的 Knowledge Hub 预检、候选写入、验证与授权边界，不生成未经源项目确认的工程命令。
+promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+path: projects/firmware-release-tools/current/runbooks/maintenance-entry.md
+project_id: firmware-release-tools
+readiness_slot: runbook
+aliases:
+- firmware-release-tools runbook
+- firmware-release-tools-runbook
+related:
+- projects/firmware-release-tools/README.md
+- projects/firmware-release-tools/current/project-profile.md
+- projects/firmware-release-tools/decisions/project-boundary-decision-candidate.md
+- projects/firmware-release-tools/validation/project-readiness.md
+---
+
+# Firmware Release Tools 维护入口
+
+> 本 runbook 只定义 Knowledge Hub 维护流程，不提供未经源项目验证的构建、刷机、设备或发布命令。
+
+## 1. 预检
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "firmware-release-tools 当前事实与验证" --task-type validation --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "firmware-release-tools" --json --limit 10
+```
+
+确认 route 的 `selected_project_id=firmware-release-tools`，并区分 `current`、`recent` 与 archive-only provenance。若本机只有 `workspace://` 而没有 local mapping，先补只读映射或由 owner 提供源码证据，不猜测路径。
+
+## 2. 变更分类
+
+- 当前事实：先在源项目验证，再捕获为 `draft/reviewing` candidate。
+- 决策：补真实 decision owner、备选方案、影响范围、回滚和验证后进入 owner review。
+- 验证：保留版本/commit、环境、命令、返回码、关键日志、制品 hash 和结论边界。
+- 历史材料：只进入 archive/provenance，不自动提升 active。
+
+## 3. Hub 写入
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --help
+rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict
+```
+
+capture 只允许创建 `draft/reviewing/personal`。promotion、retire、owner decision、memory write、source project write 和远端发布必须走独立授权门禁。
+
+## Related
+
+- [项目画像候选](../project-profile.md)
+- [边界决策候选](../../decisions/project-boundary-decision-candidate.md)
+- [readiness validation](../../validation/project-readiness.md)
+- [项目入口](../../README.md)
+- route、检索、链接、registry 和正文镜像一致。
+- 项目特有构建/设备/发布证据由真实执行方补齐，当前文档不代签。

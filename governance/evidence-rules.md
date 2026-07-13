@@ -1,3 +1,29 @@
+---
+title: 证据写法规范
+summary_zh: 规定 Hub 结论、命令输出、registry id、manifest、日志摘要和外部来源的证据写法，确保声明能追溯且不夸大。该 active 规范不把命令证据等同 owner approval，也不授权发布、删除、写
+  memory 或源项目修改。
+tags:
+- governance
+- evidence
+- validation
+- zh-cn
+id: knowledge-hub-evidence-rules
+kind: standard
+domain: governance
+path: governance/evidence-rules.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 证据写法规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 证据写法规范
 
 ## 目标

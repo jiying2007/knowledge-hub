@@ -8,26 +8,42 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: 2026-10-13
+review_after: '2026-10-13'
 created_at: 2026-07-13
 updated_at: 2026-07-13
 promotion: none
-tags: [knowledge-hub, obsidian, markdown, properties, backlinks, local-first]
+tags:
+- knowledge-hub
+- obsidian
+- markdown
+- properties
+- backlinks
+- local-first
+- bases
+- cli
+- official-docs
+- no-active-promotion
 retrieved_at: 2026-07-13
 source_language: en
 source_license: not-declared; link-and-summary-only
 external_refs:
-  - https://obsidian.md/help/data-storage
-  - https://obsidian.md/help/properties
-  - https://obsidian.md/help/bases/syntax
-  - https://obsidian.md/help/cli
-  - https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
+- https://obsidian.md/help/data-storage
+- https://obsidian.md/help/properties
+- https://obsidian.md/help/bases/syntax
+- https://obsidian.md/help/cli
+- https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
 validation_refs:
-  - indexes/obsidian-home.md
-  - registry/items.jsonl
-  - registry/body-coverage.json
-  - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-summary_zh: 规定 Obsidian 只作为 Knowledge Hub 的本地阅读、手工编辑和链接导航客户端；Markdown 是唯一正文，registry 是 status、owner、review_after 和授权权威，所有高风险动作继续由 Hub gate 控制。
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+- indexes/obsidian/project-readiness.base
+- tools/knowledge-link-audit.sh
+- tools/knowledge-obsidian-view-build.sh
+- templates/obsidian-runtime-acceptance.md
+- registry/items.jsonl
+- registry/body-coverage.json
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+summary_zh: 规定 Obsidian 只作为 Knowledge Hub 的本地阅读、手工编辑和链接导航客户端；Markdown 是唯一正文，registry 是 status、owner、review_after 和授权权威，所有高风险动作继续由
+  Hub gate 控制。
 review_status: human-reviewed-accepted
 generated_by_ai: true
 ai_role: drafted
@@ -37,6 +53,10 @@ human_reviewed_by: leiwenjun-via-codex-delegation
 human_reviewed_at: 2026-07-13
 human_review_decision: accept-as-review-record
 review_authorization: auth-20260713-knowledge-hub-obsidian-audit-review
+aliases:
+- Knowledge Hub Obsidian 集成边界
+related:
+- indexes/obsidian-home.md
 ---
 
 # Knowledge Hub Obsidian 集成边界
@@ -80,8 +100,9 @@ indexes/obsidian-home.md -> 人工首屏导航
 ## Bases 与 CLI
 
 - 官方 Properties 使用 YAML，并明确不提供内建 bulk editing；这与 Hub 由 registry/脚本做批量治理、Obsidian 只做单文档编辑的边界一致。
-- Bases 是 core plugin，视图保存为 `.base`，数据仍来自本地 Markdown 和 properties。当前已登记 Markdown 中只有少数声明完整生命周期 properties，因此暂不提交 `.base`，避免产生看似完整但实际漏项的视图。
-- 后续 Bases 只消费经过 check 的原子 properties 或 registry 派生只读数据，不编辑 `status`、`owner`、`review_after`，不创建第二份正文。
+- Bases 是 core plugin，视图保存为 `.base`，数据仍来自本地 Markdown 和 properties。本仓提交三个可选只读视图：项目成熟度、reviewing 队列和 active 长期知识；它们不包含自动写入动作，也不依赖 community plugin。
+- 31 个项目的 124 份 readiness 文档已声明一致的 lifecycle properties，因此项目 Base 具备完整结构覆盖；其 `reviewing`、`decision_owner=unassigned` 和 `manual_validation_pending=true` 仍由 registry/gate 解释，Base 不改变状态。
+- `.base` 只消费经过 check 的 properties，不编辑 `status`、`owner`、`review_after`，不创建第二份正文。普通 Markdown 阅读器仍可通过 `indexes/project-readiness.md` 获得等价 MOC 导航。
 - 官方 CLI 已提供命令行能力，但要求较新的 installer 并由 Obsidian 注册 PATH。本机 2026-07-13 未发现 `obsidian` 命令，因此当前不接入；未来只允许 `open/search/read` allowlist，不得成为 Hub 验证、写入或发布的必需依赖。
 
 ## 安全边界
@@ -89,6 +110,22 @@ indexes/obsidian-home.md -> 人工首屏导航
 - 本仓含 team-internal、项目材料和专利附件，不启用 Obsidian Publish。
 - 如使用 Sync，必须由 owner 确认数据范围、端到端加密、附件同步和恢复责任。
 - 不安装来源不明的 community plugin；需要插件时先做供应链审查并记录回滚方式。
+- `.obsidian/` 继续本机私有；仓库只提交不含凭证、布局或设备状态的 `.base` 查询定义。
+
+## 链接与视图验证
+
+`knowledge-link-audit.sh` 检查标准 Markdown links、124 份 readiness 文档的入链和 `.base` YAML 基本结构。active/reviewing 正文、README 和 MOC 的断链属于阻断；archive/冻结历史断链只作告警，避免修改历史证据来制造整洁 Graph。
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict
+rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --check --json
+```
+
+自动检查只证明 Markdown、Properties、MOC、Base 定义和链接契约正确，不证明 Obsidian 桌面端已经真实渲染。
+GUI 验收使用 [本机运行态验收模板](../templates/obsidian-runtime-acceptance.md)，人工完成后把结构化记录写入被
+Git 忽略的 `local/obsidian-runtime-acceptance.json`。`knowledge-obsidian-view-build.sh --check --json`
+会单独输出 `obsidian_runtime_status=pass|not-validated`；没有版本、验收人、日期、四项 GUI 检查和截图引用时
+必须保持 `not-validated`。该状态不改变 registry、owner decision、promotion 或 product gate 的文件层结果。
 
 ## 官方能力核对
 
@@ -108,6 +145,7 @@ indexes/obsidian-home.md -> 人工首屏导航
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Obsidian Knowledge Hub" --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json
+rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --check --json
 ```
 
 ## 复核记录
@@ -117,4 +155,5 @@ rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json
 ## 未决项
 
 - 本记录是 reviewing 集成规范，不代表 Obsidian CLI、Sync、Bases 或任何 community plugin 已启用。
+- 三个 `.base` 已作为可选视图定义落地，但本轮没有启动 Obsidian GUI 做渲染验收；当前运行态明确为 `not-validated`，可移植 Markdown MOC、view build 和 Hub link audit 是自动验证基线。
 - 不因本规范生成 owner decision、active promotion、memory write 或远端发布授权。

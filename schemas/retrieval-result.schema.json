@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/retrieval-result.schema.json",
+  "title": "Knowledge retrieval response",
+  "type": "object",
+  "required": ["schema_version", "status", "query", "index", "results", "zero_hit"],
+  "properties": {
+    "schema_version": {"type": "integer", "minimum": 2},
+    "status": {"enum": ["pass", "zero-hit", "error"]},
+    "query": {"type": "string"},
+    "index": {
+      "type": "object",
+      "required": ["mode", "fresh"],
+      "properties": {
+        "mode": {"enum": ["local-index", "repository-scan-fallback"]},
+        "fresh": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "status", "score", "why_selected"],
+        "properties": {
+          "id": {"type": "string"},
+          "path": {"type": "string"},
+          "status": {"type": "string"},
+          "score": {"type": "number"},
+          "why_selected": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": true
+      }
+    },
+    "zero_hit": {"type": "object"}
+  },
+  "additionalProperties": true
+}

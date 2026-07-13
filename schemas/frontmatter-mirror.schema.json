@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/frontmatter-mirror.schema.json",
+  "title": "Managed Markdown frontmatter mirror",
+  "type": "object",
+  "required": ["id", "title", "kind", "domain", "path", "status", "owner", "review_after", "summary_zh", "tags", "aliases", "related"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "kind": {"type": "string", "minLength": 1},
+    "domain": {"type": "string", "minLength": 1},
+    "path": {"type": "string", "pattern": "^[^/]"},
+    "status": {"enum": ["draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"]},
+    "owner": {"type": "string", "minLength": 1},
+    "review_after": {"type": "string", "format": "date"},
+    "summary_zh": {"type": "string", "minLength": 1},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "aliases": {"type": "array", "items": {"type": "string"}},
+    "related": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

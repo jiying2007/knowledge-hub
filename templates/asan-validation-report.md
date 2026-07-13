@@ -135,4 +135,4 @@ review_basis:
 
 1. 将本报告登记到对应项目 registry item。
 2. 在 `embedded-asan-non-pcr02-evidence-followup-20260629` 中追加 evidence ref。
-3. 复跑 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` 和 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression`。
+3. 复跑 `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics` 和 `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression`。

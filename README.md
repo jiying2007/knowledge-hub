@@ -1,3 +1,27 @@
+---
+title: Knowledge Hub root
+summary_zh: Knowledge Hub 根控制面入口，定义本库作为统一知识控制面的目录、registry、source、owner gate、索引和验证链路。该 active 条目只描述 Hub 自身架构入口，不替代任何项目 owner
+  decision、source project write、remote publish 或 memory write 授权。
+tags:
+- knowledge-hub
+- governance
+id: knowledge-hub-root
+kind: architecture
+domain: root
+path: README.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-16'
+review_status: active-control-plane-accepted
+promotion: none
+aliases:
+- Knowledge Hub root
+related:
+- indexes/obsidian-home.md
+---
+
 # Knowledge Hub
 
 Knowledge Hub 是本机长期知识主库：负责统一登记、检索和治理跨领域知识、项目知识、工程归档、专利材料、Codex 历史、AI 自动化和个人笔记。
@@ -55,24 +79,32 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
-`knowledge-final-gate.sh --json` 默认使用 quick regression，适合日常收口和提交前快速证明。
-
-需要检查“正文最大收口”终态时，使用 `max-body` profile：
+`knowledge-final-gate.sh` 只有一个终态 profile：`product`。不再保留 `standard`、`max-body`、`mature` 可执行 profile，也不再提供 product 别名脚本。默认 quick regression 适合日常收口；`--full-regression` 用于高风险工具改动和终态证明。
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile max-body --full-regression
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
-`standard` profile 保持日常自动治理边界：普通 AI / 外部资料人工复核队列是 report-only，不阻断 final gate。`max-body` profile 用于正文最大收口：待人工复核队列、`needs-edits` / `defer` 复核结果，以及不安全的 `copy-body` source inventory 都是 blocker。它仍然不代签 owner decision、不提升 active、不写 memory、不修改源项目。
-成熟态使用 `mature` profile：
+产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 31 个项目的真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。`4/4 structural coverage` 或 31/31 本机 source mapping 都不代表内容已签收或已验证。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
+
+高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 只保留 full regression slowest 10 与失败 ID，不做无证据的泛化重构。
+
+产品级辅助入口：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression
+rtk bash ~/knowledge-hub/tools/knowledge-project-readiness.sh --check --json
+rtk bash ~/knowledge-hub/tools/knowledge-retrieval-benchmark.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --check --json
+rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-export.sh --plan --json
+rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-13 --json
+rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --as-of 2026-07-13 --json
 ```
 
-`mature` profile 在 `max-body` 基础上进一步阻断迁移态残留：`migrated-*` 条目、copy-first / migration 过程 manifest、copy-first 工具入口、已关闭迁移 source 留在当前 source 主列表，以及长期滞留的高比例 `reviewing`。成熟态只允许保留不可误用的封存审计摘要；封存材料不得参与默认 search、context 或 routing。
-`--full-regression` 是终态证明和高风险脚本改动后的重门禁；日常查询和普通维护优先使用 search/context/check/status。
-高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 生成 compact 趋势摘要，避免把 full regression 大段 JSON 写进交付说明。需要复现历史证据时再显式传 `--as-of YYYY-MM-DD`。
+其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布。
 
 长期运营成熟态入口见 `governance/status/knowledge-hub-operational-maturity.md`。该状态页把日常、周度和 release gate 命令、搜索验收、review_after 运营节奏和剩余风险固定为可审查产物；2026-07 近期待复核批次已在 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 中按运营周期刷新到 2026-10，完整交付闭环见 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。该闭环只收口 Hub 内治理 review 和运营尾巴，不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目、不伪造外部实机证据。
 
@@ -270,3 +302,14 @@ Obsidian 是阅读和手工编辑客户端，不是治理权威。直接把 `~/k
 - `templates/`
 
 `.obsidian/` 已整体忽略，主题、布局和插件保持本机私有。建议在 Obsidian 中排除 `.git/`、`.tmp/`、`registry/`、`artifacts/manifests/`、`sources/` 和 `tools/`；新附件先进入 `inbox/attachments/`。普通使用者不需要日常阅读控制面目录，Properties 中的 `status`、`owner`、`review_after` 只能镜像 registry。
+
+<!-- knowledge-hub-project-readiness:start -->
+## 成熟度工作台
+
+以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+
+- [项目画像候选](governance/product/current/project-profile.md)
+- [维护 runbook](governance/product/current/runbooks/maintenance-entry.md)
+- [权威边界决策候选](governance/product/decisions/project-boundary-decision-candidate.md)
+- [readiness validation](governance/product/validation/project-readiness.md)
+<!-- knowledge-hub-project-readiness:end -->

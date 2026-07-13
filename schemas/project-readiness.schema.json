@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/project-readiness.schema.json",
+  "title": "Knowledge Hub project readiness matrix",
+  "type": "object",
+  "required": ["schema_version", "status", "project_count", "slot_count", "transaction"],
+  "properties": {
+    "schema_version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["planned", "applying", "applied", "no-change", "pass", "stale", "blocked"]},
+    "project_count": {"type": "integer", "minimum": 0},
+    "slot_count": {"type": "integer", "minimum": 0},
+    "rows": {"type": "array", "items": {"type": "object"}},
+    "transaction": {"type": "object", "required": ["changed_count"]}
+  },
+  "additionalProperties": true
+}

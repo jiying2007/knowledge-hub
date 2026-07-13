@@ -98,8 +98,8 @@
       "coverage_mode": "governance-baseline",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 19,
-      "inventory_sha256": "59675bb9ebaf5dab8c7dbc3028f6e5a2fb23e6d0b6d3daf741fcec63e56b5475",
+      "expected_markdown_count": 23,
+      "inventory_sha256": "ec54a54f4293827bc1f7f8d6dc0bca793fea2784434755cf952adae988432642",
       "reason_zh": "冻结 Hub 治理基线正文路径；新增治理规范仍优先逐条注册。"
     },
     {

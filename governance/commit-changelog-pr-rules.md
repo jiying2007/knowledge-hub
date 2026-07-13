@@ -1,3 +1,30 @@
+---
+title: 中文 Commit Changelog PR 规范
+summary_zh: 规定 Hub 知识资产提交、changelog 和 PR 描述的中文结构，要求说明背景、变更、registry 影响、验证、风险和回退。该 active 规范不把本地 commit 等同发布、owner approval、active
+  promotion 或远端写入授权。
+tags:
+- governance
+- commit
+- changelog
+- pr
+- zh-cn
+id: knowledge-hub-commit-changelog-pr-rules
+kind: standard
+domain: governance
+path: governance/commit-changelog-pr-rules.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 中文 Commit Changelog PR 规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 中文 Commit、Changelog 与 PR 规范
 
 ## 目标

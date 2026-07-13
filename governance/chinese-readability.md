@@ -1,3 +1,28 @@
+---
+title: 中文可读性规范
+summary_zh: 定义 Knowledge Hub 长期中文资产的标题、段落、结论、证据、风险和下一步写法，保证中文开发者可读、可查、可维护。该 active 规范只约束 Hub 文本质量，不替代项目事实复核或 owner decision。
+tags:
+- governance
+- zh-cn
+- readability
+- long-term-assets
+id: knowledge-hub-chinese-readability-rules
+kind: standard
+domain: governance
+path: governance/chinese-readability.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- 中文可读性规范
+related:
+- indexes/obsidian-home.md
+---
+
 # 中文可读性规范
 
 ## 目标

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=44"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knowledge-hub-tools"
+version = "2.0.0"
+description = "Local-first Knowledge Hub tooling"
+requires-python = ">=3.8"
+dependencies = [
+    "PyYAML==5.3.1",
+    "jsonschema==4.23.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["tools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

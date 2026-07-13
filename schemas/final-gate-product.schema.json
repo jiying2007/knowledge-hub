@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/final-gate-product.schema.json",
+  "title": "Knowledge Hub product final gate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "final_profile",
+    "platform_status",
+    "content_readiness",
+    "retrieval_quality",
+    "operational_readiness",
+    "overall_status",
+    "delivery_readiness",
+    "platform_release_complete",
+    "terminal_maturity"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "minimum": 2},
+    "final_profile": {"const": "product"},
+    "overall_status": {"enum": ["needs-fix", "needs-owner-review", "partial", "mature"]},
+    "terminal_maturity": {"type": "boolean"},
+    "platform_release_complete": {"type": "boolean"},
+    "delivery_readiness": {"type": "object"},
+    "platform_status": {"type": "object"},
+    "content_readiness": {"type": "object"},
+    "retrieval_quality": {"type": "object"},
+    "operational_readiness": {"type": "object"}
+  },
+  "additionalProperties": true
+}

@@ -1,3 +1,28 @@
+---
+title: AI 生成内容标注规范
+summary_zh: 规定 AI 生成、AI 摘要、AI 分类和人工/受托复核字段的标注方式，确保内容来源、复核状态和提升边界可追溯。该 active 规范不允许伪造人工复核、不把 AI 复核等同 owner decision。
+tags:
+- governance
+- ai-provenance
+- human-review
+- zh-cn
+id: knowledge-hub-ai-content-labeling-rules
+kind: standard
+domain: governance
+path: governance/ai-generated-content-labeling.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: leiwenjun
+review_after: '2026-09-18'
+review_status: human-reviewed-accepted
+promotion: none
+aliases:
+- AI 生成内容标注规范
+related:
+- indexes/obsidian-home.md
+---
+
 # AI 生成内容标注规范
 
 ## 目标

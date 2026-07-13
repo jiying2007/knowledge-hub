@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/project-evidence-contract.schema.json",
+  "title": "Knowledge Hub project evidence contract",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile",
+    "status",
+    "owner_ref",
+    "source_refs",
+    "validation_refs",
+    "artifact_refs",
+    "device_refs",
+    "release_ref",
+    "rollback_ref",
+    "not_applicable",
+    "member_project_ids"
+  ],
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "ref": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "nullableReference": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/reference"}
+      ]
+    },
+    "referenceArray": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/reference"}
+    },
+    "notApplicable": {
+      "type": "object",
+      "required": ["owner_ref", "authorization_id", "reason"],
+      "properties": {
+        "owner_ref": {"type": "string", "minLength": 1},
+        "authorization_id": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile": {
+      "enum": [
+        "control-plane",
+        "runtime-assets",
+        "software-tool",
+        "embedded-target",
+        "aggregate-group"
+      ]
+    },
+    "status": {"enum": ["pending", "ready", "invalidated"]},
+    "owner_ref": {"$ref": "#/$defs/nullableReference"},
+    "source_refs": {"$ref": "#/$defs/referenceArray"},
+    "validation_refs": {"$ref": "#/$defs/referenceArray"},
+    "artifact_refs": {"$ref": "#/$defs/referenceArray"},
+    "device_refs": {"$ref": "#/$defs/referenceArray"},
+    "release_ref": {"$ref": "#/$defs/nullableReference"},
+    "rollback_ref": {"$ref": "#/$defs/nullableReference"},
+    "not_applicable": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/notApplicable"}
+    },
+    "member_project_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": true
+}

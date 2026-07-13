@@ -1,19 +1,25 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "routes": [
     {
       "project_id": "pcr02",
       "name": "PCR02",
       "type": "project-group",
+      "route_scope": "group",
       "group_id": "pcr02",
       "aliases": [
         "PCR02",
-        "pcr02",
         "SigmaStar",
         "SSC305",
         "xcrz_sigmastar_demo",
         "pcr02_ssc305_compile",
         "pcr02_ssc305_release"
+      ],
+      "topic_aliases": [
+        "ST77912",
+        "dual screen display",
+        "framebuffer MI_FB",
+        "RAW_PREVIEW"
       ],
       "repo_refs": [
         "pcr02-ssc305",
@@ -35,13 +41,46 @@
       ],
       "workspace_refs": [
         "workspace://pcr02-ssc305",
-        "workspace://xcrz-sigmastar-demo"
+        "workspace://xcrz-sigmastar-demo",
+        "workspace://pcr02-api",
+        "workspace://pcr02-app",
+        "workspace://pcr02-hdi",
+        "workspace://pcr02-sensor",
+        "workspace://pcr02-daemon",
+        "workspace://pcr02-cli",
+        "workspace://pcr02-cmd-server",
+        "workspace://pcr02-proto-c",
+        "workspace://pcr02-wifi",
+        "workspace://pcr02-mp4",
+        "workspace://app-ota",
+        "workspace://app-product-test",
+        "workspace://app-tool",
+        "workspace://app-main"
       ],
       "hub_entry": "projects/pcr02/README.md",
       "current_path": "projects/pcr02/current",
       "archive_path": "projects/pcr02/archive",
       "decisions_path": "projects/pcr02/decisions",
       "validation_path": "projects/pcr02/validation",
+      "domain_refs": [
+        "projects/pcr02",
+        "projects/pcr02-ssc305",
+        "projects/xcrz-sigmastar-demo",
+        "projects/pcr02-api",
+        "projects/pcr02-app",
+        "projects/pcr02-hdi",
+        "projects/pcr02-sensor",
+        "projects/pcr02-daemon",
+        "projects/pcr02-cli",
+        "projects/pcr02-cmd-server",
+        "projects/pcr02-proto-c",
+        "projects/pcr02-wifi",
+        "projects/pcr02-mp4",
+        "projects/app-ota",
+        "projects/app-product-test",
+        "projects/app-tool",
+        "projects/app-main"
+      ],
       "default_source_ids": [
         "engineering-archive",
         "pcr02-project-docs",
@@ -49,30 +88,565 @@
         "pcr02-project-knowledge",
         "pcr02-project-agent-config",
         "pcr02-module-agent-rules",
-        "pcr02-project-root-artifacts"
+        "pcr02-project-root-artifacts",
+        "pcr02-product-test",
+        "pcr02-project-scratch",
+        "codex-raw-sessions",
+        "codex-archive"
       ],
       "retired_route_ids": [
         "retired-engineering-archive-root",
         "retired-codex-archive-root"
       ],
-      "knowledge_preflight": "required-for-project-facts-archive-debug-release-validation-decision-source",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-ssc305",
+      "name": "PCR02 SSC305 SDK",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-ssc305",
+        "PCR02 SSC305 SDK",
+        "pcr02_ssc305"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-ssc305"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-ssc305"
+      ],
+      "hub_entry": "projects/pcr02-ssc305/README.md",
+      "current_path": "projects/pcr02-ssc305/current",
+      "archive_path": "projects/pcr02-ssc305/archive",
+      "decisions_path": "projects/pcr02-ssc305/decisions",
+      "validation_path": "projects/pcr02-ssc305/validation",
+      "domain_refs": [
+        "projects/pcr02-ssc305"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "xcrz-sigmastar-demo",
+      "name": "XCRZ SigmaStar Demo",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "xcrz-sigmastar-demo",
+        "XCRZ SigmaStar Demo",
+        "xcrz_sigmastar_demo"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "xcrz-sigmastar-demo"
+      ],
+      "workspace_refs": [
+        "workspace://xcrz-sigmastar-demo"
+      ],
+      "hub_entry": "projects/xcrz-sigmastar-demo/README.md",
+      "current_path": "projects/xcrz-sigmastar-demo/current",
+      "archive_path": "projects/xcrz-sigmastar-demo/archive",
+      "decisions_path": "projects/xcrz-sigmastar-demo/decisions",
+      "validation_path": "projects/xcrz-sigmastar-demo/validation",
+      "domain_refs": [
+        "projects/xcrz-sigmastar-demo"
+      ],
+      "default_source_ids": [
+        "codex-archive"
+      ],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-api",
+      "name": "PCR02 API Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-api",
+        "PCR02 API Module",
+        "pcr02_api"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-api"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-api"
+      ],
+      "hub_entry": "projects/pcr02-api/README.md",
+      "current_path": "projects/pcr02-api/current",
+      "archive_path": "projects/pcr02-api/archive",
+      "decisions_path": "projects/pcr02-api/decisions",
+      "validation_path": "projects/pcr02-api/validation",
+      "domain_refs": [
+        "projects/pcr02-api"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-app",
+      "name": "PCR02 App Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-app",
+        "PCR02 App Module",
+        "pcr02_app"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-app"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-app"
+      ],
+      "hub_entry": "projects/pcr02-app/README.md",
+      "current_path": "projects/pcr02-app/current",
+      "archive_path": "projects/pcr02-app/archive",
+      "decisions_path": "projects/pcr02-app/decisions",
+      "validation_path": "projects/pcr02-app/validation",
+      "domain_refs": [
+        "projects/pcr02-app"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-hdi",
+      "name": "PCR02 HDI Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-hdi",
+        "PCR02 HDI Module",
+        "pcr02_hdi"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-hdi"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-hdi"
+      ],
+      "hub_entry": "projects/pcr02-hdi/README.md",
+      "current_path": "projects/pcr02-hdi/current",
+      "archive_path": "projects/pcr02-hdi/archive",
+      "decisions_path": "projects/pcr02-hdi/decisions",
+      "validation_path": "projects/pcr02-hdi/validation",
+      "domain_refs": [
+        "projects/pcr02-hdi"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-sensor",
+      "name": "PCR02 Sensor Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-sensor",
+        "PCR02 Sensor Module",
+        "pcr02_sensor"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-sensor"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-sensor"
+      ],
+      "hub_entry": "projects/pcr02-sensor/README.md",
+      "current_path": "projects/pcr02-sensor/current",
+      "archive_path": "projects/pcr02-sensor/archive",
+      "decisions_path": "projects/pcr02-sensor/decisions",
+      "validation_path": "projects/pcr02-sensor/validation",
+      "domain_refs": [
+        "projects/pcr02-sensor"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-daemon",
+      "name": "PCR02 Daemon App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-daemon",
+        "PCR02 Daemon App",
+        "pcr02_daemon"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-daemon"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-daemon"
+      ],
+      "hub_entry": "projects/pcr02-daemon/README.md",
+      "current_path": "projects/pcr02-daemon/current",
+      "archive_path": "projects/pcr02-daemon/archive",
+      "decisions_path": "projects/pcr02-daemon/decisions",
+      "validation_path": "projects/pcr02-daemon/validation",
+      "domain_refs": [
+        "projects/pcr02-daemon"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-cli",
+      "name": "PCR02 CLI App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-cli",
+        "PCR02 CLI App",
+        "pcr02_cli"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-cli"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-cli"
+      ],
+      "hub_entry": "projects/pcr02-cli/README.md",
+      "current_path": "projects/pcr02-cli/current",
+      "archive_path": "projects/pcr02-cli/archive",
+      "decisions_path": "projects/pcr02-cli/decisions",
+      "validation_path": "projects/pcr02-cli/validation",
+      "domain_refs": [
+        "projects/pcr02-cli"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-cmd-server",
+      "name": "PCR02 Command Server App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-cmd-server",
+        "PCR02 Command Server App",
+        "pcr02_cmd_server"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-cmd-server"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-cmd-server"
+      ],
+      "hub_entry": "projects/pcr02-cmd-server/README.md",
+      "current_path": "projects/pcr02-cmd-server/current",
+      "archive_path": "projects/pcr02-cmd-server/archive",
+      "decisions_path": "projects/pcr02-cmd-server/decisions",
+      "validation_path": "projects/pcr02-cmd-server/validation",
+      "domain_refs": [
+        "projects/pcr02-cmd-server"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-proto-c",
+      "name": "PCR02 Proto C App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-proto-c",
+        "PCR02 Proto C App",
+        "pcr02_proto_c"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-proto-c"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-proto-c"
+      ],
+      "hub_entry": "projects/pcr02-proto-c/README.md",
+      "current_path": "projects/pcr02-proto-c/current",
+      "archive_path": "projects/pcr02-proto-c/archive",
+      "decisions_path": "projects/pcr02-proto-c/decisions",
+      "validation_path": "projects/pcr02-proto-c/validation",
+      "domain_refs": [
+        "projects/pcr02-proto-c"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-wifi",
+      "name": "PCR02 Wi-Fi Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-wifi",
+        "PCR02 Wi-Fi Module",
+        "pcr02_wifi"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-wifi"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-wifi"
+      ],
+      "hub_entry": "projects/pcr02-wifi/README.md",
+      "current_path": "projects/pcr02-wifi/current",
+      "archive_path": "projects/pcr02-wifi/archive",
+      "decisions_path": "projects/pcr02-wifi/decisions",
+      "validation_path": "projects/pcr02-wifi/validation",
+      "domain_refs": [
+        "projects/pcr02-wifi"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "pcr02-mp4",
+      "name": "PCR02 MP4 Module",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "pcr02-mp4",
+        "PCR02 MP4 Module",
+        "pcr02_mp4"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "pcr02-mp4"
+      ],
+      "workspace_refs": [
+        "workspace://pcr02-mp4"
+      ],
+      "hub_entry": "projects/pcr02-mp4/README.md",
+      "current_path": "projects/pcr02-mp4/current",
+      "archive_path": "projects/pcr02-mp4/archive",
+      "decisions_path": "projects/pcr02-mp4/decisions",
+      "validation_path": "projects/pcr02-mp4/validation",
+      "domain_refs": [
+        "projects/pcr02-mp4"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "app-ota",
+      "name": "PCR02 OTA App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "app-ota",
+        "PCR02 OTA App",
+        "app_ota"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "app-ota"
+      ],
+      "workspace_refs": [
+        "workspace://app-ota"
+      ],
+      "hub_entry": "projects/app-ota/README.md",
+      "current_path": "projects/app-ota/current",
+      "archive_path": "projects/app-ota/archive",
+      "decisions_path": "projects/app-ota/decisions",
+      "validation_path": "projects/app-ota/validation",
+      "domain_refs": [
+        "projects/app-ota"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "app-product-test",
+      "name": "PCR02 Product Test App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "app-product-test",
+        "PCR02 Product Test App",
+        "app_product_test"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "app-product-test"
+      ],
+      "workspace_refs": [
+        "workspace://app-product-test"
+      ],
+      "hub_entry": "projects/app-product-test/README.md",
+      "current_path": "projects/app-product-test/current",
+      "archive_path": "projects/app-product-test/archive",
+      "decisions_path": "projects/app-product-test/decisions",
+      "validation_path": "projects/app-product-test/validation",
+      "domain_refs": [
+        "projects/app-product-test"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "app-tool",
+      "name": "PCR02 Tool App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "app-tool",
+        "PCR02 Tool App",
+        "app_tool"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "app-tool"
+      ],
+      "workspace_refs": [
+        "workspace://app-tool"
+      ],
+      "hub_entry": "projects/app-tool/README.md",
+      "current_path": "projects/app-tool/current",
+      "archive_path": "projects/app-tool/archive",
+      "decisions_path": "projects/app-tool/decisions",
+      "validation_path": "projects/app-tool/validation",
+      "domain_refs": [
+        "projects/app-tool"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "app-main",
+      "name": "PCR02 Main App",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "pcr02",
+      "aliases": [
+        "app-main",
+        "PCR02 Main App",
+        "app_main"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "app-main"
+      ],
+      "workspace_refs": [
+        "workspace://app-main"
+      ],
+      "hub_entry": "projects/app-main/README.md",
+      "current_path": "projects/app-main/current",
+      "archive_path": "projects/app-main/archive",
+      "decisions_path": "projects/app-main/decisions",
+      "validation_path": "projects/app-main/validation",
+      "domain_refs": [
+        "projects/app-main"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
       "route_key_policy": "git-remote-first"
     },
     {
       "project_id": "mcu",
-      "name": "MCU Firmware",
+      "name": "MCU Firmware Group",
       "type": "project-group",
+      "route_scope": "group",
       "group_id": "mcu",
       "aliases": [
         "MCU",
-        "mcu",
         "GD32",
         "HC32",
         "MM32",
         "gd32l235",
         "hc32f072",
-        "mm32spin023c"
+        "mm32spin023c",
+        "MCU Firmware Group"
       ],
+      "topic_aliases": [],
       "repo_refs": [
         "gd32l235",
         "hc32f072",
@@ -82,44 +656,227 @@
         "mm32spin-validator"
       ],
       "workspace_refs": [
-        "workspace://mcu-root"
+        "workspace://gd32l235",
+        "workspace://hc32f072",
+        "workspace://mm32spin023c",
+        "workspace://firmware-release-tools",
+        "workspace://firmware-toolchains",
+        "workspace://mm32spin-validator"
       ],
       "hub_entry": "projects/mcu/README.md",
       "current_path": "projects/mcu/current",
       "archive_path": "projects/mcu/archive",
       "decisions_path": "projects/mcu/decisions",
       "validation_path": "projects/mcu/validation",
-      "default_source_ids": [],
+      "domain_refs": [
+        "projects/mcu",
+        "projects/gd32l235",
+        "projects/hc32f072",
+        "projects/mm32spin023c",
+        "projects/firmware-release-tools",
+        "projects/firmware-toolchains",
+        "projects/mm32spin-validator"
+      ],
+      "default_source_ids": [
+        "codex-archive"
+      ],
       "retired_route_ids": [
         "retired-engineering-archive-root"
       ],
-      "knowledge_preflight": "required-for-mcu-release-validation-debug-source",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "gd32l235",
+      "name": "GD32L235 Firmware",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "gd32l235",
+        "GD32L235 Firmware"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "gd32l235"
+      ],
+      "workspace_refs": [
+        "workspace://gd32l235"
+      ],
+      "hub_entry": "projects/gd32l235/README.md",
+      "current_path": "projects/gd32l235/current",
+      "archive_path": "projects/gd32l235/archive",
+      "decisions_path": "projects/gd32l235/decisions",
+      "validation_path": "projects/gd32l235/validation",
+      "domain_refs": [
+        "projects/gd32l235"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "hc32f072",
+      "name": "HC32F072 Firmware",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "hc32f072",
+        "HC32F072 Firmware"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "hc32f072"
+      ],
+      "workspace_refs": [
+        "workspace://hc32f072"
+      ],
+      "hub_entry": "projects/hc32f072/README.md",
+      "current_path": "projects/hc32f072/current",
+      "archive_path": "projects/hc32f072/archive",
+      "decisions_path": "projects/hc32f072/decisions",
+      "validation_path": "projects/hc32f072/validation",
+      "domain_refs": [
+        "projects/hc32f072"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "mm32spin023c",
+      "name": "MM32SPIN023C Firmware",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "mm32spin023c",
+        "MM32SPIN023C Firmware"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "mm32spin023c"
+      ],
+      "workspace_refs": [
+        "workspace://mm32spin023c"
+      ],
+      "hub_entry": "projects/mm32spin023c/README.md",
+      "current_path": "projects/mm32spin023c/current",
+      "archive_path": "projects/mm32spin023c/archive",
+      "decisions_path": "projects/mm32spin023c/decisions",
+      "validation_path": "projects/mm32spin023c/validation",
+      "domain_refs": [
+        "projects/mm32spin023c"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "firmware-release-tools",
+      "name": "Firmware Release Tools",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "firmware-release-tools",
+        "Firmware Release Tools",
+        "firmware_release_tools"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "firmware-release-tools"
+      ],
+      "workspace_refs": [
+        "workspace://firmware-release-tools"
+      ],
+      "hub_entry": "projects/firmware-release-tools/README.md",
+      "current_path": "projects/firmware-release-tools/current",
+      "archive_path": "projects/firmware-release-tools/archive",
+      "decisions_path": "projects/firmware-release-tools/decisions",
+      "validation_path": "projects/firmware-release-tools/validation",
+      "domain_refs": [
+        "projects/firmware-release-tools"
+      ],
+      "default_source_ids": [
+        "codex-archive"
+      ],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "firmware-toolchains",
+      "name": "Firmware Toolchains",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "firmware-toolchains",
+        "Firmware Toolchains",
+        "firmware_toolchains"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "firmware-toolchains"
+      ],
+      "workspace_refs": [
+        "workspace://firmware-toolchains"
+      ],
+      "hub_entry": "projects/firmware-toolchains/README.md",
+      "current_path": "projects/firmware-toolchains/current",
+      "archive_path": "projects/firmware-toolchains/archive",
+      "decisions_path": "projects/firmware-toolchains/decisions",
+      "validation_path": "projects/firmware-toolchains/validation",
+      "domain_refs": [
+        "projects/firmware-toolchains"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
       "route_key_policy": "git-remote-first"
     },
     {
       "project_id": "codex",
-      "name": "Codex local runtime",
+      "name": "Codex Local Runtime Assets",
       "type": "runtime-domain",
+      "route_scope": "project",
       "group_id": "codex",
       "aliases": [
         "codex",
-        "Codex",
         "adk",
         "skill",
-        "workflow"
+        "workflow",
+        "Codex Local Runtime Assets"
       ],
+      "topic_aliases": [],
       "repo_refs": [
         "codex"
       ],
       "workspace_refs": [
-        "~/codex",
-        "~/.codex"
+        "~/codex"
       ],
       "hub_entry": "domains/codex/README.md",
-      "current_path": "domains/codex",
-      "archive_path": "domains/codex/archive/codex-archive",
-      "decisions_path": "domains/codex",
-      "validation_path": "domains/codex",
+      "current_path": "domains/codex/current",
+      "archive_path": "domains/codex/archive",
+      "decisions_path": "domains/codex/decisions",
+      "validation_path": "domains/codex/validation",
+      "domain_refs": [
+        "codex"
+      ],
       "default_source_ids": [
         "codex-archive",
         "codex-archive-registry",
@@ -131,13 +888,13 @@
       "retired_route_ids": [
         "retired-codex-archive-root"
       ],
-      "knowledge_preflight": "required-for-codex-archive-session-workflow-memory-skill-governance",
       "route_key_policy": "git-remote-first"
     },
     {
       "project_id": "llm-agent",
-      "name": "Agent tooling",
+      "name": "LLM Agent",
       "type": "project-group",
+      "route_scope": "group",
       "group_id": "agent-tools",
       "aliases": [
         "llm_agent",
@@ -145,35 +902,205 @@
         "agent-dev-kit",
         "adk",
         "llm_tools",
-        "llm-tools"
+        "llm-tools",
+        "LLM Agent"
       ],
+      "topic_aliases": [],
       "repo_refs": [
-        "llm-agent",
-        "agent-dev-kit",
-        "llm-tools"
+        "llm-agent"
       ],
       "workspace_refs": [
-        "workspace://llm-agent",
-        "workspace://agent-dev-kit",
-        "workspace://llm-tools"
+        "workspace://llm-agent"
       ],
       "hub_entry": "projects/llm-agent/README.md",
       "current_path": "projects/llm-agent/current",
       "archive_path": "projects/llm-agent/archive",
       "decisions_path": "projects/llm-agent/decisions",
       "validation_path": "projects/llm-agent/validation",
+      "domain_refs": [
+        "projects/llm-agent",
+        "projects/agent-dev-kit",
+        "projects/llm-tools"
+      ],
       "default_source_ids": [],
       "retired_route_ids": [
         "retired-engineering-archive-root",
         "retired-codex-archive-root"
       ],
-      "knowledge_preflight": "required-for-agent-tooling-workflow-skill-governance",
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "agent-dev-kit",
+      "name": "Agent Dev Kit",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "agent-tools",
+      "aliases": [
+        "agent-dev-kit",
+        "Agent Dev Kit",
+        "agent_dev_kit"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "agent-dev-kit"
+      ],
+      "workspace_refs": [
+        "workspace://agent-dev-kit"
+      ],
+      "hub_entry": "projects/agent-dev-kit/README.md",
+      "current_path": "projects/agent-dev-kit/current",
+      "archive_path": "projects/agent-dev-kit/archive",
+      "decisions_path": "projects/agent-dev-kit/decisions",
+      "validation_path": "projects/agent-dev-kit/validation",
+      "domain_refs": [
+        "projects/agent-dev-kit"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "llm-tools",
+      "name": "LLM Tools",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "agent-tools",
+      "aliases": [
+        "llm-tools",
+        "LLM Tools",
+        "llm_tools"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "llm-tools"
+      ],
+      "workspace_refs": [
+        "workspace://llm-tools"
+      ],
+      "hub_entry": "projects/llm-tools/README.md",
+      "current_path": "projects/llm-tools/current",
+      "archive_path": "projects/llm-tools/archive",
+      "decisions_path": "projects/llm-tools/decisions",
+      "validation_path": "projects/llm-tools/validation",
+      "domain_refs": [
+        "projects/llm-tools"
+      ],
+      "default_source_ids": [
+        "codex-archive"
+      ],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "sigmastar-flasher",
+      "name": "SigmaStar Flasher",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "embedded-tools",
+      "aliases": [
+        "sigmastar-flasher",
+        "SigmaStar Flasher",
+        "sigmastar_flasher"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "sigmastar-flasher"
+      ],
+      "workspace_refs": [
+        "workspace://sigmastar-flasher"
+      ],
+      "hub_entry": "projects/sigmastar-flasher/README.md",
+      "current_path": "projects/sigmastar-flasher/current",
+      "archive_path": "projects/sigmastar-flasher/archive",
+      "decisions_path": "projects/sigmastar-flasher/decisions",
+      "validation_path": "projects/sigmastar-flasher/validation",
+      "domain_refs": [
+        "projects/sigmastar-flasher"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "mm32spin-validator",
+      "name": "MM32SPIN Validator",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "mcu",
+      "aliases": [
+        "mm32spin-validator",
+        "MM32SPIN Validator",
+        "mm32spin_validator"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "mm32spin-validator"
+      ],
+      "workspace_refs": [
+        "workspace://mm32spin-validator"
+      ],
+      "hub_entry": "projects/mm32spin-validator/README.md",
+      "current_path": "projects/mm32spin-validator/current",
+      "archive_path": "projects/mm32spin-validator/archive",
+      "decisions_path": "projects/mm32spin-validator/decisions",
+      "validation_path": "projects/mm32spin-validator/validation",
+      "domain_refs": [
+        "projects/mm32spin-validator"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
+      "route_key_policy": "git-remote-first"
+    },
+    {
+      "project_id": "ota-packager",
+      "name": "OTA Packager",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "embedded-tools",
+      "aliases": [
+        "ota-packager",
+        "OTA Packager",
+        "ota_packager"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "ota-packager"
+      ],
+      "workspace_refs": [
+        "workspace://ota-packager"
+      ],
+      "hub_entry": "projects/ota-packager/README.md",
+      "current_path": "projects/ota-packager/current",
+      "archive_path": "projects/ota-packager/archive",
+      "decisions_path": "projects/ota-packager/decisions",
+      "validation_path": "projects/ota-packager/validation",
+      "domain_refs": [
+        "projects/ota-packager"
+      ],
+      "default_source_ids": [],
+      "retired_route_ids": [
+        "retired-engineering-archive-root",
+        "retired-codex-archive-root"
+      ],
       "route_key_policy": "git-remote-first"
     },
     {
       "project_id": "knowledge-hub",
       "name": "Knowledge Hub",
       "type": "knowledge-control-plane",
+      "route_scope": "project",
       "group_id": "knowledge-hub",
       "aliases": [
         "Knowledge Hub",
@@ -182,8 +1109,10 @@
         "knowledge-context",
         "knowledge check",
         "knowledge-check",
-        "Hub 自举"
+        "Hub 自举",
+        "knowledge_hub"
       ],
+      "topic_aliases": [],
       "repo_refs": [
         "knowledge-hub"
       ],
@@ -191,19 +1120,19 @@
         "~/knowledge-hub"
       ],
       "hub_entry": "README.md",
-      "current_path": "governance",
-      "archive_path": "artifacts/manifests",
-      "decisions_path": "registry",
-      "validation_path": "tools",
+      "current_path": "governance/product/current",
+      "archive_path": "governance/product/archive",
+      "decisions_path": "governance/product/decisions",
+      "validation_path": "governance/product/validation",
       "domain_refs": [
-        "root",
-        "governance"
+        "governance",
+        "root"
       ],
       "default_source_ids": [
-        "knowledge-hub-automation-runs"
+        "knowledge-hub-automation-runs",
+        "pcr02-project-docs"
       ],
       "retired_route_ids": [],
-      "knowledge_preflight": "required-for-knowledge-hub-governance-routing-validation",
       "route_key_policy": "control-plane-query-aware"
     }
   ]

@@ -11,18 +11,34 @@ knowledge_type: build
 maturity: verified
 status: reviewing
 owner: team-core
-review_after: 2026-10-13
+review_after: '2026-10-13'
 created: 2026-07-10
 last_updated: 2026-07-13
-tags: [pcr02, ssc305, thirdparty, build, optimization, cortex-a7, neon, hard-float, libyuv]
-related: [project-build-and-deploy-guide.md, project-debug-tools-guide.md]
+tags:
+- pcr02
+- ssc305
+- thirdparty
+- build
+- optimization
+- cortex-a7
+- neon
+- hard-float
+- libyuv
+- no-active-promotion
+related:
+- project-build-and-deploy-guide.md
+- project-debug-tools-guide.md
 validation_refs:
-  - sigdoc/customer/DualOS/EnvironmentSetup/Environmentsetup_zh.html
-  - sigdoc/customer/Common/Development/alkaid_defconfig_zh.html
-  - workspace://xcrz-sigmastar-demo/3rdparty/build/build_sh/common/env.sh
-  - workspace://xcrz-sigmastar-demo/build/compile.mk
+- sigdoc/customer/DualOS/EnvironmentSetup/Environmentsetup_zh.html
+- sigdoc/customer/Common/Development/alkaid_defconfig_zh.html
+- workspace://xcrz-sigmastar-demo/3rdparty/build/build_sh/common/env.sh
+- workspace://xcrz-sigmastar-demo/build/compile.mk
 promotion: none
 review_status: manual-entry-pending-owner-and-source-project-validation
+summary_zh: 记录 PCR02/SSC305 第三方库交叉编译、ARMv7-A/NEON/hard-float 优化和接入边界；当前仅作为 source-derived reviewing 基线，仍需项目 owner 复核并在目标构建环境验证，不表示
+  active 标准或发布验收完成。
+aliases:
+- PCR02 SSC305 第三方库编译优化基线
 ---
 
 # PCR02 SSC305 第三方库编译优化基线

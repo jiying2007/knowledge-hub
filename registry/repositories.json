@@ -358,7 +358,7 @@
     {
       "repo_id": "llm-agent",
       "project_id": "llm-agent",
-      "remote_key": "jiying2007/test",
+      "remote_key": "jiying2007/llm_agent",
       "remote_kind": "github",
       "workspace_ref": "workspace://llm-agent",
       "groups": [

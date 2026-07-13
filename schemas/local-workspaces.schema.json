@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/local-workspaces.schema.json",
+  "title": "Knowledge Hub machine-local workspace discovery",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "discovery_mode",
+    "tracked",
+    "workspaces",
+    "unmatched_registered_remote_keys"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "generated_at": {"type": "string", "format": "date"},
+    "discovery_mode": {"const": "read-only-local-git-remote-match"},
+    "tracked": {"const": false},
+    "workspaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "workspace_ref",
+          "repo_id",
+          "remote_key",
+          "path",
+          "present",
+          "read_only_discovery",
+          "source_evidence",
+          "alternate_count",
+          "alternate_paths"
+        ],
+        "properties": {
+          "workspace_ref": {"type": "string", "minLength": 1},
+          "repo_id": {"type": "string", "minLength": 1},
+          "project_id": {"type": "string"},
+          "remote_key": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "present": {"const": true},
+          "read_only_discovery": {"const": true},
+          "source_evidence": {
+            "type": "object",
+            "required": [
+              "readme_entries",
+              "build_entries",
+              "test_entries",
+              "version_entries",
+              "git_ref",
+              "git_head",
+              "evidence_sha256"
+            ],
+            "properties": {
+              "readme_entries": {"type": "array", "items": {"type": "string"}},
+              "build_entries": {"type": "array", "items": {"type": "string"}},
+              "test_entries": {"type": "array", "items": {"type": "string"}},
+              "version_entries": {"type": "array", "items": {"type": "string"}},
+              "git_ref": {"type": "string"},
+              "git_head": {"type": "string", "pattern": "^$|^[0-9a-fA-F]{40}$"},
+              "evidence_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            },
+            "additionalProperties": true
+          },
+          "alternate_count": {"type": "integer", "minimum": 0},
+          "alternate_paths": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": true
+      }
+    },
+    "unmatched_registered_remote_keys": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "limitations_zh": {"type": "string"}
+  },
+  "additionalProperties": true
+}

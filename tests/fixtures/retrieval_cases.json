@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "generated_route_matrix": {
+    "enabled": true,
+    "task_types": [
+      "debug",
+      "archive",
+      "release",
+      "decision",
+      "runbook",
+      "source",
+      "validation",
+      "session",
+      "general"
+    ]
+  },
+  "route_cases": [
+    {
+      "id": "topic-st77912",
+      "query": "ST77912 display",
+      "expected_status": "selected",
+      "expected_project_id": "pcr02"
+    },
+    {
+      "id": "identifier-underscore-llm-tools",
+      "query": "llm_tools GUI build",
+      "expected_status": "selected",
+      "expected_project_id": "llm-tools"
+    },
+    {
+      "id": "ambiguous-adk",
+      "query": "ADK skill routing",
+      "expected_status": "ambiguous"
+    },
+    {
+      "id": "unresolved-route",
+      "query": "completely unknown project phrase",
+      "expected_status": "unresolved"
+    }
+  ],
+  "cases": [
+    {
+      "id": "embedded-asan",
+      "query": "ASAN 嵌入式调试方法",
+      "expected_ids": ["embedded-asan-debug-guide-20260629"]
+    },
+    {
+      "id": "st77912-spi-fps",
+      "query": "ST77912 SPI FPS 高温老化",
+      "expected_ids": ["pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711"]
+    },
+    {
+      "id": "st77912-framebuffer",
+      "query": "ST77912 framebuffer MI_FB 边界",
+      "expected_ids": ["pcr02-st77912-fb-mi-fb-boundary-decision-20260711"]
+    },
+    {
+      "id": "pcr02-owner-validation",
+      "query": "PCR02 owner-ready 实机 发布 验证",
+      "expected_ids": ["pcr02-owner-ready-validation-paths-20260713"]
+    },
+    {
+      "id": "obsidian-integration",
+      "query": "Obsidian 双向链接 Graph Knowledge Hub",
+      "expected_ids": ["knowledge-hub-obsidian-integration-20260713"]
+    },
+    {
+      "id": "knowledge-hub-profile",
+      "query": "knowledge-hub 项目画像候选",
+      "expected_ids": ["knowledge-hub-readiness-profile-20260713"]
+    },
+    {
+      "id": "sigmastar-flasher-profile",
+      "query": "sigmastar-flasher 项目画像",
+      "expected_ids": ["sigmastar-flasher-readiness-profile-20260713"]
+    },
+    {
+      "id": "ota-packager-runbook",
+      "query": "ota-packager 维护入口 runbook",
+      "expected_ids": ["ota-packager-readiness-runbook-20260713"]
+    },
+    {
+      "id": "gd32-validation",
+      "query": "gd32l235 readiness validation",
+      "expected_ids": ["gd32l235-readiness-validation-20260713"]
+    },
+    {
+      "id": "codex-profile",
+      "query": "codex runtime assets 项目画像",
+      "expected_ids": ["codex-readiness-profile-20260713"]
+    },
+    {
+      "id": "firmware-toolchains-decision",
+      "query": "firmware-toolchains 权威维护边界",
+      "expected_ids": ["firmware-toolchains-readiness-decision-20260713"]
+    },
+    {
+      "id": "llm-agent-profile",
+      "query": "llm-agent 项目画像",
+      "expected_ids": ["llm-agent-readiness-profile-20260713"]
+    },
+    {
+      "id": "agent-dev-kit-validation",
+      "query": "agent-dev-kit readiness validation",
+      "expected_ids": ["agent-dev-kit-readiness-validation-20260713"]
+    },
+    {
+      "id": "core-dump-capture",
+      "query": "嵌入式 core dump capture guide",
+      "expected_paths": ["domains/embedded/runbooks/core-dump-capture-guide.md"]
+    },
+    {
+      "id": "linux-performance",
+      "query": "embedded linux performance triage",
+      "expected_paths": ["domains/embedded/runbooks/embedded-linux-performance-triage-guide.md"]
+    },
+    {
+      "id": "chinese-readability",
+      "query": "Knowledge Hub 中文可读性规范",
+      "expected_ids": ["knowledge-hub-chinese-readability-rules"]
+    },
+    {
+      "id": "path-routing",
+      "query": "Knowledge Hub 全局路径路由",
+      "expected_ids": ["knowledge-hub-path-routing-rules"]
+    },
+    {
+      "id": "patent-artifacts",
+      "query": "patent disclosure artifact reference",
+      "expected_ids": ["patent-disclosure-artifact-ref-manifest-20260619"]
+    },
+    {
+      "id": "camera-raw-preview",
+      "query": "PCR02 camera RAW_PREVIEW 虚拟流",
+      "expected_ids": ["pcr02-camera-raw-preview-virtual-stream-architecture-20260711"]
+    },
+    {
+      "id": "maintenance-plan",
+      "query": "Knowledge Hub review_after 长期维护计划",
+      "expected_ids": ["knowledge-hub-ultimate-maintenance-plan"]
+    }
+  ]
+}

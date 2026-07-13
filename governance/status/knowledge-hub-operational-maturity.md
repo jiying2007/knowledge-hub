@@ -1,144 +1,133 @@
-# Knowledge Hub 运营成熟态状态 2026-07-01
+# Knowledge Hub 产品成熟度状态 2026-07-13
 
 ## 结论
 
-Knowledge Hub 的结构和自动治理已达到长期运营成熟态：registry、索引、source control、owner gate、review queue、review_after、正文/附件完整性、search/context/status/check/final gate 都有可验证入口，且 `mature` profile 能阻断迁移态残留、高比例 `reviewing` 和未完成人工复核的内容候选。
+Knowledge Hub 已按“统一知识控制面”完成平台产品化：canonical Markdown、registry、schema catalog、Python 内核、事务化生命周期、可解释检索/context、31 项目结构与路由、Obsidian 只读工作台、团队导出、恢复演练和统一产品门禁均有稳定入口。
 
-截至 2026-07-13 当前 live baseline，P1/P2/P3 优化、运营审计和 PCR02 owner-ready 验证路径已落为 Hub 控制面资产：3 条 PCR02 decision candidate 不再被粗粒度标成 `owner-review-and-validation`，而是进入 `owner-ready-validation-pending`；2 条 PCR02 EVT2 source-audit 不再被标成 `evidence-needed`，而是进入 `evidence-backed-validation-pending`；18 条 2026-08-09..2026-08-11 Codex archive near-due item 已按 archive-only/provenance 边界复核并刷新到 2026-11-09..2026-11-11；full regression 去掉无用 fixture 复制、减少嵌套回归并支持 full suite 最多 4 worker 并行；本页把当前基线和历史基线拆开。
+当前不能声明“长期使用终态已经实证”，也不能声明 31 个项目的内容和发布证据全部成熟。项目结构槽位刻意保持 `reviewing`；本机 source mapping 已达到 31/31，但它只证明仓库可定位。真实 decision owner、当前 source commit、人工/实机、制品、release 和 rollback 证据仍为 0/31，尚未逐项目闭环。正确结论应是：
 
-2026-07-13 全面治理新增了 Obsidian reviewing 规范和 archived audit candidate。用户明确授权复核后，3 条 AI/official-doc review queue row 已 3/3 校验并机械落地，两个 item 分别保持 `reviewing` 和 `archived`；mature terminal gate 已恢复 `final_status=ok`。本页不替代 owner decision，不提升 active，不写 memory，不修改源项目，不代表板级老化、EMI、HIL、发布或远端状态已签收。
+- 平台产品化：由当前 product gate 技术检查决定。
+- 平台发布：还必须有 clean committed HEAD、已跟踪依赖清单、full regression 和该 HEAD 的 `git archive` 恢复证据。
+- 内容成熟度：存在 owner/source/device/release 缺口时保持 `needs-owner-review` 或 `partial`。
+- 长期采用成熟度：连续 30 天或至少 50 次脱敏本地调用前不得声明已实证。
 
-## 当前基线
+本页不替代 owner decision，不提升 active，不写 memory，不修改源项目，也不代表 ST77912 高温老化、SCLK/EMI、HIL、发布或远端状态已签收。
 
-| 指标 | 当前值 | 说明 |
-|---|---:|---|
-| registry item | 319 | 新增第三方编译基线、Obsidian 集成规范和全面成熟度 audit candidate 后的 live 总数 |
-| active item | 16 | `summary_zh` 缺口为 0 |
-| archived item | 281 | 历史长尾摘要已收口，并新增全面成熟度 archived audit candidate |
-| reviewing item | 22 | 比例约 6.90%，低于 mature profile 10% 阈值；新增第三方编译基线和 Obsidian 规范 |
-| review queue pending | 0 | 两个新增 candidate 的 3 条 queue row 已按 `auth-20260713-knowledge-hub-obsidian-audit-review` 完成受托复核 |
-| stale review_after | 0 | item/source stale 均为 0 |
-| 30-day near-due item | 0 | 18 条 Codex archive near-due item 已刷新到 2026-11-09..2026-11-11 |
-| mature blocker | 0 | mature audit `status=pass` |
-| full body coverage | 80 exact + 132 frozen collection + 0 missing | 212 份长期 Markdown 全覆盖；12 个集合 path inventory hash 全部通过 |
-| artifact vault | 181 identity = 178 present + 3 external-only | missing/hash/size/extra/duplicate/symlink 均为 0 |
-| reviewing triage | 3 owner-ready + 3 evidence-backed + 16 keep-reviewing | owner/实机验证和 Hub 内容复核保持分离；本轮 Hub review queue 已清零 |
-| owner gate open | 0 | PCR02 owner gate 当前无打开项 |
-| full regression baseline | 140 个回归结果场景 | 137 test function、4 worker、`failed_ids=[]`；后续性能只盯 slowest 10，不泛化重构 |
+## 唯一终态接口
 
-## 历史基线
+当前运行态只保留一个终态 profile 和一个命令入口：
 
-| 日期/阶段 | registry | active | archived | reviewing | 说明 |
-|---|---:|---:|---:|---:|---|
-| 2026-07-01 运营尾巴收口 | 246 | 未单列 | 未单列 | 0 | 27 个 2026-07 near-due item 刷新到 2026-10-16..2026-10-18；Hub 内部 review 尾巴闭环，但不代表外部 owner/content/source 签收 |
-| 2026-07-11 mature closeout 增量 | 306 | 16 | 275 | 15 | summary 缺口、普通 review queue、stale review_after 和 mature blocker 均清零 |
-| 2026-07-11 长期运营工具增强 | 311 | 16 | 276 | 19 | 新增 orphan、reviewing triage、regression trend，并把 changed-only orphan 与 reviewing triage 接入 health summary |
-| 2026-07-11 长期运营计划固化 | 312 | 16 | 277 | 19 | 固定 daily/weekly/monthly/release 节奏、reviewing 处置规则、full regression 趋势摘要和远端发布授权边界 |
-| 2026-07-11 P1/P2/P3 优化闭环 | 314 | 16 | 279 | 19 | P1 五条改为 owner-ready/evidence-backed validation pending，P2 将 mature release gate 压到 55 秒，P3 拆清当前/历史基线 |
-| 2026-07-13 运营审计与验证路径 | 316 | 16 | 280 | 20 | 18 条 Codex archive near-due 刷新到 2026-11；新增 PCR02 owner-ready validation paths；mature full gate 通过 |
-| 2026-07-13 全面成熟度与 Obsidian 治理 | 319 | 16 | 281 | 22 | 正文、frontmatter、vault、搜索和 Obsidian 呈现层落地；2 个新 candidate 已授权复核，mature full gate 最终通过 |
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
+```
 
-## 终态成熟条件
+旧治理 profile 和 product 别名不再是可执行接口。历史 archive/ledger 中出现的旧命令只作为当时证据，不得复制回当前 README、runbook、模板、生成器或自动化。
 
-- 目标成熟：Hub 是统一知识控制面，能回答“事实在哪、依据是什么、谁负责、何时复核、如何回滚”。
-- 功能成熟：分类、registry、source、owner、review_after、search、context、status、check、final gate 形成闭环。
-- 性能成熟：日常命令轻量，release 级 `--full-regression` 可作为重门禁；慢查询通过 `slowest_results` 定位。
-- 可维护性成熟：正文只维护一份，索引可重建，历史治理制品只进台账，自动化默认 report-only。
-- 可交付成熟：任何交付声明必须能映射到命令证据、registry item、索引入口和回滚边界。
+## 成熟度模型
 
-## 运营节奏
+| 维度 | 判据 | 当前边界 |
+|---|---|---|
+| `platform_status` | check、strict status、source runtime、unit/full regression、diff、事务恢复、schema、link/Obsidian、export、restore | 技术检查必须全部通过，任一失败为 `needs-fix` |
+| `content_readiness` | 31×4 槽位、31×9 route、有效 canonical 内容及 evidence readiness | 结构完整不等于事实成熟；缺真实证据保持 pending |
+| `retrieval_quality` | known-answer Top-3、MRR、零命中、current 生命周期过滤、解释字段和 fallback | archived/superseded/audit/provenance 不得进入 `context.current` |
+| `operational_readiness` | health snapshot、team export、fresh restore、transaction recovery、脱敏 metrics | 本地恢复和导出通过不等于远端发布 |
+| `delivery_readiness` | clean committed HEAD、tracked dependency manifests、full regression、HEAD `git archive` restore | dirty candidate 只能声明技术候选通过，不能声明平台发布完成 |
+| `overall_status` | 技术、内容、owner evidence、full regression、采用观察共同决定 | 只允许 `needs-fix`、`needs-owner-review`、`partial`、`mature` |
 
-### Daily
+候选文档、目录存在、Properties 完整或治理门禁通过都不能冒充 owner、source、设备和 release 证据。
+
+## 架构终态
+
+- Markdown：标题、摘要、标签、关系和正文内容权威；managed 文档使用一致 Properties。
+- Registry：身份、path、status、owner、review_after、promotion、authorization 和 lifecycle 权威。
+- Python package：`tools.codex_assets.knowledge_hub` 是共享内核，shell 入口仅定位根目录、注入 `PYTHONPATH` 和转发参数。
+- Schema：`schemas/catalog.json` 管理机器可读契约；v1 JSON 字段只做加法兼容，删改语义必须显式迁移。
+- Index/cache：核心 Markdown 索引可重建；SQLite FTS 与 metrics 位于忽略目录，缺失或过期时安全回退。
+- Local workspace：`local/workspaces.json` 只保存本机映射且不提交；tracked registry 只保存 `workspace://` 和 remote key。
+- Store：多文件 apply 使用单写锁、expected hash、journal、临时文件、fsync、`os.replace` 和 recovery audit。
+- Obsidian：直接消费同一份 Markdown；`.obsidian/` 私有，Properties/MOC/Bases 只提供发现和阅读，不改变权威状态。
+- Export/restore：团队导出按 visibility/status/evidence policy 选择并生成 hash manifest；恢复演练不依赖 cache 或本机 workspace mapping。
+
+## 功能终态
+
+| 能力 | 稳定入口 | 关键边界 |
+|---|---|---|
+| 捕获 | `knowledge-capture.sh`、`knowledge-new.sh` | `--apply` 只创建 draft/reviewing/personal，不创建 active |
+| 生命周期 | `knowledge-promote.sh`、`knowledge-retire.sh` | apply 要求 authorization、人工 forms、expected status 和 SHA256；工具不生成 owner 决策 |
+| 恢复审计 | `knowledge-recovery-audit.sh` | 只读检查未完成 transaction 和恢复动作 |
+| 检索/context | `knowledge-search.sh`、`knowledge-context.sh` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
+| 项目矩阵 | `knowledge-project-readiness.sh` | 31×4 reviewing 槽位；31/31 本机 source mapped，0/31 evidence-ready |
+| PCR02 证据路径 | `knowledge-pcr02-owner-readiness.sh` | 三条 candidate 保持 owner unassigned、人工/实机/release pending |
+| Obsidian | `knowledge-obsidian-view-build.sh`、`knowledge-link-audit.sh` | 文件层 Properties/MOC/Base/链接自动检查；真实 GUI 验收单独报告，当前为 `not-validated` |
+| 质量 | `knowledge-retrieval-benchmark.sh`、`knowledge-regression.sh` | full regression 仅跟踪 slowest 10，不泛化重构 |
+| 交付恢复 | `knowledge-export.sh`、`knowledge-restore-drill.sh` | 不发布远端、不导出 personal/pending owner decision/secret |
+| 运营 | `knowledge-health-summary.sh`、`knowledge-metrics.sh`、`knowledge-feedback.sh` | snapshot 快路径；只保存查询 hash 和 found/not-found，不保存原始查询 |
+
+## 项目内容边界
+
+31 个 registered project 均有 profile、runbook、decision candidate 和 validation readiness。结构覆盖只能证明入口可达：
+
+- source 可定位时，只读发现 remote、README、构建/测试入口和版本线索；本轮不执行源仓构建、测试或发布。
+- source 不可定位时，只写 registry 已知事实和 `manual_validation_pending`，不得推断当前源码。
+- decision candidate 默认 `decision_owner=unassigned`；没有真实 owner 决定时不得 promotion。
+- 设备、板级、实验室和 release 结论必须记录 source commit、制品 hash、设备/环境、命令、返回码、结果及回滚。
+
+PCR02 三条 owner-ready candidate 的详细路径见 [PCR02 owner-ready validation paths](../../artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md)。其中 ST77912 必须补齐高温老化、SCLK/CS/DC/MOSI 信号、EMI 风险、端到端双屏显示、发布制品和降档回滚证据。
+
+## Obsidian 关系
+
+Knowledge Hub 是知识系统和权威控制面，Obsidian 是可选客户端。有效结合方式是：
+
+- 直接打开 Hub 根目录，不复制第二份正文。
+- 使用 Properties、标准 Markdown Related links、Backlinks、Graph、总 MOC、项目 MOC、主题 MOC 和只读 Bases。
+- Inbox 模板只创建候选；生命周期仍由 Hub 工具和 registry 决定。
+- 不依赖 community plugin，不启用 Publish/Sync 自动写入，不把 Graph 中心度当成熟度。
+- `aliases/tags/related` 漂移由 view build 和 link audit 阻断，不能静默同步错误状态。
+
+## 运营与性能
+
+日常快路径：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<query>" --json
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<task>" --task-type general --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
-rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json
 ```
 
-### Weekly
+显式刷新与 release 级验证：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json --skip-final-gate
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
-rtk bash ~/knowledge-hub/tools/knowledge-reviewing-triage.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Knowledge Hub mature" --json --limit 8
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "成熟态" --json --limit 8
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "review_after" --json --limit 8
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 归档路径" --json --limit 8
+rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --refresh-gate --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --json --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
 ```
 
-### Release Gate
+性能判断只依据脱敏本地 metrics 和 full regression `slowest_results[0:10]`。目标为 warm search p95 ≤ 0.5 秒、context p95 ≤ 1 秒、status/默认 health ≤ 3 秒、quick final ≤ 15 秒；未达到时先定位具体 slowest 项，不做跨模块泛化重构。
 
-```bash
-rtk git status --short
-rtk git diff --check
-rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression
-rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json
-rtk bash ~/codex/scripts/final-ready.sh
-```
+## 近期待复核与历史边界
 
-## 2026-07 运营重点
-
-1. 2026-07-01 已刷新 PCR02 近期待复核批次：23 个 `team-core` 条目延后至 2026-10-16，1 个 2026-07-17 条目延后至 2026-10-17，3 个 2026-07-18 条目延后至 2026-10-18。
-2. 2026-10 窗口前仍可安排真实 owner/content review；本次闭环只关闭 Hub 内部 review 尾巴，不替代 owner 内容复核。
-3. 10 个 PCR02 archive-only 条目仍只作为历史证据，不提升 active fact。
-4. 4 个历史 owner-review artifact 只作为人工复核提示，不自动补 `source_id`，不反推出 owner approval。
-5. ASAN 非 PCR02 实操证据保持为外部增强输入，不伪造跨项目验证结论，不再作为成熟态或完整交付剩余运营阻塞。
-6. 正式交付前保持 Git 快照、远端推送和门禁输出可追溯。
-
-## 搜索验收查询
-
-| 查询 | 期望命中 |
-|---|---|
-| `Knowledge Hub mature` | 本状态页、README mature profile、final gate 相关制品 |
-| `成熟态` | 本状态页、成熟态目标和 mature profile 说明 |
-| `review_after` | 运营计划、review_after 工具、近期待复核说明 |
-| `PCR02 归档路径` | PCR02 archive-only 目标、归档路径和 source control 证据 |
-| `ASAN` | 团队级 runbook、PCR02 project-local runbook、active promotion 和 follow-up |
-| `owner gate` | PCR02 owner decision landing、owner gates 工具和 owner gate 状态 |
-| `source coverage` | 18 个 source 主控目录和 source control unification 证据 |
-
-## 性能策略
-
-- 日常使用 `knowledge-status.sh`、`knowledge-check.sh`、`knowledge-search.sh` 和 `knowledge-context.sh`。
-- `knowledge-final-gate.sh --full-regression` 只作为 release 级或高风险脚本改动后的重门禁。
-- 每次 high-risk tool/regression 改动后，用 `knowledge-regression-trend.sh` 将 full regression 的 `jobs`、`selected_test_count`、`result_count`、`slowest_results[0:10]` 和失败 ID 压缩进相邻 manifest 或交付说明；不保存大段 raw JSON。
-- full regression 当前默认最多 4 worker 并行；如需诊断并行互扰，可临时用 `KNOWLEDGE_REGRESSION_JOBS=1` 回退串行。
-- 若 full final gate 超过 3 分钟，先记录 `slowest_results`、命令环境和当次变更范围，再决定是否优化工具或拆分回归。
-- 搜索性能优先看首屏相关性和 fallback 行为，不以全文扫描替代 registry/query 契约。
-
-## 证据索引
-
-| 命令 | 结果摘要 |
-|---|---|
-| `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json --as-of 2026-07-01 --final-profile mature` | 退出码 0；`status=ok`；`strict_blockers=[]`；mature profile 通过 |
-| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-01` | 退出码 0；errors=0；warnings=0 |
-| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-01` | 退出码 0；final_status=ok；full regression 通过；blockers=[]；gap_map=[] |
-| `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-01 --window-days 30 --json` | 退出码 0；near_due_items=0；stale_items=0；owner_gate_open_count=0 |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --as-of 2026-07-13 --json` | 退出码 0；regression_status=pass；result_count=140；failed_ids=[]；slowest 10 已记录到 `knowledge-hub-operational-audit-20260713` |
-| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13` | 退出码 0；final_status=ok；full regression 通过；blockers=[]；gap_map=[] |
-| `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-07-13 --window-days 30 --json` | 退出码 0；刷新前 near_due_items=18；已按 2026-07-13 operational audit 刷新到 2026-11 窗口 |
-| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13` | 退出码 0；errors=0；warnings=0；正文 80 exact + 132 collection；vault 178 present + 3 external-only |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-13` | 退出码 0；137 test function；140 result；jobs=4；failed_ids=[] |
-| `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile mature --full-regression --as-of 2026-07-13`（授权复核前） | 退出码 1；`final_status=needs-owner-review`；唯一 blocker=`review-queue-pending-max-body` |
-| 同上（`auth-20260713-knowledge-hub-obsidian-audit-review` 复核后） | 退出码 0；`final_status=ok`；automatic=`complete`；check/regression pass；140/140；blockers=[]；gap_count=0 |
+- 2026-08-09 至 2026-08-11 的 18 条 Codex archive near-due 项已逐条复核 archive-only/provenance 边界并刷新到 2026-11-09 至 2026-11-11。
+- 18 条均保持 archive/provenance 或 reviewing governance ledger 边界，promotion 为 none，没有自动提升 active。
+- 旧命令、旧 profile、迁移过程和历史测试输出保留在 archive/ledger 仅为 provenance；默认 search/context/current 不消费这些材料。
 
 ## 剩余风险
 
-- 已无 2026-07-13 30 天窗口内 near-due 运营阻塞；18 条 Codex archive near-due 已按 archive-only/provenance 边界刷新到 2026-11 窗口。
-- Obsidian 规范和全面成熟度审计已按用户明确授权完成受托复核；该结论只接受为 review record，不是 owner decision、active promotion 或外部发布授权。
-- ASAN 团队级 runbook 已 active；非 PCR02 项目实操证据仍是未来外部证据输入，已由 `embedded-asan-non-pcr02-evidence-followup-20260629` 和 `knowledge-hub-complete-delivery-closure-20260701` 固定边界，不作为完整交付阻塞。
-- 完整交付仍需本地 Git 快照和远端 push 证据；本页只描述 Hub 成熟态运营，不代表 owner approval 或 source project write 授权。
-- 本页不改变任何源项目、远端仓库、owner decision 或 memory 状态。
+- 31/31 本机 source mapping 只属于 discovery 证据；31 个项目真实 evidence readiness 仍为 0/31。
+- PCR02 三条候选已补验证路径，但尚无本轮真实 owner、实机、高温、EMI、release 或 rollback 执行证据。
+- Obsidian managed Markdown、MOC、Bases 和链接自动检查已通过，但尚未在真实 GUI 完成 Properties、Backlinks、Bases 与导航验收。
+- 历史 patent archive 有缺失图片引用，只作为历史 warning；当前 managed Markdown 链接、Properties 和关系目标必须保持零错误。
+- candidate restore 必须匹配当前 working-tree signature；平台发布还必须匹配 clean committed HEAD 的 `git archive` restore。
+- 观察期前只能声明“平台产品化完成”，不能声明“长期使用终态已被实证”。
 
-## 下一步
+## 证据索引
 
-1. 在 2026-10-13 前复核 PCR02 owner-ready validation paths；在 2026-10-16 前按运营节奏安排 PCR02 内容复核；需要 owner 判断时只走 owner gate，不由 Codex 代签。
-2. 每周运行 health summary 与 review_after 30 天窗口；发现 near-due 时先分类为 owner/content/source/tooling，再决定刷新排期、补证、归档或走 owner gate。
-3. release 前运行 mature full final gate，并将实际输出写入交付说明或对应 manifest。
-4. 新增真实 ASAN 非 PCR02 实机验证时，按 `templates/asan-validation-report.md` 生成项目本地验证记录，再回链到本 closeout。
+- [产品成熟度实现审计](../../artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md)
+- [全面成熟度修复计划](../../artifacts/manifests/knowledge-hub-comprehensive-maturity-remediation-20260713.md)
+- [Obsidian 集成边界](../obsidian-integration.md)
+- [项目成熟度工作台](../../indexes/project-readiness.md)
+- [Knowledge Hub Home](../../indexes/obsidian-home.md)
