@@ -633,4 +633,4 @@
 - reviewing: `pcr02-video-audio-shm-usage-20260713`
 - reviewing: `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - reviewing: `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
-- reviewing: `llm-agent-adk-v3-1-rc2-release-closure-20260714`
+- archived: `llm-agent-adk-v3-1-rc2-release-closure-20260714`

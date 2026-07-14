@@ -5,10 +5,10 @@ kind: validation
 domain: projects/llm-agent
 scope: project-specific
 visibility: team-internal
-status: reviewing
+status: archived
 owner: leiwenjun
 review_after: '2026-10-14'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-retired
 promotion: none
 tags:
 - llm-agent
@@ -20,14 +20,14 @@ generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-14'
-manual_validation_pending: true
+manual_validation_pending: false
 summary_zh: 记录 ADK 3.1.0-rc.2 与根仓提交推送、可复现制品、回滚演练、根仓门禁及零复制零覆盖零删除的声明式 live apply；总体仍为 M3，真实 direct-target runtime、远端发布和现场 M5
   证据继续阻塞。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
+promotion_decision: 用户于 2026-07-14 明确授权将本轮 ADK 3.1 RC2 闭环验证归档；保留正文与 provenance，不提升 active、不写 memory、不远端发布。
 path: projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md
 aliases:
 - llm-agent adk 3.1 rc2 release closure
