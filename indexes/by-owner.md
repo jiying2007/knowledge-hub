@@ -354,6 +354,7 @@
 - `pcr02-video-audio-shm-usage-20260713`
 - `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+- `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 
 ## pcr02-registry-owner
 

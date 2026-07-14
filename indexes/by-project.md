@@ -280,6 +280,7 @@
 - LLM Agent 维护入口: `projects/llm-agent/current/runbooks/maintenance-entry.md`; `llm-agent-readiness-runbook-20260713`
 - LLM Agent 权威与维护边界决策候选: `projects/llm-agent/decisions/project-boundary-decision-candidate.md`; `llm-agent-readiness-decision-20260713`
 - LLM Agent readiness validation: `projects/llm-agent/validation/project-readiness.md`; `llm-agent-readiness-validation-20260713`
+- LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 
 ## Agent Dev Kit
 

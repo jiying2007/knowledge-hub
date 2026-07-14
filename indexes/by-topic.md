@@ -445,3 +445,4 @@
 - PCR02 Video/Audio 共享内存使用说明: `projects/pcr02/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
 - GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+- LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
