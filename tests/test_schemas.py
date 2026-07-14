@@ -6,7 +6,7 @@ def test_schema_catalog_resolves_all_contracts():
     result = validate_schema_catalog(repository_root())
 
     assert result["status"] == "pass"
-    assert result["contract_count"] == 14
+    assert result["contract_count"] == 15
     assert result["validated_count"] == result["contract_count"]
     assert result["authority_overlap"] == []
     assert result["instance_validation"]["status"] == "pass"

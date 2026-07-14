@@ -55,7 +55,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 能力 | 稳定入口 | 关键边界 |
 |---|---|---|
 | 捕获 | `knowledge-capture.sh`、`knowledge-new.sh` | `--apply` 只创建 draft/reviewing/personal，不创建 active |
-| 生命周期 | `knowledge-promote.sh`、`knowledge-retire.sh` | apply 要求 authorization、人工 forms、expected status 和 SHA256；工具不生成 owner 决策 |
+| 生命周期 | `knowledge-review-attest.sh`、`knowledge-promote.sh`、`knowledge-retire.sh` | execution authorization 与 content review attestation 独立校验；明确真人决定后可机械生成本地 form，active 禁止 delegated mode，工具不生成 owner 决策 |
 | 恢复审计 | `knowledge-recovery-audit.sh` | 只读检查未完成 transaction 和恢复动作 |
 | 检索/context | `knowledge-search.sh`、`knowledge-context.sh` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
 | 项目矩阵 | `knowledge-project-readiness.sh` | 31×4 reviewing 槽位；31/31 本机 source mapped，0/31 evidence-ready |

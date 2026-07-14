@@ -447,4 +447,6 @@
 - 2026-10-13: `pcr02-video-audio-shm-usage-20260713`
 - 2026-08-13: `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - 2026-08-13: `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+- 2026-10-14: `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - 2026-10-14: `llm-agent-adk-v3-1-rc2-release-closure-20260714`
+- 2026-08-14: `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`

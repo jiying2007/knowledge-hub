@@ -92,6 +92,7 @@
 - PCR02 权威与维护边界决策候选: `projects/pcr02/decisions/project-boundary-decision-candidate.md`; `pcr02-readiness-decision-20260713`
 - PCR02 readiness validation: `projects/pcr02/validation/project-readiness.md`; `pcr02-readiness-validation-20260713`
 - PCR02 Video/Audio 共享内存使用说明: `projects/pcr02/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
+- PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
 
 ## Firmware Release Tools
 
@@ -132,6 +133,7 @@
 - XCRZ SigmaStar Demo 权威与维护边界决策候选: `projects/xcrz-sigmastar-demo/decisions/project-boundary-decision-candidate.md`; `xcrz-sigmastar-demo-readiness-decision-20260713`
 - XCRZ SigmaStar Demo readiness validation: `projects/xcrz-sigmastar-demo/validation/project-readiness.md`; `xcrz-sigmastar-demo-readiness-validation-20260713`
 - PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+- PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
 
 ## PCR02 SSC305 SDK
 

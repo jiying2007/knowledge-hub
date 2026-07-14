@@ -16,7 +16,19 @@
     "authorization_id": {"type": "string"},
     "executed_by": {"type": "string", "minLength": 1},
     "executed_at": {"type": "string", "format": "date-time"},
-    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "review_attestation_id": {"type": "string"},
+    "review_attestation_mode": {
+      "enum": ["", "legacy-human-form", "human-reviewed", "human-directed-delegation"]
+    },
+    "review_attestation_statement_sha256": {
+      "type": "string",
+      "pattern": "^$|^[0-9a-f]{64}$"
+    },
+    "review_confirmation_token": {
+      "type": "string",
+      "pattern": "^$|^KH-ATTEST-[0-9a-f]{20}$"
+    }
   },
   "additionalProperties": true
 }

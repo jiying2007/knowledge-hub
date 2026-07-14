@@ -49,10 +49,11 @@ Knowledge Hub 的命令和工具必须保守、可复查、可回滚。用户和
 写入计划工具：
 
 - `knowledge-capture.sh`
+- `knowledge-review-attest.sh generate`
 - `knowledge-promote.sh`
 - `knowledge-retire.sh`
 
-写入计划工具默认 dry-run。`--apply` 只能在 reviewed manifest、owner、rollback policy、hash 校验和验证命令齐备时由人工触发。
+写入计划工具默认 dry-run。`knowledge-review-attest.sh generate --apply` 只把已经明确的真人决定机械写入忽略提交的本地表单，不创建执行授权或改变生命周期；`promote` / `retire --apply` 仍必须分别满足 execution authorization、content review attestation、rollback policy、hash 校验和验证命令。
 
 ## 证据记录
 

@@ -213,6 +213,23 @@ AI / Codex 可以执行以下高风险动作，但必须先有授权账本记录
 
 跨项目、跨会话自动化运行写入 `registry/automation-runs.jsonl`。没有授权记录时，AI / Codex 只能在 Hub 内执行 L1/L2 维护、本地 commit，或输出 plan、diff、manifest、review package、report-only 报告。
 
+### 生命周期复核与执行授权
+
+`promote` / `retire` 使用两个相互独立的门禁：
+
+- execution authorization：只允许执行限定写操作，来自 `registry/authorizations.jsonl`。
+- content review attestation：只确认真人对精确 item、原状态、目标状态和正文 SHA256 作出的决定，不授权写操作。
+
+先生成只读确认包；真人明确回复包内绑定信息后，Codex 可机械生成本地表单，无需人工编辑 JSON：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-review-attest.sh packet --id <item-id> --target archived --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-attest.sh generate --id <item-id> --target archived --expected-sha256 <sha256> --attestation-mode human-reviewed --attested-by <human> --attestation-source-ref <source-ref> --attestation-text '<exact-human-response>' --confirm-attestation --output artifacts/manifests/<item-id>-archive-review.local.jsonl --apply --json
+rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <item-id> --target archived --authorization-id <execution-authorization-id> --forms artifacts/manifests/<item-id>-archive-review.local.jsonl --expected-sha256 <sha256> --apply --json
+```
+
+确认包和表单生成不创建 authorization，也不执行状态变更。`human-directed-delegation` 只适用于非 active 目标，并强制把 `reviewed_by` 记为 `<human>-via-codex-delegation`；active promotion 必须使用 `human-reviewed`。旧版带 `authorization_id` 的人工表单继续兼容，但新表单禁止嵌入执行授权。
+
 ## 离线人工维护
 
 无法立刻联网、上板、跑完整工具或确认 owner 时，可以先登记人工待验证状态，但不能把它当作已验证事实。

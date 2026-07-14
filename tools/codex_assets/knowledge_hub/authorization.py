@@ -7,7 +7,12 @@ import json
 import pathlib
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
-from .common import KnowledgeHubError, load_jsonl
+from .common import KnowledgeHubError, bytes_sha256, load_jsonl
+from .review_attestation import (
+    FORM_KIND as CONTENT_REVIEW_ATTESTATION,
+    TARGET_DECISIONS,
+    attestation_review_basis,
+)
 
 
 def authorization_rows(root: pathlib.Path) -> List[Dict[str, Any]]:
@@ -76,7 +81,10 @@ def load_review_form(path: pathlib.Path, item_id: str) -> Dict[str, Any]:
     if len(matches) != 1:
         raise KnowledgeHubError("review form must contain exactly one row for {}".format(item_id))
     row = matches[0]
-    required = ("reviewed_by", "reviewed_at", "review_decision", "review_basis", "validation_refs", "authorization_id")
+    required = ["reviewed_by", "reviewed_at", "review_decision", "review_basis", "validation_refs"]
+    is_attestation = row.get("form_kind") == CONTENT_REVIEW_ATTESTATION
+    if not is_attestation:
+        required.append("authorization_id")
     missing = [field for field in required if row.get(field) in (None, "", [])]
     if missing:
         raise KnowledgeHubError("review form missing: {}".format(", ".join(missing)))
@@ -88,4 +96,91 @@ def load_review_form(path: pathlib.Path, item_id: str) -> Dict[str, Any]:
         raise KnowledgeHubError("reviewed_at must use YYYY-MM-DD") from exc
     if not isinstance(row.get("validation_refs"), list) or not all(str(value).strip() for value in row["validation_refs"]):
         raise KnowledgeHubError("review form validation_refs must be a non-empty list")
+    if is_attestation:
+        _validate_content_review_attestation(row)
     return row
+
+
+def _validate_content_review_attestation(row: Mapping[str, Any]) -> None:
+    required = (
+        "schema_version",
+        "attestation_id",
+        "attestation_mode",
+        "attested_by",
+        "attested_at",
+        "attestation_source_ref",
+        "attestation_statement",
+        "attestation_statement_sha256",
+        "confirmation_token",
+        "content_sha256",
+        "expected_before_status",
+        "target_status",
+        "generated_by",
+    )
+    missing = [field for field in required if row.get(field) in (None, "", [])]
+    if missing:
+        raise KnowledgeHubError("content review attestation missing: {}".format(", ".join(missing)))
+    if row.get("authorization_id") not in (None, "") or row.get("execution_authorization_embedded") is not False:
+        raise KnowledgeHubError("content review attestation must not embed execution authorization")
+    if row.get("schema_version") != 1:
+        raise KnowledgeHubError("unsupported content review attestation schema_version")
+    if row.get("generated_mechanically") is not True or row.get("generated_by") != "knowledge-review-attest":
+        raise KnowledgeHubError("content review attestation must preserve mechanical generation provenance")
+    mode = str(row.get("attestation_mode", ""))
+    if mode not in {"human-reviewed", "human-directed-delegation"}:
+        raise KnowledgeHubError("unsupported attestation_mode: {}".format(mode))
+    target_status = str(row.get("target_status", ""))
+    if target_status not in TARGET_DECISIONS:
+        raise KnowledgeHubError("unsupported attestation target_status: {}".format(target_status))
+    if row.get("review_decision") != TARGET_DECISIONS[target_status]:
+        raise KnowledgeHubError("content review attestation decision does not match target_status")
+    if target_status == "active" and mode != "human-reviewed":
+        raise KnowledgeHubError("active promotion requires direct human-reviewed attestation")
+    attested_by = str(row.get("attested_by", ""))
+    if attested_by.lower() in {"ai", "automation", "codex", "script", "system", "unassigned", "unknown"}:
+        raise KnowledgeHubError("content review attestation must identify a human attested_by")
+    if len(attested_by) > 128 or any(character in attested_by for character in "\r\n\t"):
+        raise KnowledgeHubError("content review attestation attested_by is invalid")
+    expected_reviewer = (
+        attested_by
+        if mode == "human-reviewed"
+        else "{}-via-codex-delegation".format(attested_by)
+    )
+    if row.get("reviewed_by") != expected_reviewer:
+        raise KnowledgeHubError("content review attestation reviewer identity does not match its mode")
+    if row.get("reviewed_at") != row.get("attested_at"):
+        raise KnowledgeHubError("reviewed_at must match attested_at")
+    try:
+        dt.date.fromisoformat(str(row.get("attested_at", "")))
+    except ValueError as exc:
+        raise KnowledgeHubError("attested_at must use YYYY-MM-DD") from exc
+    content_sha = str(row.get("content_sha256", ""))
+    statement_sha = str(row.get("attestation_statement_sha256", ""))
+    if len(content_sha) != 64 or any(character not in "0123456789abcdef" for character in content_sha):
+        raise KnowledgeHubError("content review attestation content_sha256 is invalid")
+    statement = str(row.get("attestation_statement", ""))
+    source_ref = str(row.get("attestation_source_ref", ""))
+    if len(statement) > 4096:
+        raise KnowledgeHubError("content review attestation statement is too long")
+    if len(source_ref) > 500 or any(character in source_ref for character in "\r\n\t"):
+        raise KnowledgeHubError("content review attestation source ref is invalid")
+    if bytes_sha256(statement.encode("utf-8")) != statement_sha:
+        raise KnowledgeHubError("content review attestation statement SHA256 does not match")
+    token = str(row.get("confirmation_token", ""))
+    if (
+        not token.startswith("KH-ATTEST-")
+        or len(token) != 30
+        or any(character not in "0123456789abcdef" for character in token[len("KH-ATTEST-"):])
+    ):
+        raise KnowledgeHubError("content review attestation confirmation token is invalid")
+    if row.get("review_basis") != attestation_review_basis(mode, token, source_ref):
+        raise KnowledgeHubError("content review attestation review_basis does not match its provenance")
+    bindings = (
+        str(row.get("item_id", "")),
+        str(row.get("expected_before_status", "")),
+        target_status,
+        content_sha,
+        token,
+    )
+    if any(value not in statement for value in bindings):
+        raise KnowledgeHubError("content review attestation statement is missing exact packet bindings")

@@ -6,6 +6,7 @@
 
 - `item.schema.json`：`registry/items.jsonl` 单行条目。
 - `authorization.schema.json`：`registry/authorizations.jsonl` 单行授权。
+- `review-attestation.schema.json`：绑定正文 hash、原状态和目标状态的本地内容复核确认表；该表不包含执行授权。
 - `lifecycle-event.schema.json`：`registry/lifecycle-events.jsonl` 单行生命周期事件。
 - `frontmatter-mirror.schema.json`：managed Markdown Properties 镜像。
 - `retrieval-result.schema.json`：检索 JSON 契约。

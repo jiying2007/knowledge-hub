@@ -48,6 +48,43 @@ Owner review 用于确认知识条目的权威状态、适用范围和生效条�
 - 何时 review_after。
 - 如果出错，如何回退或 supersede。
 
+## 三类责任必须分开
+
+| 责任 | 证明什么 | 不能替代什么 |
+| --- | --- | --- |
+| 执行授权 | 授权某个 executor 在限定 scope、时间窗和回滚条件下执行写操作 | 不证明 owner 已复核正文，也不等于生命周期决定 |
+| 内容复核确认 | 绑定精确条目、原状态、目标状态和正文 SHA256，记录真人作出的内容或生命周期决定 | 不授权工具执行写操作 |
+| 执行记录 | 记录实际 executor、transaction、验证和 authorization 消费结果 | 不得反向生成或冒充前两项 |
+
+`registry/authorizations.jsonl` 只承载执行授权。`content-review-attestation` 表单只承载内容复核确认，禁止嵌入 `authorization_id`。`knowledge-promote.sh` 和 `knowledge-retire.sh` 必须分别校验两类证据，任一缺失都保持 blocked。
+
+## Codex 机械生成表单
+
+真人决定不等于真人必须手写 JSON。生命周期变更应先运行只读确认包：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-review-attest.sh packet --id <item-id> --target <active|archived|superseded|rejected> --json
+```
+
+确认包必须显示 item id、原状态、目标状态、完整正文 SHA256、影响、确认码和两类确认模板。收到真人包含这些绑定信息的明确回复后，Codex 可以把该回复机械映射为本地表单：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-review-attest.sh generate \
+  --id <item-id> --target <target> --expected-sha256 <sha256> \
+  --attestation-mode <human-reviewed|human-directed-delegation> \
+  --attested-by <human> --attestation-source-ref <source-ref> \
+  --attestation-text '<exact-human-response>' --confirm-attestation \
+  --output artifacts/manifests/<name>.local.jsonl --apply --json
+```
+
+该命令只允许写入已忽略提交的 `artifacts/manifests/*.local.jsonl`，不创建授权、不改变 registry、不执行 promotion/retire。重复输入必须幂等，正文 hash、原状态、目标状态或确认码漂移时必须拒绝。
+
+确认模式：
+
+- `human-reviewed`：真人确认已复核精确正文；`reviewed_by` 记录真人身份。`active` 只允许此模式。
+- `human-directed-delegation`：真人看过确认包并明确作出非 active 生命周期决定，但委托 Codex 机械落表；`reviewed_by` 必须记录为 `<human>-via-codex-delegation`，不得伪装成直接内容复核。
+- “授权执行”“帮我处理”“按建议优化”等泛化指令不自动构成内容复核确认；缺少精确 item、状态、完整 hash 和确认码时不得生成表单。
+
 ## 签核结果
 
 建议使用以下状态：
@@ -67,6 +104,8 @@ Owner review 用于确认知识条目的权威状态、适用范围和生效条�
 - 不把 memory candidates 当作项目事实。
 - 不把 `.session`、handoff、raw log 或 release binary 写成 active 正文。
 - 不在缺少 source、review_after 或证据时声明 active。
+- 不把执行授权写成内容复核确认，也不把内容复核表单当作执行授权。
+- Codex 不得自行编造 attestation 文本、真人身份或确认码对应的决定。
 
 ## Review
 

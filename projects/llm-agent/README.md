@@ -19,5 +19,4 @@
 - [维护 runbook](current/runbooks/maintenance-entry.md)
 - [权威边界决策候选](decisions/project-boundary-decision-candidate.md)
 - [readiness validation](validation/project-readiness.md)
-- [ADK 3.1 RC2 发布候选闭环验证](validation/adk-v3-1-rc2-release-closure-20260714.md)
 <!-- knowledge-hub-project-readiness:end -->

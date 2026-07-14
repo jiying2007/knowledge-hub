@@ -118,9 +118,9 @@
       "coverage_mode": "archive-corpus",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 60,
-      "inventory_sha256": "cda7cccc6c45799ebcd0a72ec563d7dae337c7bb8937a91027a5993d60e74d88",
-      "reason_zh": "冻结 PCR02 历史归档正文路径，不表示当前项目事实、owner 决策或 active 提升。"
+      "expected_markdown_count": 61,
+      "inventory_sha256": "896e1378f9320b68470a202bac8c8c2740987dc07782d0799dff90b23cfdad53",
+      "reason_zh": "冻结 PCR02 历史归档正文路径；2026-07-14 显式复核并纳入 ST77912 黑屏 LCD ESD 根因 debug-record，不表示当前项目事实、owner 决策或 active 提升。"
     }
   ]
 }

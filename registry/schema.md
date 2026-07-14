@@ -525,9 +525,23 @@ Authorization invariants:
 - `rollback_path` and `validation_commands` must be non-empty for write actions.
 - AI / Codex may be executor, but must not pretend to be a human reviewer unless the authorization explicitly says it is acting on behalf of that owner.
 
+## content-review-attestation local forms
+
+`artifacts/manifests/*.local.jsonl` 可保存由 `knowledge-review-attest.sh` 机械生成的临时内容复核确认。该表单绑定精确 `item_id`、`expected_before_status`、`target_status`、`content_sha256` 和 `confirmation_token`，但禁止包含 `authorization_id`；它证明真人决定，不授予执行权限，也不进入 tracked manifest。
+
+Required fields and invariants are defined by `schemas/review-attestation.schema.json`。额外运行时约束：
+
+- `attestation_statement` 必须包含 item、原状态、目标状态、完整正文 hash、确认码和有效 reviewer 身份。
+- `human-reviewed` 表示真人直接复核，`reviewed_by` 等于 `attested_by`。
+- `human-directed-delegation` 只表示真人明确作出非 active 生命周期决定并委托机械落表，`reviewed_by` 必须为 `<attested_by>-via-codex-delegation`。
+- `active` promotion 禁止 delegated mode。
+- 表单生成不消费 authorization；实际 `promote` / `retire` 必须再独立校验有效授权账本记录。
+- apply 后长期账本只保留 attestation id/mode/source ref、正文 hash、确认码和确认文本 hash；原始确认文本继续留在未跟踪本地表单，不复制聊天正文。
+- 旧版包含 `authorization_id` 的人工 review form 继续作为 v1 兼容输入；新生成器不得产生该耦合字段。
+
 ## lifecycle-events.jsonl
 
-登记 `capture`、`promote` 和 `retire` 的可审计生命周期事件。该账本记录实际 apply 结果；dry-run 不得写入。`capture` 可在无高风险授权时创建 `draft`、`reviewing` 或 `personal`，但不得直接创建 `active`。`promote` 和 `retire` 必须引用匹配、未过期且处于 `active` 状态的 authorization，并提供真实 review form、预期正文 hash 和事务 journal。
+登记 `capture`、`promote` 和 `retire` 的可审计生命周期事件。该账本记录实际 apply 结果；dry-run 不得写入。`capture` 可在无高风险授权时创建 `draft`、`reviewing` 或 `personal`，但不得直接创建 `active`。`promote` 和 `retire` 必须分别引用匹配、未过期且处于 `active` 状态的 execution authorization，以及绑定当前正文的 content review attestation，并提供预期正文 hash 和事务 journal。
 
 Required lifecycle event fields:
 
