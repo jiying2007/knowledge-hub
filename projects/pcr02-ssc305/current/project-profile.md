@@ -8,7 +8,7 @@ visibility: team-internal
 status: reviewing
 owner: leiwenjun
 review_after: '2026-10-13'
-review_status: ai-generated-project-readiness-pending-owner-and-real-validation
+review_status: human-reviewed-accepted
 promotion: none
 tags:
 - pcr02-ssc305

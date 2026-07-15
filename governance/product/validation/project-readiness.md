@@ -8,7 +8,7 @@ visibility: team-internal
 status: reviewing
 owner: leiwenjun
 review_after: '2026-10-13'
-review_status: ai-generated-project-readiness-pending-owner-and-real-validation
+review_status: human-reviewed-accepted
 promotion: none
 tags:
 - knowledge-hub
@@ -52,7 +52,7 @@ related:
 | 验收线 | 必要条件 | 当前判定 |
 |---|---|---|
 | 平台控制面可交付 | check/schema/link/orphan/retrieval/route/full regression 通过；candidate 与 HEAD restore 新鲜；工作树已形成可审计本地提交 | 自动收口中，以最新 final gate 为准 |
-| 内容治理闭环 | product 人工复核队列为 0；精确正文、状态和 hash 已由真人确认；无越权 active promotion | 未完成 |
+| 内容治理闭环 | product 普通复核队列为 0；受托复核身份和依据可审计；owner/lifecycle 决定继续走独立 hash-bound attestation；无越权 active promotion | 普通复核已完成，owner/lifecycle 未被代签 |
 | 项目证据闭环 | 30 个 validation item 的 `evidence_contract.status=ready`，且各 profile 的必需引用可解析 | `0/30` ready |
 | 长期采用闭环 | 当前交互契约下达到观察期/调用量、性能样本、真实反馈数量和命中率门槛 | 未达到，仍为 `pending` |
 
@@ -66,10 +66,10 @@ related:
 |---|---|---|
 | 项目工作台 | 30 个项目、30 条 route、120 个 readiness slot；check 模式 `changed_count=0`；本机 workspace path/state 不写入 tracked 文档 | 结构通过 |
 | 项目证据 | 30 个 validation contract，ready `0/30` | 真实证据待补 |
-| 人工复核 | product review queue 131 条，均为 `ai-human-review`，owner 为 `leiwenjun` | 人工阻断，不可自动清零 |
+| 人工复核 | 用户后续明确“授权推动”；131 条 `ai-human-review` 已按 `auth-20260715-knowledge-hub-terminal-maturity-push` 受托复核并以 `leiwenjun-via-codex-delegation` 落地；131 条均保持 `reviewing -> reviewing` | 普通 review queue 已清零；不等于 owner decision 或项目 evidence-ready |
 | Owner worksheet | open row 为 0，但 owner-ready package coverage 为 `0/7` | 不得把“无 open row”解释为 ready package 已存在 |
-| 当前交互遥测 | search 1 次、context 1 次；379 条历史或非当前契约记录保留但排除 | 新口径已生效，样本不足 |
-| 当前性能 | search P95 426.24 ms、context P95 369.2 ms；各 1 个样本，最低各 10 个 | 数值低于目标，但统计状态仍为 `pending` |
+| 当前交互遥测 | search 4 次、context 5 次，共 9 次；379 条历史或非当前契约记录保留但排除 | 新口径已生效，样本不足 |
+| 当前性能 | search P95 3269.45 ms、context P95 2876.01 ms；样本分别为 4/5，最低各 10 个 | 小样本提示性能风险，但统计状态仍为 `pending`，不得据此宣称稳定通过或失败 |
 | 真实反馈与采用 | feedback 0；采用判定 `ready=false` | 不可判定为长期采用 |
 
 ### Evidence profile 分布与缺口
@@ -82,7 +82,15 @@ related:
 | `software-tool` | 8 | owner、source、validation、artifact、release、rollback |
 | `embedded-target` | 19 | owner、source、validation、artifact、device、release、rollback |
 
-按 profile 规则统计，当前尚未满足的必需字段为：`owner_ref` 30 项、`source_refs` 29 项、`validation_refs` 29 项、`artifact_refs` 27 项、`device_refs` 19 项、`release_ref` 29 项、`rollback_ref` 29 项；aggregate group 的成员列表已经登记，但在成员项目全部 ready 前仍不满足聚合终态。
+按 profile 规则统计，当前尚未满足的必需字段为：`owner_ref` 30 项、`source_refs` 1 项、`validation_refs` 29 项、`artifact_refs` 27 项、`device_refs` 19 项、`release_ref` 29 项、`rollback_ref` 29 项。28 个项目已绑定 registered remote 的精确 Git commit；`mm32spin-validator` 的发现结果没有可用 Git HEAD，不能伪造 source commit。aggregate group 的成员列表已经登记，但在成员项目全部 ready 前仍不满足聚合终态。
+
+### 授权推动执行记录
+
+- 执行授权：`auth-20260715-knowledge-hub-terminal-maturity-push`，只允许 Knowledge Hub 本仓内 `automation-apply-with-review`。
+- 复核范围：120 个共享生成器产生的 readiness 记录，以及 11 个逐项回退完整原文审阅的非模板记录。
+- 复核结果：131 条全部为 `accept-as-review-record`，状态均保持 `reviewing`；未关闭 owner gate、未提升 active、未写 memory、未修改源项目、未生成合成反馈。
+- Source 推进：本机按 exact registered remote 找到 29/29 个 remote；其中 28 个具有可绑定 commit，已写入对应 validation contract 的 `source_refs`。16 个 duplicate remote 继续保留为 alternate 诊断，不静默选成第二权威源。
+- 授权边界：受托普通复核不是 lifecycle attestation，也不证明真实 build、artifact、device、release 或 rollback 已完成。
 
 ## 自动结构检查
 
@@ -111,7 +119,9 @@ related:
 
 ## 精确收口包
 
-### 1. 人工复核队列
+### 1. 普通复核队列
+
+2026-07-15 授权批次已经完成，当前 `ai-human-review` 队列为 0。以后出现新队列时，继续按 20 条一批导出：
 
 按 20 条一批导出，`--queue-offset` 依次使用 `0,20,40,60,80,100,120`：
 
@@ -121,7 +131,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue \
   --queue-limit 20 --queue-offset <offset> --queue-forms-jsonl
 ```
 
-每条表单必须由真人依据精确 item、正文和证据填写。当前“按建议全部优化”只授权本仓内优化，不构成 131 条内容复核确认。填表后依次执行：
+默认情况下，每条表单仍必须由真人依据精确 item、正文和证据填写。本批是在用户引用 131 条阻塞后进一步明确“授权推动”，并由 Codex 对 120 个共享模板资产核验生成器/schema/regression、对 11 个非模板资产读取完整原文后，以显式 delegated reviewer 身份落地；该例外不得泛化到未来队列。填表后依次执行：
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue \
@@ -132,7 +142,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh \
   --forms '<filled-review-queue-forms.jsonl>' --apply --json
 ```
 
-最后一条写操作只可在精确人工复核与所需授权已具备后执行；不得由 Codex 自行填写 `human_reviewed_by`、`human_reviewed_at` 或 `review_basis`。
+最后一条写操作只可在精确人工复核或明确、可审计的 delegated review 授权已具备后执行。delegated review 必须使用 `<human>-via-codex-delegation`，记录 authorization、原文读取层级、依据和 guardrail；不得伪装成真人直接签收，也不得用于 owner decision、active promotion 或 lifecycle attestation。
 
 ### 2. 项目证据契约
 
@@ -183,15 +193,17 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 |---|---|---|
 | readiness generator 无漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-project-readiness.sh --check --json` | pass；30 projects / 120 slots / changed 0 |
 | 当前遥测与采用口径 | `rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --json` | schema v2；performance/adoption pending |
-| product 人工复核状态 | `rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json --as-of 2026-07-15` | `needs-owner-review`；queue 131 |
+| product 普通复核状态 | `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 0 --json` | queue 0；131 条受托 review record 已落地，状态无提升 |
+| source commit 覆盖 | `rtk bash ~/knowledge-hub/tools/knowledge-workspace-discover.sh --plan --first-party-only --json` 与 validation contract | registered remote 29/29；精确 commit 28；`mm32spin-validator` 缺 Git HEAD |
 | 控制面完整门禁 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-15` | 候选冻结和提交后重跑；以生成 snapshot 为准 |
 | 长期终态门禁 | 在上一命令增加 `--require-terminal` | 只允许在 review/evidence/adoption 同时闭环后为真 |
 
 ## Goal Closure
 
 - 自动化目标：修复可复现的控制面、恢复、性能口径和验证问题，并形成干净、可恢复、全回归通过的本地提交。
-- 外部目标：131 条真人内容复核、30 个项目真实证据和长期采用反馈；这些证据不能由 Codex 自行生成。
-- 当前决策：自动化目标继续执行；长期终态保持 `evidence-pending`，直到上述外部证据由真实责任人和实际环境提供。
+- 已完成的受托目标：131 条普通 AI review record 已完成透明 delegated closeout；28 个项目已绑定精确 source commit。
+- 外部目标：30 个项目的 owner、validation、artifact/device、release、rollback 证据，以及长期采用反馈；这些证据不能由 Codex 自行生成。`mm32spin-validator` 还缺可用 source commit。
+- 当前决策：普通复核阻塞已消除；长期终态继续保持 `evidence-pending`，直到真实责任人和实际环境补齐项目证据与采用门槛。
 - 失效条件：Git HEAD、working-tree signature、evidence contract 或 telemetry contract 变化后，旧 final-gate/restore snapshot 立即失效，必须重跑。
 
 ## Related

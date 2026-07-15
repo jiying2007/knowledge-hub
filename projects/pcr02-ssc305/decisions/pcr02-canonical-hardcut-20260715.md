@@ -24,7 +24,7 @@ ai_role: drafted-and-verified-under-user-direction
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
 manual_validation_pending: false
-review_status: structural-implementation-verified
+review_status: human-reviewed-accepted
 decision_owner: unassigned
 authorization_ref: auth-20260715-pcr02-canonical-hardcut
 summary_zh: 定义 PCR02 项目组唯一当前知识入口与仓库归属：SSC305 平台事实进入 pcr02-ssc305，应用事实进入 xcrz-sigmastar-demo，pcr02 仅作为项目组关系标识。
