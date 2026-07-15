@@ -24,7 +24,7 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
 manual_validation_pending: true
-summary_zh: 局部刷新候选已改为一次 pwrite 完整脏行带并在复制后精确标脏。最新固件实机确认 partial、同步 commit 与 SPI0_CK 2mA/MSPI_CK 12mA 均生效；剩余割裂集中在 RobotWaitingAction 大面积动画，证据优先指向无 TE/VSYNC 的面板扫描撕裂，旧区域漏刷仍待单变量验证。
+summary_zh: 最新固件确认 partial、同步 commit 与 SPI0_CK 2mA/MSPI_CK 12mA 均生效；同内容重发与动作时间轴把根因收敛为无 TE/VSYNC 的动态扫描撕裂。owner 确认硬件没有 TE 引脚后，release 与 sensor 源码已接入带能力协商和整行回退的二维矩形同步提交，待固件/HIL 验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
@@ -166,6 +166,37 @@ LVGL 8.3.10 官方实现同时确认：单 draw buffer 会在下一次绘制前�
 该结果把 persistent dirty coverage 降为低概率，把无 TE/VSYNC 的动态扫描撕裂提升为首要根因：横向移动会让相邻逻辑帧在 x 方向差异最大，ST77912 按 y 行顺序写 GRAM 时，上下行若分别属于新旧 x 位置，就会形成最醒目的水平断层；后续刷新又能自然覆盖该断层。随机 SPI 位错误、永久旧区漏刷和 staging 生命周期问题均不符合这一“仅运动中增强、后续刷新清除”的时间特征。
 
 根因状态更新为高置信 `known`，修复状态仍为 `needs-fix`。优先修复方向是为每块 LCD 引入 TE/VSYNC 同步；若现有硬件未路由 TE，只能先通过二维矩形 dirty、裁剪 240×240 透明 eyelid 画布和按场景限帧缩短暴露窗口，不能把扩大 `full_refresh` 当作无撕裂方案。
+
+## 2026-07-15 无 TE 软件矩形提交实现
+
+owner 明确确认现有硬件没有 LCD TE 引脚，并要求先直接修改 release 与 `modules/sensor` 源码，不在本轮维护 patch。以下状态覆盖本文前面“sensor 仅保留候选 patch”的旧基线描述。
+
+### release 内核
+
+- UAPI 保留 `FBIO_FBTFT_COMMIT`，新增 `FBIO_FBTFT_GET_CAPS` 与 `FBIO_FBTFT_COMMIT_RECT`；矩形参数固定为四个 `u32`，兼容 32-bit ARM userspace。
+- capability 只在 `fb_st77912`、RGB565、有效 packed stride、bus8 默认 `write_vmem`、可用 txbuf 条件同时满足时公布，避免其他 fbtft 控制器误用。
+- `fbtft_write_vmem16_bus8_rect()` 从有 stride 的 framebuffer 按二维区域取像素，在原 4096-byte txbuf 内做 RGB565 大端转换并连续发送，不扩大 MSPI DMA buffer。
+- 矩形提交先取消同一 framebuffer 的 delayed work，再持有 `fbdefio->lock` 接管 dirty ownership。若发现 mmap dirty page 或 dirty y 超出请求区域，内核内部自动回退 `fb_deferred_io_flush_sync()`，不丢弃额外脏数据。
+- 矩形 SPI 写失败时重新标记原 dirty 行，userspace 随后还能用旧 `FBIO_FBTFT_COMMIT` 做整行同步恢复。
+
+### sensor 应用
+
+- 直接修改 `display/com/display_com.h` 与 `display/display_provider.cpp`；初始化先确认旧同步 commit，再查询矩形 capability。
+- 每个 LVGL refresh cycle 仍把 area 同步合并到 staging，最后一次 flush 先以单次 `pwrite()` 原子写入完整 y 行带；新内核随后只从 framebuffer 发送合并后的 x/y rectangle。
+- 旧内核不识别 capability 时保持既有整行 commit。矩形 ioctl 返回 `ENOTTY`/`EOPNOTSUPP` 时运行态永久关闭矩形路径；其他失败记录 area 后立即回退整行 commit。
+- 初始化日志新增 `fbtft_rect_commit_supported`，便于固件验证能力是否真正协商成功。
+
+以 `RobotWaitingAction` 的 184×184 sclera 横移 2 px 为例，脏区近似从 `184×240×2 = 88320` bytes 的整行带缩短为 `186×184×2 = 68448` bytes，单屏 SPI payload 约减少 22.5%；实际收益由 LVGL 本轮合并 area 决定。该方案缩短每次 GRAM 写入窗口并降低转换/SPI CPU，但没有面板扫描相位信息，不能承诺绝对无撕裂。
+
+`RobotWaitingAction` 已在坐标量化后仅对至少 1 px 的变化调用 `lv_obj_align()`，并限制单帧位移为 2 px。本轮未再隔帧：隔帧若保持动画时长会放大单次位移，若保持 2 px 则会改变动画速度，均不是比矩形 transport 更低风险的首选。
+
+### 本轮验证与边界
+
+- release 相关 fb/fbtft 差异通过 `git diff --check` 与 `checkpatch.pl --no-tree --terse`，0 error、0 warning。
+- sensor 三个 display 文件通过 `git diff --check`；工程使用 `gnu++17`，新增固定宽度类型和 aggregate 初始化满足现有语言标准。
+- ioctl 号冲突搜索未发现除本实现之外的 `F/0x22`、`F/0x23` 使用者。
+- 按 owner 边界未编译固件、未刷机、未重启设备；`fbtft_rect_commit_supported=1`、实际矩形 syscall、视觉改善和 CPU/IRQ 数据仍待新固件 HIL 验证。
+- 本轮不维护 `modules/sensor/display.patch` 或 `0001-fix-display-ST77912.patch`；后者保持此前 10 文件历史版本，不含矩形接口。
 
 ## 下一轮单变量验证
 
