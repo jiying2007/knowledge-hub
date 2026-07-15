@@ -142,7 +142,7 @@ def test_manual_entry_project_from_domain():
             "projects/xcrz-sigmastar-demo/current/runbooks/derived.md",
         ],
     )
-    old_project_arg_result = run_cmd(
+    removed_project_arg_result = run_cmd(
         root,
         [
             "rtk",
@@ -163,17 +163,17 @@ def test_manual_entry_project_from_domain():
     expect(
         derived_result["exit_code"] == 0
         and "- xcrz-sigmastar-demo: projects/xcrz-sigmastar-demo/current/runbooks/derived.md" in derived_result["stdout"]
-        and old_project_arg_result["exit_code"] == 2
-        and "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
+        and removed_project_arg_result["exit_code"] == 2
+        and "ERROR unknown argument: --project" in removed_project_arg_result["stderr"],
         "manual-entry-project-derived-from-domain",
-        "manual project entries derive project id from domain and reject old --project compatibility",
+        "manual project entries derive project id from domain and reject the unsupported --project option",
         {
             "derived_exit_code": derived_result["exit_code"],
-            "old_project_arg_exit_code": old_project_arg_result["exit_code"],
+            "removed_project_arg_exit_code": removed_project_arg_result["exit_code"],
             "derived_has_project": "- xcrz-sigmastar-demo: projects/xcrz-sigmastar-demo/current/runbooks/derived.md" in derived_result["stdout"],
-            "old_project_arg_rejected": "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
+            "removed_project_arg_rejected": "ERROR unknown argument: --project" in removed_project_arg_result["stderr"],
             "derived_stdout_sample": derived_result["stdout"][:1200],
-            "old_project_arg_stderr_sample": old_project_arg_result["stderr"][:500],
+            "removed_project_arg_stderr_sample": removed_project_arg_result["stderr"][:500],
         },
     )
 
@@ -347,7 +347,7 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "notes/personal/path-mismatch.md",
         ],
     )
-    deprecated_personal_result = run_cmd(
+    unsupported_personal_result = run_cmd(
         root,
         [
             "rtk",
@@ -358,12 +358,12 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "--domain",
             "personal",
             "--id",
-            "personal-deprecated",
+            "personal-unsupported-domain",
             "--path",
-            "notes/personal/deprecated.md",
+            "notes/personal/unsupported-domain.md",
         ],
     )
-    deprecated_path_result = run_cmd(
+    unsupported_path_result = run_cmd(
         root,
         [
             "rtk",
@@ -374,9 +374,9 @@ def test_manual_entry_owner_registry_and_personal_defaults():
             "--domain",
             "notes",
             "--id",
-            "personal-deprecated-path",
+            "personal-unsupported-path",
             "--path",
-            "domains/personal/deprecated.md",
+            "domains/personal/unsupported.md",
         ],
     )
     expect(
@@ -385,8 +385,8 @@ def test_manual_entry_owner_registry_and_personal_defaults():
         and personal_result["exit_code"] == 0
         and inferred_personal_result["exit_code"] == 0
         and mismatch_result["exit_code"] == 2
-        and deprecated_personal_result["exit_code"] == 2
-        and deprecated_path_result["exit_code"] == 2
+        and unsupported_personal_result["exit_code"] == 2
+        and unsupported_path_result["exit_code"] == 2
         and "- owner_registry_status: registered" in registered_result["stdout"]
         and "owner_warning_zh" not in registered_result["stdout"]
         and "- owner_registry_status: unknown-owner" in unknown_result["stdout"]
@@ -400,25 +400,25 @@ def test_manual_entry_owner_registry_and_personal_defaults():
         and '"visibility":"personal-local"' in inferred_personal_result["stdout"]
         and '"status":"personal"' in inferred_personal_result["stdout"]
         and "请改为 --domain notes" in mismatch_result["stderr"]
-        and "domain=personal 已废弃" in deprecated_personal_result["stderr"]
-        and "domains/personal/ 已废弃" in deprecated_path_result["stderr"],
+        and "domain=personal 不属于当前路径契约" in unsupported_personal_result["stderr"]
+        and "domains/personal/ 不属于当前路径契约" in unsupported_path_result["stderr"],
         "manual-entry-owner-registry-and-personal-defaults",
-        "manual entry guide exposes item owner registry status, notes/personal safe defaults, and rejects deprecated personal entrypoints",
+        "manual entry guide exposes item owner registry status, notes/personal safe defaults, and rejects unsupported personal entrypoints",
         {
             "registered_exit_code": registered_result["exit_code"],
             "unknown_exit_code": unknown_result["exit_code"],
             "personal_exit_code": personal_result["exit_code"],
             "inferred_personal_exit_code": inferred_personal_result["exit_code"],
             "mismatch_exit_code": mismatch_result["exit_code"],
-            "deprecated_personal_exit_code": deprecated_personal_result["exit_code"],
-            "deprecated_path_exit_code": deprecated_path_result["exit_code"],
+            "unsupported_personal_exit_code": unsupported_personal_result["exit_code"],
+            "unsupported_path_exit_code": unsupported_path_result["exit_code"],
             "registered_stdout_sample": registered_result["stdout"][:1200],
             "unknown_stdout_sample": unknown_result["stdout"][:1200],
             "personal_stdout_sample": personal_result["stdout"][:1600],
             "inferred_personal_stdout_sample": inferred_personal_result["stdout"][:1600],
             "mismatch_stderr_sample": mismatch_result["stderr"][:1600],
-            "deprecated_personal_stderr_sample": deprecated_personal_result["stderr"][:800],
-            "deprecated_path_stderr_sample": deprecated_path_result["stderr"][:800],
+            "unsupported_personal_stderr_sample": unsupported_personal_result["stderr"][:800],
+            "unsupported_path_stderr_sample": unsupported_path_result["stderr"][:800],
         },
     )
 
@@ -459,8 +459,8 @@ def test_manual_entry_docs_owner_option():
 def test_manual_entry_offline_docs():
     readme_path = root / "README.md"
     templates_readme_path = root / "templates" / "README.md"
-    legacy_ledger_path = "registry/" + "source policies.jsonl"
-    legacy_template_kind = "migration" + "-record"
+    removed_ledger_path = "registry/" + "source policies.jsonl"
+    removed_template_kind = "migration" + "-record"
     try:
         readme = readme_path.read_text()
         templates_readme = templates_readme_path.read_text()
@@ -476,8 +476,8 @@ def test_manual_entry_offline_docs():
         and '"from": "field-debug / meeting / code-review / lab-test / owner-decision / design-review"' in readme
         and '"status": "reviewing"' in readme
         and '"review_status": "manual-entry-pending-review"' in readme
-        and legacy_ledger_path not in templates_readme
-        and legacy_template_kind not in templates_readme,
+        and removed_ledger_path not in templates_readme
+        and removed_template_kind not in templates_readme,
         "manual-entry-offline-docs",
         "manual and offline maintenance docs state default registry values without migration ledger entrypoints",
         {
@@ -485,7 +485,7 @@ def test_manual_entry_offline_docs():
             "readme_has_manual_validation_pending": "manual_validation_pending: true" in readme,
             "readme_has_manual_source_type": '"type": "manual"' in readme,
             "readme_has_reviewing_default": '"status": "reviewing"' in readme,
-            "templates_has_migration_ledger": legacy_ledger_path in templates_readme or legacy_template_kind in templates_readme,
+            "templates_has_migration_ledger": removed_ledger_path in templates_readme or removed_template_kind in templates_readme,
         },
     )
 
@@ -660,7 +660,7 @@ def test_manual_entry_archive_default_status():
     )
 
 def test_manual_entry_no_migration_ledger_guide():
-    legacy_ledger_path = "registry/" + "source policies.jsonl"
+    removed_ledger_path = "registry/" + "source policies.jsonl"
     result = run_cmd(
         root,
         [
@@ -679,14 +679,14 @@ def test_manual_entry_no_migration_ledger_guide():
     )
     expect(
         result["exit_code"] == 0
-        and legacy_ledger_path not in result["stdout"]
+        and removed_ledger_path not in result["stdout"]
         and "source policy notes" not in result["stdout"]
         and "Evidence Index" in result["stdout"],
         "manual-entry-no-migration-ledger-guide",
         "manual entry guide does not expose migration ledger entrypoints",
         {
             "exit_code": result["exit_code"],
-            "has_source policies_jsonl": legacy_ledger_path in result["stdout"],
+            "has_source policies_jsonl": removed_ledger_path in result["stdout"],
             "has_migration_notes": "source policy notes" in result["stdout"],
             "has_evidence_index": "Evidence Index" in result["stdout"],
             "stdout_sample": result["stdout"][:1600],
@@ -1556,6 +1556,40 @@ def test_summary_backfill_archived_only_contract():
 
 def test_orphan_files_advisory_contract():
     repo = copy_repo("orphan-files")
+    git_setup = init_temp_git_repo(repo)
+    git_config = run_cmd(
+        repo,
+        ["rtk", "git", "config", "status.showUntrackedFiles", "no"],
+    )
+    deleted_rel = "governance/deleted-orphan-regression-fixture.md"
+    deleted_path = repo / deleted_rel
+    deleted_path.write_text("# Deleted orphan regression fixture\n")
+    git_add = run_cmd(repo, ["rtk", "git", "add", deleted_rel])
+    git_commit = run_cmd(
+        repo,
+        [
+            "rtk",
+            "git",
+            "-c",
+            "user.name=Knowledge Hub Regression",
+            "-c",
+            "user.email=regression@knowledge-hub.local",
+            "commit",
+            "-m",
+            "test: track deleted orphan fixture",
+        ],
+    )
+    deleted_path.unlink()
+    deleted_candidate = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-orphan-files.sh",
+            "--strict",
+            "--json",
+        ],
+    )
     baseline = run_cmd(
         repo,
         [
@@ -1600,6 +1634,11 @@ def test_orphan_files_advisory_contract():
         ],
     )
     parse_errors = []
+    try:
+        deleted_candidate_payload = json.loads(deleted_candidate["stdout"])
+    except Exception as exc:
+        deleted_candidate_payload = {}
+        parse_errors.append(f"deleted-candidate: {exc}")
     try:
         baseline_payload = json.loads(baseline["stdout"])
     except Exception as exc:
@@ -1653,7 +1692,14 @@ def test_orphan_files_advisory_contract():
     }
 
     expect(
-        baseline["exit_code"] == 0
+        not git_setup
+        and git_config["exit_code"] == 0
+        and git_add["exit_code"] == 0
+        and git_commit["exit_code"] == 0
+        and deleted_candidate["exit_code"] == 0
+        and deleted_candidate_payload.get("status") == "ok"
+        and deleted_rel not in deleted_candidate_payload.get("missing_registry", [])
+        and baseline["exit_code"] == 0
         and baseline_payload.get("status") == "ok"
         and baseline_payload.get("missing_registry_count") == 0
         and baseline_payload.get("collection_covered_count", 0) > 0
@@ -1672,6 +1718,13 @@ def test_orphan_files_advisory_contract():
         "frozen body coverage passes at baseline while orphan, frontmatter drift and missing vault files fail closed",
         {
             "baseline_exit_code": baseline["exit_code"],
+            "git_setup": git_setup,
+            "git_config_exit_code": git_config["exit_code"],
+            "git_add_exit_code": git_add["exit_code"],
+            "git_commit_exit_code": git_commit["exit_code"],
+            "deleted_candidate_exit_code": deleted_candidate["exit_code"],
+            "deleted_candidate_status": deleted_candidate_payload.get("status"),
+            "deleted_candidate_missing_registry": deleted_candidate_payload.get("missing_registry"),
             "baseline_status": baseline_payload.get("status"),
             "baseline_exact_registered_count": baseline_payload.get("exact_registered_count"),
             "baseline_collection_covered_count": baseline_payload.get("collection_covered_count"),
@@ -1888,7 +1941,7 @@ def test_source_manual_entry_guide_check_command():
     )
 
 def test_source_manual_entry_status_coverage_sync():
-    retired_result = run_cmd(
+    registered_result = run_cmd(
         root,
         [
             "rtk",
@@ -1896,22 +1949,20 @@ def test_source_manual_entry_status_coverage_sync():
             "tools/knowledge-new.sh",
             "--source",
             "--source-id",
-            "example-source-retired",
+            "example-source-current",
             "--source-path",
-            "sources/example-source-retired",
+            "sources/example-source-current",
             "--role",
             "hub-canonical-source",
             "--authority",
             "knowledge-hub-canonical",
             "--write-policy",
             "knowledge-hub-only",
-            "--source-status",
-            "retired",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
     )
-    deprecated_result = run_cmd(
+    removed_status_result = run_cmd(
         root,
         [
             "rtk",
@@ -1919,9 +1970,9 @@ def test_source_manual_entry_status_coverage_sync():
             "tools/knowledge-new.sh",
             "--source",
             "--source-id",
-            "example-source-deprecated",
+            "example-source-status-option",
             "--source-path",
-            "sources/example-source-deprecated",
+            "sources/example-source-status-option",
             "--role",
             "hub-canonical-source",
             "--authority",
@@ -1929,26 +1980,24 @@ def test_source_manual_entry_status_coverage_sync():
             "--write-policy",
             "knowledge-hub-only",
             "--source-status",
-            "deprecated",
+            "registered",
             "--no-check-reason",
             "classify-first pending source coverage",
         ],
     )
     expect(
-        retired_result["exit_code"] == 0
-        and deprecated_result["exit_code"] == 0
-        and '"status":"retired"' in retired_result["stdout"]
-        and '"status":"retired-pending-classification"' in retired_result["stdout"]
-        and '"status":"registered-pending-classification"' not in retired_result["stdout"]
-        and '"status":"deprecated"' in deprecated_result["stdout"]
-        and '"status":"deprecated-pending-classification"' in deprecated_result["stdout"],
+        registered_result["exit_code"] == 0
+        and '"status":"registered"' in registered_result["stdout"]
+        and '"status":"registered-pending-classification"' in registered_result["stdout"]
+        and removed_status_result["exit_code"] == 2
+        and "ERROR unknown argument: --source-status" in removed_status_result["stderr"],
         "source-manual-entry-status-coverage-sync",
-        "source manual entry coverage row follows provided source status",
+        "source manual entry emits the current registered status and rejects the removed status-selection option",
         {
-            "retired_exit_code": retired_result["exit_code"],
-            "deprecated_exit_code": deprecated_result["exit_code"],
-            "retired_stdout_sample": retired_result["stdout"][:1800],
-            "deprecated_stdout_sample": deprecated_result["stdout"][:1800],
+            "registered_exit_code": registered_result["exit_code"],
+            "removed_status_exit_code": removed_status_result["exit_code"],
+            "registered_stdout_sample": registered_result["stdout"][:1800],
+            "removed_status_stderr_sample": removed_status_result["stderr"][:800],
         },
     )
 

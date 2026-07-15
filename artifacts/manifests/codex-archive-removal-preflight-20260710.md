@@ -1,3 +1,39 @@
+---
+id: codex-archive-removal-preflight-20260710
+title: Codex archive 删除预检 2026-07-10
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-11-10'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- removal-preflight
+- archive-governance
+- subagents
+- delete-blocked
+- file-level-sha256
+- no-memory-write
+- no-active-promotion
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 把 Codex archive 第一批移除队列压实到 file-level 删除预检：5 个 covered 文件和 3 个 provenance-only 文件进入删除预检候选，1 个 Codex token 路线图文件必须保留或重分类，memory-curation
+  与 session-wrap 因大量高信号候选继续阻塞删除。旧 archive 正文未删除。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-0343cce247b981b12203;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex archive 删除预检 2026-07-10
 
 ## 摘要

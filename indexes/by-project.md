@@ -7,7 +7,7 @@
 - 应用规范入口：`projects/xcrz-sigmastar-demo/README.md`，承载应用、诊断、媒体、显示应用层、模块联调和会话证据。
 - 独立模块继续进入各自 `projects/pcr02-*` 项目；跨仓正文按结论主责只维护一份。
 - 组级 source control：`sources/pcr02-project-docs` 与 `sources/engineering-archive`；它们只描述来源和历史 provenance，不替代两个规范项目入口。
-- 路径硬切审计：`projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`。
+- 项目组规范入口边界：`projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`。
 - owner gate 与历史治理通过 `indexes/by-decision.md`、`indexes/by-source.md` 和 `artifacts/manifests/` 恢复。
 - review-required 历史处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
 - reference/artifact-ref applied 报告：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
@@ -133,7 +133,8 @@
 - PCR02 SSC305 SDK 权威与维护边界决策候选: `projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md`; `pcr02-ssc305-readiness-decision-20260713`
 - PCR02 SSC305 SDK readiness validation: `projects/pcr02-ssc305/validation/project-readiness.md`; `pcr02-ssc305-readiness-validation-20260713`
 - PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
-- PCR02 组级入口硬切收口记录候选: `projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`; `pcr02-ssc305-canonical-hardcut-20260715`
+- PCR02 项目组规范入口边界决策候选: `projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`; `pcr02-ssc305-canonical-hardcut-20260715`
+- PCR02 新摄像头栈混装 ABI 故障与回退记录: `projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md`; `pcr02-camera-mi-abi-mix-rollback-20260715`
 
 ## PCR02 API Module
 

@@ -103,6 +103,18 @@ def _git_delivery_state(root: pathlib.Path) -> Dict[str, Any]:
     }
 
 
+def _candidate_integrity(root: pathlib.Path, before_signature: str) -> Dict[str, Any]:
+    after_signature = working_tree_signature(root)
+    unchanged = after_signature == before_signature
+    return {
+        "status": "pass" if unchanged else "fail",
+        "unchanged": unchanged,
+        "before_signature": before_signature,
+        "after_signature": after_signature,
+        "scope": "tracked-and-untracked-nonignored-candidate",
+    }
+
+
 def _restore_state(
     root: pathlib.Path,
     as_of: str,
@@ -511,6 +523,7 @@ def run_product_gate(
             self_test_override=True,
             notes_zh="仅供嵌套回归夹具避免递归恢复演练；真实 product gate 不接受该覆盖。",
         )
+    candidate_integrity = _candidate_integrity(root, signature)
     items = registry_items(root)
     proof_artifacts = _proof_artifacts(root, as_of, items)
     status_counts = Counter(str(row.get("status", "unknown")) for row in items)
@@ -531,6 +544,7 @@ def run_product_gate(
         "full_regression": regression_suite != "full"
         or (regression_result["exit_code"] == 0 and regression_payload.get("status") == "pass"),
         "git_diff_check": diff_result["exit_code"] == 0,
+        "candidate_integrity": candidate_integrity["unchanged"],
         "transaction_recovery": not incomplete,
         "link_audit": links["status"] == "pass",
         "retrieval_quality": retrieval["status"] == "pass",
@@ -624,6 +638,7 @@ def run_product_gate(
             "exit_code": diff_result["exit_code"],
             "command": diff_result["command"],
         },
+        "candidate_integrity": candidate_integrity,
     }
     blocker_metadata = {
         "knowledge_check": ("knowledge-check-failed", "governance"),
@@ -632,6 +647,7 @@ def run_product_gate(
         "shared_unit_tests": ("shared-unit-tests-failed", "test"),
         "full_regression": ("full-regression-failed", "regression"),
         "git_diff_check": ("git-diff-check-failed", "worktree"),
+        "candidate_integrity": ("candidate-mutated-during-final-gate", "worktree"),
         "transaction_recovery": ("transaction-recovery-required", "recovery"),
         "link_audit": ("link-audit-failed", "obsidian"),
         "retrieval_quality": ("retrieval-quality-failed", "retrieval"),
@@ -782,9 +798,10 @@ def run_product_gate(
         "terminal_maturity": overall_status == "mature" and delivery_ready,
         "final_profile": "product",
         "regression_suite": regression_suite,
-        "tracked_files_written": False,
+        "tracked_files_written": not candidate_integrity["unchanged"],
         "local_cache_written": True,
         "working_tree_signature": signature,
+        "candidate_integrity": candidate_integrity,
         "platform_status": {
             "status": gate_status,
             "hard_checks": hard_checks,
@@ -802,6 +819,7 @@ def run_product_gate(
                 "command": regression_result.get("command", ""),
                 "exit_code": regression_result.get("exit_code", 0),
             },
+            "candidate_integrity": candidate_integrity,
             "incomplete_transactions": incomplete,
         },
         "content_readiness": {

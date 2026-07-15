@@ -1307,11 +1307,11 @@ def test_owner_validate_forms_partial_coverage_warning():
         repo,
     )
 
-def test_owner_archive_only_target_path_compatibility():
+def test_owner_archive_only_explicit_path_contract():
     repo = copy_repo_with_open_owner_gates("owner-archive-only-target-path")
     form, setup_error = make_owner_decision_form_for_worksheet(repo, "pcr02-owner-decision-worksheet-007")
     if setup_error:
-        expect(False, "owner-archive-only-target-path-compatibility", "owner archive-only forms can target explicit archive paths", setup_error, repo)
+        expect(False, "owner-archive-only-explicit-path-contract", "owner archive-only forms can target explicit archive paths", setup_error, repo)
         return
     archive_target = "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
     form["owner_decision"] = "archive-only"
@@ -1343,7 +1343,7 @@ def test_owner_archive_only_target_path_compatibility():
         result["exit_code"] == 0
         and parsed.get("form_validation", {}).get("status") == "pass"
         and not any(row.get("code") == "owner-decision-target-mismatch" for row in diagnostics),
-        "owner-archive-only-target-path-compatibility",
+        "owner-archive-only-explicit-path-contract",
         "owner archive-only forms can target explicit archive paths",
         {
             "exit_code": result["exit_code"],
@@ -1559,7 +1559,7 @@ def test_owner_form_decision_target_pair_gate():
     repo = copy_repo_with_open_owner_gates("owner-form-decision-target-pair-gate")
     form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", setup_error, repo)
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects invalid owner_decision and target_decision pairs", setup_error, repo)
         return
     project_target = next(
         (
@@ -1569,25 +1569,25 @@ def test_owner_form_decision_target_pair_gate():
         "",
     )
     if not project_target:
-        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "missing project target candidate", "target_candidates": form.get("target_candidates", [])}, repo)
+        expect(False, "owner-form-decision-target-pair-gate", "owner form rejects invalid owner_decision and target_decision pairs", {"setup_error": "missing project target candidate", "target_candidates": form.get("target_candidates", [])}, repo)
         return
     run_owner_decision_target_pair_gate(
         "owner-form-decision-target-pair-reference-only-project-path",
         "reference-only",
         project_target,
-        "owner_decision 'reference-only' is not compatible",
+        "owner_decision 'reference-only' does not form a valid pair",
     )
     run_owner_decision_target_pair_gate(
         "owner-form-decision-target-pair-no-migration-project-path",
         "no-migration",
         project_target,
-        "owner_decision 'no-migration' is not compatible",
+        "owner_decision 'no-migration' does not form a valid pair",
     )
     run_owner_decision_target_pair_gate(
         "owner-form-decision-target-pair-project-rule-reference-only",
         "project-local-rule",
         "reference-only",
-        "owner_decision 'project-local-rule' is not compatible",
+        "owner_decision 'project-local-rule' does not form a valid pair",
     )
 
 def test_owner_form_decision_target_pair_positive_gate():
@@ -2380,7 +2380,7 @@ def test_final_proof_artifact_as_of_date_selector():
             "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
             "selection_mode": proof_artifacts.get("selection_mode"),
             "selection_date": proof_artifacts.get("selection_date"),
-            "legacy_alias_present": "proof_artifacts_20260622" in parsed,
+            "removed_date_key_present": "proof_artifacts_20260622" in parsed,
             "dynamic_ids": proof_artifacts.get("dynamic_ids", []),
             "expected_ids": proof_artifacts.get("expected_ids", []),
             "missing_registry": proof_artifacts.get("missing_registry", []),
@@ -2420,13 +2420,13 @@ def test_final_proof_artifacts_stable_key_only():
         and stable.get("selection_date") == "2026-06-23"
         and stable.get("selection_mode") == "seed-plus-dynamic-governance-by-as-of-date",
         "final-proof-artifacts-stable-key-only",
-        "final gate exposes only stable proof_artifacts without legacy date key",
+        "final gate exposes only stable proof_artifacts without the removed date key",
         {
             "exit_code": result["exit_code"],
             "parse_error": parse_error,
             "final_status": parsed.get("final_status") if isinstance(parsed, dict) else "",
             "stable_present": bool(stable),
-            "legacy_present": "proof_artifacts_20260622" in parsed,
+            "removed_date_key_present": "proof_artifacts_20260622" in parsed,
             "stable_status": stable.get("status"),
             "selection_date": stable.get("selection_date"),
             "stdout_sample": result["stdout"][:1000],

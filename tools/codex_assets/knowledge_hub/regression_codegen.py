@@ -1,9 +1,4 @@
-"""Split the historical regression payload into maintainable Python modules.
-
-This generator is intentionally deterministic.  It is retained so the initial
-hard cut from the shell heredoc can be audited and reproduced without copying
-truncated terminal output into source files.
-"""
+"""Build the modular regression package from an explicitly selected Git source."""
 
 from __future__ import annotations
 
@@ -24,20 +19,6 @@ CASE_MODULES = (
     "governance",
     "terminal_gates",
 )
-
-PRODUCT_GATE_REPLACEMENTS = {
-    "test_final_gate_owner_review_blocker",
-    "test_final_gate_skip_regression_blocker",
-    # Historical shell name is pruned when regenerating the hard-cut package.
-    "test_final_gate_mature_review_queue_owner_review_blocker",
-    "test_final_gate_product_review_queue_owner_review_blocker",
-    "test_final_gate_empty_child_json_blocker",
-    "test_final_gate_default_regression_path",
-    "test_final_gate_source_final_state_field_gap",
-    "test_final_gate_strict_status_nonowner_blocker",
-    "test_final_gate_source_check_runtime_failed_blocker",
-}
-
 
 def _source_from_git(root: pathlib.Path, revision: str, path: str) -> str:
     result = subprocess.run(
@@ -113,26 +94,6 @@ def _atomic_write(path: pathlib.Path, content: str) -> None:
     os.replace(str(temporary), str(path))
 
 
-def prune_replaced_product_gate_tests(root: pathlib.Path) -> str:
-    path = root / "tools/codex_assets/knowledge_hub/regression/terminal_gates.py"
-    source = path.read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    lines = source.splitlines(keepends=True)
-    ranges = [
-        (node.lineno - 1, node.end_lineno)
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name in PRODUCT_GATE_REPLACEMENTS
-    ]
-    for start, end in sorted(ranges, reverse=True):
-        del lines[start:end]
-    content = "".join(lines)
-    while "\n\n\n\ndef " in content:
-        content = content.replace("\n\n\n\ndef ", "\n\n\ndef ")
-    _atomic_write(path, content)
-    return str(path.relative_to(root))
-
-
 def split_payload(source: str) -> Tuple[str, Dict[str, str], str]:
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
@@ -198,16 +159,8 @@ def main(argv: Iterable[str] = ()) -> int:
     parser.add_argument("--root", default="")
     parser.add_argument("--revision", default="HEAD")
     parser.add_argument("--source-path", default="tools/knowledge-regression.sh")
-    parser.add_argument(
-        "--prune-product-legacy",
-        action="store_true",
-        help="Remove product-gate tests replaced by regression/product_gates.py from the current split module.",
-    )
     args = parser.parse_args(list(argv) if argv else None)
     root = pathlib.Path(args.root or pathlib.Path(__file__).resolve().parents[3]).resolve()
-    if args.prune_product_legacy:
-        print(prune_replaced_product_gate_tests(root))
-        return 0
     for path in generate(root, args.revision, args.source_path):
         print(path)
     return 0

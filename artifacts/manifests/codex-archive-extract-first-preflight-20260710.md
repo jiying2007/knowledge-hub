@@ -1,3 +1,41 @@
+---
+id: codex-archive-extract-first-preflight-20260710
+title: Codex archive extract-first 预检 2026-07-10
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-11-10'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- extract-first
+- archive-governance
+- subagents
+- session-wrap
+- memory-curation
+- token-efficiency
+- delete-blocked
+- no-memory-write
+- no-active-promotion
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 承接 Codex archive 删除预检中的阻塞项，file-level 分流 4 个 session-wrap、3 个 memory-curation 和 1 个 Codex token roadmap 例外：区分
+  extract-first、covered-removal、memory-candidate-report、tombstone-only 与 retain-or-reclassify；旧正文未删除，memory 未写入。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-741b46b61d2609f4f005;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex archive extract-first 预检 2026-07-10
 
 ## 摘要

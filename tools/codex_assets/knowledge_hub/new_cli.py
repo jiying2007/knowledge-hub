@@ -1,4 +1,4 @@
-"""Create governed items or print the compatibility maintenance guide."""
+"""Create governed items or print the current maintenance guide."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ AI_ROLES = ("none", "drafted", "summarized", "translated", "rewritten", "classif
 SOURCE_ENUMS = {
     "role": ("hub-canonical-source", "hub-runtime-input", "hub-native-source"),
     "authority": ("knowledge-hub-canonical", "runtime-input-provenance", "knowledge-hub-ledger"),
-    "status": ("registered", "deprecated", "retired"),
+    "status": ("registered",),
     "write_policy": ("knowledge-hub-only", "runtime-read-only-input", "hub-native-registry"),
 }
 TEMPLATES = {
@@ -69,7 +69,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--role", default="")
     parser.add_argument("--authority", default="")
     parser.add_argument("--write-policy", default="")
-    parser.add_argument("--source-status", default="registered")
     parser.add_argument("--check", default="")
     parser.add_argument("--no-check-reason", default="")
     parser.add_argument("--kind", default="")
@@ -124,11 +123,11 @@ def _validate_common(args: argparse.Namespace) -> None:
     if args.apply and args.dry_run:
         raise KnowledgeHubError("--apply and --dry-run are mutually exclusive")
     if args.domain == "personal":
-        raise KnowledgeHubError("domain=personal 已废弃；硬切换后请使用 --domain notes --path notes/personal/<file>.md")
+        raise KnowledgeHubError("domain=personal 不属于当前路径契约；请使用 --domain notes --path notes/personal/<file>.md")
     if args.path.startswith("domains/personal/"):
-        raise KnowledgeHubError("domains/personal/ 已废弃；硬切换后请使用 notes/personal/...")
+        raise KnowledgeHubError("domains/personal/ 不属于当前路径契约；请使用 notes/personal/...")
     if args.path.startswith("domains/projects/"):
-        raise KnowledgeHubError("domains/projects/ 已废弃；硬切换后请使用 projects/<project>/...")
+        raise KnowledgeHubError("domains/projects/ 不属于当前路径契约；请使用 projects/<project>/...")
     if args.ai_role != "none":
         args.generated_by_ai = True
     if args.generated_by_ai and args.ai_role == "none":
@@ -147,7 +146,7 @@ def _validate_source(args: argparse.Namespace) -> None:
     values = {
         "role": args.role,
         "authority": args.authority,
-        "status": args.source_status,
+        "status": "registered",
         "write_policy": args.write_policy,
     }
     for field, value in values.items():
@@ -172,13 +171,13 @@ def _source_recommendation(role: str, policy: str) -> Tuple[str, str, str, str]:
             "hub-native-source",
             "hub-native-ledger",
             "Hub 原生账本不需要外部来源；权威正文仍在 Hub registry、manifest 或 automation ledger。",
-            "保持 Hub-native control，不制造旧外部 source。",
+            "保持 Hub-native control，不创建非权威外部 source entry。",
         )
     return (
         "hub-canonical",
         "hub-canonical-copy-docs",
         "默认按终态 Hub-only source 处理；path 只能是 sources/<source_id>，当前知识入口只使用 Hub 内路径。",
-        "默认通过 Hub source control、canonical target、artifact vault 和 source policy 表达终态状态，不生成旧回源入口。",
+        "默认通过 Hub source control、canonical target、artifact vault 和 source policy 表达终态状态，不生成外部回源入口。",
     )
 
 
@@ -187,14 +186,14 @@ def _source_guide(root: pathlib.Path, args: argparse.Namespace, today: dt.date) 
     source_path = args.source_path or "sources/{}".format(source_id)
     role = args.role or "hub-canonical-source"
     authority = args.authority or "knowledge-hub-canonical"
-    source_status = args.source_status or "registered"
+    source_status = "registered"
     policy = args.write_policy or "knowledge-hub-only"
     owner_state = _owner_status(root, args.owner)
     final_disposition, strategy, disposition_reason, strategy_reason = _source_recommendation(role, policy)
     registry_row: Dict[str, Any] = {
         "id": source_id,
         "path": source_path,
-        "origin_path": "<retired-origin-or-empty>",
+        "origin_path": "<external-origin-or-empty>",
         "role": role,
         "authority": authority,
         "status": source_status,
@@ -272,7 +271,7 @@ def _source_guide(root: pathlib.Path, args: argparse.Namespace, today: dt.date) 
 
 - role: hub-canonical-source / hub-runtime-input / hub-native-source
 - authority: knowledge-hub-canonical / runtime-input-provenance / knowledge-hub-ledger
-- status: registered / deprecated / retired
+- status: registered
 - write_policy: knowledge-hub-only / runtime-read-only-input / hub-native-registry
 - final_disposition 常用值: hub-canonical / runtime-input-reference-only / hub-native-source
 

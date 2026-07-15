@@ -5,6 +5,7 @@ from tools.codex_assets.knowledge_hub import context as context_module
 from tools.codex_assets.knowledge_hub import metrics
 from tools.codex_assets.knowledge_hub.common import repository_root, route_rows
 from tools.codex_assets.knowledge_hub.context import (
+    _git_head_from_config,
     _query_route_selection,
     assemble_context,
     record_context_telemetry,
@@ -159,6 +160,14 @@ def test_control_plane_keeps_explicit_self_query_but_not_unknown_query():
     assert unknown_query["route_selection"]["status"] == "unresolved"
 
 
+def test_context_route_exposes_only_current_default_sources():
+    root = repository_root()
+    payload = assemble_context(root, str(root), "增强 Knowledge Hub 自举体验", "general")
+
+    assert "retired_route_ids" not in payload["route"]
+    assert set(payload["route"]["default_source_ids"]) == {"knowledge-hub-automation-runs"}
+
+
 def test_small_budget_caps_search_limit(monkeypatch, tmp_path):
     root = _context_root(tmp_path)
     observed_limits = []
@@ -242,3 +251,45 @@ def test_context_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path
     assert result["reason"] == "read-only-or-permission-denied"
     assert result["error_code"] == "EACCES"
     assert "private preflight query" not in json.dumps(result)
+
+
+def test_context_telemetry_binds_current_interaction_and_result_ids(monkeypatch, tmp_path):
+    captured = {}
+
+    def capture(path, row):
+        captured.update(row)
+
+    monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
+    monkeypatch.setattr(metrics, "_append_locked", capture)
+    result = record_context_telemetry(
+        tmp_path,
+        {
+            "query": "private preflight query",
+            "task_type": "validation",
+            "route": {"project_id": "knowledge-hub"},
+            "context": {
+                "current": [{"id": "item-a"}],
+                "recent": [],
+                "related": [{"item_id": "item-b"}],
+                "search_fallback": [],
+            },
+            "search": {"index": {"state": "warm", "rebuilt": False}},
+            "latency_ms": 12,
+        },
+    )
+
+    assert result["status"] == "recorded"
+    assert captured["schema_version"] == metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION
+    assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
+    assert captured["result_ids"] == ["item-a", "item-b"]
+    assert "private preflight query" not in json.dumps(captured)
+
+
+def test_git_head_evidence_reads_current_ref(tmp_path):
+    git_dir = tmp_path / ".git"
+    (git_dir / "refs/heads").mkdir(parents=True)
+    (git_dir / "config").write_text("[core]\n\trepositoryformatversion = 0\n")
+    (git_dir / "HEAD").write_text("ref: refs/heads/main\n")
+    (git_dir / "refs/heads/main").write_text("b" * 40 + "\n")
+
+    assert _git_head_from_config(git_dir / "config") == "b" * 40

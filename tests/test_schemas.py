@@ -1,4 +1,5 @@
-from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.common import load_json, repository_root
+from tools.codex_assets.knowledge_hub.metrics import local_metrics
 from tools.codex_assets.knowledge_hub.schemas import validate_instance, validate_schema_catalog
 
 
@@ -13,10 +14,29 @@ def test_schema_catalog_resolves_all_contracts():
     assert result["instance_validation"]["instance_count"] > 400
 
 
+def test_schema_catalog_exposes_only_strict_current_contracts():
+    catalog = load_json(repository_root() / "schemas/catalog.json", {})
+
+    assert catalog["schema_change_policy"].startswith("runtime accepts only")
+    assert "migration_policy" not in catalog
+    assert all(row.get("change_policy") == "strict-current-contract" for row in catalog["contracts"])
+    assert all("compatibility" not in row for row in catalog["contracts"])
+
+
 def test_schema_instance_validation_rejects_invalid_item():
     result = validate_instance(repository_root(), "registry-item-v1", {"id": "broken"})
     assert result["status"] == "fail"
     assert result["error_count"] > 0
+
+
+def test_local_metrics_v2_schema_accepts_current_contract_output():
+    result = validate_instance(
+        repository_root(),
+        "local-metrics-v2",
+        local_metrics(repository_root()),
+    )
+
+    assert result["status"] == "pass"
 
 
 def test_project_readiness_schema_accepts_idempotent_apply():

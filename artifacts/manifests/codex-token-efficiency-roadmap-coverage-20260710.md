@@ -1,3 +1,42 @@
+---
+id: codex-token-efficiency-roadmap-coverage-20260710
+title: Codex token efficiency roadmap 覆盖审计 2026-07-10
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-08-24'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- token-efficiency
+- context-governance
+- usage-tail
+- usage-report
+- archive-search
+- caveman
+- coverage-audit
+- deleted-tombstoned
+- no-memory-write
+- no-active-promotion
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 从旧 Codex archive 的错误 topic 文件中抽取 token/context efficiency 路线图覆盖审计：live Codex 资产已覆盖回答压缩、大输出裁剪、分层读取、HOT/CRITICAL/CTX_PRESSURE
+  收口、archive-search 和 usage 观测；usage 归因仍为启发式，结构化代码导航 PoC 与长期 usage 时序未覆盖。旧正文已在独立授权批次中删除并 tombstone，不提升 active。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-db9b6021b6ab26585890;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex token efficiency roadmap coverage audit 2026-07-10
 
 ## 摘要

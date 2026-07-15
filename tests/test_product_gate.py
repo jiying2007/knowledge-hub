@@ -1,8 +1,10 @@
 import pytest
 
 from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.common import working_tree_signature
 from tools.codex_assets.knowledge_hub.final_gate_cli import main as final_gate_main
 from tools.codex_assets.knowledge_hub.common import run_rtk
+from tools.codex_assets.knowledge_hub.product_gate import _candidate_integrity
 from tools.codex_assets.knowledge_hub.product_gate import _git_delivery_state
 from tools.codex_assets.knowledge_hub.product_gate import _project_readiness
 from tools.codex_assets.knowledge_hub.product_gate import _restore_state
@@ -25,6 +27,9 @@ def test_product_is_the_only_executable_final_profile():
     with pytest.raises(SystemExit) as error:
         final_gate_main(["--final-profile", "mature", "--json"])
     assert error.value.code == 2
+    with pytest.raises(SystemExit) as removed_alias:
+        final_gate_main(["--full-regression", "--json"])
+    assert removed_alias.value.code == 2
 
 
 def test_restore_state_requires_matching_source_mode(tmp_path):
@@ -44,3 +49,18 @@ def test_git_delivery_state_treats_unborn_repository_as_candidate(tmp_path):
     assert payload["head_present"] is False
     assert payload["head_revision"] == ""
     assert payload["worktree_clean"] is True
+
+
+def test_candidate_integrity_detects_test_side_effects(tmp_path):
+    run_rtk(tmp_path, ["git", "init"])
+    tracked = tmp_path / "tracked.txt"
+    tracked.write_text("before\n", encoding="utf-8")
+    run_rtk(tmp_path, ["git", "add", "tracked.txt"])
+    before = working_tree_signature(tmp_path)
+
+    assert _candidate_integrity(tmp_path, before)["status"] == "pass"
+    tracked.write_text("after-change\n", encoding="utf-8")
+    payload = _candidate_integrity(tmp_path, before)
+
+    assert payload["status"] == "fail"
+    assert payload["unchanged"] is False

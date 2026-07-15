@@ -100,7 +100,7 @@ def classify(scope, rel_path, line_text):
         return "runtime-route-candidate"
     if scope == "codex" or scope.startswith("skills-"):
         return "runtime-route-candidate"
-    if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/migration-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
+    if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/source-lifecycle-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
         return "canonical-policy"
     if normalized.startswith("domains/codex/archive/codex-archive/"):
         return "provenance"
@@ -208,4 +208,3 @@ if errors:
     sys.exit(2)
 if args.strict and runtime_count:
     sys.exit(1)
-

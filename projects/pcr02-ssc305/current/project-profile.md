@@ -65,7 +65,7 @@ related:
 
 ## 已有 Hub 证据
 
-- [规范入口硬切收口记录候选](../decisions/pcr02-canonical-hardcut-20260715.md)：平台与应用归属边界及迁移审计。
+- [项目组规范入口边界决策候选](../decisions/pcr02-canonical-hardcut-20260715.md)：平台、应用、独立模块与产品组关系的唯一当前边界。
 - [第三方库编译优化基线](runbooks/thirdparty-build-optimization-baseline.md)：SSC305 工具链和构建边界候选。
 - [IMSSV06C11 三方 SDK 审计](../archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md)：摄像头、SPI NAND 和时钟路径来源审计。
 - [工程历史归档](../archive/engineering-archive/README.md)：OTA、存储、硬件、启动链和平台验证历史语料。

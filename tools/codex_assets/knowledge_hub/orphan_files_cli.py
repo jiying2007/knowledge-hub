@@ -80,7 +80,7 @@ def changed_markdown_paths():
         if " -> " in path:
             path = path.split(" -> ", 1)[1]
         path = path.strip()
-        if is_body_markdown(path):
+        if is_body_markdown(path) and (root / path).is_file():
             paths.append(path)
     return sorted(set(paths))
 
@@ -278,4 +278,3 @@ else:
 
 if args.strict and needs_fix:
     raise SystemExit(1)
-

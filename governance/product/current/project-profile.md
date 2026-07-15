@@ -53,7 +53,7 @@ related:
 | 所属组 | `knowledge-hub` |
 | registry 状态 | `registered` |
 | 本地源码映射 | `machine-local / not tracked` |
-| Hub 已登记条目 | `186`；active=15, archived=165, reviewing=6 |
+| Hub 已登记条目 | 由 `knowledge-health-summary.sh --json` 实时计算；不在当前画像中固化计数 |
 
 ## 仓库边界
 

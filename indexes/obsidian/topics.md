@@ -116,7 +116,7 @@
 
 - [Knowledge Hub root](../../README.md) · `active`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
-- [Knowledge Hub readiness validation](../../governance/product/validation/project-readiness.md) · `reviewing`
+- [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
 - [Knowledge Hub 权威与维护边界决策候选](../../governance/product/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [Knowledge Hub 维护入口](../../governance/product/current/runbooks/maintenance-entry.md) · `reviewing`
 - [Knowledge Hub 项目画像候选](../../governance/product/current/project-profile.md) · `reviewing`
@@ -135,7 +135,7 @@
 - [PCR02 SSC305 SDK 权威与维护边界决策候选](../../projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [PCR02 SSC305 SDK 维护入口](../../projects/pcr02-ssc305/current/runbooks/maintenance-entry.md) · `reviewing`
 - [PCR02 SSC305 SDK 项目画像候选](../../projects/pcr02-ssc305/current/project-profile.md) · `reviewing`
-- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## agent-dev-kit (4)
 
@@ -443,7 +443,7 @@
 
 ## canonical-path (1)
 
-- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## changelog (1)
 
@@ -509,10 +509,6 @@
 
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
-## hardcut (1)
-
-- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
-
 ## high-load (1)
 
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
@@ -565,10 +561,6 @@
 
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
-## no-compatibility-layer (1)
-
-- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
-
 ## obsidian (1)
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
@@ -601,9 +593,13 @@
 
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
+## project-boundary (1)
+
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+
 ## project-routing (1)
 
-- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## properties (1)
 
@@ -632,6 +628,10 @@
 ## schema (1)
 
 - [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
+
+## single-source-of-truth (1)
+
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## source-boundary (1)
 

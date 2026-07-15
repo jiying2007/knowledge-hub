@@ -1,4 +1,7 @@
+import pytest
+
 from tools.codex_assets.knowledge_hub.health import _is_body_markdown, _review_queue
+from tools.codex_assets.knowledge_hub.health_cli import build_parser
 
 
 def test_fast_body_coverage_matches_orphan_body_boundary():
@@ -27,3 +30,10 @@ def test_fast_review_queue_excludes_archived_and_active_items():
     assert payload["ai_generated_pending"] == 1
     assert payload["external_source_pending"] == 1
     assert payload["active_or_promotion_blocker_count"] == 1
+
+
+def test_health_cli_rejects_removed_skip_gate_option():
+    with pytest.raises(SystemExit) as error:
+        build_parser().parse_args(["--skip-final-gate"])
+
+    assert error.value.code == 2

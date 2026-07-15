@@ -223,7 +223,10 @@ def test_final_gate_default_regression_path():
     if setup_error:
         expect(False, result_id, title, setup_error, repo)
         return
-    result, payload = _run_product_gate(repo, "--full-regression --as-of {}".format(today.isoformat()))
+    result, payload = _run_product_gate(
+        repo,
+        "--regression-suite full --as-of {}".format(today.isoformat()),
+    )
     regression = payload.get("checks", {}).get("knowledge_regression", {})
     expect(
         result["exit_code"] == 0

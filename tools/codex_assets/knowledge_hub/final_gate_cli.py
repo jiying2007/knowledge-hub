@@ -17,7 +17,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--as-of", default="")
     parser.add_argument("--final-profile", choices=("product",), default="product")
     parser.add_argument("--regression-suite", choices=("quick", "full"), default="quick")
-    parser.add_argument("--full-regression", action="store_true", help="Alias for --regression-suite full.")
     parser.add_argument("--require-terminal", action="store_true")
     return parser
 
@@ -26,8 +25,7 @@ def main(argv: Sequence[str] = ()) -> int:
     args = build_parser().parse_args(list(argv) if argv else None)
     root = repository_root(args.root)
     today, _ = resolve_today(args.as_of)
-    suite = "full" if args.full_regression else args.regression_suite
-    payload = run_product_gate(root, today.isoformat(), regression_suite=suite)
+    payload = run_product_gate(root, today.isoformat(), regression_suite=args.regression_suite)
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:

@@ -1,13 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowledge-hub.local/schemas/local-metrics.schema.json",
-  "title": "Knowledge Hub privacy-preserving local metrics result",
+  "title": "Knowledge Hub privacy-preserving current-contract local metrics result",
   "type": "object",
-  "required": ["schema_version", "status", "privacy", "adoption"],
+  "required": ["schema_version", "status", "measurement_contract", "privacy", "usage", "retrieval", "performance", "adoption"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "status": {"type": "string"},
+    "measurement_contract": {
+      "type": "object",
+      "required": ["interaction_contract", "interactive_telemetry_schema_version", "feedback_schema_version"]
+    },
     "privacy": {"type": "object", "required": ["raw_query_stored"]},
+    "usage": {"type": "object", "required": ["invocation_count", "excluded_historical_or_noninteractive_count"]},
+    "retrieval": {"type": "object", "required": ["feedback_count", "found_rate", "excluded_unbound_or_historical_feedback_count"]},
+    "performance": {"type": "object", "required": ["evaluable", "status", "search_sample_count", "context_sample_count"]},
     "adoption": {"type": "object", "required": ["ready"]}
   },
   "additionalProperties": true

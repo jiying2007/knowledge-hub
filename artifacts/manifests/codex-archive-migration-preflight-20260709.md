@@ -1,3 +1,38 @@
+---
+id: codex-archive-migration-preflight-20260709
+title: Codex archive 迁移预检批次 2026-07-09
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-11-09'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- migration-preflight
+- archive-governance
+- subagents
+- delete-blocked
+- no-memory-write
+- no-active-promotion
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-09'
+manual_validation_pending: false
+summary_zh: 压实 Codex archive phased migration/removal 台账中的三条 extract-first 记录：迁移 llm_tools Windows 构建机 runbook、llm_tools 发布治理历史记录和
+  xcrz_sigmastar_demo 双屏动画历史分析；旧 Codex archive 正文仍未删除。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-e8016ab8b78ce7a04418;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex archive 迁移预检批次 2026-07-09
 
 ## 摘要

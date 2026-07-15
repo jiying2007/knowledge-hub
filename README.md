@@ -80,16 +80,18 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 ```
 
-`knowledge-final-gate.sh` 只有一个终态 profile：`product`。不再保留 `standard`、`max-body`、`mature` 可执行 profile，也不再提供 product 别名脚本。默认 quick regression 适合日常收口；`--full-regression` 用于高风险工具改动和终态证明。
+`knowledge-final-gate.sh` 只有一个终态 profile：`product`。`--regression-suite quick` 适合日常收口；`--regression-suite full` 用于高风险工具改动和终态证明。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
 产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 30 个规范项目的真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。`4/4 structural coverage` 或 30/30 本机 source mapping 都不代表内容已签收或已验证；`pcr02` 只作为 group 元数据，不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
+
+长期采用只统计当前 telemetry contract 的真实交互；历史 contract 样本保留为 provenance，但不参与当前 P95 和采用判定。性能至少需要 10 个 search 与 10 个 context 当前样本，显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
 
 高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 只保留 full regression slowest 10 与失败 ID，不做无证据的泛化重构。
 
@@ -107,7 +109,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --a
 
 其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布。
 
-长期运营成熟态入口见 `governance/status/knowledge-hub-operational-maturity.md`。该状态页把日常、周度和 release gate 命令、搜索验收、review_after 运营节奏和剩余风险固定为可审查产物；2026-07 近期待复核批次已在 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 中按运营周期刷新到 2026-10，完整交付闭环见 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。该闭环只收口 Hub 内治理 review 和运营尾巴，不生成 owner decision、不关闭 owner gate、不提升 active、不写 memory、不修改源项目、不伪造外部实机证据。
+当前产品状态与证据缺口以 `governance/product/validation/project-readiness.md` 和实时 `knowledge-final-gate.sh` 输出为准。`governance/status/knowledge-hub-operational-maturity.md` 仅保留 2026-07-13 历史快照；2026-07 运营批次和交付记录分别见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 与 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`，均不替代当前 owner、设备、发布或回滚证据。
 
 ## 目录边界
 
@@ -229,7 +231,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-attest.sh generate --id <item-id
 rtk bash ~/knowledge-hub/tools/knowledge-retire.sh --id <item-id> --target archived --authorization-id <execution-authorization-id> --forms artifacts/manifests/<item-id>-archive-review.local.jsonl --expected-sha256 <sha256> --apply --json
 ```
 
-确认包和表单生成不创建 authorization，也不执行状态变更。`human-directed-delegation` 只适用于非 active 目标，并强制把 `reviewed_by` 记为 `<human>-via-codex-delegation`；active promotion 必须使用 `human-reviewed`。旧版带 `authorization_id` 的人工表单继续兼容，但新表单禁止嵌入执行授权。
+确认包和表单生成不创建 authorization，也不执行状态变更。`human-directed-delegation` 只适用于非 active 目标，并强制把 `reviewed_by` 记为 `<human>-via-codex-delegation`；active promotion 必须使用 `human-reviewed`。生命周期工具只接受 `content-review-attestation`，表单禁止嵌入执行授权。
 
 ## 离线人工维护
 

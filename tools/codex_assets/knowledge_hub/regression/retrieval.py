@@ -368,7 +368,7 @@ def test_knowledge_context_budget_explainability():
             )
         )
         and first_item.get("why_selected")
-        and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", [])
+        and "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。" in context.get("risks", [])
         and summary_result["exit_code"] == 0
         and summary.get("projection") == "agent-summary-v1"
         and "ranked_items" not in summary

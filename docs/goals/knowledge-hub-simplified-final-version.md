@@ -1,8 +1,10 @@
-# Knowledge Hub 硬切换终态设计 Goal
+# Knowledge Hub 终态设计历史记录
 
-## 最终执行 Goal 指令（推荐引用）
+> 归档身份：registry item `knowledge-hub-simplified-final-version-goal` 的状态为 `archived`。本页保存当时的设计与验收推导，不得作为新线程 Goal 或当前运行手册；当前入口为 `README.md`、`governance/product/current/` 和 `governance/product/validation/project-readiness.md`。
 
-后续线程可直接引用本文件作为长期目标：
+## 历史执行 Goal 指令
+
+以下内容只用于审计当时的长期目标：
 
 ```text
 Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md` 推进 Knowledge Hub 去复杂度硬切换终态。
@@ -33,7 +35,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 运行并通过：
   - `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics`
   - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`
-  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression`
+  - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full`
   - `rtk git diff --check`
 - 技术候选与发布完成分开：前者看 `gate_status`，后者还必须有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。
 - 30/30 规范项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-owner-review`。
@@ -45,7 +47,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
 - 不新增复杂流程，除非它替代至少两个现有人工步骤并有回归覆盖。
 ```
 
-## 可直接引用的短 Goal
+## 历史短 Goal
 
 继续 `~/knowledge-hub` 的去复杂度硬切换。目标是把 Knowledge Hub 收敛为 Obsidian-friendly Markdown Vault、最小 registry 账本和高风险治理门禁：普通内容轻量维护，项目内容统一进入 `projects/`，普通与个人笔记统一进入 `notes/`，跨项目知识进入 `domains/`，source 治理进入 `sources/` 和 `registry/sources.json`，高风险动作才使用 manifest、owner gate、regression 和 final gate。
 
@@ -478,7 +480,7 @@ rtk bash tools/knowledge-search.sh "<关键词>"
 使用规则：
 
 - `knowledge-regression.sh --suite quick` 用于日常 final gate smoke；`--suite full` 用于工具、schema、owner gate、source control 或 final gate 相关变更后的终态证明。
-- `knowledge-final-gate.sh --json --final-profile product` 默认 quick regression；高风险收口使用 `--full-regression`，不用于每条普通笔记。
+- `knowledge-final-gate.sh --json --final-profile product` 默认 quick regression；高风险收口使用 `--regression-suite full`，不用于每条普通笔记。
 - `knowledge-index-plan.sh` 默认 report-only，不得自动覆盖人工索引。
 
 ## 九、Obsidian 协作
@@ -687,7 +689,7 @@ local-commit
 
 ## 十五、实施验证
 
-当前硬切换验收以本次运行的 terminal gate 输出为准；默认不固定旧日期。
+当时的硬切换验收以该次 terminal gate 输出为准；日期仅解释历史证据。
 
 2026-06-25 及更早制品只作为历史证据；如果历史制品中仍出现 `needs-owner-review`、`owner-gates-open` 或旧 source 路径，应先判断它是否属于历史 manifest、authorization、automation run 或回归负例，不得反向当作有效状态。
 
@@ -707,7 +709,7 @@ rtk bash -n tools/knowledge-search.sh
 rtk bash -n tools/knowledge-index-plan.sh
 rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash tools/knowledge-regression.sh --json
-rtk bash tools/knowledge-final-gate.sh --json --final-profile product --full-regression
+rtk bash tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full
 ```
 
 硬切换后必须增加负向验证：

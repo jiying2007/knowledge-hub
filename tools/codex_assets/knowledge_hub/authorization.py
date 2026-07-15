@@ -81,10 +81,11 @@ def load_review_form(path: pathlib.Path, item_id: str) -> Dict[str, Any]:
     if len(matches) != 1:
         raise KnowledgeHubError("review form must contain exactly one row for {}".format(item_id))
     row = matches[0]
+    if row.get("form_kind") != CONTENT_REVIEW_ATTESTATION:
+        raise KnowledgeHubError(
+            "unsupported review form kind; content-review-attestation is required"
+        )
     required = ["reviewed_by", "reviewed_at", "review_decision", "review_basis", "validation_refs"]
-    is_attestation = row.get("form_kind") == CONTENT_REVIEW_ATTESTATION
-    if not is_attestation:
-        required.append("authorization_id")
     missing = [field for field in required if row.get(field) in (None, "", [])]
     if missing:
         raise KnowledgeHubError("review form missing: {}".format(", ".join(missing)))
@@ -96,8 +97,7 @@ def load_review_form(path: pathlib.Path, item_id: str) -> Dict[str, Any]:
         raise KnowledgeHubError("reviewed_at must use YYYY-MM-DD") from exc
     if not isinstance(row.get("validation_refs"), list) or not all(str(value).strip() for value in row["validation_refs"]):
         raise KnowledgeHubError("review form validation_refs must be a non-empty list")
-    if is_attestation:
-        _validate_content_review_attestation(row)
+    _validate_content_review_attestation(row)
     return row
 
 

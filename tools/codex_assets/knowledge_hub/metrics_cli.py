@@ -24,6 +24,13 @@ def main(argv: Iterable[str] = ()) -> int:
         print("- invocations: {}".format(payload["usage"]["invocation_count"]))
         print("- observation_days: {}".format(payload["usage"]["observation_days"]))
         print("- found_rate: {}".format(payload["retrieval"]["found_rate"]))
+        print("- performance_status: {}".format(payload["performance"]["status"]))
+        print(
+            "- performance_samples: search={} context={}".format(
+                payload["performance"]["search_sample_count"],
+                payload["performance"]["context_sample_count"],
+            )
+        )
         print("- adoption_ready: {}".format(str(payload["adoption"]["ready"]).lower()))
     return 0
 

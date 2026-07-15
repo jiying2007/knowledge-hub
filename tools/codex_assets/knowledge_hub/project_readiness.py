@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime as dt
-import hashlib
 import os
 import pathlib
 import posixpath
@@ -34,7 +33,6 @@ from .store import RepositoryTransaction
 MANAGED_START = "<!-- knowledge-hub-project-readiness:start -->"
 MANAGED_END = "<!-- knowledge-hub-project-readiness:end -->"
 SLOT_NAMES = ("profile", "runbook", "decision", "validation")
-BODY_PREFIXES = ("projects/", "domains/", "governance/", "notes/")
 
 
 def _project_paths(project: Mapping[str, Any]) -> Dict[str, str]:
@@ -563,7 +561,7 @@ def _managed_readme(readme_path: str, text: str, project: Mapping[str, Any], pat
 def _route_document(
     projects: Sequence[Mapping[str, Any]], repositories: Sequence[Mapping[str, Any]],
     groups: Sequence[Mapping[str, Any]], existing_routes: Sequence[Mapping[str, Any]],
-    items: Sequence[Mapping[str, Any]],
+    items: Sequence[Mapping[str, Any]], current_source_ids: Set[str],
 ) -> Dict[str, Any]:
     existing_by_project = {str(row.get("project_id")): row for row in existing_routes if row.get("project_id")}
     group_by_id = {str(row.get("id")): row for row in groups if row.get("id")}
@@ -595,6 +593,11 @@ def _route_document(
             )
         inventory = _item_inventory(project, items)
         source_ids = _dedupe(source_id(row) for row in inventory if source_id(row))
+        configured_source_ids = _dedupe(
+            list(existing["default_source_ids"])
+            if "default_source_ids" in existing
+            else source_ids
+        )
         is_group_route = project.get("type") == "product-group" or existing.get("type") == "project-group"
         if is_group_route:
             members = [str(value) for value in group_by_id.get(group_id, {}).get("member_project_ids", [])]
@@ -626,14 +629,9 @@ def _route_document(
                 "decisions_path": project["decisions"],
                 "validation_path": project["validation"],
                 "domain_refs": domain_refs,
-                "default_source_ids": _dedupe(
-                    list(existing["default_source_ids"])
-                    if "default_source_ids" in existing
-                    else source_ids
-                ),
-                "retired_route_ids": existing.get(
-                    "retired_route_ids", ["retired-engineering-archive-root", "retired-codex-archive-root"]
-                ),
+                "default_source_ids": [
+                    value for value in configured_source_ids if value in current_source_ids
+                ],
                 "route_key_policy": existing.get(
                     "route_key_policy", "control-plane-query-aware" if project_id == "knowledge-hub" else "git-remote-first"
                 ),
@@ -677,36 +675,6 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
         ]
     )
     return "\n".join(rows) + "\n"
-
-
-def _is_body_markdown(path: str) -> bool:
-    if not path.endswith(".md") or pathlib.PurePosixPath(path).name == "README.md":
-        return False
-    if path == "projects/pcr02-ssc305/archive/engineering-archive/pcr02/decision-index.md":
-        return False
-    return path.startswith(BODY_PREFIXES)
-
-
-def _updated_body_coverage(root: pathlib.Path, new_paths: Iterable[str]) -> str:
-    payload = load_json(root / "registry/body-coverage.json", {}) or {}
-    future_paths = set(path for path in new_paths if _is_body_markdown(path))
-    for collection in payload.get("collections", []):
-        prefix = str(collection.get("path_prefix", ""))
-        if not prefix:
-            continue
-        base = root / prefix.rstrip("/")
-        paths = set()
-        if base.exists():
-            paths.update(
-                path.relative_to(root).as_posix()
-                for path in base.rglob("*.md")
-                if _is_body_markdown(path.relative_to(root).as_posix())
-            )
-        paths.update(path for path in future_paths if path.startswith(prefix))
-        encoded = "".join("{}\n".format(path) for path in sorted(paths)).encode("utf-8")
-        collection["expected_markdown_count"] = len(paths)
-        collection["inventory_sha256"] = hashlib.sha256(encoded).hexdigest()
-    return pretty_json(payload) + "\n"
 
 
 def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str, content: str) -> None:
@@ -879,7 +847,19 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
             }
         )
 
-    routes_doc = _route_document(projects, repositories, groups, existing_routes, next_items)
+    current_source_ids = {
+        str(row.get("id", ""))
+        for row in (load_json(root / "registry/sources.json", {}) or {}).get("sources", [])
+        if row.get("id") and row.get("status") == "registered"
+    }
+    routes_doc = _route_document(
+        projects,
+        repositories,
+        groups,
+        existing_routes,
+        next_items,
+        current_source_ids,
+    )
     readiness_index = _readiness_index(projects, project_paths)
     transaction = RepositoryTransaction(root)
     for path, content in rendered_docs.items():
@@ -895,12 +875,6 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     _add_text(transaction, root, "indexes/by-project.md", project_index)
     _add_text(transaction, root, "indexes/by-topic.md", topic_index)
     _add_text(transaction, root, "indexes/project-readiness.md", readiness_index)
-    _add_text(
-        transaction,
-        root,
-        "registry/body-coverage.json",
-        _updated_body_coverage(root, rendered_docs.keys()),
-    )
     plan = transaction.plan()
     result: Dict[str, Any] = {
         "schema_version": 1,
@@ -926,6 +900,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
             "transaction_id": plan["transaction_id"],
             "write_count": plan["write_count"],
             "changed_count": plan["changed_count"],
+            "write_paths": [row["path"] for row in plan["writes"]],
         },
     }
     if apply:

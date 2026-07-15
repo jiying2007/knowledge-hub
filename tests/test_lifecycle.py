@@ -5,6 +5,10 @@ import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, file_sha256, load_jsonl
 from tools.codex_assets.knowledge_hub.lifecycle import capture, transition
+from tools.codex_assets.knowledge_hub.review_attestation import (
+    build_attestation_packet,
+    generate_review_form,
+)
 
 
 def _jsonl(rows):
@@ -156,17 +160,31 @@ def test_promote_consumes_scoped_authorization(tmp_path):
         "status": "active",
     }
     (root / "registry/authorizations.jsonl").write_text(_jsonl([authorization]))
-    review = {
-        "item_id": "captured-20260713",
-        "reviewed_by": "owner-a",
-        "reviewed_at": "2026-07-13",
-        "review_decision": "accept-active",
-        "review_basis": "owner reviewed the captured body and validation evidence",
-        "validation_refs": ["governance/captured.md"],
-        "authorization_id": auth_id,
-    }
-    review_path = root / "review.json"
-    review_path.write_text(json.dumps(review))
+    packet = build_attestation_packet(
+        root,
+        "captured-20260713",
+        "active",
+        dt.date(2026, 7, 13),
+    )
+    statement = packet["content_review_attestation"]["response_templates"]["human-reviewed"].replace(
+        "<reviewer>", "owner-a"
+    )
+    review_output = "artifacts/manifests/captured-active.local.jsonl"
+    generate_review_form(
+        root,
+        "captured-20260713",
+        "active",
+        dt.date(2026, 7, 13),
+        packet["item"]["content_sha256"],
+        "human-reviewed",
+        "owner-a",
+        "test:owner-a-active-confirmation",
+        statement,
+        review_output,
+        True,
+        True,
+    )
+    review_path = root / review_output
     body_hash = file_sha256(root / "governance/captured.md")
     result = transition(
         root,
@@ -184,3 +202,44 @@ def test_promote_consumes_scoped_authorization(tmp_path):
     assert load_jsonl(root / "registry/promotions.jsonl")[0]["target_item"] == "captured-20260713"
     events = load_jsonl(root / "registry/lifecycle-events.jsonl")
     assert [row["event_type"] for row in events] == ["capture", "promote"]
+
+
+def test_removed_coupled_review_form_is_rejected(tmp_path):
+    root = _root(tmp_path)
+    source = tmp_path / "source.md"
+    source.write_text("# 捕获样例\n\n待复核。\n")
+    capture(
+        root,
+        source,
+        "audit",
+        "governance/captured.md",
+        dt.date(2026, 7, 13),
+        True,
+        item_id="captured-20260713",
+    )
+    review_path = root / "review.json"
+    review_path.write_text(
+        json.dumps(
+            {
+                "item_id": "captured-20260713",
+                "reviewed_by": "owner-a",
+                "reviewed_at": "2026-07-13",
+                "review_decision": "accept-active",
+                "review_basis": "removed coupled form",
+                "validation_refs": ["governance/captured.md"],
+                "authorization_id": "auth-captured-active",
+            }
+        )
+    )
+
+    result = transition(
+        root,
+        "captured-20260713",
+        "active",
+        dt.date(2026, 7, 13),
+        False,
+        authorization_id="auth-captured-active",
+        review_form=review_path,
+    )
+
+    assert any("content-review-attestation is required" in error for error in result["gate_errors"])

@@ -1,4 +1,5 @@
 import errno
+import hashlib
 import json
 
 import pytest
@@ -11,19 +12,39 @@ from tools.codex_assets.knowledge_hub.metrics import (
 )
 
 
+def _interaction(query, kind="search", recorded_at="2026-07-13T00:00:00Z", latency_ms=120, result_ids=("item-a",)):
+    query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+    return {
+        "schema_version": metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+        "sample_kind": "interactive",
+        "interaction_contract": metrics.INTERACTION_CONTRACT,
+        "interaction_id": metrics.make_interaction_id(kind, query_hash, recorded_at),
+        "retrieval_kind": kind,
+        "recorded_at": recorded_at,
+        "query_sha256": query_hash,
+        "result_count": len(result_ids),
+        "result_ids": list(result_ids),
+        "latency_ms": latency_ms,
+        "raw_query_stored": False,
+    }
+
+
+def test_interaction_ids_are_unique_for_same_query_and_second():
+    query_hash = hashlib.sha256(b"same query").hexdigest()
+
+    first = metrics.make_interaction_id("search", query_hash, "2026-07-13T00:00:00Z")
+    second = metrics.make_interaction_id("search", query_hash, "2026-07-13T00:00:00Z")
+
+    assert first != second
+
+
 def test_metrics_do_not_store_raw_queries(tmp_path):
     cache = tmp_path / ".cache/knowledge-hub"
     cache.mkdir(parents=True)
     (cache / "search-telemetry.jsonl").write_text(
-        json.dumps(
-            {
-                "recorded_at": "2026-07-13T00:00:00Z",
-                "query_sha256": "abc",
-                "result_count": 1,
-                "latency_ms": 120,
-                "raw_query_stored": False,
-            }
-        )
+        json.dumps(_interaction("sensitive query body"))
+        + "\n"
+        + json.dumps({"recorded_at": "2026-07-12T00:00:00Z", "latency_ms": 999})
         + "\n"
     )
 
@@ -34,34 +55,27 @@ def test_metrics_do_not_store_raw_queries(tmp_path):
     assert recorded["raw_query_stored"] is False
     assert "sensitive query body" not in stored
     assert payload["privacy"]["raw_query_stored"] is False
-    assert payload["usage"]["invocation_count"] == 0
-    assert payload["usage"]["excluded_legacy_or_noninteractive_count"] == 1
+    assert payload["schema_version"] == 2
+    assert payload["usage"]["invocation_count"] == 1
+    assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
+    assert payload["retrieval"]["feedback_count"] == 1
+    assert payload["performance"]["status"] == "pending"
     assert payload["adoption"]["ready"] is False
 
 
-def test_metrics_only_count_interactive_v2_samples(tmp_path):
+def test_metrics_only_count_current_contract_interactive_samples(tmp_path):
     cache = tmp_path / ".cache/knowledge-hub"
     cache.mkdir(parents=True)
     (cache / "search-telemetry.jsonl").write_text(
         "\n".join(
             [
+                json.dumps(_interaction("current")),
                 json.dumps(
                     {
                         "schema_version": 2,
                         "sample_kind": "interactive",
-                        "recorded_at": "2026-07-13T00:00:00Z",
-                        "query_sha256": "interactive",
-                        "result_count": 1,
-                        "latency_ms": 120,
-                        "raw_query_stored": False,
-                    }
-                ),
-                json.dumps(
-                    {
-                        "schema_version": 2,
-                        "sample_kind": "benchmark",
                         "recorded_at": "2026-07-13T00:00:01Z",
-                        "query_sha256": "benchmark",
+                        "query_sha256": "historical",
                         "result_count": 1,
                         "latency_ms": 900,
                         "raw_query_stored": False,
@@ -75,9 +89,89 @@ def test_metrics_only_count_interactive_v2_samples(tmp_path):
     payload = local_metrics(tmp_path)
 
     assert payload["usage"]["invocation_count"] == 1
-    assert payload["usage"]["excluded_legacy_or_noninteractive_count"] == 1
+    assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
     assert payload["performance"]["search_p95_ms"] == 120
+    assert payload["performance"]["status"] == "pending"
+
+
+def test_metrics_require_enough_current_search_and_context_samples(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    search_rows = [
+        _interaction("search-{}".format(index), recorded_at="2026-07-13T00:00:{:02d}Z".format(index))
+        for index in range(metrics.MINIMUM_PERFORMANCE_SAMPLE_COUNT)
+    ]
+    context_rows = [
+        _interaction(
+            "context-{}".format(index),
+            kind="context",
+            recorded_at="2026-07-13T00:01:{:02d}Z".format(index),
+            latency_ms=240,
+        )
+        for index in range(metrics.MINIMUM_PERFORMANCE_SAMPLE_COUNT)
+    ]
+    (cache / "search-telemetry.jsonl").write_text("".join(json.dumps(row) + "\n" for row in search_rows))
+    (cache / "context-telemetry.jsonl").write_text("".join(json.dumps(row) + "\n" for row in context_rows))
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["performance"]["evaluable"] is True
     assert payload["performance"]["status"] == "pass"
+    assert payload["adoption"]["ready"] is False
+
+
+def test_feedback_requires_a_matching_result_and_is_unique(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    interaction = _interaction("bound query")
+    (cache / "search-telemetry.jsonl").write_text(json.dumps(interaction) + "\n")
+
+    with pytest.raises(ValueError, match="selected_id"):
+        record_feedback(tmp_path, "bound query", "found", "item-missing")
+
+    recorded = record_feedback(tmp_path, "bound query", "found", "item-a")
+    assert recorded["record"]["interaction_id"] == interaction["interaction_id"]
+
+    with pytest.raises(ValueError, match="already exists"):
+        record_feedback(tmp_path, "bound query", "found", "item-a")
+
+    with pytest.raises(ValueError, match="does not accept selected_id"):
+        record_feedback(tmp_path, "bound query", "not-found", "item-a")
+
+
+def test_metrics_only_count_feedback_bound_to_observed_result(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    first_interaction = _interaction("first query", result_ids=("item-a",))
+    second_interaction = _interaction("second query", result_ids=("item-b",))
+    (cache / "search-telemetry.jsonl").write_text(
+        json.dumps(first_interaction) + "\n" + json.dumps(second_interaction) + "\n"
+    )
+    recorded = record_feedback(tmp_path, "first query", "found", "item-a")["record"]
+    duplicate = dict(recorded)
+    invalid_selected = dict(recorded)
+    invalid_selected.update(
+        {
+            "interaction_id": second_interaction["interaction_id"],
+            "query_sha256": second_interaction["query_sha256"],
+            "selected_id": "item-missing",
+        }
+    )
+    unbound = dict(recorded)
+    unbound["interaction_id"] = "f" * 64
+    with (cache / "retrieval-feedback.jsonl").open("a") as handle:
+        for row in (duplicate, invalid_selected, unbound):
+            handle.write(json.dumps(row) + "\n")
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["retrieval"]["feedback_count"] == 1
+    assert payload["retrieval"]["excluded_unbound_or_historical_feedback_count"] == 3
+
+
+def test_feedback_rejects_unobserved_query(tmp_path):
+    with pytest.raises(ValueError, match="matching current-contract"):
+        record_feedback(tmp_path, "never observed", "not-found")
 
 
 def test_optional_telemetry_degrades_on_read_only_storage(monkeypatch, tmp_path):

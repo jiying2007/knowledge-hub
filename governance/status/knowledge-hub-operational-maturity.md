@@ -1,4 +1,6 @@
-# Knowledge Hub 产品成熟度状态 2026-07-13
+# Knowledge Hub 产品成熟度历史快照 2026-07-13
+
+> 归档身份：registry item `knowledge-hub-operational-maturity-20260701` 的状态为 `archived`。本页只保存 2026-07-13 当日结论与命令证据，不是当前状态入口；当前状态以 [`governance/product/validation/project-readiness.md`](../product/validation/project-readiness.md) 和实时 product gate 输出为准。
 
 ## 结论
 
@@ -19,11 +21,11 @@ Knowledge Hub 已按“统一知识控制面”完成平台产品化：canonical
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
-旧治理 profile 和 product 别名不再是可执行接口。历史 archive/ledger 中出现的旧命令只作为当时证据，不得复制回当前 README、runbook、模板、生成器或自动化。
+可执行接口以以上命令为准。archive/ledger 中的命令只解释当时证据，不作为 README、runbook、模板、生成器或自动化入口。
 
 ## 成熟度模型
 
@@ -43,7 +45,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 - Markdown：标题、摘要、标签、关系和正文内容权威；managed 文档使用一致 Properties。
 - Registry：身份、path、status、owner、review_after、promotion、authorization 和 lifecycle 权威。
 - Python package：`tools.codex_assets.knowledge_hub` 是共享内核，shell 入口仅定位根目录、注入 `PYTHONPATH` 和转发参数。
-- Schema：`schemas/catalog.json` 管理机器可读契约；v1 JSON 字段只做加法兼容，删改语义必须显式迁移。
+- Schema：`schemas/catalog.json` 只发布当前 contract；breaking 字段或语义变化必须使用新 contract id 并提供回归证据。
 - Index/cache：核心 Markdown 索引可重建；SQLite FTS 与 metrics 位于忽略目录，缺失或过期时安全回退。
 - Local workspace：`local/workspaces.json` 只保存本机映射且不提交；tracked registry 只保存 `workspace://` 和 remote key。
 - Store：多文件 apply 使用单写锁、expected hash、journal、临时文件、fsync、`os.replace` 和 recovery audit。
@@ -63,7 +65,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | Obsidian | `knowledge-obsidian-view-build.sh`、`knowledge-link-audit.sh` | 文件层 Properties/MOC/Base/链接自动检查；真实 GUI 验收单独报告，当前为 `not-validated` |
 | 质量 | `knowledge-retrieval-benchmark.sh`、`knowledge-regression.sh` | full regression 仅跟踪 slowest 10，不泛化重构 |
 | 交付恢复 | `knowledge-export.sh`、`knowledge-restore-drill.sh` | 不发布远端、不导出 personal/pending owner decision/secret |
-| 运营 | `knowledge-health-summary.sh`、`knowledge-metrics.sh`、`knowledge-feedback.sh` | snapshot 快路径；只保存查询 hash 和 found/not-found，不保存原始查询 |
+| 运营 | `knowledge-health-summary.sh`、`knowledge-metrics.sh`、`knowledge-feedback.sh` | snapshot 快路径；metrics v2 只统计当前 interaction contract，feedback 绑定真实检索，只保存查询 hash 和 found/not-found，不保存原始查询 |
 
 ## 项目内容边界
 
@@ -104,16 +106,16 @@ rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --refresh-gate --json
 rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --json --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --json --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
 ```
 
-性能判断只依据脱敏本地 metrics 和 full regression `slowest_results[0:10]`。目标为 warm search p95 ≤ 0.5 秒、context p95 ≤ 1 秒、status/默认 health ≤ 3 秒、quick final ≤ 15 秒；未达到时先定位具体 slowest 项，不做跨模块泛化重构。
+性能判断只依据脱敏本地 metrics 和 full regression `slowest_results[0:10]`。目标为 warm search p95 ≤ 0.5 秒、context p95 ≤ 1 秒、status/默认 health ≤ 3 秒、quick final ≤ 15 秒；当前 contract 的 search/context 各不足 10 个样本时只能标为 `pending`。历史 contract 样本不删除，但不与当前实现 P95 混算；显式反馈必须绑定真实 interaction，不能靠重复反馈刷绿。未达到时先定位具体 slowest 项，不做跨模块泛化重构。
 
-## 近期待复核与历史边界
+## 当日待复核与历史边界
 
 - 2026-08-09 至 2026-08-11 的 18 条 Codex archive near-due 项已逐条复核 archive-only/provenance 边界并刷新到 2026-11-09 至 2026-11-11。
 - 18 条均保持 archive/provenance 或 reviewing governance ledger 边界，promotion 为 none，没有自动提升 active。
-- 旧命令、旧 profile、迁移过程和历史测试输出保留在 archive/ledger 仅为 provenance；默认 search/context/current 不消费这些材料。
+- archive/ledger 中的命令、过程记录和测试输出只作 provenance；默认 search/context/current 不消费这些材料。
 
 ## 剩余风险
 

@@ -1199,7 +1199,7 @@ review_queue_blocking_count = int(review_queues.get("summary", {}).get("active_o
 review_queue_product_blocking_count = int(review_queues.get("summary", {}).get("total_pending_count", 0) or 0)
 product_source_inventory_blocking_count = int(product_source_inventory_audit.get("blocker_count", 0) or 0)
 
-PRODUCT_MIGRATION_PATTERNS = [
+PRODUCT_NONCANONICAL_PATTERNS = [
     re.compile(pattern, re.IGNORECASE)
     for pattern in [
         r"\bmigrated-",
@@ -1224,7 +1224,7 @@ PRODUCT_ALLOWED_PROCESS_MANIFEST_NAMES = {
 }
 PRODUCT_REVIEWING_TARGET_RATIO = 0.10
 
-def product_migration_text_matches(*values):
+def product_noncanonical_text_matches(*values):
     text_parts = []
     for value in values:
         if isinstance(value, list):
@@ -1232,9 +1232,9 @@ def product_migration_text_matches(*values):
         elif value is not None:
             text_parts.append(str(value))
     haystack = " ".join(text_parts)
-    return any(pattern.search(haystack) for pattern in PRODUCT_MIGRATION_PATTERNS)
+    return any(pattern.search(haystack) for pattern in PRODUCT_NONCANONICAL_PATTERNS)
 
-def product_sealed_migration_item(item):
+def product_sealed_historical_item(item):
     status_value = str(item.get("status", ""))
     path_value = str(item.get("path", ""))
     review_status = str(item.get("review_status", ""))
@@ -1264,15 +1264,15 @@ def product_sealed_migration_item(item):
     }
     return bool(tag_set & sealed_tags) or path_value.startswith("artifacts/manifests/")
 
-def build_product_migration_residue_audit():
-    migration_item_hits = []
-    sealed_migration_hits = []
+def build_product_noncanonical_residue_audit():
+    noncanonical_item_hits = []
+    sealed_historical_hits = []
     long_lived_reviewing = []
-    archived_migration_hits = []
+    archived_noncanonical_hits = []
     for item in items:
         item_id = str(item.get("id", ""))
         status_value = str(item.get("status", ""))
-        hit = product_migration_text_matches(
+        hit = product_noncanonical_text_matches(
             item_id,
             item.get("path", ""),
             item.get("tags", []),
@@ -1289,12 +1289,12 @@ def build_product_migration_residue_audit():
                 "review_status": item.get("review_status", ""),
                 "tags": item.get("tags", []),
             }
-            if product_sealed_migration_item(item):
-                sealed_migration_hits.append(item_ref)
+            if product_sealed_historical_item(item):
+                sealed_historical_hits.append(item_ref)
                 continue
-            migration_item_hits.append(item_ref)
+            noncanonical_item_hits.append(item_ref)
             if status_value == "archived":
-                archived_migration_hits.append(item_id)
+                archived_noncanonical_hits.append(item_id)
         if status_value == "reviewing":
             long_lived_reviewing.append({
                 "id": item_id,
@@ -1336,42 +1336,42 @@ def build_product_migration_residue_audit():
     item_count = len(items)
     reviewing_ratio = round(reviewing_count / item_count, 4) if item_count else 0
     blockers = []
-    if migration_item_hits:
+    if noncanonical_item_hits:
         blockers.append({
-            "id": "product-migration-items",
-            "count": len(migration_item_hits),
-            "summary_zh": "product 运行模型不允许 migration/copy-first/migrated/source-docs 等迁移态条目留在当前 registry。",
-            "sample": migration_item_hits[:20],
+            "id": "product-noncanonical-items",
+            "count": len(noncanonical_item_hits),
+            "summary_zh": "product 运行模型不允许带有 copy-first、migrated、source-docs 等封存流程标记的条目留在当前 registry。",
+            "sample": noncanonical_item_hits[:20],
         })
     if process_manifest_hits:
         blockers.append({
             "id": "product-process-manifests",
             "count": len(process_manifest_hits),
-            "summary_zh": "product 运行模型不保留 copy-first、classification 或 source-inventory 迁移过程 manifest 作为当前树文件。",
+            "summary_zh": "product 运行模型不把 copy-first、classification 或 source-inventory 过程 manifest 保留为当前树资产。",
             "sample": process_manifest_hits[:20],
         })
     if copy_first_tools:
         blockers.append({
             "id": "product-copy-first-tools",
             "count": len(copy_first_tools),
-            "summary_zh": "product 运行模型不暴露 copy-first 迁移工具入口；外部资料吸收统一走 source/intake/review/promote。",
+            "summary_zh": "product 运行模型不暴露 copy-first 工具入口；外部资料吸收统一走 source/intake/review/promote。",
             "sample": copy_first_tools,
         })
     if source_current_closed:
         blockers.append({
             "id": "product-closed-sources-in-current-registry",
             "count": len(source_current_closed),
-            "summary_zh": "product 运行模型不把已关闭迁移来源保留在 registry/sources.json 当前 source 主列表。",
+            "summary_zh": "product 运行模型不把已关闭来源保留在 registry/sources.json 当前 source 主列表。",
             "sample": source_current_closed[:20],
         })
     return {
         "status": "pass" if not blockers else "needs-fix",
         "profile": "product",
         "item_count": item_count,
-        "migration_item_count": len(migration_item_hits),
-        "archived_migration_item_count": len(archived_migration_hits),
-        "sealed_migration_item_count": len(sealed_migration_hits),
-        "sealed_migration_item_sample": sealed_migration_hits[:20],
+        "noncanonical_item_count": len(noncanonical_item_hits),
+        "archived_noncanonical_item_count": len(archived_noncanonical_hits),
+        "sealed_historical_item_count": len(sealed_historical_hits),
+        "sealed_historical_item_sample": sealed_historical_hits[:20],
         "process_manifest_count": len(process_manifest_hits),
         "copy_first_tool_count": len(copy_first_tools),
         "closed_source_count": len(source_current_closed),
@@ -1380,11 +1380,11 @@ def build_product_migration_residue_audit():
         "reviewing_target_ratio": PRODUCT_REVIEWING_TARGET_RATIO,
         "blocker_count": len(blockers),
         "blockers": blockers,
-        "notes_zh": "product 运行模型要求迁移态从当前入口消失；reviewing 比例只作采用度观测，不作为技术失败。已归档且不可误用的迁移证据只作 provenance。",
+        "notes_zh": "product 运行模型只允许 canonical 资产进入当前入口；reviewing 比例只作采用度观测，不作为技术失败。已封存且不可误用的历史证据只作 provenance。",
     }
 
-product_migration_residue_audit = build_product_migration_residue_audit()
-product_migration_blocking_count = int(product_migration_residue_audit.get("blocker_count", 0) or 0)
+product_noncanonical_residue_audit = build_product_noncanonical_residue_audit()
+product_noncanonical_blocking_count = int(product_noncanonical_residue_audit.get("blocker_count", 0) or 0)
 
 fix_blocking = (
     knowledge_check["exit_code"] != 0
@@ -1393,7 +1393,7 @@ fix_blocking = (
     or owner_ready_row_schema_errors
     or review_queue_blocking_count
     or product_source_inventory_blocking_count
-    or product_migration_blocking_count
+    or product_noncanonical_blocking_count
 )
 owner_review_blocking = open_owner_gate_count or review_queue_product_blocking_count
 
@@ -1577,9 +1577,9 @@ if product_source_inventory_blocking_count:
     next_actions.append(
         "product 终态要求 source inventory 无 pending，且 copy-body 仅限 canonical Markdown 正文；先查看 `product_source_inventory_audit.blockers`。"
     )
-if product_migration_blocking_count:
+if product_noncanonical_blocking_count:
     next_actions.append(
-        "product 终态要求迁移态从当前 registry、manifest、source 主列表和工具入口消失；先查看 `product_migration_residue_audit.blockers`。"
+        "product 终态要求当前 registry、manifest、source 主列表和工具入口只包含 canonical 资产；先查看 `product_noncanonical_residue_audit.blockers`。"
     )
 if not next_actions:
     next_actions.append("控制面无阻断；新增内容仍按 README 人工最短路径登记、索引和验证。")
@@ -1673,13 +1673,13 @@ if product_source_inventory_blocking_count:
         "blockers": product_source_inventory_audit.get("blockers", []),
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json"],
     })
-if product_migration_blocking_count:
+if product_noncanonical_blocking_count:
     strict_blockers.append({
-        "id": "product-migration-residue-blockers",
+        "id": "product-noncanonical-residue-blockers",
         "severity": "blocker",
-        "count": product_migration_blocking_count,
-        "summary_zh": "product 运行模型仍发现迁移态 registry、manifest、source 或工具入口残留。",
-        "blockers": product_migration_residue_audit.get("blockers", []),
+        "count": product_noncanonical_blocking_count,
+        "summary_zh": "product 运行模型仍发现非规范 registry、manifest、source 或工具入口残留。",
+        "blockers": product_noncanonical_residue_audit.get("blockers", []),
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict --json"],
     })
 if open_owner_gate_count:
@@ -1767,7 +1767,7 @@ result = {
         "source_check_report_command": source_check_report_command,
         "boundary_health": check_payload.get("boundary_health", {}),
         "product_source_inventory_audit": product_source_inventory_audit,
-        "product_migration_residue_audit": product_migration_residue_audit,
+        "product_noncanonical_residue_audit": product_noncanonical_residue_audit,
     },
     "review_queues": review_queues,
     "owner_gates": {

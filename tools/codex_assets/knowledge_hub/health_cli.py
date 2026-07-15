@@ -16,7 +16,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--as-of", default="")
     parser.add_argument("--refresh-gate", action="store_true")
-    parser.add_argument("--skip-final-gate", action="store_true", help="Deprecated compatibility alias: ignore gate snapshot.")
     parser.add_argument("--snapshot-max-age-hours", type=int, default=24)
     return parser
 
@@ -32,7 +31,6 @@ def main(argv: Sequence[str] = ()) -> int:
         root,
         today,
         refresh_gate=args.refresh_gate,
-        skip_final_gate=args.skip_final_gate,
         snapshot_max_age_hours=args.snapshot_max_age_hours,
     )
     if args.json:

@@ -599,7 +599,7 @@ def make_owner_decision_form_for_worksheet(repo, worksheet_id):
     form["source_sha256"] = identity.get("observed_sha256", "")
     form["source_size"] = identity.get("observed_size", "")
     form["evidence_refs"] = ["artifacts/manifests/pcr02-owner-resolution-playbook-20260618.md"]
-    form["status_reason"] = "Regression fixture for owner decision compatibility."
+    form["status_reason"] = "Regression fixture for the explicit owner-decision contract."
     for field in form.get("required_owner_fields", []):
         value = form.get(field)
         if value in (None, "") or value == [] or value == {}:
@@ -610,13 +610,13 @@ def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision
     repo = copy_repo_with_open_owner_gates(case_id)
     form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", setup_error, repo)
+        expect(False, case_id, "owner form rejects invalid owner_decision and target_decision pairs", setup_error, repo)
         return
     if owner_decision not in form.get("allowed_owner_decisions", []):
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
+        expect(False, case_id, "owner form rejects invalid owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
         return
     if target_decision not in form.get("target_candidates", []):
-        expect(False, case_id, "owner form rejects incompatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
+        expect(False, case_id, "owner form rejects invalid owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
         return
     form["owner_decision"] = owner_decision
     form["target_decision"] = target_decision
@@ -662,7 +662,7 @@ def run_owner_decision_target_pair_gate(case_id, owner_decision, target_decision
         and mismatch_diagnostic.get("actual") == {"owner_decision": owner_decision, "target_decision": target_decision}
         and "成对一致" in mismatch_diagnostic.get("action_zh", ""),
         case_id,
-        "owner form rejects incompatible owner_decision and target_decision pairs",
+        "owner form rejects invalid owner_decision and target_decision pairs",
         {
             "exit_code": result["exit_code"],
             "validation_status": parsed.get("form_validation", {}).get("status"),
@@ -678,13 +678,13 @@ def run_owner_decision_target_pair_positive(case_id, owner_decision, target_deci
     repo = copy_repo_with_open_owner_gates(case_id)
     form, setup_error = make_valid_owner_decision_form(repo)
     if setup_error:
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", setup_error, repo)
+        expect(False, case_id, "owner form accepts valid owner_decision and target_decision pairs", setup_error, repo)
         return
     if owner_decision not in form.get("allowed_owner_decisions", []):
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
+        expect(False, case_id, "owner form accepts valid owner_decision and target_decision pairs", {"setup_error": "owner_decision fixture not allowed", "owner_decision": owner_decision, "allowed_owner_decisions": form.get("allowed_owner_decisions", [])}, repo)
         return
     if target_decision not in form.get("target_candidates", []):
-        expect(False, case_id, "owner form accepts compatible owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
+        expect(False, case_id, "owner form accepts valid owner_decision and target_decision pairs", {"setup_error": "target_decision fixture not a candidate", "target_decision": target_decision, "target_candidates": form.get("target_candidates", [])}, repo)
         return
     form["owner_decision"] = owner_decision
     form["target_decision"] = target_decision
@@ -717,7 +717,7 @@ def run_owner_decision_target_pair_positive(case_id, owner_decision, target_deci
         and parsed.get("form_validation", {}).get("status") == "pass"
         and parsed.get("form_validation", {}).get("error_count") == 0,
         case_id,
-        "owner form accepts compatible owner_decision and target_decision pairs",
+        "owner form accepts valid owner_decision and target_decision pairs",
         {
             "exit_code": result["exit_code"],
             "validation_status": parsed.get("form_validation", {}).get("status"),

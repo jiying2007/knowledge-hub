@@ -283,7 +283,7 @@
 - status-owner-landing-command-applied: `tools/knowledge-status.sh` exposes `owner_gates.validate_forms_command_templates`, `owner_gates.landing_plan_command_templates` and next-open focus validation/landing-plan command templates in status actions and strict blocker `command_templates`; documented by `artifacts/manifests/knowledge-hub-status-owner-landing-command-20260620.jsonl`.
 - status-command-template-split-applied: `tools/knowledge-status.sh` and `tools/knowledge-final-gate.sh` separate executable owner blocker commands from placeholder-bearing command_templates; documented by `artifacts/manifests/knowledge-hub-status-command-template-split-20260620.jsonl`.
 - owner-placeholder-quoting-applied: human-facing Markdown validate-forms command examples quote `<owner-decisions.jsonl>` to avoid shell redirection ambiguity; documented by `artifacts/manifests/knowledge-hub-owner-placeholder-quoting-20260620.jsonl`.
-- final-state-goal-registered: `docs/goals/knowledge-hub-final-state.md` is registered as the Knowledge Hub final-state governance goal and gap-map SSOT; documented by `artifacts/manifests/knowledge-hub-final-state-goal-20260620.jsonl`.
+- archived-goal-record: `docs/goals/knowledge-hub-final-state.md` 只保存 2026-06-20 目标记录；当前边界以 `README.md` 和 product readiness/final gate 为准。
 - owner-dispatch-filter-applied: `tools/knowledge-owner-gates.sh` with `--owner <owner>` and `tools/knowledge-status.sh` owner summary commands support read-only owner gate assignment by responsible owner; documented by `artifacts/manifests/knowledge-hub-owner-dispatch-filter-20260620.jsonl`.
 - index-source-maintenance-tools-applied: `tools/knowledge-index-plan.sh` covers project/source/topic/decision planning and `tools/knowledge-new.sh` with `--source` prints source registry/index/coverage drafts; documented by `artifacts/manifests/knowledge-hub-index-source-maintenance-tools-20260620.jsonl`.
 - final-gate-gap-map-applied: `tools/knowledge-final-gate.sh` emits structured `automatic_governance` and `gap_map` fields so owner-only terminal state is machine-readable; documented by `artifacts/manifests/knowledge-hub-final-gate-gap-map-20260620.jsonl`.
@@ -410,7 +410,7 @@
 - archived: `knowledge-hub-simplified-main-source-coverage-20260624`
 - simplified-main-source-coverage-applied: source coverage 已扩展为 18 个来源，新增 Codex history、raw sessions、session index、archive registry 和 automation run ledger，Hub 成为跨项目/跨会话历史与自动化主库入口；证据：`artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`.
 - archived: `knowledge-hub-simplified-final-version-goal`
-- current-goal-under-review: 简化终态设计文档已登记为当前 Knowledge Hub 硬切换目标；证据：`docs/goals/knowledge-hub-simplified-final-version.md`.
+- archived-design-record: `docs/goals/knowledge-hub-simplified-final-version.md` 只保存终态设计历史，不作为当前 Goal 或运行手册。
 - archived: `knowledge-hub-git-automation-permission-20260624`
 - git-automation-permission-applied: Git 管理下 Hub 本仓 L1/L2 自动维护和本地 commit 默认允许；远端 Git 写入、owner decision、active、memory、源项目写入和非 report-only 自动化仍需授权；证据：`artifacts/manifests/knowledge-hub-git-automation-permission-20260624.jsonl`.
 - archived: `knowledge-hub-user-path-boundary-20260624`
@@ -428,7 +428,7 @@
 - archived: `embedded-asan-non-pcr02-evidence-followup-20260629`
 - delegated-review-closed-nonblocking-external-evidence-followup: 非 PCR02 ASAN 实操证据增强项已按完整交付闭环降级为未来外部证据输入；当前 Hub 检索未发现真实非 PCR02 验证记录，该项不阻塞 `embedded-asan-debug-guide-20260629` active 状态或 Knowledge Hub 完整交付；证据：`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.jsonl`、`artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`。
 - archived: `knowledge-hub-operational-maturity-20260701`
-- operational-maturity-recorded: Knowledge Hub 长期运营成熟态状态页已落地，明确日常/周度/release 节奏、成熟条件、搜索验收、review_after 周期刷新和非阻塞增强项；证据：`governance/status/knowledge-hub-operational-maturity.md`.
+- archived-status-snapshot: `governance/status/knowledge-hub-operational-maturity.md` 只保存 2026-07-13 产品成熟度快照；当前状态以 `governance/product/validation/project-readiness.md` 和实时 product gate 为准。
 - archived: `knowledge-hub-review-after-operation-plan-20260701`
 - review-after-operation-plan-recorded: 2026-07 review_after 近期待复核队列已拆成 P1/P2/P3 并按用户授权刷新到 2026-10；不把排期刷新当作 owner 内容复核，不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.jsonl`.
 - archived: `pcr02-dvr-plan-archive-only-20260624`
@@ -459,18 +459,9 @@
 - archived: `codex-daily-engineering-archive-summary-20260708`
 - archived: `pcr02-codex-history-backfill-engineering-findings-20260709`
 - archived: `codex-archive-selective-backfill-audit-20260709`
-- reviewing: `codex-archive-phased-migration-removal-20260709`
 - archived: `llm-tools-windows-builder-runbook-20260709`
 - archived: `llm-tools-release-governance-archive-20260516`
 - archived: `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
-- reviewing: `codex-archive-migration-preflight-20260709`
-- reviewing: `codex-archive-removal-preflight-20260710`
-- reviewing: `codex-archive-extract-first-preflight-20260710`
-- reviewing: `codex-openai-local-runtime-boundary-20260524`
-- reviewing: `codex-token-efficiency-roadmap-coverage-20260710`
-- reviewing: `codex-archive-memory-curation-file-level-audit-20260710`
-- reviewing: `codex-adk-hardcut-source-to-live-audit-20260710`
-- reviewing: `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
 - archived: `firmware-release-tools-nas-release-sync-session-20260518`
 - archived: `codex-archive-removal-execution-20260710`
 - archived: `codex-archive-removal-execution-20260710-migrated-extract-first`
@@ -637,3 +628,13 @@
 - reviewing: `pcr02-imssv06c11-three-way-sdk-audit-20260715`
 - reviewing: `pcr02-ssc305-canonical-hardcut-20260715`
 - reviewing: `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
+- reviewing: `pcr02-camera-mi-abi-mix-rollback-20260715`
+- archived: `codex-archive-phased-migration-removal-20260709`
+- archived: `codex-archive-migration-preflight-20260709`
+- archived: `codex-archive-removal-preflight-20260710`
+- archived: `codex-archive-extract-first-preflight-20260710`
+- archived: `codex-openai-local-runtime-boundary-20260524`
+- archived: `codex-token-efficiency-roadmap-coverage-20260710`
+- archived: `codex-archive-memory-curation-file-level-audit-20260710`
+- archived: `codex-adk-hardcut-source-to-live-audit-20260710`
+- archived: `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`

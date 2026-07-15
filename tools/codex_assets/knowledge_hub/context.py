@@ -11,7 +11,12 @@ import urllib.parse
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .common import load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
-from .metrics import append_optional_telemetry
+from .metrics import (
+    INTERACTION_CONTRACT,
+    INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+    append_optional_telemetry,
+    make_interaction_id,
+)
 from .search import SearchFilters, query_terms, search
 
 
@@ -73,6 +78,36 @@ def find_git_config(cwd_text: str) -> Tuple[Optional[pathlib.Path], Optional[pat
         if (gitdir / "config").exists():
             return gitdir / "config", directory
     return None, None
+
+
+def _git_head_from_config(config_path: Optional[pathlib.Path]) -> str:
+    if not config_path:
+        return ""
+    git_dir = config_path.parent
+    try:
+        head = (git_dir / "HEAD").read_text(encoding="ascii", errors="replace").strip()
+    except OSError:
+        return ""
+    if not head.startswith("ref:"):
+        return head if re.fullmatch(r"[0-9a-f]{40}", head) else ""
+    ref = head.split(":", 1)[1].strip()
+    try:
+        commit = (git_dir / ref).read_text(encoding="ascii", errors="replace").strip()
+    except OSError:
+        commit = ""
+        try:
+            for line in (git_dir / "packed-refs").read_text(
+                encoding="ascii", errors="replace"
+            ).splitlines():
+                if not line or line.startswith(("#", "^")):
+                    continue
+                value, name = line.split(" ", 1)
+                if name == ref:
+                    commit = value
+                    break
+        except (OSError, ValueError):
+            commit = ""
+    return commit if re.fullmatch(r"[0-9a-f]{40}", commit) else ""
 
 
 def remote_urls_from_config(config_path: Optional[pathlib.Path]) -> List[Dict[str, str]]:
@@ -504,6 +539,21 @@ def assemble_context(
             matched_remote = remote
             break
     workspace_ref, workspace_match = _workspace_for_cwd(cwd, local_workspaces, repositories, routes)
+    recorded_workspace_head = str(
+        (workspace_match.get("source_evidence") or {}).get("git_head", "")
+    ) if isinstance(workspace_match.get("source_evidence"), Mapping) else ""
+    current_workspace_head = _git_head_from_config(git_config)
+    if recorded_workspace_head or current_workspace_head:
+        evidence_state = (
+            "fresh"
+            if recorded_workspace_head and recorded_workspace_head == current_workspace_head
+            else "stale"
+            if recorded_workspace_head and current_workspace_head
+            else "incomplete"
+        )
+        workspace_match["source_evidence_state"] = evidence_state
+        workspace_match["source_evidence_fresh"] = evidence_state == "fresh"
+        workspace_match["current_git_head"] = current_workspace_head
     repo_route = _route_for_repo(matched_repo, routes, projects)
     workspace_route: Optional[Mapping[str, Any]] = None
     workspace_matches: List[Dict[str, Any]] = []
@@ -663,7 +713,6 @@ def assemble_context(
             "workspace_refs": best_route.get("workspace_refs", []),
             "domain_refs": sorted(domain_refs),
             "default_source_ids": best_route.get("default_source_ids", []),
-            "retired_route_ids": best_route.get("retired_route_ids", []),
             "route_key_policy": best_route.get("route_key_policy", "git-remote-first"),
             "matched_by": best_matches,
         }
@@ -681,10 +730,15 @@ def assemble_context(
         }
     candidate_required = task_type in {"debug", "release", "decision", "validation", "session"}
     risks = [
-        "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
+        "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。",
         "memory、raw session、raw log、core、binary 不能高于 Hub 当前事实。",
         "owner gate、active promotion、memory write 和 source project write 必须有授权和证据。",
     ]
+    if workspace_match.get("source_evidence_state") == "stale":
+        risks.insert(
+            0,
+            "本机 workspace source_evidence HEAD 已陈旧；先运行 knowledge-workspace-discover.sh --apply 再形成源码结论。",
+        )
     payload: Dict[str, Any] = {
         "schema_version": 2,
         "read_only": True,
@@ -741,10 +795,10 @@ def assemble_context(
             "allowed_kinds": ["debug-record", "validation", "decision", "runbook", "codex-session"] if candidate_required else [],
         },
         "guardrails_zh": [
-            "Hub 当前路由优先于 memory、raw session 和旧 archive 入口。",
+            "Hub 当前路由优先于 memory、raw session 和 historical archive provenance。",
             "Git remote key 是跨机器长期路由键；本机源码路径只允许出现在未纳管 local/workspaces.json。",
             "raw session、raw log、core、binary 不复制进正文；只写摘要、证据引用和 registry item。",
-            "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。",
+            "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。",
         ],
     }
     payload["latency_ms"] = round((time.monotonic() - started) * 1000, 2)
@@ -883,16 +937,32 @@ def record_context_telemetry(
     enabled: bool = True,
 ) -> Dict[str, Any]:
     query = str(payload.get("query", ""))
+    query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+    recorded_at = utc_timestamp()
+    context = payload.get("context") or {}
+    result_ids = []
+    for section in ("current", "recent", "related", "search_fallback"):
+        for result in context.get(section, []):
+            result_id = str(result.get("item_id") or result.get("id") or "")
+            if result_id and result_id not in result_ids:
+                result_ids.append(result_id)
+    search_index = ((payload.get("search") or {}).get("index") or {})
     row = {
-        "schema_version": 2,
+        "schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
-        "recorded_at": utc_timestamp(),
-        "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
+        "interaction_contract": INTERACTION_CONTRACT,
+        "interaction_id": make_interaction_id("context", query_hash, recorded_at),
+        "retrieval_kind": "context",
+        "recorded_at": recorded_at,
+        "query_sha256": query_hash,
         "task_type": payload.get("task_type", ""),
         "selected_project_id": (payload.get("route") or {}).get("project_id", ""),
-        "current_count": len((payload.get("context") or {}).get("current", [])),
-        "recent_count": len((payload.get("context") or {}).get("recent", [])),
+        "current_count": len(context.get("current", [])),
+        "recent_count": len(context.get("recent", [])),
+        "result_ids": result_ids,
         "latency_ms": payload.get("latency_ms", 0),
+        "index_state": search_index.get("state", ""),
+        "index_rebuilt": bool(search_index.get("rebuilt", False)),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/context-telemetry.jsonl"

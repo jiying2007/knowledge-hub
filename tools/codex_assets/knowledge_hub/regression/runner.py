@@ -44,7 +44,7 @@ full_tests = [
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
     test_final_gate_skip_regression_blocker,
-    test_status_mature_profile_blocks_migration_state,
+    test_status_product_profile_blocks_noncanonical_residue,
     test_final_gate_product_review_queue_owner_review_blocker,
     test_final_gate_empty_child_json_blocker,
     test_final_gate_default_regression_path,
@@ -53,7 +53,7 @@ full_tests = [
     test_final_gap_readability_positive_contracts,
     test_owner_landing_plan_project_index,
     test_owner_validate_forms_partial_coverage_warning,
-    test_owner_archive_only_target_path_compatibility,
+    test_owner_archive_only_explicit_path_contract,
     test_owner_archive_only_rejects_non_archive_target,
     test_owner_landing_plan_requires_owner_ready_package_missing,
     test_owner_landing_plan_requires_owner_ready_package_invalid,
@@ -175,7 +175,7 @@ quick_test_names = {
     "test_no_user_absolute_path_persisted",
     "test_user_path_redaction_in_tool_outputs",
     "test_stable_governance_command_examples",
-    "test_status_mature_profile_blocks_migration_state",
+    "test_status_product_profile_blocks_noncanonical_residue",
 }
 
 if args.test:

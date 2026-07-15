@@ -8,9 +8,54 @@ import fcntl
 import hashlib
 import os
 import pathlib
+import secrets
 from typing import Any, Dict, List, Mapping, Sequence
 
 from .common import compact_json, load_jsonl, utc_timestamp
+
+
+INTERACTIVE_TELEMETRY_SCHEMA_VERSION = 3
+INTERACTION_CONTRACT = "knowledge-retrieval-interaction-v1"
+FEEDBACK_SCHEMA_VERSION = 2
+MINIMUM_PERFORMANCE_SAMPLE_COUNT = 10
+
+
+def make_interaction_id(
+    kind: str,
+    query_sha256: str,
+    recorded_at: str,
+    nonce: str = "",
+) -> str:
+    payload = "{}\0{}\0{}\0{}\0{}".format(
+        INTERACTION_CONTRACT,
+        kind,
+        query_sha256,
+        recorded_at,
+        nonce or secrets.token_hex(16),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _is_sha256(value: Any) -> bool:
+    text = str(value or "")
+    return len(text) == 64 and all(character in "0123456789abcdef" for character in text)
+
+
+def _current_interaction_rows(
+    rows: Sequence[Mapping[str, Any]],
+    retrieval_kind: str,
+) -> List[Mapping[str, Any]]:
+    return [
+        row
+        for row in rows
+        if row.get("schema_version") == INTERACTIVE_TELEMETRY_SCHEMA_VERSION
+        and row.get("sample_kind") == "interactive"
+        and row.get("interaction_contract") == INTERACTION_CONTRACT
+        and row.get("retrieval_kind") == retrieval_kind
+        and _is_sha256(row.get("interaction_id"))
+        and _is_sha256(row.get("query_sha256"))
+        and row.get("raw_query_stored") is False
+    ]
 
 
 def _percentile(values: Sequence[float], fraction: float) -> float:
@@ -92,11 +137,47 @@ def record_feedback(
     outcome: str,
     selected_id: str = "",
     task_type: str = "general",
+    interaction_id: str = "",
 ) -> Dict[str, Any]:
     if outcome not in {"found", "not-found"}:
         raise ValueError("outcome must be found or not-found")
+    if outcome == "not-found" and selected_id:
+        raise ValueError("--outcome not-found does not accept selected_id")
     query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+    interactions = [
+        row
+        for path, retrieval_kind in (
+            (root / ".cache/knowledge-hub/search-telemetry.jsonl", "search"),
+            (root / ".cache/knowledge-hub/context-telemetry.jsonl", "context"),
+        )
+        for row in _current_interaction_rows(load_jsonl(path), retrieval_kind)
+        if row.get("query_sha256") == query_hash
+        and (not interaction_id or row.get("interaction_id") == interaction_id)
+    ]
+    if not interactions:
+        raise ValueError("feedback requires a matching current-contract retrieval interaction")
+    interaction = max(interactions, key=lambda row: str(row.get("recorded_at", "")))
+    resolved_interaction_id = str(interaction.get("interaction_id", ""))
+    if not resolved_interaction_id:
+        raise ValueError("matching retrieval interaction is missing interaction_id")
+    if outcome == "found":
+        result_ids = {str(value) for value in interaction.get("result_ids", []) if str(value)}
+        if selected_id not in result_ids:
+            raise ValueError("selected_id was not present in the matching retrieval interaction")
+    existing_feedback = load_jsonl(root / ".cache/knowledge-hub/retrieval-feedback.jsonl")
+    if any(
+        row.get("schema_version") == FEEDBACK_SCHEMA_VERSION
+        and row.get("interaction_contract") == INTERACTION_CONTRACT
+        and row.get("interaction_id") == resolved_interaction_id
+        for row in existing_feedback
+    ):
+        raise ValueError("feedback already exists for this retrieval interaction")
     row = {
+        "schema_version": FEEDBACK_SCHEMA_VERSION,
+        "sample_kind": "explicit-feedback",
+        "interaction_contract": INTERACTION_CONTRACT,
+        "interaction_id": resolved_interaction_id,
+        "retrieval_kind": interaction.get("retrieval_kind", ""),
         "recorded_at": utc_timestamp(),
         "query_sha256": query_hash,
         "query_term_count": len(query.split()),
@@ -112,22 +193,64 @@ def record_feedback(
 def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     all_search_rows = load_jsonl(root / ".cache/knowledge-hub/search-telemetry.jsonl")
     all_context_rows = load_jsonl(root / ".cache/knowledge-hub/context-telemetry.jsonl")
+    candidate_search_rows = _current_interaction_rows(all_search_rows, "search")
+    candidate_context_rows = _current_interaction_rows(all_context_rows, "context")
+    interaction_counts: Dict[str, int] = {}
+    for row in candidate_search_rows + candidate_context_rows:
+        interaction_id = str(row.get("interaction_id", ""))
+        interaction_counts[interaction_id] = interaction_counts.get(interaction_id, 0) + 1
+    duplicate_interaction_ids = {
+        interaction_id
+        for interaction_id, count in interaction_counts.items()
+        if count > 1
+    }
     search_rows = [
         row
-        for row in all_search_rows
-        if row.get("schema_version") == 2 and row.get("sample_kind") == "interactive"
+        for row in candidate_search_rows
+        if row.get("interaction_id") not in duplicate_interaction_ids
     ]
     context_rows = [
         row
-        for row in all_context_rows
-        if row.get("schema_version") == 2 and row.get("sample_kind") == "interactive"
+        for row in candidate_context_rows
+        if row.get("interaction_id") not in duplicate_interaction_ids
     ]
-    feedback_rows = load_jsonl(root / ".cache/knowledge-hub/retrieval-feedback.jsonl")
     all_rows = search_rows + context_rows
+    interactions_by_id = {
+        str(row.get("interaction_id")): row
+        for row in all_rows
+    }
+    all_feedback_rows = load_jsonl(root / ".cache/knowledge-hub/retrieval-feedback.jsonl")
+    feedback_rows: List[Mapping[str, Any]] = []
+    feedback_interaction_ids = set()
+    for row in all_feedback_rows:
+        interaction_id = str(row.get("interaction_id", ""))
+        interaction = interactions_by_id.get(interaction_id)
+        outcome = str(row.get("outcome", ""))
+        selected_id = str(row.get("selected_id", ""))
+        if (
+            row.get("schema_version") != FEEDBACK_SCHEMA_VERSION
+            or row.get("sample_kind") != "explicit-feedback"
+            or row.get("interaction_contract") != INTERACTION_CONTRACT
+            or interaction is None
+            or interaction_id in feedback_interaction_ids
+            or row.get("query_sha256") != interaction.get("query_sha256")
+            or row.get("retrieval_kind") != interaction.get("retrieval_kind")
+            or row.get("raw_query_stored") is not False
+            or outcome not in {"found", "not-found"}
+        ):
+            continue
+        if outcome == "found" and selected_id not in {
+            str(value) for value in interaction.get("result_ids", []) if str(value)
+        }:
+            continue
+        if outcome == "not-found" and selected_id:
+            continue
+        feedback_rows.append(row)
+        feedback_interaction_ids.add(interaction_id)
     dates = sorted(value for value in (_date(row.get("recorded_at")) for row in all_rows) if value != dt.date.min)
     observation_days = (dates[-1] - dates[0]).days + 1 if dates else 0
     invocation_count = len(all_rows)
-    evaluable = observation_days >= 30 or invocation_count >= 50
+    usage_evaluable = observation_days >= 30 or invocation_count >= 50
     found_count = sum(1 for row in feedback_rows if row.get("outcome") == "found")
     not_found_count = sum(1 for row in feedback_rows if row.get("outcome") == "not-found")
     feedback_count = found_count + not_found_count
@@ -137,17 +260,31 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     zero_hits = sum(1 for row in search_rows if int(row.get("result_count", 0) or 0) == 0)
     search_p95 = _percentile(search_latencies, 0.95)
     context_p95 = _percentile(context_latencies, 0.95)
-    performance_ready = (not search_latencies or search_p95 <= 500.0) and (not context_latencies or context_p95 <= 1000.0)
+    performance_evaluable = (
+        len(search_latencies) >= MINIMUM_PERFORMANCE_SAMPLE_COUNT
+        and len(context_latencies) >= MINIMUM_PERFORMANCE_SAMPLE_COUNT
+    )
+    performance_ready = (
+        performance_evaluable
+        and search_p95 <= 500.0
+        and context_p95 <= 1000.0
+    )
+    evaluable = usage_evaluable and performance_evaluable
     adoption_ready = evaluable and feedback_count >= 10 and found_rate >= 0.8 and performance_ready
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "pass",
+        "measurement_contract": {
+            "interaction_contract": INTERACTION_CONTRACT,
+            "interactive_telemetry_schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+            "feedback_schema_version": FEEDBACK_SCHEMA_VERSION,
+        },
         "privacy": {"raw_query_stored": False, "query_hash_only": True},
         "usage": {
             "invocation_count": invocation_count,
             "search_count": len(search_rows),
             "context_count": len(context_rows),
-            "excluded_legacy_or_noninteractive_count": (
+            "excluded_historical_or_noninteractive_count": (
                 len(all_search_rows) + len(all_context_rows) - invocation_count
             ),
             "observation_days": observation_days,
@@ -161,20 +298,26 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             "found_count": found_count,
             "not_found_count": not_found_count,
             "found_rate": found_rate,
+            "excluded_unbound_or_historical_feedback_count": len(all_feedback_rows) - len(feedback_rows),
         },
         "performance": {
             "search_p95_ms": search_p95,
             "context_p95_ms": context_p95,
             "search_target_ms": 500,
             "context_target_ms": 1000,
-            "status": "pass" if performance_ready else "fail",
+            "search_sample_count": len(search_latencies),
+            "context_sample_count": len(context_latencies),
+            "minimum_sample_count_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
+            "evaluable": performance_evaluable,
+            "status": "pass" if performance_ready else ("fail" if performance_evaluable else "pending"),
         },
         "adoption": {
             "evaluable": evaluable,
             "ready": adoption_ready,
             "criteria": {
                 "observation_days_or_invocations": "observation_days >= 30 or invocation_count >= 50",
-                "sample_kind": "interactive schema v2 only",
+                "sample_kind": "current-contract interactive telemetry only",
+                "minimum_performance_samples_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
                 "minimum_feedback_count": 10,
                 "minimum_found_rate": 0.8,
                 "performance_required": True,

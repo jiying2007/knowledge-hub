@@ -409,8 +409,8 @@ def test_status_owner_gates_exit_code_blocker():
     )
 
 
-def test_status_mature_profile_blocks_migration_state():
-    repo = copy_repo("status-mature-profile-blocks-migration-state")
+def test_status_product_profile_blocks_noncanonical_residue():
+    repo = copy_repo("status-product-profile-blocks-noncanonical-residue")
     injected = {
         "id": "migrated-fixture-copyfirst-20260628",
         "title": "Migrated fixture copy-first 2026-06-28",
@@ -433,7 +433,7 @@ def test_status_mature_profile_blocks_migration_state():
     items_path = repo / "registry" / "items.jsonl"
     with items_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(injected, ensure_ascii=False, separators=(",", ":")) + "\n")
-    legacy_result = run_cmd(
+    unsupported_profile_result = run_cmd(
         repo,
         [
             "rtk",
@@ -464,10 +464,10 @@ def test_status_mature_profile_blocks_migration_state():
         parsed = json.loads(result["stdout"])
     except Exception:
         pass
-    migration_audit = parsed.get("sources", {}).get("product_migration_residue_audit", {})
+    residue_audit = parsed.get("sources", {}).get("product_noncanonical_residue_audit", {})
     blocker_ids = {
         blocker.get("id")
-        for blocker in migration_audit.get("blockers", [])
+        for blocker in residue_audit.get("blockers", [])
         if isinstance(blocker, dict)
     }
     strict_blocker_ids = {
@@ -476,22 +476,22 @@ def test_status_mature_profile_blocks_migration_state():
         if isinstance(blocker, dict)
     }
     expect(
-        legacy_result["exit_code"] == 2
+        unsupported_profile_result["exit_code"] == 2
         and result["exit_code"] == 1
         and parsed.get("status") == "needs-fix"
-        and migration_audit.get("status") == "needs-fix"
-        and migration_audit.get("copy_first_tool_count") == 0
-        and migration_audit.get("blocker_count", 0) >= 1
-        and "product-migration-residue-blockers" in strict_blocker_ids
-        and "product-migration-items" in blocker_ids,
-        "status-mature-profile-blocks-migration-state",
-        "legacy mature profile is rejected and the product status gate blocks migration residues",
+        and residue_audit.get("status") == "needs-fix"
+        and residue_audit.get("copy_first_tool_count") == 0
+        and residue_audit.get("blocker_count", 0) >= 1
+        and "product-noncanonical-residue-blockers" in strict_blocker_ids
+        and "product-noncanonical-items" in blocker_ids,
+        "status-product-profile-blocks-noncanonical-residue",
+        "unsupported final profile is rejected and the product status gate blocks noncanonical residues",
         {
-            "legacy_exit_code": legacy_result["exit_code"],
+            "unsupported_profile_exit_code": unsupported_profile_result["exit_code"],
             "exit_code": result["exit_code"],
             "status": parsed.get("status"),
             "strict_blocker_ids": sorted(strict_blocker_ids),
-            "product_migration_residue_audit": migration_audit,
+            "product_noncanonical_residue_audit": residue_audit,
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -566,7 +566,6 @@ def test_health_summary_operational_fields():
         "--json",
         "--as-of",
         today.isoformat(),
-        "--skip-final-gate",
     ]
     result = run_cmd(root, command)
     parse_error = ""
@@ -768,7 +767,7 @@ def test_regression_manifest_coverage():
         "status-owner-gates-exit-code-blocker",
         "final-gate-owner-review-blocker",
         "final-gate-skip-regression-blocker",
-        "status-mature-profile-blocks-migration-state",
+        "status-product-profile-blocks-noncanonical-residue",
         "final-gate-product-review-queue-owner-review-blocker",
         "final-gate-empty-child-json-blocker",
         "final-gate-default-regression-path",
@@ -777,7 +776,7 @@ def test_regression_manifest_coverage():
         "final-gap-readability-positive-contracts",
         "owner-landing-plan-project-index",
         "owner-validate-forms-partial-coverage-warning",
-        "owner-archive-only-target-path-compatibility",
+        "owner-archive-only-explicit-path-contract",
         "owner-archive-only-rejects-non-archive-target",
         "owner-landing-plan-requires-owner-ready-missing",
         "owner-landing-plan-requires-owner-ready-invalid",

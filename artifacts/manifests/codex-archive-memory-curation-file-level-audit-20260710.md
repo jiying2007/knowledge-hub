@@ -1,3 +1,40 @@
+---
+id: codex-archive-memory-curation-file-level-audit-20260710
+title: Codex archive memory-curation file-level audit 2026-07-10
+kind: audit
+domain: codex
+scope: codex-memory-curation-governance
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-08-24'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- memory-curation
+- memory-candidates
+- file-level-audit
+- report-only
+- no-memory-write
+- no-active-promotion
+- delete-blocked
+- subagents
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 对旧 Codex archive memory-curation 三篇代表阻塞文件做 file-level 审计：ADK hardcut 和 2026-07 usage records 进入候选报告，Knowledge
+  Hub final hardcut 为 tombstone-only；所有候选仍需 owner review，不写 memory、不提升 active、不删除旧正文。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-a2e6d44d3e36023aa161;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex archive memory-curation file-level audit 2026-07-10
 
 ## 摘要

@@ -17,18 +17,23 @@ def main(argv: Iterable[str] = ()) -> int:
     parser.add_argument("--query", required=True)
     parser.add_argument("--outcome", choices=("found", "not-found"), required=True)
     parser.add_argument("--selected-id", default="")
+    parser.add_argument("--interaction-id", default="")
     parser.add_argument("--task-type", choices=sorted(TASK_TYPES), default="general")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(list(argv) if argv else None)
     if args.outcome == "found" and not args.selected_id:
         parser.error("--outcome found requires --selected-id")
-    payload = record_feedback(
-        repository_root(args.root),
-        args.query,
-        args.outcome,
-        selected_id=args.selected_id,
-        task_type=args.task_type,
-    )
+    try:
+        payload = record_feedback(
+            repository_root(args.root),
+            args.query,
+            args.outcome,
+            selected_id=args.selected_id,
+            task_type=args.task_type,
+            interaction_id=args.interaction_id,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:

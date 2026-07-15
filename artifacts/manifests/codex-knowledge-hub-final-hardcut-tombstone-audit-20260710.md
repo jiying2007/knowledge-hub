@@ -1,3 +1,42 @@
+---
+id: codex-knowledge-hub-final-hardcut-tombstone-audit-20260710
+title: Codex Knowledge Hub final hardcut tombstone audit 2026-07-10
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-08-24'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- knowledge-hub
+- final-hardcut
+- tombstone-audit
+- path-routing
+- owner-gate
+- review-queue
+- no-memory-write
+- no-active-promotion
+- deleted-tombstoned
+- subagents
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 对旧 Codex archive 中 2026-06-27 Knowledge Hub final hardcut session-wrap 做 tombstone-only 审计：终态知识控制面、路径硬切换、review
+  queue/owner gate 边界和旧 archive provenance 已由当前 Hub 治理覆盖；旧正文已按 CARE-20260710-014 删除并 tombstone，本批不提升 active、不写 memory。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-bd58f94cf1a47df4665b;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex Knowledge Hub final hardcut tombstone audit 2026-07-10
 
 ## 摘要

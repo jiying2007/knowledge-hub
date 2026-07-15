@@ -1,3 +1,43 @@
+---
+id: codex-openai-local-runtime-boundary-20260524
+title: Codex OpenAI 本地运行边界历史归档 2026-05-24
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-08-24'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- openai-docs
+- runtime-boundary
+- freshness-required
+- archive-only
+- docs-mcp
+- hook-contract
+- automation-report-only
+- no-memory-write
+- no-active-promotion
+- deleted-tombstoned
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 从旧 Codex archive 迁移 2026-05-24 OpenAI local runtime boundary 会话结论，保留本地-only、Docs MCP 只读、automation report-only、hook
+  contract 非完整 enforcement、官方资料 freshness gate 后再提升等历史治理边界；旧正文已按 CARE-20260710-016 删除并 tombstone，当前官方事实仍需 freshness review，不提升
+  active。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-d968bf2dde10d8ce0aa8;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex OpenAI 本地运行边界历史归档 2026-05-24
 
 ## 摘要

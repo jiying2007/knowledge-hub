@@ -19,7 +19,7 @@
     "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "review_attestation_id": {"type": "string"},
     "review_attestation_mode": {
-      "enum": ["", "legacy-human-form", "human-reviewed", "human-directed-delegation"]
+      "enum": ["", "human-reviewed", "human-directed-delegation"]
     },
     "review_attestation_statement_sha256": {
       "type": "string",

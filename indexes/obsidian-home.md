@@ -5,7 +5,7 @@
 ## 日常入口
 
 - [Knowledge Hub README](../README.md)
-- [运营成熟态](../governance/status/knowledge-hub-operational-maturity.md)
+- [当前产品状态与证据缺口](../governance/product/validation/project-readiness.md)
 - [Obsidian 集成边界](../governance/obsidian-integration.md)
 - [全面成熟度治理审计](../artifacts/manifests/knowledge-hub-comprehensive-maturity-remediation-20260713.md)
 - [索引维护说明](README.md)
@@ -43,7 +43,7 @@
 - [Inbox 笔记模板](../templates/inbox-note.md)
 - [Knowledge Hub 项目画像](../governance/product/current/project-profile.md)
 - [Knowledge Hub 维护入口](../governance/product/current/runbooks/maintenance-entry.md)
-- [Knowledge Hub readiness validation](../governance/product/validation/project-readiness.md)
+- [Knowledge Hub 当前产品状态与证据缺口](../governance/product/validation/project-readiness.md)
 - 链接检查：`rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict`
 - 产品检查：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13`
 

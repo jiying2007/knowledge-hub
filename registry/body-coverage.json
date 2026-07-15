@@ -99,8 +99,8 @@
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
       "expected_markdown_count": 23,
-      "inventory_sha256": "ec54a54f4293827bc1f7f8d6dc0bca793fea2784434755cf952adae988432642",
-      "reason_zh": "冻结 Hub 治理基线正文路径；新增治理规范仍优先逐条注册。"
+      "inventory_sha256": "b6a8ce992e25b05f84ed4b8b156e3c7ebeb61a1be07b406c2cae16201b441e7f",
+      "reason_zh": "冻结 Hub 当前治理基线正文路径；Source 生命周期策略是唯一当前 source 处置入口，新增治理规范仍优先逐条注册。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",
@@ -118,9 +118,9 @@
       "coverage_mode": "archive-corpus",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 42,
-      "inventory_sha256": "5880481eb15305b95b2b5530b36ae34e3ee59b640f86c7f9bae1788a48846dba",
-      "reason_zh": "2026-07-15 规范入口硬切时显式复核并冻结 pcr02-ssc305 平台归档正文路径；该集合只覆盖 SDK、kernel、OTA、存储、硬件和平台集成历史语料，不表示当前项目事实、owner 决策或 active 提升。"
+      "expected_markdown_count": 43,
+      "inventory_sha256": "ca231ce95dff70593234ae775522dea58876e4e20c53ed0d0430543bd245b81a",
+      "reason_zh": "2026-07-15 显式复核 43 个 pcr02-ssc305 归档正文路径，包含已登记的 camera MI ABI 回退记录；该集合只覆盖 SDK、kernel、OTA、存储、硬件和平台集成历史语料，不表示当前项目事实、owner 决策或 active 提升。"
     },
     {
       "id": "xcrz-sigmastar-demo-archive-corpus-baseline-20260715",

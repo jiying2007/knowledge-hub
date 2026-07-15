@@ -7,7 +7,8 @@ import re
 from typing import Any, Dict, List, Pattern, Tuple
 
 
-SCANNER_VERSION = "knowledge-secret-scanner-v1"
+SCANNER_VERSION = "knowledge-secret-scanner-v2"
+_ATTESTATION_CONFIRMATION_TOKEN = re.compile(r"KH-ATTEST-[0-9a-f]{20}")
 _PATTERNS: Tuple[Tuple[str, Pattern[str]], ...] = (
     (
         "private-key",
@@ -46,13 +47,19 @@ def _is_placeholder(value: str) -> bool:
     return not stripped
 
 
+def _is_attestation_confirmation_token(value: str) -> bool:
+    normalized = value.rstrip(".,;:!?)]}")
+    return _ATTESTATION_CONFIRMATION_TOKEN.fullmatch(normalized) is not None
+
+
 def scan_secret_text(text: str) -> List[Dict[str, Any]]:
     findings: List[Dict[str, Any]] = []
     for name, pattern in _PATTERNS:
         for match in pattern.finditer(text):
             matched = match.group(1) if match.lastindex else match.group(0)
-            if name == "credential-assignment" and _is_placeholder(matched):
-                continue
+            if name == "credential-assignment":
+                if _is_placeholder(matched) or _is_attestation_confirmation_token(matched):
+                    continue
             line = text.count("\n", 0, match.start()) + 1
             findings.append(
                 {

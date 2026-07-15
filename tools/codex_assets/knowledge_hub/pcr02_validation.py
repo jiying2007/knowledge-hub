@@ -149,7 +149,7 @@ def _managed_section(body: str, section: str) -> str:
 
 - 证据记录必须包含 `owner_identity`、`source_commit`、`artifact_sha256`、`device_identity`、`environment`、`commands`、`exit_codes`、`result_summary`、`rollback_result` 和可恢复引用。
 - raw log、视频、截图和二进制只保存在受控外部制品位置；Hub 正文只保存脱敏摘要、hash 和引用。
-- 最终复核命令：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression --as-of 2026-07-13`。
+- 最终复核命令：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13`。
 {end}""".format(start=MANAGED_START, section=section, end=MANAGED_END)
     has_start = MANAGED_START in body
     has_end = MANAGED_END in body

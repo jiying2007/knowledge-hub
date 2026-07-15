@@ -1,3 +1,42 @@
+---
+id: codex-adk-hardcut-source-to-live-audit-20260710
+title: Codex ADK hardcut source-to-live 覆盖审计 2026-07-10
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-08-24'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- adk-hardcut
+- source-to-live
+- asset-governance
+- coverage-audit
+- memory-candidates
+- no-memory-write
+- no-active-promotion
+- deleted-tombstoned
+- subagents
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+manual_validation_pending: false
+summary_zh: 从旧 Codex archive 迁移 2026-06-02 ADK skill naming hardcut 会话为 source-to-live coverage audit：保留 source freshness、声明式
+  apply、active-only residual scan、格式修复后重跑 plan/apply/drift 等治理经验；live Codex 已有覆盖，旧正文已按 CARE-20260710-013 删除并 tombstone，本批不提升
+  active、不写 memory。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-4977ecd42efd620b6185;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex ADK hardcut source-to-live 覆盖审计 2026-07-10
 
 ## 摘要

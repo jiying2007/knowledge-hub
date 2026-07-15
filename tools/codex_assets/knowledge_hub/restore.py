@@ -49,10 +49,6 @@ def _write_snapshot(root: pathlib.Path, payload: Mapping[str, Any]) -> str:
     temporary = path.with_suffix(".tmp")
     temporary.write_text(pretty_json(dict(payload)) + "\n", encoding="utf-8")
     os.replace(str(temporary), str(path))
-    compatibility_path = root / ".cache/knowledge-hub/restore-drill.json"
-    compatibility_temporary = compatibility_path.with_suffix(".tmp")
-    compatibility_temporary.write_text(pretty_json(dict(payload)) + "\n", encoding="utf-8")
-    os.replace(str(compatibility_temporary), str(compatibility_path))
     return str(path.relative_to(root))
 
 

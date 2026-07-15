@@ -34,7 +34,12 @@ from .common import (
     source_id,
     utc_timestamp,
 )
-from .metrics import append_optional_telemetry
+from .metrics import (
+    INTERACTION_CONTRACT,
+    INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+    append_optional_telemetry,
+    make_interaction_id,
+)
 from .model import ITEM_KINDS, ITEM_STATUSES
 
 
@@ -770,16 +775,28 @@ def record_search_telemetry(
     enabled: bool = True,
 ) -> Dict[str, Any]:
     query = str(payload.get("query", ""))
+    query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+    recorded_at = utc_timestamp()
+    result_ids = []
+    for result in payload.get("results", []):
+        result_id = str(result.get("item_id") or result.get("id") or "")
+        if result_id and result_id not in result_ids:
+            result_ids.append(result_id)
     row = {
-        "schema_version": 2,
+        "schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
-        "recorded_at": utc_timestamp(),
-        "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
+        "interaction_contract": INTERACTION_CONTRACT,
+        "interaction_id": make_interaction_id("search", query_hash, recorded_at),
+        "retrieval_kind": "search",
+        "recorded_at": recorded_at,
+        "query_sha256": query_hash,
         "query_term_count": len(payload.get("query_terms", [])),
         "result_count": int(payload.get("count", 0)),
+        "result_ids": result_ids,
         "total_matches": int(payload.get("total_matches", 0)),
         "latency_ms": payload.get("latency_ms", 0),
         "index_state": (payload.get("index") or {}).get("state", ""),
+        "index_rebuilt": bool((payload.get("index") or {}).get("rebuilt", False)),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/search-telemetry.jsonl"

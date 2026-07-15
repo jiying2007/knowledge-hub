@@ -24,11 +24,7 @@ from .common import (
 )
 from .indexing import CORE_INDEXES, update_core_indexes, update_project_index, update_topic_index
 from .model import assert_transition, frontmatter_mirror, require_valid_item
-from .review_attestation import (
-    FORM_KIND as CONTENT_REVIEW_ATTESTATION,
-    confirmation_token,
-    suggested_output_path,
-)
+from .review_attestation import confirmation_token, suggested_output_path
 from .store import RepositoryTransaction
 
 
@@ -370,26 +366,23 @@ def transition(
     if review_form:
         try:
             review = load_review_form(review_form.expanduser().resolve(), item_id)
-            if review.get("form_kind") == CONTENT_REVIEW_ATTESTATION:
-                expected_token = confirmation_token(
-                    {
-                        "item_id": item_id,
-                        "item_path": str(before["path"]),
-                        "before_status": before_status,
-                        "target_status": target_status,
-                        "content_sha256": actual_item_sha,
-                    }
-                )
-                if review.get("confirmation_token") != expected_token:
-                    attestation_errors.append("content review attestation confirmation token does not match")
-                if review.get("content_sha256") != actual_item_sha:
-                    attestation_errors.append("content review attestation SHA256 does not match current body")
-                if review.get("expected_before_status") != before_status:
-                    attestation_errors.append("content review attestation before status does not match")
-                if review.get("target_status") != target_status:
-                    attestation_errors.append("content review attestation target status does not match")
-            elif review.get("authorization_id") != authorization_id:
-                attestation_errors.append("legacy review form authorization_id does not match")
+            expected_token = confirmation_token(
+                {
+                    "item_id": item_id,
+                    "item_path": str(before["path"]),
+                    "before_status": before_status,
+                    "target_status": target_status,
+                    "content_sha256": actual_item_sha,
+                }
+            )
+            if review.get("confirmation_token") != expected_token:
+                attestation_errors.append("content review attestation confirmation token does not match")
+            if review.get("content_sha256") != actual_item_sha:
+                attestation_errors.append("content review attestation SHA256 does not match current body")
+            if review.get("expected_before_status") != before_status:
+                attestation_errors.append("content review attestation before status does not match")
+            if review.get("target_status") != target_status:
+                attestation_errors.append("content review attestation target status does not match")
         except KnowledgeHubError as exc:
             attestation_errors.append(str(exc))
     else:
@@ -472,7 +465,7 @@ def transition(
     after = dict(before)
     after["status"] = target_status
     after["updated_at"] = today.isoformat()
-    attestation_mode = str(review.get("attestation_mode", "legacy-human-form"))
+    attestation_mode = str(review["attestation_mode"])
     if attestation_mode == "human-directed-delegation":
         after["review_status"] = "human-directed-delegated-retired"
     else:
@@ -484,13 +477,12 @@ def transition(
     after["validation_refs"] = list(review["validation_refs"])
     after["promotion_decision"] = reason or str(review["review_basis"])
     after["manual_validation_pending"] = False
-    if review.get("attestation_id"):
-        after["review_attestation_id"] = review["attestation_id"]
-        after["review_attestation_mode"] = attestation_mode
-        after["review_attestation_source_ref"] = review["attestation_source_ref"]
-        after["review_attestation_statement_sha256"] = review["attestation_statement_sha256"]
-        after["review_confirmation_token"] = review["confirmation_token"]
-        after["review_content_sha256"] = review["content_sha256"]
+    after["review_attestation_id"] = review["attestation_id"]
+    after["review_attestation_mode"] = attestation_mode
+    after["review_attestation_source_ref"] = review["attestation_source_ref"]
+    after["review_attestation_statement_sha256"] = review["attestation_statement_sha256"]
+    after["review_confirmation_token"] = review["confirmation_token"]
+    after["review_content_sha256"] = review["content_sha256"]
     if superseded_by:
         after["superseded_by"] = superseded_by
     require_valid_item(after)
@@ -507,10 +499,10 @@ def transition(
         "after_status": target_status,
         "authorization_id": authorization_id,
         "reviewed_by": review["reviewed_by"],
-        "review_attestation_id": str(review.get("attestation_id", "")),
+        "review_attestation_id": str(review["attestation_id"]),
         "review_attestation_mode": attestation_mode,
-        "review_attestation_statement_sha256": str(review.get("attestation_statement_sha256", "")),
-        "review_confirmation_token": str(review.get("confirmation_token", "")),
+        "review_attestation_statement_sha256": str(review["attestation_statement_sha256"]),
+        "review_confirmation_token": str(review["confirmation_token"]),
         "executed_by": "knowledge-lifecycle",
         "executed_at": utc_timestamp(),
         "evidence_refs": list(review["validation_refs"]),

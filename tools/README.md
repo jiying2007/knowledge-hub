@@ -60,12 +60,12 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 | 层级 | 使用场景 | 稳定入口 | 边界 |
 |---|---|---|---|
 | 日常路径 | 人工新增、检索、索引计划和全仓检查 | `knowledge-new.sh`、`knowledge-search.sh`、`knowledge-index-plan.sh`、`knowledge-check.sh --dry-run --json --diagnostics` | new/capture 默认 dry-run；受控 `--apply` 只创建 draft/reviewing/personal，不伪造 source/owner/evidence |
-| 健康首屏 | 总数、summary 缺口、review queue、stale review、changed-only 正文覆盖、reviewing triage 和最近 product gate 摘要 | `knowledge-health-summary.sh --json` | 只读；默认读取带工作树签名和时间戳的最近 gate snapshot，`--refresh-gate` 显式刷新；`--skip-final-gate` 仅作 deprecated 兼容参数 |
+| 健康首屏 | 总数、summary 缺口、review queue、stale review、changed-only 正文覆盖、reviewing triage 和最近 product gate 摘要 | `knowledge-health-summary.sh --json` | 只读；默认读取带工作树签名和时间戳的最近 gate snapshot，`--refresh-gate` 显式刷新 |
 | 上下文预检 | 从 cwd 和任务文本解析项目、Hub 入口、候选知识和写入建议 | `knowledge-context.sh --cwd "$PWD" --query "如何分析 core" --task-type debug --context-budget small --limit 3 --summary-json` | Agent 默认使用低 Token 摘要；路由歧义、完整排序解释或高风险结论回退 `--json`；本地 telemetry 为 best-effort，不修改 tracked/managed 资产 |
 | 人工复核 | 查看、校验和机械落地 AI 生成内容及外部资料待复核队列 | `knowledge-status.sh --json --review-queue-limit 10`、`knowledge-index-plan.sh --section review-queue --json`、`knowledge-index-plan.sh --section review-queue --queue-forms-jsonl`、`knowledge-index-plan.sh --section review-queue --validate-queue-forms <jsonl> --json`、`knowledge-review-queue-apply.sh --forms <jsonl> --dry-run\|--apply --json` | 队列和表单骨架只读；apply 只允许机械落地真实人工填写的 human review 字段，不生成 review 结论、不代签 owner gate、不提升 active、不写 memory、不修改源项目 |
 | 生命周期复核 | 生成绑定 item/status/SHA/target 的真人确认包，并在明确真人决定后机械生成本地表单 | `knowledge-review-attest.sh packet`、`knowledge-review-attest.sh generate --apply` | 内容复核与执行授权分离；只写 `*.local.jsonl`，不创建 authorization、不改 registry、不执行 promotion/retire；active 禁止 delegated mode |
 | owner gate | 导出、校验和审计人工 owner decision JSONL | `knowledge-owner-gates.sh --owner-inbox`、`--forms-jsonl`、`--validate-forms`、`--landing-plan`、`--landing-audit` | 不生成 owner decision，不代签 `reviewed_by`，不关闭 gate |
-| 终态检查 | 区分平台技术通过、内容准备度、检索质量、运营恢复与真实 owner/evidence 成熟度 | `knowledge-final-gate.sh --json --final-profile product` 默认 quick；终态证明加 `--full-regression`，声明成熟加 `--require-terminal` | 旧 `standard/max-body/mature` profile 和 product 别名已删除；候选文档、目录存在或治理门禁通过不得冒充内容成熟 |
+| 终态检查 | 区分平台技术通过、内容准备度、检索质量、运营恢复与真实 owner/evidence 成熟度 | `knowledge-final-gate.sh --json --final-profile product` 默认 quick；终态证明使用 `--regression-suite full`，声明成熟加 `--require-terminal` | 候选文档、目录存在或治理门禁通过不得冒充内容成熟 |
 | 路径漂移 | 扫描旧归档路径在 Hub、Codex、memory、历史 session、runtime rules 和 Codex live/vendor/source skill 资产中的残留，并按 policy/provenance/runtime/memory-superseded/historical 分类 | `knowledge-path-audit.sh --scope hub --json`、`knowledge-path-audit.sh --scope runtime-rules --strict --json`、`knowledge-path-audit.sh --scope all --json` | 只读 report-only；不改写 memory、不改历史 session、不修改 `~/codex`、`/vsdata` 或源项目 |
 | 高级写入计划 | artifact-ref、capture、summary backfill、promote、retire 和人工 review apply 等需要 reviewed manifest 的流程 | 对应工具默认 dry-run；`--apply` 只允许人工在证据齐备后触发 | 自动化不得删除、发布、提升 active、关闭 owner gate、写 memory 或改源项目 |
 
@@ -74,7 +74,7 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
   - 主要输出：JSON 中包含 `source_coverage_selection`、`source_coverage_health`、`source_check_health`、`frontmatter_status_health`、`body_coverage_health`、`artifact_vault_health`、`boundary_health` 和 `--diagnostics` 中文错误分组。
   - 不会做什么：`source_check_health` 不执行 registry check 命令；`boundary_health` 不读取 PCR02 源项目正文；本工具不修复文件、不关闭 owner gate、不写 memory。
 - `knowledge-check.sh`、`knowledge-status.sh` 和 `knowledge-final-gate.sh` 支持 `--as-of YYYY-MM-DD`；未传时可用环境变量 `KNOWLEDGE_TODAY=YYYY-MM-DD` 固定日期，再未设置时才使用系统日期。`--as-of` 用于复现 `review_after` 过期判断和终态证据，不生成 owner decision，不改变 registry。
-- `knowledge-health-summary.sh`: 只读健康首屏入口。它汇总 registry、review queue、stale review_after、正文覆盖、reviewing triage、owner gate 和最近 product gate snapshot；默认不重新执行重门禁，`--refresh-gate` 才刷新。旧 `--skip-final-gate` 保留参数解析但标记 deprecated。它不生成 owner decision、不提升 active、不关闭 owner gate、不写 memory、不修改源项目。
+- `knowledge-health-summary.sh`: 只读健康首屏入口。它汇总 registry、review queue、stale review_after、正文覆盖、reviewing triage、owner gate 和最近 product gate snapshot；默认不重新执行重门禁，`--refresh-gate` 才刷新。它不生成 owner decision、不提升 active、不关闭 owner gate、不写 memory、不修改源项目。
 - `knowledge-orphan-files.sh`: 只读正文覆盖检查入口。默认 `changed-only`；`--all --strict` 扫描全部长期 Markdown，并要求每个路径由 `registry/items.jsonl` 精确登记或由 `registry/body-coverage.json` 的冻结集合覆盖。精确登记优先；集合仅覆盖固定路径 inventory，不创建 active/owner decision/promotion，新增或删除路径会因 count/hash 漂移而失败。
 - `knowledge-reviewing-triage.sh`: 只读 reviewing 周期 triage 入口。按 bucket、recommended_action、review_after 输出 reviewing 队列，帮助每周判断 keep-reviewing、evidence-needed、evidence-backed-validation-pending、owner-review-and-validation、owner-ready-validation-pending 或 archive-ready-check；不自动 archive、不提升 active、不代签 owner。
 - registry item 和 registered source 的 stale `review_after` 只是 warning/status surface，不是阻断错误；日期格式非法和 `updated_at < created_at` 仍是错误。
@@ -87,6 +87,7 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 - `knowledge-pcr02-owner-targets.sh`: PCR02 owner-approved target materialization 入口。默认只读检查 4 个 Hub 内目标正文是否存在，并从 owner decision landing manifest 读取 source identity，不读取 retired origin 正文；`--apply` 才要求退役源文件仍可用并按已授权 worksheet 重新生成目标正文。不修改源项目、不写 memory、不提升 embedded standards。
 - `knowledge-search.sh`: 只读检索入口。它对中英文 query term 做带覆盖率的加权召回，支持中文 2/3-gram、短词、短语、别名和同义词，综合 canonical path、registry presence、status、title/id/tags/summary/path/body 排序，并对历史 manifest 和机器 registry 降权；JSON 的 `score`、`query_coverage`、`match_kind`、`why_selected` 解释排序，零命中时给出降级词、过滤原因和 fallback。它也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。本地倒排索引和 telemetry 都是可重建、非权威的 cache；任一写入因只读环境失败时安全回退扫描或标记 telemetry degraded，不改变命中语义和原有退出码。
 - 结构化过滤只返回已登记 registry item；未登记 raw file 即使命中关键词，也不能在 `--source-id` / `--status` 等过滤模式下混入结果。
+- `knowledge-metrics.sh` / `knowledge-feedback.sh`: metrics v2 只聚合当前 `knowledge-retrieval-interaction-v1` contract；旧 telemetry/feedback 继续留在忽略提交的本地 cache 中，但列入 excluded 计数。性能在 search/context 各不足 10 个当前样本时为 `pending`，不是无样本 `pass`。feedback 必须按 query 或显式 `--interaction-id` 绑定已发生的当前检索；`found` 的 `--selected-id` 必须实际出现在该 interaction 结果中，同一 interaction 只能反馈一次。工具不保存 raw query。
 - `knowledge-status.sh`: 只读控制面 dashboard。
   - 用途：汇总 `knowledge-check`、registry/source policy、owner gate、人工复核队列、项目证据缺口、product source inventory、迁移残留和 `strict_blockers`。
   - 主要输出：`final_profile` 固定为 `product`；`owner_dispatch[]`、`next_open_queue[]` 和 recovery commands 只提供真人 owner 交接路径；普通 owner/evidence backlog 归类为 `needs-owner-review`，active/promotion 缺授权、不安全 source inventory、当前迁移残留、schema 或技术错误归类为 `needs-fix`。已归档且带 archive-only/tombstone/no-active-promotion 边界的历史材料只计入 sealed provenance，不进入 current。
@@ -181,7 +182,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 # 跑一次终态检查
 rtk git diff --check
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full
 ```
 
 `owner-decision-worksheet` 只输出人工签核草稿建议，不代表 owner decision 已签收，也不能关闭 owner gate。
@@ -196,7 +197,7 @@ product gate JSON 先看 `gate_status`、`platform_status.status`、`content_rea
 - `content_readiness`：registry 内容与 30 个规范项目的结构/owner/source/人工或实机/发布证据；候选目录存在只计 structural，不计 evidence-ready。
 - `retrieval_quality`、`operational_readiness`：检索 benchmark、恢复、事务、导出和可运维性证据。
 - `delivery_readiness`：clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` restore；candidate restore 不能替代。
-- `owner_and_real_evidence`、`adoption`：真实 owner/验证缺口与 30 天或 50 次调用且至少 10 条反馈的观察期证据。
+- `owner_and_real_evidence`、`adoption`：真实 owner/验证缺口与当前 telemetry contract 下 30 天或 50 次调用、search/context 各至少 10 个性能样本及至少 10 条绑定真实 interaction 的显式反馈；历史样本保留但不混入当前 P95。
 - `checks`、`proof_artifacts`、`blockers` 和 `gap_map`：本次门禁采信的命令结果、proof 主制品及可执行的阻断分类。
 
 `knowledge-status.sh --strict` 是 blocker dashboard，`knowledge-final-gate.sh --final-profile product --json` 是唯一产品门禁；普通 owner/evidence backlog 保持 `needs-owner-review`，技术/契约失败才是 `needs-fix`。
@@ -210,7 +211,7 @@ product gate JSON 先看 `gate_status`、`platform_status.status`、`content_rea
 1. `gate_status=fail` 或 `overall_status=needs-fix`：先看 `platform_status.hard_checks`，再按 `blockers[]` / `gap_map[]` 修复技术或契约错误。
 2. `overall_status=needs-owner-review`：平台可用但 owner、人工/实机/发布 evidence 或 review queue 未闭环；按 `owner_and_real_evidence` 和 status 中的 owner/review queue 入口交给真人处理。
 3. `overall_status=partial`：真实 evidence 已闭环，但尚缺 committed delivery、full regression 或 adoption 观察期；不得提前声明长期使用终态成熟。
-4. `overall_status=mature`、`platform_release_complete=true` 且 `terminal_maturity=true`：产品终态证据完整；发布声明仍应使用 `--require-terminal --full-regression` 复跑并保存 proof。
+4. `overall_status=mature`、`platform_release_complete=true` 且 `terminal_maturity=true`：产品终态证据完整；发布声明仍应使用 `--regression-suite full --require-terminal` 复跑并保存 proof。
 
 `<owner-decisions.jsonl>` 是 owner 人工填写后的临时 JSONL 路径；工具只校验和生成 no-write landing plan，不代签、不关闭 gate。表单中的 `owner_route` 只说明抽象 decision owner role 的分派责任人、真实签收人待确认说明和升级路径；不能把 `routing_owner` 自动填成 `reviewed_by`。`target_decision` 不仅要在 `target_candidates` 内，还要和 `owner_decision` 成对兼容。`validate-forms` 可以合法只校验本批 JSONL 子集；批量处理时必须查看 `form_validation.coverage_status`、`missing_open_worksheet_ids`、`landing_scope` 和 `remaining_open_after_this_batch`，并在落地后复查 owner gate `open_count`。表单中的 `verification_cwd` 和 landing plan step 中的 `worksheet_verification_cwd` 是项目侧命令执行目录；相对命令必须在该目录下运行，而不是在 Knowledge Hub root 下运行。
 
@@ -237,7 +238,7 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 | 归档历史 | `projects/<project>/archive/...`、`registry/items.jsonl`、相关索引 | `knowledge-check --diagnostics`、`knowledge-search "<keyword>" --domain projects/<project> --kind project-archive --json` |
 | owner 人工签收 | owner 人工填写的临时 JSONL；真正落地文件以 `--landing-plan` 输出为准 | `--validate-forms '<owner-decisions.jsonl>' --json`、`--landing-plan --json` |
 | AI / 外部资料人工复核 | 人工填写后的临时 JSONL；长期只落地 human review 字段到 registry item | `knowledge-index-plan.sh --section review-queue --validate-queue-forms '<review-forms.jsonl>' --json`、`knowledge-review-queue-apply.sh --forms '<review-forms.jsonl>' --dry-run --json`、`knowledge-status.sh --strict --json` |
-| 终态检查 | 通常不新增文件；需要保存证据时落相邻 manifest | `rtk git diff --check`、`knowledge-final-gate.sh --json --final-profile product`；高风险收口加 `--full-regression` |
+| 终态检查 | 通常不新增文件；需要保存证据时落相邻 manifest | `rtk git diff --check`、`knowledge-final-gate.sh --json --final-profile product`；高风险收口加 `--regression-suite full` |
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-root

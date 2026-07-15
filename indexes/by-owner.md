@@ -358,6 +358,16 @@
 - `codex-token-lean-context-validation-20260714`
 - `pcr02-imssv06c11-three-way-sdk-audit-20260715`
 - `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
+- `pcr02-camera-mi-abi-mix-rollback-20260715`
+- `codex-archive-phased-migration-removal-20260709`
+- `codex-archive-migration-preflight-20260709`
+- `codex-archive-removal-preflight-20260710`
+- `codex-archive-extract-first-preflight-20260710`
+- `codex-openai-local-runtime-boundary-20260524`
+- `codex-token-efficiency-roadmap-coverage-20260710`
+- `codex-archive-memory-curation-file-level-audit-20260710`
+- `codex-adk-hardcut-source-to-live-audit-20260710`
+- `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
 
 ## pcr02-registry-owner
 
@@ -413,19 +423,10 @@
 - `codex-daily-engineering-archive-summary-20260708`
 - `pcr02-codex-history-backfill-engineering-findings-20260709`
 - `codex-archive-selective-backfill-audit-20260709`
-- `codex-archive-phased-migration-removal-20260709`
 - `llm-tools-windows-builder-runbook-20260709`
 - `llm-tools-release-governance-archive-20260516`
 - `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
-- `codex-archive-migration-preflight-20260709`
-- `codex-archive-removal-preflight-20260710`
-- `codex-archive-extract-first-preflight-20260710`
 - `pcr02-customer-ro-sd-upgrade-session-20260526`
-- `codex-openai-local-runtime-boundary-20260524`
-- `codex-token-efficiency-roadmap-coverage-20260710`
-- `codex-archive-memory-curation-file-level-audit-20260710`
-- `codex-adk-hardcut-source-to-live-audit-20260710`
-- `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
 - `firmware-release-tools-nas-release-sync-session-20260518`
 - `codex-archive-removal-execution-20260710`
 - `codex-archive-removal-execution-20260710-migrated-extract-first`

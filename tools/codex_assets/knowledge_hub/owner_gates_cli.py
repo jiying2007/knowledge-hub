@@ -1110,7 +1110,7 @@ def owner_decision_target_mismatch(owner_decision, target_decision):
     if target_decision.startswith("domains/projects/") or target_decision.startswith("domains/personal/"):
         return {
             "expected": "projects/<project>/...、notes/personal/... 或终止类字面目标",
-            "reason_zh": "硬切换后 owner target 不再兼容 domains/projects 或 domains/personal 旧入口。",
+            "reason_zh": "owner target 当前契约不接受 domains/projects 或 domains/personal 非规范入口。",
         }
     if owner_decision == "archive-only":
         if target_decision == "archive-only" or "/archive/" in target_decision:
@@ -1131,7 +1131,7 @@ def owner_decision_target_mismatch(owner_decision, target_decision):
         }
     if owner_decision not in terminal_targets and target_decision in {"reference-only", "no-migration"}:
         return {
-            "expected": "与 owner_decision 成对兼容的落地目标",
+            "expected": "与 owner_decision 构成有效配对的落地目标",
             "reason_zh": "落地类 owner_decision 不能搭配 reference-only 或 no-migration 目标。",
         }
     return None
@@ -1261,7 +1261,7 @@ def validate_forms_file(path, rows):
             if mismatch:
                 add_form_error(
                     "owner-decision-target-mismatch",
-                    f"{prefix}: owner_decision {owner_decision!r} is not compatible with target_decision {target_decision!r}: {mismatch['reason_zh']}",
+                    f"{prefix}: owner_decision {owner_decision!r} does not form a valid pair with target_decision {target_decision!r}: {mismatch['reason_zh']}",
                     worksheet_id=worksheet_id,
                     field="target_decision",
                     actual={"owner_decision": owner_decision, "target_decision": target_decision},
@@ -2231,4 +2231,3 @@ print("rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diag
 print("```")
 
 sys.exit(exit_status)
-

@@ -17,6 +17,16 @@ def test_restore_snapshot_modes_are_separate(tmp_path):
     assert restore._snapshot_path(tmp_path, "head").name == "restore-drill-head.json"
 
 
+def test_restore_snapshot_writes_only_the_selected_mode(tmp_path):
+    payload = {"source_mode": "candidate", "status": "pass"}
+
+    relative = restore._write_snapshot(tmp_path, payload)
+
+    assert relative == ".cache/knowledge-hub/restore-drill-candidate.json"
+    assert (tmp_path / relative).is_file()
+    assert not (tmp_path / ".cache/knowledge-hub/restore-drill.json").exists()
+
+
 def test_restore_rejects_unknown_source_mode(tmp_path):
     try:
         restore.run_restore_drill(tmp_path, "2026-07-13", source_mode="unknown")

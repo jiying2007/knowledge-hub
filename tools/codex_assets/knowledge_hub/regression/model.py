@@ -478,7 +478,7 @@ def test_index_plan_extended_sections():
         and manifest_summary.get("latest_strategy") == "filename-date-only"
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_profile_health.get("pass", 0) >= 1
-        and manifest_profile_health.get("legacy-missing-profile", 0) >= 1
+        and manifest_profile_health.get("historical-evidence-exempt", 0) >= 1
         and manifest_summary.get("unpaired_count") == 1
         and manifest_summary.get("unpaired_expected_count") == 1
         and manifest_summary.get("unpaired_needs_review_count") == 0
@@ -507,7 +507,7 @@ def test_index_plan_extended_sections():
         and current_manifest_profile.get("derived_summary_zh") == current_manifest_profile.get("summary_zh")
         and current_manifest_profile.get("summary_source") in {"summary_zh", "notes_zh", "notes"}
         and current_manifest_profile.get("evidence_source") in {"evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"}
-        and current_manifest_profile.get("profile_health") in {"pass", "advisory-missing-boundary", "legacy-missing-profile"}
+        and current_manifest_profile.get("profile_health") in {"pass", "advisory-missing-boundary", "historical-evidence-exempt"}
         and current_runtime_recovery_profile.get("paired") is True
         and current_runtime_recovery_profile.get("derived_summary_zh") == current_runtime_recovery_profile.get("summary_zh")
         and current_runtime_recovery_profile.get("summary_source") == "summary_zh"
@@ -755,11 +755,11 @@ def test_registry_canonical_topic_retention_paths():
     expect(
         not any(domain.startswith(old_prefixes) for domain in topic_domains + retention_domains)
         and result["exit_code"] != 0
-        and any(error.startswith("topics:project-current domain uses deprecated canonical path") for error in errors)
-        and any(error.startswith("topics:personal domain uses deprecated canonical path") for error in errors)
-        and any(error.startswith("retention:0 domain uses deprecated canonical path") for error in errors),
+        and any(error.startswith("topics:project-current domain uses a noncanonical path") for error in errors)
+        and any(error.startswith("topics:personal domain uses a noncanonical path") for error in errors)
+        and any(error.startswith("retention:0 domain uses a noncanonical path") for error in errors),
         "registry-canonical-topic-retention-paths",
-        "registry topics and retention rules use final canonical paths and reject deprecated project/personal roots",
+        "registry topics and retention rules use final canonical paths and reject noncanonical project/personal roots",
         {
             "topic_domains": topic_domains,
             "retention_domains": retention_domains,

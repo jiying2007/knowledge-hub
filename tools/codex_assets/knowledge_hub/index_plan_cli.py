@@ -1061,7 +1061,7 @@ def manifest_profile_health(manifest_path, first, date_value, summary_source, ev
         review_status = str(first.get("review_status", "") or "")
         if "reference" in mode or "reference" in classification or "reference" in review_status:
             return "reference-only"
-        return "legacy-missing-profile"
+        return "historical-evidence-exempt"
     if summary_source == "missing":
         return "missing-summary"
     if evidence_source == "missing" or evidence_count == 0:
@@ -1172,10 +1172,10 @@ by_manifest = {
         "latest_strategy": "filename-date-only",
         "latest_strategy_zh": "latest 只按 manifest 文件名中的 YYYYMMDD 排序；JSONL row 内 checked_at/created_at/updated_at/review_after 仅作为 row_date 辅助字段，不参与 latest 排序。",
         "profile_health": dict(sorted(manifest_profile_health_counts.items())),
-        "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；legacy/reference 类旧制品不作为硬失败；advisory-* 仅提示人工补强方向，missing-summary/missing-evidence 才说明当前 profile 基础字段缺失。",
+        "profile_health_zh": "只读恢复视图：pass 表示当前治理 manifest 满足中文摘要、证据和边界字段；历史证据与 reference-only 制品不按当前发布契约判定；advisory-* 仅提示人工补强方向，missing-summary/missing-evidence 才说明当前 profile 基础字段缺失。",
         "profile_health_next_actions_zh": {
             "advisory-missing-boundary": "不回填历史正文、不升为硬失败；如需人工复核，优先打开 paired Markdown、查看 evidence_refs/validation_refs，并只对后续新增治理 manifest 在新增时补 boundaries。",
-            "legacy-missing-profile": "历史制品保留 legacy 口径；只有迁移、重写或重新发布时才按当前 profile 补齐中文摘要、证据和边界字段。",
+            "historical-evidence-exempt": "历史制品维持原始证据形态；需要重新发布时创建满足当前 profile 的新制品，不回填或改写历史证据。",
             "reference-only": "引用类制品只维护引用和边界，不复制 source 正文。",
             "missing-summary": "当前 profile 基础字段缺失；新增或近期治理 manifest 需要补中文摘要。",
             "missing-evidence": "当前 profile 基础字段缺失；新增或近期治理 manifest 需要补 validation_refs/evidence_refs。",

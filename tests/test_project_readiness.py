@@ -1,6 +1,6 @@
 import datetime as dt
 
-from tools.codex_assets.knowledge_hub.common import project_rows, registry_items, repository_root, route_rows
+from tools.codex_assets.knowledge_hub.common import load_json, project_rows, registry_items, repository_root, route_rows
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
 from tools.codex_assets.knowledge_hub.project_readiness import (
     SLOT_NAMES,
@@ -46,6 +46,19 @@ def test_project_query_route_matrix_is_complete_for_all_task_types():
     assert checked == 30 * len(TASK_TYPES)
 
 
+def test_project_routes_reference_only_current_registered_sources():
+    root = repository_root()
+    routes = route_rows(root)
+    current_source_ids = {
+        row["id"]
+        for row in load_json(root / "registry/sources.json", {})["sources"]
+        if row["status"] == "registered"
+    }
+
+    assert all("retired_route_ids" not in route for route in routes)
+    assert all(set(route.get("default_source_ids", [])) <= current_source_ids for route in routes)
+
+
 def test_project_readiness_generator_is_idempotent():
     root = repository_root()
     payload = generate_project_readiness(root, dt.date(2026, 7, 13), apply=False)
@@ -54,9 +67,14 @@ def test_project_readiness_generator_is_idempotent():
     assert payload["transaction"]["changed_count"] == 0
 
 
-def test_project_readiness_apply_returns_success_when_already_current(capsys):
-    assert project_readiness_main(["--apply", "--as-of", "2026-07-13", "--json"]) == 0
-    assert '"status": "no-change"' in capsys.readouterr().out
+def test_project_readiness_check_returns_success_when_already_current(capsys):
+    assert project_readiness_main(["--check", "--as-of", "2026-07-13", "--json"]) == 0
+    assert '"status": "pass"' in capsys.readouterr().out
+
+
+def test_project_readiness_never_rewrites_frozen_body_coverage():
+    payload = generate_project_readiness(repository_root(), dt.date(2026, 7, 13), apply=False)
+    assert "registry/body-coverage.json" not in payload["transaction"]["write_paths"]
 
 
 def test_project_readiness_generator_does_not_rotate_ids_by_date():

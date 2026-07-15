@@ -20,7 +20,7 @@
 - path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
 - review queue: `tools/knowledge-status.sh`; `tools/knowledge-index-plan.sh`（常用参数：status 使用 --json --review-queue-limit 10，index-plan 使用 --section review-queue）
-- operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `tools/knowledge-review-after.sh`; product final gate 使用 `tools/knowledge-final-gate.sh`，固定参数 `--final-profile product`
+- product status: 当前证据缺口见 `governance/product/validation/project-readiness.md`；实时状态由 `tools/knowledge-final-gate.sh`（`--final-profile product`）计算；历史快照见 `governance/status/knowledge-hub-operational-maturity.md`
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - PCR02 owner-ready validation: `artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`; `pcr02-owner-ready-validation-paths-20260713`
 - PCR02 third-party build optimization: `projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`
@@ -257,11 +257,11 @@
 - PCR02 project docs owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - Knowledge Hub owner/source/subagent 边界加固: `artifacts/manifests/knowledge-hub-owner-source-subagent-boundary-hardening-20260623.md`
 - Knowledge Hub 简化终态主库 source 覆盖收口: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.md`
-- Knowledge Hub 简化终态设计: `docs/goals/knowledge-hub-simplified-final-version.md`
+- Knowledge Hub 终态设计历史记录: `docs/goals/knowledge-hub-simplified-final-version.md`
 - Knowledge Hub 用户路径边界加固: `artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`
 - Knowledge Hub canonical registry 边界加固: `artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`
 - Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
-- Knowledge Hub operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`; `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`
+- Knowledge Hub operational maturity history: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`; `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`
 - PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
 - PCR02 ASAN project-local target: `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
 - PCR02 DVR archive targets: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
@@ -436,7 +436,7 @@
 - Knowledge Hub 项目画像候选: `governance/product/current/project-profile.md`; `knowledge-hub-readiness-profile-20260713`
 - Knowledge Hub 维护入口: `governance/product/current/runbooks/maintenance-entry.md`; `knowledge-hub-readiness-runbook-20260713`
 - Knowledge Hub 权威与维护边界决策候选: `governance/product/decisions/project-boundary-decision-candidate.md`; `knowledge-hub-readiness-decision-20260713`
-- Knowledge Hub readiness validation: `governance/product/validation/project-readiness.md`; `knowledge-hub-readiness-validation-20260713`
+- Knowledge Hub 当前产品状态与证据缺口: `governance/product/validation/project-readiness.md`; `knowledge-hub-readiness-validation-20260713`
 - Knowledge Hub 产品成熟度全面实现审计 2026-07-13: `artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md`; `knowledge-hub-product-maturity-implementation-20260713`
 - PCR02 Video/Audio 共享内存使用说明: `projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
 - GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
@@ -448,3 +448,4 @@
 - Codex token-lean 固定上下文优化验证候选: `artifacts/manifests/codex-token-lean-context-validation-20260714.md`; `codex-token-lean-context-validation-20260714`
 - PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
 - PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
+- PCR02 新摄像头栈混装 ABI 故障与回退记录: `projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md`; `pcr02-camera-mi-abi-mix-rollback-20260715`

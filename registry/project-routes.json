@@ -37,15 +37,7 @@
       "domain_refs": [
         "projects/pcr02-ssc305"
       ],
-      "default_source_ids": [
-        "engineering-archive",
-        "pcr02-project-root-artifacts",
-        "pcr02-project-agent-config"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
+      "default_source_ids": [],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -75,18 +67,7 @@
         "projects/xcrz-sigmastar-demo"
       ],
       "default_source_ids": [
-        "codex-archive",
-        "pcr02-project-docs",
-        "pcr02-project-tools",
-        "pcr02-project-knowledge",
-        "pcr02-module-agent-rules",
-        "pcr02-product-test",
-        "pcr02-project-scratch",
         "codex-raw-sessions"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
       ],
       "route_key_policy": "git-remote-first"
     },
@@ -117,10 +98,6 @@
         "projects/pcr02-api"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -150,10 +127,6 @@
         "projects/pcr02-app"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -183,10 +156,6 @@
         "projects/pcr02-hdi"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -216,10 +185,6 @@
         "projects/pcr02-sensor"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -249,10 +214,6 @@
         "projects/pcr02-daemon"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -282,10 +243,6 @@
         "projects/pcr02-cli"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -315,10 +272,6 @@
         "projects/pcr02-cmd-server"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -348,10 +301,6 @@
         "projects/pcr02-proto-c"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -381,10 +330,6 @@
         "projects/pcr02-wifi"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -414,10 +359,6 @@
         "projects/pcr02-mp4"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -447,10 +388,6 @@
         "projects/app-ota"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -480,10 +417,6 @@
         "projects/app-product-test"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -513,10 +446,6 @@
         "projects/app-tool"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -546,10 +475,6 @@
         "projects/app-main"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -599,12 +524,7 @@
         "projects/firmware-toolchains",
         "projects/mm32spin-validator"
       ],
-      "default_source_ids": [
-        "codex-archive"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root"
-      ],
+      "default_source_ids": [],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -633,10 +553,6 @@
         "projects/gd32l235"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -665,10 +581,6 @@
         "projects/hc32f072"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -697,10 +609,6 @@
         "projects/mm32spin023c"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -729,13 +637,7 @@
       "domain_refs": [
         "projects/firmware-release-tools"
       ],
-      "default_source_ids": [
-        "codex-archive"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
+      "default_source_ids": [],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -765,10 +667,6 @@
         "projects/firmware-toolchains"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -800,15 +698,10 @@
         "codex"
       ],
       "default_source_ids": [
-        "codex-archive",
-        "codex-archive-registry",
         "codex-history",
         "codex-raw-sessions",
         "codex-session-index",
         "codex-memories"
-      ],
-      "retired_route_ids": [
-        "retired-codex-archive-root"
       ],
       "route_key_policy": "git-remote-first"
     },
@@ -845,10 +738,6 @@
         "projects/llm-tools"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -878,10 +767,6 @@
         "projects/agent-dev-kit"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -910,13 +795,7 @@
       "domain_refs": [
         "projects/llm-tools"
       ],
-      "default_source_ids": [
-        "codex-archive"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
+      "default_source_ids": [],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -946,10 +825,6 @@
         "projects/sigmastar-flasher"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -979,10 +854,6 @@
         "projects/mm32spin-validator"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -1012,10 +883,6 @@
         "projects/ota-packager"
       ],
       "default_source_ids": [],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
       "route_key_policy": "git-remote-first"
     },
     {
@@ -1051,10 +918,8 @@
         "root"
       ],
       "default_source_ids": [
-        "knowledge-hub-automation-runs",
-        "pcr02-project-docs"
+        "knowledge-hub-automation-runs"
       ],
-      "retired_route_ids": [],
       "route_key_policy": "control-plane-query-aware"
     }
   ]

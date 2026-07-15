@@ -255,7 +255,6 @@ ALLOWED_SOURCE_AUTHORITIES = {
 }
 ALLOWED_SOURCE_STATUSES = {
     "registered",
-    "deprecated",
     "retired",
 }
 ALLOWED_SOURCE_WRITE_POLICIES = {
@@ -342,7 +341,7 @@ OWNER_DECISION_DRAFT_FIELDS = {
     "evidence_refs",
     "status_reason",
 }
-ALLOWED_PROJECT_REGISTRY_STATUSES = {"registered", "deprecated", "retired"}
+ALLOWED_PROJECT_REGISTRY_STATUSES = {"registered", "retired"}
 ALLOWED_REPOSITORY_LIFECYCLES = {"first-party", "external-reference", "workspace-only", "retired"}
 ALLOWED_COMPONENT_STATUSES = {"registered", "workspace-only", "external-reference", "retired"}
 ALLOWED_REMOTE_KINDS = {"internal-git", "github", "gitee", "external-git", "local-only"}
@@ -648,7 +647,18 @@ retired_sources = load_jsonl(root / "registry" / "retired-sources.jsonl")
 if not isinstance(current_sources, list):
     errors.append("sources: sources must be a list")
     current_sources = []
+for source in current_sources:
+    if isinstance(source, dict) and source.get("status") != "registered":
+        errors.append(f"sources:{source.get('id', '<unknown>')} current registry requires status=registered")
+for source in retired_sources:
+    if isinstance(source, dict) and source.get("status") != "retired":
+        errors.append(f"retired-sources:{source.get('id', '<unknown>')} retired ledger requires status=retired")
 sources = current_sources + retired_sources
+current_source_ids = {
+    str(source.get("id", ""))
+    for source in current_sources
+    if isinstance(source, dict) and source.get("id") and source.get("status") == "registered"
+}
 owner_ids_for_sources = {
     owner.get("id", "")
     for owner in load_json(root / "registry" / "owners.json").get("owners", [])
@@ -895,15 +905,15 @@ for row in load_jsonl(owner_target_landing_path):
     if owner_decision in {"reference-only", "teamized-report-only"} or target_decision in skip_decisions:
         owner_target_health["skipped_count"] += 1
     elif target_decision.startswith("domains/projects/") or target_decision.startswith("domains/personal/"):
-        target_status = "legacy-target-rejected"
+        target_status = "noncanonical-target-rejected"
         missing = {
             "worksheet_id": worksheet_id,
             "target_decision": target_decision,
             "mapped_target_path": "",
-            "reason": "legacy domains/projects or domains/personal target is not accepted after hard cutover",
+            "reason": "domains/projects and domains/personal are not canonical owner targets in the current contract",
         }
         owner_target_health["missing_targets"].append(missing)
-        errors.append(f"owner-target:{worksheet_id} legacy target path rejected after hard cutover: {target_decision}")
+        errors.append(f"owner-target:{worksheet_id} noncanonical target path rejected: {target_decision}")
     elif target_decision.startswith("projects/"):
         target_path = target_decision
     if target_path:
@@ -1671,11 +1681,25 @@ if not args.sources_only:
             errors.append(f"project-routes:{route_key} unknown group_id: {group_id}")
             route_registry_health["invalid_reference_count"] += 1
         if "cwd_patterns" in route:
-            errors.append(f"project-routes:{route_key} cwd_patterns is forbidden after git-remote-first cutover")
+            errors.append(f"project-routes:{route_key} cwd_patterns is not part of the current route contract")
             route_registry_health["invalid_reference_count"] += 1
         if str(route.get("engineering_archive_path", "")):
-            errors.append(f"project-routes:{route_key} engineering_archive_path is retired; use archive_path")
+            errors.append(f"project-routes:{route_key} engineering_archive_path is unsupported; use archive_path")
             route_registry_health["invalid_reference_count"] += 1
+        if "retired_route_ids" in route:
+            errors.append(f"project-routes:{route_key} retired_route_ids is not part of the current route contract")
+            route_registry_health["invalid_reference_count"] += 1
+        default_source_ids = route.get("default_source_ids", [])
+        if not isinstance(default_source_ids, list):
+            errors.append(f"project-routes:{route_key} default_source_ids must be a list")
+            route_registry_health["invalid_reference_count"] += 1
+        else:
+            for default_source_id in default_source_ids:
+                if default_source_id not in current_source_ids:
+                    errors.append(
+                        f"project-routes:{route_key} default_source_id is not a current registered source: {default_source_id}"
+                    )
+                    route_registry_health["invalid_reference_count"] += 1
         for repo_id in route.get("repo_refs", []) if isinstance(route.get("repo_refs", []), list) else []:
             if repo_id not in repository_ids:
                 errors.append(f"project-routes:{route_key} unknown repo_ref: {repo_id}")
@@ -1749,7 +1773,7 @@ if not args.sources_only:
             errors.append(f"topics:{topic_id} missing domain")
         else:
             if str(topic_domain).startswith(("domains/projects", "domains/personal")):
-                errors.append(f"topics:{topic_id} domain uses deprecated canonical path: {topic_domain}")
+                errors.append(f"topics:{topic_id} domain uses a noncanonical path: {topic_domain}")
             topic_path = pathlib.Path(str(topic_domain))
             if topic_path.is_absolute():
                 errors.append(f"topics:{topic_id} domain must be relative: {topic_domain}")
@@ -1776,7 +1800,7 @@ if not args.sources_only:
                     continue
                 rule_domain = str(rule.get("domain", ""))
                 if rule_domain.startswith(("domains/projects", "domains/personal")):
-                    errors.append(f"retention:{index} domain uses deprecated canonical path: {rule_domain}")
+                    errors.append(f"retention:{index} domain uses a noncanonical path: {rule_domain}")
 
     local_path_prefixes = LOCAL_PATH_PREFIXES
     manifest_profile_paths = []
@@ -2182,7 +2206,7 @@ if not args.sources_only:
         if domain == "patents" and not path_text.startswith(("domains/patents/", "artifacts/manifests/")):
             errors.append(f"items:{item_id} patents domain path outside patents/control artifacts: {path_text}")
         if domain == "personal":
-            errors.append(f"items:{item_id} deprecated personal domain; use domain=notes path=notes/personal/**")
+            errors.append(f"items:{item_id} noncanonical personal domain; use domain=notes path=notes/personal/**")
         status = item.get("status")
         if status in {"active", "reviewing"}:
             if not item.get("owner"):
@@ -2652,7 +2676,7 @@ def classify_path_routing_hit(rel_path, line_text):
         "README.md",
         "governance/path-routing.md",
         "governance/source-boundaries.md",
-        "governance/migration-policy.md",
+        "governance/source-lifecycle-policy.md",
         "registry/schema.md",
         "tools/knowledge-path-audit.sh",
         "tools/knowledge-check.sh",

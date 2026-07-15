@@ -1,11 +1,8 @@
-# Knowledge Hub 终态目标
+# Knowledge Hub 终态目标历史记录
 
-本文件是终态目标的稳定入口。当前执行规格以
-`docs/goals/knowledge-hub-simplified-final-version.md` 为准；本文件只保留
-可被 registry、index 和旧验证记录引用的短入口，避免把早期治理草案误读为
-当前流程。
+> 归档身份：registry item `knowledge-hub-final-state-goal-20260620` 的状态为 `archived`。本文件只保存当时的目标与验收口径，不是当前执行入口；当前产品边界见 `README.md`，当前证据状态见 `governance/product/validation/project-readiness.md`。
 
-## 当前终态
+## 历史目标摘要
 
 Knowledge Hub 的当前定位：
 
@@ -35,7 +32,7 @@ Knowledge Hub = Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高�
 - `knowledge-final-gate --json --final-profile product` 是唯一终态入口，分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness`、`overall_status` 和 `terminal_maturity`。
 - 平台技术候选完成要求 `gate_status=pass`、全部 technical hard checks 通过；平台发布完成还要求 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。两者不能混为同一声明。
 - 真实 owner/evidence 未闭环时必须保持 `overall_status=needs-owner-review`，不能用候选文档、30/30 source mapping 或治理通过冒充成熟。
-- 全面产品终态声明要求 `--require-terminal --full-regression` 退出 0、`platform_release_complete=true`、`overall_status=mature`、`terminal_maturity=true`，并满足 adoption 观察期；未达到时结论必须保守降级。
+- 全面产品终态声明要求 `--regression-suite full --require-terminal` 退出 0、`platform_release_complete=true`、`overall_status=mature`、`terminal_maturity=true`，并满足 adoption 观察期；未达到时结论必须保守降级。
 - 旧入口精确扫描不命中当前文档、registry、index、template、tool 或 source control。
 
 ## 验证命令

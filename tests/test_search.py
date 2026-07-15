@@ -94,3 +94,32 @@ def test_search_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path)
     assert result["reason"] == "read-only-or-permission-denied"
     assert result["error_code"] == "EACCES"
     assert "private search query" not in json.dumps(result)
+
+
+def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, tmp_path):
+    captured = {}
+
+    def capture(path, row):
+        captured.update(row)
+
+    monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
+    monkeypatch.setattr(metrics, "_append_locked", capture)
+    result = record_search_telemetry(
+        tmp_path,
+        {
+            "query": "private search query",
+            "query_terms": ["private"],
+            "count": 1,
+            "total_matches": 1,
+            "latency_ms": 5,
+            "index": {"state": "warm", "rebuilt": False},
+            "results": [{"item_id": "item-a"}],
+        },
+    )
+
+    assert result["status"] == "recorded"
+    assert captured["schema_version"] == metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION
+    assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
+    assert captured["result_ids"] == ["item-a"]
+    assert captured["index_rebuilt"] is False
+    assert "private search query" not in json.dumps(captured)

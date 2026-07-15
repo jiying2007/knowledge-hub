@@ -1,3 +1,39 @@
+---
+id: codex-archive-phased-migration-removal-20260709
+title: Codex archive 分阶段迁移与移除台账 2026-07-09
+kind: audit
+domain: codex
+scope: team-general
+visibility: team-internal
+status: archived
+owner: leiwenjun
+review_after: '2026-11-09'
+review_status: human-directed-delegated-retired
+promotion: none
+tags:
+- codex-archive
+- phased-migration
+- archive-removal
+- archive-governance
+- tombstone
+- report-only
+- no-memory-write
+- no-active-promotion
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-09'
+manual_validation_pending: false
+summary_zh: 将 Codex archive 从 reference-first 审计推进到分阶段迁移/移除台账：旧 origin 已不存在；Hub 内 canonical archive corpus 按 covered、tombstone-candidate、extract-first
+  分类排队；实际删除必须另建批次并满足 migrated_as、covered_by 或 tombstone_as 门禁。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
+promotion_decision: explicit human lifecycle decision delegated to Codex; direct content review not asserted; token=KH-ATTEST-670bed5b38521f108005;
+  source=current-session exact hash-bound lifecycle attestation and reviewer binding on 2026-07-15
+---
+
 # Codex archive 分阶段迁移与移除台账 2026-07-09
 
 ## 摘要

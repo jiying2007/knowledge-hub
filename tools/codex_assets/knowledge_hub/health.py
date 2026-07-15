@@ -198,7 +198,6 @@ def health_summary(
     root: pathlib.Path,
     as_of: dt.date,
     refresh_gate: bool = False,
-    skip_final_gate: bool = False,
     snapshot_max_age_hours: int = 24,
 ) -> Dict[str, Any]:
     items = registry_items(root)
@@ -207,17 +206,16 @@ def health_summary(
     review_after = _review_after(items, root, as_of)
     body_coverage = _body_coverage(root, items)
     triage = _reviewing_triage(items, as_of)
-    if refresh_gate and not skip_final_gate:
+    if refresh_gate:
         run_product_gate(root, as_of.isoformat(), regression_suite="quick")
     snapshot, snapshot_meta = _load_snapshot(root, as_of.isoformat(), snapshot_max_age_hours)
     review_queue["source"] = "registry-direct-fast"
     final_gate = {
-        "skipped": skip_final_gate,
         "command": "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of {}".format(
             as_of.isoformat()
         ),
-        "exit_code": None if skip_final_gate or not snapshot else (0 if snapshot.get("gate_status") == "pass" else 1),
-        "final_status": "skipped" if skip_final_gate else snapshot.get("overall_status", "snapshot-missing"),
+        "exit_code": None if not snapshot else (0 if snapshot.get("gate_status") == "pass" else 1),
+        "final_status": snapshot.get("overall_status", "snapshot-missing"),
         "parse_error": "",
         "blocker_count": len(snapshot.get("blockers", [])) if snapshot else 0,
         "gap_count": len(snapshot.get("gap_map", [])) if snapshot else 0,
@@ -228,9 +226,9 @@ def health_summary(
     health_status = "ok"
     if registry["summary_gap_total"] or body_coverage["missing_registry_count"] or incomplete:
         health_status = "needs-fix"
-    elif not skip_final_gate and (not snapshot_meta["fresh"] or snapshot.get("gate_status") != "pass"):
+    elif not snapshot_meta["fresh"] or snapshot.get("gate_status") != "pass":
         health_status = "needs-fix"
-    elif not skip_final_gate and snapshot.get("overall_status") in {"needs-owner-review", "partial"}:
+    elif snapshot.get("overall_status") in {"needs-owner-review", "partial"}:
         health_status = str(snapshot["overall_status"])
     output = {
         "schema_version": 2,

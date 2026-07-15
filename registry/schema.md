@@ -242,7 +242,7 @@ Domain/path invariants:
 - `embedded` domain path must live under `domains/embedded/` or `artifacts/manifests/`.
 - `patents` domain path must live under `domains/patents/` or `artifacts/manifests/`.
 - `codex` domain path must live under `domains/codex/` or `artifacts/manifests/`.
-- `personal` domain is deprecated. New personal-local content must use `domain=notes` and `path=notes/personal/**`.
+- `personal` 不是当前合法 domain；个人内容必须使用 `domain=notes` 和 `path=notes/personal/**`。
 - `project-specific` scope must use `projects/<project>` domain.
 - `codex-memory-curation-governance` scope must use `codex` domain.
 
@@ -264,7 +264,7 @@ Invariants:
 - `id` 必须唯一。
 - `entry` 必须是 Knowledge Hub repo-relative path，不能是本机绝对路径。
 - `member_project_ids` 必须指向 `registry/projects.json` 中已登记项目。
-- `status` 只能使用 `registered`、`deprecated` 或 `retired`。
+- `status` 只能使用 `registered` 或 `retired`；当前可路由记录使用 `registered`。
 
 ## projects.json
 
@@ -291,7 +291,7 @@ Invariants:
 - `domain`、`entry`、`current`、`archive`、`decisions`、`validation` 必须是 Hub repo-relative path。
 - `groups` 必须指向 `registry/project-groups.json` 中已登记项目组。
 - `entry` 必须存在。
-- `status` 只能使用 `registered`、`deprecated` 或 `retired`。
+- `status` 只能使用 `registered` 或 `retired`；当前可路由记录使用 `registered`。
 
 ## repositories.json
 
@@ -317,6 +317,7 @@ Invariants:
 - `workspace_ref` 只能使用逻辑引用 `workspace://...`，或保留约定 `~/knowledge-hub`、`~/codex`、`~/.codex`。
 - 不得写入 `/home/...`、`/vsdata/...`、`~/work/...`、`~/bin/...` 等机器路径。
 - `lifecycle` 允许值：`first-party`、`external-reference`、`workspace-only`、`retired`。
+- `status` 只能使用 `registered` 或 `retired`；当前可路由记录使用 `registered`。
 
 ## components.json
 
@@ -377,6 +378,7 @@ Required fields:
 - `archive_path`
 - `decisions_path`
 - `validation_path`
+- `default_source_ids`
 - `route_key_policy`
 
 Invariants:
@@ -384,9 +386,9 @@ Invariants:
 - `repo_refs` 必须指向 `registry/repositories.json`。
 - `workspace_refs` 只能使用允许的逻辑 workspace 或保留本地约定。
 - `domain_refs` 可选；用于非 `projects/<project_id>` 的控制面或运行时域路由，例如 `root`、`governance`、`codex`。未显式填写时，工具按 `projects/<project_id>` 或项目 `domain` 派生。
+- `default_source_ids` 只能引用 `registry/sources.json` 中当前 `registered` source；历史 source 账本不得参与默认路由或上下文加权。
 - `route_key_policy=control-plane-query-aware` 只允许用于 Knowledge Hub 这类控制面路由：当前 cwd 属于控制面时，query 明确命中其他项目 alias 则路由到目标项目，否则回到控制面自身。
-- 禁止使用 `cwd_patterns`。
-- 禁止使用 retired `engineering_archive_path` 字段；新增归档统一使用 `archive_path`。
+- `cwd_patterns`、`engineering_archive_path` 和 `retired_route_ids` 不属于当前 route contract；归档统一使用 `archive_path`。
 
 ## sources.json and retired-sources.jsonl
 
@@ -448,9 +450,10 @@ Allowed source `status`:
 
 ```text
 registered
-deprecated
 retired
 ```
+
+`registry/sources.json` 只接受 `registered`；`registry/retired-sources.jsonl` 只接受 `retired`。
 
 Allowed source `write_policy`:
 
@@ -537,7 +540,7 @@ Required fields and invariants are defined by `schemas/review-attestation.schema
 - `active` promotion 禁止 delegated mode。
 - 表单生成不消费 authorization；实际 `promote` / `retire` 必须再独立校验有效授权账本记录。
 - apply 后长期账本只保留 attestation id/mode/source ref、正文 hash、确认码和确认文本 hash；原始确认文本继续留在未跟踪本地表单，不复制聊天正文。
-- 旧版包含 `authorization_id` 的人工 review form 继续作为 v1 兼容输入；新生成器不得产生该耦合字段。
+- 生命周期工具只接受 `content-review-attestation`；任何包含 `authorization_id` 的复核表单均拒绝，执行授权必须单独来自 `registry/authorizations.jsonl`。
 
 ## lifecycle-events.jsonl
 
