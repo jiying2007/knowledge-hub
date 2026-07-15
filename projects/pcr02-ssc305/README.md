@@ -8,7 +8,9 @@
 - 验证：`projects/pcr02-ssc305/validation/`
 - 归档：`projects/pcr02-ssc305/archive/`
 
-跨仓集成结论可汇总到 `projects/pcr02/`；本仓私有事实、构建差异、发布证据和排障记录优先留在本项目入口下。
+本入口只承载 `robot/pcr02_ssc305` 的 SDK、kernel、boot、镜像、OTA、存储、板级硬件和平台集成事实。`robot/xcrz_sigmastar_demo` 的应用、诊断、媒体、显示应用层和模块联调事实统一进入 `projects/xcrz-sigmastar-demo/`；跨仓记录按结论主责只保留一份正文，再用 `related`、registry 和索引关联。
+
+`pcr02` 仅是 `registry/project-groups.json` 中的产品组 ID，不是独立项目、正文 domain 或兼容路由。
 
 <!-- knowledge-hub-project-readiness:start -->
 ## 成熟度工作台

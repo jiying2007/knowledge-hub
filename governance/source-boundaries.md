@@ -9,7 +9,7 @@
 | 分组 | source_id | 边界摘要 |
 |---|---|---|
 | legacy team knowledge | `embedded-knowledge` | 已终态归位到 `domains/embedded/*`；旧团队知识目录 retired，后续提升仍需 owner review |
-| legacy project archive | `engineering-archive` | 已终态归位到终态目录 `projects/pcr02/archive/engineering-archive`；历史证据不等于当前 active fact |
+| legacy project archive | `engineering-archive` | 已终态归位到终态目录 `projects/pcr02-ssc305/archive/engineering-archive`；历史证据不等于当前 active fact |
 | patent materials | `patent-disclosure` | Markdown 正文进入 `domains/patents/archive/patent-disclosure`，附件进入 `artifacts/vault/patent-disclosure`；法律状态和披露边界仍需 owner/legal review |
 | Codex archive | `codex-archive` | 已终态归位到 `domains/codex/archive/codex-archive`；旧 Codex archive 目录 retired，不再作为新增归档入口 |
 | Codex runtime | `codex-memories` / `codex-history` / `codex-raw-sessions` / `codex-session-index` | 运行态输入 provenance；不复制 raw memory、history 或 session 正文，不写 `~/.codex/memories` |
@@ -29,7 +29,7 @@
 - Level 1：`pcr02-project-docs`，当前已有 Hub source control、必要 provenance 和 owner-approved target；旧正文副本不再保留，剩余 AI/外部资料复核队列仍按 review queue 处理。
 - Level 2：`pcr02-project-tools`、`pcr02-project-knowledge`、`pcr02-product-test`、`pcr02-project-scratch`、`pcr02-project-root-artifacts`、`pcr02-module-agent-rules`、`pcr02-project-agent-config`。这些 source 已进入 Hub 控制面；后续只从 Hub canonical、artifact vault、registry 和 manifest 推进，不默认回源。
 
-PCR02 project-specific 内容默认留在 `projects/pcr02/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
+PCR02 project-specific 内容默认留在 `projects/pcr02-ssc305/` 或 source/artifact 引用层；不得提升到 `domains/embedded/standards/`，除非另有 owner review、拆分证据和团队级适用性决策。
 
 ## 边界决策（Boundary Decisions）
 
@@ -71,7 +71,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 “归档路径在哪里”这类问题不再由当前工作区或历史 memory 单独决定。统一先读 `governance/path-routing.md`：
 
-- PCR02 工程归档新增落点：`projects/pcr02/archive/engineering-archive/pcr02/`。
+- PCR02 工程归档新增落点：`projects/pcr02-ssc305/archive/engineering-archive/pcr02/`。
 - Codex archive 新增落点：`domains/codex/archive/codex-archive/`。
 - 旧 `~/embedded/engineering_archive`、`~/codex/docs/archive`、源项目旧 `docs/` / `knowledge/` / `tools/` 只能作为 provenance 或历史证据。
 - memory 和历史 session 中的旧路径命中先用 `tools/knowledge-path-audit.sh` 归类，不直接改写。

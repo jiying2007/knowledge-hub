@@ -49,9 +49,9 @@ def bucket_for(row):
         return "codex-archive-provenance"
     if domain == "codex":
         return "codex-runtime-governance"
-    if domain == "projects/pcr02" and kind == "decision":
+    if domain == "projects/pcr02-ssc305" and kind == "decision":
         return "pcr02-decision-candidate"
-    if domain == "projects/pcr02":
+    if domain == "projects/pcr02-ssc305":
         return "pcr02-reviewing-record"
     return domain or "uncategorized"
 

@@ -8,7 +8,7 @@
 - 验证：`projects/app-ota/validation/`
 - 归档：`projects/app-ota/archive/`
 
-OTA app 的发布、协议、升级验证和失败分析优先沉淀到本入口；跨 SDK 发布链结论再同步到 `projects/pcr02/`。
+OTA app 的发布、协议、升级验证和失败分析优先沉淀到本入口；跨 SDK 发布链结论再同步到 `projects/pcr02-ssc305/`。
 
 <!-- knowledge-hub-project-readiness:start -->
 ## 成熟度工作台

@@ -41,7 +41,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-003",
         "source_path": "runbooks/asan-debug-guide.md",
-        "target_path": "projects/pcr02/current/runbooks/asan-debug-guide.md",
+        "target_path": "projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md",
         "title": "PCR02 ASAN 调试指导",
         "status": "project-local-current",
         "boundary": "仅作为 PCR02 project-local runbook；不得整篇提升为团队级 ASAN 标准，团队层方法论必须另行重写和复核。",
@@ -50,7 +50,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-005",
         "source_path": "plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
-        "target_path": "projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
+        "target_path": "projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
         "title": "DVR 录像回放 proto/sensor 解耦设计与实施计划",
         "status": "archive-only",
         "boundary": "仅归档原计划；缺少 completed 证据，不声明完成，不作为 current baseline。",
@@ -59,7 +59,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-006",
         "source_path": "reports/2026-05-29-motor-mcu-debug-record.md",
-        "target_path": "projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md",
+        "target_path": "projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md",
         "title": "电机 MCU 调试详细记录",
         "status": "archive-only",
         "boundary": "仅归档调试记录；事实、反馈、推断、建议和 open items 未拆分前不得进入 validation/current。",
@@ -68,7 +68,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-007",
         "source_path": "reports/2026-06-16-dvr-record-replay-session-archive.md",
-        "target_path": "projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md",
+        "target_path": "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md",
         "title": "DVR 录像回放解耦会话归档",
         "status": "archive-only",
         "boundary": "仅归档 session archive；handoff、dirty-state 和 memory candidates 不进入 active facts，不写 memory。",

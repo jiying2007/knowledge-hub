@@ -101,7 +101,7 @@ indexes/obsidian-home.md -> 人工首屏导航
 
 - 官方 Properties 使用 YAML，并明确不提供内建 bulk editing；这与 Hub 由 registry/脚本做批量治理、Obsidian 只做单文档编辑的边界一致。
 - Bases 是 core plugin，视图保存为 `.base`，数据仍来自本地 Markdown 和 properties。本仓提交三个可选只读视图：项目成熟度、reviewing 队列和 active 长期知识；它们不包含自动写入动作，也不依赖 community plugin。
-- 31 个项目的 124 份 readiness 文档已声明一致的 lifecycle properties，因此项目 Base 具备完整结构覆盖；其 `reviewing`、`decision_owner=unassigned` 和 `manual_validation_pending=true` 仍由 registry/gate 解释，Base 不改变状态。
+- 30 个规范项目的 120 份 readiness 文档已声明一致的 lifecycle properties，因此项目 Base 具备完整结构覆盖；`pcr02` group 元数据不重复计数。其 `reviewing`、`decision_owner=unassigned` 和 `manual_validation_pending=true` 仍由 registry/gate 解释，Base 不改变状态。
 - `.base` 只消费经过 check 的 properties，不编辑 `status`、`owner`、`review_after`，不创建第二份正文。普通 Markdown 阅读器仍可通过 `indexes/project-readiness.md` 获得等价 MOC 导航。
 - 官方 CLI 已提供命令行能力，但要求较新的 installer 并由 Obsidian 注册 PATH。本机 2026-07-13 未发现 `obsidian` 命令，因此当前不接入；未来只允许 `open/search/read` allowlist，不得成为 Hub 验证、写入或发布的必需依赖。
 
@@ -114,7 +114,7 @@ indexes/obsidian-home.md -> 人工首屏导航
 
 ## 链接与视图验证
 
-`knowledge-link-audit.sh` 检查标准 Markdown links、124 份 readiness 文档的入链和 `.base` YAML 基本结构。active/reviewing 正文、README 和 MOC 的断链属于阻断；archive/冻结历史断链只作告警，避免修改历史证据来制造整洁 Graph。
+`knowledge-link-audit.sh` 检查标准 Markdown links、120 份 readiness 文档的入链和 `.base` YAML 基本结构。active/reviewing 正文、README 和 MOC 的断链属于阻断；archive/冻结历史断链只作告警，避免修改历史证据来制造整洁 Graph。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict

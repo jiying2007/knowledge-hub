@@ -54,8 +54,8 @@ def _parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md\n"
-            "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner team-core --id pcr02-example-runbook --path projects/pcr02/current/runbooks/example.md --dry-run --json\n"
+            "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner team-core --id pcr02-example-runbook --path projects/xcrz-sigmastar-demo/current/runbooks/example.md\n"
+            "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner team-core --id pcr02-example-runbook --path projects/xcrz-sigmastar-demo/current/runbooks/example.md --dry-run --json\n"
             "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path sources/example-source --role hub-canonical-source --authority knowledge-hub-canonical --write-policy knowledge-hub-only --check \"rtk test -d sources/example-source\"\n"
             "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id runtime-example --source-path sources/runtime-example --role hub-runtime-input --authority runtime-input-provenance --write-policy runtime-read-only-input --no-check-reason \"runtime input; Hub control directory pending\"\n\n"
             "Guide mode is read-only. --dry-run prints an exact transaction plan; --apply performs the governed transaction."

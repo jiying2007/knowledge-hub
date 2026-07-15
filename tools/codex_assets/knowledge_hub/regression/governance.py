@@ -1313,7 +1313,7 @@ def test_owner_archive_only_target_path_compatibility():
     if setup_error:
         expect(False, "owner-archive-only-target-path-compatibility", "owner archive-only forms can target explicit archive paths", setup_error, repo)
         return
-    archive_target = "projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
+    archive_target = "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
     form["owner_decision"] = "archive-only"
     form["target_decision"] = archive_target
     form_path = repo / "archive-owner-decisions.jsonl"
@@ -1362,7 +1362,7 @@ def test_owner_archive_only_rejects_non_archive_target():
         expect(False, "owner-archive-only-rejects-non-archive-target", "owner archive-only forms reject validation or decision targets", setup_error, repo)
         return
     form["owner_decision"] = "archive-only"
-    form["target_decision"] = "projects/pcr02/validation/"
+    form["target_decision"] = "projects/pcr02-ssc305/validation/"
     form_path = repo / "archive-owner-decisions.jsonl"
     form_path.write_text(json.dumps(form, ensure_ascii=False, separators=(",", ":")) + "\n")
     result = run_cmd(
@@ -1670,7 +1670,7 @@ def test_owner_form_allowed_decisions_tamper_gate():
 
 def test_owner_form_target_candidates_tamper_gate():
     def mutate(form):
-        form["target_candidates"] = list(form.get("target_candidates", [])) + ["projects/pcr02/current/invalid-target-candidate-fixture.md"]
+        form["target_candidates"] = list(form.get("target_candidates", [])) + ["projects/pcr02-ssc305/current/invalid-target-candidate-fixture.md"]
 
     run_owner_form_tamper_gate(
         "owner-form-target-candidates-tamper-gate",
@@ -1986,14 +1986,14 @@ def test_source_control_raw_copy_body_gate():
 
 def test_owner_target_existence_gate():
     repo = copy_repo("owner-target-existence-gate")
-    target_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "asan-debug-guide.md"
+    target_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "asan-debug-guide.md"
     if target_path.exists():
         target_path.unlink()
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     combined = result["stdout"] + result["stderr"]
     expect(
         result["exit_code"] != 0
-        and "owner-target:pcr02-owner-decision-worksheet-003 target path missing: projects/pcr02/current/runbooks/asan-debug-guide.md" in combined,
+        and "owner-target:pcr02-owner-decision-worksheet-003 target path missing: projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md" in combined,
         "owner-target-existence-gate",
         "knowledge-check rejects missing owner decision landing target documents",
         {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
@@ -2486,7 +2486,8 @@ def test_review_after_near_due_json_contract():
         and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 4
         and groups.get("by_status", {}).get("reviewing", {}).get("count") == 13
         and groups.get("by_status", {}).get("archived", {}).get("count") == 14
-        and groups.get("by_domain", {}).get("projects/pcr02", {}).get("count") == 27
+        and groups.get("by_domain", {}).get("projects/xcrz-sigmastar-demo", {}).get("count") == 22
+        and groups.get("by_domain", {}).get("projects/pcr02-ssc305", {}).get("count") == 5
         and groups.get("by_source_id", {}).get("pcr02-project-docs", {}).get("count") == 23
         and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 4
         and len(archived_rows) >= 1
@@ -2611,7 +2612,7 @@ def test_review_after_as_of_deterministic():
         return
     path.write_text("\n".join(updated_lines) + "\n")
     sync_status_index_entries(repo, [item_id], "reviewing")
-    body_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
+    body_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
     body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
 
     past_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-01"])
@@ -2698,7 +2699,7 @@ def test_stale_review_after_warning_surface():
         return
     path.write_text("\n".join(updated_lines) + "\n")
     sync_status_index_entries(repo, [item_id], "reviewing")
-    body_path = repo / "projects" / "pcr02" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
+    body_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
     body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
 
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
@@ -2831,7 +2832,7 @@ def test_embedded_asan_methodology_deprojectized():
         and not banned_hits
         and not missing_required
         and "status: active" in text
-        and "projects/pcr02/current/runbooks/asan-debug-guide.md" in text,
+        and "projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md" in text,
         "embedded-asan-methodology-deprojectized",
         "team-level ASAN methodology stays deprojectized with active runbook boundaries",
         {

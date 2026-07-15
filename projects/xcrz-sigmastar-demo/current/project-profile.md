@@ -53,7 +53,7 @@ related:
 | 所属组 | `pcr02` |
 | registry 状态 | `registered` |
 | 本地源码映射 | `machine-local / not tracked` |
-| Hub 已登记条目 | `5`；archived=1, reviewing=4 |
+| Hub 已登记条目 | 截至 2026-07-15 为 `51`；archived=37, reviewing=14；后续以 `registry/items.jsonl` 动态查询为准 |
 
 ## 仓库边界
 
@@ -65,16 +65,17 @@ related:
 
 ## 已有 Hub 证据
 
-- [Sigmastar 双屏动画实现分析 2026-05-14](../archive/reports/2026-05-14-dual-screen-animation-analysis.md)：`archived` / `project-archive`
-- [XCRZ SigmaStar Demo readiness validation](../validation/project-readiness.md)：`reviewing` / `validation`
-- [XCRZ SigmaStar Demo 权威与维护边界决策候选](../decisions/project-boundary-decision-candidate.md)：`reviewing` / `decision`
-- [XCRZ SigmaStar Demo 维护入口](runbooks/maintenance-entry.md)：`reviewing` / `runbook`
-- [XCRZ SigmaStar Demo 项目画像候选](project-profile.md)：`reviewing` / `project-current`
+- [项目总体设计](architecture/project-overview-design.md)和[详细设计](../decisions/project-detailed-design.md)：应用与模块结构候选。
+- [ASAN 调试指南](runbooks/asan-debug-guide.md)、[构建部署指南](runbooks/project-build-and-deploy-guide.md)和[调试工具指南](runbooks/project-debug-tools-guide.md)：应用侧维护入口。
+- [Camera RAW_PREVIEW 架构候选](../decisions/camera-raw-preview-virtual-stream-architecture-20260711.md)与[Video/Audio 共享内存说明](runbooks/video-audio-shm-usage.md)：媒体和应用集成知识。
+- [应用排障与会话归档](../archive/README.md)：诊断、显示、媒体、模块联调和历史会话证据。
+- [XCRZ SigmaStar Demo readiness validation](../validation/project-readiness.md)、[权威边界决策候选](../decisions/project-boundary-decision-candidate.md)和[维护入口](runbooks/maintenance-entry.md)：结构控制资产，保持 `reviewing`。
 
 ## 当前权威边界
 
 - 当前源码、分支、版本、构建和发布事实：源项目及其可复现验证证据。
 - 长期摘要、决策记录、验证索引和跨项目方法：Knowledge Hub canonical Markdown 与 registry。
+- `pcr02` 只是产品组 ID；不得作为独立 project/domain/path 重新写入内容。
 - `status`、`owner`、`review_after`、promotion 和 authorization：registry/gate，不由目录名、Obsidian Graph 或本页文字推断。
 - 当前 `decision_owner=unassigned`，`manual_validation_pending=true`；未完成 owner 和真实环境验证前保持 `reviewing`。
 

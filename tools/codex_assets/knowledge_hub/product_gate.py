@@ -584,13 +584,13 @@ def run_product_gate(
     elif not delivery_ready:
         conclusion_zh = (
             "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
-            "31 个项目的真实 owner/source/device/platform/release evidence 也尚未闭环，"
+            "30 个项目的真实 owner/source/device/platform/release evidence 也尚未闭环，"
             "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
         )
     elif not evidence_ready:
         conclusion_zh = (
             "平台发布、结构、检索、链接、导出和恢复门禁已通过；"
-            "31 个项目的真实 owner/source/device/platform/release evidence 尚未闭环，"
+            "30 个项目的真实 owner/source/device/platform/release evidence 尚未闭环，"
             "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
         )
     else:

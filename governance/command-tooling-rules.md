@@ -43,8 +43,11 @@ Knowledge Hub 的命令和工具必须保守、可复查、可回滚。用户和
 只读工具：
 
 - `knowledge-check.sh`
+- `knowledge-context.sh`
 - `knowledge-search.sh`
 - `knowledge-inventory.sh`
+
+这里的“只读”表示不修改 tracked/managed 知识资产。`knowledge-context.sh` 和 `knowledge-search.sh` 可以向忽略提交的 `.cache/knowledge-hub/` 写入可重建索引或脱敏 telemetry，但这些观测写入不是业务结果的硬依赖：只读文件系统、权限受限沙箱或 cache 故障必须返回 `telemetry.status=degraded` 并保留预检/检索结果；`--no-telemetry` 和 `KNOWLEDGE_TELEMETRY=off` 显式关闭观测写入。只允许捕获存储层 `OSError`，编程错误和业务错误不得被 telemetry 降级逻辑吞掉。
 
 写入计划工具：
 

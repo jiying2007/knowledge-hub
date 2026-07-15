@@ -21,7 +21,6 @@
 | [MM32SPIN Validator](../../projects/mm32spin-validator/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |
 | [MM32SPIN023C Firmware](../../projects/mm32spin023c/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |
 | [OTA Packager](../../projects/ota-packager/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |
-| [PCR02](../../projects/pcr02/README.md) | `product-group` | `registered` | [4 槽位工作台](../project-readiness.md) |
 | [PCR02 API Module](../../projects/pcr02-api/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |
 | [PCR02 App Module](../../projects/pcr02-app/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |
 | [PCR02 CLI App](../../projects/pcr02-cli/README.md) | `git-repository` | `registered` | [4 槽位工作台](../project-readiness.md) |

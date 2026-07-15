@@ -2,16 +2,18 @@
   "schema_version": 2,
   "routes": [
     {
-      "project_id": "pcr02",
-      "name": "PCR02",
-      "type": "project-group",
-      "route_scope": "group",
+      "project_id": "pcr02-ssc305",
+      "name": "PCR02 SSC305 SDK",
+      "type": "project",
+      "route_scope": "project",
       "group_id": "pcr02",
       "aliases": [
+        "pcr02-ssc305",
+        "PCR02 SSC305 SDK",
+        "pcr02_ssc305",
         "PCR02",
         "SigmaStar",
         "SSC305",
-        "xcrz_sigmastar_demo",
         "pcr02_ssc305_compile",
         "pcr02_ssc305_release"
       ],
@@ -21,97 +23,6 @@
         "framebuffer MI_FB",
         "RAW_PREVIEW"
       ],
-      "repo_refs": [
-        "pcr02-ssc305",
-        "xcrz-sigmastar-demo",
-        "pcr02-api",
-        "pcr02-app",
-        "pcr02-hdi",
-        "pcr02-sensor",
-        "pcr02-daemon",
-        "pcr02-cli",
-        "pcr02-cmd-server",
-        "pcr02-proto-c",
-        "pcr02-wifi",
-        "pcr02-mp4",
-        "app-ota",
-        "app-product-test",
-        "app-tool",
-        "app-main"
-      ],
-      "workspace_refs": [
-        "workspace://pcr02-ssc305",
-        "workspace://xcrz-sigmastar-demo",
-        "workspace://pcr02-api",
-        "workspace://pcr02-app",
-        "workspace://pcr02-hdi",
-        "workspace://pcr02-sensor",
-        "workspace://pcr02-daemon",
-        "workspace://pcr02-cli",
-        "workspace://pcr02-cmd-server",
-        "workspace://pcr02-proto-c",
-        "workspace://pcr02-wifi",
-        "workspace://pcr02-mp4",
-        "workspace://app-ota",
-        "workspace://app-product-test",
-        "workspace://app-tool",
-        "workspace://app-main"
-      ],
-      "hub_entry": "projects/pcr02/README.md",
-      "current_path": "projects/pcr02/current",
-      "archive_path": "projects/pcr02/archive",
-      "decisions_path": "projects/pcr02/decisions",
-      "validation_path": "projects/pcr02/validation",
-      "domain_refs": [
-        "projects/pcr02",
-        "projects/pcr02-ssc305",
-        "projects/xcrz-sigmastar-demo",
-        "projects/pcr02-api",
-        "projects/pcr02-app",
-        "projects/pcr02-hdi",
-        "projects/pcr02-sensor",
-        "projects/pcr02-daemon",
-        "projects/pcr02-cli",
-        "projects/pcr02-cmd-server",
-        "projects/pcr02-proto-c",
-        "projects/pcr02-wifi",
-        "projects/pcr02-mp4",
-        "projects/app-ota",
-        "projects/app-product-test",
-        "projects/app-tool",
-        "projects/app-main"
-      ],
-      "default_source_ids": [
-        "engineering-archive",
-        "pcr02-project-docs",
-        "pcr02-project-tools",
-        "pcr02-project-knowledge",
-        "pcr02-project-agent-config",
-        "pcr02-module-agent-rules",
-        "pcr02-project-root-artifacts",
-        "pcr02-product-test",
-        "pcr02-project-scratch",
-        "codex-raw-sessions",
-        "codex-archive"
-      ],
-      "retired_route_ids": [
-        "retired-engineering-archive-root",
-        "retired-codex-archive-root"
-      ],
-      "route_key_policy": "git-remote-first"
-    },
-    {
-      "project_id": "pcr02-ssc305",
-      "name": "PCR02 SSC305 SDK",
-      "type": "project",
-      "route_scope": "project",
-      "group_id": "pcr02",
-      "aliases": [
-        "pcr02-ssc305",
-        "PCR02 SSC305 SDK",
-        "pcr02_ssc305"
-      ],
-      "topic_aliases": [],
       "repo_refs": [
         "pcr02-ssc305"
       ],
@@ -126,7 +37,11 @@
       "domain_refs": [
         "projects/pcr02-ssc305"
       ],
-      "default_source_ids": [],
+      "default_source_ids": [
+        "engineering-archive",
+        "pcr02-project-root-artifacts",
+        "pcr02-project-agent-config"
+      ],
       "retired_route_ids": [
         "retired-engineering-archive-root",
         "retired-codex-archive-root"
@@ -160,7 +75,14 @@
         "projects/xcrz-sigmastar-demo"
       ],
       "default_source_ids": [
-        "codex-archive"
+        "codex-archive",
+        "pcr02-project-docs",
+        "pcr02-project-tools",
+        "pcr02-project-knowledge",
+        "pcr02-module-agent-rules",
+        "pcr02-product-test",
+        "pcr02-project-scratch",
+        "codex-raw-sessions"
       ],
       "retired_route_ids": [
         "retired-engineering-archive-root",

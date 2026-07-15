@@ -34,12 +34,12 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile pr
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
-`knowledge-final-gate.sh --final-profile product` 聚合一致性、共享单元测试、事务恢复、链接、检索基准、31 项目结构、279 条 task route、Obsidian Properties/MOC/Bases、团队导出计划和恢复演练。它刻意分离：
+`knowledge-final-gate.sh --final-profile product` 聚合一致性、共享单元测试、事务恢复、链接、检索基准、30 个规范项目结构、task route、Obsidian Properties/MOC/Bases、团队导出计划和恢复演练。它刻意分离：
 
 - `gate_status`：平台技术能力是否通过。
 - `delivery_readiness`：是否已有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD restore 证据。
 - `maturity_status`：当前是 `mature`、`needs-owner-review` 还是 `needs-fix`。
-- `terminal_maturity`：平台和 31 个项目的 owner/source/人工或实机/发布证据是否都闭环。
+- `terminal_maturity`：平台和 30 个规范项目的 owner/source/人工或实机/发布证据是否都闭环。
 
 默认模式只要技术门禁通过即退出 0；`--require-terminal` 会在真实证据未闭环时退出 2。项目生成的 4 个槽位全部保持 `reviewing`，`decision_owner=unassigned`、`manual_validation_pending=true`，工具不得据此自动提升 active。
 
@@ -47,7 +47,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 
 | 能力 | 命令 | 关键边界 |
 |---|---|---|
-| 31 项目结构 | `knowledge-project-readiness.sh --check --json` | 检查/生成 profile、runbook、decision candidate、validation；不生成真实项目事实 |
+| 30 项目结构 | `knowledge-project-readiness.sh --check --json` | 检查/生成 profile、runbook、decision candidate、validation；不生成真实项目事实；group 元数据不重复计数 |
 | 本机源码发现 | `knowledge-workspace-discover.sh --plan --json` | 默认只读扫描 `~` 与存在时的 `/vsdata/<user>`，仅按 registered remote key 精确匹配；`--apply` 只写未跟踪的 `local/workspaces.json` |
 | 检索质量 | `knowledge-retrieval-benchmark.sh --json` | 固定 20 条产品/领域/项目查询，输出 top-3、MRR 和延迟 |
 | 链接与 Bases | `knowledge-link-audit.sh --json` | 检查标准 Markdown links、readiness inbound 和只读 `.base` schema；不读取本机 `.obsidian/` 配置作为权威 |
@@ -93,7 +93,7 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
   - `registry/retired-process-ledger.jsonl` 只作迁移过程封存清单，不参与 `review_queues`、owner gate、active promotion 或默认 source 恢复；需要审计 dry-run、applied、classification、source-inventory 历史时显式查看该文件。
   - 不会做什么：不生成或应用 owner decision；`--strict` 只作为 blocker dashboard；terminal gate 仍以 `knowledge-final-gate.sh --json` 为准。`strict_blockers[].commands` 可直接执行，`strict_blockers[].command_templates` 需要替换 `<owner-decisions.jsonl>`。
 - `knowledge-final-gate.sh`: 唯一产品终态门禁。
-  - 用途：固定 `--final-profile product`，聚合 check、strict status、PCR02 Level 2 source runtime、共享单元测试、可选 full regression、diff、事务恢复、schema、检索 benchmark、31×4 项目结构、31×9 route、Obsidian Properties/MOC/Bases、team export、restore drill 和 proof artifacts。
+  - 用途：固定 `--final-profile product`，聚合 check、strict status、PCR02 Level 2 source runtime、共享单元测试、可选 full regression、diff、事务恢复、schema、检索 benchmark、30×4 项目结构、30×9 route、Obsidian Properties/MOC/Bases、team export、restore drill 和 proof artifacts。
   - 主要输出：`platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness`、`platform_release_complete`、`overall_status`、`terminal_maturity`、typed `blockers` 和 `gap_map`。owner/source/设备/release 缺口不会伪装成技术 pass，也不会被候选目录或 governance check 自动关闭。
   - 退出码：技术门禁失败为 1；默认模式在平台通过但 evidence pending 时为 0；`--require-terminal` 在未达到真实终态时为 2。工具不代签 owner、不提升 active、不写 memory、不修改源项目或远端。
 - `knowledge-review-queue-apply.sh`: 人工复核队列表单应用入口。
@@ -135,11 +135,11 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 
 ```bash
 # 新增一条知识
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/archive/debug/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/archive/debug/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind external-source-note --domain codex --owner <owner> --id <id> --path artifacts/manifests/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/pcr02 --owner <owner> --id <id> --path artifacts/worksheets/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path artifacts/worksheets/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind patent-disclosure --domain patents --owner <owner> --id <id> --path domains/patents/disclosures/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -190,10 +190,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile pr
 
 个人笔记必须保持 `personal-local` visibility，落在 `notes/personal/`，不得进入团队 active index、团队导出或 owner gate。该边界由 registry、索引派生和产品终态门禁共同校验，不能通过 Obsidian Properties 或手工链接绕过。
 
-product gate JSON 先看 `gate_status`、`platform_status.status`、`content_readiness.status`、`retrieval_quality.status`、`operational_readiness.status`、`delivery_readiness.status`、`platform_release_complete`、`overall_status` 和 `terminal_maturity`。`platform_status.hard_checks` 解释技术门禁，`delivery_readiness` 区分 dirty candidate 与 committed HEAD，`content_readiness.project_readiness` 分开报告 31 项目结构、source mapping 和真实 evidence-ready，不能再用旧 `final_status=ok` 或治理 profile 推断产品成熟。
+product gate JSON 先看 `gate_status`、`platform_status.status`、`content_readiness.status`、`retrieval_quality.status`、`operational_readiness.status`、`delivery_readiness.status`、`platform_release_complete`、`overall_status` 和 `terminal_maturity`。`platform_status.hard_checks` 解释技术门禁，`delivery_readiness` 区分 dirty candidate 与 committed HEAD，`content_readiness.project_readiness` 分开报告 30 个规范项目的结构、source mapping 和真实 evidence-ready，不能再用旧 `final_status=ok` 或治理 profile 推断产品成熟。
 
 - `platform_status`：check、status、source runtime、共享测试、full regression、diff、事务恢复、链接、检索、项目结构、路由、导出、恢复、Obsidian、schema 和 proof artifact。
-- `content_readiness`：registry 内容与 31 项目结构/owner/source/人工或实机/发布证据；候选目录存在只计 structural，不计 evidence-ready。
+- `content_readiness`：registry 内容与 30 个规范项目的结构/owner/source/人工或实机/发布证据；候选目录存在只计 structural，不计 evidence-ready。
 - `retrieval_quality`、`operational_readiness`：检索 benchmark、恢复、事务、导出和可运维性证据。
 - `delivery_readiness`：clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` restore；candidate restore 不能替代。
 - `owner_and_real_evidence`、`adoption`：真实 owner/验证缺口与 30 天或 50 次调用且至少 10 条反馈的观察期证据。
@@ -221,7 +221,7 @@ rtk git rev-parse --short HEAD
 rtk git status --branch --short
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/pcr02 --kind project-current --status reviewing --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/xcrz-sigmastar-demo --kind project-current --status reviewing --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-project-docs --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
@@ -267,7 +267,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>'
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-audit
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/pcr02 --owner <owner> --id <id> --path projects/pcr02/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
 ```
 

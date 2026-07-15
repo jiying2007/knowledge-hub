@@ -8,7 +8,7 @@
 - 验证：`projects/pcr02-hdi/validation/`
 - 归档：`projects/pcr02-hdi/archive/`
 
-HDI 层接口、驱动适配和设备行为结论优先沉淀到本入口，跨模块影响再同步到 `projects/pcr02/`。
+HDI 层接口、驱动适配和设备行为结论优先沉淀到本入口，跨模块影响再同步到 `projects/pcr02-ssc305/`。
 
 <!-- knowledge-hub-project-readiness:start -->
 ## 成熟度工作台

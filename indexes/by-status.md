@@ -190,7 +190,7 @@
 - archived: `pcr02-customer-ro-sd-upgrade-session-20260526`
 - archived: `pcr02-engineering-archive-corpus`
 - archived-owner-review-plan: PCR02 review-required、owner review、worksheet、action board、intake、source preflight 和早期 closeout 包均为 landing 前历史证据；终态 owner decision 由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl` 记录。
-- archived-owner-target-evidence: ASAN、memory auto-curation、DVR plan、motor MCU 和 DVR session 的 2026-06-18 目标包仅保留为历史证据；终态目标见 `projects/pcr02/current/`、`projects/pcr02/archive/` 和 `indexes/by-decision.md`。
+- archived-owner-target-evidence: ASAN、memory auto-curation、DVR plan、motor MCU 和 DVR session 的 2026-06-18 目标包仅保留为历史证据；终态目标见 `projects/pcr02-ssc305/current/`、`projects/pcr02-ssc305/archive/` 和 `indexes/by-decision.md`。
 - final-maintenance-closure-applied: Knowledge Hub final maintenance closure records final gate diff-check evidence, owner forms target candidates, status text owner commands and offline manual defaults by `artifacts/manifests/knowledge-hub-final-maintenance-closure-20260620.jsonl`; PCR02 Level 1 owner gates were later landed on 2026-06-23.
 - index-recovery-hardening-applied: Knowledge Hub index/status recovery exposes source final-state fields, owner worksheet recovery fields, review_after commands and regression coverage by `artifacts/manifests/knowledge-hub-index-recovery-hardening-20260620.jsonl`; PCR02 Level 1 owner gates were later landed on 2026-06-23.
 - owner-resolution-playbook-ready: PCR02 owner decision landing rules are ready by `artifacts/manifests/pcr02-owner-resolution-playbook-20260618.jsonl`; no owner gate is resolved by this playbook alone.
@@ -221,7 +221,7 @@
 - doctor-helper-applied: Knowledge Hub read-only doctor helper is documented by `artifacts/manifests/knowledge-hub-doctor-helper-20260619.jsonl`.
 - readme-maintenance-path-sync-applied: Knowledge Hub README maintenance path sync is documented by `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.jsonl`.
 - evidence-index-template-applied: Knowledge Hub Evidence Index template alignment is documented by `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.jsonl`.
-- engineering-archive-corpus-materialized: Engineering archive corpus is materialized at `projects/pcr02/archive/engineering-archive`; aggregate corpus remains archive-only.
+- engineering-archive-corpus-materialized: Engineering archive corpus is materialized at `projects/pcr02-ssc305/archive/engineering-archive`; aggregate corpus remains archive-only.
 - patent-disclosure-corpus-materialized: Patent disclosure Markdown corpus is materialized at `domains/patents/archive/patent-disclosure`; attachment bodies remain artifact references only and legal status remains reviewing.
 - source-coverage-closeout-applied: Registered source coverage is documented by `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`; retired external origins are hub-canonical in Hub source control, Codex runtime inputs remain runtime provenance only, and codex-memories remains no-memory-write.
 - index-plan-helper-applied: Core index planning is assisted by `tools/knowledge-index-plan.sh`; the helper is read-only and does not rewrite `indexes/*.md`.
@@ -418,7 +418,7 @@
 - archived: `knowledge-hub-canonical-registry-boundary-20260624`
 - canonical-registry-boundary-applied: current topic registry、retention rules 和治理说明已收敛到 `projects/` 与 `notes/personal/`，旧项目/个人目录不得重新成为 current registry 入口；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.jsonl`.
 - archived: `pcr02-asan-debug-guide-project-local-20260624`
-- owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；该行描述 2026-06-24 项目内目标落地状态，团队级 ASAN 方法论后续已在 2026-06-29 独立提升 active；证据：`projects/pcr02/current/runbooks/asan-debug-guide.md`.
+- owner-approved-project-local-target-materialized: PCR02 ASAN split-approved 目标已落到项目内 current runbook；该行描述 2026-06-24 项目内目标落地状态，团队级 ASAN 方法论后续已在 2026-06-29 独立提升 active；证据：`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`.
 - active: `embedded-asan-debug-guide-20260629`
 - active-promotion-applied: 团队级 ASAN 方法论已去项目化落到 `domains/embedded/runbooks/asan-debug-guide.md`，并按 2026-06-29 用户授权提升 active；证据：`artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl`.
 - archived: `embedded-asan-team-owner-ready-package-20260629`
@@ -432,11 +432,11 @@
 - archived: `knowledge-hub-review-after-operation-plan-20260701`
 - review-after-operation-plan-recorded: 2026-07 review_after 近期待复核队列已拆成 P1/P2/P3 并按用户授权刷新到 2026-10；不把排期刷新当作 owner 内容复核，不关闭 owner gate、不生成 owner decision；证据：`artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.jsonl`.
 - archived: `pcr02-dvr-plan-archive-only-20260624`
-- owner-approved-archive-only-target-materialized: DVR proto/sensor 解耦计划已按 archive-only 落地；缺 completed 证据，不声明完成；证据：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`.
+- owner-approved-archive-only-target-materialized: DVR proto/sensor 解耦计划已按 archive-only 落地；缺 completed 证据，不声明完成；证据：`projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`.
 - archived: `pcr02-motor-mcu-debug-record-archive-only-20260624`
-- owner-approved-archive-only-target-materialized: motor MCU debug record 已按 archive-only 落地；事实、反馈、推断、建议和 open items 未拆分前不提升验证结论；证据：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`.
+- owner-approved-archive-only-target-materialized: motor MCU debug record 已按 archive-only 落地；事实、反馈、推断、建议和 open items 未拆分前不提升验证结论；证据：`projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`.
 - archived: `pcr02-dvr-session-archive-only-20260624`
-- owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
+- owner-approved-archive-only-target-materialized: DVR record/replay session archive 已按 archive-only 落地；memory candidates 不写 memory、不进 active facts；证据：`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`.
 - archived: `knowledge-hub-source-control-unification-20260624`
 - source-control-unification-applied: 18 个 registered source 已有 sources/<source_id>/ 主控目录，4 个 PCR02 owner target 已落地，并新增 source-control/owner-target/raw-dump 门禁；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl`.
 - archived: `knowledge-hub-project-routes-20260626`
@@ -505,10 +505,6 @@
 - archived: `codex-archive-corpus-deletion-readiness-20260711`
 - archived: `knowledge-hub-archived-summary-full-closeout-20260711`
 - archived: `knowledge-hub-operational-tooling-hardening-20260711`
-- reviewing: `pcr02-readiness-profile-20260713`
-- reviewing: `pcr02-readiness-runbook-20260713`
-- reviewing: `pcr02-readiness-decision-20260713`
-- reviewing: `pcr02-readiness-validation-20260713`
 - reviewing: `pcr02-ssc305-readiness-profile-20260713`
 - reviewing: `pcr02-ssc305-readiness-runbook-20260713`
 - reviewing: `pcr02-ssc305-readiness-decision-20260713`
@@ -636,4 +632,8 @@
 - reviewing: `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - archived: `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - reviewing: `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- reviewing: `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
 - reviewing: `codex-token-lean-context-validation-20260714`
+- reviewing: `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- reviewing: `pcr02-ssc305-canonical-hardcut-20260715`
+- reviewing: `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`

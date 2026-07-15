@@ -14,20 +14,20 @@
 - [按决策浏览](by-decision.md)
 - [按状态浏览](by-status.md)
 - [按复核日期浏览](by-review-date.md)
-- [31 项目成熟度工作台](project-readiness.md)
+- [30 项目成熟度工作台](project-readiness.md)
 - [项目成熟度 Base](obsidian/project-readiness.base)
 - [Reviewing Base](obsidian/reviewing.base)
 - [Active 知识 Base](obsidian/active-knowledge.base)
 
 ## PCR02
 
-- [PCR02 项目入口](../projects/pcr02/README.md)
-- [第三方库编译优化基线](../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md)
-- [项目构建与部署指导](../projects/pcr02/current/runbooks/project-build-and-deploy-guide.md)
-- [终端发布验证记录](../projects/pcr02/validation/reports/2026-05-14-prog-tool-terminal-release-report.md)
-- [历史归档入口](../projects/pcr02/archive/README.md)
-- [ST77912 SPI/FPS 决策候选](../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md)
-- [ST77912 framebuffer 边界候选](../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md)
+- [PCR02 项目入口](../projects/pcr02-ssc305/README.md)
+- [第三方库编译优化基线](../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md)
+- [项目构建与部署指导](../projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md)
+- [终端发布验证记录](../projects/xcrz-sigmastar-demo/validation/reports/2026-05-14-prog-tool-terminal-release-report.md)
+- [历史归档入口](../projects/pcr02-ssc305/archive/README.md)
+- [ST77912 SPI/FPS 决策候选](../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md)
+- [ST77912 framebuffer 边界候选](../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md)
 - [owner-ready 验证路径](../artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md)
 
 ## 跨项目知识

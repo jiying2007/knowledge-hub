@@ -456,8 +456,8 @@ def test_index_plan_extended_sections():
         not parse_errors
         and all(result["exit_code"] == 0 for result in section_results.values())
         and all(parsed_by_section.get(section, {}).get("status") == "planned" for section in section_results)
-        and "pcr02" in project_index
-        and project_index.get("pcr02", {}).get("domain") == "projects/pcr02"
+        and "pcr02-ssc305" in project_index
+        and project_index.get("pcr02-ssc305", {}).get("domain") == "projects/pcr02-ssc305"
         and "pcr02-project-tools" in source_index
         and pcr02_source.get("owner") == "pcr02-registry-owner"
         and pcr02_source.get("review_after") == "2026-09-20"

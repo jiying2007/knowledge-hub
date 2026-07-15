@@ -26,8 +26,8 @@ def test_project_readiness_schema_accepts_idempotent_apply():
         {
             "schema_version": 1,
             "status": "no-change",
-            "project_count": 31,
-            "slot_count": 124,
+            "project_count": 30,
+            "slot_count": 120,
             "transaction": {"changed_count": 0},
         },
     )

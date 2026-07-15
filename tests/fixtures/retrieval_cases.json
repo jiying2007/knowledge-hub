@@ -19,7 +19,7 @@
       "id": "topic-st77912",
       "query": "ST77912 display",
       "expected_status": "selected",
-      "expected_project_id": "pcr02"
+      "expected_project_id": "pcr02-ssc305"
     },
     {
       "id": "identifier-underscore-llm-tools",

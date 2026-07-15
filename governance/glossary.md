@@ -53,7 +53,7 @@ related:
 
 - registry 和模板可以引用术语表，但不能用术语表替代证据。
 - 项目临时叫法不能直接提升为团队术语。
-- PCR02 project-specific 术语默认留在 `projects/pcr02/`，不得直接进入 `domains/embedded/standards/`。
+- PCR02 project-specific 术语默认留在 `projects/pcr02-ssc305/`，不得直接进入 `domains/embedded/standards/`。
 - 同一术语有冲突时，优先保留更小范围的项目术语，并记录差异。
 
 ## 示例

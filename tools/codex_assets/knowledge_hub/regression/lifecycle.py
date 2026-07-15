@@ -13,11 +13,11 @@ def test_manual_entry_project_index_hint():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--id",
             "pcr02-regression-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/regression.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/regression.md",
         ],
     )
     governance_result = run_cmd(
@@ -44,7 +44,7 @@ def test_manual_entry_project_index_hint():
         and "未知来源不要同步 by-source" in project_result["stdout"]
         and "- <source-id>:" not in project_result["stdout"]
         and "# - <真实-source-id>:" in project_result["stdout"]
-        and "projects/pcr02/current/runbooks/regression.md" in project_result["stdout"]
+        and "projects/xcrz-sigmastar-demo/current/runbooks/regression.md" in project_result["stdout"]
         and "indexes/by-decision.md" in governance_result["stdout"]
         and "governance-regression-decision: governance/regression-decision.md" in governance_result["stdout"]
         and "indexes/by-project.md" not in governance_result["stdout"],
@@ -73,13 +73,13 @@ def test_manual_entry_registered_source_binding():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--owner",
             "team-core",
             "--id",
             "pcr02-source-bound-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/source-bound.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/source-bound.md",
             "--item-source-id",
             "codex-history",
             "--item-source-path",
@@ -95,11 +95,11 @@ def test_manual_entry_registered_source_binding():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--id",
             "pcr02-unknown-source-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/unknown-source.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/unknown-source.md",
             "--item-source-id",
             "not-registered-source",
         ],
@@ -135,11 +135,11 @@ def test_manual_entry_project_from_domain():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--id",
             "pcr02-derived-project-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/derived.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/derived.md",
         ],
     )
     old_project_arg_result = run_cmd(
@@ -151,18 +151,18 @@ def test_manual_entry_project_from_domain():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--project",
             "wrong-project",
             "--id",
             "pcr02-mismatch-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/mismatch.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/mismatch.md",
         ],
     )
     expect(
         derived_result["exit_code"] == 0
-        and "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"]
+        and "- xcrz-sigmastar-demo: projects/xcrz-sigmastar-demo/current/runbooks/derived.md" in derived_result["stdout"]
         and old_project_arg_result["exit_code"] == 2
         and "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
         "manual-entry-project-derived-from-domain",
@@ -170,7 +170,7 @@ def test_manual_entry_project_from_domain():
         {
             "derived_exit_code": derived_result["exit_code"],
             "old_project_arg_exit_code": old_project_arg_result["exit_code"],
-            "derived_has_project": "- pcr02: projects/pcr02/current/runbooks/derived.md" in derived_result["stdout"],
+            "derived_has_project": "- xcrz-sigmastar-demo: projects/xcrz-sigmastar-demo/current/runbooks/derived.md" in derived_result["stdout"],
             "old_project_arg_rejected": "ERROR unknown argument: --project" in old_project_arg_result["stderr"],
             "derived_stdout_sample": derived_result["stdout"][:1200],
             "old_project_arg_stderr_sample": old_project_arg_result["stderr"][:500],
@@ -440,7 +440,7 @@ def test_manual_entry_docs_owner_option():
     help_has_owner_example = (
         help_result["exit_code"] == 0
         and "--owner team-core" in help_result["stdout"]
-        and "--domain projects/pcr02 --owner" in help_result["stdout"]
+        and "--domain projects/xcrz-sigmastar-demo --owner" in help_result["stdout"]
     )
     expect(
         not read_error and readme_has_owner and tools_readme_has_owner and help_has_owner_example,
@@ -573,13 +573,13 @@ def test_manual_entry_readability_fields():
             "--kind",
             "runbook",
             "--domain",
-            "projects/pcr02",
+            "projects/xcrz-sigmastar-demo",
             "--owner",
             "team-core",
             "--id",
             "pcr02-readable-runbook",
             "--path",
-            "projects/pcr02/current/runbooks/readable.md",
+            "projects/xcrz-sigmastar-demo/current/runbooks/readable.md",
             "--manual-source-reason",
             "field-debug",
             "--manual-validation-pending",
@@ -633,13 +633,13 @@ def test_manual_entry_archive_default_status():
             "--kind",
             "project-archive",
             "--domain",
-            "projects/pcr02",
+            "projects/pcr02-ssc305",
             "--owner",
             "team-core",
             "--id",
             "pcr02-archive-status-default",
             "--path",
-            "projects/pcr02/archive/status-default.md",
+            "projects/pcr02-ssc305/archive/status-default.md",
         ],
     )
     required_fragments = [
@@ -1569,7 +1569,7 @@ def test_orphan_files_advisory_contract():
             "20",
         ],
     )
-    orphan_rel = "projects/pcr02/archive/debug/orphan-regression-fixture.md"
+    orphan_rel = "projects/xcrz-sigmastar-demo/archive/debug/orphan-regression-fixture.md"
     orphan_path = repo / orphan_rel
     orphan_path.parent.mkdir(parents=True, exist_ok=True)
     orphan_path.write_text("# Orphan regression fixture\n\nThis file intentionally has no registry item.\n")

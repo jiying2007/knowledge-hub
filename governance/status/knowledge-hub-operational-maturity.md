@@ -2,9 +2,9 @@
 
 ## 结论
 
-Knowledge Hub 已按“统一知识控制面”完成平台产品化：canonical Markdown、registry、schema catalog、Python 内核、事务化生命周期、可解释检索/context、31 项目结构与路由、Obsidian 只读工作台、团队导出、恢复演练和统一产品门禁均有稳定入口。
+Knowledge Hub 已按“统一知识控制面”完成平台产品化：canonical Markdown、registry、schema catalog、Python 内核、事务化生命周期、可解释检索/context、30 个规范项目结构与路由、Obsidian 只读工作台、团队导出、恢复演练和统一产品门禁均有稳定入口。`pcr02` 仅作为 group 元数据，不重复占用项目槽位。
 
-当前不能声明“长期使用终态已经实证”，也不能声明 31 个项目的内容和发布证据全部成熟。项目结构槽位刻意保持 `reviewing`；本机 source mapping 已达到 31/31，但它只证明仓库可定位。真实 decision owner、当前 source commit、人工/实机、制品、release 和 rollback 证据仍为 0/31，尚未逐项目闭环。正确结论应是：
+当前不能声明“长期使用终态已经实证”，也不能声明 30 个规范项目的内容和发布证据全部成熟。项目结构槽位刻意保持 `reviewing`；本机 source mapping 已达到 30/30，但它只证明仓库可定位。真实 decision owner、当前 source commit、人工/实机、制品、release 和 rollback 证据仍为 0/30，尚未逐项目闭环。正确结论应是：
 
 - 平台产品化：由当前 product gate 技术检查决定。
 - 平台发布：还必须有 clean committed HEAD、已跟踪依赖清单、full regression 和该 HEAD 的 `git archive` 恢复证据。
@@ -30,7 +30,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 维度 | 判据 | 当前边界 |
 |---|---|---|
 | `platform_status` | check、strict status、source runtime、unit/full regression、diff、事务恢复、schema、link/Obsidian、export、restore | 技术检查必须全部通过，任一失败为 `needs-fix` |
-| `content_readiness` | 31×4 槽位、31×9 route、有效 canonical 内容及 evidence readiness | 结构完整不等于事实成熟；缺真实证据保持 pending |
+| `content_readiness` | 30×4 槽位、30×9 route、有效 canonical 内容及 evidence readiness | 结构完整不等于事实成熟；group 元数据不重复计数；缺真实证据保持 pending |
 | `retrieval_quality` | known-answer Top-3、MRR、零命中、current 生命周期过滤、解释字段和 fallback | archived/superseded/audit/provenance 不得进入 `context.current` |
 | `operational_readiness` | health snapshot、team export、fresh restore、transaction recovery、脱敏 metrics | 本地恢复和导出通过不等于远端发布 |
 | `delivery_readiness` | clean committed HEAD、tracked dependency manifests、full regression、HEAD `git archive` restore | dirty candidate 只能声明技术候选通过，不能声明平台发布完成 |
@@ -58,7 +58,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 生命周期 | `knowledge-review-attest.sh`、`knowledge-promote.sh`、`knowledge-retire.sh` | execution authorization 与 content review attestation 独立校验；明确真人决定后可机械生成本地 form，active 禁止 delegated mode，工具不生成 owner 决策 |
 | 恢复审计 | `knowledge-recovery-audit.sh` | 只读检查未完成 transaction 和恢复动作 |
 | 检索/context | `knowledge-search.sh`、`knowledge-context.sh` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
-| 项目矩阵 | `knowledge-project-readiness.sh` | 31×4 reviewing 槽位；31/31 本机 source mapped，0/31 evidence-ready |
+| 项目矩阵 | `knowledge-project-readiness.sh` | 30×4 reviewing 槽位；30/30 本机 source mapped，0/30 evidence-ready；group 元数据不重复计数 |
 | PCR02 证据路径 | `knowledge-pcr02-owner-readiness.sh` | 三条 candidate 保持 owner unassigned、人工/实机/release pending |
 | Obsidian | `knowledge-obsidian-view-build.sh`、`knowledge-link-audit.sh` | 文件层 Properties/MOC/Base/链接自动检查；真实 GUI 验收单独报告，当前为 `not-validated` |
 | 质量 | `knowledge-retrieval-benchmark.sh`、`knowledge-regression.sh` | full regression 仅跟踪 slowest 10，不泛化重构 |
@@ -67,7 +67,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 
 ## 项目内容边界
 
-31 个 registered project 均有 profile、runbook、decision candidate 和 validation readiness。结构覆盖只能证明入口可达：
+30 个 registered project 均有 profile、runbook、decision candidate 和 validation readiness。`pcr02` 只保留为 group 元数据，不生成重复 readiness 槽位。结构覆盖只能证明入口可达：
 
 - source 可定位时，只读发现 remote、README、构建/测试入口和版本线索；本轮不执行源仓构建、测试或发布。
 - source 不可定位时，只写 registry 已知事实和 `manual_validation_pending`，不得推断当前源码。
@@ -117,7 +117,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile pr
 
 ## 剩余风险
 
-- 31/31 本机 source mapping 只属于 discovery 证据；31 个项目真实 evidence readiness 仍为 0/31。
+- 30/30 本机 source mapping 只属于 discovery 证据；30 个规范项目真实 evidence readiness 仍为 0/30。
 - PCR02 三条候选已补验证路径，但尚无本轮真实 owner、实机、高温、EMI、release 或 rollback 执行证据。
 - Obsidian managed Markdown、MOC、Bases 和链接自动检查已通过，但尚未在真实 GUI 完成 Properties、Backlinks、Bases 与导航验收。
 - 历史 patent archive 有缺失图片引用，只作为历史 warning；当前 managed Markdown 链接、Properties 和关系目标必须保持零错误。

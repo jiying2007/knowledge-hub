@@ -2,8 +2,8 @@ from tools.codex_assets.knowledge_hub.health import _is_body_markdown, _review_q
 
 
 def test_fast_body_coverage_matches_orphan_body_boundary():
-    assert _is_body_markdown("projects/pcr02/current/runbooks/debug.md") is True
-    assert _is_body_markdown("projects/pcr02/README.md") is False
+    assert _is_body_markdown("projects/xcrz-sigmastar-demo/current/runbooks/debug.md") is True
+    assert _is_body_markdown("projects/pcr02-ssc305/README.md") is False
     assert _is_body_markdown("templates/inbox-note.md") is False
     assert _is_body_markdown("docs/goals/knowledge-hub-final-state.md") is False
 

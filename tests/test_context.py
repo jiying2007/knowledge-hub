@@ -128,7 +128,7 @@ def test_natural_query_route_handles_topic_exact_and_ambiguity():
     llm_tools = _query_route_selection("llm_tools GUI build", routes)
     adk = _query_route_selection("ADK skill routing", routes)
     assert st77912["status"] == "selected"
-    assert st77912["route"]["project_id"] == "pcr02"
+    assert st77912["route"]["project_id"] == "pcr02-ssc305"
     assert llm_tools["status"] == "selected"
     assert llm_tools["route"]["project_id"] == "llm-tools"
     assert adk["status"] == "ambiguous"

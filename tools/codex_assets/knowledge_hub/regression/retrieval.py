@@ -121,7 +121,7 @@ def test_knowledge_search_structured_filters():
 
 def test_knowledge_search_structured_filters_exclude_unregistered_raw():
     repo = copy_repo("knowledge-search-structured-filter-excludes-unregistered-raw")
-    raw_path = repo / "projects" / "pcr02" / "current" / "unregistered-diag-raw-fixture.md"
+    raw_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "unregistered-diag-raw-fixture.md"
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     raw_path.write_text(
         "# Unregistered diag raw fixture\n\n"
@@ -354,9 +354,9 @@ def test_knowledge_context_budget_explainability():
         and parsed.get("context_budget") == "small"
         and context.get("budget") == "small"
         and context.get("effective_limit") == 4
-        and parsed.get("route", {}).get("project_id") == "pcr02"
-        and canonical_paths.get("archive") == "projects/pcr02/archive"
-        and context_canonical_paths.get("archive") == "projects/pcr02/archive"
+        and parsed.get("route", {}).get("project_id") == "pcr02-ssc305"
+        and canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"
+        and context_canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"
         and isinstance(context.get("current"), list)
         and isinstance(context.get("risks"), list)
         and len(search.get("results", [])) <= context.get("effective_limit", 0)
@@ -488,7 +488,7 @@ def test_knowledge_context_control_plane_query_override():
         and llm_agent["exit_code"] == 0
         and parsed_pcr02.get("repo_route", {}).get("repo_id") == "knowledge-hub"
         and parsed_llm.get("repo_route", {}).get("repo_id") == "knowledge-hub"
-        and parsed_pcr02.get("route", {}).get("project_id") == "pcr02"
+        and parsed_pcr02.get("route", {}).get("project_id") == "pcr02-ssc305"
         and parsed_llm.get("route", {}).get("project_id") == "agent-dev-kit"
         and parsed_pcr02.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub"
         and parsed_llm.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub",
@@ -532,10 +532,10 @@ def test_knowledge_context_control_plane_alias_ambiguity():
     expect(
         result["exit_code"] == 0
         and parsed.get("repo_route", {}).get("repo_id") == "knowledge-hub"
-        and route.get("project_id") == "pcr02"
+        and route.get("project_id") == "pcr02-ssc305"
         and route_selection.get("cwd_route_project_id") == "knowledge-hub"
-        and route_selection.get("query_route_project_id") == "pcr02"
-        and route_selection.get("selected_project_id") == "pcr02"
+        and route_selection.get("query_route_project_id") == "pcr02-ssc305"
+        and route_selection.get("selected_project_id") == "pcr02-ssc305"
         and route_selection.get("query_score", 0) > 0
         and any(row.get("type") == "control-plane-query-aware" for row in matched_by),
         "knowledge-context-control-plane-alias-ambiguity",

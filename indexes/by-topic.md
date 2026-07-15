@@ -5,17 +5,17 @@
 本段是跨会话恢复首屏，只保留必须优先定位的主题、命令和长期入口。历史治理制品不得插入本段，统一放入“历史治理台账”。
 
 - owner gate: `artifacts/manifests/pcr02-owner-decision-worksheets-20260618.md`; `tools/knowledge-owner-gates.sh`
-- PCR02: `projects/pcr02`; `indexes/by-project.md`
+- PCR02: `projects/pcr02-ssc305`; `indexes/by-project.md`
 - tools: `artifacts/manifests/pcr02-tools-boundary-20260620.md`; `tools/`
 - knowledge: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
-- diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/pcr02/current/runbooks/diag-usage-guide.md`
-- ASAN: `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论）；`templates/asan-validation-report.md`（非 PCR02 项目验证模板）；`artifacts/manifests/embedded-asan-active-promotion-20260629.md`（active promotion 证据）；`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`（非 PCR02 实操证据增强项）；`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`（前置审查包）；`projects/pcr02/current/runbooks/asan-debug-guide.md`（PCR02 project-local）；`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/xcrz-sigmastar-demo/current/runbooks/diag-usage-guide.md`
+- ASAN: `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论）；`templates/asan-validation-report.md`（非 PCR02 项目验证模板）；`artifacts/manifests/embedded-asan-active-promotion-20260629.md`（active promotion 证据）；`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`（非 PCR02 实操证据增强项）；`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`（前置审查包）；`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`（PCR02 project-local）；`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - memory auto-curation: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
-- PCR02 归档路径: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`; `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- DVR: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- motor MCU: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- PCR02 归档路径: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- DVR: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- motor MCU: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`
 - governance: `governance/`; `artifacts/manifests`
 - path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
@@ -23,11 +23,11 @@
 - operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `tools/knowledge-review-after.sh`; product final gate 使用 `tools/knowledge-final-gate.sh`，固定参数 `--final-profile product`
 - regression: `tools/knowledge-regression.sh`; `artifacts/manifests/knowledge-hub-governance-regression-helper-20260619.md`
 - PCR02 owner-ready validation: `artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`; `pcr02-owner-ready-validation-paths-20260713`
-- PCR02 third-party build optimization: `projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`
+- PCR02 third-party build optimization: `projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`
 - Obsidian: `indexes/obsidian-home.md`; `governance/obsidian-integration.md`; `knowledge-hub-obsidian-integration-20260713`
 - patent: `domains/patents`; `domains/patents/archive/patent-disclosure`
 - Codex archive: `domains/codex/archive/codex-archive.ref.md`; `domains/codex/archive/codex-archive`; `registry/sources.json`
-- PCR02 /customer ro SD upgrade 历史阶段：`projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
+- PCR02 /customer ro SD upgrade 历史阶段：`projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
 - OpenAI local runtime boundary 历史治理：`artifacts/manifests/codex-openai-local-runtime-boundary-20260524.md`; `codex-openai-local-runtime-boundary-20260524`
 - Codex token efficiency roadmap 覆盖审计：`artifacts/manifests/codex-token-efficiency-roadmap-coverage-20260710.md`; `codex-token-efficiency-roadmap-coverage-20260710`
 - Codex archive memory-curation file-level audit：`artifacts/manifests/codex-archive-memory-curation-file-level-audit-20260710.md`; `codex-archive-memory-curation-file-level-audit-20260710`
@@ -106,7 +106,7 @@
 - Knowledge Hub status owner summary command: `artifacts/manifests/knowledge-hub-status-owner-summary-command-20260620.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `domains/embedded/runbooks/asan-debug-guide.md`; `templates/asan-validation-report.md`; `artifacts/manifests/embedded-asan-active-promotion-20260629.md`; `artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`; `artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.md`; `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
-- PCR02 debug runbooks: `projects/pcr02/current/runbooks`
+- PCR02 debug runbooks: `projects/xcrz-sigmastar-demo/current/runbooks`
 - Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - PCR02 DVR closeout: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
@@ -144,7 +144,7 @@
 - Knowledge Hub doctor helper: `artifacts/manifests/knowledge-hub-doctor-helper-20260619.md`
 - Knowledge Hub README maintenance path sync: `artifacts/manifests/knowledge-hub-readme-maintenance-path-sync-20260619.md`
 - Knowledge Hub Evidence Index template alignment: `artifacts/manifests/knowledge-hub-evidence-index-template-20260619.md`
-- Engineering archive PCR02 archive corpus: `projects/pcr02/archive/engineering-archive`
+- Engineering archive PCR02 archive corpus: `projects/pcr02-ssc305/archive/engineering-archive`
 - Registered source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - PCR02 Level 2 source coverage closeout: `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260620.md`
 - Source registry final-state fields: `artifacts/manifests/knowledge-hub-source-registry-final-state-fields-20260620.md`
@@ -263,14 +263,14 @@
 - Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
 - Knowledge Hub operational maturity: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`; `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`
 - PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
-- PCR02 ASAN project-local target: `projects/pcr02/current/runbooks/asan-debug-guide.md`
-- PCR02 DVR archive targets: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- PCR02 motor MCU archive target: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
-- PCR02 prog_pcr02 high-load monitoring: `projects/pcr02/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
-- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/pcr02/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
-- PCR02 Codex history backfill engineering findings: `projects/pcr02/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
-- PCR02 SIGBUS core/debug tools historical session: `projects/pcr02/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
-- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
+- PCR02 ASAN project-local target: `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
+- PCR02 DVR archive targets: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- PCR02 motor MCU archive target: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- PCR02 prog_pcr02 high-load monitoring: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
+- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 Codex history backfill engineering findings: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
+- PCR02 SIGBUS core/debug tools historical session: `projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
+- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
 - Codex archive selective backfill audit: `artifacts/manifests/codex-archive-selective-backfill-audit-20260709.md`; `codex-archive-selective-backfill-audit-20260709`
 - Codex archive phased migration removal: `artifacts/manifests/codex-archive-phased-migration-removal-20260709.md`; `codex-archive-phased-migration-removal-20260709`
 - llm_tools Windows builder runbook 候选归档: `projects/llm-tools/archive/release/2026-07-09-windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
@@ -301,15 +301,15 @@
 - llm_tools normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`
 - llm_tools v1.0.0 release memory review: `projects/llm-tools/archive/release/2026-05-19-llm-tools-v1-release-memory-review.md`; `llm-tools-v1-release-memory-review-20260519`
 - MCU memory-curation coverage: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`
-- PCR02 SSC305 2026-05-19 release validation: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
+- PCR02 SSC305 2026-05-19 release validation: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
 - Codex archive memory-curation coverage: `artifacts/manifests/codex-archive-memory-curation-coverage-20260711.md`; `codex-archive-memory-curation-coverage-20260711`
 - Codex archive memory-curation removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-memory-curation.md`; `codex-archive-removal-execution-20260711-memory-curation`
 - Codex archive remaining blockers scan: `artifacts/manifests/codex-archive-remaining-blockers-scan-20260711.md`; `codex-archive-remaining-blockers-scan-20260711`
-- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
-- PCR02 core/GDB triage historical debug record: `projects/pcr02/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
-- PCR02 DVR protocol sync build fix: `projects/pcr02/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
-- PCR02 regular OTA customer partition guard delta: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
-- PCR02 IR light/player/WiFi debug summary: `projects/pcr02/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
+- PCR02 core/GDB triage historical debug record: `projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
+- PCR02 DVR protocol sync build fix: `projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
+- PCR02 regular OTA customer partition guard delta: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
+- PCR02 IR light/player/WiFi debug summary: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
 - MCU release NAS guard governance: `projects/mcu/archive/2026-06-29-mcu-release-nas-guard-governance.md`; `mcu-release-nas-guard-governance-20260629`
 - Codex archive final body coverage: `artifacts/manifests/codex-archive-final-body-coverage-20260711.md`; `codex-archive-final-body-coverage-20260711`
 - Codex archive final bodies removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.md`; `codex-archive-removal-execution-20260711-final-bodies`
@@ -317,10 +317,6 @@
 
 ## 受控生成条目
 
-- PCR02 项目画像候选: `projects/pcr02/current/project-profile.md`; `pcr02-readiness-profile-20260713`
-- PCR02 维护入口: `projects/pcr02/current/runbooks/maintenance-entry.md`; `pcr02-readiness-runbook-20260713`
-- PCR02 权威与维护边界决策候选: `projects/pcr02/decisions/project-boundary-decision-candidate.md`; `pcr02-readiness-decision-20260713`
-- PCR02 readiness validation: `projects/pcr02/validation/project-readiness.md`; `pcr02-readiness-validation-20260713`
 - PCR02 SSC305 SDK 项目画像候选: `projects/pcr02-ssc305/current/project-profile.md`; `pcr02-ssc305-readiness-profile-20260713`
 - PCR02 SSC305 SDK 维护入口: `projects/pcr02-ssc305/current/runbooks/maintenance-entry.md`; `pcr02-ssc305-readiness-runbook-20260713`
 - PCR02 SSC305 SDK 权威与维护边界决策候选: `projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md`; `pcr02-ssc305-readiness-decision-20260713`
@@ -442,10 +438,13 @@
 - Knowledge Hub 权威与维护边界决策候选: `governance/product/decisions/project-boundary-decision-candidate.md`; `knowledge-hub-readiness-decision-20260713`
 - Knowledge Hub readiness validation: `governance/product/validation/project-readiness.md`; `knowledge-hub-readiness-validation-20260713`
 - Knowledge Hub 产品成熟度全面实现审计 2026-07-13: `artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md`; `knowledge-hub-product-maturity-implementation-20260713`
-- PCR02 Video/Audio 共享内存使用说明: `projects/pcr02/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
+- PCR02 Video/Audio 共享内存使用说明: `projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
 - GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
-- PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
+- PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- PCR02 Sensor 静态数据上报 Task/App 联调指南: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md`; `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
 - Codex token-lean 固定上下文优化验证候选: `artifacts/manifests/codex-token-lean-context-validation-20260714.md`; `codex-token-lean-context-validation-20260714`
+- PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`

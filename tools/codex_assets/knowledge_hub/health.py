@@ -13,7 +13,7 @@ from .store import incomplete_transactions
 
 
 BODY_PREFIXES = ("projects/", "domains/", "governance/", "notes/")
-EXCLUDED_BODY_PATHS = {"projects/pcr02/archive/engineering-archive/pcr02/decision-index.md"}
+EXCLUDED_BODY_PATHS = {"projects/pcr02-ssc305/archive/engineering-archive/pcr02/decision-index.md"}
 
 
 def _is_body_markdown(path: str) -> bool:

@@ -20,4 +20,4 @@ def test_normalize_relpath_rejects_unsafe_paths(value):
 
 
 def test_normalize_relpath_accepts_repository_path():
-    assert normalize_relpath("projects/pcr02/current/a.md") == "projects/pcr02/current/a.md"
+    assert normalize_relpath("projects/pcr02-ssc305/current/a.md") == "projects/pcr02-ssc305/current/a.md"

@@ -74,7 +74,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs/runbooks/asan-debug-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU 事实拆分和 archive-only 边界：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
@@ -103,10 +103,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner resolution schema`: owner decision 字段、枚举和非法组合：`artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`。
 - `pcr02-project-docs owner decision landing`: 7 条 owner gate 人工授权决策落地：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。
 - `pcr02-project-docs source control`: Hub 内 source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/source-policy.md`。
-- `pcr02-project-docs ASAN owner target`: `projects/pcr02/current/runbooks/asan-debug-guide.md`，registry item `pcr02-asan-debug-guide-project-local-20260624`。
-- `pcr02-project-docs DVR plan owner target`: `projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`，registry item `pcr02-dvr-plan-archive-only-20260624`。
-- `pcr02-project-docs motor MCU owner target`: `projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`，registry item `pcr02-motor-mcu-debug-record-archive-only-20260624`。
-- `pcr02-project-docs DVR session owner target`: `projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
+- `pcr02-project-docs ASAN owner target`: `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`，registry item `pcr02-asan-debug-guide-project-local-20260624`。
+- `pcr02-project-docs DVR plan owner target`: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`，registry item `pcr02-dvr-plan-archive-only-20260624`。
+- `pcr02-project-docs motor MCU owner target`: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`，registry item `pcr02-motor-mcu-debug-record-archive-only-20260624`。
+- `pcr02-project-docs DVR session owner target`: `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
 - `pcr02-project-docs governance closeout`: 可恢复 handoff：`artifacts/manifests/pcr02-governance-handoff-20260618.md`。
 - `registry/items.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
 - `codex-memories`: runtime input；不迁移 raw memory，不写 `~/.codex/memories/**`，只在 Hub 生成候选、摘要或人工复核记录。
@@ -150,7 +150,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-archive/session-wrap/20260524-231336-gd32l235-app-boot-v1-session-wrap.md`: 已合并到 MCU GD32L235 app_boot_v1 refactor historical session，旧正文已按授权删除并保留 tombstone：`artifacts/manifests/codex-archive-removal-execution-20260710-session-wrap-final-032-037.md`。
 - `codex-archive-registry`: 已终态归位到 `domains/codex/archive/codex-archive-registry`；后续索引维护以 Hub registry/index 为准。
 - `knowledge-hub-automation-runs`: Hub native ledger；用于串联 automation、authorization、project、session、source 和验证证据。
-- `engineering-archive`: 已归位到 `projects/pcr02/archive/engineering-archive` 终态工程归档目录；旧过渡副本不再保留。
+- `engineering-archive`: 已归位到 `projects/pcr02-ssc305/archive/engineering-archive` 终态工程归档目录；旧过渡副本不再保留。
 - `patent-disclosure`: 已归位到 `domains/patents/archive/patent-disclosure` 和 `artifacts/vault/patent-disclosure`。
 - `embedded-knowledge`: 已完整迁移到 `domains/embedded/*`；旧过渡快照目录已删除，旧外部路径不再作为 source authority。
 - `codex-archive`: 已终态归位到 `domains/codex/archive/codex-archive`；旧 Codex archive 工具不再作为新增归档入口。
@@ -187,7 +187,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-archive/memory-curation/20260517-154419-llm-tools-targeted-memory-curation.md` and `codex-archive/memory-curation/20260517-155031-llm-tools-memory-curation-normal-iteration.md`: migrated to llm_tools normal iteration historical policy: `projects/llm-tools/archive/release/2026-05-17-llm-tools-normal-iteration-policy.md`; `llm-tools-normal-iteration-policy-20260517`.
 - `codex-archive/memory-curation/20260519-221757-llm-tools-v1-release-memory-review.md`: migrated to llm_tools v1.0.0 release memory review: `projects/llm-tools/archive/release/2026-05-19-llm-tools-v1-release-memory-review.md`; `llm-tools-v1-release-memory-review-20260519`.
 - `codex-archive/memory-curation/20260518-224302-mcu-memory-curation.md`: migrated to MCU memory-curation coverage: `projects/mcu/archive/2026-05-18-mcu-memory-curation-coverage.md`; `mcu-memory-curation-coverage-20260518`.
-- `codex-archive/memory-curation/20260519-221757-pcr02-ssc305-post-release-memory-review.md`: migrated to PCR02 2026-05-19 release validation historical record: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`.
+- `codex-archive/memory-curation/20260519-221757-pcr02-ssc305-post-release-memory-review.md`: migrated to PCR02 2026-05-19 release validation historical record: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`.
 - `codex-archive/memory-curation/*`: 40 old memory-curation source bodies classified by terminal coverage ledger: `artifacts/manifests/codex-archive-memory-curation-coverage-20260711.md`; `codex-archive-memory-curation-coverage-20260711`.
 - `codex-archive/memory-curation/*`: 40 old memory-curation source bodies deleted with tombstone; topic index retained: `artifacts/manifests/codex-archive-removal-execution-20260711-memory-curation.md`; `codex-archive-removal-execution-20260711-memory-curation`.
 - `codex-archive`: post-memory-curation remaining blocker scan recorded 7 non-index bodies; superseded by final body coverage: `artifacts/manifests/codex-archive-remaining-blockers-scan-20260711.md`; `codex-archive-remaining-blockers-scan-20260711`.

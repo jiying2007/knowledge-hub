@@ -9,7 +9,7 @@ def test_known_answer_retrieval_meets_product_thresholds():
     payload = run_retrieval_benchmark(repository_root(), maximum_p95_ms=5000)
     assert payload["status"] == "pass"
     assert payload["case_count"] >= 20
-    assert payload["route_case_count"] == 31 * 9 + 4
+    assert payload["route_case_count"] == 30 * 9 + 4
     assert payload["route_accuracy"] == 1.0
     assert payload["hit_rate"] >= 0.95
     assert payload["mrr"] >= 0.85

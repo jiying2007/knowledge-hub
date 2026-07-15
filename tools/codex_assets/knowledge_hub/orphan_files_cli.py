@@ -25,7 +25,7 @@ if args.limit < 1:
 body_prefixes = ("projects/", "domains/", "governance/", "notes/")
 excluded_names = {"README.md"}
 excluded_prefixes = (
-    "projects/pcr02/archive/engineering-archive/pcr02/decision-index.md",
+    "projects/pcr02-ssc305/archive/engineering-archive/pcr02/decision-index.md",
 )
 
 

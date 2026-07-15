@@ -4,7 +4,6 @@
 
 | 项目 | profile | runbook | decision | validation | 源码定位 |
 |---|---|---|---|---|---|
-| [PCR02](../projects/pcr02/README.md) | [profile](../projects/pcr02/current/project-profile.md) | [runbook](../projects/pcr02/current/runbooks/maintenance-entry.md) | [decision](../projects/pcr02/decisions/project-boundary-decision-candidate.md) | [validation](../projects/pcr02/validation/project-readiness.md) | `local-only` |
 | [PCR02 SSC305 SDK](../projects/pcr02-ssc305/README.md) | [profile](../projects/pcr02-ssc305/current/project-profile.md) | [runbook](../projects/pcr02-ssc305/current/runbooks/maintenance-entry.md) | [decision](../projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md) | [validation](../projects/pcr02-ssc305/validation/project-readiness.md) | `local-only` |
 | [XCRZ SigmaStar Demo](../projects/xcrz-sigmastar-demo/README.md) | [profile](../projects/xcrz-sigmastar-demo/current/project-profile.md) | [runbook](../projects/xcrz-sigmastar-demo/current/runbooks/maintenance-entry.md) | [decision](../projects/xcrz-sigmastar-demo/decisions/project-boundary-decision-candidate.md) | [validation](../projects/xcrz-sigmastar-demo/validation/project-readiness.md) | `local-only` |
 | [PCR02 API Module](../projects/pcr02-api/README.md) | [profile](../projects/pcr02-api/current/project-profile.md) | [runbook](../projects/pcr02-api/current/runbooks/maintenance-entry.md) | [decision](../projects/pcr02-api/decisions/project-boundary-decision-candidate.md) | [validation](../projects/pcr02-api/validation/project-readiness.md) | `local-only` |
@@ -38,7 +37,7 @@
 
 ## 判定边界
 
-- structural coverage：31 项目均有四类 reviewing 入口。
+- structural coverage：30 项目均有四类 reviewing 入口；group 元数据不重复计入项目数。
 - source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。
 - evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。
 - lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。

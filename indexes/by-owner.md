@@ -226,14 +226,11 @@
 - `knowledge-hub-git-remote-route-registry-20260626`
 - `knowledge-hub-complete-delivery-closure-20260701`
 - `pcr02-nfs-app-share-runbook-20260702`
-- `pcr02-readiness-profile-20260713`
-- `pcr02-readiness-runbook-20260713`
-- `pcr02-readiness-decision-20260713`
-- `pcr02-readiness-validation-20260713`
 - `pcr02-ssc305-readiness-profile-20260713`
 - `pcr02-ssc305-readiness-runbook-20260713`
 - `pcr02-ssc305-readiness-decision-20260713`
 - `pcr02-ssc305-readiness-validation-20260713`
+- `pcr02-ssc305-canonical-hardcut-20260715`
 - `xcrz-sigmastar-demo-readiness-profile-20260713`
 - `xcrz-sigmastar-demo-readiness-runbook-20260713`
 - `xcrz-sigmastar-demo-readiness-decision-20260713`
@@ -357,7 +354,10 @@
 - `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
 - `codex-token-lean-context-validation-20260714`
+- `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
 
 ## pcr02-registry-owner
 

@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## no-active-promotion (131)
+## no-active-promotion (127)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -13,7 +13,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## manual-validation-pending (128)
+## manual-validation-pending (124)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## ai-generated (124)
+## ai-generated (120)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -31,7 +31,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## owner-review-pending (124)
+## owner-review-pending (120)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -40,7 +40,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## project-readiness (124)
+## project-readiness (120)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -49,7 +49,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## runbook (32)
+## runbook (31)
 
 - [Agent Dev Kit 维护入口](../../projects/agent-dev-kit/current/runbooks/maintenance-entry.md) · `reviewing`
 - [Codex Local Runtime Assets 维护入口](../../domains/codex/current/runbooks/maintenance-entry.md) · `reviewing`
@@ -58,7 +58,7 @@
 - [GD32L235 Firmware 维护入口](../../projects/gd32l235/current/runbooks/maintenance-entry.md) · `reviewing`
 - [HC32F072 Firmware 维护入口](../../projects/hc32f072/current/runbooks/maintenance-entry.md) · `reviewing`
 
-## validation (32)
+## validation (31)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -67,7 +67,7 @@
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## decision (31)
+## decision (30)
 
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -76,7 +76,7 @@
 - [GD32L235 Firmware 权威与维护边界决策候选](../../projects/gd32l235/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [HC32F072 Firmware 权威与维护边界决策候选](../../projects/hc32f072/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## profile (31)
+## profile (30)
 
 - [Agent Dev Kit 项目画像候选](../../projects/agent-dev-kit/current/project-profile.md) · `reviewing`
 - [Codex Local Runtime Assets 项目画像候选](../../domains/codex/current/project-profile.md) · `reviewing`
@@ -94,15 +94,6 @@
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
 
-## pcr02 (11)
-
-- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
-
 ## zh-cn (11)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -111,6 +102,15 @@
 - [中文可读性规范](../../governance/chinese-readability.md) · `active`
 - [中文术语表规范](../../governance/glossary.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
+
+## pcr02 (7)
+
+- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## knowledge-hub (6)
 
@@ -128,6 +128,14 @@
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [Codex Local Runtime Assets 维护入口](../../domains/codex/current/runbooks/maintenance-entry.md) · `reviewing`
 - [Codex Local Runtime Assets 项目画像候选](../../domains/codex/current/project-profile.md) · `reviewing`
+
+## pcr02-ssc305 (5)
+
+- [PCR02 SSC305 SDK readiness validation](../../projects/pcr02-ssc305/validation/project-readiness.md) · `reviewing`
+- [PCR02 SSC305 SDK 权威与维护边界决策候选](../../projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [PCR02 SSC305 SDK 维护入口](../../projects/pcr02-ssc305/current/runbooks/maintenance-entry.md) · `reviewing`
+- [PCR02 SSC305 SDK 项目画像候选](../../projects/pcr02-ssc305/current/project-profile.md) · `reviewing`
+- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## agent-dev-kit (4)
 
@@ -297,13 +305,6 @@
 - [PCR02 Sensor Module 维护入口](../../projects/pcr02-sensor/current/runbooks/maintenance-entry.md) · `reviewing`
 - [PCR02 Sensor Module 项目画像候选](../../projects/pcr02-sensor/current/project-profile.md) · `reviewing`
 
-## pcr02-ssc305 (4)
-
-- [PCR02 SSC305 SDK readiness validation](../../projects/pcr02-ssc305/validation/project-readiness.md) · `reviewing`
-- [PCR02 SSC305 SDK 权威与维护边界决策候选](../../projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [PCR02 SSC305 SDK 维护入口](../../projects/pcr02-ssc305/current/runbooks/maintenance-entry.md) · `reviewing`
-- [PCR02 SSC305 SDK 项目画像候选](../../projects/pcr02-ssc305/current/project-profile.md) · `reviewing`
-
 ## pcr02-wifi (4)
 
 - [PCR02 Wi-Fi Module readiness validation](../../projects/pcr02-wifi/validation/project-readiness.md) · `reviewing`
@@ -327,9 +328,9 @@
 
 ## decision-candidate (3)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## evidence (3)
 
@@ -344,18 +345,18 @@
 
 ## fbtft (2)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## lcd-preview (2)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## libyuv (2)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## long-term-assets (2)
 
@@ -364,8 +365,8 @@
 
 ## qr-scan (2)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## readability (2)
 
@@ -379,18 +380,18 @@
 
 ## shm (2)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## st77912 (2)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## vision-rgb (2)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## absorption (1)
 
@@ -398,7 +399,7 @@
 
 ## adb (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## address-sanitizer (1)
 
@@ -406,7 +407,7 @@
 
 ## android-camera-hal (1)
 
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## archive (1)
 
@@ -418,7 +419,7 @@
 
 ## audio (1)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 
 ## backlinks (1)
 
@@ -430,15 +431,19 @@
 
 ## build (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## camera (1)
 
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## candidate-runbook (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+
+## canonical-path (1)
+
+- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## changelog (1)
 
@@ -454,7 +459,7 @@
 
 ## cortex-a7 (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## debug (1)
 
@@ -470,7 +475,7 @@
 
 ## display (1)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
 ## embedded (1)
 
@@ -482,15 +487,15 @@
 
 ## fbdev (1)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
 ## fps (1)
 
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## framebuffer (1)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
 ## glossary (1)
 
@@ -498,19 +503,23 @@
 
 ## h264 (1)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 
 ## hard-float (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
+## hardcut (1)
+
+- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## high-load (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## high-temperature-aging (1)
 
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## human-review (1)
 
@@ -518,7 +527,7 @@
 
 ## lcd (1)
 
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## local-first (1)
 
@@ -542,11 +551,11 @@
 
 ## mi_fb (1)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
 ## mspi (1)
 
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## naming (1)
 
@@ -554,7 +563,11 @@
 
 ## neon (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
+## no-compatibility-layer (1)
+
+- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## obsidian (1)
 
@@ -566,7 +579,7 @@
 
 ## optimization (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## owner-review (1)
 
@@ -578,7 +591,7 @@
 
 ## pcm (1)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 
 ## pr (1)
 
@@ -586,7 +599,11 @@
 
 ## prog_pcr02 (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+
+## project-routing (1)
+
+- [PCR02 组级旧入口硬切收口实施记录候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
 ## properties (1)
 
@@ -594,7 +611,7 @@
 
 ## raw-preview (1)
 
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
 ## report-only (1)
 
@@ -602,7 +619,7 @@
 
 ## reviewing-followup (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## rtk (1)
 
@@ -610,7 +627,7 @@
 
 ## runtime-debug (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## schema (1)
 
@@ -622,15 +639,15 @@
 
 ## spi (1)
 
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
 ## ssc305 (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## sstar-fb (1)
 
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
 ## team-runbook (1)
 
@@ -646,11 +663,11 @@
 
 ## thirdparty (1)
 
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## thread-analysis (1)
 
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/pcr02/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## tools (1)
 
@@ -658,8 +675,8 @@
 
 ## video (1)
 
-- [PCR02 Video/Audio 共享内存使用说明](../../projects/pcr02/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+- [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 
 ## virtual-stream (1)
 
-- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+- [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`

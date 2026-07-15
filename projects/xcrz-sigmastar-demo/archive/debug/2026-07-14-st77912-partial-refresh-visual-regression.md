@@ -26,6 +26,8 @@ related:
 validation_refs:
 - adb-read-only-runtime-capture-20260714
 - source-timing-review-20260714
+- userspace-refresh-cycle-implementation-build-20260714
+- release-kernel-source-static-sync-20260714
 artifact_refs:
 - device:/customer/bin/prog_pcr02#sha256=7b1d46d903f22d3488da2d4fd67fecfd1afab773b01e2cebfafca4d0acc67794
 summary_zh: 最新 partial-refresh 部署在降低静态窗口显示线程负载的同时出现图像割裂和局部残留；ADB 抓取 framebuffer 多数完整，源码时序表明 LVGL area flush 与 fbtft deferred
@@ -52,6 +54,7 @@ incident_id: xcrz-display-partial-refresh-20260714
 severity: visual-correctness-regression
 affected_version: latest test firmware, prog_pcr02 sha256 7b1d46d903f22d3488da2d4fd67fecfd1afab773b01e2cebfafca4d0acc67794
 manual_validation_pending: true
+implementation_status: source-implemented-static-verified-runtime-pending
 ---
 
 # PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录
@@ -146,16 +149,45 @@ manual_validation_pending: true
 
 ## 修复或规避
 
-本次未修改或部署代码。建议分两阶段处理：
+初次只读取证阶段未修改或部署代码；同日后续已按长期方案实现源码，但仍未生成或部署正式固件。方案分两阶段处理：
 
 1. **立即恢复正确性基线**：仅对 `fb_st77912` 单 framebuffer 路径恢复 `disp_drv->full_refresh=1`；保留 54 MHz/25 fps、dirty-line 越界保护、resume 分辨率修正等已验证的内核安全改动。该动作会增加 LVGL 渲染和 SPI 带宽，但风险最低。
 2. **清除明确应用瑕疵**：显示初始化后对两个 screen root 清除 `LV_OBJ_FLAG_SCROLLABLE`，并设置 `LV_SCROLLBAR_MODE_OFF`。该修复与 partial/full refresh 独立。
 3. **长期 partial-refresh 设计**：`flush_cb` 先把每个 area 同步拷到 staging 并合并范围；使用 `lv_disp_flush_is_last()` 判断一个 LVGL refresh cycle 结束，只在最后 area 将本轮一致的 staging 状态提交给 framebuffer。随后仍需增加内核可等待的 fbtft commit/completion 或等价双缓冲屏障，避免下一帧覆盖 SPI 正在读取的共享 framebuffer。
 4. **不建议**：继续依赖当前 queue 批处理、仅调低 fps、仅调用 `fsync()`，或把问题归因于 ESD。这些措施都没有补齐逻辑帧和物理完成边界。
 
+### 同日后续实施状态（2026-07-14）
+
+应用层已在开发工作树实现以下闭环：
+
+- `flush_cb` 在返回 ready 前将每个 LVGL area 同步复制到应用 staging，确保 `color_p` 不会被复用后再读取。
+- 使用 `lv_disp_flush_is_last()` 识别同一 refresh cycle 的最后 area；本轮 dirty area 合并后只排队一次 framebuffer commit。
+- 共享 flush worker 先把 staging 的合并区域写入 mmap framebuffer，再调用阻塞式 `FBIO_FBTFT_COMMIT`；ioctl 返回后才调用最后一次 `lv_disp_flush_ready()`。
+- 双屏共用一个 worker，物理提交天然串行，避免两屏同时抢占 SPI。
+- 初始化时探测 commit ioctl；新应用运行在旧内核时收到 `ENOTTY`，自动切回 `full_refresh=1`、关闭 partial refresh。
+- 两个 root screen 显式清除 `LV_OBJ_FLAG_SCROLLABLE` 并关闭 scrollbar。
+
+该应用实现已完成一次开发工作树编译，`display_provider.cpp` 进入实际编译和链接且构建退出码为 0。之后用户将 release 工作树的验收边界收敛为静态检查，因此未在 release 工作树重复编译。
+
+内核层已同步到 PCR02 SSC305 release 工作树，涉及四个文件：
+
+1. UAPI `fb.h`：新增私有 `FBIO_FBTFT_COMMIT = _IO('F', 0x21)`。
+2. 内核 `fb.h` 与 `fb_defio.c`：新增并导出 `fb_deferred_io_flush_sync()`，立即调度并等待 deferred work 完成。
+3. `fbtft-core.c`：接入 commit ioctl，并把空 dirty 状态统一为 `start=yres, end=0`，防止无 dirty 的能力探测误刷第 0 行。
+
+release 工作树四个目标文件与开发工作树逐字节一致；标准 `checkpatch` 为 0 error、0 warning，`git diff --check` 通过。目标配置中 `CONFIG_FB_DEFERRED_IO=y`、`CONFIG_FB_TFT=y`、`CONFIG_FB_TFT_ST77912=y`。未执行 release 固件编译、刷写或实机 HIL。
+
+版本组合必须作为一个验收单元：
+
+- **新应用 + 旧内核**：能力探测失败后自动回退全刷，显示正确性优先。
+- **新应用 + 新内核**：进入长期 partial-refresh 路径，仍需固件和实机验证。
+- **旧应用 + 新内核**：旧应用不会主动调用完成屏障；若它已经启用原有 partial refresh，割裂与残留风险仍在。因此 release 打包不能只换内核而继续携带旧显示应用。
+
 ## 验证
 
 当前结论已通过设备运行配置、连续 framebuffer 取样、线程 CPU tick、应用日志和三层源码时序交叉核对。当前 partial-refresh 版本的验收结论为：**显示正确性失败，不可作为 release baseline**。
+
+长期方案当前达到“源码实现并完成静态验证”，尚未达到“固件或实机通过”。旧内核上的独立 ioctl 探针返回 `ENOTTY`，构成兼容回退的负路径证据；新内核返回成功、应用初始化进入 `partial_enabled=1`、面板无割裂/残留以及 CPU A/B 均待后续 HIL 补齐。
 
 后续修复至少需要固定同一动画脚本执行三组 A/B：
 
@@ -171,8 +203,8 @@ manual_validation_pending: true
 
 ```yaml
 manual_validation_pending: true
-manual_validation_reason: 安全回退和长期修复均尚未构建、部署及完成固定场景 A/B。
-required_followup: 部署最小回退版本验证正确性，再实现 refresh-cycle commit 和可等待完成屏障。
+manual_validation_reason: 长期方案已实现源码并完成静态检查，但 release 固件尚未编译、部署及完成固定场景 A/B。
+required_followup: 使用同时包含新显示应用和新内核的 release 制品，验证 commit ioctl、兼容回退、视觉正确性和 CPU 收益。
 owner: leiwenjun
 review_after: 2026-08-14
 ```
@@ -180,7 +212,8 @@ review_after: 2026-08-14
 ## 后续动作
 
 - 本记录保持 `reviewing`，不自动提升为 runbook、validation、AGENTS 或 owner decision。
-- 先实施最小安全回退并做固定场景 A/B；通过后补充真实制品 hash、视频证据和 CPU 指标。
+- release 构建必须确认新显示应用与新内核成套进入同一制品；构建后补充制品 hash。
+- 先验证“新应用 + 旧内核”自动回退，再验证“新应用 + 新内核”固定场景 A/B；通过后补充视频证据和 CPU 指标。
 - 长期 partial-refresh 方案通过视觉与性能门禁后，再决定是否 supersede 2026-07-13 的“待验证”条目；当前两条记录保留时间顺序和证据演进关系。
 
 ## 归档证据模板
@@ -190,6 +223,6 @@ review_after: 2026-08-14
 - Archive Candidate Path: 本文件。
 - Sanitization: 未记录设备地址、凭据、原始 framebuffer、完整日志或二进制。
 - Provenance: 2026-07-14 最新测试固件与同日工作区源码快照。
-- Verification: `knowledge-check --dry-run --json --diagnostics` 通过，0 error、0 warning；修复部署 A/B 仍 pending。
+- Verification: release 内核四文件一致性、`git diff --check`、标准 `checkpatch` 和内核配置检查通过；`knowledge-check --dry-run --json --diagnostics` 通过，0 error、0 warning；固件与实机 A/B 仍 pending。
 - Memory Candidate: no。
 - Gate Result: archive governance pass；软件显示正确性 needs-fix，内容待人工 review。

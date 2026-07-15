@@ -319,10 +319,6 @@
 - 2026-10-11: `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - 2026-10-11: `knowledge-hub-operational-tooling-hardening-20260711`
 - 2026-10-11: `knowledge-hub-long-term-operations-plan-20260711`
-- 2026-10-13: `pcr02-readiness-profile-20260713`
-- 2026-10-13: `pcr02-readiness-runbook-20260713`
-- 2026-10-13: `pcr02-readiness-decision-20260713`
-- 2026-10-13: `pcr02-readiness-validation-20260713`
 - 2026-10-13: `pcr02-ssc305-readiness-profile-20260713`
 - 2026-10-13: `pcr02-ssc305-readiness-runbook-20260713`
 - 2026-10-13: `pcr02-ssc305-readiness-decision-20260713`
@@ -450,4 +446,8 @@
 - 2026-10-14: `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - 2026-10-14: `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - 2026-08-14: `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- 2026-08-14: `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
 - 2026-10-14: `codex-token-lean-context-validation-20260714`
+- 2026-10-13: `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- 2026-10-15: `pcr02-ssc305-canonical-hardcut-20260715`
+- 2026-08-15: `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`

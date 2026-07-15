@@ -32,8 +32,8 @@ TERMS = [
 ]
 
 CANONICAL_ROUTES = {
-    "~/embedded/engineering_archive": "~/knowledge-hub/projects/pcr02/archive/engineering-archive",
-    "~/embedded/engineering_archive/pcr02": "~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02",
+    "~/embedded/engineering_archive": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive",
+    "~/embedded/engineering_archive/pcr02": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02",
     "~/codex/docs/archive": "~/knowledge-hub/domains/codex/archive/codex-archive",
     "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
 }

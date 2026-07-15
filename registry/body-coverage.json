@@ -113,14 +113,24 @@
       "reason_zh": "冻结 MCU 项目历史归档正文路径，不表示当前项目事实。"
     },
     {
-      "id": "pcr02-archive-corpus-baseline-20260713",
-      "path_prefix": "projects/pcr02/archive/",
+      "id": "pcr02-ssc305-archive-corpus-baseline-20260715",
+      "path_prefix": "projects/pcr02-ssc305/archive/",
       "coverage_mode": "archive-corpus",
       "owner": "leiwenjun",
-      "review_after": "2026-10-13",
-      "expected_markdown_count": 61,
-      "inventory_sha256": "896e1378f9320b68470a202bac8c8c2740987dc07782d0799dff90b23cfdad53",
-      "reason_zh": "冻结 PCR02 历史归档正文路径；2026-07-14 显式复核并纳入 ST77912 黑屏 LCD ESD 根因 debug-record，不表示当前项目事实、owner 决策或 active 提升。"
+      "review_after": "2026-10-15",
+      "expected_markdown_count": 42,
+      "inventory_sha256": "5880481eb15305b95b2b5530b36ae34e3ee59b640f86c7f9bae1788a48846dba",
+      "reason_zh": "2026-07-15 规范入口硬切时显式复核并冻结 pcr02-ssc305 平台归档正文路径；该集合只覆盖 SDK、kernel、OTA、存储、硬件和平台集成历史语料，不表示当前项目事实、owner 决策或 active 提升。"
+    },
+    {
+      "id": "xcrz-sigmastar-demo-archive-corpus-baseline-20260715",
+      "path_prefix": "projects/xcrz-sigmastar-demo/archive/",
+      "coverage_mode": "archive-corpus",
+      "owner": "leiwenjun",
+      "review_after": "2026-10-15",
+      "expected_markdown_count": 25,
+      "inventory_sha256": "b1027b1760d22d7dce1b46a6b23ae1b23b34b252b53505784523f64cd0885010",
+      "reason_zh": "2026-07-15 规范入口硬切时显式复核并冻结 xcrz-sigmastar-demo 应用归档正文路径；该集合只覆盖应用、诊断、媒体、模块联调和会话历史语料，不表示当前项目事实、owner 决策或 active 提升。"
     }
   ]
 }

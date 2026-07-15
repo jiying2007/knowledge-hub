@@ -52,7 +52,7 @@ def test_pcr02_contract_preserves_owner_evolution():
     result = _initialize_candidate_contract(
         item,
         contract,
-        "projects/pcr02/decisions/example.md",
+        "projects/xcrz-sigmastar-demo/decisions/example.md",
         dt.date(2026, 7, 13),
     )
     for field in (

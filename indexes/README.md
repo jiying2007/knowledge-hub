@@ -4,7 +4,7 @@
 
 `obsidian-home.md` 是 Obsidian 和普通 Markdown 阅读器的首屏 MOC，只链接 canonical 正文和少量长期证据。它不复制 registry 字段、不替代 `by-status`/`by-owner`/`by-review-date`，也不因 backlink 或 graph 关系产生 active 状态。
 
-`project-readiness.md` 是 31 个项目的结构工作台；`obsidian/*.base` 是可选只读视图。结构 4/4 只表示 profile、runbook、decision、validation 入口齐全，不代表 owner、源码、实机或发布证据完成。
+`project-readiness.md` 是 30 个规范项目的结构工作台；`pcr02` group 元数据不重复计入项目数，`obsidian/*.base` 是可选只读视图。结构 4/4 只表示 profile、runbook、decision、validation 入口齐全，不代表 owner、源码、实机或发布证据完成。
 
 ## 最小同步
 

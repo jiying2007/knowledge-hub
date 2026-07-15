@@ -8,7 +8,9 @@
 - 验证：`projects/xcrz-sigmastar-demo/validation/`
 - 归档：`projects/xcrz-sigmastar-demo/archive/`
 
-该入口用于设备侧 demo/app 集成知识。源码仓本地 AGENTS.md 和运行规则继续由源码仓管理。
+本入口统一承载 `robot/xcrz_sigmastar_demo` 的设备应用、诊断、媒体、显示应用层、模块集成和会话证据。SDK、kernel、boot、镜像、OTA、存储和板级平台事实统一进入 `projects/pcr02-ssc305/`；跨仓记录按结论主责只保留一份正文，再用 `related`、registry 和索引关联。
+
+`pcr02` 仅是 `registry/project-groups.json` 中的产品组 ID，不是独立项目、正文 domain 或兼容路由。源码仓本地 `AGENTS.md` 和运行规则继续由源码仓管理。
 
 <!-- knowledge-hub-project-readiness:start -->
 ## 成熟度工作台

@@ -1233,7 +1233,7 @@ def build_linking_audit():
     required_index_anchors = {
         "by_project": {
             "path": "indexes/by-project.md",
-            "anchors": ["projects/pcr02", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
+            "anchors": ["projects/pcr02-ssc305", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
         },
         "by_source": {
             "path": "indexes/by-source.md",
@@ -1258,14 +1258,14 @@ def build_linking_audit():
     }
 
     missing_cross_session = []
-    pcr02_project = by_project.get("pcr02", {})
+    pcr02_project = by_project.get("pcr02-ssc305", {})
     source_ids = set(by_source.keys())
     topic_ids = set(by_topic.keys())
     owner_worksheets = by_decision.get("owner_worksheets", [])
     registry_decisions = by_decision.get("registry_decisions", [])
 
     cross_session_checks = {
-        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "projects/pcr02",
+        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "projects/pcr02-ssc305",
         "source_recoverable": "pcr02-project-docs" in source_ids and required_level2_sources.issubset(source_ids),
         "topic_recoverable": required_topics.issubset(topic_ids),
         "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions),
@@ -1628,4 +1628,3 @@ print("rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics")
 print("```")
 
 sys.exit(1 if errors else 0)
-

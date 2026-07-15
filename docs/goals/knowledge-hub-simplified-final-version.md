@@ -36,7 +36,7 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
   - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --full-regression`
   - `rtk git diff --check`
 - 技术候选与发布完成分开：前者看 `gate_status`，后者还必须有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。
-- 31/31 项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-owner-review`。
+- 30/30 规范项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-owner-review`。
 
 非目标：
 - 不兼容旧目录作为长期主入口。
@@ -714,8 +714,8 @@ rtk bash tools/knowledge-final-gate.sh --json --final-profile product --full-reg
 
 - 新 registry item 指向 `domains/projects/**` 应失败。
 - 新 registry item 指向 `domains/personal/**` 应失败。
-- `knowledge-new.sh --domain projects/pcr02` 必须输出 `projects/pcr02/...`。
-- `knowledge-search.sh --domain projects/pcr02` 能找到 canonical 项目内容。
+- `knowledge-new.sh --domain projects/pcr02-ssc305` 必须输出 `projects/pcr02-ssc305/...`。
+- `knowledge-search.sh --domain projects/pcr02-ssc305` 能找到 canonical 项目内容。
 - `indexes/` 中不再把旧路径作为当前入口。
 - 当前文档、registry、index、template、tool 输出和 source control 不暴露旧入口。
 

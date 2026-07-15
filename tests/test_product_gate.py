@@ -10,9 +10,9 @@ from tools.codex_assets.knowledge_hub.product_gate import _restore_state
 
 def test_product_readiness_separates_structure_from_real_evidence():
     payload = _project_readiness(repository_root())
-    assert payload["project_count"] == 31
-    assert payload["slot_count"] == 124
-    assert payload["structural_ready_count"] == 31
+    assert payload["project_count"] == 30
+    assert payload["slot_count"] == 120
+    assert payload["structural_ready_count"] == 30
     assert "source_mapping_ready_count" in payload
     assert payload["route_matrix_failure_count"] == 0
     assert payload["evidence_ready_count"] < payload["project_count"]

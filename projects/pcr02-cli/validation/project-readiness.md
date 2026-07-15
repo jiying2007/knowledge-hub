@@ -48,7 +48,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 31 项目 route matrix 能将 `pcr02-cli` 稳定解析为本项目。
+- [x] 30 项目 route matrix 能将 `pcr02-cli` 稳定解析为本项目。
 - [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。

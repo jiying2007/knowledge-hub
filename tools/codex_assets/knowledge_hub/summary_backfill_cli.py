@@ -119,7 +119,7 @@ def boundary_phrase(item):
         return "该条目当前为 archived embedded 治理证据，仅作历史 provenance，不提升团队 active 标准或项目事实。"
     if domain == "governance":
         return "该条目当前为 archived Knowledge Hub 治理证据，仅作 report-only 历史 provenance，不生成 owner decision、不关闭 owner gate、不写 memory。"
-    if domain == "projects/pcr02":
+    if domain == "projects/pcr02-ssc305":
         return "该条目当前为 archived PCR02 治理证据，仅作历史 provenance，不代表当前项目事实、owner decision、active promotion 或源项目写入。"
     return "该条目当前为 archived 历史证据，仅作 provenance，不代表 active promotion、owner decision、memory write 或 source project write。"
 

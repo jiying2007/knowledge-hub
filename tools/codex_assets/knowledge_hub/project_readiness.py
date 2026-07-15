@@ -154,7 +154,7 @@ def _validation_expectations(project: Mapping[str, Any]) -> List[str]:
         rows.append("控制面验证：执行 check、unit、retrieval、route、link、export 和 restore drill。")
     else:
         rows.append("项目组验证：每个成员仓分别补源码、设备/平台和发布证据，不能用组级结论替代。")
-    if project["id"] in {"pcr02", "xcrz-sigmastar-demo", "pcr02-hdi"}:
+    if project["id"] in {"pcr02-ssc305", "xcrz-sigmastar-demo", "pcr02-hdi"}:
         rows.append("ST77912 专项：补高温老化、SCLK/EMI 和端到端显示链路证据；缺任一项不得声明发布就绪。")
     return rows
 
@@ -483,7 +483,7 @@ def _decision_body(project: Mapping[str, Any], path: str, paths: Mapping[str, st
 def _validation_body(project: Mapping[str, Any], path: str, paths: Mapping[str, str]) -> str:
     expectations = "\n".join("- [ ] {}".format(value) for value in _validation_expectations(project))
     special = ""
-    if project["id"] in {"pcr02", "xcrz-sigmastar-demo", "pcr02-hdi"}:
+    if project["id"] in {"pcr02-ssc305", "xcrz-sigmastar-demo", "pcr02-hdi"}:
         special = "\n- {}".format(
             _link(path, "artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md", "PCR02 owner-ready 实机/发布验证路径")
         )
@@ -496,7 +496,7 @@ def _validation_body(project: Mapping[str, Any], path: str, paths: Mapping[str, 
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 31 项目 route matrix 能将 `{project_id}` 稳定解析为本项目。
+- [x] 30 项目 route matrix 能将 `{project_id}` 稳定解析为本项目。
 - [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
@@ -583,7 +583,7 @@ def _route_document(
             + [project_id, str(project.get("name", "")), project_id.replace("-", "_")]
         )
         topic_aliases = _dedupe(existing.get("topic_aliases", []))
-        if project_id == "pcr02":
+        if project_id == "pcr02-ssc305":
             topic_aliases = _dedupe(
                 topic_aliases
                 + [
@@ -626,7 +626,11 @@ def _route_document(
                 "decisions_path": project["decisions"],
                 "validation_path": project["validation"],
                 "domain_refs": domain_refs,
-                "default_source_ids": _dedupe(list(existing.get("default_source_ids", [])) + source_ids),
+                "default_source_ids": _dedupe(
+                    list(existing["default_source_ids"])
+                    if "default_source_ids" in existing
+                    else source_ids
+                ),
                 "retired_route_ids": existing.get(
                     "retired_route_ids", ["retired-engineering-archive-root", "retired-codex-archive-root"]
                 ),
@@ -666,7 +670,7 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
             "",
             "## 判定边界",
             "",
-            "- structural coverage：31 项目均有四类 reviewing 入口。",
+            "- structural coverage：30 项目均有四类 reviewing 入口；group 元数据不重复计入项目数。",
             "- source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。",
             "- evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。",
             "- lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。",
@@ -678,7 +682,7 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
 def _is_body_markdown(path: str) -> bool:
     if not path.endswith(".md") or pathlib.PurePosixPath(path).name == "README.md":
         return False
-    if path == "projects/pcr02/archive/engineering-archive/pcr02/decision-index.md":
+    if path == "projects/pcr02-ssc305/archive/engineering-archive/pcr02/decision-index.md":
         return False
     return path.startswith(BODY_PREFIXES)
 
@@ -713,8 +717,8 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
 def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
     projects_doc = load_json(root / "registry/projects.json", {}) or {}
     projects = [dict(row) for row in projects_doc.get("projects", [])]
-    if len(projects) != 31:
-        raise KnowledgeHubError("expected 31 registered projects, found {}".format(len(projects)))
+    if len(projects) != 30:
+        raise KnowledgeHubError("expected 30 registered projects, found {}".format(len(projects)))
     for project in projects:
         if project.get("id") == "knowledge-hub":
             project.update(

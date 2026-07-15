@@ -43,7 +43,7 @@ related:
 Codex 在任意项目目录处理以下任务时，应先运行或等价执行 Hub 上下文预检：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用户问题或任务>" --task-type <type> --json
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用户问题或任务>" --task-type <type> --context-budget small --limit 3 --summary-json
 ```
 
 `task-type` 常用值：
@@ -55,7 +55,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 - `runbook`：操作指南、复用流程、排障手册。
 - `source`：source coverage、source 边界、迁移状态。
 
-预检输出的 `route` 是当前项目入口；`ranked_items` 和 `search` 是候选证据；`candidate_recommendation.required=true` 时，完成或中断都必须生成 Hub candidate，或明确说明“本次无可归档结论”。
+摘要预检输出的 `route` 是当前项目入口，`context` 是去重候选索引，`context_contract.raw_evidence` 是原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并用 `--json` 回退 `ranked_items` 和 `search` 完整证据。`candidate_recommendation.required=true` 时，完成或中断都必须生成 Hub candidate，或明确说明“本次无可归档结论”。
 
 ## 上下文装配原则
 
@@ -78,11 +78,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 
 | 语境 | 旧口径 | 终态回答和新增落点 |
 |---|---|---|
-| PCR02 工程归档 | `~/embedded/engineering_archive/pcr02/` | `~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/` |
-| PCR02 排障记录 | `~/embedded/engineering_archive/pcr02/<topic>/` | `~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/<topic>/` |
-| PCR02 当前事实 | 源项目 `docs/`、`knowledge/` | `~/knowledge-hub/projects/pcr02/current/` |
-| PCR02 当前决策 | 源项目 `docs/decisions` 或历史归档 | `~/knowledge-hub/projects/pcr02/decisions/` |
-| PCR02 验证记录 | 源项目散落日志或旧 validation 归档 | `~/knowledge-hub/projects/pcr02/validation/` |
+| PCR02 工程归档 | `~/embedded/engineering_archive/pcr02/` | `~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02/` |
+| PCR02 排障记录 | `~/embedded/engineering_archive/pcr02/<topic>/` | `~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02/<topic>/` |
+| PCR02 当前事实 | 源项目 `docs/`、`knowledge/` | `~/knowledge-hub/projects/pcr02-ssc305/current/` |
+| PCR02 当前决策 | 源项目 `docs/decisions` 或历史归档 | `~/knowledge-hub/projects/xcrz-sigmastar-demo/decisions/` |
+| PCR02 验证记录 | 源项目散落日志或旧 validation 归档 | `~/knowledge-hub/projects/pcr02-ssc305/validation/` |
 | Codex archive | `~/codex/docs/archive/` | `~/knowledge-hub/domains/codex/archive/codex-archive/` |
 | Codex archive registry | `~/codex/docs/archive/_registry/` | `~/knowledge-hub/domains/codex/archive/codex-archive-registry/` |
 | Codex 会话总结和工作流治理 | `~/codex/docs/archive/session-*` | `~/knowledge-hub/domains/codex/` 或 `~/knowledge-hub/domains/codex/archive/codex-archive/` |
@@ -96,7 +96,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 新增归档统一写入 Knowledge Hub。
 
 PCR02 工程归档：
-~/knowledge-hub/projects/pcr02/archive/engineering-archive/pcr02/
+~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02/
 
 Codex 工作流和会话归档：
 ~/knowledge-hub/domains/codex/archive/codex-archive/

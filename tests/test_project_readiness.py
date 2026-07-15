@@ -15,7 +15,7 @@ def test_all_registered_projects_have_four_reviewing_readiness_assets():
     root = repository_root()
     projects = project_rows(root)
     items = {row["id"]: row for row in registry_items(root)}
-    assert len(projects) == 31
+    assert len(projects) == 30
     for project in projects:
         paths = _project_paths(project)
         assert set(paths) == set(SLOT_NAMES)
@@ -34,7 +34,7 @@ def test_project_query_route_matrix_is_complete_for_all_task_types():
     root = repository_root()
     projects = project_rows(root)
     routes = route_rows(root)
-    assert len(routes) == len(projects) == 31
+    assert len(routes) == len(projects) == 30
     checked = 0
     for project in projects:
         for task_type in sorted(TASK_TYPES):
@@ -43,7 +43,7 @@ def test_project_query_route_matrix_is_complete_for_all_task_types():
             assert route["project_id"] == project["id"]
             assert score > 0
             checked += 1
-    assert checked == 31 * len(TASK_TYPES)
+    assert checked == 30 * len(TASK_TYPES)
 
 
 def test_project_readiness_generator_is_idempotent():

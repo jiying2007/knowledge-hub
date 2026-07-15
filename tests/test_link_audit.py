@@ -58,7 +58,7 @@ def test_reviewing_missing_attachment_is_blocking(tmp_path):
 def test_repository_readiness_links_and_bases_are_valid():
     payload = audit_links(repository_root())
     assert payload["status"] == "pass"
-    assert payload["readiness_document_count"] == 124
+    assert payload["readiness_document_count"] == 120
     assert payload["readiness_without_inbound_count"] == 0
     assert payload["base_failure_count"] == 0
     assert payload["managed_frontmatter_coverage_percent"] == 100.0

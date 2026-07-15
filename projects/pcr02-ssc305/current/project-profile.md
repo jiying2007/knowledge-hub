@@ -53,7 +53,7 @@ related:
 | 所属组 | `pcr02` |
 | registry 状态 | `registered` |
 | 本地源码映射 | `machine-local / not tracked` |
-| Hub 已登记条目 | `4`；reviewing=4 |
+| Hub 已登记条目 | 截至 2026-07-15 为 `55`；archived=42, reviewing=13；后续以 `registry/items.jsonl` 动态查询为准 |
 
 ## 仓库边界
 
@@ -65,15 +65,17 @@ related:
 
 ## 已有 Hub 证据
 
-- [PCR02 SSC305 SDK readiness validation](../validation/project-readiness.md)：`reviewing` / `validation`
-- [PCR02 SSC305 SDK 权威与维护边界决策候选](../decisions/project-boundary-decision-candidate.md)：`reviewing` / `decision`
-- [PCR02 SSC305 SDK 维护入口](runbooks/maintenance-entry.md)：`reviewing` / `runbook`
-- [PCR02 SSC305 SDK 项目画像候选](project-profile.md)：`reviewing` / `project-current`
+- [规范入口硬切收口记录候选](../decisions/pcr02-canonical-hardcut-20260715.md)：平台与应用归属边界及迁移审计。
+- [第三方库编译优化基线](runbooks/thirdparty-build-optimization-baseline.md)：SSC305 工具链和构建边界候选。
+- [IMSSV06C11 三方 SDK 审计](../archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md)：摄像头、SPI NAND 和时钟路径来源审计。
+- [工程历史归档](../archive/engineering-archive/README.md)：OTA、存储、硬件、启动链和平台验证历史语料。
+- [PCR02 SSC305 SDK readiness validation](../validation/project-readiness.md)、[权威边界决策候选](../decisions/project-boundary-decision-candidate.md)和[维护入口](runbooks/maintenance-entry.md)：结构控制资产，保持 `reviewing`。
 
 ## 当前权威边界
 
 - 当前源码、分支、版本、构建和发布事实：源项目及其可复现验证证据。
 - 长期摘要、决策记录、验证索引和跨项目方法：Knowledge Hub canonical Markdown 与 registry。
+- `pcr02` 只是产品组 ID；不得作为独立 project/domain/path 重新写入内容。
 - `status`、`owner`、`review_after`、promotion 和 authorization：registry/gate，不由目录名、Obsidian Graph 或本页文字推断。
 - 当前 `decision_owner=unassigned`，`manual_validation_pending=true`；未完成 owner 和真实环境验证前保持 `reviewing`。
 

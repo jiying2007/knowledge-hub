@@ -5,9 +5,8 @@
       "id": "pcr02",
       "name": "PCR02 Product Group",
       "type": "product-group",
-      "entry": "projects/pcr02/README.md",
+      "entry": "projects/pcr02-ssc305/README.md",
       "member_project_ids": [
-        "pcr02",
         "pcr02-ssc305",
         "xcrz-sigmastar-demo",
         "pcr02-api",

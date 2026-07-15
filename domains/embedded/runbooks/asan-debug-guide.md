@@ -47,7 +47,7 @@ aliases:
 
 项目特例参考：
 
-- PCR02 项目本地 ASAN runbook：`projects/pcr02/current/runbooks/asan-debug-guide.md`
+- PCR02 项目本地 ASAN runbook：`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
 - PCR02 owner decision 边界：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 
 上述 PCR02 文档只能作为项目特例参考，不作为团队默认命令或路径。

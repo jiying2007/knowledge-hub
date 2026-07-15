@@ -11,8 +11,8 @@
     },
     {
       "component_id": "robot-pcr02-local",
-      "parent_project_id": "pcr02",
-      "component_uri": "component://pcr02/robot-pcr02-local",
+      "parent_project_id": "pcr02-ssc305",
+      "component_uri": "component://pcr02-ssc305/robot-pcr02-local",
       "kind": "workspace-aggregate",
       "relative_path": "",
       "status": "workspace-only"
@@ -27,24 +27,24 @@
     },
     {
       "component_id": "pcr02-examples-app",
-      "parent_project_id": "pcr02",
-      "component_uri": "component://pcr02/examples-app",
+      "parent_project_id": "xcrz-sigmastar-demo",
+      "component_uri": "component://xcrz-sigmastar-demo/examples-app",
       "kind": "reference-example",
       "relative_path": "examples/App",
       "status": "external-reference"
     },
     {
       "component_id": "pcr02-eye-anim",
-      "parent_project_id": "pcr02",
-      "component_uri": "component://pcr02/eye-anim",
+      "parent_project_id": "xcrz-sigmastar-demo",
+      "component_uri": "component://xcrz-sigmastar-demo/eye-anim",
       "kind": "reference-demo",
       "relative_path": "eye_anim",
       "status": "external-reference"
     },
     {
       "component_id": "pcr02-iford-imssv05c13",
-      "parent_project_id": "pcr02",
-      "component_uri": "component://pcr02/iford-imssv05c13",
+      "parent_project_id": "pcr02-ssc305",
+      "component_uri": "component://pcr02-ssc305/iford-imssv05c13",
       "kind": "reference-drop",
       "relative_path": "Iford_IMSSV05C13",
       "status": "external-reference"

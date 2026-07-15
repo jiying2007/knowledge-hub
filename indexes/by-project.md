@@ -1,21 +1,14 @@
 # By Project
 
-## PCR02
+## PCR02 产品组关系索引
 
-- 当前 docs source control：`sources/pcr02-project-docs`
-- PCR02 旧正文剪枝账本：`artifacts/manifests/pcr02-retired-body-prune-20260625.md`
-- 历史归档 source control：`sources/engineering-archive`
-- 历史工程归档终态正文：`projects/pcr02/archive/engineering-archive`
-- 当前知识入口：只使用 Hub 内 projects/<project>/ 与 sources/<source_id>/ 路径；旧外部路径不作为 active source 或默认查询入口。
-- 目标项目域：`projects/pcr02`
-- 项目入口：`projects/pcr02/README.md`
-- current 恢复锚点：`projects/pcr02/current/`
-- archive 恢复锚点：`projects/pcr02/archive/`
-- archive 入口：`projects/pcr02/archive/README.md`
-- validation 恢复锚点：`projects/pcr02/validation/`
-- manifests 恢复锚点：`artifacts/manifests/` 中 `pcr02-*` 与 `knowledge-hub-*pcr02*` 制品；完整可观测链路运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json`
-- 决策目录：`projects/pcr02/decisions/`；7 条 PCR02 project docs owner gate 已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 落地，恢复入口在 `indexes/by-decision.md`。
-- PCR02 docs canonical 条目：`projects/pcr02/current/`、`projects/pcr02/decisions/`、`projects/pcr02/archive/`、`projects/pcr02/validation/`
+- group ID：`pcr02`；唯一声明位置是 `registry/project-groups.json`，不作为独立 project、正文 domain、目录或兼容 route。
+- 平台规范入口：`projects/pcr02-ssc305/README.md`，承载 SDK、kernel、boot、镜像、OTA、存储、板级硬件和平台集成事实。
+- 应用规范入口：`projects/xcrz-sigmastar-demo/README.md`，承载应用、诊断、媒体、显示应用层、模块联调和会话证据。
+- 独立模块继续进入各自 `projects/pcr02-*` 项目；跨仓正文按结论主责只维护一份。
+- 组级 source control：`sources/pcr02-project-docs` 与 `sources/engineering-archive`；它们只描述来源和历史 provenance，不替代两个规范项目入口。
+- 路径硬切审计：`projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`。
+- owner gate 与历史治理通过 `indexes/by-decision.md`、`indexes/by-source.md` 和 `artifacts/manifests/` 恢复。
 - review-required 历史处理计划：`artifacts/manifests/pcr02-review-required-resolution-20260617.md`
 - reference/artifact-ref applied 报告：`artifacts/manifests/pcr02-reference-artifact-ref-applied-20260618.md`
 - owner-review 历史 package：`artifacts/manifests/pcr02-owner-review-package-20260618.md`
@@ -53,10 +46,10 @@
 - DVR session archive historical owner signoff package: `artifacts/manifests/pcr02-dvr-session-archive-owner-ready-package-20260620.md`
 - Owner decision landing: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - Source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/source-policy.md`
-- ASAN project-local target：`projects/pcr02/current/runbooks/asan-debug-guide.md`
-- DVR plan archive target：`projects/pcr02/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`
-- Motor MCU debug record archive target：`projects/pcr02/archive/reports/2026-05-29-motor-mcu-debug-record.md`
-- DVR record/replay session archive target：`projects/pcr02/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- ASAN project-local target：`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
+- DVR plan archive target：`projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`
+- Motor MCU debug record archive target：`projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- DVR record/replay session archive target：`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
 - Source control unification：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
 - Owner target and landing validation: `artifacts/manifests/knowledge-hub-owner-target-landing-validation-20260621.md`
 - Owner-ready command stability: `artifacts/manifests/knowledge-hub-owner-ready-command-stability-20260621.md`
@@ -65,34 +58,30 @@
 - Owner dispatch and readability sync: `artifacts/manifests/knowledge-hub-owner-dispatch-readability-sync-20260621.md`
 - Status dispatch, owner recovery and AI provenance sync: `artifacts/manifests/knowledge-hub-status-dispatch-notes-zh-20260621.md`
 - Owner routing recovery: `artifacts/manifests/knowledge-hub-owner-routing-recovery-20260621.md`
-- Docs index reference: `projects/pcr02/current/docs-index.ref.md`
-- CI smoke session artifact reference: `projects/pcr02/validation/prog-tool-ci-smoke.session.ref.md`
-- Engineering archive corpus: `projects/pcr02/archive/engineering-archive`
-- PCR02 prog_pcr02 high-load monitoring: `projects/pcr02/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
-- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/pcr02/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
-- PCR02 camera RAW_PREVIEW virtual stream architecture decision candidate: `projects/pcr02/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`; `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`; reviewing candidate only, no owner-signed active rule or release claim
-- PCR02 ST77912 dual-screen SPI clock/FPS decision candidate: `projects/pcr02/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md`; `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`; reviewing candidate only, requires aging, oscilloscope and animation validation
-- PCR02 ST77912 fbtft 54MHz/25fps implementation evidence: `projects/pcr02/decisions/st77912-fbtft-54m25fps-implementation-20260711.md`; `pcr02-st77912-fbtft-54m25fps-implementation-20260711`; archived evidence only, no owner-signed active decision, aging validation or release claim
-- PCR02 ST77912 framebuffer and SigmaStar mi_fb boundary decision candidate: `projects/pcr02/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md`; `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`; reviewing candidate only, records that `/dev/fb0` and `/dev/fb1` are `fb_st77912` while `/dev/fb2` is `SStar FB0`.
+- Docs index reference: `projects/xcrz-sigmastar-demo/current/docs-index.ref.md`
+- CI smoke session artifact reference: `projects/xcrz-sigmastar-demo/validation/prog-tool-ci-smoke.session.ref.md`
+- Engineering archive corpus: `projects/pcr02-ssc305/archive/engineering-archive`
+- PCR02 prog_pcr02 high-load monitoring: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
+- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 camera RAW_PREVIEW virtual stream architecture decision candidate: `projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`; `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`; reviewing candidate only, no owner-signed active rule or release claim
+- PCR02 ST77912 dual-screen SPI clock/FPS decision candidate: `projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md`; `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`; reviewing candidate only, requires aging, oscilloscope and animation validation
+- PCR02 ST77912 fbtft 54MHz/25fps implementation evidence: `projects/pcr02-ssc305/decisions/st77912-fbtft-54m25fps-implementation-20260711.md`; `pcr02-st77912-fbtft-54m25fps-implementation-20260711`; archived evidence only, no owner-signed active decision, aging validation or release claim
+- PCR02 ST77912 framebuffer and SigmaStar mi_fb boundary decision candidate: `projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md`; `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`; reviewing candidate only, records that `/dev/fb0` and `/dev/fb1` are `fb_st77912` while `/dev/fb2` is `SStar FB0`.
 - PCR02 owner-ready validation paths: `artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`; `pcr02-owner-ready-validation-paths-20260713`; validation path only, requires real owner signoff and target-device/lab evidence before active or release claim
-- PCR02 SSC305 第三方库编译优化基线：`projects/pcr02/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`; reviewing source-derived runbook，仍需 owner 和目标构建验证
-- PCR02 EVT2 MCU/SoC contract source-derived index: `projects/pcr02/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_mcu_soc_contract_index_20260711.md`; `pcr02-evt2-mcu-soc-contract-index-20260711`; reviewing source-audit only, no owner-signed active contract or release claim
-- PCR02 Codex history backfill engineering findings: `projects/pcr02/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
-- PCR02 /customer ro SD upgrade historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
-- PCR02 SIGBUS core/debug tools historical session: `projects/pcr02/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
-- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
-- PCR02 SSC305 2026-05-19 release validation historical record: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
-- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
-- PCR02 core/GDB triage historical debug record: `projects/pcr02/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
-- PCR02 DVR protocol sync build fix historical record: `projects/pcr02/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
-- PCR02 regular OTA customer partition guard historical delta: `projects/pcr02/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
-- PCR02 IR light/player/WiFi debug summary from 2026-07-08 daily split: `projects/pcr02/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
-- PCR02 项目画像候选: `projects/pcr02/current/project-profile.md`; `pcr02-readiness-profile-20260713`
-- PCR02 维护入口: `projects/pcr02/current/runbooks/maintenance-entry.md`; `pcr02-readiness-runbook-20260713`
-- PCR02 权威与维护边界决策候选: `projects/pcr02/decisions/project-boundary-decision-candidate.md`; `pcr02-readiness-decision-20260713`
-- PCR02 readiness validation: `projects/pcr02/validation/project-readiness.md`; `pcr02-readiness-validation-20260713`
-- PCR02 Video/Audio 共享内存使用说明: `projects/pcr02/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
-- PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
+- PCR02 SSC305 第三方库编译优化基线：`projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md`; `pcr02-thirdparty-build-optimization-baseline-20260710`; reviewing source-derived runbook，仍需 owner 和目标构建验证
+- PCR02 EVT2 MCU/SoC contract source-derived index: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_mcu_soc_contract_index_20260711.md`; `pcr02-evt2-mcu-soc-contract-index-20260711`; reviewing source-audit only, no owner-signed active contract or release claim
+- PCR02 Codex history backfill engineering findings: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
+- PCR02 /customer ro SD upgrade historical session: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_customer_ro_sd_upgrade_20260526.md`; `pcr02-customer-ro-sd-upgrade-session-20260526`
+- PCR02 SIGBUS core/debug tools historical session: `projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
+- PCR02 GROS/SSC305/HDI historical session: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
+- PCR02 SSC305 2026-05-19 release validation historical record: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_release_validation_20260519.md`; `pcr02-release-validation-20260519`
+- PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
+- PCR02 core/GDB triage historical debug record: `projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
+- PCR02 DVR protocol sync build fix historical record: `projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
+- PCR02 regular OTA customer partition guard historical delta: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
+- PCR02 IR light/player/WiFi debug summary from 2026-07-08 daily split: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+- PCR02 Video/Audio 共享内存使用说明: `projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
+- PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
 
 ## Firmware Release Tools
 
@@ -134,6 +123,8 @@
 - XCRZ SigmaStar Demo readiness validation: `projects/xcrz-sigmastar-demo/validation/project-readiness.md`; `xcrz-sigmastar-demo-readiness-validation-20260713`
 - PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
 - PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- PCR02 Sensor 静态数据上报 Task/App 联调指南: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md`; `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
+- PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
 
 ## PCR02 SSC305 SDK
 
@@ -141,6 +132,8 @@
 - PCR02 SSC305 SDK 维护入口: `projects/pcr02-ssc305/current/runbooks/maintenance-entry.md`; `pcr02-ssc305-readiness-runbook-20260713`
 - PCR02 SSC305 SDK 权威与维护边界决策候选: `projects/pcr02-ssc305/decisions/project-boundary-decision-candidate.md`; `pcr02-ssc305-readiness-decision-20260713`
 - PCR02 SSC305 SDK readiness validation: `projects/pcr02-ssc305/validation/project-readiness.md`; `pcr02-ssc305-readiness-validation-20260713`
+- PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- PCR02 组级入口硬切收口记录候选: `projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`; `pcr02-ssc305-canonical-hardcut-20260715`
 
 ## PCR02 API Module
 
