@@ -34,6 +34,7 @@ from .common import (
     source_id,
     utc_timestamp,
 )
+from .metrics import append_optional_telemetry
 from .model import ITEM_KINDS, ITEM_STATUSES
 
 
@@ -763,9 +764,11 @@ def search(
     return payload
 
 
-def record_search_telemetry(root: pathlib.Path, payload: Mapping[str, Any], enabled: bool = True) -> None:
-    if not enabled or os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {"0", "false", "off", "no"}:
-        return
+def record_search_telemetry(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+    enabled: bool = True,
+) -> Dict[str, Any]:
     query = str(payload.get("query", ""))
     row = {
         "schema_version": 2,
@@ -780,10 +783,4 @@ def record_search_telemetry(root: pathlib.Path, payload: Mapping[str, Any], enab
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/search-telemetry.jsonl"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-        handle.write(compact_json(row) + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
-        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    return append_optional_telemetry(path, row, enabled=enabled)

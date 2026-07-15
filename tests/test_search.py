@@ -1,7 +1,9 @@
+import errno
 import json
 import sqlite3
 
-from tools.codex_assets.knowledge_hub.search import SearchFilters, search
+from tools.codex_assets.knowledge_hub import metrics
+from tools.codex_assets.knowledge_hub.search import SearchFilters, record_search_telemetry, search
 
 
 def _jsonl(rows):
@@ -68,3 +70,27 @@ def test_search_falls_back_to_repository_scan_when_index_fails(tmp_path):
     assert payload["index"]["mode"] == "repository-scan-fallback"
     assert payload["index"]["fresh"] is False
     assert payload["results"][0]["item_id"] == "obsidian-workbench"
+
+
+def test_search_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path):
+    def deny_write(path, row):
+        raise PermissionError(errno.EACCES, "permission denied")
+
+    monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
+    monkeypatch.setattr(metrics, "_append_locked", deny_write)
+    result = record_search_telemetry(
+        tmp_path,
+        {
+            "query": "private search query",
+            "query_terms": ["private"],
+            "count": 1,
+            "total_matches": 1,
+            "latency_ms": 5,
+            "index": {"state": "fresh"},
+        },
+    )
+
+    assert result["status"] == "degraded"
+    assert result["reason"] == "read-only-or-permission-denied"
+    assert result["error_code"] == "EACCES"
+    assert "private search query" not in json.dumps(result)

@@ -357,6 +357,7 @@
 - `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- `codex-token-lean-context-validation-20260714`
 
 ## pcr02-registry-owner
 

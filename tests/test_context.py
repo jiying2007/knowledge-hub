@@ -1,10 +1,15 @@
+import errno
 import json
 
+from tools.codex_assets.knowledge_hub import context as context_module
+from tools.codex_assets.knowledge_hub import metrics
 from tools.codex_assets.knowledge_hub.common import repository_root, route_rows
 from tools.codex_assets.knowledge_hub.context import (
     _query_route_selection,
     assemble_context,
+    record_context_telemetry,
 )
+from tools.codex_assets.knowledge_hub.context_cli import main as context_main
 
 
 def _jsonl(rows):
@@ -152,3 +157,88 @@ def test_control_plane_keeps_explicit_self_query_but_not_unknown_query():
     assert self_query["route_selection"]["status"] == "selected"
     assert unknown_query["route"] is None
     assert unknown_query["route_selection"]["status"] == "unresolved"
+
+
+def test_small_budget_caps_search_limit(monkeypatch, tmp_path):
+    root = _context_root(tmp_path)
+    observed_limits = []
+
+    def fake_search(root, query, limit, filters):
+        observed_limits.append(limit)
+        return {
+            "status": "pass",
+            "results": [{"path": "projects/p1/current/runbook.md"}],
+            "count": 1,
+            "total_matches": 1,
+            "zero_hit": {"is_zero_hit": False, "reason": "", "degraded_terms": []},
+        }
+
+    monkeypatch.setattr(context_module, "search", fake_search)
+    payload = assemble_context(root, str(root), "P1 发布", "release", 8, "small")
+
+    assert payload["context"]["effective_limit"] == 4
+    assert observed_limits == [4]
+
+
+def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
+    root = _context_root(tmp_path)
+    exit_code = context_main(
+        [
+            "--root",
+            str(root),
+            "--cwd",
+            str(root),
+            "--query",
+            "P1 发布",
+            "--task-type",
+            "release",
+            "--context-budget",
+            "small",
+            "--limit",
+            "3",
+            "--summary-json",
+            "--no-telemetry",
+        ]
+    )
+    output = capsys.readouterr().out.strip()
+    parsed = json.loads(output)
+
+    assert exit_code == 0
+    assert "\n" not in output
+    assert len(output.encode("utf-8")) <= 4096
+    assert parsed["projection"] == "agent-summary-v1"
+    assert "ranked_items" not in parsed
+    assert "search" not in parsed
+    assert parsed["search_summary"]["count"] <= 3
+    assert parsed["context_contract"]["read_tier"] == "L1"
+    assert parsed["context_contract"]["raw_evidence"]
+    item_ids = [
+        row["id"]
+        for section in ("current", "recent", "related", "search_fallback")
+        for row in parsed["context"][section]
+        if row.get("id")
+    ]
+    assert len(item_ids) == len(set(item_ids))
+
+
+def test_context_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path):
+    def deny_write(path, row):
+        raise PermissionError(errno.EACCES, "permission denied")
+
+    monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
+    monkeypatch.setattr(metrics, "_append_locked", deny_write)
+    result = record_context_telemetry(
+        tmp_path,
+        {
+            "query": "private preflight query",
+            "task_type": "general",
+            "route": None,
+            "context": {"current": [], "recent": []},
+            "latency_ms": 12,
+        },
+    )
+
+    assert result["status"] == "degraded"
+    assert result["reason"] == "read-only-or-permission-denied"
+    assert result["error_code"] == "EACCES"
+    assert "private preflight query" not in json.dumps(result)

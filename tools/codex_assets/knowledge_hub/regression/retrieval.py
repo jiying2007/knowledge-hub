@@ -313,6 +313,23 @@ def test_knowledge_context_budget_explainability():
         "small",
         "--json",
     ])
+    summary_result = run_cmd(root, [
+        "rtk",
+        "bash",
+        "tools/knowledge-context.sh",
+        "--cwd",
+        str(root),
+        "--query",
+        "PCR02 OTA 归档路径",
+        "--task-type",
+        "archive",
+        "--context-budget",
+        "small",
+        "--limit",
+        "3",
+        "--summary-json",
+        "--no-telemetry",
+    ])
     parsed = {}
     try:
         parsed = json.loads(result["stdout"])
@@ -325,6 +342,12 @@ def test_knowledge_context_budget_explainability():
     context_canonical_paths = context.get("canonical_paths", {})
     search = parsed.get("search", {})
     search_fallback = context.get("search_fallback", [])
+    summary = {}
+    try:
+        summary = json.loads(summary_result["stdout"])
+    except Exception:
+        pass
+    summary_bytes = len(summary_result["stdout"].strip().encode("utf-8"))
     expect(
         result["exit_code"] == 0
         and parsed.get("schema_version") == 2
@@ -336,6 +359,7 @@ def test_knowledge_context_budget_explainability():
         and context_canonical_paths.get("archive") == "projects/pcr02/archive"
         and isinstance(context.get("current"), list)
         and isinstance(context.get("risks"), list)
+        and len(search.get("results", [])) <= context.get("effective_limit", 0)
         and (
             search.get("count", 0) >= 1
             or (
@@ -344,9 +368,16 @@ def test_knowledge_context_budget_explainability():
             )
         )
         and first_item.get("why_selected")
-        and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", []),
+        and "旧工程归档和旧 Codex archive 路径只作 retired provenance，不作为新增入口。" in context.get("risks", [])
+        and summary_result["exit_code"] == 0
+        and summary.get("projection") == "agent-summary-v1"
+        and "ranked_items" not in summary
+        and "search" not in summary
+        and summary_bytes <= 4096
+        and summary.get("context_contract", {}).get("raw_evidence")
+        and summary.get("search_summary", {}).get("count", 0) <= 3,
         "knowledge-context-budget-explainability",
-        "knowledge-context emits budgeted explainable context for project routing",
+        "knowledge-context emits bounded full context and compact traceable agent summary",
         {
             "exit_code": result["exit_code"],
             "context_budget": parsed.get("context_budget"),
@@ -355,8 +386,12 @@ def test_knowledge_context_budget_explainability():
             "context": context,
             "search": search,
             "first_item": first_item,
+            "summary_bytes": summary_bytes,
+            "summary": summary,
             "stdout_sample": result["stdout"][:1200],
+            "summary_stdout_sample": summary_result["stdout"][:1200],
             "stderr_sample": result["stderr"][:500],
+            "summary_stderr_sample": summary_result["stderr"][:500],
         },
     )
 

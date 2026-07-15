@@ -39,7 +39,7 @@ def main(argv: Sequence[str] = ()) -> int:
             SearchFilters(args.source, args.owner, args.status, args.kind, args.domain, args.source_id),
             rebuild_index=args.rebuild_index,
         )
-        record_search_telemetry(root, payload, enabled=not args.no_telemetry)
+        payload["telemetry"] = record_search_telemetry(root, payload, enabled=not args.no_telemetry)
     except KnowledgeHubError as exc:
         parser.error(str(exc))
     if args.json:

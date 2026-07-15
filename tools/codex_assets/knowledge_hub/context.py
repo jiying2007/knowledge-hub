@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
-import os
 import pathlib
 import re
 import time
 import urllib.parse
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
-from .common import compact_json, load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
+from .common import load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
+from .metrics import append_optional_telemetry
 from .search import SearchFilters, query_terms, search
 
 
@@ -423,6 +422,35 @@ def _public_item(score: int, item: Mapping[str, Any], reasons: Sequence[str]) ->
     }
 
 
+def _compact_mapping(value: Any, fields: Sequence[str]) -> Optional[Dict[str, Any]]:
+    if not isinstance(value, Mapping):
+        return None
+    compact: Dict[str, Any] = {}
+    for field in fields:
+        candidate = value.get(field)
+        if candidate is None or candidate == "" or candidate == [] or candidate == {}:
+            continue
+        compact[field] = candidate
+    return compact
+
+
+def _compact_context_item(row: Mapping[str, Any]) -> Dict[str, Any]:
+    compact = {
+        "id": row.get("id") or row.get("item_id", ""),
+        "title": row.get("title", ""),
+        "kind": row.get("kind", ""),
+        "status": row.get("status", ""),
+        "path": row.get("path", ""),
+    }
+    source = row.get("source_id")
+    if source:
+        compact["source_id"] = source
+    reasons = [str(reason) for reason in row.get("why_selected", []) if str(reason)][:3]
+    if reasons:
+        compact["why_selected"] = reasons
+    return compact
+
+
 def _current_exclusion_reason(row: Mapping[str, Any]) -> str:
     status = str(row.get("status", ""))
     if status in {"archived", "superseded", "rejected"}:
@@ -556,7 +584,7 @@ def assemble_context(
     ranked_rows = [_public_item(score, item, reasons) for score, item, reasons in ranked[:effective_limit]]
 
     search_filters = SearchFilters(domains=sorted(domain_refs)) if domain_refs else SearchFilters()
-    search_payload = search(root, query, limit=limit, filters=search_filters)
+    search_payload = search(root, query, limit=effective_limit, filters=search_filters)
     search_payload["fallback_terms"] = []
     search_payload["fallback_results"] = []
     search_payload["fallback_count"] = 0
@@ -566,7 +594,7 @@ def assemble_context(
         merged: List[Dict[str, Any]] = []
         seen: Set[Tuple[str, int, str]] = set()
         for term in fallback_terms:
-            fallback = search(root, term, limit=limit, filters=search_filters)
+            fallback = search(root, term, limit=effective_limit, filters=search_filters)
             for result in fallback["results"]:
                 key = (str(result.get("path", "")), int(result.get("line", 0)), str(result.get("item_id", "")))
                 if key in seen:
@@ -723,9 +751,137 @@ def assemble_context(
     return payload
 
 
-def record_context_telemetry(root: pathlib.Path, payload: Mapping[str, Any], enabled: bool = True) -> None:
-    if not enabled or os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {"0", "false", "off", "no"}:
-        return
+def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    context = payload.get("context") if isinstance(payload.get("context"), Mapping) else {}
+    route_selection = (
+        payload.get("route_selection") if isinstance(payload.get("route_selection"), Mapping) else {}
+    )
+    search_payload = payload.get("search") if isinstance(payload.get("search"), Mapping) else {}
+    zero_hit = search_payload.get("zero_hit") if isinstance(search_payload.get("zero_hit"), Mapping) else {}
+    search_index = search_payload.get("index") if isinstance(search_payload.get("index"), Mapping) else {}
+    preflight = (
+        payload.get("knowledge_preflight")
+        if isinstance(payload.get("knowledge_preflight"), Mapping)
+        else {}
+    )
+
+    compact_sections: Dict[str, List[Dict[str, Any]]] = {}
+    seen_items: Set[str] = set()
+    raw_evidence: List[str] = []
+    seen_evidence: Set[str] = set()
+    for section in ("current", "recent", "related", "search_fallback"):
+        compact_rows: List[Dict[str, Any]] = []
+        rows = context.get(section, [])
+        if not isinstance(rows, list):
+            rows = []
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            compact = _compact_context_item(row)
+            dedupe_key = str(compact.get("id") or compact.get("path") or "")
+            if dedupe_key and dedupe_key in seen_items:
+                continue
+            if dedupe_key:
+                seen_items.add(dedupe_key)
+            compact_rows.append(compact)
+            path = str(compact.get("path") or "")
+            if path and path not in seen_evidence:
+                seen_evidence.add(path)
+                raw_evidence.append(path)
+        compact_sections[section] = compact_rows
+
+    candidates: List[Dict[str, Any]] = []
+    for candidate in route_selection.get("candidates", []):
+        compact_candidate = _compact_mapping(candidate, ("project_id", "score"))
+        if compact_candidate:
+            candidates.append(compact_candidate)
+    compact_route_selection = _compact_mapping(
+        route_selection,
+        (
+            "status",
+            "selection_source",
+            "cwd_route_project_id",
+            "query_route_project_id",
+            "selected_project_id",
+        ),
+    ) or {}
+    if candidates:
+        compact_route_selection["candidates"] = candidates
+
+    route_status = str(route_selection.get("status", "unresolved"))
+    confidence = {"selected": "high", "ambiguous": "medium", "unresolved": "low"}.get(
+        route_status,
+        "low",
+    )
+    telemetry = payload.get("telemetry") if isinstance(payload.get("telemetry"), Mapping) else {}
+    candidate_recommendation = (
+        payload.get("candidate_recommendation")
+        if isinstance(payload.get("candidate_recommendation"), Mapping)
+        else {}
+    )
+
+    return {
+        "schema_version": payload.get("schema_version", 2),
+        "projection": "agent-summary-v1",
+        "read_only": bool(payload.get("read_only", True)),
+        "task_type": payload.get("task_type", "general"),
+        "context_budget": payload.get("context_budget", "normal"),
+        "knowledge_preflight": dict(preflight),
+        "repo_route": _compact_mapping(
+            payload.get("repo_route"),
+            ("repo_id", "project_id", "remote_key", "workspace_ref", "groups", "lifecycle"),
+        ),
+        "route": _compact_mapping(
+            payload.get("route"),
+            (
+                "project_id",
+                "group_id",
+                "name",
+                "hub_entry",
+                "current_path",
+                "archive_path",
+                "decisions_path",
+                "validation_path",
+            ),
+        ),
+        "route_selection": compact_route_selection,
+        "canonical_paths": payload.get("canonical_paths", {}),
+        "context": {
+            "budget": context.get("budget", payload.get("context_budget", "normal")),
+            "effective_limit": context.get("effective_limit", 0),
+            "selection_order": context.get("selection_order", []),
+            **compact_sections,
+            "risks": context.get("risks", []),
+        },
+        "search_summary": {
+            "status": search_payload.get("status", ""),
+            "count": search_payload.get("count", len(search_payload.get("results", []))),
+            "total_matches": search_payload.get("total_matches", 0),
+            "fallback_count": search_payload.get("fallback_count", 0),
+            "latency_ms": search_payload.get("latency_ms", 0),
+            "index": _compact_mapping(search_index, ("state", "mode", "fresh", "rebuilt")) or {},
+            "zero_hit": _compact_mapping(zero_hit, ("is_zero_hit", "reason")) or {},
+        },
+        "candidate_recommendation": dict(candidate_recommendation),
+        "context_contract": {
+            "read_tier": "L1",
+            "budget_profile": payload.get("context_budget", "normal"),
+            "confidence": confidence,
+            "raw_evidence": raw_evidence,
+            "raw_required_for_conclusion": bool(preflight.get("required", False)),
+            "fallback_condition": "路由歧义、需要完整排序解释或形成高风险结论时，回退完整 JSON 并读取候选原文。",
+            "full_detail_mode": "rerun without --summary-json",
+        },
+        "latency_ms": payload.get("latency_ms", 0),
+        "telemetry": dict(telemetry),
+    }
+
+
+def record_context_telemetry(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+    enabled: bool = True,
+) -> Dict[str, Any]:
     query = str(payload.get("query", ""))
     row = {
         "schema_version": 2,
@@ -740,10 +896,4 @@ def record_context_telemetry(root: pathlib.Path, payload: Mapping[str, Any], ena
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/context-telemetry.jsonl"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-        handle.write(compact_json(row) + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
-        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    return append_optional_telemetry(path, row, enabled=enabled)

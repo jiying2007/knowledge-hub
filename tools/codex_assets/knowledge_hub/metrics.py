@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import errno
 import fcntl
 import hashlib
 import os
@@ -36,6 +37,53 @@ def _append_locked(path: pathlib.Path, row: Mapping[str, Any]) -> None:
         handle.flush()
         os.fsync(handle.fileno())
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def append_optional_telemetry(
+    path: pathlib.Path,
+    row: Mapping[str, Any],
+    enabled: bool = True,
+) -> Dict[str, Any]:
+    """Append local telemetry without making observation a command dependency."""
+    if not enabled:
+        return {
+            "status": "disabled",
+            "recorded": False,
+            "non_blocking": True,
+            "reason": "cli-disabled",
+            "error_code": "",
+        }
+    if os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {"0", "false", "off", "no"}:
+        return {
+            "status": "disabled",
+            "recorded": False,
+            "non_blocking": True,
+            "reason": "environment-disabled",
+            "error_code": "",
+        }
+    try:
+        _append_locked(path, row)
+    except OSError as exc:
+        error_code = errno.errorcode.get(exc.errno or 0, "OSERROR")
+        permission_errors = {errno.EACCES, errno.EPERM, errno.EROFS}
+        return {
+            "status": "degraded",
+            "recorded": False,
+            "non_blocking": True,
+            "reason": (
+                "read-only-or-permission-denied"
+                if exc.errno in permission_errors
+                else "local-storage-unavailable"
+            ),
+            "error_code": error_code,
+        }
+    return {
+        "status": "recorded",
+        "recorded": True,
+        "non_blocking": True,
+        "reason": "",
+        "error_code": "",
+    }
 
 
 def record_feedback(

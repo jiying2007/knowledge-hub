@@ -50,15 +50,16 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任务或问题>" --task-type general --json
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任务或问题>" --task-type general --context-budget small --limit 3 --summary-json
 ```
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
-上下文预算可用 `--context-budget small|normal|deep` 控制；输出中的 `canonical_paths`、`context.current`、`context.recent`、`context.related`、`context.search_fallback` 和 `why_selected` 用于解释 AI 为什么选中这些材料，不代表条目已提升 active 或 owner 已签收。
+预检和检索不会修改受 Git 管理的知识资产；默认只向 `.cache/knowledge-hub/` 写入脱敏 telemetry。只读文件系统、权限受限沙箱或本地 cache 不可用时，业务结果继续返回，JSON 的 `telemetry.status=degraded` 会说明降级原因；要求完全不尝试本地观测写入时使用 `--no-telemetry`。
+Agent 默认使用 `--summary-json --context-budget small --limit 3`，只装配 route、候选索引、风险和原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并使用 `--json` 回退完整证据。`--context-budget small|normal|deep` 和 `--limit` 会共同约束候选与全文搜索结果。任何输出都不代表条目已提升 active 或 owner 已签收。
 在 `~/knowledge-hub` 内自举维护时，`repo_route` 表示当前 cwd 属于 Knowledge Hub 仓库，`route` 表示 query 目标；如果 query 明确命中 PCR02、agent-dev-kit 等项目别名，预检仍应路由到目标项目。检查 Hub 自身治理上下文可用：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd ~/knowledge-hub --query "增强 Knowledge Hub 自举体验" --task-type general --context-budget small --json
+rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd ~/knowledge-hub --query "增强 Knowledge Hub 自举体验" --task-type general --context-budget small --limit 3 --summary-json
 ```
 
 路径类问题优先看：

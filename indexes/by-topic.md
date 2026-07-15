@@ -448,3 +448,4 @@
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
 - PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- Codex token-lean 固定上下文优化验证候选: `artifacts/manifests/codex-token-lean-context-validation-20260714.md`; `codex-token-lean-context-validation-20260714`
