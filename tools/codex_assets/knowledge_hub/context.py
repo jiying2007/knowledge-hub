@@ -22,6 +22,8 @@ from .search import SearchFilters, query_terms, search
 
 TASK_TYPES = {"debug", "archive", "release", "decision", "runbook", "source", "validation", "session", "general"}
 BUDGET_LIMITS = {"small": 4, "normal": 8, "deep": 16}
+SUMMARY_JSON_MAX_BYTES = 4096
+SUMMARY_JSON_MAX_ITEMS = 3
 TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
     "debug": {"debug-record": 10, "runbook": 5, "validation": 3, "project-archive": 2},
     "archive": {"project-archive": 10, "codex-session": 7, "audit": 4, "debug-record": 3},
@@ -486,6 +488,86 @@ def _compact_context_item(row: Mapping[str, Any]) -> Dict[str, Any]:
     return compact
 
 
+def _summary_json_size(summary: Mapping[str, Any]) -> int:
+    return len(
+        json.dumps(summary, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    )
+
+
+def _sync_summary_raw_evidence(summary: Dict[str, Any]) -> None:
+    context = summary.get("context", {})
+    contract = summary.get("context_contract", {})
+    paths: List[str] = []
+    for section in ("current", "recent", "related", "search_fallback"):
+        for row in context.get(section, []):
+            path = str(row.get("path", ""))
+            if path and path not in paths:
+                paths.append(path)
+    contract["raw_evidence"] = paths
+
+
+def _fit_summary_budget(summary: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep the L1 projection valid and traceable within its byte contract."""
+    if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
+        return summary
+    context = summary["context"]
+    sections = ("current", "recent", "related", "search_fallback")
+
+    for section in reversed(sections):
+        for row in reversed(context.get(section, [])):
+            reasons = row.get("why_selected", [])
+            if len(reasons) > 1:
+                row["why_selected"] = reasons[:1]
+    if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
+        return summary
+
+    risks = context.get("risks", [])
+    while len(risks) > 2 and _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
+        risks.pop(-2)
+
+    while _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
+        row_count = sum(len(context.get(section, [])) for section in sections)
+        if row_count <= 1:
+            break
+        removed = False
+        for section in reversed(sections):
+            rows = context.get(section, [])
+            if rows:
+                rows.pop()
+                removed = True
+                break
+        if not removed:
+            break
+        _sync_summary_raw_evidence(summary)
+
+    optional_paths = (
+        (summary.get("search_summary", {}), "latency_ms"),
+        (summary, "latency_ms"),
+        (summary.get("candidate_recommendation", {}), "reason_zh"),
+        (summary.get("telemetry", {}), "error_code"),
+    )
+    for mapping, field in optional_paths:
+        if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
+            break
+        mapping.pop(field, None)
+
+    for section in reversed(sections):
+        for row in reversed(context.get(section, [])):
+            if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
+                break
+            row.pop("title", None)
+            row.pop("why_selected", None)
+
+    if _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
+        context["risks"] = []
+        summary.get("route_selection", {}).pop("candidates", None)
+        summary.get("repo_route", {}).pop("groups", None)
+        summary.get("repo_route", {}).pop("lifecycle", None)
+        summary.get("route", {}).pop("name", None)
+
+    return summary
+
+
 def _current_exclusion_reason(row: Mapping[str, Any]) -> str:
     status = str(row.get("status", ""))
     if status in {"archived", "superseded", "rejected"}:
@@ -821,6 +903,7 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
 
     compact_sections: Dict[str, List[Dict[str, Any]]] = {}
     seen_items: Set[str] = set()
+    selected_item_count = 0
     raw_evidence: List[str] = []
     seen_evidence: Set[str] = set()
     for section in ("current", "recent", "related", "search_fallback"):
@@ -829,6 +912,8 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         if not isinstance(rows, list):
             rows = []
         for row in rows:
+            if selected_item_count >= SUMMARY_JSON_MAX_ITEMS:
+                break
             if not isinstance(row, Mapping):
                 continue
             compact = _compact_context_item(row)
@@ -838,6 +923,7 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
             if dedupe_key:
                 seen_items.add(dedupe_key)
             compact_rows.append(compact)
+            selected_item_count += 1
             path = str(compact.get("path") or "")
             if path and path not in seen_evidence:
                 seen_evidence.add(path)
@@ -874,7 +960,7 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         else {}
     )
 
-    return {
+    summary = {
         "schema_version": payload.get("schema_version", 2),
         "projection": "agent-summary-v1",
         "read_only": bool(payload.get("read_only", True)),
@@ -929,6 +1015,7 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "latency_ms": payload.get("latency_ms", 0),
         "telemetry": dict(telemetry),
     }
+    return _fit_summary_budget(summary)
 
 
 def record_context_telemetry(

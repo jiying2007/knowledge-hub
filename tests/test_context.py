@@ -230,6 +230,58 @@ def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
     assert len(item_ids) == len(set(item_ids))
 
 
+def test_summary_json_enforces_byte_budget_with_dynamic_risks():
+    rows = [
+        {
+            "id": "item-{}".format(index),
+            "title": "很长的动态候选标题" * 60,
+            "kind": "project-archive",
+            "status": "reviewing",
+            "path": "projects/p1/archive/item-{}.md".format(index),
+            "why_selected": ["query-term:p1", "task-kind:archive", "status:reviewing"],
+        }
+        for index in range(8)
+    ]
+    payload = {
+        "schema_version": 2,
+        "read_only": True,
+        "task_type": "archive",
+        "context_budget": "small",
+        "knowledge_preflight": {"required": True, "source_of_truth": "registry"},
+        "route_selection": {"status": "selected", "selected_project_id": "p1"},
+        "route": {"project_id": "p1", "name": "P1"},
+        "context": {
+            "budget": "small",
+            "effective_limit": 4,
+            "selection_order": ["current", "recent", "related", "risk"],
+            "current": rows[:4],
+            "recent": rows[4:],
+            "related": [],
+            "search_fallback": [],
+            "risks": ["动态风险说明" * 80 for _ in range(5)],
+        },
+        "search": {
+            "status": "pass",
+            "count": 4,
+            "total_matches": 8,
+            "index": {"state": "warm", "mode": "local-index"},
+            "zero_hit": {"is_zero_hit": False},
+        },
+        "telemetry": {"status": "disabled", "recorded": False},
+    }
+
+    summary = context_module.summarize_context(payload)
+    encoded = json.dumps(summary, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    item_count = sum(
+        len(summary["context"][section])
+        for section in ("current", "recent", "related", "search_fallback")
+    )
+
+    assert len(encoded) <= context_module.SUMMARY_JSON_MAX_BYTES
+    assert item_count <= context_module.SUMMARY_JSON_MAX_ITEMS
+    assert summary["context_contract"]["raw_evidence"]
+
+
 def test_context_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path):
     def deny_write(path, row):
         raise PermissionError(errno.EACCES, "permission denied")
