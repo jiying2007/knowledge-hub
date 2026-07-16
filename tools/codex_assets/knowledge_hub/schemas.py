@@ -117,6 +117,12 @@ def validate_instance(
 def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
     for index, row in enumerate(load_jsonl(root / "registry/items.jsonl"), 1):
         yield "registry-item-v1", "registry/items.jsonl:{}".format(index), row
+        if row.get("agent_contract"):
+            yield (
+                "agent-contract-v1",
+                "registry/items.jsonl:{}#agent_contract".format(index),
+                row["agent_contract"],
+            )
         if row.get("evidence_contract"):
             yield (
                 "project-evidence-contract-v1",
@@ -130,6 +136,13 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
     workspace_path = root / "local/workspaces.json"
     if workspace_path.is_file():
         yield "local-workspaces-v1", "local/workspaces.json", load_json(workspace_path, {})
+    proposal_policy = root / "registry/agent-review-policy.json"
+    if proposal_policy.is_file():
+        yield (
+            "agent-review-policy-v1",
+            "registry/agent-review-policy.json",
+            load_json(proposal_policy, {}),
+        )
 
 
 def validate_schema_catalog(root: pathlib.Path) -> Dict[str, Any]:

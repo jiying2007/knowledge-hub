@@ -26,6 +26,19 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 短命令只做首屏维护和日常巡检；全面产品成熟度验收只有一个入口：`knowledge-final-gate.sh --final-profile product`。
 
+## Agent 运行时只读入口
+
+| 能力 | 稳定命令 | 权威与失败边界 |
+|---|---|---|
+| 有界导航 | `knowledge-map.sh --summary-json` | registry 派生；默认 20 items / 8192 bytes，cursor 绑定 source fingerprint 与 filters；map 不可作为引用证据 |
+| 分层证据 | `knowledge-evidence-pack.sh "<query>" --scope-ref <scope> --json` | active 与 provisional 分道；terminal/personal 不服务；只有显式 active contract 进入 MUST/SHOULD |
+| 动作预检 | `knowledge-action-check.sh --task <task> --candidate <action> --scope-ref <scope> --json` | `ALLOW/BLOCK/NEEDS_REVIEW`；无规则不 ALLOW，候选规则无 authority，输出不回显 candidate 正文 |
+| 合规评测 | `knowledge-compliance-eval.sh --cases <cases.jsonl> --json` | 批量复放确定性用例，只输出 candidate SHA 和 item id，不输出动作正文 |
+| Shadow 路由 | `knowledge-proposal-route.sh --proposal <candidate.json> --json` | `registry/agent-review-policy.json` 默认禁用；actual route 固定 human-review，`--record-shadow` 只写脱敏 ignored cache |
+| 原始证据检查 | `knowledge-evidence-ledger.sh --ledger <events.jsonl> --json` | 严格只读、metadata-only、chain fail-closed；永远 reference-only，不复制 raw body |
+
+这些入口独立实现并参考 `memdsl@2d87af7` / `rawmem@9842be6` 的公开契约；不引入上游运行时依赖、不启动 MCP/daemon、不安装 hook、不修改外部仓库。长期采用边界见 `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`。
+
 ## 产品成熟度入口
 
 ```bash
@@ -81,11 +94,11 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 - `knowledge-review-after.sh`: 只读复核排期报告入口。它按 `--as-of` 和 `--window-days` 输出 stale / near-due registry item、source 统计和 owner gate open 计数；near-due 只是人工提醒，不作为 blocking gate，不自动修改 `review_after`，不关闭 owner gate。
 - `knowledge-source-check.sh`: 只读 source availability 报告入口。首版只支持 `--scope pcr02-level2`，只执行 allowlist 中 `rtk test -d/-f ...` 或 `rtk bash -lc 'test -d/-f ...'` 的路径存在性检查；相对路径必须留在 Hub 根目录下。它不读取 PCR02 source 正文，不运行项目脚本，不改变 `knowledge-check` 的 `source_check_health.mode=static-registry-only` 和 `executed=false` 语义。
 - `knowledge-source-control.sh`: source 主控目录生成和检查入口。它读取 `registry/sources.json` current source、`registry/retired-sources.jsonl` provenance ledger 与 latest source coverage closeout，为每个 current/retired source 生成或检查 `sources/<source_id>/README.md`、`inventory.jsonl`、`coverage.md`、`source-policy.md`；默认只输出计划，`--apply` 只写 Hub 本仓控制文件，不读取或复制 source 正文。
-- `knowledge-context.sh`: 跨项目会话的 Hub 上下文预检入口。Agent 默认使用 `--summary-json --context-budget small --limit 3`，输出去重后的 route、`context.current/recent/related/search_fallback` 索引、风险、搜索摘要和 `context_contract.raw_evidence`；`--limit` 与预算上限共同约束 registry 候选、全文搜索和 fallback。路由歧义、需要完整 `ranked_items[].why_selected` / `search.results` 或形成高风险结论时，去掉 `--summary-json` 并用 `--json` 回退完整证据。Hub 控制面继续使用 `control-plane-query-aware` 路由，不读取 raw session 全文、不修改 tracked/managed 文件；默认脱敏 telemetry 只写忽略提交的本地 cache，存储不可用时返回 `telemetry.status=degraded`，`--no-telemetry` 或 `KNOWLEDGE_TELEMETRY=off` 会返回 `disabled`。
+- `knowledge-context.sh`: 跨项目会话的 Hub 上下文预检入口。Agent 默认使用 `--summary-json --context-budget small --limit 3`，输出去重后的 route、`context.current/recent/related/search_fallback` 索引、`context.authority_lanes.active_ids/provisional_ids`、风险、搜索摘要和 `context_contract.raw_evidence`；`--limit` 与预算上限共同约束 registry 候选、全文搜索和 fallback。摘要会保留有界 `search_trace`，但在 4KB 压力下先移除明细而保留计数。路由歧义、需要完整 `ranked_items[].why_selected` / `search.results` 或形成高风险结论时，去掉 `--summary-json` 并用 `--json` 回退完整证据。Hub 控制面继续使用 `control-plane-query-aware` 路由，不读取 raw session 全文、不修改 tracked/managed 文件；默认脱敏 telemetry 只写忽略提交的本地 cache，存储不可用时返回 `telemetry.status=degraded`，`--no-telemetry` 或 `KNOWLEDGE_TELEMETRY=off` 会返回 `disabled`。
 - `knowledge-workspace-discover.sh`: 本机 Git workspace 只读发现入口。默认扫描 `~` 与存在时的 `/vsdata/<user>`，也可重复传 `--scan-root`；只把 `.git/config` 中规范化后的 remote key 与 `registry/repositories.json` 精确匹配，输出未匹配 remote、重复副本、README、构建/测试/版本入口和 HEAD 指纹。默认 `--plan` 不写文件；`--apply` 只事务化刷新 `.gitignore` 已排除的 `local/workspaces.json`，绝对路径、alternate path 和动态 HEAD 不得复制到 tracked registry、Markdown、team export 或 owner evidence。发现源码只关闭“可定位”缺口，不等于 owner、构建、实机或发布验证完成。
 - `knowledge-path-audit.sh`: 全局路径漂移只读审计入口。它扫描 `~/embedded/engineering_archive`、`~/codex/docs/archive` 等 retired 路径在 Hub、Codex、memory、历史 session、runtime rules 和 Codex live/vendor/source skill 资产中的命中，并分类为 `canonical-policy`、`provenance`、`runtime-route-candidate`、`memory-superseded` 或 `historical-session`。默认 `--scope hub`，运行时规则门禁用 `--scope runtime-rules --strict --json`，skill/agent 专项用 `--scope skills --json`，需要跨仓报告时用 `--scope all --max-matches <N> --json`；它只报告，不改写 memory、历史 session、`~/codex`、`/vsdata` 或源项目。
 - `knowledge-pcr02-owner-targets.sh`: PCR02 owner-approved target materialization 入口。默认只读检查 4 个 Hub 内目标正文是否存在，并从 owner decision landing manifest 读取 source identity，不读取 retired origin 正文；`--apply` 才要求退役源文件仍可用并按已授权 worksheet 重新生成目标正文。不修改源项目、不写 memory、不提升 embedded standards。
-- `knowledge-search.sh`: 只读检索入口。它对中英文 query term 做带覆盖率的加权召回，支持中文 2/3-gram、短词、短语、别名和同义词，综合 canonical path、registry presence、status、title/id/tags/summary/path/body 排序，并对历史 manifest 和机器 registry 降权；JSON 的 `score`、`query_coverage`、`match_kind`、`why_selected` 解释排序，零命中时给出降级词、过滤原因和 fallback。它也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。本地倒排索引和 telemetry 都是可重建、非权威的 cache；任一写入因只读环境失败时安全回退扫描或标记 telemetry degraded，不改变命中语义和原有退出码。
+- `knowledge-search.sh`: 只读检索入口。它对中英文 query term 做带覆盖率的加权召回，支持中文 2/3-gram、短词、短语、别名和同义词，综合 canonical path、registry presence、status、title/id/tags/summary/path/body 排序，并对历史 manifest 和机器 registry 降权；JSON 的 `score`、`query_coverage`、`match_kind`、`why_selected` 解释排序。`search_trace` 记录 query terms、applied filters、candidate pool、有界 `excluded_by_filters[]` 和 retry query；只返回已登记条目的稳定元数据，不回显被过滤正文。它也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。本地倒排索引和 telemetry 都是可重建、非权威的 cache；任一写入因只读环境失败时安全回退扫描或标记 telemetry degraded，不改变命中语义和原有退出码。
 
   搜索索引使用 SQLite 原子事务增量刷新：普通 Markdown/文本的小批增删改只更新受影响的 FTS 行；`registry/items.jsonl`、source registry 变化、索引 schema 升级、冷启动或一次变化超过 128 个文件时仍执行完整 rebuild。增量路径继续同步校验相对路径、size 和 `mtime_ns`，失败时由 rollback journal 回滚，不会用 stale index 换取低延迟；JSON 的 `index.state=updated` 会同时给出 changed/deleted 数量和事务时间。
   v5 完整 rebuild 不再重复倒排原始 `body`，正文仍完整保存在 `documents` 表并由等价的 index token 集合覆盖；同时使用确定性的 index 专用顺序去重、frontmatter 单行 title 快路径和 source path 边界比较。普通查询继续使用 256 个 FTS candidate；带 owner/status/kind/domain/source 等结构化过滤时扩大到 4096，避免过滤前预排序截断合法结果。查询端 token 排序契约、增量事务、freshness 与 repository-scan fallback 保持不变；旧 v4 cache 不再作为权威索引，也不会被工具主动删除。

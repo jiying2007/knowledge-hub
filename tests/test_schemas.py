@@ -7,11 +7,21 @@ def test_schema_catalog_resolves_all_contracts():
     result = validate_schema_catalog(repository_root())
 
     assert result["status"] == "pass"
-    assert result["contract_count"] == 15
+    assert result["contract_count"] == 23
     assert result["validated_count"] == result["contract_count"]
     assert result["authority_overlap"] == []
     assert result["instance_validation"]["status"] == "pass"
     assert result["instance_validation"]["instance_count"] > 400
+    assert {
+        "agent-contract-v1",
+        "knowledge-map-v1",
+        "agent-evidence-pack-v1",
+        "agent-action-check-v1",
+        "agent-review-policy-v1",
+        "agent-proposal-route-v1",
+        "raw-evidence-inspection-v1",
+        "agent-compliance-eval-v1",
+    }.issubset({row["id"] for row in result["contracts"]})
 
 
 def test_schema_catalog_exposes_only_strict_current_contracts():

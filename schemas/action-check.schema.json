@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/action-check.schema.json",
+  "title": "Knowledge Hub deterministic Agent action check",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "verdict", "reason", "task",
+    "candidate_sha256", "scope_refs", "applicable_must", "violations",
+    "needs_review", "evaluated", "provisional_constraints", "authority_contract"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.action-check.v1"},
+    "read_only": {"const": true},
+    "verdict": {"enum": ["ALLOW", "BLOCK", "NEEDS_REVIEW"]},
+    "candidate_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "applicable_must": {"type": "array", "items": {"type": "object"}},
+    "violations": {"type": "array", "items": {"type": "object"}},
+    "needs_review": {"type": "array", "items": {"type": "object"}},
+    "evaluated": {"type": "array", "items": {"type": "object"}},
+    "provisional_constraints": {"type": "array", "items": {"type": "object"}},
+    "authority_contract": {"type": "object"}
+  },
+  "additionalProperties": true
+}

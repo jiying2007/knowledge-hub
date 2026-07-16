@@ -62,6 +62,27 @@ Agent 默认使用 `--summary-json --context-budget small --limit 3`，只装配
 rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd ~/knowledge-hub --query "增强 Knowledge Hub 自举体验" --task-type general --context-budget small --limit 3 --summary-json
 ```
 
+## Agent 运行时派生契约
+
+Agent 需要先导航、再查询、再读原文；对后果性动作还应做确定性预检。以下入口都是 registry/Markdown 的只读派生视图，不创建第二套知识正文：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-map.sh --summary-json
+rtk bash ~/knowledge-hub/tools/knowledge-evidence-pack.sh "<任务或问题>" --scope-ref repository:<repo-id> --json
+rtk bash ~/knowledge-hub/tools/knowledge-action-check.sh --task "<任务>" --candidate "<候选动作>" --scope-ref repository:<repo-id> --json
+rtk bash ~/knowledge-hub/tools/knowledge-proposal-route.sh --proposal <candidate.json> --json
+rtk bash ~/knowledge-hub/tools/knowledge-evidence-ledger.sh --ledger <rawmem-events.jsonl> --json
+```
+
+- `knowledge-map` 使用 item/byte budget、source fingerprint 和游标提供紧凑导航；map 不是事实证据。
+- `knowledge-search` 的 `search_trace.excluded_by_filters[]` 会有界返回被错误过滤的已登记 ID，不再把“过滤隐藏”伪装成“不存在”。
+- `knowledge-evidence-pack` 将 active 事实与 `reviewing/draft` 候选分别放入 CONTEXT/PROVISIONAL；只有显式、active、scope 命中的 `agent_contract` 才能进入 MUST/SHOULD。
+- `knowledge-action-check` 无显式适用规则时返回 `NEEDS_REVIEW`，候选 constraint 永不参与判定；`ALLOW` 只表示全部适用的确定性 guard 已求值通过，不是通用安全证明。
+- `knowledge-proposal-route` 默认 policy disabled 且固定 report-only shadow；它不会写 registry 或提升 active。
+- `knowledge-evidence-ledger` 只校验 `rawmem.event.v1` 的链和隐私元数据，不输出事件正文，并固定 `eligible_for_text_ingest=false`。
+
+完整采用/拒绝边界见 `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`。该决策仍为 `reviewing`，不改变本文现有 active 终态定义，也不替代 owner、source、设备、发布、回滚或采用证据。
+
 路径类问题优先看：
 
 ```bash

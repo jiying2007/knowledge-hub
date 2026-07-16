@@ -139,6 +139,84 @@ def test_structured_filter_excludes_unregistered_raw_file(tmp_path):
     assert payload["filter_diagnostics"]["by_reason"]["unregistered-structured-result"] >= 1
 
 
+def test_zero_hit_trace_returns_registered_item_hidden_by_wrong_filter(tmp_path):
+    root = _search_root(tmp_path)
+
+    payload = search(
+        root,
+        "obsidian-workbench",
+        limit=5,
+        filters=SearchFilters(kinds=("patent",)),
+    )
+
+    assert payload["status"] == "zero-hit"
+    assert payload["zero_hit"]["reason"] == (
+        "matching registered items were excluded by structured filters"
+    )
+    trace = payload["search_trace"]
+    assert trace["schema_version"] == "knowledge-hub.search-trace.v1"
+    assert trace["excluded_by_filters_total"] == 1
+    assert trace["excluded_by_filters"] == [
+        {
+            "id": "obsidian-workbench",
+            "path": "governance/obsidian.md",
+            "kind": "standard",
+            "status": "reviewing",
+            "domain": "governance",
+            "owner": "owner-a",
+            "excluded_by": "kind",
+            "matched_terms": ["obsidian-workbench"],
+            "query_coverage": 1.0,
+        }
+    ]
+    assert trace["retry_queries"] == [
+        {"query": "obsidian-workbench", "drop_filters": ["kind"]}
+    ]
+    assert "Backlinks" not in json.dumps(trace, ensure_ascii=False)
+
+
+def test_zero_hit_trace_does_not_expose_personal_local_metadata(tmp_path):
+    root = _search_root(tmp_path)
+    personal_path = root / "governance/personal.md"
+    personal_path.write_text("# private trace\n\npersonal-private-needle\n")
+    items_path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line]
+    rows.append(
+        {
+            "id": "personal-private-item",
+            "title": "personal-private-needle",
+            "kind": "standard",
+            "domain": "governance",
+            "path": "governance/personal.md",
+            "status": "personal",
+            "owner": "owner-a",
+            "visibility": "personal-local",
+            "source": {"type": "manual"},
+            "summary_zh": "personal-private-needle",
+            "review_after": "2026-10-13",
+            "tags": ["personal-private-needle"],
+        }
+    )
+    items_path.write_text(_jsonl(rows))
+
+    payload = search(
+        root,
+        "personal-private-needle",
+        limit=5,
+        filters=SearchFilters(kinds=("patent",)),
+    )
+
+    trace = payload["search_trace"]
+    serialized = json.dumps(trace, ensure_ascii=False)
+    assert trace["excluded_by_filters_total"] == 0
+    assert trace["excluded_by_filters"] == []
+    assert "personal-private-item" not in serialized
+    assert "governance/personal.md" not in serialized
+    assert payload["zero_hit"]["reason"] == (
+        "no indexed document matched the query and structured filters"
+    )
+
+
 def test_search_incrementally_updates_changed_added_and_deleted_bodies(tmp_path):
     root = _search_root(tmp_path)
     initial = search(root, "raw secret marker", limit=5)

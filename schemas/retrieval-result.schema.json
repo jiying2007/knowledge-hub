@@ -3,7 +3,7 @@
   "$id": "https://knowledge-hub.local/schemas/retrieval-result.schema.json",
   "title": "Knowledge retrieval response",
   "type": "object",
-  "required": ["schema_version", "status", "query", "index", "results", "zero_hit"],
+  "required": ["schema_version", "status", "query", "index", "results", "search_trace", "zero_hit"],
   "properties": {
     "schema_version": {"type": "integer", "minimum": 2},
     "status": {"enum": ["pass", "zero-hit", "error"]},
@@ -31,6 +31,43 @@
         },
         "additionalProperties": true
       }
+    },
+    "search_trace": {
+      "type": "object",
+      "required": [
+        "schema_version", "query_terms", "applied_filters", "candidate_pool",
+        "excluded_by_filters_total", "excluded_by_filters", "excluded_truncated", "retry_queries"
+      ],
+      "properties": {
+        "schema_version": {"const": "knowledge-hub.search-trace.v1"},
+        "query_terms": {"type": "array", "items": {"type": "string"}},
+        "applied_filters": {"type": "object"},
+        "candidate_pool": {
+          "type": "object",
+          "required": ["indexed", "after_filters", "returned"]
+        },
+        "excluded_by_filters_total": {"type": "integer", "minimum": 0},
+        "excluded_by_filters": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "kind", "status", "excluded_by", "matched_terms"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "path": {"type": "string", "minLength": 1},
+              "kind": {"type": "string"},
+              "status": {"type": "string"},
+              "excluded_by": {"type": "string", "minLength": 1},
+              "matched_terms": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": true
+          }
+        },
+        "excluded_truncated": {"type": "boolean"},
+        "retry_queries": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
     },
     "zero_hit": {"type": "object"}
   },

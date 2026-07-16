@@ -1,0 +1,16 @@
+{
+  "id": "fixture-observation",
+  "kind": "debug-record",
+  "status": "reviewing",
+  "promotion": "none",
+  "agent_contract": {
+    "schema_version": 1,
+    "role": "assertion",
+    "force": "advisory",
+    "capabilities": ["shadow_auto_stage_eligible"]
+  },
+  "evidence": {
+    "source_path": "governance/external-source-absorption.md",
+    "quote": "吸收的目标是形成可复用结论，不是搬运原文。"
+  }
+}

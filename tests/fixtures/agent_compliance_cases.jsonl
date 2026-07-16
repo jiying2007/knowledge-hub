@@ -1,0 +1,1 @@
+{"case_id":"no-active-contract-needs-review","task":"inspect Knowledge Hub repository","candidate":"rtk git status --short","scope_refs":["repository:knowledge-hub"],"expected_verdict":"NEEDS_REVIEW"}

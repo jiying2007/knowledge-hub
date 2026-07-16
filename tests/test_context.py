@@ -121,6 +121,8 @@ def test_context_keeps_archived_project_current_out_of_current(tmp_path):
     assert any(row["id"] == "p1-archived-current" for row in payload["context"]["recent"])
     assert any(row["id"] == "p1-active-audit" for row in payload["context"]["related"])
     assert any(row["id"] == "p1-active-audit" for row in payload["context"]["current_exclusions"])
+    assert payload["context"]["authority_lanes"]["provisional_ids"] == ["p1-runbook"]
+    assert "p1-runbook" not in payload["context"]["authority_lanes"]["active_ids"]
 
 
 def test_natural_query_route_handles_topic_exact_and_ambiguity():
@@ -221,6 +223,10 @@ def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
     assert parsed["search_summary"]["count"] <= 3
     assert parsed["context_contract"]["read_tier"] == "L1"
     assert parsed["context_contract"]["raw_evidence"]
+    assert parsed["context"]["authority_lanes"]["provisional_ids"] == ["p1-runbook"]
+    assert parsed["search_summary"]["search_trace"]["schema_version"] == (
+        "knowledge-hub.search-trace.v1"
+    )
     item_ids = [
         row["id"]
         for section in ("current", "recent", "related", "search_fallback")

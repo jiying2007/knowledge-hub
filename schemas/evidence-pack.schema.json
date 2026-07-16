@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/evidence-pack.schema.json",
+  "title": "Knowledge Hub Agent EvidencePack",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "query", "scope_refs", "must", "should",
+    "context", "provisional", "conflict", "missing", "search_trace",
+    "active_search_trace",
+    "authority_contract", "counts"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.evidence-pack.v1"},
+    "read_only": {"const": true},
+    "query": {"type": "string", "minLength": 1},
+    "scope_refs": {"type": "array", "items": {"type": "string"}},
+    "must": {"$ref": "#/$defs/lane"},
+    "should": {"$ref": "#/$defs/lane"},
+    "context": {"$ref": "#/$defs/lane"},
+    "provisional": {"$ref": "#/$defs/lane"},
+    "conflict": {"type": "array", "items": {"type": "object"}},
+    "missing": {"type": "array", "items": {"type": "object"}},
+    "search_trace": {"type": "object"},
+    "active_search_trace": {"type": "object"},
+    "authority_contract": {"type": "object"},
+    "counts": {"type": "object"}
+  },
+  "$defs": {
+    "lane": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "kind", "status", "runtime_role", "path", "authority"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

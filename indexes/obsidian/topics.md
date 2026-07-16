@@ -13,7 +13,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## no-active-promotion (127)
+## no-active-promotion (128)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## ai-generated (120)
+## ai-generated (121)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -112,14 +112,14 @@
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
-## knowledge-hub (7)
+## knowledge-hub (8)
 
 - [Knowledge Hub root](../../README.md) · `active`
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
 - [Knowledge Hub 权威与维护边界决策候选](../../governance/product/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [Knowledge Hub 维护入口](../../governance/product/current/runbooks/maintenance-entry.md) · `reviewing`
-- [Knowledge Hub 项目画像候选](../../governance/product/current/project-profile.md) · `reviewing`
 
 ## pcr02-ssc305 (6)
 
@@ -366,6 +366,11 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
 - [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
 
+## external-source (2)
+
+- [外部资料吸收规范](../../governance/external-source-absorption.md) · `active`
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
+
 ## fbtft (2)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -427,6 +432,10 @@
 ## address-sanitizer (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
+
+## agent-runtime (1)
+
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
 ## android-camera-hal (1)
 
@@ -496,6 +505,10 @@
 
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 
+## delegated-review-accepted (1)
+
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
+
 ## display (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -503,10 +516,6 @@
 ## embedded (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
-
-## external-source (1)
-
-- [外部资料吸收规范](../../governance/external-source-absorption.md) · `active`
 
 ## fbdev (1)
 
@@ -559,6 +568,10 @@
 ## markdown (1)
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+
+## memdsl (1)
+
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
 ## memory (1)
 
@@ -639,6 +652,10 @@
 ## raw-preview (1)
 
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+
+## rawmem (1)
+
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
 ## release (1)
 

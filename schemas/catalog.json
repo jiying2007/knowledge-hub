@@ -10,6 +10,13 @@
       "change_policy": "strict-current-contract"
     },
     {
+      "id": "agent-contract-v1",
+      "schema": "schemas/agent-contract.schema.json",
+      "applies_to": "registry/items.jsonl#each-line.agent_contract",
+      "authority": "registry-explicit-agent-runtime-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
       "id": "authorization-v1",
       "schema": "schemas/authorization.schema.json",
       "applies_to": "registry/authorizations.jsonl#each-line",
@@ -42,6 +49,55 @@
       "schema": "schemas/retrieval-result.schema.json",
       "applies_to": "knowledge-search.sh --json",
       "authority": "derived-local-index",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "knowledge-map-v1",
+      "schema": "schemas/knowledge-map.schema.json",
+      "applies_to": "knowledge-map.sh --json",
+      "authority": "derived-registry-navigation",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-evidence-pack-v1",
+      "schema": "schemas/evidence-pack.schema.json",
+      "applies_to": "knowledge-evidence-pack.sh --json",
+      "authority": "derived-registry-and-search-runtime-view",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-action-check-v1",
+      "schema": "schemas/action-check.schema.json",
+      "applies_to": "knowledge-action-check.sh --json",
+      "authority": "derived-active-explicit-agent-contracts",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-review-policy-v1",
+      "schema": "schemas/agent-review-policy.schema.json",
+      "applies_to": "registry/agent-review-policy.json",
+      "authority": "report-only-shadow-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-proposal-route-v1",
+      "schema": "schemas/proposal-route.schema.json",
+      "applies_to": "knowledge-proposal-route.sh --json",
+      "authority": "derived-report-only-shadow-assessment",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "raw-evidence-inspection-v1",
+      "schema": "schemas/raw-evidence-inspection.schema.json",
+      "applies_to": "knowledge-evidence-ledger.sh --json",
+      "authority": "derived-read-only-external-ledger-metadata",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-compliance-eval-v1",
+      "schema": "schemas/compliance-eval.schema.json",
+      "applies_to": "knowledge-compliance-eval.sh --json",
+      "authority": "derived-reproducible-agent-contract-evaluation",
       "change_policy": "strict-current-contract"
     },
     {
@@ -120,7 +176,8 @@
       "owner",
       "review_after",
       "review_status",
-      "promotion"
+      "promotion",
+      "agent_contract"
     ],
     "markdown": [
       "title",

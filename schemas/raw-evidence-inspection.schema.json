@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/raw-evidence-inspection.schema.json",
+  "title": "Knowledge Hub metadata-only raw evidence inspection",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "projection", "source_format", "status",
+    "chain_status", "ledger", "vocabulary", "privacy", "errors", "error_count",
+    "errors_truncated", "hub_route", "authority_contract"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.raw-evidence-inspection.v1"},
+    "read_only": {"const": true},
+    "projection": {"const": "metadata-only"},
+    "source_format": {"const": "rawmem.event.v1"},
+    "status": {"enum": ["pass", "fail"]},
+    "chain_status": {"enum": ["verified", "failed"]},
+    "ledger": {
+      "type": "object",
+      "required": ["path", "size_bytes", "snapshot_sha256", "event_count", "first_content_hash", "last_content_hash"]
+    },
+    "vocabulary": {"type": "object"},
+    "privacy": {
+      "type": "object",
+      "required": ["status", "suspected_secret_finding_count", "content_echoed"],
+      "properties": {"content_echoed": {"const": false}}
+    },
+    "errors": {"type": "array", "items": {"type": "object"}},
+    "error_count": {"type": "integer", "minimum": 0},
+    "errors_truncated": {"type": "boolean"},
+    "hub_route": {
+      "type": "object",
+      "required": ["route", "eligible_for_text_ingest", "eligible_for_active_promotion", "review_required", "candidate"],
+      "properties": {
+        "route": {"const": "reference-only"},
+        "eligible_for_text_ingest": {"const": false},
+        "eligible_for_active_promotion": {"const": false},
+        "review_required": {"const": true}
+      }
+    },
+    "authority_contract": {"type": "object"}
+  },
+  "additionalProperties": true
+}

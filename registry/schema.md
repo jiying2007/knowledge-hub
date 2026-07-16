@@ -97,6 +97,20 @@ Recommended external-source fields:
 - `source_license`
 - `promotion_decision`
 
+Optional Agent runtime contract:
+
+- `agent_contract.schema_version`：当前固定为 `1`。
+- `agent_contract.role`：`symbol`、`constraint`、`guidance`、`assertion` 或 `question`。
+- `agent_contract.force`：`advisory`、`strong` 或 `hard`。
+- `agent_contract.subject`、`scope_refs`：稳定主体和显式适用范围。
+- `agent_contract.capabilities`：声明是否可搜索、需证据、可执行 guard 或仅具备 shadow auto-stage 资格。
+- `agent_contract.guard`：只允许 `constraint` 使用的确定性 `when_any`、`deny_any`、`require_any` 和 `deny_regex`。
+- `agent_contract.exceptions`、`relations`：只保存显式例外和关系，不从自然语言自动推断。
+
+`agent_contract` 是 registry 权威字段，并可镜像进 managed Markdown frontmatter。运行时只允许 `active`、`manual_validation_pending=false`、scope 命中的显式 contract 获得 authority：`reviewing/draft` 一律进入 PROVISIONAL，archived/superseded/rejected/personal 不进入可服务 EvidencePack；candidate constraint 永不参加动作判定。无显式适用 contract 或 guard 不能确定性求值时，`knowledge-action-check.sh` 必须返回 `NEEDS_REVIEW`，不得用普通 `kind` 猜出 MUST。
+
+`registry/agent-review-policy.json` 只承载默认禁用的 report-only shadow 路由策略。即使策略测试判定 `eligible_route=auto-stage-reviewing`，实际 route 仍为 `human-review`；该文件不授权写 registry、active promotion、owner decision 或外部写入。
+
 Date invariants:
 
 - `created_at`, `updated_at` and `review_after` must use ISO date format: `YYYY-MM-DD`.

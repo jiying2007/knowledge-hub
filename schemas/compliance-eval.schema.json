@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/compliance-eval.schema.json",
+  "title": "Knowledge Hub Agent compliance evaluation",
+  "type": "object",
+  "required": ["schema_version", "read_only", "status", "total", "passed", "failed", "results", "content_echoed"],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.compliance-eval.v1"},
+    "read_only": {"const": true},
+    "status": {"enum": ["pass", "fail"]},
+    "total": {"type": "integer", "minimum": 1},
+    "passed": {"type": "integer", "minimum": 0},
+    "failed": {"type": "integer", "minimum": 0},
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "expected_verdict", "actual_verdict", "passed", "candidate_sha256"],
+        "additionalProperties": true
+      }
+    },
+    "content_echoed": {"const": false}
+  },
+  "additionalProperties": true
+}

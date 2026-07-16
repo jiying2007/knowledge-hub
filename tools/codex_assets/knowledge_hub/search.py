@@ -83,6 +83,8 @@ GENERIC_QUERY_TERMS = {
     "候选",
     "文档",
 }
+SEARCH_TRACE_EXCLUDED_LIMIT = 5
+SEARCH_TRACE_SCORE_LIMIT = 128
 
 
 @dataclass
@@ -694,6 +696,17 @@ def _term_matches(term: str, haystack: str) -> bool:
     return False
 
 
+def _matched_query_terms(
+    terms: Sequence[str],
+    body: str,
+    item: Mapping[str, Any],
+) -> List[str]:
+    """Return query terms matched by a row without exposing matched body text."""
+
+    combined = (_metadata_haystack(item) if item else "") + "\n" + body.lower()
+    return [term for term in terms if _term_matches(term, combined)]
+
+
 def _filters_match(item: Mapping[str, Any], physical_sources: Sequence[str], filters: SearchFilters) -> bool:
     if filters.sources and not set(filters.sources).intersection(physical_sources):
         return False
@@ -785,9 +798,7 @@ def _score(
     query: str,
 ) -> Optional[Tuple[int, List[str], float]]:
     body_haystack = body.lower()
-    metadata = _metadata_haystack(item) if item else ""
-    combined = metadata + "\n" + body_haystack
-    matched_terms = [term for term in terms if _term_matches(term, combined)]
+    matched_terms = _matched_query_terms(terms, body, item)
     if not matched_terms:
         return None
     coverage = len(matched_terms) / float(max(1, len(terms)))
@@ -913,6 +924,8 @@ def search(
     terms = query_terms(query)
     candidates: List[Dict[str, Any]] = []
     filtered_reasons: Counter = Counter()
+    excluded_registered_total = 0
+    excluded_registered: List[Dict[str, Any]] = []
     for row in indexed_rows:
         try:
             item = json.loads(row["item_json"])
@@ -922,6 +935,36 @@ def search(
         filter_reason = _filter_reason(item, physical_sources, filters)
         if filter_reason:
             filtered_reasons[filter_reason] += 1
+            if item and item.get("visibility") != "personal-local":
+                matched_terms = _matched_query_terms(terms, str(row["body"]), item)
+                if matched_terms:
+                    excluded_registered_total += 1
+                    if len(excluded_registered) < SEARCH_TRACE_SCORE_LIMIT:
+                        scored_hidden = _score(
+                            str(row["path"]),
+                            str(row["suffix"]),
+                            str(row["body"]),
+                            item,
+                            str(row["indexed_title"]),
+                            terms,
+                            query,
+                        )
+                        if scored_hidden is not None:
+                            hidden_score, _, hidden_coverage = scored_hidden
+                            excluded_registered.append(
+                                {
+                                    "id": str(item.get("id", "")),
+                                    "path": str(item.get("path", row["path"])),
+                                    "kind": str(item.get("kind", "")),
+                                    "status": str(item.get("status", "")),
+                                    "domain": str(item.get("domain", "")),
+                                    "owner": str(item.get("owner", "")),
+                                    "excluded_by": filter_reason,
+                                    "matched_terms": matched_terms,
+                                    "query_coverage": round(hidden_coverage, 3),
+                                    "score": hidden_score,
+                                }
+                            )
             continue
         scored = _score(
             str(row["path"]),
@@ -972,10 +1015,58 @@ def search(
         candidates.append(result)
     candidates.sort(key=lambda value: (-int(value["score"]), str(value.get("path", "")), str(value.get("item_id", ""))))
     results = candidates[:limit]
+    excluded_registered.sort(
+        key=lambda value: (
+            -int(value["score"]),
+            str(value.get("path", "")),
+            str(value.get("id", "")),
+        )
+    )
+    excluded_slice = [
+        {key: value for key, value in row.items() if key != "score"}
+        for row in excluded_registered[:SEARCH_TRACE_EXCLUDED_LIMIT]
+    ]
     elapsed_ms = round((time.monotonic() - started) * 1000, 2)
+    filter_payload = {
+        "source": list(filters.sources),
+        "owner": list(filters.owners),
+        "status": list(filters.statuses),
+        "kind": list(filters.kinds),
+        "kind_normalized": filters.normalized_kinds,
+        "domain": list(filters.domains),
+        "source_id": list(filters.source_ids),
+    }
+    retry_queries = []
+    if not results and excluded_slice:
+        retry_queries.append(
+            {
+                "query": query,
+                "drop_filters": sorted(
+                    {str(row["excluded_by"]) for row in excluded_slice}
+                ),
+            }
+        )
+    search_trace = {
+        "schema_version": "knowledge-hub.search-trace.v1",
+        "query_terms": terms,
+        "applied_filters": filter_payload,
+        "candidate_pool": {
+            "indexed": len(indexed_rows),
+            "after_filters": len(candidates),
+            "returned": len(results),
+        },
+        "excluded_by_filters_total": excluded_registered_total,
+        "excluded_by_filters": excluded_slice,
+        "excluded_truncated": excluded_registered_total > len(excluded_slice),
+        "retry_queries": retry_queries,
+    }
     zero_hit = {
         "is_zero_hit": not bool(results),
-        "reason": "" if results else "no indexed document matched the query and structured filters",
+        "reason": ""
+        if results
+        else "matching registered items were excluded by structured filters"
+        if excluded_registered_total
+        else "no indexed document matched the query and structured filters",
         "degraded_terms": [],
         "filtered_by_reason": dict(sorted(filtered_reasons.items())),
         "suggestions": [] if results else [
@@ -992,15 +1083,7 @@ def search(
         "count": len(results),
         "total_matches": len(candidates),
         "ranking": "sqlite-fts5-registry-canonical-distinctive-terms-v3",
-        "filters": {
-            "source": list(filters.sources),
-            "owner": list(filters.owners),
-            "status": list(filters.statuses),
-            "kind": list(filters.kinds),
-            "kind_normalized": filters.normalized_kinds,
-            "domain": list(filters.domains),
-            "source_id": list(filters.source_ids),
-        },
+        "filters": filter_payload,
         "index": index_state,
         "filter_diagnostics": {
             "filtered_count": sum(filtered_reasons.values()),
@@ -1008,6 +1091,7 @@ def search(
         },
         "latency_ms": elapsed_ms,
         "results": results,
+        "search_trace": search_trace,
         "zero_hit": zero_hit,
     }
     return payload

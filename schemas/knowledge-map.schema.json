@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/knowledge-map.schema.json",
+  "title": "Knowledge Hub bounded navigation map",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "navigation_only", "authority",
+    "source_fingerprint", "filters", "summary", "modules", "vocabulary",
+    "items", "returned_items", "truncated", "next_cursor", "encoded_bytes"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.map.v1"},
+    "read_only": {"const": true},
+    "navigation_only": {"const": true},
+    "authority": {"const": "registry/items.jsonl"},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "filters": {"type": "object"},
+    "summary": {"type": "object"},
+    "modules": {"type": "object"},
+    "vocabulary": {"type": "object"},
+    "items": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "kind", "status", "domain", "owner", "path", "authority_lane"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "authority_lane": {"enum": ["active", "provisional", "terminal", "personal"]}
+        },
+        "additionalProperties": true
+      }
+    },
+    "returned_items": {"type": "integer", "minimum": 0, "maximum": 100},
+    "truncated": {"type": "boolean"},
+    "next_cursor": {"type": "string"},
+    "encoded_bytes": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": true
+}

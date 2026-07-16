@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/proposal-route.schema.json",
+  "title": "Knowledge Hub report-only proposal routing assessment",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "report_only", "policy_mode", "policy_enabled",
+    "actual_route", "eligible_route", "proposal_hash", "client_fingerprint",
+    "reason_codes", "evidence_verification", "sample", "authority_contract"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.proposal-route.v1"},
+    "read_only": {"const": true},
+    "report_only": {"const": true},
+    "policy_mode": {"const": "shadow"},
+    "actual_route": {"const": "human-review"},
+    "eligible_route": {"enum": ["human-review", "auto-stage-reviewing", "human-sampled"]},
+    "proposal_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "client_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "evidence_verification": {"type": "object"},
+    "sample": {"type": "object"},
+    "authority_contract": {"type": "object"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/agent-contract.schema.json",
+  "title": "Knowledge Hub explicit Agent runtime contract",
+  "type": "object",
+  "required": ["schema_version", "role"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "role": {"enum": ["symbol", "constraint", "guidance", "assertion", "question"]},
+    "force": {"enum": ["advisory", "strong", "hard"]},
+    "subject": {"type": "string", "minLength": 1, "maxLength": 200},
+    "scope_refs": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200}
+    },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "searchable", "requires_evidence", "enforceable", "guardable",
+          "exceptions_recommended", "shadow_auto_stage_eligible"
+        ]
+      }
+    },
+    "guard": {
+      "type": "object",
+      "properties": {
+        "when_any": {"$ref": "#/$defs/phrases"},
+        "deny_any": {"$ref": "#/$defs/phrases"},
+        "require_any": {"$ref": "#/$defs/phrases"},
+        "deny_regex": {"$ref": "#/$defs/phrases"}
+      },
+      "additionalProperties": false
+    },
+    "exceptions": {"$ref": "#/$defs/phrases"},
+    "relations": {
+      "type": "object",
+      "properties": {
+        "conflicts_with": {"$ref": "#/$defs/phrases"},
+        "supersedes": {"$ref": "#/$defs/phrases"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "phrases": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    }
+  },
+  "additionalProperties": false
+}

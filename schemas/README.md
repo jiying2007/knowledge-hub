@@ -10,6 +10,14 @@
 - `lifecycle-event.schema.json`：`registry/lifecycle-events.jsonl` 单行生命周期事件。
 - `frontmatter-mirror.schema.json`：managed Markdown Properties 镜像。
 - `retrieval-result.schema.json`：检索 JSON 契约。
+- `agent-contract.schema.json`：registry item 可选的显式 Agent 运行时角色、scope、capability、guard 与关系契约。
+- `knowledge-map.schema.json`：有界、可分页、仅用于导航的 registry map 契约。
+- `evidence-pack.schema.json`：MUST / SHOULD / CONTEXT / PROVISIONAL / CONFLICT / MISSING 分层契约。
+- `action-check.schema.json`：`ALLOW / BLOCK / NEEDS_REVIEW` 确定性动作预检契约。
+- `agent-review-policy.schema.json`：默认禁用的 report-only shadow proposal policy。
+- `proposal-route.schema.json`：不写 registry 的候选路由评估契约。
+- `raw-evidence-inspection.schema.json`：rawmem-compatible ledger 的 metadata-only、fail-closed 检查契约。
+- `compliance-eval.schema.json`：批量动作合规用例的脱敏结果契约。
 - `project-readiness.schema.json`：项目能力矩阵契约。
 - `local-workspaces.schema.json`：未跟踪的本机 Git workspace 发现结果契约。
 - `final-gate-product.schema.json`：唯一 product 终态门禁契约。

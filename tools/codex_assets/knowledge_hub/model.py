@@ -55,6 +55,16 @@ REQUIRED_ITEM_FIELDS = {
 }
 AI_ROLES = {"drafted", "summarized", "translated", "rewritten", "classified", "extracted"}
 TERMINAL_STATUSES = {"archived", "superseded", "rejected"}
+AGENT_ROLES = {"symbol", "constraint", "guidance", "assertion", "question"}
+AGENT_FORCES = {"advisory", "strong", "hard"}
+AGENT_CAPABILITIES = {
+    "searchable",
+    "requires_evidence",
+    "enforceable",
+    "guardable",
+    "exceptions_recommended",
+    "shadow_auto_stage_eligible",
+}
 
 
 def _iso_date(value: Any, field: str) -> dt.date:
@@ -163,6 +173,93 @@ def validate_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]]
                 errors.append("AI-generated item missing {}".format(field))
         if item.get("ai_role") and item.get("ai_role") not in AI_ROLES:
             errors.append("invalid ai_role {}".format(item.get("ai_role")))
+    errors.extend(_validate_agent_contract(item.get("agent_contract")))
+    return errors
+
+
+def _validate_string_list(value: Any, field: str, maximum: int = 32) -> List[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        return ["agent_contract {} must be a list".format(field)]
+    errors = []
+    if len(value) > maximum:
+        errors.append("agent_contract {} exceeds {} entries".format(field, maximum))
+    valid_strings = [item for item in value if isinstance(item, str)]
+    if len(valid_strings) != len(value) or any(not item.strip() for item in valid_strings):
+        errors.append("agent_contract {} must contain non-empty strings".format(field))
+    if len(set(valid_strings)) != len(valid_strings):
+        errors.append("agent_contract {} must not contain duplicates".format(field))
+    return errors
+
+
+def _validate_agent_contract(value: Any) -> List[str]:
+    if value is None:
+        return []
+    if not isinstance(value, Mapping):
+        return ["agent_contract must be an object"]
+    errors: List[str] = []
+    if value.get("schema_version") != 1:
+        errors.append("agent_contract schema_version must be 1")
+    role = str(value.get("role", ""))
+    force = str(value.get("force", "advisory"))
+    if role not in AGENT_ROLES:
+        errors.append("invalid agent_contract role {}".format(role))
+    if force not in AGENT_FORCES:
+        errors.append("invalid agent_contract force {}".format(force))
+    capabilities = value.get("capabilities", [])
+    errors.extend(_validate_string_list(capabilities, "capabilities", 16))
+    if isinstance(capabilities, list):
+        valid_capabilities = {
+            capability for capability in capabilities if isinstance(capability, str)
+        }
+        unknown = sorted(valid_capabilities - AGENT_CAPABILITIES)
+        if unknown:
+            errors.append("invalid agent_contract capabilities {}".format(", ".join(unknown)))
+    for field in ("scope_refs", "exceptions"):
+        errors.extend(_validate_string_list(value.get(field), field))
+    guard = value.get("guard")
+    if guard is not None:
+        if role != "constraint":
+            errors.append("agent_contract guard requires role constraint")
+        if not isinstance(guard, Mapping):
+            errors.append("agent_contract guard must be an object")
+        else:
+            allowed = {"when_any", "deny_any", "require_any", "deny_regex"}
+            unknown_guard = sorted(str(field) for field in guard if field not in allowed)
+            if unknown_guard:
+                errors.append("invalid agent_contract guard fields {}".format(", ".join(unknown_guard)))
+            for field in allowed:
+                errors.extend(_validate_string_list(guard.get(field), "guard.{}".format(field)))
+            for pattern in guard.get("deny_regex", []) if isinstance(guard.get("deny_regex"), list) else []:
+                if not isinstance(pattern, str):
+                    continue
+                try:
+                    re.compile(pattern)
+                except re.error as exc:
+                    errors.append("invalid agent_contract deny_regex: {}".format(exc))
+        if isinstance(capabilities, list) and not {"enforceable", "guardable"}.issubset(
+            {capability for capability in capabilities if isinstance(capability, str)}
+        ):
+            errors.append("agent_contract guard requires enforceable and guardable capabilities")
+    relations = value.get("relations")
+    if relations is not None:
+        if not isinstance(relations, Mapping):
+            errors.append("agent_contract relations must be an object")
+        else:
+            unknown_relations = sorted(
+                str(field)
+                for field in relations
+                if field not in {"conflicts_with", "supersedes"}
+            )
+            if unknown_relations:
+                errors.append("invalid agent_contract relation fields {}".format(", ".join(unknown_relations)))
+            for field in ("conflicts_with", "supersedes"):
+                errors.extend(_validate_string_list(relations.get(field), "relations.{}".format(field)))
+    if role == "constraint" and force not in {"strong", "hard"}:
+        errors.append("agent_contract constraint force must be strong or hard")
+    if role == "guidance" and force == "hard":
+        errors.append("agent_contract guidance force must not be hard")
     return errors
 
 
@@ -212,5 +309,6 @@ def frontmatter_mirror(item: Mapping[str, Any]) -> Dict[str, Any]:
         "translation_status",
         "terminology_status",
         "promotion_decision",
+        "agent_contract",
     ]
     return {key: item[key] for key in keys if key in item}

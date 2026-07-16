@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "mode": "shadow",
+  "enabled": false,
+  "trusted_clients": [],
+  "eligible_kinds": [],
+  "eligible_runtime_roles": ["assertion"],
+  "daily_limit": 0,
+  "human_sample_percent": 100,
+  "sample_seed": "knowledge-hub-disabled-default",
+  "evidence_verifier": "hub-file-exact-quote",
+  "target_status": "reviewing",
+  "notes_zh": "默认全禁用。该策略只计算 shadow 路由，不写 registry、不提升 active；启用前必须经过 owner review。"
+}

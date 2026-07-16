@@ -541,6 +541,8 @@ def _fit_summary_budget(summary: Dict[str, Any]) -> Dict[str, Any]:
         _sync_summary_raw_evidence(summary)
 
     optional_paths = (
+        (summary.get("search_summary", {}).get("search_trace", {}), "excluded_by_filters"),
+        (summary.get("search_summary", {}).get("search_trace", {}), "retry_queries"),
         (summary.get("search_summary", {}), "latency_ms"),
         (summary, "latency_ms"),
         (summary.get("candidate_recommendation", {}), "reason_zh"),
@@ -561,9 +563,13 @@ def _fit_summary_budget(summary: Dict[str, Any]) -> Dict[str, Any]:
     if _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
         context["risks"] = []
         summary.get("route_selection", {}).pop("candidates", None)
-        summary.get("repo_route", {}).pop("groups", None)
-        summary.get("repo_route", {}).pop("lifecycle", None)
-        summary.get("route", {}).pop("name", None)
+        repo_route = summary.get("repo_route")
+        if isinstance(repo_route, dict):
+            repo_route.pop("groups", None)
+            repo_route.pop("lifecycle", None)
+        route = summary.get("route")
+        if isinstance(route, dict):
+            route.pop("name", None)
 
     return summary
 
@@ -811,6 +817,20 @@ def assemble_context(
             "git_config_detected": str(git_config) if git_config else "",
         }
     candidate_required = task_type in {"debug", "release", "decision", "validation", "session"}
+    authority_lanes = {
+        "active_ids": [str(row.get("id", "")) for row in current if row.get("status") == "active" and row.get("id")],
+        "provisional_ids": [
+            str(row.get("id", ""))
+            for row in current
+            if row.get("status") in {"reviewing", "draft"} and row.get("id")
+        ],
+        "historical_ids": [
+            str(row.get("id", ""))
+            for row in recent
+            if row.get("status") in terminal_statuses and row.get("id")
+        ],
+        "contract": "active and provisional are separate authority lanes; provisional items are never current fact authority",
+    }
     risks = [
         "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。",
         "memory、raw session、raw log、core、binary 不能高于 Hub 当前事实。",
@@ -864,6 +884,7 @@ def assemble_context(
             "related": related[:effective_limit],
             "search_fallback": search_payload.get("fallback_results", [])[:effective_limit],
             "current_exclusions": current_exclusions,
+            "authority_lanes": authority_lanes,
             "risks": risks,
             "notes_zh": "context 是只读候选装配；状态分类优先于 kind，archived/superseded/rejected 不会进入 current。why_selected 不代表 active 或 owner 签收。",
         },
@@ -894,6 +915,11 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
     )
     search_payload = payload.get("search") if isinstance(payload.get("search"), Mapping) else {}
     zero_hit = search_payload.get("zero_hit") if isinstance(search_payload.get("zero_hit"), Mapping) else {}
+    search_trace = (
+        search_payload.get("search_trace")
+        if isinstance(search_payload.get("search_trace"), Mapping)
+        else {}
+    )
     search_index = search_payload.get("index") if isinstance(search_payload.get("index"), Mapping) else {}
     preflight = (
         payload.get("knowledge_preflight")
@@ -991,6 +1017,7 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
             "effective_limit": context.get("effective_limit", 0),
             "selection_order": context.get("selection_order", []),
             **compact_sections,
+            "authority_lanes": context.get("authority_lanes", {}),
             "risks": context.get("risks", []),
         },
         "search_summary": {
@@ -1001,6 +1028,17 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
             "latency_ms": search_payload.get("latency_ms", 0),
             "index": _compact_mapping(search_index, ("state", "mode", "fresh", "rebuilt")) or {},
             "zero_hit": _compact_mapping(zero_hit, ("is_zero_hit", "reason")) or {},
+            "search_trace": _compact_mapping(
+                search_trace,
+                (
+                    "schema_version",
+                    "excluded_by_filters_total",
+                    "excluded_by_filters",
+                    "excluded_truncated",
+                    "retry_queries",
+                ),
+            )
+            or {},
         },
         "candidate_recommendation": dict(candidate_recommendation),
         "context_contract": {

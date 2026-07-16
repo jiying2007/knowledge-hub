@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/agent-review-policy.schema.json",
+  "title": "Knowledge Hub report-only Agent proposal shadow policy",
+  "type": "object",
+  "required": [
+    "schema_version", "mode", "enabled", "trusted_clients", "eligible_kinds",
+    "eligible_runtime_roles", "daily_limit", "human_sample_percent",
+    "sample_seed", "evidence_verifier", "target_status"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "mode": {"const": "shadow"},
+    "enabled": {"type": "boolean"},
+    "trusted_clients": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "eligible_kinds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "eligible_runtime_roles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"const": "assertion"}
+    },
+    "daily_limit": {"type": "integer", "minimum": 0, "maximum": 10000},
+    "human_sample_percent": {"type": "integer", "minimum": 0, "maximum": 100},
+    "sample_seed": {"type": "string", "minLength": 1, "maxLength": 200},
+    "evidence_verifier": {"const": "hub-file-exact-quote"},
+    "target_status": {"const": "reviewing"},
+    "notes_zh": {"type": "string"}
+  },
+  "additionalProperties": false
+}
