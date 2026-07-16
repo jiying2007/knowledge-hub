@@ -23,9 +23,9 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
+decision_owner: leiwenjun
 summary_zh: 记录 GD32L235 Firmware 的 registry 身份、仓库边界、已有 Hub 证据和权威边界；只作 reviewing 工作台，不声明源码或发布事实。
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+promotion_decision: none; owner boundary attested, no active promotion or evidence-ready claim
 path: projects/gd32l235/current/project-profile.md
 project_id: gd32l235
 readiness_slot: profile
@@ -76,7 +76,7 @@ related:
 - 当前源码、分支、版本、构建和发布事实：源项目及其可复现验证证据。
 - 长期摘要、决策记录、验证索引和跨项目方法：Knowledge Hub canonical Markdown 与 registry。
 - `status`、`owner`、`review_after`、promotion 和 authorization：registry/gate，不由目录名、Obsidian Graph 或本页文字推断。
-- 当前 `decision_owner=unassigned`，`manual_validation_pending=true`；未完成 owner 和真实环境验证前保持 `reviewing`。
+- 当前 `decision_owner=leiwenjun`，owner boundary 已通过 hash-bound attestation；`manual_validation_pending=true`，真实环境验证未闭环前保持 `reviewing`。
 
 ## Related
 

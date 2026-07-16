@@ -165,6 +165,60 @@ def sync_status_index_entries(repo, item_ids, target_status):
         kept_lines[insert_at:insert_at] = additions
     status_path.write_text("\n".join(kept_lines) + "\n")
 
+def sync_owner_index_entries(repo, item_ids, owner):
+    owner_path = repo / "indexes" / "by-owner.md"
+    try:
+        lines = owner_path.read_text().splitlines()
+    except Exception:
+        return
+    ids = {str(item_id) for item_id in item_ids if item_id}
+    if not ids:
+        return
+    heading = f"## {owner}"
+    try:
+        section_start = lines.index(heading) + 1
+    except ValueError:
+        if lines and lines[-1]:
+            lines.append("")
+        lines.extend([heading, ""])
+        section_start = len(lines)
+    section_end = next(
+        (index for index in range(section_start, len(lines)) if lines[index].startswith("## ")),
+        len(lines),
+    )
+    present = {
+        match.group(1)
+        for line in lines[section_start:section_end]
+        if (match := re.fullmatch(r"- `([^`]+)`", line))
+    }
+    additions = [f"- `{item_id}`" for item_id in sorted(ids - present)]
+    if additions:
+        insert_at = section_end
+        while insert_at > section_start and not lines[insert_at - 1]:
+            insert_at -= 1
+        lines[insert_at:insert_at] = additions
+    owner_path.write_text("\n".join(lines) + "\n")
+
+def sync_review_date_index_entries(repo, item_ids, review_after):
+    review_path = repo / "indexes" / "by-review-date.md"
+    try:
+        lines = review_path.read_text().splitlines()
+    except Exception:
+        return
+    ids = {str(item_id) for item_id in item_ids if item_id}
+    if not ids:
+        return
+    present = {
+        match.group(1)
+        for line in lines
+        if (match := re.search(r"`([^`]+)`", line))
+    }
+    lines.extend(
+        f"- {review_after}: `{item_id}`"
+        for item_id in sorted(ids - present)
+    )
+    review_path.write_text("\n".join(lines) + "\n")
+
 def update_source_registry_entry(repo, source_id, updates):
     sources_path = repo / "registry" / "sources.json"
     retired_sources_path = repo / "registry" / "retired-sources.jsonl"
@@ -299,6 +353,11 @@ def seed_pending_review_queue_items(repo, count=2):
             "validation_refs": [
                 "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
             ],
+            "summary_zh": "回归夹具：模拟等待人工复核的 AI 生成治理审计条目。",
+            "primary_language": "zh-CN",
+            "source_language": "zh-CN",
+            "translation_status": "not-required",
+            "terminology_status": "pending-review",
             "review_status": "ai-generated-pending-human-review",
             "created_at": today.isoformat(),
             "updated_at": today.isoformat(),
@@ -312,7 +371,11 @@ def seed_pending_review_queue_items(repo, count=2):
     with items_path.open("a", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
-    return [row["id"] for row in rows]
+    item_ids = [row["id"] for row in rows]
+    sync_owner_index_entries(repo, item_ids, "leiwenjun")
+    sync_review_date_index_entries(repo, item_ids, today.isoformat())
+    sync_status_index_entries(repo, item_ids, "reviewing")
+    return item_ids
 
 OWNER_DECISION_FIELD_NAMES = {
     "owner_decision",

@@ -76,6 +76,12 @@ def test_final_gate_owner_review_blocker():
         and payload.get("platform_productization_complete") is True
         and payload.get("terminal_maturity") is False
         and owner.get("status") == "needs-owner-review"
+        and owner.get("project_boundary_owner_ready") is True
+        and owner.get("decision_owner_ready_count") == 30
+        and owner.get("owner_ref_ready_count") == 30
+        and owner.get("owner_boundary_ready_count") == 30
+        and owner.get("specialized_owner_ready_candidate_count") == 3
+        and owner.get("pending_specialized_owner_candidate_count") == 0
         and owner.get("owner_gate_open_count") == 7
         and owner_gap.get("gap_type") == "owner-review"
         and owner_gap.get("codex_auto_can_complete") is False
@@ -128,6 +134,7 @@ def test_final_gate_product_review_queue_owner_review_blocker():
     if _skip_inside_product_gate(result_id, title):
         return
     repo = copy_repo(result_id)
+    seed_pending_review_queue_items(repo, count=2)
     setup_error = init_temp_git_repo(repo)
     if setup_error:
         expect(False, result_id, title, setup_error, repo)

@@ -93,14 +93,14 @@
       "reason_zh": "冻结专利历史归档正文路径，不把历史材料提升为当前披露或检索结论。"
     },
     {
-      "id": "knowledge-hub-governance-baseline-20260713",
+      "id": "knowledge-hub-governance-baseline-20260715",
       "path_prefix": "governance/",
       "coverage_mode": "governance-baseline",
       "owner": "leiwenjun",
-      "review_after": "2026-10-13",
-      "expected_markdown_count": 23,
-      "inventory_sha256": "b6a8ce992e25b05f84ed4b8b156e3c7ebeb61a1be07b406c2cae16201b441e7f",
-      "reason_zh": "冻结 Hub 当前治理基线正文路径；Source 生命周期策略是唯一当前 source 处置入口，新增治理规范仍优先逐条注册。"
+      "review_after": "2026-10-15",
+      "expected_markdown_count": 24,
+      "inventory_sha256": "0e52356db4434cf44a403a28978169b2d230f3ef74e547844ef3a3526d558086",
+      "reason_zh": "2026-07-15 显式复核并加入已逐条注册的软件工具证据审计报告后，重新冻结 Hub 治理正文路径；Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",

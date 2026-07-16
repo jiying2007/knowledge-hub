@@ -47,7 +47,7 @@ def main(argv=None) -> int:
                 payload["transaction"]["changed_count"],
             )
         )
-    return 0 if payload["status"] in {"planned", "applied", "pass"} else 1
+    return 0 if payload["status"] in {"planned", "applied", "no-change", "pass"} else 1
 
 
 if __name__ == "__main__":

@@ -23,9 +23,9 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
+decision_owner: leiwenjun
 summary_zh: 定义 Firmware Release Tools 的 Knowledge Hub 预检、候选写入、验证与授权边界，不生成未经源项目确认的工程命令。
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+promotion_decision: none; owner boundary attested, no active promotion or evidence-ready claim
 path: projects/firmware-release-tools/current/runbooks/maintenance-entry.md
 project_id: firmware-release-tools
 readiness_slot: runbook

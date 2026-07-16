@@ -3,13 +3,14 @@
   "$id": "https://knowledge-hub.local/schemas/pcr02-evidence-readiness.schema.json",
   "title": "PCR02 owner device and release evidence readiness result",
   "type": "object",
-  "required": ["schema_version", "status", "candidate_count", "reviewing_only", "decision_owner_default", "manual_validation_pending", "transaction"],
+  "required": ["schema_version", "status", "candidate_count", "reviewing_only", "decision_owner_default", "owner_attestation_ref", "manual_validation_pending", "transaction"],
   "properties": {
     "schema_version": {"const": 1},
     "status": {"enum": ["planned", "applied", "pass", "stale", "blocked"]},
     "candidate_count": {"const": 3},
     "reviewing_only": {"type": "boolean"},
-    "decision_owner_default": {"const": "initial-only:unassigned"},
+    "decision_owner_default": {"const": "hash-bound-attestation:leiwenjun"},
+    "owner_attestation_ref": {"const": "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"},
     "manual_validation_pending": {"type": "boolean"},
     "transaction": {"type": "object", "required": ["changed_count"]}
   },

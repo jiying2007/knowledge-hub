@@ -15,6 +15,10 @@ def test_repository_obsidian_views_are_idempotent():
         assert payload["property_coverage"][field]["coverage_percent"] == 100.0
     assert payload["obsidian_runtime_status"] == "not-validated"
 
+    applied = build_obsidian_views(repository_root(), apply=True)
+    assert applied["status"] == "no-change"
+    assert applied["transaction"]["changed_count"] == 0
+
 
 def test_obsidian_runtime_acceptance_requires_real_gui_evidence(tmp_path):
     (tmp_path / "local").mkdir()

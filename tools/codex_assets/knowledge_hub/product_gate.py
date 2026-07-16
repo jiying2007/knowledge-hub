@@ -54,6 +54,21 @@ FINAL_PROOF_SEED_IDS = (
     "knowledge-hub-report-only-maintenance-tools-20260622",
     "knowledge-hub-owner-inbox-final-gate-audit-20260622",
 )
+SPECIALIZED_OWNER_ATTESTATION_REF = (
+    "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"
+)
+SPECIALIZED_OWNER_DECISION_STATUS = "accepted-boundary-evidence-pending"
+SPECIALIZED_OWNER_DECISIONS = {
+    "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711": (
+        "accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing"
+    ),
+    "pcr02-st77912-fb-mi-fb-boundary-decision-20260711": (
+        "accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing"
+    ),
+    "pcr02-camera-raw-preview-virtual-stream-architecture-20260711": (
+        "accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing"
+    ),
+}
 
 
 def product_snapshot_path(root: pathlib.Path) -> pathlib.Path:
@@ -189,6 +204,9 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
     rows = []
     structural_ready = 0
     source_mapped = 0
+    decision_owner_ready = 0
+    owner_ref_ready = 0
+    owner_boundary_ready = 0
     reusable_asset_ready = 0
     ready_project_ids: Set[str] = set()
     for project in projects:
@@ -225,6 +243,21 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         contract_evaluation = evaluate_evidence_contract(
             validation_item.get("evidence_contract", {})
         )
+        decision_owner_values = {
+            str(item.get("decision_owner", "unassigned")) for item in slot_items.values()
+        }
+        project_decision_owner_ready = (
+            len(decision_owner_values) == 1
+            and next(iter(decision_owner_values)) not in {"", "unassigned"}
+        )
+        project_owner_ref_ready = (
+            "owner_ref" not in contract_evaluation["missing_fields"]
+            and "owner_ref" not in contract_evaluation["invalid_fields"]
+        )
+        project_owner_boundary_ready = project_decision_owner_ready and project_owner_ref_ready
+        decision_owner_ready += int(project_decision_owner_ready)
+        owner_ref_ready += int(project_owner_ref_ready)
+        owner_boundary_ready += int(project_owner_boundary_ready)
         evidence = (
             structural
             and mapped
@@ -253,6 +286,9 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
                 "evidence_profile": contract_evaluation["profile"],
                 "evidence_status": "ready" if evidence else "contract-evidence-pending",
                 "evidence_contract": contract_evaluation,
+                "decision_owner_status": "ready" if project_decision_owner_ready else "pending",
+                "owner_ref_status": "ready" if project_owner_ref_ready else "pending",
+                "owner_boundary_status": "ready" if project_owner_boundary_ready else "pending",
                 "reusable_asset_status": "ready" if reusable else "pending",
                 "slots": slot_rows,
             }
@@ -293,6 +329,10 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         "structural_ready_count": structural_ready,
         "structural_coverage": round(structural_ready / float(max(1, project_count)), 4),
         "source_mapping_ready_count": source_mapped,
+        "decision_owner_ready_count": decision_owner_ready,
+        "owner_ref_ready_count": owner_ref_ready,
+        "owner_boundary_ready_count": owner_boundary_ready,
+        "owner_boundary_coverage": round(owner_boundary_ready / float(max(1, project_count)), 4),
         "evidence_ready_count": len(ready_project_ids),
         "evidence_coverage": round(len(ready_project_ids) / float(max(1, project_count)), 4),
         "reusable_asset_ready_count": reusable_asset_ready,
@@ -525,6 +565,33 @@ def run_product_gate(
         )
     candidate_integrity = _candidate_integrity(root, signature)
     items = registry_items(root)
+    items_by_id = {str(row.get("id", "")): row for row in items}
+    pcr_items = {}
+    specialized_owner_ready_ids = []
+    for item_id, expected_decision in SPECIALIZED_OWNER_DECISIONS.items():
+        row = items_by_id.get(item_id, {})
+        owner_ready = (
+            row.get("decision_owner") == "leiwenjun"
+            and row.get("decision_status") == SPECIALIZED_OWNER_DECISION_STATUS
+            and row.get("owner_attestation_ref") == SPECIALIZED_OWNER_ATTESTATION_REF
+            and row.get("owner_decision") == expected_decision
+        )
+        pcr_items[item_id] = {
+            "status": row.get("status", "missing"),
+            "path": row.get("path", ""),
+            "decision_owner": row.get("decision_owner", "unassigned"),
+            "decision_status": row.get("decision_status", "candidate"),
+            "owner_attestation_ref": row.get("owner_attestation_ref", ""),
+            "owner_decision": row.get("owner_decision", ""),
+            "owner_ready": owner_ready,
+            "manual_validation_pending": row.get("manual_validation_pending", True),
+        }
+        if owner_ready:
+            specialized_owner_ready_ids.append(item_id)
+    specialized_owner_ready_ids.sort()
+    pending_specialized_owner_ids = sorted(
+        set(SPECIALIZED_OWNER_DECISIONS) - set(specialized_owner_ready_ids)
+    )
     proof_artifacts = _proof_artifacts(root, as_of, items)
     status_counts = Counter(str(row.get("status", "unknown")) for row in items)
     active_domain = [
@@ -568,6 +635,14 @@ def run_product_gate(
         status_payload.get("review_queues", {}).get("summary", {}).get("total_pending_count", 0) or 0
     )
     project_evidence_ready = readiness["evidence_ready_count"] == readiness["project_count"]
+    project_boundary_owner_ready = (
+        readiness["owner_boundary_ready_count"] == readiness["project_count"]
+    )
+    owner_decision_pending = (
+        not project_boundary_owner_ready
+        or owner_gate_open_count > 0
+        or bool(pending_specialized_owner_ids)
+    )
     evidence_ready = project_evidence_ready and owner_gate_open_count == 0 and review_queue_pending_count == 0
     adoption_ready = bool(metrics.get("adoption", {}).get("ready", False))
     full_regression_ready = regression_suite == "full" and hard_checks["full_regression"]
@@ -593,20 +668,44 @@ def run_product_gate(
         if adoption_ready and full_regression_ready and delivery_ready
         else "partial"
     )
+    if not owner_decision_pending:
+        owner_evidence_clause = (
+            "30 项 authority-boundary owner 与 3 项 PCR02 专项 owner 决定均已绑定；"
+            "真实 source/device/platform/release evidence 尚未闭环，"
+        )
+    else:
+        owner_evidence_clause = (
+            "30 项 authority-boundary owner 已绑定，仍有 {} 项专项或队列 owner 决定待处理；"
+            "真实 source/device/platform/release evidence 尚未闭环，"
+        ).format(len(pending_specialized_owner_ids) + owner_gate_open_count)
     if gate_status != "pass":
         conclusion_zh = "产品门禁存在技术阻断，必须先修复 blockers。"
     elif not delivery_ready:
-        conclusion_zh = (
-            "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
-            "30 个项目的真实 owner/source/device/platform/release evidence 也尚未闭环，"
-            "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
-        )
+        if project_boundary_owner_ready:
+            conclusion_zh = (
+                "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
+                + owner_evidence_clause
+                + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+            )
+        else:
+            conclusion_zh = (
+                "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
+                "30 个项目的真实 owner/source/device/platform/release evidence 也尚未闭环，"
+                "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+            )
     elif not evidence_ready:
-        conclusion_zh = (
-            "平台发布、结构、检索、链接、导出和恢复门禁已通过；"
-            "30 个项目的真实 owner/source/device/platform/release evidence 尚未闭环，"
-            "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
-        )
+        if project_boundary_owner_ready:
+            conclusion_zh = (
+                "平台发布、结构、检索、链接、导出和恢复门禁已通过；"
+                + owner_evidence_clause
+                + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+            )
+        else:
+            conclusion_zh = (
+                "平台发布、结构、检索、链接、导出和恢复门禁已通过；"
+                "30 个项目的真实 owner/source/device/platform/release evidence 尚未闭环，"
+                "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+            )
     else:
         conclusion_zh = "平台和项目证据均达到终态门槛。"
     source_runtime_payload = dict(source_check_payload)
@@ -711,10 +810,14 @@ def run_product_gate(
         blocker_rows.append(
             {
                 "id": "owner-and-real-evidence-pending",
-                "severity": "owner-review",
-                "gap_type": "owner-review",
+                "severity": "owner-review" if owner_decision_pending else "evidence-readiness",
+                "gap_type": "owner-review" if owner_decision_pending else "evidence",
                 "codex_auto_can_complete": False,
-                "requires_owner_decision": True,
+                "requires_owner_decision": owner_decision_pending,
+                "project_boundary_owner_ready": project_boundary_owner_ready,
+                "project_boundary_owner_ready_count": readiness["owner_boundary_ready_count"],
+                "specialized_owner_ready_count": len(specialized_owner_ready_ids),
+                "specialized_owner_pending_count": len(pending_specialized_owner_ids),
             }
         )
     if not delivery_ready:
@@ -739,20 +842,6 @@ def run_product_gate(
         }
         for row in blocker_rows
     ]
-    pcr_items = {
-        row.get("id"): {
-            "status": row.get("status"),
-            "path": row.get("path"),
-            "manual_validation_pending": row.get("manual_validation_pending", False),
-        }
-        for row in items
-        if row.get("id")
-        in {
-            "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711",
-            "pcr02-st77912-fb-mi-fb-boundary-decision-20260711",
-            "pcr02-camera-raw-preview-virtual-stream-architecture-20260711",
-        }
-    }
     next_actions_zh = []
     if readiness["source_mapping_ready_count"] != readiness["project_count"]:
         next_actions_zh.append(
@@ -762,14 +851,26 @@ def run_product_gate(
         pending_evidence_count = sum(
             1 for row in readiness["rows"] if row["evidence_status"] != "ready"
         )
-        next_actions_zh.extend(
-            [
+        if project_boundary_owner_ready:
+            if pending_specialized_owner_ids:
+                next_actions_zh.append(
+                    "30 项 authority-boundary owner 与 owner_ref 已绑定；仍需真实 owner 处理 {} 个 PCR02 专项候选，并为 {} 个 evidence-pending 项目补真实证据。".format(
+                        len(pending_specialized_owner_ids), pending_evidence_count
+                    )
+                )
+            else:
+                next_actions_zh.append(
+                    "30 项 authority-boundary owner 与 3 项 PCR02 专项 owner 决定均已绑定；继续为 {} 个 evidence-pending 项目补真实证据。".format(
+                        pending_evidence_count
+                    )
+                )
+        else:
+            next_actions_zh.append(
                 "由真实 decision owner 处理 {} 个未闭环项目候选；未签收前保持 reviewing。".format(
                     pending_evidence_count
-                ),
-                "优先补 PCR02 ST77912 高温、SCLK/EMI、端到端显示和发布回滚证据。",
-            ]
-        )
+                )
+            )
+        next_actions_zh.append("优先补 PCR02 ST77912 高温、SCLK/EMI、端到端显示和发布回滚证据。")
     if not delivery_ready:
         next_actions_zh.append(
             "在门禁全绿后形成 clean committed HEAD，并用 full regression 与 HEAD git archive 恢复演练复核交付。"
@@ -909,6 +1010,15 @@ def run_product_gate(
             "ready_project_count": readiness["evidence_ready_count"],
             "project_count": readiness["project_count"],
             "project_evidence_ready": project_evidence_ready,
+            "project_boundary_owner_ready": project_boundary_owner_ready,
+            "decision_owner_ready_count": readiness["decision_owner_ready_count"],
+            "owner_ref_ready_count": readiness["owner_ref_ready_count"],
+            "owner_boundary_ready_count": readiness["owner_boundary_ready_count"],
+            "owner_decision_status": "pending" if owner_decision_pending else "ready",
+            "specialized_owner_ready_candidate_count": len(specialized_owner_ready_ids),
+            "specialized_owner_ready_candidate_ids": specialized_owner_ready_ids,
+            "pending_specialized_owner_candidate_count": len(pending_specialized_owner_ids),
+            "pending_specialized_owner_candidate_ids": pending_specialized_owner_ids,
             "owner_gate_open_count": owner_gate_open_count,
             "review_queue_pending_count": review_queue_pending_count,
             "pending_project_ids": [row["project_id"] for row in readiness["rows"] if row["evidence_status"] != "ready"],
@@ -930,6 +1040,7 @@ def run_product_gate(
             "retrieval_status": retrieval.get("status", "fail"),
             "operational_status": "pass" if hard_checks["team_export_plan"] and hard_checks["restore_drill"] else "fail",
             "owner_evidence_status": "ready" if evidence_ready else "needs-owner-review",
+            "project_boundary_owner_ready": project_boundary_owner_ready,
             "full_regression_ready": full_regression_ready,
             "adoption_ready": adoption_ready,
             "platform_release_complete": gate_status == "pass" and delivery_ready,

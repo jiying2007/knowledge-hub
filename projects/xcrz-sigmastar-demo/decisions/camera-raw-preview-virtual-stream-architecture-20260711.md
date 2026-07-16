@@ -7,7 +7,7 @@ status: reviewing
 maturity: candidate
 owner: leiwenjun
 created_at: 2026-07-11
-updated_at: '2026-07-13'
+updated_at: '2026-07-16'
 review_after: '2026-10-11'
 tags:
 - pcr02
@@ -37,10 +37,10 @@ related:
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
 - artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
-decision_owner: unassigned
-decision_status: candidate
+decision_owner: leiwenjun
+decision_status: accepted-boundary-evidence-pending
 manual_validation_pending: true
-review_scope: content-review-record-only-not-owner-approval
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
 owner_roles_required:
 - PCR02 product decision owner
 - camera/media owner
@@ -48,7 +48,7 @@ owner_roles_required:
 - application/AI owner
 - release owner
 evidence_readiness:
-  owner: pending-real-owner-assignment-and-decision
+  owner: accepted-boundary-evidence-pending
   source: pending-current-commit-and-artifact-identity
   device: pending-real-device-or-lab-evidence
   release: pending-release-and-rollback-evidence
@@ -58,6 +58,11 @@ validation_refs:
 - artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing
+decision_date: '2026-07-16'
+promotion_decision: none; owner accepted the single RAW_PREVIEW and three-virtual-stream boundary; device soak, packaging,
+  compatibility, release and rollback evidence remain pending
 ---
 
 # PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
@@ -259,8 +264,8 @@ Potential project-local memory candidate for human review:
 
 ### 1. Owner 决策路径
 
-- `decision_owner=unassigned`。既有 proto/build 通过和 review record 不等于架构 owner、协议 owner 或 release owner 签收。
-- owner 必须确认单物理 RAW_PREVIEW + 三虚拟流 fan-out、旧 DS1/DS2 alias 生命周期、SHM padded payload 契约、消费者兼容边界和回滚方案。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受单物理 RAW_PREVIEW + 三虚拟流 fan-out，且 DS1/DS2 仅作为临时兼容 alias。
+- 该决定不证明设备 soak、镜像打包、协议兼容、消费者端到端、发布或回滚验证已通过；候选继续保持 `reviewing`。
 
 ### 2. Source、构建与制品身份
 

@@ -21,14 +21,21 @@ from .store import RepositoryTransaction
 MANAGED_START = "<!-- pcr02-owner-device-release-validation:start -->"
 MANAGED_END = "<!-- pcr02-owner-device-release-validation:end -->"
 MANIFEST_PATH = "artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md"
+OWNER_PACKET_PATH = "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-boundary-packet-20260716.jsonl"
+OWNER_PACKET_SHA256 = "ed72da24c54207f6a52189cc2b11f88a7ac15a10dfce0166460023c9d0ca5e88"
+OWNER_ATTESTATION_REF = "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"
+OWNER_DECISION_STATUS = "accepted-boundary-evidence-pending"
+OWNER_ATTESTED_AT = "2026-07-16"
 
 TARGETS = {
     "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711": {
         "owner_roles": ["PCR02 product decision owner", "display/BSP owner", "hardware/EMC owner", "release owner"],
+        "owner_decision": "accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing",
+        "promotion_decision": "none; owner accepted 36MHz stable baseline and higher clocks as validation-only; high-temperature, SCLK/EMI, device, release and rollback evidence remain pending",
         "section": """### 1. Owner 决策路径
 
-- `decision_owner=unassigned`。Hub 维护人和既有 `accept-as-review-record` 记录均不等于产品 owner 签收。
-- 产品 decision owner 必须对 36MHz 稳态档、40/43MHz 候选档、54MHz 观感档逐项给出 `accept/modify/reject`，并固定适用硬件版本、环境上限、刷新面积约束和降档阈值。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受 36MHz 稳态默认、40/43MHz 与 54MHz 仅作验证档的边界。
+- 该 owner 决定不证明任何高温、SCLK/EMI、设备、发布或回滚验证已通过；候选继续保持 `reviewing`。
 - display/BSP owner 负责 DTS、fbtft、MSPI 实际时钟和应用刷新策略；hardware/EMC owner 负责信号完整性及 EMI 风险；release owner 负责制品和回滚。角色可由同一真人承担，但每个责任必须显式记录。
 
 ### 2. Source 与制品身份
@@ -74,10 +81,12 @@ owner 在执行前填写产品规范中的温度、供电、样机数和时长�
     },
     "pcr02-st77912-fb-mi-fb-boundary-decision-20260711": {
         "owner_roles": ["PCR02 product decision owner", "display/BSP owner", "application owner", "release owner"],
+        "owner_decision": "accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing",
+        "promotion_decision": "none; owner accepted the current fbtft/ST77912 versus SStar/MI_FB boundary; current-firmware, device, release and rollback evidence remain pending",
         "section": """### 1. Owner 决策路径
 
-- `decision_owner=unassigned`；既有内容复核记录只证明候选可读，不证明 framebuffer 边界已被产品 owner 接受。
-- owner 必须确认适用硬件/固件版本，并对 `/dev/fb0`、`/dev/fb1`、`/dev/fb2` 的角色、应用依赖和未来失效条件作出明确决定。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受当前范围内 `/dev/fb0`、`/dev/fb1` 属于 fbtft/ST77912、`/dev/fb2` 属于 SStar/MI_FB 的边界。
+- 该决定不证明当前固件、目标设备、发布或回滚验证已通过；编号漂移和适用范围仍须按下列证据路径复核。
 
 ### 2. Source 与运行态证据
 
@@ -99,10 +108,12 @@ owner 在执行前填写产品规范中的温度、供电、样机数和时长�
     },
     "pcr02-camera-raw-preview-virtual-stream-architecture-20260711": {
         "owner_roles": ["PCR02 product decision owner", "camera/media owner", "protocol/API owner", "application/AI owner", "release owner"],
+        "owner_decision": "accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing",
+        "promotion_decision": "none; owner accepted the single RAW_PREVIEW and three-virtual-stream boundary; device soak, packaging, compatibility, release and rollback evidence remain pending",
         "section": """### 1. Owner 决策路径
 
-- `decision_owner=unassigned`。既有 proto/build 通过和 review record 不等于架构 owner、协议 owner 或 release owner 签收。
-- owner 必须确认单物理 RAW_PREVIEW + 三虚拟流 fan-out、旧 DS1/DS2 alias 生命周期、SHM padded payload 契约、消费者兼容边界和回滚方案。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受单物理 RAW_PREVIEW + 三虚拟流 fan-out，且 DS1/DS2 仅作为临时兼容 alias。
+- 该决定不证明设备 soak、镜像打包、协议兼容、消费者端到端、发布或回滚验证已通过；候选继续保持 `reviewing`。
 
 ### 2. Source、构建与制品身份
 
@@ -188,6 +199,29 @@ def _initialize_candidate_contract(
             "validation_path": MANIFEST_PATH,
         },
     )
+    current_owner = str(result.get("decision_owner", "unassigned"))
+    current_decision_status = str(result.get("decision_status", "candidate"))
+    current_attestation_ref = str(result.get("owner_attestation_ref", ""))
+    authorized_initial_state = current_owner in {"", "unassigned"} and current_decision_status in {
+        "",
+        "candidate",
+    }
+    authorized_bound_state = (
+        current_owner == "leiwenjun"
+        and current_decision_status == OWNER_DECISION_STATUS
+        and current_attestation_ref in {"", OWNER_ATTESTATION_REF}
+    )
+    if authorized_initial_state or authorized_bound_state:
+        result["decision_owner"] = "leiwenjun"
+        result["decision_status"] = OWNER_DECISION_STATUS
+        result["decision_date"] = OWNER_ATTESTED_AT
+        result["owner_attestation_ref"] = OWNER_ATTESTATION_REF
+        result["owner_decision"] = str(contract["owner_decision"])
+        result["promotion_decision"] = str(contract["promotion_decision"])
+        result["review_scope"] = "owner-attested-boundary-only-no-active-release-or-evidence-ready"
+        evidence_readiness = copy.deepcopy(dict(result.get("evidence_readiness", {})))
+        evidence_readiness["owner"] = "accepted-boundary-evidence-pending"
+        result["evidence_readiness"] = evidence_readiness
     validation_refs = list(result.get("validation_refs", []))
     for required in (path, MANIFEST_PATH):
         if required not in validation_refs:
@@ -215,7 +249,7 @@ def _manifest() -> str:
         "",
         "## 边界",
         "",
-        "本记录把三条 PCR02 candidate 固定为 `reviewing + decision_owner=unassigned + manual_validation_pending=true`，并给出真实 source、实机和 release 证据路径。它不是 owner decision，不关闭 owner gate，不提升 active，不修改源项目，不写 memory。",
+        "本记录把三条 PCR02 candidate 固定为 `reviewing + decision_owner=leiwenjun + decision_status=accepted-boundary-evidence-pending + manual_validation_pending=true`，并给出真实 source、实机和 release 证据路径。Owner 边界由 2026-07-16 hash-bound attestation 确认；本记录不提升 active，不批准 release，不声明 evidence-ready，不修改源项目，不写 memory。",
         "",
         "## 候选入口",
         "",
@@ -241,7 +275,7 @@ def _manifest() -> str:
             "",
             "## 当前状态",
             "",
-            "截至 2026-07-13，上述路径已定义，但真实 owner、当前 source commit、目标设备矩阵和 release/rollback 证据未在 Hub 登记。三条 candidate 均保持 `reviewing`，不得声明 release-ready 或 active。",
+            "截至 2026-07-16，三项专项边界已由真实 owner 作出 hash-bound 确认；当前 source commit、目标设备矩阵和 release/rollback 证据仍未闭环。三条 candidate 均保持 `reviewing`，不得声明 evidence-ready、release-ready 或 active。",
             "",
             "## 验证",
             "",
@@ -261,6 +295,11 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
 
 
 def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+    packet_path = root / OWNER_PACKET_PATH
+    if not packet_path.exists() or file_sha256(packet_path) != OWNER_PACKET_SHA256:
+        raise KnowledgeHubError("PCR02 specialized owner Packet is missing or hash-mismatched")
+    if not (root / OWNER_ATTESTATION_REF).exists():
+        raise KnowledgeHubError("PCR02 specialized owner attestation is missing")
     items = registry_items(root)
     by_id = {str(item.get("id", "")): item for item in items}
     missing_ids = sorted(set(TARGETS) - set(by_id))
@@ -297,6 +336,14 @@ def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = Fa
             "updated_at",
         ):
             metadata[field] = item[field]
+        for field in (
+            "decision_date",
+            "owner_attestation_ref",
+            "owner_decision",
+            "promotion_decision",
+        ):
+            if field in item:
+                metadata[field] = item[field]
         related = metadata.get("related", [])
         related = related if isinstance(related, list) else [related]
         if MANIFEST_PATH not in related:
@@ -310,6 +357,9 @@ def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = Fa
                 "path": path,
                 "status": item["status"],
                 "decision_owner": item["decision_owner"],
+                "decision_status": item["decision_status"],
+                "owner_attestation_ref": item.get("owner_attestation_ref", ""),
+                "owner_decision": item.get("owner_decision", ""),
                 "manual_validation_pending": item["manual_validation_pending"],
                 "owner_role_count": len(contract["owner_roles"]),
                 "lifecycle_preserved": all(
@@ -339,7 +389,8 @@ def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = Fa
         "candidate_count": len(rows),
         "candidates": rows,
         "reviewing_only": all(row["status"] == "reviewing" for row in rows),
-        "decision_owner_default": "initial-only:unassigned",
+        "decision_owner_default": "hash-bound-attestation:leiwenjun",
+        "owner_attestation_ref": OWNER_ATTESTATION_REF,
         "manual_validation_pending": all(row["manual_validation_pending"] for row in rows),
         "lifecycle_preserved": all(row["lifecycle_preserved"] for row in rows),
         "active_promotion": False,

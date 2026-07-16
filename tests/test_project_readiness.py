@@ -11,6 +11,12 @@ from tools.codex_assets.knowledge_hub.project_readiness import (
 from tools.codex_assets.knowledge_hub.project_readiness_cli import main as project_readiness_main
 
 
+OWNER_ATTESTATION_REF = {
+    "kind": "owner-attestation",
+    "ref": "artifacts/manifests/knowledge-hub-terminal-owner-attestation-20260716.md",
+}
+
+
 def test_all_registered_projects_have_four_reviewing_readiness_assets():
     root = repository_root()
     projects = project_rows(root)
@@ -24,9 +30,13 @@ def test_all_registered_projects_have_four_reviewing_readiness_assets():
             item = items[item_id]
             assert item["path"] == path
             assert item["status"] == "reviewing"
-            assert item["decision_owner"] == "unassigned"
+            assert item["decision_owner"] == "leiwenjun"
             assert item["manual_validation_pending"] is True
+            assert item["promotion"] == "none"
             assert item["generated_by_ai"] is True
+            if slot == "validation":
+                assert item["evidence_contract"]["status"] == "pending"
+                assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
             assert (root / path).is_file()
 
 

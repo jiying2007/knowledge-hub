@@ -13,9 +13,10 @@ source:
   from: Codex analysis of PCR02 framebuffer mapping between fb_st77912 and SigmaStar mi_fb
 review_after: '2026-10-11'
 created_at: 2026-07-11
-updated_at: '2026-07-13'
+updated_at: '2026-07-16'
 promotion: none
-promotion_decision: none; PCR02 framebuffer/mi_fb 边界项目本地决策候选，需要 owner review 和固件变更后的目标设备复核后才能提升 active
+promotion_decision: none; owner accepted the current fbtft/ST77912 versus SStar/MI_FB boundary; current-firmware, device,
+  release and rollback evidence remain pending
 tags:
 - pcr02
 - st77912
@@ -62,24 +63,26 @@ ai_generated_at: 2026-07-11
 human_reviewed_by: null
 human_reviewed_at: null
 review_basis: null
-decision_owner: unassigned
-decision_status: candidate
-decision_date: 2026-07-11
+decision_owner: leiwenjun
+decision_status: accepted-boundary-evidence-pending
+decision_date: '2026-07-16'
 aliases:
 - PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
 manual_validation_pending: true
-review_scope: content-review-record-only-not-owner-approval
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
 owner_roles_required:
 - PCR02 product decision owner
 - display/BSP owner
 - application owner
 - release owner
 evidence_readiness:
-  owner: pending-real-owner-assignment-and-decision
+  owner: accepted-boundary-evidence-pending
   source: pending-current-commit-and-artifact-identity
   device: pending-real-device-or-lab-evidence
   release: pending-release-and-rollback-evidence
   validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing
 ---
 
 # PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
@@ -174,7 +177,7 @@ info->var.yres_virtual = info->var.yres
 
 - owner：leiwenjun
 - review_after：2026-10-11
-- 下一次复核内容：owner review、目标设备固件变更后的 `/proc/fb` 和 `/sys/class/graphics/fb*/name` 复核、是否需要把该候选提升为 active。
+- 下一次复核内容：目标设备固件变更后的 `/proc/fb` 和 `/sys/class/graphics/fb*/name` 复核、发布与回滚证据，以及是否另行申请 active promotion。
 
 <!-- pcr02-owner-device-release-validation:start -->
 ## Owner、实机与发布验证门禁
@@ -183,8 +186,8 @@ info->var.yres_virtual = info->var.yres
 
 ### 1. Owner 决策路径
 
-- `decision_owner=unassigned`；既有内容复核记录只证明候选可读，不证明 framebuffer 边界已被产品 owner 接受。
-- owner 必须确认适用硬件/固件版本，并对 `/dev/fb0`、`/dev/fb1`、`/dev/fb2` 的角色、应用依赖和未来失效条件作出明确决定。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受当前范围内 `/dev/fb0`、`/dev/fb1` 属于 fbtft/ST77912、`/dev/fb2` 属于 SStar/MI_FB 的边界。
+- 该决定不证明当前固件、目标设备、发布或回滚验证已通过；编号漂移和适用范围仍须按下列证据路径复核。
 
 ### 2. Source 与运行态证据
 

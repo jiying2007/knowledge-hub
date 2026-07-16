@@ -368,6 +368,12 @@
 - `codex-archive-memory-curation-file-level-audit-20260710`
 - `codex-adk-hardcut-source-to-live-audit-20260710`
 - `codex-knowledge-hub-final-hardcut-tombstone-audit-20260710`
+- `mcu-release-evidence-audit-20260715`
+- `software-tool-evidence-audit-20260715`
+- `pcr02-soc-v1-1-33-nas-release-audit-20260715`
+- `pcr02-module-clean-source-build-audit-20260715`
+- `llm-agent-exact-source-quick-gate-audit-20260715`
+- `pcr02-robot-module-contract-audit-20260715`
 
 ## pcr02-registry-owner
 

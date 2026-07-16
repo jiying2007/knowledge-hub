@@ -23,9 +23,9 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
-summary_zh: 为 Agent Dev Kit 提供 source/Hub/Obsidian 权威分工的 owner-review 候选；decision owner 尚未指定，当前没有生效决定。
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+decision_owner: leiwenjun
+summary_zh: 为 Agent Dev Kit 记录 hash-bound owner attestation 已接受 source/Hub/Obsidian 权威分工；候选继续 reviewing，真实验证与发布证据仍待补齐。
+promotion_decision: none; owner boundary attested, no active promotion or evidence-ready claim
 path: projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md
 project_id: agent-dev-kit
 readiness_slot: decision
@@ -43,10 +43,10 @@ related:
 
 ## 决策状态
 
-- decision owner：`unassigned`
+- decision owner：`leiwenjun`
 - 状态：`reviewing`
-- 当前决定：未作出
-- 禁止解释：本候选不等于 owner approval、active promotion、源码变更或发布授权。
+- 当前决定：`accept-authority-boundary-remain-reviewing`
+- 禁止解释：本 attestation 只接受方案 A 的权威分工并绑定 owner；不等于 active promotion、evidence-ready、源码变更或发布授权。
 
 ## 待决问题
 
@@ -69,12 +69,12 @@ related:
 
 ## 建议候选
 
-建议 owner 选择 A，并明确项目级 owner、验证责任、复核周期和失效条件。该建议在 owner 决策前不生效。
+Owner `leiwenjun` 已通过 hash-bound attestation 接受方案 A。候选继续保持 `reviewing`；真实验证、制品/设备、发布、回滚和采用证据未闭环前不得提升。
 
-## owner 必填
+## 后续仍需补齐
 
-- decision owner 与参与者
-- 接受/修改/拒绝及理由
+- 参与者与责任分工（decision owner 已绑定为 `leiwenjun`）
+- 真实验证、发布与回滚的接受/修改/拒绝及理由
 - source of truth、适用版本和失效条件
 - 验证命令/环境/制品/设备证据
 - 回滚路径和下一次 `review_after`

@@ -23,10 +23,15 @@ def test_pcr02_validation_contract_is_idempotent_and_owner_safe():
     for row in rows.values():
         assert row["status"] == "reviewing"
         assert row["promotion"] == "none"
-        assert row["decision_owner"] == "unassigned"
+        assert row["decision_owner"] == "leiwenjun"
+        assert row["decision_status"] == "accepted-boundary-evidence-pending"
+        assert row["owner_attestation_ref"] == (
+            "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"
+        )
+        assert row["owner_decision"].startswith("accept-")
         assert row["manual_validation_pending"] is True
         assert set(row["evidence_readiness"].values()) >= {
-            "pending-real-owner-assignment-and-decision",
+            "accepted-boundary-evidence-pending",
             "pending-current-commit-and-artifact-identity",
             "pending-real-device-or-lab-evidence",
             "pending-release-and-rollback-evidence",

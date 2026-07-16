@@ -23,9 +23,9 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
-summary_zh: 记录 PCR02 MP4 Module 的结构成熟度、本机 source 发现流程和真实 owner、工程/设备及发布验证待办；源码可定位不等于验证完成。
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+decision_owner: leiwenjun
+summary_zh: 记录 PCR02 MP4 Module 的结构成熟度、本机 source 发现流程和工程/设备及发布验证待办；owner_ref 已绑定，源码可定位与 owner 确认仍不等于验证完成。
+promotion_decision: none; owner boundary attested, no active promotion or evidence-ready claim
 path: projects/pcr02-mp4/validation/project-readiness.md
 project_id: pcr02-mp4
 readiness_slot: validation
@@ -43,7 +43,7 @@ related:
 
 ## 结论
 
-结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，真实 owner、工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
+结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，decision owner 与 owner_ref 已通过 hash-bound attestation 绑定；工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
 
 ## 自动结构检查
 
@@ -57,7 +57,7 @@ related:
 
 - [ ] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵通过。
 - [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。
-- [ ] 责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。
+- [x] 责任验证：真实 decision owner `leiwenjun` 已通过 `knowledge-hub-terminal-owner-attestation-20260716` 接受权威边界，并要求继续保持 `reviewing`。
 - [ ] 工程验证：在源项目运行适用的构建、单元/集成测试并保留命令、版本和日志摘要。
 - [ ] 设备验证：需要硬件行为的结论必须补 HIL/实机、环境条件和可复现实验记录。
 - [ ] 发布验证：记录制品身份、版本、回滚路径和端到端验收，不以 Hub 文档替代发布签收。
@@ -66,7 +66,7 @@ related:
 
 | 字段 | 待填写 |
 |---|---|
-| decision owner | `unassigned` |
+| decision owner | `leiwenjun` |
 | source repo / commit / version | pending |
 | 执行环境与设备 | pending |
 | 命令与返回码 | pending |

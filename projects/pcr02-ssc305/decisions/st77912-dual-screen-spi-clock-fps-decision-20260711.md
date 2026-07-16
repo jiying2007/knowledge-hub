@@ -13,9 +13,10 @@ source:
   from: Codex analysis of PCR02 ST77912 dual LCD SPI clock/FPS tradeoff
 review_after: '2026-10-11'
 created_at: 2026-07-11
-updated_at: '2026-07-13'
+updated_at: '2026-07-16'
 promotion: none
-promotion_decision: none; PCR02 ST77912 双 SPI 小屏项目本地决策候选，需要高温老化、示波器和实机动画验证后才能提升为 active
+promotion_decision: none; owner accepted 36MHz stable baseline and higher clocks as validation-only; high-temperature, SCLK/EMI,
+  device, release and rollback evidence remain pending
 tags:
 - pcr02
 - st77912
@@ -59,24 +60,26 @@ ai_generated_at: 2026-07-11
 human_reviewed_by: null
 human_reviewed_at: null
 review_basis: null
-decision_owner: unassigned
-decision_status: candidate
-decision_date: 2026-07-11
+decision_owner: leiwenjun
+decision_status: accepted-boundary-evidence-pending
+decision_date: '2026-07-16'
 aliases:
 - PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
 manual_validation_pending: true
-review_scope: content-review-record-only-not-owner-approval
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
 owner_roles_required:
 - PCR02 product decision owner
 - display/BSP owner
 - hardware/EMC owner
 - release owner
 evidence_readiness:
-  owner: pending-real-owner-assignment-and-decision
+  owner: accepted-boundary-evidence-pending
   source: pending-current-commit-and-artifact-identity
   device: pending-real-device-or-lab-evidence
   release: pending-release-and-rollback-evidence
   validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing
 ---
 
 # PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
@@ -243,8 +246,8 @@ fbtft fps = 25
 
 ### 1. Owner 决策路径
 
-- `decision_owner=unassigned`。Hub 维护人和既有 `accept-as-review-record` 记录均不等于产品 owner 签收。
-- 产品 decision owner 必须对 36MHz 稳态档、40/43MHz 候选档、54MHz 观感档逐项给出 `accept/modify/reject`，并固定适用硬件版本、环境上限、刷新面积约束和降档阈值。
+- `decision_owner=leiwenjun`，并已通过 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 接受 36MHz 稳态默认、40/43MHz 与 54MHz 仅作验证档的边界。
+- 该 owner 决定不证明任何高温、SCLK/EMI、设备、发布或回滚验证已通过；候选继续保持 `reviewing`。
 - display/BSP owner 负责 DTS、fbtft、MSPI 实际时钟和应用刷新策略；hardware/EMC owner 负责信号完整性及 EMI 风险；release owner 负责制品和回滚。角色可由同一真人承担，但每个责任必须显式记录。
 
 ### 2. Source 与制品身份

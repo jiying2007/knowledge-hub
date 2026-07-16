@@ -23,9 +23,9 @@ ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
-summary_zh: 记录 SigmaStar Flasher 的结构成熟度、本机 source 发现流程和真实 owner、工程/设备及发布验证待办；源码可定位不等于验证完成。
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+decision_owner: leiwenjun
+summary_zh: 记录 SigmaStar Flasher 的结构成熟度、本机 source 发现流程和工程/设备及发布验证待办；owner_ref 已绑定，源码可定位与 owner 确认仍不等于验证完成。
+promotion_decision: none; owner boundary attested, no active promotion or evidence-ready claim
 path: projects/sigmastar-flasher/validation/project-readiness.md
 project_id: sigmastar-flasher
 readiness_slot: validation
@@ -43,7 +43,7 @@ related:
 
 ## 结论
 
-结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，真实 owner、工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
+结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，decision owner 与 owner_ref 已通过 hash-bound attestation 绑定；工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
 
 ## 自动结构检查
 
@@ -57,7 +57,7 @@ related:
 
 - [ ] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵通过。
 - [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。
-- [ ] 责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。
+- [x] 责任验证：真实 decision owner `leiwenjun` 已通过 `knowledge-hub-terminal-owner-attestation-20260716` 接受权威边界，并要求继续保持 `reviewing`。
 - [ ] 工具验证：覆盖 CLI help、错误码、输入边界、制品 hash 和目标平台 smoke test。
 - [ ] 发布验证：覆盖可安装/可运行制品、版本信息、回滚和消费者兼容性。
 
@@ -65,7 +65,7 @@ related:
 
 | 字段 | 待填写 |
 |---|---|
-| decision owner | `unassigned` |
+| decision owner | `leiwenjun` |
 | source repo / commit / version | pending |
 | 执行环境与设备 | pending |
 | 命令与返回码 | pending |

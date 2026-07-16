@@ -52,3 +52,20 @@ def test_project_readiness_schema_accepts_idempotent_apply():
         },
     )
     assert result["status"] == "pass"
+
+
+def test_obsidian_view_schema_accepts_idempotent_apply():
+    result = validate_instance(
+        repository_root(),
+        "obsidian-view-build-v1",
+        {
+            "schema_version": 1,
+            "status": "no-change",
+            "obsidian_runtime_status": "not-validated",
+            "managed_document_count": 150,
+            "content_mirror_drift_count": 0,
+            "property_coverage": {},
+            "transaction": {"changed_count": 0},
+        },
+    )
+    assert result["status"] == "pass"

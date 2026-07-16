@@ -61,7 +61,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 恢复审计 | `knowledge-recovery-audit.sh` | 只读检查未完成 transaction 和恢复动作 |
 | 检索/context | `knowledge-search.sh`、`knowledge-context.sh` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
 | 项目矩阵 | `knowledge-project-readiness.sh` | 30×4 reviewing 槽位；30/30 本机 source mapped，0/30 evidence-ready；group 元数据不重复计数 |
-| PCR02 证据路径 | `knowledge-pcr02-owner-readiness.sh` | 三条 candidate 保持 owner unassigned、人工/实机/release pending |
+| PCR02 证据路径 | `knowledge-pcr02-owner-readiness.sh` | 三条 candidate 已绑定 hash-bound owner 决定，继续保持 reviewing、实机/release/evidence pending |
 | Obsidian | `knowledge-obsidian-view-build.sh`、`knowledge-link-audit.sh` | 文件层 Properties/MOC/Base/链接自动检查；真实 GUI 验收单独报告，当前为 `not-validated` |
 | 质量 | `knowledge-retrieval-benchmark.sh`、`knowledge-regression.sh` | full regression 仅跟踪 slowest 10，不泛化重构 |
 | 交付恢复 | `knowledge-export.sh`、`knowledge-restore-drill.sh` | 不发布远端、不导出 personal/pending owner decision/secret |
@@ -73,10 +73,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 
 - source 可定位时，只读发现 remote、README、构建/测试入口和版本线索；本轮不执行源仓构建、测试或发布。
 - source 不可定位时，只写 registry 已知事实和 `manual_validation_pending`，不得推断当前源码。
-- decision candidate 默认 `decision_owner=unassigned`；没有真实 owner 决定时不得 promotion。
+- decision candidate 初始默认 `decision_owner=unassigned`；PCR02 三项已由 2026-07-16 hash-bound attestation 绑定 owner，但没有独立 active authorization 和真实证据时仍不得 promotion。
 - 设备、板级、实验室和 release 结论必须记录 source commit、制品 hash、设备/环境、命令、返回码、结果及回滚。
 
-PCR02 三条 owner-ready candidate 的详细路径见 [PCR02 owner-ready validation paths](../../artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md)。其中 ST77912 必须补齐高温老化、SCLK/CS/DC/MOSI 信号、EMI 风险、端到端双屏显示、发布制品和降档回滚证据。
+PCR02 三条 owner-attested candidate 的详细路径见 [PCR02 owner-ready validation paths](../../artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md)。Owner 边界已接受；ST77912 仍必须补齐高温老化、SCLK/CS/DC/MOSI 信号、EMI 风险、端到端双屏显示、发布制品和降档回滚证据。
 
 ## Obsidian 关系
 

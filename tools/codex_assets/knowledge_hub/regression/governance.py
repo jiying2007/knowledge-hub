@@ -1212,8 +1212,23 @@ def test_final_gap_readability_positive_contracts():
     expected_delivery_gaps = [
         gap for gap in non_owner_gaps if gap.get("gap_id") == "committed-release-evidence-pending"
     ]
+    expected_external_evidence_gaps = [
+        gap for gap in non_owner_gaps if gap.get("gap_id") == "owner-and-real-evidence-pending"
+    ]
+    invalid_expected_gaps = [
+        gap
+        for gap in expected_delivery_gaps
+        if gap.get("gap_type") != "delivery" or gap.get("codex_auto_can_complete") is not True
+    ] + [
+        gap
+        for gap in expected_external_evidence_gaps
+        if gap.get("gap_type") != "evidence" or gap.get("codex_auto_can_complete") is not False
+    ]
     unexpected_non_owner_gaps = [
-        gap for gap in non_owner_gaps if gap.get("gap_id") != "committed-release-evidence-pending"
+        gap
+        for gap in non_owner_gaps
+        if gap.get("gap_id")
+        not in {"committed-release-evidence-pending", "owner-and-real-evidence-pending"}
     ]
     expect(
         check_result["exit_code"] == 0
@@ -1223,6 +1238,8 @@ def test_final_gap_readability_positive_contracts():
         and not missing_readability_fields
         and not missing_source_fields
         and len(expected_delivery_gaps) <= 1
+        and len(expected_external_evidence_gaps) <= 1
+        and not invalid_expected_gaps
         and not unexpected_non_owner_gaps,
         "final-gap-readability-positive-contracts",
         "current repository has no automatic product gaps while owner evidence remains explicit",
@@ -1235,6 +1252,8 @@ def test_final_gap_readability_positive_contracts():
             "missing_source_fields": missing_source_fields,
             "non_owner_gaps": non_owner_gaps,
             "expected_delivery_gaps": expected_delivery_gaps,
+            "expected_external_evidence_gaps": expected_external_evidence_gaps,
+            "invalid_expected_gaps": invalid_expected_gaps,
             "unexpected_non_owner_gaps": unexpected_non_owner_gaps,
             "final_stdout_sample": final_result["stdout"][:1200],
         },

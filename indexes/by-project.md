@@ -125,6 +125,8 @@
 - PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
 - PCR02 Sensor 静态数据上报 Task/App 联调指南: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md`; `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
 - PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
+- PCR02 API/App/HDI/MP4 精确源码构建审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md`; `pcr02-module-clean-source-build-audit-20260715`
+- PCR02 Robot 子模块精确源码契约审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md`; `pcr02-robot-module-contract-audit-20260715`
 
 ## PCR02 SSC305 SDK
 
@@ -135,6 +137,7 @@
 - PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
 - PCR02 项目组规范入口边界决策候选: `projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md`; `pcr02-ssc305-canonical-hardcut-20260715`
 - PCR02 新摄像头栈混装 ABI 故障与回退记录: `projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md`; `pcr02-camera-mi-abi-mix-rollback-20260715`
+- PCR02 SOC v1.1.33 NAS 发布证据审计: `projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md`; `pcr02-soc-v1-1-33-nas-release-audit-20260715`
 
 ## PCR02 API Module
 
@@ -240,6 +243,7 @@
 - MCU Firmware Group 维护入口: `projects/mcu/current/runbooks/maintenance-entry.md`; `mcu-readiness-runbook-20260713`
 - MCU Firmware Group 权威与维护边界决策候选: `projects/mcu/decisions/project-boundary-decision-candidate.md`; `mcu-readiness-decision-20260713`
 - MCU Firmware Group readiness validation: `projects/mcu/validation/project-readiness.md`; `mcu-readiness-validation-20260713`
+- MCU NAS 发布制品与契约验证 2026-07-15: `projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md`; `mcu-release-evidence-audit-20260715`
 
 ## GD32L235 Firmware
 
@@ -277,6 +281,7 @@
 - LLM Agent 权威与维护边界决策候选: `projects/llm-agent/decisions/project-boundary-decision-candidate.md`; `llm-agent-readiness-decision-20260713`
 - LLM Agent readiness validation: `projects/llm-agent/validation/project-readiness.md`; `llm-agent-readiness-validation-20260713`
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
+- LLM Agent 精确源码 Quick 门禁审计 2026-07-15: `projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md`; `llm-agent-exact-source-quick-gate-audit-20260715`
 
 ## Agent Dev Kit
 

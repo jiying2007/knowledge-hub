@@ -449,3 +449,9 @@
 - PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
 - PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
 - PCR02 新摄像头栈混装 ABI 故障与回退记录: `projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md`; `pcr02-camera-mi-abi-mix-rollback-20260715`
+- MCU NAS 发布制品与契约验证 2026-07-15: `projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md`; `mcu-release-evidence-audit-20260715`
+- 软件工具干净源码验证审计 2026-07-15: `governance/product/validation/software-tool-evidence-audit-20260715.md`; `software-tool-evidence-audit-20260715`
+- PCR02 SOC v1.1.33 NAS 发布证据审计: `projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md`; `pcr02-soc-v1-1-33-nas-release-audit-20260715`
+- PCR02 API/App/HDI/MP4 精确源码构建审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md`; `pcr02-module-clean-source-build-audit-20260715`
+- LLM Agent 精确源码 Quick 门禁审计 2026-07-15: `projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md`; `llm-agent-exact-source-quick-gate-audit-20260715`
+- PCR02 Robot 子模块精确源码契约审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md`; `pcr02-robot-module-contract-audit-20260715`

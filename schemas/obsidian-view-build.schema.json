@@ -6,7 +6,7 @@
   "required": ["schema_version", "status", "obsidian_runtime_status", "managed_document_count", "content_mirror_drift_count", "property_coverage", "transaction"],
   "properties": {
     "schema_version": {"const": 1},
-    "status": {"enum": ["planned", "applied", "pass", "stale", "blocked"]},
+    "status": {"enum": ["planned", "applied", "no-change", "pass", "stale", "blocked"]},
     "obsidian_runtime_status": {"enum": ["not-validated", "pass"]},
     "managed_document_count": {"type": "integer", "minimum": 0},
     "content_mirror_drift_count": {"type": "integer", "minimum": 0},
