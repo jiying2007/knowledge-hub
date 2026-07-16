@@ -146,6 +146,8 @@ related:
 
 2026-07-16 pre-close checkpoint：修复恢复 wrapper 的调用方相对路径兼容并刷新 Obsidian 生成视图后，candidate restore 通过；随后 full terminal gate 的 18 项 hard check 全部为真，shared pytest、140/140 full regression 与输出 schema 均通过，`platform_productization_complete=true`。命令按契约返回 2：当前批次仍是 dirty delivery candidate，普通内容复核队列为 1，30 项 evidence-ready 为 0，当前性能代际与真实 feedback 也未达到采用门槛。因此 S5 的工程预收口完成，但长期资产终态仍是 external-blocked；本段写入后必须重新生成候选恢复快照并完成 S6 的 committed HEAD 验证。
 
+首次 committed HEAD full gate 暴露 3 个非确定性 regression 失败：`final-proof-artifacts-stable-key-only`、`status-next-owner-gate` 与 `user-path-redaction-in-tool-outputs`。三项在相同 inner-regression 环境单独复跑均通过；源码核验确认 `copy_repo()` 会复制正被其他 worker 更新的非权威根 `.cache`，同时 final-proof 用例在 4-worker suite 内再次启动真实根 final gate，形成可变 cache 混合快照与嵌套全局 cache 竞争。修复只将 `.cache` 排除出 fixture，并把真实根 final gate/路径脱敏两项移到 serial tail，没有删除或放宽断言；随后 4-worker full suite 恢复为 137 个测试函数、140/140 结果通过。committed release 仍须以修复提交后的 HEAD restore 和 full terminal gate 为准。
+
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。

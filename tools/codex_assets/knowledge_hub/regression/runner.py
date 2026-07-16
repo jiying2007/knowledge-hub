@@ -192,7 +192,11 @@ else:
         else full_tests
     )
 
-serial_tail_test_names = {"test_regression_manifest_coverage"}
+serial_tail_test_names = {
+    "test_final_proof_artifacts_stable_key_only",
+    "test_user_path_redaction_in_tool_outputs",
+    "test_regression_manifest_coverage",
+}
 parallel_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ not in serial_tail_test_names]
 serial_tail_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ in serial_tail_test_names]
 

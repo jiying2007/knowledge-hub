@@ -112,7 +112,10 @@ def copy_repo(label):
         ignored = set()
         directory_path = pathlib.Path(directory).resolve()
         if directory_path == root:
-            ignored.update({".git", ".tmp", ".codex"})
+            # Regression fixtures must rebuild ignored derived state. Copying a live
+            # .cache while other workers run root-level read tools creates a mixed
+            # snapshot and lets non-authoritative local state leak between cases.
+            ignored.update({".git", ".tmp", ".codex", ".cache"})
         if directory_path == root / "artifacts":
             ignored.add("vault")
         ignored.update(name for name in names if name in {"__pycache__", ".pytest_cache"})
