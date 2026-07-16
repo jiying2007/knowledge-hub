@@ -3,7 +3,17 @@ import json
 import sqlite3
 
 from tools.codex_assets.knowledge_hub import metrics
-from tools.codex_assets.knowledge_hub.search import SearchFilters, record_search_telemetry, search
+from tools.codex_assets.knowledge_hub.search import (
+    INDEX_SCHEMA_VERSION,
+    SearchFilters,
+    SearchIndex,
+    _index_tokens,
+    _indexed_title,
+    _physical_sources,
+    record_search_telemetry,
+    search,
+    search_tokens,
+)
 
 
 def _jsonl(rows):
@@ -48,11 +58,83 @@ def test_search_supports_chinese_synonym_and_registry_ranking(tmp_path):
     assert payload["zero_hit"]["is_zero_hit"] is False
 
 
+def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
+    root = _search_root(tmp_path)
+    search(root, "raw secret marker", limit=5)
+    index = SearchIndex(root)
+
+    with sqlite3.connect(str(index.path)) as connection:
+        schema = connection.execute(
+            "select sql from sqlite_master where name='documents_fts'"
+        ).fetchone()[0]
+
+    assert INDEX_SCHEMA_VERSION == 5
+    assert index.path.name == "search-index-v5.sqlite3"
+    assert "body unindexed" in schema.lower()
+
+
+def test_index_tokens_preserve_search_token_set_with_deterministic_order():
+    value = "Knowledge Hub 重复重复 token TOKEN 与中文检索"
+
+    first = _index_tokens(value)
+    second = _index_tokens(value)
+
+    assert first == second
+    assert set(first) == set(search_tokens(value))
+
+
+def test_indexed_title_fast_path_preserves_yaml_scalar_and_block_values():
+    assert _indexed_title(
+        "notes/plain.md",
+        "---\ntitle: 简单标题\n---\n# ignored\n",
+        {},
+    ) == "简单标题"
+    assert _indexed_title(
+        "notes/quoted.md",
+        '---\ntitle: "带冒号: 标题"\n---\n# ignored\n',
+        {},
+    ) == "带冒号: 标题"
+    assert _indexed_title(
+        "notes/block.md",
+        "---\ntitle: >-\n  分块\n  标题\n---\n# ignored\n",
+        {},
+    ) == "分块 标题"
+    assert _indexed_title(
+        "notes/multiline-quoted.md",
+        '---\ntitle: "多行\n  引号标题"\n---\n# ignored\n',
+        {},
+    ) == "多行 引号标题"
+    assert _indexed_title(
+        "notes/heading.md",
+        "---\ntags: [example]\n---\n# 正文标题\n",
+        {},
+    ) == "正文标题"
+
+
+def test_physical_sources_use_path_boundaries_and_resolve_file_symlinks(tmp_path):
+    source_root = (tmp_path / "source").resolve()
+    source_root.mkdir()
+    inside = source_root / "inside.md"
+    inside.write_text("inside\n")
+    collision = tmp_path / "source-other.md"
+    collision.write_text("outside\n")
+    outside = tmp_path / "outside.md"
+    outside.write_text("outside\n")
+    link = source_root / "outside-link.md"
+    link.symlink_to(outside)
+    roots = [("registered-source", source_root)]
+
+    assert _physical_sources(inside, roots) == ["knowledge-hub", "registered-source"]
+    assert _physical_sources(collision, roots) == ["knowledge-hub"]
+    assert _physical_sources(link, roots) == ["knowledge-hub"]
+
+
 def test_structured_filter_excludes_unregistered_raw_file(tmp_path):
     root = _search_root(tmp_path)
     payload = search(root, "secret marker", limit=5, filters=SearchFilters(owners=("owner-a",)))
     assert payload["results"] == []
     assert payload["status"] == "zero-hit"
+    assert payload["index"]["candidate_limit"] == SearchIndex.STRUCTURED_CANDIDATE_LIMIT
     assert payload["zero_hit"]["is_zero_hit"] is True
     assert payload["filter_diagnostics"]["by_reason"]["unregistered-structured-result"] >= 1
 

@@ -233,6 +233,37 @@ do_not_repeat: 不提供 stale-read 快路径、不删除慢 telemetry、不把�
 
 该优化显著降低普通正文维护后的首次查询成本，但没有把 cold cache、registry 变化或大批变更伪装成增量；这些 full rebuild 仍会作为真实性能样本进入 telemetry，并作为下一阶段优化边界。
 
+## 2026-07-16 冷启动 full rebuild v5 优化
+
+本节继续处理 cold cache、schema 升级和 registry dependency 变化触发的完整 rebuild。所有 profile、原型、强制 rebuild 和 benchmark 均禁用真实交互 telemetry；复现固定为 clean `222730b` 内容、1054 个文件、1059 个 document row 和临时空 cache。
+
+| 假设 | 单变量实验 | 结果 |
+|---|---|---|
+| H1：临时 SQLite 文件写入主导 0.7s `execute` | 把 rebuild DB 放入内存并跳过持久化，仅测性能上限 | 已证伪；总时延仍为 2076.22–2125.49ms，说明主要成本是 FTS 建索引，不是临时文件 I/O |
+| H2：2118 次 Python `execute` 调用主导 | 对同一 1059 行比较逐行写入和两次 `executemany` | 已证伪；逐行为 657.25–689.76ms，`executemany` 为 645.82–673.98ms，差异不足以解释热点 |
+| H3：合并 ASCII/CJK 正则扫描可以等价加速 token | 对 1059 个真实 token 输入比较集合和耗时 | 已证伪；输出零差异，但两个实现分别从 839.06/852.17ms 变为 849.29/872.19ms |
+| H4：线程或进程并发 token 值得进入默认路径 | 串行、4 线程、2/4/8 进程对照并校验输出 digest | 线程从 846.21ms 恶化到 1595.12ms；8 进程最好 454.75ms，但 full regression 自身为 4 并发，存在放大为 16–32 worker 的过度并行风险，本轮不采用 |
+| H5：FTS 同时倒排原始 body 与完整 token 集合造成重复工作 | 只把 FTS `body` 标成 `UNINDEXED`，正文继续保存在 documents 表 | 部分确认；FTS `execute` 从 0.720s 降到 0.604s，294-case 普通查询门禁通过；首次 full regression 暴露结构化过滤仍在 256 candidate 后执行，active/owner 合法结果被截断，必须另补结构化窗口修复 |
+| H6：YAML title、physical source 和 token 排序仍有可消除的串行成本 | 全量等价性后分别加入 scalar 快路径、规范路径边界比较和 index 专用顺序去重 | 确认；title 1059/1059、physical source 1054/1054、token 集合 1059/1059 均零差异；查询端 `search_tokens` 排序未改变 |
+
+实现将 cache schema 升到 v5。原始正文仍完整保存在 `documents.body`，FTS 的 `body` 列仅不再建立重复倒排，candidate coverage 继续由 metadata 与正文生成的完整 token 集合承担。index 专用 token 使用确定的首次出现顺序去重，避免全量排序；查询 token 仍沿用既有排序和 `maximum=64` 契约。普通查询保持 256 candidate，结构化过滤扩大到 4096；当前 1059 row 可完整覆盖，过滤后仍由同一 `_filter_reason` 做最终校验。frontmatter 单行 scalar 只解析 title 值，quoted scalar 仍兼容，block/multiline scalar 回退完整 YAML；file symlink 继续 resolve 后再判 physical source。旧 v4 cache 保留但不再作为 v5 权威状态。
+
+无 profile 的三次 v4 clean cold 基线总时延为 2137.17–2318.64ms；最终 v5 三次为 1557.00–1589.43ms，中位数从 2194.20ms 降至 1566.71ms，约下降 28.6%。最终强制 rebuild 为 1571.59ms；294-case benchmark 为 20/20 search hit、MRR 1.0、274/274 route accuracy，P50 85.52ms、P95 134.28ms、max 137.63ms。
+
+```text
+[repair-note]
+failed_scope: cold cache/schema 升级/registry dependency 完整 rebuild 为 2.14–2.32s，明显高于 500ms 交互目标
+passing_scope_to_preserve: 1054 文件与 1059 row、完整正文、candidate coverage、Top 3、增量事务、freshness、fallback、查询 token 契约和真实 telemetry
+minimal_rerun: test_search/test_common、强制 cold rebuild 3 次、294-case benchmark、全量 pytest、full regression、clean HEAD restore、product gate
+rollback_anchor: 222730b；v4 cache 文件继续保留但不作为 v5 权威状态
+root_cause_status: known；Python CJK token 构造与 SQLite FTS 重复 body/token 倒排共同主导，YAML title 和逐 source Path.relative_to 是次级固定成本
+repair_action: v5 body UNINDEXED + index 专用确定性 token 去重 + title scalar 快路径 + source path 边界比较 + 结构化过滤 4096 candidate；拒绝低收益 executemany/内存 DB/合并正则与有过度并行风险的 worker 方案
+semantic_verification: 等价性样本全通过；benchmark hit/MRR/route 均为 1.0，P95 134.28ms；active/owner 结构化查询返回 5 条、113.2ms，对应最小 regression 通过
+do_not_repeat: 不删除正文、不缩减 token 集合、不改查询 token 上限、不用 stale cache、不把普通 benchmark 当成结构化过滤充分证据、不在 full regression 内默认嵌套多进程
+```
+
+最终 cProfile 中 index token 仍为 0.922s、FTS 写入仍为 0.607s；因此 cold full rebuild 继续是显式性能债务，不声明达到 500ms。后续若继续优化，应优先评估可控的持久 token provenance 或 FTS 架构变更，并单独设计并发预算，不能直接打开嵌套 worker。
+
 ## 人工/真实环境门禁
 
 - [x] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵在当前阶段检查中通过；最终写入后仍需重跑。
@@ -330,6 +361,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 | Manifest 配对与 review-queue fixture | manifest profile 门禁；`test_final_gate_product_review_queue_owner_review_blocker` | 两份新 JSONL 已补中文配对说明；测试改为显式注入 2 条合法临时 queue row，不再依赖真实队列非空；定向回归通过 |
 | 检索遍历性能 | `knowledge-search/context --no-telemetry`、cProfile、`knowledge-retrieval-benchmark.sh --json` | 文件集合保持 1054/1054；warm search 168.69–178.32ms、context 162.00–178.17ms；benchmark P95 142.90ms，hit/MRR/route 均为 1.0 |
 | 增量索引性能 | v4 cold build、单文件 Markdown 更新、signature 5 次、`knowledge-retrieval-benchmark.sh --json` | cold build 2728.49ms；单文件增量 227.79ms、事务 38.11ms；signature 33.28–37.16ms；benchmark P95 133.20ms，语义指标保持 1.0 |
+| 冷启动 v5 rebuild | clean `222730b` 临时空 cache、cProfile、等价性检查、`knowledge-retrieval-benchmark.sh --json` | v4 clean cold 2137.17–2318.64ms；v5 为 1557.00–1589.43ms，中位数下降约 28.6%；benchmark P95 134.28ms，hit/MRR/route 均为 1.0 |
 | Full regression | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-16` | 首轮暴露 1 个 gap-contract drift；定向修复后 pass，137 个测试函数、140/140 结果通过、失败列表为空 |
 | Candidate restore | `rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-16 --json` | pass；1361 个 candidate path 全部复制，missing/hash mismatch 均为 0，unit/link/Obsidian/retrieval/project/export/search/context/product smoke 全部通过 |
 | 控制面完整门禁 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16` | `gate_status=pass`、`platform_productization_complete=true`；工作树未提交使 `platform_release_complete=false` |

@@ -44,7 +44,7 @@ from .metrics import (
 from .model import ITEM_KINDS, ITEM_STATUSES
 
 
-INDEX_SCHEMA_VERSION = 4
+INDEX_SCHEMA_VERSION = 5
 FULL_REBUILD_DEPENDENCIES = frozenset(
     {
         "registry/items.jsonl",
@@ -143,6 +143,22 @@ def search_tokens(value: str, maximum: int = 20000) -> List[str]:
     return sorted(tokens)[:maximum]
 
 
+def _index_tokens(value: str, maximum: int = 20000) -> List[str]:
+    normalized = value.lower()
+    tokens: Dict[str, None] = {
+        token: None for token in ASCII_TOKEN_PATTERN.findall(normalized)
+    }
+    for segment in CJK_PATTERN.findall(normalized):
+        if len(segment) == 1:
+            tokens.setdefault(segment, None)
+            continue
+        tokens.setdefault(segment, None)
+        for width in (2, 3):
+            for index in range(max(0, len(segment) - width + 1)):
+                tokens.setdefault(segment[index : index + width], None)
+    return list(tokens)[:maximum]
+
+
 def _term_variants(term: str) -> Tuple[str, ...]:
     variants = [term]
     variants.extend(SYNONYMS.get(term.lower(), ()))
@@ -178,12 +194,25 @@ def _indexed_title(relative: str, body: str, item: Mapping[str, Any]) -> str:
     if body.startswith("---\n"):
         marker = body.find("\n---\n", 4)
         if marker >= 0:
-            try:
-                metadata = yaml.safe_load(body[4:marker]) or {}
-                if isinstance(metadata, dict) and metadata.get("title"):
-                    return str(metadata["title"])
-            except (ValueError, TypeError, yaml.YAMLError):
-                pass
+            raw_title = ""
+            for line in body[4:marker].splitlines():
+                if line.startswith("title:"):
+                    raw_title = line.partition(":")[2].strip()
+            needs_full_yaml = bool(raw_title and raw_title[0] in "|>*")
+            if raw_title and raw_title[0] not in "|>*":
+                try:
+                    scalar = yaml.safe_load(raw_title)
+                    if scalar is not None:
+                        return str(scalar)
+                except (ValueError, TypeError, yaml.YAMLError):
+                    needs_full_yaml = True
+            if needs_full_yaml:
+                try:
+                    metadata = yaml.safe_load(body[4:marker]) or {}
+                    if isinstance(metadata, dict) and metadata.get("title"):
+                        return str(metadata["title"])
+                except (ValueError, TypeError, yaml.YAMLError):
+                    pass
     for line in body.splitlines()[:80]:
         match = re.match(r"^#\s+(.+?)\s*$", line)
         if match:
@@ -209,13 +238,17 @@ def _source_roots(root: pathlib.Path) -> List[Tuple[str, pathlib.Path]]:
 
 def _physical_sources(path: pathlib.Path, roots: Sequence[Tuple[str, pathlib.Path]]) -> List[str]:
     result = ["knowledge-hub"]
-    resolved = path.resolve(strict=False)
+    candidate = (
+        path.resolve(strict=False)
+        if path.is_symlink() or not path.is_absolute()
+        else path
+    )
+    candidate_text = os.fspath(candidate)
     for source_name, source_root in roots:
-        try:
-            resolved.relative_to(source_root)
-        except ValueError:
-            continue
-        result.append(source_name)
+        source_text = os.fspath(source_root)
+        source_prefix = source_text if source_text.endswith(os.sep) else source_text + os.sep
+        if candidate_text == source_text or candidate_text.startswith(source_prefix):
+            result.append(source_name)
     return result
 
 
@@ -240,6 +273,7 @@ def _signature(
 
 class SearchIndex:
     CANDIDATE_LIMIT = 256
+    STRUCTURED_CANDIDATE_LIMIT = 4096
 
     def __init__(self, root: pathlib.Path) -> None:
         self.root = root.resolve()
@@ -391,7 +425,7 @@ class SearchIndex:
             item_id = str(item.get("id", ""))
             doc_key = "{}#{}".format(relative, item_id or "unregistered")
             metadata = _metadata_haystack(item) if item else ""
-            token_text = " ".join(search_tokens(metadata + "\n" + body))
+            token_text = " ".join(_index_tokens(metadata + "\n" + body))
             title = _indexed_title(relative, body, item)
             tags = " ".join(
                 str(value) for value in item.get("tags", []) if isinstance(value, str)
@@ -539,7 +573,7 @@ class SearchIndex:
                     body text not null
                 );
                 create virtual table documents_fts using fts5(
-                    title, item_id, tags, summary, path, body, tokens,
+                    title, item_id, tags, summary, path, body unindexed, tokens,
                     tokenize='unicode61 remove_diacritics 2'
                 );
                 """
@@ -572,7 +606,12 @@ class SearchIndex:
             raise
         return count
 
-    def candidates(self, query: str) -> List[sqlite3.Row]:
+    def candidates(
+        self,
+        query: str,
+        candidate_limit: Optional[int] = None,
+    ) -> List[sqlite3.Row]:
+        candidate_limit = candidate_limit or self.CANDIDATE_LIMIT
         expanded_query = " ".join(
             variant
             for term in query_terms(query)
@@ -594,7 +633,7 @@ class SearchIndex:
                     order by fts_rank
                     limit ?
                     """,
-                    (expression, self.CANDIDATE_LIMIT),
+                    (expression, candidate_limit),
                 ).fetchall()
             except sqlite3.Error:
                 rows = connection.execute("select d.*, 0.0 as fts_rank from documents d").fetchall()
@@ -846,9 +885,18 @@ def search(
     filters = filters or SearchFilters()
     filters.validate()
     index = search_index or SearchIndex(root)
+    base_candidate_limit = int(getattr(index, "CANDIDATE_LIMIT", 256))
+    candidate_limit = (
+        int(getattr(index, "STRUCTURED_CANDIDATE_LIMIT", 4096))
+        if filters.structured
+        else base_candidate_limit
+    )
     try:
         index_state = index.ensure(force=rebuild_index)
-        indexed_rows: Sequence[Mapping[str, Any]] = index.candidates(query)
+        indexed_rows: Sequence[Mapping[str, Any]] = index.candidates(
+            query,
+            candidate_limit=candidate_limit,
+        )
     except (KnowledgeHubError, OSError, sqlite3.Error) as exc:
         index_state = {
             "state": "fallback",
@@ -860,7 +908,7 @@ def search(
         indexed_rows = _scan_candidates(root)
     index_state["candidate_count"] = len(indexed_rows)
     index_state["candidate_limit"] = (
-        index.CANDIDATE_LIMIT if index_state.get("mode") == "local-index" else None
+        candidate_limit if index_state.get("mode") == "local-index" else None
     )
     terms = query_terms(query)
     candidates: List[Dict[str, Any]] = []
