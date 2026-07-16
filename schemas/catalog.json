@@ -45,7 +45,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "retrieval-result-v2",
+      "id": "retrieval-result-v3",
       "schema": "schemas/retrieval-result.schema.json",
       "applies_to": "knowledge-search.sh --json",
       "authority": "derived-local-index",
@@ -87,6 +87,13 @@
       "change_policy": "strict-current-contract"
     },
     {
+      "id": "agent-proposal-shadow-stats-v1",
+      "schema": "schemas/proposal-shadow-stats.schema.json",
+      "applies_to": "knowledge-proposal-shadow-stats.sh --json",
+      "authority": "derived-local-report-only-shadow-audit",
+      "change_policy": "strict-current-contract"
+    },
+    {
       "id": "raw-evidence-inspection-v1",
       "schema": "schemas/raw-evidence-inspection.schema.json",
       "applies_to": "knowledge-evidence-ledger.sh --json",
@@ -94,7 +101,14 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "agent-compliance-eval-v1",
+      "id": "artifact-restore-drill-v1",
+      "schema": "schemas/artifact-restore-drill.schema.json",
+      "applies_to": "knowledge-artifact-restore-drill.sh --json",
+      "authority": "derived-isolated-checksum-bound-restore-evidence",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "agent-compliance-eval-v2",
       "schema": "schemas/compliance-eval.schema.json",
       "applies_to": "knowledge-compliance-eval.sh --json",
       "authority": "derived-reproducible-agent-contract-evaluation",
@@ -143,7 +157,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "local-metrics-v2",
+      "id": "local-metrics-v3",
       "schema": "schemas/local-metrics.schema.json",
       "applies_to": "knowledge-metrics.sh --json",
       "authority": "derived-local-telemetry",

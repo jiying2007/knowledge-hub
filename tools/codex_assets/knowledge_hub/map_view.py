@@ -20,6 +20,9 @@ MAP_MAX_LIMIT = 100
 MAP_DEFAULT_MAX_BYTES = 8192
 MAP_MIN_MAX_BYTES = 2048
 MAP_MAX_MAX_BYTES = 1024 * 1024
+MAP_MAX_CURSOR_CHARS = 4096
+MAP_MAX_FILTER_VALUES = 32
+MAP_MAX_FILTER_VALUE_CHARS = 256
 DEFAULT_STATUSES = ("active", "reviewing", "draft")
 STATUS_ORDER = {
     "active": 0,
@@ -47,6 +50,8 @@ def _source_fingerprint(items: Sequence[Mapping[str, Any]]) -> str:
                 "owner": str(item.get("owner", "")),
                 "path": str(item.get("path", "")),
                 "status": str(item.get("status", "")),
+                "scope": str(item.get("scope", "")),
+                "visibility": str(item.get("visibility", "")),
                 "summary_zh": str(item.get("summary_zh", "")),
                 "manual_validation_pending": bool(
                     item.get("manual_validation_pending", False)
@@ -66,6 +71,10 @@ def _cursor_token(payload: Mapping[str, Any]) -> str:
 
 
 def _decode_cursor(token: str) -> Dict[str, Any]:
+    if len(token) > MAP_MAX_CURSOR_CHARS:
+        raise KnowledgeHubError(
+            "map cursor exceeds {} characters".format(MAP_MAX_CURSOR_CHARS)
+        )
     try:
         padded = token + "=" * (-len(token) % 4)
         raw = base64.urlsafe_b64decode(padded.encode("ascii"))
@@ -89,6 +98,34 @@ def _bounded_counts(values: Iterable[str], limit: int) -> Dict[str, Any]:
         "total_values": len(ordered),
         "truncated": len(ordered) > limit,
     }
+
+
+def _validate_filter_values(name: str, values: Sequence[str]) -> None:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise KnowledgeHubError("{} filter values must be a sequence".format(name))
+    if len(values) > MAP_MAX_FILTER_VALUES:
+        raise KnowledgeHubError(
+            "{} filter values exceed {}".format(name, MAP_MAX_FILTER_VALUES)
+        )
+    for value in values:
+        text = str(value)
+        if not text.strip():
+            raise KnowledgeHubError("{} filter values must not be empty".format(name))
+        if len(text) > MAP_MAX_FILTER_VALUE_CHARS:
+            raise KnowledgeHubError(
+                "{} filter value exceeds {} characters".format(
+                    name, MAP_MAX_FILTER_VALUE_CHARS
+                )
+            )
+
+
+def _domain_matches(domain: Any, prefix: str) -> bool:
+    domain_text = str(domain or "").rstrip("/")
+    prefix_text = str(prefix or "").rstrip("/")
+    return bool(
+        prefix_text
+        and (domain_text == prefix_text or domain_text.startswith(prefix_text + "/"))
+    )
 
 
 def _item_projection(item: Mapping[str, Any]) -> Dict[str, Any]:
@@ -201,7 +238,20 @@ def build_knowledge_map(
         )
     if all_statuses and statuses:
         raise KnowledgeHubError("--all-statuses cannot be combined with --status")
-    selected_statuses = tuple(statuses) if statuses else (() if all_statuses else DEFAULT_STATUSES)
+    for name, values in (
+        ("status", statuses),
+        ("kind", kinds),
+        ("domain", domains),
+        ("owner", owners),
+    ):
+        _validate_filter_values(name, values)
+    selected_statuses = (
+        tuple(statuses)
+        if statuses
+        else tuple(sorted(ITEM_STATUSES - {"personal"}))
+        if all_statuses
+        else DEFAULT_STATUSES
+    )
     invalid_statuses = sorted(set(selected_statuses) - ITEM_STATUSES)
     invalid_kinds = sorted(set(kinds) - ITEM_KINDS)
     if invalid_statuses:
@@ -236,7 +286,7 @@ def build_knowledge_map(
             continue
         if kinds and item.get("kind") not in kinds:
             continue
-        if domains and not any(str(item.get("domain", "")).startswith(value) for value in domains):
+        if domains and not any(_domain_matches(item.get("domain", ""), value) for value in domains):
             continue
         if owners and item.get("owner") not in owners:
             continue
@@ -254,6 +304,11 @@ def build_knowledge_map(
 
     status_counts = Counter(str(item.get("status", "")) for item in source_items)
     authority_counts = Counter(_authority_lane(item) for item in source_items)
+    metadata_items = (
+        source_items
+        if "personal" in selected_statuses
+        else [item for item in source_items if item.get("status") != "personal"]
+    )
     base: Dict[str, Any] = {
         "schema_version": MAP_SCHEMA,
         "read_only": True,
@@ -269,12 +324,12 @@ def build_knowledge_map(
             "terminal_items": status_counts["archived"] + status_counts["superseded"] + status_counts["rejected"],
             "personal_items": status_counts["personal"],
         },
-        "modules": _module_projection(source_items),
+        "modules": _module_projection(metadata_items),
         "vocabulary": {
-            "statuses": _bounded_counts((str(item.get("status", "")) for item in source_items), 12),
-            "kinds": _bounded_counts((str(item.get("kind", "")) for item in source_items), 24),
-            "domains": _bounded_counts((str(item.get("domain", "")) for item in source_items), 24),
-            "owners": _bounded_counts((str(item.get("owner", "")) for item in source_items), 16),
+            "statuses": _bounded_counts((str(item.get("status", "")) for item in metadata_items), 12),
+            "kinds": _bounded_counts((str(item.get("kind", "")) for item in metadata_items), 24),
+            "domains": _bounded_counts((str(item.get("domain", "")) for item in metadata_items), 24),
+            "owners": _bounded_counts((str(item.get("owner", "")) for item in metadata_items), 16),
         },
         "items": [],
         "returned_items": 0,

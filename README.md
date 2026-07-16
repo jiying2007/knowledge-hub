@@ -71,15 +71,20 @@ rtk bash ~/knowledge-hub/tools/knowledge-map.sh --summary-json
 rtk bash ~/knowledge-hub/tools/knowledge-evidence-pack.sh "<任务或问题>" --scope-ref repository:<repo-id> --json
 rtk bash ~/knowledge-hub/tools/knowledge-action-check.sh --task "<任务>" --candidate "<候选动作>" --scope-ref repository:<repo-id> --json
 rtk bash ~/knowledge-hub/tools/knowledge-proposal-route.sh --proposal <candidate.json> --json
+rtk bash ~/knowledge-hub/tools/knowledge-proposal-shadow-stats.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-compliance-eval.sh --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --json
 rtk bash ~/knowledge-hub/tools/knowledge-evidence-ledger.sh --ledger <rawmem-events.jsonl> --json
+rtk bash ~/knowledge-hub/tools/knowledge-artifact-restore-drill.sh --release-root <release-dir> --source-label <stable-ref> --json
 ```
 
-- `knowledge-map` 使用 item/byte budget、source fingerprint 和游标提供紧凑导航；map 不是事实证据。
-- `knowledge-search` 的 `search_trace.excluded_by_filters[]` 会有界返回被错误过滤的已登记 ID，不再把“过滤隐藏”伪装成“不存在”。
+- `knowledge-map` 使用 item/byte/filter budget、source fingerprint 和游标提供紧凑导航；domain 按完整路径段匹配，personal 元数据默认不进入 map vocabulary，只有显式 `--status personal` 才可查看；map 不是事实证据。
+- `knowledge-search` 的 JSON contract 已升为 v3；`search_trace.excluded_by_filters[]` 是必需、有界字段，会返回被错误过滤的已登记 ID，不再把“过滤隐藏”伪装成“不存在”；`timing` 将校验、索引 freshness、候选查询和重排分别计时。外部 JSON consumer 应显式检查 `schema_version=3`。
 - `knowledge-evidence-pack` 将 active 事实与 `reviewing/draft` 候选分别放入 CONTEXT/PROVISIONAL；只有显式、active、scope 命中的 `agent_contract` 才能进入 MUST/SHOULD。
-- `knowledge-action-check` 无显式适用规则时返回 `NEEDS_REVIEW`，候选 constraint 永不参与判定；`ALLOW` 只表示全部适用的确定性 guard 已求值通过，不是通用安全证明。
-- `knowledge-proposal-route` 默认 policy disabled 且固定 report-only shadow；它不会写 registry 或提升 active。
-- `knowledge-evidence-ledger` 只校验 `rawmem.event.v1` 的链和隐私元数据，不输出事件正文，并固定 `eligible_for_text_ingest=false`。
+- `knowledge-action-check` 无显式适用规则时返回 `NEEDS_REVIEW`，候选 constraint 永不参与判定；task/candidate、scope、exception 均有硬预算，`deny_regex` 只允许无 backreference、lookaround、嵌套 group/量词、过大量词或超大 repeat bound 的受限子集；`ALLOW` 只表示全部适用的确定性 guard 已求值通过，不是通用安全证明。
+- `knowledge-proposal-route` 默认 policy disabled 且固定 report-only shadow；proposal、client ID、证据 quote、source 文件和策略枚举均有硬预算，策略字段无效时 fail-closed；它不会写 registry 或提升 active。可选 shadow audit 只接受固定枚举的脱敏元数据，以单调 sequence 和 hash chain 追加到 `0600` ignored cache；文件、单行和行数均有上限，拒绝 symlink、截断尾行和未知 metadata。`knowledge-proposal-shadow-stats` 对实际非人工路由、高风险非人工候选、链损坏和内容字段泄漏 fail，且不会把恶意 route/reason 值原样回显。
+- `knowledge-compliance-eval` v2 支持有界 JSONL 和 `--minimum-cases`，只输出 candidate SHA、适用 item 与 high-risk false-allow 汇总；仓库固定 50 条高风险矩阵当前全部返回 `NEEDS_REVIEW`，不能据此推导真实自动写入已安全。
+- `knowledge-evidence-ledger` 只校验 `rawmem.event.v1` 的链和隐私元数据，不输出事件正文，并固定 `eligible_for_text_ingest=false`；默认限制 ledger 64 MiB、100000 events 和单行 1 MiB，可在受控调用中显式收紧或放宽到硬上限。
+- `knowledge-artifact-restore-drill` 只读 checksum-bound release source，在临时部署副本中验证复制、故意损坏检测与精确恢复；最多 1000 个文件、manifest 1 MiB、制品集 10 GiB，拒绝 symlink 和路径逃逸。它固定声明远端留存、设备和生产回滚未验证，不能单独提升 evidence-ready。
 
 完整采用/拒绝边界见 `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`。该决策仍为 `reviewing`，不改变本文现有 active 终态定义，也不替代 owner、source、设备、发布、回滚或采用证据。
 
@@ -112,7 +117,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 
 产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 30 个规范项目的真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。`4/4 structural coverage` 或 30/30 本机 source mapping 都不代表内容已签收或已验证；`pcr02` 只作为 group 元数据，不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
 
-长期采用只统计当前 telemetry contract 的真实交互；历史 contract 样本保留为 provenance，但不参与当前 P95 和采用判定。性能至少需要 10 个 search 与 10 个 context 当前样本，显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
+长期采用的调用量继续统计当前 interaction contract 的真实交互；性能另按当前 `performance_contract` 聚合，旧实现的真实慢样本保留为 usage/provenance，但不冒充当前实现 P95。性能至少需要 10 个 search 与 10 个 context 当前性能样本，显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
 
 高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 只保留 full regression slowest 10 与失败 ID，不做无证据的泛化重构。
 

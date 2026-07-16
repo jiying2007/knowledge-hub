@@ -52,7 +52,7 @@ related:
 
 | 验收线 | 必要条件 | 当前判定 |
 |---|---|---|
-| 平台控制面可交付 | check/schema/link/orphan/retrieval/route/full regression 通过；candidate 与 HEAD restore 新鲜；工作树已形成可审计本地提交 | 2026-07-16 full regression 达 137 个测试函数、140/140 结果通过，candidate restore 通过；`platform_productization_complete=true`。当前工作树仍未提交、HEAD restore 不新鲜，因此 `platform_release_complete=false` |
+| 平台控制面可交付 | check/schema/link/orphan/retrieval/route/full regression 通过；candidate 与 HEAD restore 新鲜；工作树已形成可审计本地提交 | 上一已验证发布锚点为 `9a1a36307198988fd18af06cff5416fcda12af43`：full regression 140/140、candidate/HEAD restore 与 product gate 均通过，`platform_productization_complete=true`、`platform_release_complete=true`。后续 HEAD 变化后该结论立即失效并由实时 gate 重算。 |
 | 内容治理闭环 | product 普通复核队列为 0；受托复核身份和依据可审计；owner/lifecycle 决定继续走独立 hash-bound attestation；无越权 active promotion | 普通复核队列为 0；30 项 authority-boundary 与 3 项 PCR02 专项 owner attestation 均已落地，候选继续 `reviewing`；真实项目证据仍独立待办 |
 | 项目证据闭环 | 30 个 validation item 的 `evidence_contract.status=ready`，且各 profile 的必需引用可解析 | `0/30` ready |
 | 长期采用闭环 | 当前交互契约下达到观察期/调用量、性能样本、真实反馈数量和命中率门槛 | 未达到，仍为 `pending` |
@@ -69,9 +69,9 @@ related:
 | 项目证据 | 30 个 validation contract，ready `0/30` | 真实证据待补 |
 | 人工复核 | 初始 131 条按 `auth-20260715-knowledge-hub-terminal-maturity-push` 受托复核；随后 6 份真实证据报告按 `auth-20260715-knowledge-hub-terminal-maturity-full-closeout` 复核，合计 137 条本轮 review record，均保持 `reviewing -> reviewing` | 普通 review queue 为 0；不等于 owner decision 或项目 evidence-ready |
 | Owner worksheet | open row 为 0，但 owner-ready package coverage 为 `0/7` | 不得把“无 open row”解释为 ready package 已存在 |
-| 当前交互遥测 | search 10 次、context 43 次，共 53 次；历史或非当前契约记录保留但排除；观察 2 天 | 已通过“30 天或 50 次”中的调用量门槛；不替代反馈与性能门槛 |
-| 当前性能 | search P95 3269.45 ms、context P95 1903.01 ms；样本分别为 10/43 | 已可评估且 `fail`，分别高于 500 ms / 1000 ms 目标 |
-| 真实反馈与采用 | feedback 0，found/not-found 均为 0；采用判定 `evaluable=false`、`ready=false` | 不得生成合成反馈或为达门槛刷调用 |
+| 上一发布锚点交互遥测 | `9a1a363` final gate 固定 search 10 次、context 65 次，共 75 次；历史或非当前契约记录保留但排除；观察 2 天 | 已通过“30 天或 50 次”中的调用量门槛；实时计数以 `knowledge-metrics.sh --json` 为准，不替代反馈与性能门槛 |
+| 上一发布锚点性能 | search P95 3269.45 ms、context P95 1903.01 ms；样本分别为 10/65 | 已可评估且 `fail`，分别高于 500 ms / 1000 ms 目标；后续不删除慢样本，只用真实交互复验 |
+| 真实反馈与采用 | `9a1a363` final gate 固定 feedback 0，found/not-found 均为 0；采用判定 `evaluable=true`、`ready=false` | 不得生成合成反馈或为达门槛刷调用 |
 
 ### Evidence profile 分布与缺口
 
@@ -83,11 +83,11 @@ related:
 | `software-tool` | 8 | owner、source、validation、artifact、release、rollback |
 | `embedded-target` | 19 | owner、source、validation、artifact、device、release、rollback |
 
-按 profile 规则统计，`owner_ref` 与 `validation_refs` 均已实现结构覆盖 30/30；当前尚未满足的其他必需字段为：`artifact_refs` 18 项、`device_refs` 19 项、`release_ref` 21 项、`rollback_ref` 29 项、aggregate `member_project_ids` 1 项。28 个项目已绑定 registered remote 的精确 Git commit；`mm32spin-validator` 没有可用 Git HEAD，改为绑定受治理 source snapshot SHA256，没有伪造 commit；`mcu` 是 aggregate group，不要求独立 source ref。aggregate 成员列表虽已登记，但 evaluator 在成员未全部 ready 时仍将该字段判作未闭环。
+按 profile 规则统计，`owner_ref` 与 `validation_refs` 均已实现结构覆盖 30/30；当前尚未满足的其他必需字段为：`artifact_refs` 18 项、`device_refs` 19 项、`release_ref` 21 项、`rollback_ref` 25 项、aggregate `member_project_ids` 1 项。`llm-tools`、`ota-packager`、`sigmastar-flasher`、`mm32spin-validator` 已补真实 checksum-bound 隔离恢复证据，六类必填引用均完整，但契约仍由 owner lifecycle 保持 `status=pending`，因此只计 `field-complete 4/30`，不计 evidence-ready。28 个项目已绑定 registered remote 的精确 Git commit；`mm32spin-validator` 没有可用 Git HEAD，改为绑定受治理 source snapshot SHA256，没有伪造 commit；`mcu` 是 aggregate group，不要求独立 source ref。aggregate 成员列表虽已登记，但 evaluator 在成员未全部 ready 时仍将该字段判作未闭环。
 
 2026-07-16 owner checkpoint：`knowledge-hub-terminal-owner-attestation-20260716` 已绑定 30 项通用 authority-boundary；`knowledge-hub-pcr02-specialized-owner-attestation-20260716` 又按独立 Packet 绑定 3 项专项技术边界。120/120 readiness 镜像为 `decision_owner=leiwenjun`，30/30 validation contract 的 `owner_ref` 已绑定；三项专项候选也均为 `decision_owner=leiwenjun / decision_status=accepted-boundary-evidence-pending`。所有项目 contract 仍为 `pending`，0/30 ready；owner 绑定不替代工程、设备、发布、回滚或采用证据。
 
-2026-07-16 adoption checkpoint：当前契约累计 53 次真实交互（search 10、context 43），观察 2 天；显式 feedback 仍为 0。调用量已使采用进入 `evaluable=true`，但 search/context P95 分别为 3269.45ms / 1903.01ms，性能状态仍为 `fail`，长期采用为 `ready=false`。本轮没有用合成调用、合成反馈、删除慢样本或改口径刷绿。
+2026-07-16 adoption checkpoint：上一已验证发布锚点 `9a1a363` 的 final gate 固定 75 次真实交互（search 10、context 65），观察 2 天；显式 feedback 仍为 0。调用量已使采用进入 `evaluable=true`，但 search/context P95 分别为 3269.45ms / 1903.01ms，性能状态仍为 `fail`，长期采用为 `ready=false`。后续实时调用会继续增长，本页不追写瞬时计数；本轮没有用合成调用、合成反馈、删除慢样本或改口径刷绿。
 
 `validation_refs` 存在只证明执行结果可定位，不证明结果通过。PCR02 HDI、sensor、cli、cmd-server、proto-c、product-test 等已绑定真实失败或局部通过报告，contract 仍保持 `pending`。Knowledge Hub 自身已绑定本页作为 validation report，并记录 full regression 140/140 的技术结果；owner、工程/设备、发布、回滚、clean committed HEAD 和采用门槛不会因此改变。
 
@@ -123,13 +123,36 @@ related:
 
 当前 `completion_claim`：尚未完成；30 项 authority-boundary 与 3 项 PCR02 专项 owner 绑定均已完成。最终 tracked 写入后的 candidate/full gate 由实时命令和本地 final-gate snapshot 验证，不再把瞬时 snapshot 回写本页以避免自我失效。clean committed HEAD、真实内容证据和真实采用仍未同时闭环，`terminal_maturity` 不得判真。
 
+### 2026-07-16 Agent 运行时终态优化执行检查点
+
+- `goal_statement`：以 `9a1a363` 为回滚锚点，在不降低权威、安全、真实反馈和项目证据口径的前提下，完成运行时契约兼容与负路径加固、性能根因闭环、真实 shadow/采用观测，以及可在本机或隔离环境产生的 release/rollback evidence；外部实机、发布批准和 owner lifecycle 证据只形成精确 blocker，不伪造完成。
+- `authorization`：用户在当前会话明确要求“按上述计划全量推进落地”；仅授权 Knowledge Hub 本仓 L1/L2 实现、只读 source/evidence 审计、report-only shadow、验证和门禁全绿后的本地 commit。该指令不授权 active promotion、owner 代签、memory/source-project 写入、实机高风险操作或远端 push/tag/release。
+- `claimant`：Codex 执行代理；`verifier`：独立 schema/pytest/full regression、retrieval benchmark、project readiness evaluator、candidate/HEAD restore、product/terminal gate，以及真实 owner/设备/发布环境证据。
+- `required_evidence`：schema/CLI golden contract 与负例、性能单变量实验、真实 interaction-bound feedback、逐项目 artifact/device/release/rollback 引用、恢复演练和 committed HEAD。
+- `retry_budget`：同一自动验证或同一性能假设最多连续尝试 2 次；外部设备/发布证据最多安排 3 个执行窗口。用尽后必须 `replan`、`split` 或记录 `blocked`。
+- `staleness_threshold`：Git HEAD、schema、telemetry contract、source commit、artifact hash、owner attestation 或 evidence contract 任一变化，关联 checkpoint 立即失效；性能基线在实现变化、增加 20 个真实 interaction 或超过 7 天后重测。
+- `heartbeat`：每完成契约基线、性能 repair、采用/shadow、一个 evidence wave、terminal gate 中任一阶段即更新本节和 Evidence Index。
+- `stop_condition`：仅允许 `pass`、`replan`、`split`、`blocked` 或 `abort`；不得用文档、占位引用、合成调用或 synthetic feedback 代替证据。
+
+| 阶段 | 当前状态 | 完成标准 | 独立验证 |
+|---|---|---|---|
+| S0 基线与状态外化 | `completed` | workspace mapping 刷新；发布锚点、实时 metrics、review queue、30 项缺口和兼容边界可复算 | workspace discover 29/29、metrics、project readiness、schema/consumer inventory |
+| S1 契约与安全加固 | `completed` | 版本兼容结论明确；CLI/schema/exit code、权限、预算和负路径回归齐全 | retrieval-result v3、pytest、schema catalog、跨 cwd smoke、负向 fixtures、full regression 140/140 |
+| S2 性能根因与修复 | `completed-engineering / real-samples-pending` | 不删除真实慢样本；warm/incremental 语义不回退；cold/context 根因有单变量证据和最小修复 | no-telemetry profile、token provenance、benchmark、metrics v3、full regression 140/140 |
+| S3 真实采用与 shadow | `completed-engineering / external-observation-pending` | 真实 feedback >=10、found rate >=0.8、P95 达标；shadow 高风险误放行 0，默认自动写入仍禁用 | metrics v3、50-case compliance eval、hash-chain shadow stats；真实 feedback/shadow 均为 0 |
+| S4 项目 evidence waves | `completed-local-wave / external-evidence-pending` | 可本机闭环项目先完成真实 rollback/release；其余保留精确设备/发布 blocker，最终目标 30/30 ready | 3 套隔离恢复演练、4 个 rollback_ref、field-complete 4/30；status 均保持 pending |
+| S5 Terminal 预收口 | `technical-pass / external-blocked` | 技术 hard checks 全绿；review queue 0、adoption ready、30/30 evidence ready、`--require-terminal` 返回 0 | full terminal gate 当前 18/18 hard checks、140/140 regression 通过；因真实证据与采用未完成返回 2 |
+| S6 提交与恢复 | `ready-for-local-commit` | diff/review 全绿、本地 commit、HEAD restore 与 terminal gate 复验 | commit gate、HEAD restore、final-ready |
+
+2026-07-16 pre-close checkpoint：修复恢复 wrapper 的调用方相对路径兼容并刷新 Obsidian 生成视图后，candidate restore 通过；随后 full terminal gate 的 18 项 hard check 全部为真，shared pytest、140/140 full regression 与输出 schema 均通过，`platform_productization_complete=true`。命令按契约返回 2：当前批次仍是 dirty delivery candidate，普通内容复核队列为 1，30 项 evidence-ready 为 0，当前性能代际与真实 feedback 也未达到采用门槛。因此 S5 的工程预收口完成，但长期资产终态仍是 external-blocked；本段写入后必须重新生成候选恢复快照并完成 S6 的 committed HEAD 验证。
+
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
 - [x] 30 项目 route matrix 能将 `knowledge-hub` 稳定解析为本项目。
 - [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
 - [x] search known-answer 与 link audit 通过。
-- [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
+- [x] 本机 source 定位：2026-07-16 已运行 `knowledge-workspace-discover.sh --apply --first-party-only --json`，29/29 注册远端可定位、0 scan error；结果只写未跟踪 `local/workspaces.json`，不复制绝对路径到 tracked Markdown。
 
 ## 已落地的测量完整性优化
 
@@ -264,6 +287,28 @@ do_not_repeat: 不删除正文、不缩减 token 集合、不改查询 token 上
 
 最终 cProfile 中 index token 仍为 0.922s、FTS 写入仍为 0.607s；因此 cold full rebuild 继续是显式性能债务，不声明达到 500ms。后续若继续优化，应优先评估可控的持久 token provenance 或 FTS 架构变更，并单独设计并发预算，不能直接打开嵌套 worker。
 
+## 2026-07-16 持久 token provenance 与性能代际隔离
+
+本轮先用当前 1072 个 document row 做上限原型：首轮正常生成 token 后，第二轮仅按精确输入 SHA-256 复用 token，forced rebuild 从 1890.36ms 降到 1127.58ms，改善 40.35%，超过“至少 20% 才进入实现”的阈值。实现继续沿用 v5 主索引，最终使用本地忽略提交的 `search-token-cache-v2.sqlite3`；key 绑定 token 算法版本、上限和完整 `metadata + body` 输入，value 又绑定 `cache_key + token_text` digest，内容、registry metadata 或缓存行任一变化都会 miss 并确定性重算。待写内存与落盘 token 均受 128 MiB / 10000 项预算约束。
+
+该 cache 不是 freshness 或事实权威：单项上限 4 MiB、待写与落盘 token 总量上限 128 MiB、最多 10000 项，权限收紧为 `0600`；SQLite 文件损坏、合法行 digest 不匹配、不可写或越界时分别标记 `degraded` / `recovered` 并调用原 tokenizer，不能让 search 失败或静默复用已损坏 token。v1 实现阶段真实仓库首次 miss forced rebuild 为 1984.95ms，其中 build 1863.24ms；随后 1072/1072 hit 为 1177.19ms，其中 build 1055.25ms，总时延改善 40.69%。最终 v2 完整性加固后，1075 miss 的 forced rebuild 为 2261.44ms、build 2116.27ms；随后 1075/1075 digest-verified hit 为 1441.42ms、build 1271.34ms，build 改善 39.93%、总时延改善 36.26%。首次全新 cache 仍高于 500ms，继续作为显式 cold-start 性能债务。
+
+search v3 同时新增必需的阶段计时：validation、index ensure、candidate query、ranking 和 total；context 记录 registry load、routing、registry ranking、search、assembly 和 total。当前 warm search 为 147.70–155.61ms，warm context 为 198.97–255.69ms；context 中 search 占约 76%–82%，因此“context assembly 是历史慢样本主因”被证伪。forced cold 的 signature 约 40ms、build 约 1890ms，因此“signature 扫描主导 cold”也被证伪。v2 完整性加固后的 294-case 收口 benchmark 继续保持 20/20 hit、MRR 1.0、274/274 route，P50 103.06ms、P95 148.78ms、max 156.68ms。
+
+metrics 升为 v3，但不删除或改写任何历史 telemetry。`knowledge-retrieval-interaction-v1` 继续统计真实 usage 和绑定 feedback；新增 `knowledge-retrieval-performance-v1` 只选择当前实现的性能样本。切换时实时 usage 为 80、feedback 为 0；80 条旧实现交互全部保留并计入 usage/provenance，但列入 `excluded_stale_contract_sample_count`。当前 search/context 性能样本均为 0，performance 和 adoption 如实回到 `pending`，直到各积累至少 10 条真实交互；本轮 benchmark、forced rebuild 和测试全部使用 `--no-telemetry`，不拿诊断调用刷成熟度。
+
+```text
+[repair-note]
+failed_scope: 历史 interaction contract 横跨多个性能实现，旧实现慢样本永久污染当前 P95；cold rebuild 的 tokenizer 仍占约 1.08s
+passing_scope_to_preserve: usage/feedback 历史、真实慢样本、精确 token 集合、freshness、增量事务、fallback、隐私和 294-case 语义
+minimal_rerun: test_search/test_context/test_metrics/test_schemas、全量 pytest、两次 forced rebuild、294-case benchmark、full regression、candidate/HEAD restore、product gate
+rollback_anchor: 9a1a363；删除本地 token cache 只能恢复重算，不影响权威数据
+root_cause_status: known；token 重算主导可重复 full rebuild，性能 telemetry 缺少独立实现代际
+repair_action: exact-input bounded token provenance cache + fail-open 重算 + stage timing + 独立 performance contract
+semantic_verification: 46 个定向测试和全量 pytest 通过；cache hit/miss/corruption/change invalidation 均有负例；benchmark hit/MRR/route 不变
+do_not_repeat: 不清理历史 telemetry、不把 benchmark/测试记为真实 interaction、不把 token cache 当 freshness 证据、不把首次 cold miss 声明为低于 500ms
+```
+
 ## 人工/真实环境门禁
 
 - [x] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵在当前阶段检查中通过；最终写入后仍需重跑。
@@ -347,8 +392,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 |---|---|---|
 | readiness generator 无漂移 | `rtk bash ~/knowledge-hub/tools/knowledge-project-readiness.sh --check --json` | pass；30 projects / 120 slots / changed 0 |
 | Obsidian 幂等 apply | `rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --apply --json` 与定向 pytest | 修复 `no-change` 与 schema/CLI 成功枚举不一致；8 个定向测试通过，幂等 apply 返回 0 且 schema pass |
-| 当前遥测与采用口径 | `rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --json` | 53 次当前交互、2 天、feedback 0；search/context P95 为 3269.45ms / 1903.01ms，performance fail，adoption evaluable but not ready |
-| product 普通复核状态 | `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 0 --json` | queue 0；本轮 137 条受托 review record 已落地，状态无提升 |
+| 当前遥测与采用口径 | `rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --json` | metrics v3 切换点为 80 次真实交互、2 天、feedback 0；旧实现 80 条性能样本全部保留为 usage/provenance 并显式排除出当前 P95。当前 performance search/context 样本均为 0，状态 `pending`，adoption not ready；实时调用数由命令重算。 |
+| v3 检索契约与安全边界 | pytest、跨 cwd CLI smoke、retrieval benchmark、full regression | `retrieval-result` 硬切 v3；仓内 consumer 已同步；查询/过滤/游标、任务/候选、proposal/证据、raw ledger 均有确定性预算；domain 使用路径段边界；personal 默认隔离；guard regex 采用安全子集并 fail closed。48 个定向测试、全量 pytest、294 条 benchmark、140/140 full regression 均通过；旧 limit 文案断言同步为完整 `1..100` 契约。 |
+| Shadow 与动作合规观测 | `knowledge-proposal-shadow-stats.sh --json`、`knowledge-compliance-eval.sh --minimum-cases 50 --json`、篡改/泄漏 fixtures | policy 继续 disabled；真实 shadow sample 0，状态 `pending`；audit 只存哈希/路由/原因并使用 `0600` 与 hash chain。50/50 高风险矩阵通过，实际 ALLOW 0、false-allow 0、content echoed false；该确定性评测不替代真实 shadow 或 feedback。 |
+| 软件工具制品隔离恢复 | `knowledge-artifact-restore-drill.sh` 三次相对路径复跑、两项 release CLI help、负例单测 | OTA 7/7、SigmaStar 10/10、Validator 4/4 完成 source 校验、临时副本损坏检测、恢复后全量校验与 source 未变化复核；4 个项目补 `rollback_ref`，missing rollback 从 29 降至 25。远端、设备、生产回滚固定为 false，四个契约均保持 pending。 |
+| product 普通复核状态 | `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-type ai-human-review --queue-owner leiwenjun --queue-limit 0 --json` | 历史 137 条受托 review record 已落地；本轮新增恢复演练报告产生 1 条普通内容复核队列 `item:software-tool-artifact-restore-drill-20260716:ai-human-review`。泛化“继续优化”授权不构成精确内容签收，未自动回填。 |
 | 30 项 authority-boundary owner 绑定 | Packet SHA256、attestation、120 个 frontmatter/registry 镜像与 30 个 evidence contract `owner_ref` 交叉校验 | `decision_owner` 120/120、`owner_ref` 30/30；仍为 reviewing/pending，未提升 active/evidence-ready |
 | 3 项 PCR02 专项 owner 绑定 | Packet SHA256、三份 before/after 正文 hash、attestation、registry/frontmatter 与 product gate 交叉校验 | `decision_owner / owner_attestation_ref / owner_decision / decision_status` 均为 3/3；仍为 reviewing/evidence-pending，未批准 active/release/evidence-ready |
 | source 身份覆盖 | `rtk bash ~/knowledge-hub/tools/knowledge-workspace-discover.sh --plan --first-party-only --json` 与 validation contract | 28 个精确 commit；`mm32spin-validator` 为 hash-bound snapshot；`mcu` 为 aggregate |
@@ -362,17 +410,45 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 | 检索遍历性能 | `knowledge-search/context --no-telemetry`、cProfile、`knowledge-retrieval-benchmark.sh --json` | 文件集合保持 1054/1054；warm search 168.69–178.32ms、context 162.00–178.17ms；benchmark P95 142.90ms，hit/MRR/route 均为 1.0 |
 | 增量索引性能 | v4 cold build、单文件 Markdown 更新、signature 5 次、`knowledge-retrieval-benchmark.sh --json` | cold build 2728.49ms；单文件增量 227.79ms、事务 38.11ms；signature 33.28–37.16ms；benchmark P95 133.20ms，语义指标保持 1.0 |
 | 冷启动 v5 rebuild | clean `222730b` 临时空 cache、cProfile、等价性检查、`knowledge-retrieval-benchmark.sh --json` | v4 clean cold 2137.17–2318.64ms；v5 为 1557.00–1589.43ms，中位数下降约 28.6%；benchmark P95 134.28ms，hit/MRR/route 均为 1.0 |
+| 持久 token provenance 与性能代际 | 精确输入 cache 原型、两次 forced rebuild、阶段 timing、metrics v3、`knowledge-retrieval-benchmark.sh --json` | 原型改善 40.35%；真实首次 miss 1984.95ms，随后 1072/1072 hit 为 1177.19ms，改善 40.69%；warm benchmark P95 140.46ms，hit/MRR/route 均为 1.0；cache 损坏/输入变化 fail-open 负例通过。 |
 | Full regression | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-16` | 首轮暴露 1 个 gap-contract drift；定向修复后 pass，137 个测试函数、140/140 结果通过、失败列表为空 |
 | Candidate restore | `rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-16 --json` | pass；1361 个 candidate path 全部复制，missing/hash mismatch 均为 0，unit/link/Obsidian/retrieval/project/export/search/context/product smoke 全部通过 |
-| 控制面完整门禁 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16` | `gate_status=pass`、`platform_productization_complete=true`；工作树未提交使 `platform_release_complete=false` |
-| 长期终态门禁 | 在上一命令增加 `--require-terminal` | 退出 2；`terminal_maturity=false`，blocker 为 `owner-and-real-evidence-pending` 与 `committed-release-evidence-pending` |
+| 控制面完整门禁 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16` | 发布锚点 `9a1a363`：`gate_status=pass`、`platform_productization_complete=true`、`platform_release_complete=true`，HEAD restore 精确匹配该 commit |
+| 长期终态门禁 | 在上一命令增加 `--require-terminal` | `terminal_maturity=false`；committed release 已闭环，剩余主 blocker 为真实项目 evidence 与采用反馈/性能，不能由 Codex 自动完成 |
+
+## 2026-07-16 Terminal Blocker Packet
+
+下表只列当前仍需外部身份、环境或自然使用产生的证据。`Codex 可执行` 为“否”的条目不得用 synthetic feedback、占位 URI、模拟设备、代签或修改 contract status 替代。
+
+| Blocker | 对象 | 当前精确缺口 | 所需执行者与证据 | 完成后复核 |
+| --- | --- | --- | --- | --- |
+| B1 普通内容复核 | `software-tool-artifact-restore-drill-20260716` | `human_reviewed_by / human_reviewed_at / review_basis`；queue 1 | 真人读取精确正文后填写 review queue form；可接受、退回或要求修订。泛化执行授权不是内容确认。 | `knowledge-index-plan.sh --section review-queue --queue-limit 0 --json` |
+| B2 真实反馈 | 当前 retrieval interaction | feedback 0，要求至少 10；found rate 要求 ≥0.8 | 实际使用者在真实 search/context 后绑定 interaction ID 与真实 selected ID；not-found 不得填 selected ID。 | `knowledge-metrics.sh --json` |
+| B3 当前性能观测 | `knowledge-retrieval-performance-v1` | search/context 当前真实样本均为 0，分别要求 ≥10 | 自然交互自动记录；benchmark、测试、forced rebuild 一律 `--no-telemetry`，不得刷样本。 | `knowledge-metrics.sh --json` |
+| B4 已有发布、缺设备与回滚 | `pcr02-ssc305`、`gd32l235`、`hc32f072`、`mm32spin023c` | 4 个 `device_refs`、4 个真实目标/生产级 `rollback_ref` | 设备 owner 提供设备 ID、source commit、artifact SHA、环境、完整命令/退出码、结果、失败恢复和日志引用。 | project readiness + terminal gate |
+| B5 嵌入式全证据波次 | `xcrz-sigmastar-demo`、10 个 PCR02 模块/应用、`app-main`、`app-ota`、`app-product-test`、`app-tool` | 共 15 个 artifact、15 个 device、15 个 release、15 个 rollback；其中现有负向 build 不能改写成通过 | 各项目 owner/实验室/发布人生成可定位 artifact、目标设备 run、immutable release record 和同版本 rollback；先修复已记录的 SDK/header/schema/API/generator 缺口。 | evidence contract + source/设备复测 |
+| B6 软件发布波次 | `agent-dev-kit`、`firmware-release-tools`、`llm-agent` | 各缺 artifact/release/rollback；`firmware-toolchains` 缺 release/rollback | 发布 owner 绑定目标版本、正式制品 URI/SHA、发布记录与隔离恢复；`llm-agent` 还需 full/harden。 | `knowledge-final-gate.sh --final-profile product --json` |
+| B7 控制面/运行时 | `knowledge-hub`、`codex` | 各缺 release/rollback；Knowledge Hub 当前批次还需 committed HEAD restore | 本轮 S6 只能完成 Knowledge Hub 本地 commit/restore；Codex runtime 需独立 source-to-live release 与 rollback 证据。 | candidate/HEAD restore + product gate |
+| B8 Aggregate | `mcu` | `member_project_ids` 只有在成员全部 evidence-ready 后才闭环 | 不单独造 aggregate 证据；等待 MCU 成员真实 ready。 | project readiness evaluator |
+| B9 Lifecycle declaration | `llm-tools`、`ota-packager`、`sigmastar-flasher`、`mm32spin-validator` | 六类字段已完整，但 `status=pending`；本轮没有精确 owner lifecycle attestation | Owner 复核 source/release/restore 边界后作出精确 status 决定；本报告不得代签。 | field-complete 4/30 与 evidence-ready 分开核对 |
+
+剩余字段总数为 `artifact_refs=18`、`device_refs=19`、`release_ref=21`、`rollback_ref=25`、aggregate `member_project_ids=1`。这组数字在 evidence contract、项目 readiness 与 terminal gate 三处必须一致；任一 source commit、artifact hash、owner attestation 或 contract 改变后重新生成本包。
+
+推荐的只读复核顺序：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --queue-limit 0 --json
+rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-project-readiness.sh --check --as-of 2026-07-16 --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16 --require-terminal
+```
 
 ## Goal Closure
 
-- 自动化目标：修复可复现的控制面、恢复、性能口径和验证问题，并形成可审计、可恢复、全回归通过的工作树；本轮不自动创建 commit，clean committed HEAD 继续作为 delivery gate。
+- 自动化目标：发布锚点 `9a1a363` 已证明控制面可交付；本轮继续修复可复现的契约、性能和验证问题，并分批落地可由本机或隔离环境产生的真实 release/rollback evidence。门禁全绿后允许创建本地 commit，但不自动 push/tag/release。
 - 已完成的受托目标：本轮 137 条普通 AI review record 已完成透明 delegated closeout；30 项 authority-boundary 已由真实 owner 的 hash-bound attestation 绑定；28 个项目绑定精确 source commit，`mm32spin-validator` 绑定 source snapshot；所有可本机独立核验的 validation 与已有 NAS artifact/release 证据已如实绑定。
-- 外部目标：3 个 PCR02 专项 owner 决定已经完成；仍有 18 个 artifact、19 个 device、21 个 release、29 个 rollback 缺口，以及长期采用反馈。这些证据不能由 Codex 自行生成。已绑定的失败 validation 还需要源项目修复和复测。
-- 当前决策：普通复核、30 项 authority-boundary 和 3 项 PCR02 专项 owner 绑定均已完成；长期终态继续保持 `evidence-pending`，直到真实责任人和实际环境补齐项目证据与采用门槛。
+- 外部目标：3 个 PCR02 专项 owner 决定已经完成；本轮关闭 4 个可在隔离环境直接验证的 rollback slot 后，仍有 18 个 artifact、19 个 device、21 个 release、25 个 rollback 缺口、aggregate 1 个成员闭环缺口，以及长期采用反馈。这些剩余证据不能由 Codex 自行生成。已绑定的失败 validation 还需要源项目修复和复测。
+- 当前决策：历史普通复核、30 项 authority-boundary、3 项 PCR02 专项 owner 绑定和发布锚点 `9a1a363` 均已完成；本轮新恢复报告保留 1 条精确内容复核队列。长期终态继续保持 `evidence-pending`，直到真实责任人和实际环境补齐项目证据、生命周期决定与采用门槛；外部缺口已收敛为上方 blocker packet。
 - 失效条件：Git HEAD、working-tree signature、evidence contract 或 telemetry contract 变化后，旧 final-gate/restore snapshot 立即失效，必须重跑。
 
 ## Related

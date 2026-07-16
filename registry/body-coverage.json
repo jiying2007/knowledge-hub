@@ -98,9 +98,9 @@
       "coverage_mode": "governance-baseline",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 25,
-      "inventory_sha256": "fc575209b89d078302f6e94dee2f5359d3a8a1731af0ed0b25d642d47b17de6f",
-      "reason_zh": "2026-07-16 显式复核并加入已逐条注册的 Agent 运行时契约吸收决策候选后，重新冻结 Hub 治理正文路径；Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active 或 owner approval。"
+      "expected_markdown_count": 26,
+      "inventory_sha256": "da0dc658f7d80a36a7701795694bbae70a00a5c35be6f9ec3294ce20e358d089",
+      "reason_zh": "2026-07-16 显式加入已逐条注册的 Agent 运行时契约吸收候选与软件工具制品隔离恢复报告后，重新冻结 Hub 治理正文路径；Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",

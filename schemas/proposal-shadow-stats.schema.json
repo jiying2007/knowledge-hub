@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/proposal-shadow-stats.schema.json",
+  "title": "Knowledge Hub proposal shadow audit statistics",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only", "status", "policy_enabled", "sample_count",
+    "route_counts", "reason_counts", "sampled_count", "client_fingerprint_count",
+    "first_recorded_at", "last_recorded_at", "safety", "integrity", "content_echoed"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.proposal-shadow-stats.v1"},
+    "read_only": {"const": true},
+    "status": {"enum": ["pass", "pending", "fail"]},
+    "policy_enabled": {"type": "boolean"},
+    "sample_count": {"type": "integer", "minimum": 0},
+    "route_counts": {
+      "type": "object",
+      "required": ["actual", "eligible"],
+      "properties": {
+        "actual": {"$ref": "#/$defs/route_counts"},
+        "eligible": {"$ref": "#/$defs/route_counts"}
+      },
+      "additionalProperties": false
+    },
+    "reason_counts": {
+      "type": "object",
+      "propertyNames": {"enum": [
+        "policy_disabled", "client_not_trusted_by_host_policy",
+        "high_risk_kind_human_only", "kind_not_opted_in",
+        "runtime_role_not_low_risk_assertion", "type_capability_not_opted_in",
+        "target_status_not_candidate", "promotion_field_forbidden",
+        "owner_or_human_review_field_forbidden", "evidence_not_exactly_verified",
+        "daily_limit_disabled_or_exhausted", "write_auto_not_granted_shadow_only",
+        "invalid"
+      ]},
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "sampled_count": {"type": "integer", "minimum": 0},
+    "client_fingerprint_count": {"type": "integer", "minimum": 0},
+    "first_recorded_at": {"type": "string", "maxLength": 64},
+    "last_recorded_at": {"type": "string", "maxLength": 64},
+    "safety": {
+      "type": "object",
+      "required": ["actual_non_human_route_count", "high_risk_non_human_eligible_count", "content_leak_row_count"],
+      "properties": {
+        "actual_non_human_route_count": {"type": "integer", "minimum": 0},
+        "high_risk_non_human_eligible_count": {"type": "integer", "minimum": 0},
+        "content_leak_row_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["hash_chain_valid", "invalid_row_count", "duplicate_proposal_hash_count"],
+      "properties": {
+        "hash_chain_valid": {"type": "boolean"},
+        "invalid_row_count": {"type": "integer", "minimum": 0},
+        "duplicate_proposal_hash_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "content_echoed": {"const": false}
+  },
+  "$defs": {
+    "route_counts": {
+      "type": "object",
+      "propertyNames": {"enum": ["human-review", "human-sampled", "auto-stage-reviewing", "invalid"]},
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    }
+  },
+  "additionalProperties": false
+}

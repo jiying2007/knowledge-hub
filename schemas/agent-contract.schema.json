@@ -32,7 +32,7 @@
         "when_any": {"$ref": "#/$defs/phrases"},
         "deny_any": {"$ref": "#/$defs/phrases"},
         "require_any": {"$ref": "#/$defs/phrases"},
-        "deny_regex": {"$ref": "#/$defs/phrases"}
+        "deny_regex": {"$ref": "#/$defs/safe_regexes"}
       },
       "additionalProperties": false
     },
@@ -52,6 +52,12 @@
       "maxItems": 32,
       "uniqueItems": true,
       "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "safe_regexes": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200}
     }
   },
   "additionalProperties": false

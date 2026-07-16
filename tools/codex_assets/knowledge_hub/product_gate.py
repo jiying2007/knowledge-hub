@@ -286,6 +286,12 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
                 "evidence_profile": contract_evaluation["profile"],
                 "evidence_status": "ready" if evidence else "contract-evidence-pending",
                 "evidence_contract": contract_evaluation,
+                "evidence_field_status": (
+                    "complete-awaiting-declaration"
+                    if not contract_evaluation["missing_fields"]
+                    and not contract_evaluation["invalid_fields"]
+                    else "incomplete"
+                ),
                 "decision_owner_status": "ready" if project_decision_owner_ready else "pending",
                 "owner_ref_status": "ready" if project_owner_ref_ready else "pending",
                 "owner_boundary_status": "ready" if project_owner_boundary_ready else "pending",
@@ -311,6 +317,11 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
             and evaluation["status"] == "ready"
         )
         row["evidence_contract"] = evaluation
+        row["evidence_field_status"] = (
+            "complete-awaiting-declaration"
+            if not evaluation["missing_fields"] and not evaluation["invalid_fields"]
+            else "incomplete"
+        )
         row["evidence_status"] = "ready" if evidence else "member-contract-evidence-pending"
         if evidence:
             ready_project_ids.add(project_id)
@@ -323,6 +334,9 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
             if not selected or selected.get("project_id") != project["id"] or score <= 0:
                 route_failures.append({"project_id": project["id"], "task_type": task_type})
     project_count = len(projects)
+    evidence_field_complete_count = sum(
+        1 for row in rows if row["evidence_field_status"] == "complete-awaiting-declaration"
+    )
     return {
         "project_count": project_count,
         "slot_count": project_count * len(SLOT_NAMES),
@@ -335,6 +349,10 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         "owner_boundary_coverage": round(owner_boundary_ready / float(max(1, project_count)), 4),
         "evidence_ready_count": len(ready_project_ids),
         "evidence_coverage": round(len(ready_project_ids) / float(max(1, project_count)), 4),
+        "evidence_field_complete_count": evidence_field_complete_count,
+        "evidence_field_complete_coverage": round(
+            evidence_field_complete_count / float(max(1, project_count)), 4
+        ),
         "reusable_asset_ready_count": reusable_asset_ready,
         "reusable_asset_coverage": round(reusable_asset_ready / float(max(1, project_count)), 4),
         "route_count": len(routes),

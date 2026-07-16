@@ -106,6 +106,40 @@ def bytes_sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def read_bytes_bounded(
+    path: pathlib.Path,
+    maximum_bytes: int,
+    label: str,
+) -> bytes:
+    """Read one regular file without a stat/read race bypassing its byte budget."""
+
+    if maximum_bytes < 1:
+        raise KnowledgeHubError("{} byte budget must be positive".format(label))
+    if not path.is_file():
+        raise KnowledgeHubError("{} must be a regular file".format(label))
+    with path.open("rb") as handle:
+        raw = handle.read(maximum_bytes + 1)
+    if len(raw) > maximum_bytes:
+        raise KnowledgeHubError(
+            "{} exceeds {} bytes".format(label, maximum_bytes)
+        )
+    return raw
+
+
+def read_utf8_bounded(
+    path: pathlib.Path,
+    maximum_bytes: int,
+    label: str,
+) -> str:
+    """Read one bounded regular UTF-8 file."""
+
+    raw = read_bytes_bounded(path, maximum_bytes, label)
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise KnowledgeHubError("{} must be valid UTF-8".format(label)) from exc
+
+
 def normalize_relpath(value: str) -> str:
     text = str(value or "").replace("\\", "/").strip()
     candidate = pathlib.PurePosixPath(text)

@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## manual-validation-pending (129)
+## manual-validation-pending (130)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## ai-generated (121)
+## ai-generated (122)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -49,7 +49,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## validation (37)
+## validation (38)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -103,6 +103,15 @@
 - [中文术语表规范](../../governance/glossary.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
 
+## knowledge-hub (9)
+
+- [Knowledge Hub root](../../README.md) · `active`
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
+- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+- [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
+- [Knowledge Hub 权威与维护边界决策候选](../../governance/product/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [Knowledge Hub 维护入口](../../governance/product/current/runbooks/maintenance-entry.md) · `reviewing`
+
 ## pcr02 (9)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
@@ -111,15 +120,6 @@
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
-
-## knowledge-hub (8)
-
-- [Knowledge Hub root](../../README.md) · `active`
-- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
-- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
-- [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
-- [Knowledge Hub 权威与维护边界决策候选](../../governance/product/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Knowledge Hub 维护入口](../../governance/product/current/runbooks/maintenance-entry.md) · `reviewing`
 
 ## pcr02-ssc305 (6)
 
@@ -411,6 +411,11 @@
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
+## software-tool (2)
+
+- [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing`
+- [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing`
+
 ## st77912 (2)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -444,6 +449,10 @@
 ## archive (1)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+
+## artifact-integrity (1)
+
+- [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing`
 
 ## asan (1)
 
@@ -669,6 +678,10 @@
 
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
+## rollback-drill (1)
+
+- [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing`
+
 ## rtk (1)
 
 - [命令与工具入口规范](../../governance/command-tooling-rules.md) · `active`
@@ -688,10 +701,6 @@
 ## soc-release (1)
 
 - [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing`
-
-## software-tool (1)
-
-- [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing`
 
 ## source-boundary (1)
 

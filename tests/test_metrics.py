@@ -12,9 +12,16 @@ from tools.codex_assets.knowledge_hub.metrics import (
 )
 
 
-def _interaction(query, kind="search", recorded_at="2026-07-13T00:00:00Z", latency_ms=120, result_ids=("item-a",)):
+def _interaction(
+    query,
+    kind="search",
+    recorded_at="2026-07-13T00:00:00Z",
+    latency_ms=120,
+    result_ids=("item-a",),
+    performance_contract=metrics.PERFORMANCE_CONTRACT,
+):
     query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
-    return {
+    row = {
         "schema_version": metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
         "interaction_contract": metrics.INTERACTION_CONTRACT,
@@ -27,6 +34,9 @@ def _interaction(query, kind="search", recorded_at="2026-07-13T00:00:00Z", laten
         "latency_ms": latency_ms,
         "raw_query_stored": False,
     }
+    if performance_contract:
+        row["performance_contract"] = performance_contract
+    return row
 
 
 def test_interaction_ids_are_unique_for_same_query_and_second():
@@ -55,7 +65,7 @@ def test_metrics_do_not_store_raw_queries(tmp_path):
     assert recorded["raw_query_stored"] is False
     assert "sensitive query body" not in stored
     assert payload["privacy"]["raw_query_stored"] is False
-    assert payload["schema_version"] == 2
+    assert payload["schema_version"] == 3
     assert payload["usage"]["invocation_count"] == 1
     assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
     assert payload["retrieval"]["feedback_count"] == 1
@@ -92,6 +102,31 @@ def test_metrics_only_count_current_contract_interactive_samples(tmp_path):
     assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
     assert payload["performance"]["search_p95_ms"] == 120
     assert payload["performance"]["status"] == "pending"
+
+
+def test_metrics_keep_usage_but_exclude_stale_performance_contract(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    rows = [
+        _interaction("current-performance"),
+        _interaction(
+            "historical-performance",
+            recorded_at="2026-07-13T00:00:01Z",
+            latency_ms=9999,
+            performance_contract=None,
+        ),
+    ]
+    (cache / "search-telemetry.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows)
+    )
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["usage"]["invocation_count"] == 2
+    assert payload["performance"]["search_sample_count"] == 1
+    assert payload["performance"]["search_p95_ms"] == 120
+    assert payload["performance"]["excluded_stale_contract_sample_count"] == 1
+    assert payload["measurement_contract"]["performance_contract"] == metrics.PERFORMANCE_CONTRACT
 
 
 def test_metrics_require_enough_current_search_and_context_samples(tmp_path):

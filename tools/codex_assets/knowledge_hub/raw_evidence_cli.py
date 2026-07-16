@@ -15,6 +15,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Inspect a rawmem-compatible ledger without echoing event content.")
     parser.add_argument("--ledger", required=True)
     parser.add_argument("--max-errors", type=int, default=20)
+    parser.add_argument("--max-bytes", type=int, default=64 * 1024 * 1024)
+    parser.add_argument("--max-events", type=int, default=100000)
+    parser.add_argument("--max-line-bytes", type=int, default=1024 * 1024)
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -24,7 +27,11 @@ def main(argv: Sequence[str] = ()) -> int:
     args = parser.parse_args(list(argv) if argv else None)
     try:
         payload = inspect_raw_evidence_ledger(
-            pathlib.Path(args.ledger), max_errors=args.max_errors
+            pathlib.Path(args.ledger),
+            max_errors=args.max_errors,
+            max_bytes=args.max_bytes,
+            max_events=args.max_events,
+            max_line_bytes=args.max_line_bytes,
         )
     except (KnowledgeHubError, OSError) as exc:
         parser.error(str(exc))

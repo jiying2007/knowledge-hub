@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowledge-hub.local/schemas/retrieval-result.schema.json",
-  "title": "Knowledge retrieval response",
+  "title": "Knowledge retrieval response v3",
   "type": "object",
-  "required": ["schema_version", "status", "query", "index", "results", "search_trace", "zero_hit"],
+  "required": ["schema_version", "status", "query", "index", "results", "search_trace", "zero_hit", "timing"],
   "properties": {
-    "schema_version": {"type": "integer", "minimum": 2},
+    "schema_version": {"const": 3},
     "status": {"enum": ["pass", "zero-hit", "error"]},
     "query": {"type": "string"},
     "index": {
@@ -69,7 +69,19 @@
       },
       "additionalProperties": true
     },
-    "zero_hit": {"type": "object"}
+    "zero_hit": {"type": "object"},
+    "timing": {
+      "type": "object",
+      "required": ["validation_ms", "index_ensure_ms", "candidate_query_ms", "ranking_ms", "total_ms"],
+      "properties": {
+        "validation_ms": {"type": "number", "minimum": 0},
+        "index_ensure_ms": {"type": "number", "minimum": 0},
+        "candidate_query_ms": {"type": "number", "minimum": 0},
+        "ranking_ms": {"type": "number", "minimum": 0},
+        "total_ms": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": true
 }

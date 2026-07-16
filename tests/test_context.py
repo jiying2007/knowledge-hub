@@ -115,6 +115,15 @@ def test_context_keeps_archived_project_current_out_of_current(tmp_path):
     root = _context_root(tmp_path)
     payload = assemble_context(root, str(tmp_path), "P1 发布", "release", 8, "normal")
     assert payload["route"]["project_id"] == "p1"
+    assert payload["timing"]["total_ms"] == payload["latency_ms"]
+    assert set(payload["timing"]) == {
+        "registry_load_ms",
+        "routing_ms",
+        "registry_rank_ms",
+        "search_ms",
+        "assembly_ms",
+        "total_ms",
+    }
     assert any(row["id"] == "p1-runbook" for row in payload["context"]["current"])
     assert all(row["status"] not in {"archived", "superseded", "rejected"} for row in payload["context"]["current"])
     assert all(row["kind"] != "audit" for row in payload["context"]["current"])
@@ -339,7 +348,9 @@ def test_context_telemetry_binds_current_interaction_and_result_ids(monkeypatch,
     assert result["status"] == "recorded"
     assert captured["schema_version"] == metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION
     assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
+    assert captured["performance_contract"] == metrics.PERFORMANCE_CONTRACT
     assert captured["result_ids"] == ["item-a", "item-b"]
+    assert captured["stage_timing"] == {}
     assert "private preflight query" not in json.dumps(captured)
 
 

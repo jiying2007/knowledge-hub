@@ -7,8 +7,12 @@ import json
 import pathlib
 from typing import Sequence
 
-from .common import KnowledgeHubError, repository_root
-from .proposal_routing import assess_proposal, record_shadow_assessment
+from .common import KnowledgeHubError, read_utf8_bounded, repository_root
+from .proposal_routing import (
+    PROPOSAL_MAX_BYTES,
+    assess_proposal,
+    record_shadow_assessment,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -29,7 +33,14 @@ def main(argv: Sequence[str] = ()) -> int:
     args = parser.parse_args(list(argv) if argv else None)
     try:
         root = repository_root(args.root)
-        proposal = json.loads(pathlib.Path(args.proposal).read_text(encoding="utf-8"))
+        proposal_path = pathlib.Path(args.proposal)
+        proposal = json.loads(
+            read_utf8_bounded(
+                proposal_path,
+                PROPOSAL_MAX_BYTES,
+                "proposal file",
+            )
+        )
         payload = assess_proposal(
             root,
             proposal,

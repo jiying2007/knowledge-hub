@@ -7,6 +7,7 @@ import re
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from .common import KnowledgeHubError, registry_items
+from .model import guard_regex_safety_error
 from .search import SearchFilters, SearchIndex, search
 
 
@@ -16,6 +17,10 @@ ACTIVE_STATUS = "active"
 PROVISIONAL_STATUSES = {"reviewing", "draft"}
 TERMINAL_STATUSES = {"archived", "superseded", "rejected"}
 EVIDENCE_PACK_MAX_LIMIT = 100
+ACTION_TEXT_MAX_CHARS = 8192
+ACTION_MAX_LIST_VALUES = 32
+ACTION_MAX_SCOPE_CHARS = 200
+ACTION_MAX_EXCEPTION_CHARS = 500
 
 
 def _contract(item: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -100,6 +105,7 @@ def build_evidence_pack(
                 EVIDENCE_PACK_MAX_LIMIT
             )
         )
+    _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
     filters = filters or SearchFilters()
     search_index = SearchIndex(root)
     search_payload = search(
@@ -262,6 +268,27 @@ def _contains_any(text: str, patterns: Iterable[str]) -> List[str]:
     return [pattern for pattern in patterns if str(pattern).casefold() in lowered]
 
 
+def _validate_runtime_values(
+    name: str,
+    values: Sequence[str],
+    maximum_length: int,
+) -> None:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise KnowledgeHubError("{} must be a sequence of strings".format(name))
+    if len(values) > ACTION_MAX_LIST_VALUES:
+        raise KnowledgeHubError(
+            "{} exceeds {} values".format(name, ACTION_MAX_LIST_VALUES)
+        )
+    for value in values:
+        text = str(value)
+        if not text.strip():
+            raise KnowledgeHubError("{} must contain non-empty values".format(name))
+        if len(text) > maximum_length:
+            raise KnowledgeHubError(
+                "{} value exceeds {} characters".format(name, maximum_length)
+            )
+
+
 def check_action(
     root: pathlib.Path,
     task: str,
@@ -274,8 +301,18 @@ def check_action(
         raise KnowledgeHubError("task must not be empty")
     if not candidate.strip():
         raise KnowledgeHubError("candidate must not be empty")
-    if len(candidate) > 8192:
-        raise KnowledgeHubError("candidate exceeds 8192 characters")
+    if len(task) > ACTION_TEXT_MAX_CHARS:
+        raise KnowledgeHubError(
+            "task exceeds {} characters".format(ACTION_TEXT_MAX_CHARS)
+        )
+    if len(candidate) > ACTION_TEXT_MAX_CHARS:
+        raise KnowledgeHubError(
+            "candidate exceeds {} characters".format(ACTION_TEXT_MAX_CHARS)
+        )
+    _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
+    _validate_runtime_values(
+        "asserted_exceptions", asserted_exceptions, ACTION_MAX_EXCEPTION_CHARS
+    )
     combined = "{}\n{}".format(task, candidate)
     applicable: List[Dict[str, Any]] = []
     provisional: List[Dict[str, Any]] = []
@@ -317,6 +354,15 @@ def check_action(
         deny_matches = _contains_any(candidate, guard.get("deny_any", []))
         regex_matches = []
         for pattern in guard.get("deny_regex", []):
+            unsafe_reason = guard_regex_safety_error(str(pattern))
+            if unsafe_reason:
+                needs_review.append(
+                    {
+                        "id": row["id"],
+                        "reason": "unsafe_guard_regex",
+                    }
+                )
+                continue
             try:
                 if re.search(str(pattern), candidate, flags=re.IGNORECASE):
                     regex_matches.append(str(pattern))

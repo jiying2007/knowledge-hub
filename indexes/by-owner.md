@@ -375,6 +375,7 @@
 - `llm-agent-exact-source-quick-gate-audit-20260715`
 - `pcr02-robot-module-contract-audit-20260715`
 - `knowledge-hub-agent-runtime-contract-absorption-20260716`
+- `software-tool-artifact-restore-drill-20260716`
 
 ## pcr02-registry-owner
 

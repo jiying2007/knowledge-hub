@@ -177,7 +177,12 @@ def validate_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]]
     return errors
 
 
-def _validate_string_list(value: Any, field: str, maximum: int = 32) -> List[str]:
+def _validate_string_list(
+    value: Any,
+    field: str,
+    maximum: int = 32,
+    maximum_length: int = 500,
+) -> List[str]:
     if value is None:
         return []
     if not isinstance(value, list):
@@ -190,7 +195,71 @@ def _validate_string_list(value: Any, field: str, maximum: int = 32) -> List[str
         errors.append("agent_contract {} must contain non-empty strings".format(field))
     if len(set(valid_strings)) != len(valid_strings):
         errors.append("agent_contract {} must not contain duplicates".format(field))
+    if any(len(item) > maximum_length for item in valid_strings):
+        errors.append(
+            "agent_contract {} value exceeds {} characters".format(
+                field, maximum_length
+            )
+        )
     return errors
+
+
+def guard_regex_safety_error(pattern: str) -> str:
+    """Return a deterministic reason when a guard regex exceeds the safe subset."""
+
+    if len(pattern) > 200:
+        return "pattern exceeds 200 characters"
+    if any(ord(character) < 32 for character in pattern):
+        return "control characters are not allowed"
+    if re.search(r"\\[1-9]|\\g<", pattern):
+        return "backreferences are not allowed"
+    if re.search(r"\(\?(?:[=!]|<[=!])", pattern):
+        return "lookaround is not allowed"
+    if re.search(r"\(\?(?!:)", pattern):
+        return "unsupported regex group extension"
+    depth = 0
+    escaped = False
+    in_class = False
+    quantifier_count = 0
+    for index, character in enumerate(pattern):
+        if escaped:
+            escaped = False
+            continue
+        if character == "\\":
+            escaped = True
+            continue
+        if character == "[" and not in_class:
+            in_class = True
+            continue
+        if character == "]" and in_class:
+            in_class = False
+            continue
+        if in_class:
+            continue
+        if character == "(":
+            depth += 1
+            if depth > 1:
+                return "nested groups are not allowed"
+        elif character == ")":
+            depth = max(0, depth - 1)
+        elif character in "*+?" and not (
+            character == "?" and index > 0 and pattern[index - 1] == "("
+        ):
+            quantifier_count += 1
+    repeat_bounds = re.findall(r"\{(\d+)(?:,(\d*))?\}", pattern)
+    for lower, upper in repeat_bounds:
+        if int(lower) > 1000 or (upper and int(upper) > 1000):
+            return "repeat bound exceeds 1000"
+    quantifier_count += len(repeat_bounds)
+    if quantifier_count > 8:
+        return "too many quantifiers"
+    if re.search(r"\([^)]*(?:\*|\+|\?|\{\d+(?:,\d*)?\})[^)]*\)(?:\*|\+|\{)", pattern):
+        return "nested quantified group"
+    if re.search(r"\([^)]*\|[^)]*\)(?:\*|\+|\{)", pattern):
+        return "quantified alternation group"
+    if len(re.findall(r"\.\*|\.\+", pattern)) > 1:
+        return "multiple wildcard quantifiers"
+    return ""
 
 
 def _validate_agent_contract(value: Any) -> List[str]:
@@ -208,7 +277,7 @@ def _validate_agent_contract(value: Any) -> List[str]:
     if force not in AGENT_FORCES:
         errors.append("invalid agent_contract force {}".format(force))
     capabilities = value.get("capabilities", [])
-    errors.extend(_validate_string_list(capabilities, "capabilities", 16))
+    errors.extend(_validate_string_list(capabilities, "capabilities", 16, 64))
     if isinstance(capabilities, list):
         valid_capabilities = {
             capability for capability in capabilities if isinstance(capability, str)
@@ -216,8 +285,8 @@ def _validate_agent_contract(value: Any) -> List[str]:
         unknown = sorted(valid_capabilities - AGENT_CAPABILITIES)
         if unknown:
             errors.append("invalid agent_contract capabilities {}".format(", ".join(unknown)))
-    for field in ("scope_refs", "exceptions"):
-        errors.extend(_validate_string_list(value.get(field), field))
+    errors.extend(_validate_string_list(value.get("scope_refs"), "scope_refs", 32, 200))
+    errors.extend(_validate_string_list(value.get("exceptions"), "exceptions", 32, 500))
     guard = value.get("guard")
     if guard is not None:
         if role != "constraint":
@@ -230,7 +299,15 @@ def _validate_agent_contract(value: Any) -> List[str]:
             if unknown_guard:
                 errors.append("invalid agent_contract guard fields {}".format(", ".join(unknown_guard)))
             for field in allowed:
-                errors.extend(_validate_string_list(guard.get(field), "guard.{}".format(field)))
+                maximum_length = 200 if field == "deny_regex" else 500
+                errors.extend(
+                    _validate_string_list(
+                        guard.get(field),
+                        "guard.{}".format(field),
+                        32,
+                        maximum_length,
+                    )
+                )
             for pattern in guard.get("deny_regex", []) if isinstance(guard.get("deny_regex"), list) else []:
                 if not isinstance(pattern, str):
                     continue
@@ -238,6 +315,14 @@ def _validate_agent_contract(value: Any) -> List[str]:
                     re.compile(pattern)
                 except re.error as exc:
                     errors.append("invalid agent_contract deny_regex: {}".format(exc))
+                    continue
+                unsafe_reason = guard_regex_safety_error(pattern)
+                if unsafe_reason:
+                    errors.append(
+                        "unsafe agent_contract deny_regex: {}".format(
+                            unsafe_reason
+                        )
+                    )
         if isinstance(capabilities, list) and not {"enforceable", "guardable"}.issubset(
             {capability for capability in capabilities if isinstance(capability, str)}
         ):
@@ -255,7 +340,14 @@ def _validate_agent_contract(value: Any) -> List[str]:
             if unknown_relations:
                 errors.append("invalid agent_contract relation fields {}".format(", ".join(unknown_relations)))
             for field in ("conflicts_with", "supersedes"):
-                errors.extend(_validate_string_list(relations.get(field), "relations.{}".format(field)))
+                errors.extend(
+                    _validate_string_list(
+                        relations.get(field),
+                        "relations.{}".format(field),
+                        32,
+                        200,
+                    )
+                )
     if role == "constraint" and force not in {"strong", "hard"}:
         errors.append("agent_contract constraint force must be strong or hard")
     if role == "guidance" and force == "hard":

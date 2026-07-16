@@ -645,3 +645,4 @@
 - reviewing: `llm-agent-exact-source-quick-gate-audit-20260715`
 - reviewing: `pcr02-robot-module-contract-audit-20260715`
 - reviewing: `knowledge-hub-agent-runtime-contract-absorption-20260716`
+- reviewing: `software-tool-artifact-restore-drill-20260716`

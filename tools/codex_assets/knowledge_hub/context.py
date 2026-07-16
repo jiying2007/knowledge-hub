@@ -14,6 +14,7 @@ from .common import load_json, project_rows, registry_items, repository_rows, ro
 from .metrics import (
     INTERACTION_CONTRACT,
     INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+    PERFORMANCE_CONTRACT,
     append_optional_telemetry,
     make_interaction_id,
 )
@@ -616,6 +617,7 @@ def assemble_context(
     groups_list = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
     group_by_id = {str(row.get("id")): row for row in groups_list if row.get("id")}
     local_workspaces = list((load_json(root / "local/workspaces.json", {}) or {}).get("workspaces", []))
+    registry_loaded = time.monotonic()
 
     git_config, git_root = find_git_config(cwd)
     git_remotes = remote_urls_from_config(git_config)
@@ -712,6 +714,7 @@ def assemble_context(
     project_ids = _route_project_ids(best_route, group_by_id, repo_by_id)
     domain_refs = _route_domains(best_route, project_ids, projects)
     default_source_ids = set(str(value) for value in (best_route or {}).get("default_source_ids", []))
+    routing_ready = time.monotonic()
     terms = query_terms(query)
     ranked: List[Tuple[int, Mapping[str, Any], List[str]]] = []
     for item in registry_items(root):
@@ -720,8 +723,10 @@ def assemble_context(
             ranked.append((score, item, reasons))
     ranked.sort(key=lambda row: (-row[0], str(row[1].get("id", ""))))
     ranked_rows = [_public_item(score, item, reasons) for score, item, reasons in ranked[:effective_limit]]
+    registry_rank_ready = time.monotonic()
 
     search_filters = SearchFilters(domains=sorted(domain_refs)) if domain_refs else SearchFilters()
+    search_started = time.monotonic()
     search_payload = search(root, query, limit=effective_limit, filters=search_filters)
     search_payload["fallback_terms"] = []
     search_payload["fallback_results"] = []
@@ -749,6 +754,7 @@ def assemble_context(
         search_payload["fallback_results"] = merged
         search_payload["fallback_count"] = len(merged)
         search_payload["zero_hit"]["degraded_terms"] = fallback_terms
+    search_ready = time.monotonic()
 
     current: List[Dict[str, Any]] = []
     recent: List[Dict[str, Any]] = []
@@ -904,7 +910,16 @@ def assemble_context(
             "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。",
         ],
     }
-    payload["latency_ms"] = round((time.monotonic() - started) * 1000, 2)
+    finished = time.monotonic()
+    payload["latency_ms"] = round((finished - started) * 1000, 2)
+    payload["timing"] = {
+        "registry_load_ms": round((registry_loaded - started) * 1000, 2),
+        "routing_ms": round((routing_ready - registry_loaded) * 1000, 2),
+        "registry_rank_ms": round((registry_rank_ready - routing_ready) * 1000, 2),
+        "search_ms": round((search_ready - search_started) * 1000, 2),
+        "assembly_ms": round((finished - search_ready) * 1000, 2),
+        "total_ms": payload["latency_ms"],
+    }
     return payload
 
 
@@ -1076,6 +1091,7 @@ def record_context_telemetry(
         "schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
         "interaction_contract": INTERACTION_CONTRACT,
+        "performance_contract": PERFORMANCE_CONTRACT,
         "interaction_id": make_interaction_id("context", query_hash, recorded_at),
         "retrieval_kind": "context",
         "recorded_at": recorded_at,
@@ -1088,6 +1104,12 @@ def record_context_telemetry(
         "latency_ms": payload.get("latency_ms", 0),
         "index_state": search_index.get("state", ""),
         "index_rebuilt": bool(search_index.get("rebuilt", False)),
+        "index_build_ms": search_index.get("build_duration_ms", 0),
+        "token_cache_status": search_index.get("token_cache_status", ""),
+        "token_cache_hits": search_index.get("token_cache_hits", 0),
+        "token_cache_misses": search_index.get("token_cache_misses", 0),
+        "stage_timing": dict(payload.get("timing") or {}),
+        "search_stage_timing": dict(((payload.get("search") or {}).get("timing") or {})),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/context-telemetry.jsonl"

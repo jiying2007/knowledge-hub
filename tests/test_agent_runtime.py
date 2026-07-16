@@ -240,3 +240,87 @@ def test_item_validation_reports_non_string_contract_values_without_crashing():
 def test_evidence_pack_rejects_unbounded_limit(tmp_path):
     with pytest.raises(KnowledgeHubError, match="limit must be between"):
         build_evidence_pack(_root(tmp_path), "demo", limit=101)
+
+
+def test_action_check_rejects_unbounded_task_scope_and_exceptions(tmp_path):
+    root = _root(tmp_path)
+    with pytest.raises(KnowledgeHubError, match="task exceeds"):
+        check_action(root, "t" * 8193, "safe")
+    with pytest.raises(KnowledgeHubError, match="scope_refs exceeds"):
+        check_action(
+            root,
+            "push main",
+            "git push origin main",
+            scope_refs=tuple("scope:{}".format(i) for i in range(33)),
+        )
+    with pytest.raises(KnowledgeHubError, match="asserted_exceptions value exceeds"):
+        check_action(
+            root,
+            "push main",
+            "git push origin main",
+            asserted_exceptions=("x" * 501,),
+        )
+
+
+def test_item_validation_rejects_unsafe_guard_regex():
+    item = {
+        "agent_contract": _contract(
+            "constraint",
+            "hard",
+            capabilities=["enforceable", "guardable"],
+            guard={"deny_regex": ["(a+)+$"]},
+        )
+    }
+    errors = validate_item(item)
+    assert "unsafe agent_contract deny_regex: nested quantified group" in errors
+
+
+def test_item_validation_rejects_nested_groups_and_large_repeat_bounds():
+    nested = {
+        "agent_contract": _contract(
+            "constraint",
+            "hard",
+            capabilities=["enforceable", "guardable"],
+            guard={"deny_regex": ["((ab)+)+$"]},
+        )
+    }
+    repeated = {
+        "agent_contract": _contract(
+            "constraint",
+            "hard",
+            capabilities=["enforceable", "guardable"],
+            guard={"deny_regex": ["a{1001}"]},
+        )
+    }
+
+    assert "unsafe agent_contract deny_regex: nested groups are not allowed" in validate_item(nested)
+    assert "unsafe agent_contract deny_regex: repeat bound exceeds 1000" in validate_item(repeated)
+
+
+def test_action_check_rejects_string_scope_sequence(tmp_path):
+    root = _root(tmp_path)
+    with pytest.raises(KnowledgeHubError, match="sequence of strings"):
+        check_action(
+            root,
+            "push main",
+            "git push origin main",
+            scope_refs="repository:demo",
+        )
+
+
+def test_action_check_fails_closed_for_unsafe_guard_regex(tmp_path):
+    root = _root(tmp_path)
+    path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    rows[0]["agent_contract"]["guard"]["deny_regex"] = ["(a+)+$"]
+    rows[0]["agent_contract"]["guard"]["deny_any"] = []
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    result = check_action(
+        root,
+        "push main",
+        "git push origin main",
+        scope_refs=["repository:demo"],
+    )
+    assert result["verdict"] == "NEEDS_REVIEW"
+    assert {row["reason"] for row in result["needs_review"]} == {"unsafe_guard_regex"}

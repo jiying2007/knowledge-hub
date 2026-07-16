@@ -14,6 +14,12 @@ from .security import scan_secret_text
 
 RAW_EVIDENCE_SCHEMA = "knowledge-hub.raw-evidence-inspection.v1"
 RAWMEM_EVENT_SCHEMA = "rawmem.event.v1"
+RAW_EVIDENCE_DEFAULT_MAX_BYTES = 64 * 1024 * 1024
+RAW_EVIDENCE_MAX_MAX_BYTES = 1024 * 1024 * 1024
+RAW_EVIDENCE_DEFAULT_MAX_EVENTS = 100000
+RAW_EVIDENCE_MAX_MAX_EVENTS = 1000000
+RAW_EVIDENCE_DEFAULT_MAX_LINE_BYTES = 1024 * 1024
+RAW_EVIDENCE_MAX_MAX_LINE_BYTES = 16 * 1024 * 1024
 
 
 def _canonical_event_hash(event: Mapping[str, Any]) -> str:
@@ -47,13 +53,38 @@ def inspect_raw_evidence_ledger(
     ledger_path: pathlib.Path,
     *,
     max_errors: int = 20,
+    max_bytes: int = RAW_EVIDENCE_DEFAULT_MAX_BYTES,
+    max_events: int = RAW_EVIDENCE_DEFAULT_MAX_EVENTS,
+    max_line_bytes: int = RAW_EVIDENCE_DEFAULT_MAX_LINE_BYTES,
 ) -> Dict[str, Any]:
     path = ledger_path.expanduser().resolve()
     if max_errors < 1 or max_errors > 100:
         raise KnowledgeHubError("--max-errors must be between 1 and 100")
+    if not 1 <= max_bytes <= RAW_EVIDENCE_MAX_MAX_BYTES:
+        raise KnowledgeHubError(
+            "--max-bytes must be between 1 and {}".format(
+                RAW_EVIDENCE_MAX_MAX_BYTES
+            )
+        )
+    if not 1 <= max_events <= RAW_EVIDENCE_MAX_MAX_EVENTS:
+        raise KnowledgeHubError(
+            "--max-events must be between 1 and {}".format(
+                RAW_EVIDENCE_MAX_MAX_EVENTS
+            )
+        )
+    if not 1 <= max_line_bytes <= RAW_EVIDENCE_MAX_MAX_LINE_BYTES:
+        raise KnowledgeHubError(
+            "--max-line-bytes must be between 1 and {}".format(
+                RAW_EVIDENCE_MAX_MAX_LINE_BYTES
+            )
+        )
     if not path.is_file():
         raise KnowledgeHubError("raw evidence ledger does not exist: {}".format(display_path(path)))
     before = path.stat()
+    if before.st_size > max_bytes:
+        raise KnowledgeHubError(
+            "raw evidence ledger exceeds {} bytes".format(max_bytes)
+        )
     snapshot_digest = hashlib.sha256()
     previous_hash = None
     first_hash = ""
@@ -82,12 +113,42 @@ def inspect_raw_evidence_ledger(
         if len(errors) < max_errors:
             errors.append({"code": code, "line": line, "message": message})
 
+    bytes_read = 0
     with path.open("rb") as handle:
-        for line_no, raw in enumerate(handle, 1):
+        line_no = 0
+        while True:
+            remaining_bytes = max_bytes - bytes_read
+            read_limit = min(max_line_bytes + 1, remaining_bytes + 1)
+            raw = handle.readline(read_limit)
+            if not raw:
+                break
+            line_no += 1
+            bytes_read += len(raw)
             snapshot_digest.update(raw)
+            if bytes_read > max_bytes:
+                add_error(
+                    "byte_limit_exceeded",
+                    line_no,
+                    "ledger grew beyond the configured byte budget",
+                )
+                break
+            if len(raw) > max_line_bytes:
+                add_error(
+                    "line_too_large",
+                    line_no,
+                    "line exceeds configured byte budget",
+                )
+                break
             if not raw.strip():
                 continue
             nonempty_line_count += 1
+            if nonempty_line_count > max_events:
+                add_error(
+                    "event_limit_exceeded",
+                    line_no,
+                    "event count exceeds configured budget",
+                )
+                break
             for finding in scan_secret_text(raw.decode("utf-8", errors="ignore")):
                 secret_rules[str(finding.get("rule", "unknown"))] += 1
             try:
@@ -155,6 +216,11 @@ def inspect_raw_evidence_ledger(
         "read_only": True,
         "projection": "metadata-only",
         "source_format": RAWMEM_EVENT_SCHEMA,
+        "limits": {
+            "max_bytes": max_bytes,
+            "max_events": max_events,
+            "max_line_bytes": max_line_bytes,
+        },
         "status": "pass" if valid else "fail",
         "chain_status": "verified" if valid else "failed",
         "ledger": {
@@ -209,5 +275,6 @@ def inspect_raw_evidence_ledger(
             "ledger_is_long_term_knowledge": False,
             "raw_body_may_enter_hub_text": False,
             "verification_has_side_effects": False,
+            "input_budgets_enforced": True,
         },
     }

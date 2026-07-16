@@ -7,8 +7,8 @@ import json
 import pathlib
 from typing import Sequence
 
-from .agent_runtime import check_action
-from .common import KnowledgeHubError, repository_root
+from .agent_runtime import ACTION_TEXT_MAX_CHARS, check_action
+from .common import KnowledgeHubError, read_utf8_bounded, repository_root
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,7 +30,11 @@ def main(argv: Sequence[str] = ()) -> int:
     try:
         candidate = args.candidate
         if args.candidate_file:
-            candidate = pathlib.Path(args.candidate_file).read_text(encoding="utf-8")
+            candidate = read_utf8_bounded(
+                pathlib.Path(args.candidate_file),
+                ACTION_TEXT_MAX_CHARS * 4,
+                "candidate file",
+            )
         payload = check_action(
             repository_root(args.root),
             args.task,

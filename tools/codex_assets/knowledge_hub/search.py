@@ -38,6 +38,7 @@ from .common import (
 from .metrics import (
     INTERACTION_CONTRACT,
     INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+    PERFORMANCE_CONTRACT,
     append_optional_telemetry,
     make_interaction_id,
 )
@@ -45,6 +46,10 @@ from .model import ITEM_KINDS, ITEM_STATUSES
 
 
 INDEX_SCHEMA_VERSION = 5
+TOKEN_CACHE_SCHEMA_VERSION = 2
+TOKEN_CACHE_MAX_ENTRIES = 10000
+TOKEN_CACHE_MAX_VALUE_BYTES = 4 * 1024 * 1024
+TOKEN_CACHE_MAX_TOTAL_BYTES = 128 * 1024 * 1024
 FULL_REBUILD_DEPENDENCIES = frozenset(
     {
         "registry/items.jsonl",
@@ -85,6 +90,38 @@ GENERIC_QUERY_TERMS = {
 }
 SEARCH_TRACE_EXCLUDED_LIMIT = 5
 SEARCH_TRACE_SCORE_LIMIT = 128
+SEARCH_MAX_LIMIT = 100
+SEARCH_MAX_QUERY_CHARS = 4096
+SEARCH_MAX_FILTER_VALUES = 32
+SEARCH_MAX_FILTER_VALUE_CHARS = 256
+
+
+def _validate_filter_values(name: str, values: Sequence[str]) -> None:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise KnowledgeHubError("{} filter values must be a sequence".format(name))
+    if len(values) > SEARCH_MAX_FILTER_VALUES:
+        raise KnowledgeHubError(
+            "{} filter values exceed {}".format(name, SEARCH_MAX_FILTER_VALUES)
+        )
+    for value in values:
+        text = str(value)
+        if not text.strip():
+            raise KnowledgeHubError("{} filter values must not be empty".format(name))
+        if len(text) > SEARCH_MAX_FILTER_VALUE_CHARS:
+            raise KnowledgeHubError(
+                "{} filter value exceeds {} characters".format(
+                    name, SEARCH_MAX_FILTER_VALUE_CHARS
+                )
+            )
+
+
+def _domain_matches(domain: Any, prefix: str) -> bool:
+    domain_text = str(domain or "").rstrip("/")
+    prefix_text = str(prefix or "").rstrip("/")
+    return bool(
+        prefix_text
+        and (domain_text == prefix_text or domain_text.startswith(prefix_text + "/"))
+    )
 
 
 @dataclass
@@ -105,6 +142,15 @@ class SearchFilters:
         return bool(self.owners or self.statuses or self.kinds or self.domains or self.source_ids)
 
     def validate(self) -> None:
+        for name, values in (
+            ("source", self.sources),
+            ("owner", self.owners),
+            ("status", self.statuses),
+            ("kind", self.kinds),
+            ("domain", self.domains),
+            ("source-id", self.source_ids),
+        ):
+            _validate_filter_values(name, values)
         invalid_statuses = sorted(set(self.statuses) - ITEM_STATUSES)
         invalid_kinds = sorted(value for value in set(self.kinds) if KIND_ALIASES.get(value, value) not in ITEM_KINDS)
         if invalid_statuses:
@@ -159,6 +205,176 @@ def _index_tokens(value: str, maximum: int = 20000) -> List[str]:
             for index in range(max(0, len(segment) - width + 1)):
                 tokens.setdefault(segment[index : index + width], None)
     return list(tokens)[:maximum]
+
+
+def _hash_token_cache_value(cache_key: str, token_text: str) -> str:
+    digest = hashlib.sha256()
+    digest.update(cache_key.encode("ascii"))
+    digest.update(b"\0")
+    digest.update(token_text.encode("utf-8"))
+    return digest.hexdigest()
+
+
+class _PersistentTokenCache:
+    """Best-effort exact-input token cache; never an authority for search data."""
+
+    def __init__(self, path: pathlib.Path) -> None:
+        self.path = path
+        self.connection: Optional[sqlite3.Connection] = None
+        self.pending: Dict[str, Tuple[str, str]] = {}
+        self.pending_bytes = 0
+        self.hits = 0
+        self.misses = 0
+        self.entry_count = 0
+        self.status = "ready"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            self.connection = sqlite3.connect(str(path))
+            self.connection.execute("pragma journal_mode=delete")
+            self.connection.execute("pragma synchronous=normal")
+            self.connection.execute(
+                """
+                create table if not exists token_cache (
+                    cache_key text primary key,
+                    token_text text not null,
+                    token_digest text not null
+                )
+                """
+            )
+            os.chmod(path, 0o600)
+        except (OSError, sqlite3.Error):
+            self._disable()
+
+    def _disable(self) -> None:
+        self.status = "degraded"
+        if self.connection is not None:
+            try:
+                self.connection.close()
+            except sqlite3.Error:
+                pass
+        self.connection = None
+        self.pending = {}
+        self.pending_bytes = 0
+
+    @staticmethod
+    def _key(value: str, maximum: int) -> str:
+        digest = hashlib.sha256()
+        digest.update(str(TOKEN_CACHE_SCHEMA_VERSION).encode("ascii"))
+        digest.update(b":")
+        digest.update(str(maximum).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(value.encode("utf-8"))
+        return digest.hexdigest()
+
+    def token_text(self, value: str, maximum: int = 20000) -> str:
+        cache_key = self._key(value, maximum)
+        if self.connection is not None:
+            try:
+                row = self.connection.execute(
+                    "select token_text,token_digest from token_cache where cache_key=?",
+                    (cache_key,),
+                ).fetchone()
+            except sqlite3.Error:
+                self._disable()
+                row = None
+            if row and isinstance(row[0], str) and isinstance(row[1], str):
+                token_text = str(row[0])
+                expected_digest = _hash_token_cache_value(cache_key, token_text)
+                if str(row[1]) == expected_digest:
+                    self.hits += 1
+                    return token_text
+                self.status = "recovered"
+                try:
+                    self.connection.execute(
+                        "delete from token_cache where cache_key=?",
+                        (cache_key,),
+                    )
+                except sqlite3.Error:
+                    self._disable()
+        self.misses += 1
+        token_text = " ".join(_index_tokens(value, maximum))
+        token_bytes = len(token_text.encode("utf-8"))
+        if (
+            self.connection is not None
+            and token_bytes <= TOKEN_CACHE_MAX_VALUE_BYTES
+            and len(self.pending) < TOKEN_CACHE_MAX_ENTRIES
+            and self.pending_bytes + token_bytes <= TOKEN_CACHE_MAX_TOTAL_BYTES
+        ):
+            if cache_key not in self.pending:
+                self.pending[cache_key] = (
+                    token_text,
+                    _hash_token_cache_value(cache_key, token_text),
+                )
+                self.pending_bytes += token_bytes
+        return token_text
+
+    def _prune(self) -> None:
+        if self.connection is None:
+            return
+        count = int(
+            self.connection.execute("select count(*) from token_cache").fetchone()[0]
+        )
+        if count > TOKEN_CACHE_MAX_ENTRIES:
+            self.connection.execute(
+                "delete from token_cache where rowid in "
+                "(select rowid from token_cache order by rowid limit ?)",
+                (count - TOKEN_CACHE_MAX_ENTRIES,),
+            )
+        total_bytes = int(
+            self.connection.execute(
+                "select coalesce(sum(length(cast(token_text as blob))), 0) from token_cache"
+            ).fetchone()[0]
+        )
+        while total_bytes > TOKEN_CACHE_MAX_TOTAL_BYTES:
+            rows = self.connection.execute(
+                "select rowid,length(cast(token_text as blob)) "
+                "from token_cache order by rowid limit 256"
+            ).fetchall()
+            if not rows:
+                break
+            self.connection.executemany(
+                "delete from token_cache where rowid=?",
+                ((int(row[0]),) for row in rows),
+            )
+            total_bytes -= sum(int(row[1]) for row in rows)
+
+    def close(self) -> None:
+        if self.connection is None:
+            return
+        try:
+            if self.pending:
+                self.connection.executemany(
+                    "insert or replace into token_cache(cache_key,token_text,token_digest) "
+                    "values(?,?,?)",
+                    (
+                        (cache_key, value[0], value[1])
+                        for cache_key, value in self.pending.items()
+                    ),
+                )
+            self._prune()
+            self.entry_count = int(
+                self.connection.execute("select count(*) from token_cache").fetchone()[0]
+            )
+            self.connection.commit()
+            self.connection.close()
+            self.connection = None
+            self.pending = {}
+            self.pending_bytes = 0
+        except sqlite3.Error:
+            try:
+                self.connection.rollback()
+            except sqlite3.Error:
+                pass
+            self._disable()
+
+    def stats(self) -> Dict[str, Any]:
+        return {
+            "token_cache_schema_version": TOKEN_CACHE_SCHEMA_VERSION,
+            "token_cache_status": self.status,
+            "token_cache_hits": self.hits,
+            "token_cache_misses": self.misses,
+            "token_cache_entries": self.entry_count,
+        }
 
 
 def _term_variants(term: str) -> Tuple[str, ...]:
@@ -283,6 +499,10 @@ class SearchIndex:
         cache_name = "search-index-v{}".format(INDEX_SCHEMA_VERSION)
         self.path = self.cache_root / "{}.sqlite3".format(cache_name)
         self.lock_path = self.cache_root / "{}.lock".format(cache_name)
+        self.token_cache_path = self.cache_root / "search-token-cache-v{}.sqlite3".format(
+            TOKEN_CACHE_SCHEMA_VERSION
+        )
+        self._token_cache_stats: Dict[str, Any] = {}
         self._ensure_cache: Optional[Tuple[float, Dict[str, Any]]] = None
 
     def _current_signature(self) -> str:
@@ -377,6 +597,7 @@ class SearchIndex:
                 "signature_duration_ms": signature_duration_ms,
                 "build_duration_ms": round((time.monotonic() - started) * 1000, 2),
             }
+            result.update(self._token_cache_stats)
             self._ensure_cache = (time.monotonic(), result)
             return result
 
@@ -414,6 +635,7 @@ class SearchIndex:
         path: pathlib.Path,
         items_by_path: Mapping[str, Sequence[Mapping[str, Any]]],
         source_roots: Sequence[Tuple[str, pathlib.Path]],
+        token_cache: Optional[_PersistentTokenCache] = None,
     ) -> int:
         try:
             body = path.read_text(encoding="utf-8", errors="ignore")
@@ -427,7 +649,12 @@ class SearchIndex:
             item_id = str(item.get("id", ""))
             doc_key = "{}#{}".format(relative, item_id or "unregistered")
             metadata = _metadata_haystack(item) if item else ""
-            token_text = " ".join(_index_tokens(metadata + "\n" + body))
+            token_input = metadata + "\n" + body
+            token_text = (
+                token_cache.token_text(token_input)
+                if token_cache is not None
+                else " ".join(_index_tokens(token_input))
+            )
             title = _indexed_title(relative, body, item)
             tags = " ".join(
                 str(value) for value in item.get("tags", []) if isinstance(value, str)
@@ -551,6 +778,7 @@ class SearchIndex:
             INDEX_SCHEMA_VERSION, uuid.uuid4().hex
         )
         items_by_path, source_roots = self._index_inputs()
+        token_cache = _PersistentTokenCache(self.token_cache_path)
         connection = sqlite3.connect(str(temporary))
         count = 0
         try:
@@ -581,7 +809,13 @@ class SearchIndex:
                 """
             )
             for path in paths:
-                count += self._insert_path(connection, path, items_by_path, source_roots)
+                count += self._insert_path(
+                    connection,
+                    path,
+                    items_by_path,
+                    source_roots,
+                    token_cache=token_cache,
+                )
             connection.executemany(
                 "insert into indexed_files(path,size,mtime_ns) values(?,?,?)",
                 (
@@ -601,6 +835,8 @@ class SearchIndex:
             connection.commit()
         finally:
             connection.close()
+            token_cache.close()
+            self._token_cache_stats = token_cache.stats()
         try:
             os.replace(str(temporary), str(self.path))
         except Exception:
@@ -718,7 +954,7 @@ def _filters_match(item: Mapping[str, Any], physical_sources: Sequence[str], fil
         return False
     if filters.normalized_kinds and item.get("kind", "") not in filters.normalized_kinds:
         return False
-    if filters.domains and not any(str(item.get("domain", "")).startswith(prefix) for prefix in filters.domains):
+    if filters.domains and not any(_domain_matches(item.get("domain", ""), prefix) for prefix in filters.domains):
         return False
     if filters.source_ids and source_id(item) not in filters.source_ids:
         return False
@@ -736,7 +972,7 @@ def _filter_reason(item: Mapping[str, Any], physical_sources: Sequence[str], fil
         return "status"
     if filters.normalized_kinds and item.get("kind", "") not in filters.normalized_kinds:
         return "kind"
-    if filters.domains and not any(str(item.get("domain", "")).startswith(prefix) for prefix in filters.domains):
+    if filters.domains and not any(_domain_matches(item.get("domain", ""), prefix) for prefix in filters.domains):
         return "domain"
     if filters.source_ids and source_id(item) not in filters.source_ids:
         return "source-id"
@@ -889,12 +1125,19 @@ def search(
     search_index: Optional[SearchIndex] = None,
 ) -> Dict[str, Any]:
     started = time.monotonic()
-    if limit < 1:
-        raise KnowledgeHubError("--limit must be >= 1")
+    if not 1 <= limit <= SEARCH_MAX_LIMIT:
+        raise KnowledgeHubError(
+            "--limit must be between 1 and {}".format(SEARCH_MAX_LIMIT)
+        )
     if not query.strip():
         raise KnowledgeHubError("query must not be empty")
+    if len(query) > SEARCH_MAX_QUERY_CHARS:
+        raise KnowledgeHubError(
+            "query exceeds {} characters".format(SEARCH_MAX_QUERY_CHARS)
+        )
     filters = filters or SearchFilters()
     filters.validate()
+    validated_at = time.monotonic()
     index = search_index or SearchIndex(root)
     base_candidate_limit = int(getattr(index, "CANDIDATE_LIMIT", 256))
     candidate_limit = (
@@ -902,13 +1145,23 @@ def search(
         if filters.structured
         else base_candidate_limit
     )
+    ensure_started = time.monotonic()
+    index_ready: Optional[float] = None
+    candidate_started = ensure_started
     try:
         index_state = index.ensure(force=rebuild_index)
+        index_ready = time.monotonic()
+        candidate_started = index_ready
         indexed_rows: Sequence[Mapping[str, Any]] = index.candidates(
             query,
             candidate_limit=candidate_limit,
         )
+        candidate_ready = time.monotonic()
     except (KnowledgeHubError, OSError, sqlite3.Error) as exc:
+        failed_at = time.monotonic()
+        if index_ready is None:
+            index_ready = failed_at
+        candidate_started = index_ready
         index_state = {
             "state": "fallback",
             "mode": "repository-scan-fallback",
@@ -917,6 +1170,8 @@ def search(
             "reason": str(exc),
         }
         indexed_rows = _scan_candidates(root)
+        candidate_ready = time.monotonic()
+    ranking_started = candidate_ready
     index_state["candidate_count"] = len(indexed_rows)
     index_state["candidate_limit"] = (
         candidate_limit if index_state.get("mode") == "local-index" else None
@@ -1026,7 +1281,6 @@ def search(
         {key: value for key, value in row.items() if key != "score"}
         for row in excluded_registered[:SEARCH_TRACE_EXCLUDED_LIMIT]
     ]
-    elapsed_ms = round((time.monotonic() - started) * 1000, 2)
     filter_payload = {
         "source": list(filters.sources),
         "owner": list(filters.owners),
@@ -1075,8 +1329,17 @@ def search(
             "try a shorter domain term or exact item id",
         ],
     }
+    finished = time.monotonic()
+    elapsed_ms = round((finished - started) * 1000, 2)
+    timing = {
+        "validation_ms": round((validated_at - started) * 1000, 2),
+        "index_ensure_ms": round((index_ready - ensure_started) * 1000, 2),
+        "candidate_query_ms": round((candidate_ready - candidate_started) * 1000, 2),
+        "ranking_ms": round((finished - ranking_started) * 1000, 2),
+        "total_ms": elapsed_ms,
+    }
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "pass" if results else "zero-hit",
         "query": query,
         "query_terms": terms,
@@ -1090,6 +1353,7 @@ def search(
             "by_reason": dict(sorted(filtered_reasons.items())),
         },
         "latency_ms": elapsed_ms,
+        "timing": timing,
         "results": results,
         "search_trace": search_trace,
         "zero_hit": zero_hit,
@@ -1114,6 +1378,7 @@ def record_search_telemetry(
         "schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
         "interaction_contract": INTERACTION_CONTRACT,
+        "performance_contract": PERFORMANCE_CONTRACT,
         "interaction_id": make_interaction_id("search", query_hash, recorded_at),
         "retrieval_kind": "search",
         "recorded_at": recorded_at,
@@ -1129,6 +1394,11 @@ def record_search_telemetry(
         "index_lock_wait_ms": (payload.get("index") or {}).get("lock_wait_duration_ms", 0),
         "index_signature_ms": (payload.get("index") or {}).get("signature_duration_ms", 0),
         "index_transaction_ms": (payload.get("index") or {}).get("transaction_duration_ms", 0),
+        "index_build_ms": (payload.get("index") or {}).get("build_duration_ms", 0),
+        "token_cache_status": (payload.get("index") or {}).get("token_cache_status", ""),
+        "token_cache_hits": (payload.get("index") or {}).get("token_cache_hits", 0),
+        "token_cache_misses": (payload.get("index") or {}).get("token_cache_misses", 0),
+        "stage_timing": dict(payload.get("timing") or {}),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/search-telemetry.jsonl"

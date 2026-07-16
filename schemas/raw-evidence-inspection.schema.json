@@ -13,6 +13,15 @@
     "read_only": {"const": true},
     "projection": {"const": "metadata-only"},
     "source_format": {"const": "rawmem.event.v1"},
+    "limits": {
+      "type": "object",
+      "required": ["max_bytes", "max_events", "max_line_bytes"],
+      "properties": {
+        "max_bytes": {"type": "integer", "minimum": 1},
+        "max_events": {"type": "integer", "minimum": 1},
+        "max_line_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
     "status": {"enum": ["pass", "fail"]},
     "chain_status": {"enum": ["verified", "failed"]},
     "ledger": {

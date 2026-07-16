@@ -104,7 +104,7 @@ Optional Agent runtime contract:
 - `agent_contract.force`：`advisory`、`strong` 或 `hard`。
 - `agent_contract.subject`、`scope_refs`：稳定主体和显式适用范围。
 - `agent_contract.capabilities`：声明是否可搜索、需证据、可执行 guard 或仅具备 shadow auto-stage 资格。
-- `agent_contract.guard`：只允许 `constraint` 使用的确定性 `when_any`、`deny_any`、`require_any` 和 `deny_regex`。
+- `agent_contract.guard`：只允许 `constraint` 使用的确定性 `when_any`、`deny_any`、`require_any` 和 `deny_regex`。`deny_regex` 单条最多 200 字符，并拒绝 backreference、lookaround、非捕获以外的 group extension、嵌套 group/量词、量化 alternation、超过 8 个量词和大于 1000 的 repeat bound；超出安全子集时 lint 报错，运行时即使遇到未 lint 数据也固定 `NEEDS_REVIEW`，不得执行不受控正则。
 - `agent_contract.exceptions`、`relations`：只保存显式例外和关系，不从自然语言自动推断。
 
 `agent_contract` 是 registry 权威字段，并可镜像进 managed Markdown frontmatter。运行时只允许 `active`、`manual_validation_pending=false`、scope 命中的显式 contract 获得 authority：`reviewing/draft` 一律进入 PROVISIONAL，archived/superseded/rejected/personal 不进入可服务 EvidencePack；candidate constraint 永不参加动作判定。无显式适用 contract 或 guard 不能确定性求值时，`knowledge-action-check.sh` 必须返回 `NEEDS_REVIEW`，不得用普通 `kind` 猜出 MUST。

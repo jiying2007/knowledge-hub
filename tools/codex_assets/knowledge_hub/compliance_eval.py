@@ -7,21 +7,40 @@ import pathlib
 from typing import Any, Dict, List, Mapping
 
 from .agent_runtime import check_action
-from .common import KnowledgeHubError
+from .common import KnowledgeHubError, read_utf8_bounded
 
 
-COMPLIANCE_EVAL_SCHEMA = "knowledge-hub.compliance-eval.v1"
+COMPLIANCE_EVAL_SCHEMA = "knowledge-hub.compliance-eval.v2"
 VERDICTS = {"ALLOW", "BLOCK", "NEEDS_REVIEW"}
+RISK_LEVELS = {"normal", "high"}
+COMPLIANCE_MAX_FILE_BYTES = 1024 * 1024
+COMPLIANCE_MAX_LINE_BYTES = 16 * 1024
+COMPLIANCE_MAX_CASES = 1000
 
 
 def _load_cases(path: pathlib.Path) -> List[Dict[str, Any]]:
     if not path.is_file():
         raise KnowledgeHubError("compliance cases file does not exist: {}".format(path))
+    text = read_utf8_bounded(
+        path,
+        COMPLIANCE_MAX_FILE_BYTES,
+        "compliance cases file",
+    )
     rows: List[Dict[str, Any]] = []
     seen = set()
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_no, line in enumerate(text.splitlines(), 1):
         if not line.strip():
             continue
+        if len(line.encode("utf-8")) > COMPLIANCE_MAX_LINE_BYTES:
+            raise KnowledgeHubError(
+                "compliance JSONL line {} exceeds {} bytes".format(
+                    line_no, COMPLIANCE_MAX_LINE_BYTES
+                )
+            )
+        if len(rows) >= COMPLIANCE_MAX_CASES:
+            raise KnowledgeHubError(
+                "compliance cases exceed {} rows".format(COMPLIANCE_MAX_CASES)
+            )
         try:
             row = json.loads(line)
         except json.JSONDecodeError as exc:
@@ -30,23 +49,44 @@ def _load_cases(path: pathlib.Path) -> List[Dict[str, Any]]:
             raise KnowledgeHubError("compliance case line {} must be an object".format(line_no))
         case_id = str(row.get("case_id", ""))
         expected = str(row.get("expected_verdict", ""))
+        risk_level = str(row.get("risk_level", "normal"))
         if not case_id or case_id in seen:
             raise KnowledgeHubError("compliance case_id must be non-empty and unique")
         if expected not in VERDICTS:
             raise KnowledgeHubError("invalid expected_verdict for {}".format(case_id))
+        if risk_level not in RISK_LEVELS:
+            raise KnowledgeHubError("invalid risk_level for {}".format(case_id))
         if not str(row.get("task", "")).strip() or not str(row.get("candidate", "")).strip():
             raise KnowledgeHubError("compliance case {} requires task and candidate".format(case_id))
         seen.add(case_id)
+        row["risk_level"] = risk_level
         rows.append(row)
     if not rows:
         raise KnowledgeHubError("compliance cases file is empty")
     return rows
 
 
-def evaluate_compliance_cases(root: pathlib.Path, cases_path: pathlib.Path) -> Dict[str, Any]:
+def evaluate_compliance_cases(
+    root: pathlib.Path,
+    cases_path: pathlib.Path,
+    minimum_cases: int = 1,
+) -> Dict[str, Any]:
+    if not isinstance(minimum_cases, int) or not 1 <= minimum_cases <= COMPLIANCE_MAX_CASES:
+        raise KnowledgeHubError(
+            "minimum_cases must be between 1 and {}".format(COMPLIANCE_MAX_CASES)
+        )
     cases = _load_cases(cases_path)
+    if len(cases) < minimum_cases:
+        raise KnowledgeHubError(
+            "compliance cases do not meet minimum_cases={}: got {}".format(
+                minimum_cases, len(cases)
+            )
+        )
     results = []
     passed = 0
+    high_risk_total = 0
+    high_risk_allowed = 0
+    high_risk_false_allow = 0
     for case in cases:
         result = check_action(
             root,
@@ -58,6 +98,12 @@ def evaluate_compliance_cases(root: pathlib.Path, cases_path: pathlib.Path) -> D
         expected = str(case["expected_verdict"])
         actual = str(result["verdict"])
         case_passed = expected == actual
+        high_risk = case.get("risk_level") == "high"
+        high_risk_total += int(high_risk)
+        high_risk_allowed += int(high_risk and actual == "ALLOW")
+        high_risk_false_allow += int(
+            high_risk and expected != "ALLOW" and actual == "ALLOW"
+        )
         passed += int(case_passed)
         results.append(
             {
@@ -65,6 +111,7 @@ def evaluate_compliance_cases(root: pathlib.Path, cases_path: pathlib.Path) -> D
                 "expected_verdict": expected,
                 "actual_verdict": actual,
                 "passed": case_passed,
+                "risk_level": case.get("risk_level", "normal"),
                 "candidate_sha256": result["candidate_sha256"],
                 "applicable_ids": [row["id"] for row in result["applicable_must"]],
                 "violation_ids": [row["id"] for row in result["violations"]],
@@ -76,8 +123,14 @@ def evaluate_compliance_cases(root: pathlib.Path, cases_path: pathlib.Path) -> D
         "read_only": True,
         "status": "pass" if passed == len(cases) else "fail",
         "total": len(cases),
+        "minimum_cases": minimum_cases,
         "passed": passed,
         "failed": len(cases) - passed,
         "results": results,
+        "safety": {
+            "high_risk_total": high_risk_total,
+            "high_risk_allowed_count": high_risk_allowed,
+            "high_risk_false_allow_count": high_risk_false_allow,
+        },
         "content_echoed": False,
     }

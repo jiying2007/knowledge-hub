@@ -2,7 +2,11 @@ import errno
 import json
 import sqlite3
 
+import pytest
+
 from tools.codex_assets.knowledge_hub import metrics
+from tools.codex_assets.knowledge_hub import search as search_module
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.search import (
     INDEX_SCHEMA_VERSION,
     SearchFilters,
@@ -52,10 +56,18 @@ def test_search_supports_chinese_synonym_and_registry_ranking(tmp_path):
     payload = search(root, "Obsidian 双向链接", limit=5)
     assert payload["results"][0]["item_id"] == "obsidian-workbench"
     assert payload["results"][0]["query_coverage"] == 1.0
-    assert payload["schema_version"] == 2
+    assert payload["schema_version"] == 3
     assert payload["status"] == "pass"
     assert payload["index"]["mode"] == "local-index"
     assert payload["zero_hit"]["is_zero_hit"] is False
+    assert payload["timing"]["total_ms"] == payload["latency_ms"]
+    assert set(payload["timing"]) == {
+        "validation_ms",
+        "index_ensure_ms",
+        "candidate_query_ms",
+        "ranking_ms",
+        "total_ms",
+    }
 
 
 def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
@@ -71,6 +83,94 @@ def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
     assert INDEX_SCHEMA_VERSION == 5
     assert index.path.name == "search-index-v5.sqlite3"
     assert "body unindexed" in schema.lower()
+
+
+def test_forced_rebuild_reuses_exact_persistent_token_provenance(monkeypatch, tmp_path):
+    root = _search_root(tmp_path)
+    calls = []
+    original = search_module._index_tokens
+
+    def counted(value, maximum=20000):
+        calls.append(value)
+        return original(value, maximum)
+
+    monkeypatch.setattr(search_module, "_index_tokens", counted)
+    first = search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+    first_call_count = len(calls)
+    second = search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+
+    assert first_call_count > 0
+    assert len(calls) == first_call_count
+    assert first["results"] == second["results"]
+    assert first["index"]["token_cache_misses"] == first_call_count
+    assert second["index"]["token_cache_hits"] == first_call_count
+    assert second["index"]["token_cache_misses"] == 0
+    assert second["index"]["token_cache_status"] == "ready"
+
+
+def test_corrupt_persistent_token_cache_fails_open(monkeypatch, tmp_path):
+    root = _search_root(tmp_path)
+    search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+    index = SearchIndex(root)
+    index.token_cache_path.write_text("not a sqlite database")
+    calls = []
+    original = search_module._index_tokens
+
+    def counted(value, maximum=20000):
+        calls.append(value)
+        return original(value, maximum)
+
+    monkeypatch.setattr(search_module, "_index_tokens", counted)
+    payload = search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+
+    assert payload["status"] == "pass"
+    assert calls
+    assert payload["index"]["token_cache_status"] == "degraded"
+    assert payload["index"]["token_cache_hits"] == 0
+    assert payload["index"]["token_cache_misses"] == len(calls)
+
+
+def test_valid_sqlite_token_cache_row_tampering_is_recomputed(tmp_path):
+    root = _search_root(tmp_path)
+    first = search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+    index = SearchIndex(root)
+    with sqlite3.connect(str(index.token_cache_path)) as connection:
+        connection.execute("update token_cache set token_text='tampered tokens'")
+        connection.commit()
+
+    second = search(root, "Obsidian 双向链接", limit=5, rebuild_index=True)
+
+    assert second["results"] == first["results"]
+    assert second["index"]["token_cache_status"] == "recovered"
+    assert second["index"]["token_cache_hits"] == 0
+    assert second["index"]["token_cache_misses"] > 0
+
+
+def test_persistent_token_provenance_invalidates_exact_changed_input(tmp_path):
+    root = _search_root(tmp_path)
+    first = search(root, "raw secret marker", limit=5, rebuild_index=True)
+    index = SearchIndex(root)
+    assert index.token_cache_path.stat().st_mode & 0o777 == 0o600
+
+    (root / "projects/p1/current/unregistered.md").write_text(
+        "replacement provenance needle\n"
+    )
+    second = search(root, "replacement provenance needle", limit=5, rebuild_index=True)
+
+    assert first["results"][0]["path"] == "projects/p1/current/unregistered.md"
+    assert second["results"][0]["path"] == "projects/p1/current/unregistered.md"
+    assert second["index"]["token_cache_misses"] >= 1
+    assert second["index"]["token_cache_hits"] >= 1
+
+
+def test_persistent_token_cache_bounds_pending_memory(monkeypatch, tmp_path):
+    monkeypatch.setattr(search_module, "TOKEN_CACHE_MAX_TOTAL_BYTES", 1)
+    cache = search_module._PersistentTokenCache(tmp_path / "token-cache.sqlite3")
+
+    assert cache.token_text("several searchable tokens")
+    assert cache.pending == {}
+    assert cache.pending_bytes == 0
+    cache.close()
 
 
 def test_index_tokens_preserve_search_token_set_with_deterministic_order():
@@ -217,6 +317,53 @@ def test_zero_hit_trace_does_not_expose_personal_local_metadata(tmp_path):
     )
 
 
+def test_domain_filter_uses_path_segment_boundary(tmp_path):
+    root = _search_root(tmp_path)
+    (root / "projects/p10/current").mkdir(parents=True)
+    other_path = root / "projects/p10/current/other.md"
+    other_path.write_text("boundary-project-needle\n")
+    items_path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line]
+    rows.append(
+        {
+            "id": "project-p10-item",
+            "title": "boundary-project-needle",
+            "kind": "project-current",
+            "domain": "projects/p10",
+            "path": "projects/p10/current/other.md",
+            "status": "reviewing",
+            "owner": "owner-a",
+            "source": {"type": "manual"},
+            "summary_zh": "boundary-project-needle",
+            "review_after": "2026-10-13",
+            "tags": ["boundary-project-needle"],
+        }
+    )
+    items_path.write_text(_jsonl(rows))
+
+    payload = search(
+        root,
+        "boundary-project-needle",
+        limit=5,
+        filters=SearchFilters(domains=("projects/p1",)),
+    )
+
+    assert payload["results"] == []
+    assert payload["search_trace"]["excluded_by_filters"][0]["id"] == "project-p10-item"
+
+
+def test_search_rejects_unbounded_query_limit_and_filters(tmp_path):
+    root = _search_root(tmp_path)
+    with pytest.raises(KnowledgeHubError, match="query exceeds"):
+        search(root, "q" * 4097)
+    with pytest.raises(KnowledgeHubError, match="limit must be between"):
+        search(root, "demo", limit=101)
+    with pytest.raises(KnowledgeHubError, match="filter values"):
+        search(root, "demo", filters=SearchFilters(owners=tuple("owner-{}".format(i) for i in range(33))))
+    with pytest.raises(KnowledgeHubError, match="filter value exceeds"):
+        search(root, "demo", filters=SearchFilters(domains=("d" * 257,)))
+
+
 def test_search_incrementally_updates_changed_added_and_deleted_bodies(tmp_path):
     root = _search_root(tmp_path)
     initial = search(root, "raw secret marker", limit=5)
@@ -340,10 +487,12 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
     assert result["status"] == "recorded"
     assert captured["schema_version"] == metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION
     assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
+    assert captured["performance_contract"] == metrics.PERFORMANCE_CONTRACT
     assert captured["result_ids"] == ["item-a"]
     assert captured["index_rebuilt"] is False
     assert captured["index_updated"] is True
     assert captured["index_lock_wait_ms"] == 1.5
     assert captured["index_signature_ms"] == 12.5
     assert captured["index_transaction_ms"] == 8.5
+    assert captured["stage_timing"] == {}
     assert "private search query" not in json.dumps(captured)

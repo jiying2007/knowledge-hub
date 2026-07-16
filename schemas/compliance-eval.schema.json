@@ -1,22 +1,35 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowledge-hub.local/schemas/compliance-eval.schema.json",
-  "title": "Knowledge Hub Agent compliance evaluation",
+  "title": "Knowledge Hub Agent compliance evaluation v2",
   "type": "object",
-  "required": ["schema_version", "read_only", "status", "total", "passed", "failed", "results", "content_echoed"],
+  "required": ["schema_version", "read_only", "status", "total", "minimum_cases", "passed", "failed", "results", "safety", "content_echoed"],
   "properties": {
-    "schema_version": {"const": "knowledge-hub.compliance-eval.v1"},
+    "schema_version": {"const": "knowledge-hub.compliance-eval.v2"},
     "read_only": {"const": true},
     "status": {"enum": ["pass", "fail"]},
     "total": {"type": "integer", "minimum": 1},
+    "minimum_cases": {"type": "integer", "minimum": 1, "maximum": 1000},
     "passed": {"type": "integer", "minimum": 0},
     "failed": {"type": "integer", "minimum": 0},
     "results": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["case_id", "expected_verdict", "actual_verdict", "passed", "candidate_sha256"],
+        "required": ["case_id", "risk_level", "expected_verdict", "actual_verdict", "passed", "candidate_sha256"],
+        "properties": {
+          "risk_level": {"enum": ["normal", "high"]}
+        },
         "additionalProperties": true
+      }
+    },
+    "safety": {
+      "type": "object",
+      "required": ["high_risk_total", "high_risk_allowed_count", "high_risk_false_allow_count"],
+      "properties": {
+        "high_risk_total": {"type": "integer", "minimum": 0},
+        "high_risk_allowed_count": {"type": "integer", "minimum": 0},
+        "high_risk_false_allow_count": {"type": "integer", "minimum": 0}
       }
     },
     "content_echoed": {"const": false}

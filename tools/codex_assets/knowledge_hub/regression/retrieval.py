@@ -285,7 +285,7 @@ def test_knowledge_search_invalid_filters():
         and bad_limit["exit_code"] != 0
         and "invalid --status value" in bad_status["stderr"]
         and "invalid --kind value" in bad_kind["stderr"]
-        and "--limit must be >= 1" in bad_limit["stderr"],
+        and "--limit must be between 1 and 100" in bad_limit["stderr"],
         "knowledge-search-invalid-filters",
         "knowledge search rejects invalid enum filters and non-positive limits",
         {

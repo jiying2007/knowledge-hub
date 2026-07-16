@@ -7,7 +7,7 @@ def test_schema_catalog_resolves_all_contracts():
     result = validate_schema_catalog(repository_root())
 
     assert result["status"] == "pass"
-    assert result["contract_count"] == 23
+    assert result["contract_count"] == 25
     assert result["validated_count"] == result["contract_count"]
     assert result["authority_overlap"] == []
     assert result["instance_validation"]["status"] == "pass"
@@ -19,9 +19,12 @@ def test_schema_catalog_resolves_all_contracts():
         "agent-action-check-v1",
         "agent-review-policy-v1",
         "agent-proposal-route-v1",
+        "agent-proposal-shadow-stats-v1",
         "raw-evidence-inspection-v1",
-        "agent-compliance-eval-v1",
+        "artifact-restore-drill-v1",
+        "agent-compliance-eval-v2",
     }.issubset({row["id"] for row in result["contracts"]})
+    assert "retrieval-result-v3" in {row["id"] for row in result["contracts"]}
 
 
 def test_schema_catalog_exposes_only_strict_current_contracts():
@@ -39,10 +42,10 @@ def test_schema_instance_validation_rejects_invalid_item():
     assert result["error_count"] > 0
 
 
-def test_local_metrics_v2_schema_accepts_current_contract_output():
+def test_local_metrics_v3_schema_accepts_current_contract_output():
     result = validate_instance(
         repository_root(),
-        "local-metrics-v2",
+        "local-metrics-v3",
         local_metrics(repository_root()),
     )
 

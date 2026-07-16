@@ -148,3 +148,54 @@ def test_map_rejects_ambiguous_all_statuses_filter(tmp_path):
         build_knowledge_map(
             _root(tmp_path), all_statuses=True, statuses=("active",)
         )
+
+
+def test_map_domain_filter_uses_boundary_and_personal_metadata_is_opt_in(tmp_path):
+    root = _root(tmp_path)
+    path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    rows.extend(
+        [
+            {
+                "id": "p10-item",
+                "title": "P10 item",
+                "kind": "project-current",
+                "domain": "projects/p10",
+                "path": "projects/p10/current/item.md",
+                "status": "reviewing",
+                "owner": "owner-c",
+                "updated_at": "2026-07-16",
+            },
+            {
+                "id": "personal-item",
+                "title": "Private item",
+                "kind": "personal-note",
+                "domain": "notes",
+                "path": "notes/personal/private.md",
+                "status": "personal",
+                "visibility": "personal-local",
+                "owner": "private-owner",
+                "updated_at": "2026-07-16",
+            },
+        ]
+    )
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    filtered = build_knowledge_map(root, domains=("projects/p1",), all_statuses=True)
+    assert [row["id"] for row in filtered["items"]] == ["old-note"]
+    default_all = build_knowledge_map(root, all_statuses=True)
+    serialized = json.dumps(default_all)
+    assert "personal-item" not in serialized
+    assert "private-owner" not in serialized
+    personal = build_knowledge_map(root, statuses=("personal",))
+    assert [row["id"] for row in personal["items"]] == ["personal-item"]
+
+
+def test_map_rejects_oversized_cursor_and_filter_inputs(tmp_path):
+    root = _root(tmp_path)
+    with pytest.raises(KnowledgeHubError, match="cursor exceeds"):
+        build_knowledge_map(root, cursor="x" * 4097)
+    with pytest.raises(KnowledgeHubError, match="filter values"):
+        build_knowledge_map(root, owners=tuple("owner-{}".format(i) for i in range(33)))
+    with pytest.raises(KnowledgeHubError, match="filter value exceeds"):
+        build_knowledge_map(root, domains=("d" * 257,))

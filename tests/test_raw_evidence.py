@@ -1,8 +1,11 @@
 import hashlib
 import json
 
+import pytest
+
 from tools.codex_assets.knowledge_hub.raw_evidence import inspect_raw_evidence_ledger
 from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.schemas import validate_instance
 
 
@@ -76,3 +79,22 @@ def test_raw_evidence_tamper_fails_closed_without_echoing_body(tmp_path):
     assert payload["chain_status"] == "failed"
     assert any(row["code"] == "content_hash_mismatch" for row in payload["errors"])
     assert "tampered body" not in json.dumps(payload)
+
+
+def test_raw_evidence_rejects_file_budget_and_bounds_line_processing(tmp_path):
+    path = _ledger(tmp_path)
+    with pytest.raises(KnowledgeHubError, match="ledger exceeds"):
+        inspect_raw_evidence_ledger(path, max_bytes=1)
+
+    payload = inspect_raw_evidence_ledger(path, max_line_bytes=32)
+    assert payload["status"] == "fail"
+    assert any(row["code"] == "line_too_large" for row in payload["errors"])
+    assert payload["limits"]["max_line_bytes"] == 32
+
+
+def test_raw_evidence_max_events_fails_closed(tmp_path):
+    path = _ledger(tmp_path)
+    payload = inspect_raw_evidence_ledger(path, max_events=1)
+    assert payload["status"] == "fail"
+    assert any(row["code"] == "event_limit_exceeded" for row in payload["errors"])
+    assert payload["ledger"]["event_count"] == 1

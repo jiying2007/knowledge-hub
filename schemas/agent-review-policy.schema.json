@@ -12,10 +12,11 @@
     "schema_version": {"const": 1},
     "mode": {"const": "shadow"},
     "enabled": {"type": "boolean"},
-    "trusted_clients": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "eligible_kinds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "trusted_clients": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+    "eligible_kinds": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
     "eligible_runtime_roles": {
       "type": "array",
+      "maxItems": 64,
       "uniqueItems": true,
       "items": {"const": "assertion"}
     },
@@ -24,7 +25,7 @@
     "sample_seed": {"type": "string", "minLength": 1, "maxLength": 200},
     "evidence_verifier": {"const": "hub-file-exact-quote"},
     "target_status": {"const": "reviewing"},
-    "notes_zh": {"type": "string"}
+    "notes_zh": {"type": "string", "maxLength": 4096}
   },
   "additionalProperties": false
 }

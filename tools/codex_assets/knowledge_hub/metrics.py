@@ -16,6 +16,7 @@ from .common import compact_json, load_jsonl, utc_timestamp
 
 INTERACTIVE_TELEMETRY_SCHEMA_VERSION = 3
 INTERACTION_CONTRACT = "knowledge-retrieval-interaction-v1"
+PERFORMANCE_CONTRACT = "knowledge-retrieval-performance-v1"
 FEEDBACK_SCHEMA_VERSION = 2
 MINIMUM_PERFORMANCE_SAMPLE_COUNT = 10
 
@@ -55,6 +56,16 @@ def _current_interaction_rows(
         and _is_sha256(row.get("interaction_id"))
         and _is_sha256(row.get("query_sha256"))
         and row.get("raw_query_stored") is False
+    ]
+
+
+def _current_performance_rows(
+    rows: Sequence[Mapping[str, Any]],
+) -> List[Mapping[str, Any]]:
+    return [
+        row
+        for row in rows
+        if row.get("performance_contract") == PERFORMANCE_CONTRACT
     ]
 
 
@@ -255,8 +266,14 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     not_found_count = sum(1 for row in feedback_rows if row.get("outcome") == "not-found")
     feedback_count = found_count + not_found_count
     found_rate = round(found_count / float(feedback_count), 4) if feedback_count else 0.0
-    search_latencies = [float(row.get("latency_ms", 0) or 0) for row in search_rows]
-    context_latencies = [float(row.get("latency_ms", 0) or 0) for row in context_rows]
+    performance_search_rows = _current_performance_rows(search_rows)
+    performance_context_rows = _current_performance_rows(context_rows)
+    search_latencies = [
+        float(row.get("latency_ms", 0) or 0) for row in performance_search_rows
+    ]
+    context_latencies = [
+        float(row.get("latency_ms", 0) or 0) for row in performance_context_rows
+    ]
     zero_hits = sum(1 for row in search_rows if int(row.get("result_count", 0) or 0) == 0)
     search_p95 = _percentile(search_latencies, 0.95)
     context_p95 = _percentile(context_latencies, 0.95)
@@ -272,10 +289,11 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     evaluable = usage_evaluable and performance_evaluable
     adoption_ready = evaluable and feedback_count >= 10 and found_rate >= 0.8 and performance_ready
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "pass",
         "measurement_contract": {
             "interaction_contract": INTERACTION_CONTRACT,
+            "performance_contract": PERFORMANCE_CONTRACT,
             "interactive_telemetry_schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
             "feedback_schema_version": FEEDBACK_SCHEMA_VERSION,
         },
@@ -307,6 +325,12 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             "context_target_ms": 1000,
             "search_sample_count": len(search_latencies),
             "context_sample_count": len(context_latencies),
+            "excluded_stale_contract_sample_count": (
+                len(search_rows)
+                + len(context_rows)
+                - len(performance_search_rows)
+                - len(performance_context_rows)
+            ),
             "minimum_sample_count_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
             "evaluable": performance_evaluable,
             "status": "pass" if performance_ready else ("fail" if performance_evaluable else "pending"),

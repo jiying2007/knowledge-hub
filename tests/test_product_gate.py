@@ -18,6 +18,11 @@ def test_product_readiness_separates_structure_from_real_evidence():
     assert "source_mapping_ready_count" in payload
     assert payload["route_matrix_failure_count"] == 0
     assert payload["evidence_ready_count"] < payload["project_count"]
+    assert 0 <= payload["evidence_field_complete_count"] <= payload["project_count"]
+    assert all(
+        row["evidence_field_status"] in {"incomplete", "complete-awaiting-declaration"}
+        for row in payload["rows"]
+    )
 
 
 def test_product_is_the_only_executable_final_profile():

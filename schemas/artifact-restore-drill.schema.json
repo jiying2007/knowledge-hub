@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/artifact-restore-drill.schema.json",
+  "title": "Knowledge Hub isolated artifact restore drill",
+  "type": "object",
+  "required": [
+    "schema_version", "read_only_source", "status", "source_label",
+    "checksum_manifest_sha256", "artifact_set_sha256", "file_count", "total_bytes",
+    "source_mismatch_count", "deployment_mismatch_count", "restore_mismatch_count",
+    "mutated_path_sha256", "phases", "temporary_cleanup", "content_echoed", "authority_contract"
+  ],
+  "properties": {
+    "schema_version": {"const": "knowledge-hub.artifact-restore-drill.v1"},
+    "read_only_source": {"const": true},
+    "status": {"enum": ["pass", "fail"]},
+    "source_label": {"type": "string", "minLength": 1, "maxLength": 256},
+    "checksum_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact_set_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "file_count": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "total_bytes": {"type": "integer", "minimum": 0, "maximum": 10737418240},
+    "source_mismatch_count": {"type": "integer", "minimum": 0, "maximum": 1001},
+    "deployment_mismatch_count": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "restore_mismatch_count": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "mutated_path_sha256": {"type": "string", "pattern": "^(?:|[0-9a-f]{64})$"},
+    "phases": {
+      "type": "object",
+      "required": ["source_integrity", "deployment_copy_integrity", "negative_corruption_detection", "restore_integrity", "source_unchanged"],
+      "properties": {
+        "source_integrity": {"type": "boolean"},
+        "deployment_copy_integrity": {"type": "boolean"},
+        "negative_corruption_detection": {"type": "boolean"},
+        "restore_integrity": {"type": "boolean"},
+        "source_unchanged": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "temporary_cleanup": {"const": true},
+    "content_echoed": {"const": false},
+    "authority_contract": {
+      "type": "object",
+      "required": ["source_written", "remote_retention_verified", "device_rollback_verified", "production_rollback_verified"],
+      "properties": {
+        "source_written": {"const": false},
+        "remote_retention_verified": {"const": false},
+        "device_rollback_verified": {"const": false},
+        "production_rollback_verified": {"const": false}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
