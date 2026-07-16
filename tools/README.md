@@ -41,7 +41,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 - `maturity_status`：当前是 `mature`、`needs-owner-review` 还是 `needs-fix`。
 - `terminal_maturity`：平台和 30 个规范项目的 owner/source/人工或实机/发布证据是否都闭环。
 
-默认模式只要技术门禁通过即退出 0；`--require-terminal` 会在真实证据未闭环时退出 2。项目生成的 4 个槽位全部保持 `reviewing`，`decision_owner=unassigned`、`manual_validation_pending=true`，工具不得据此自动提升 active。
+默认模式只要技术门禁通过即退出 0；`--require-terminal` 会在真实证据未闭环时退出 2。新项目首次生成的 4 个槽位默认使用 `decision_owner=unassigned`；当前 30 个项目已由 `knowledge-hub-terminal-owner-attestation-20260716` 统一绑定 `decision_owner=leiwenjun`，3 项 PCR02 专项边界又由 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 精确绑定。两组候选都仍保持 `reviewing`、`manual_validation_pending=true` 和 `promotion=none`，工具不得据此自动提升 active 或把 evidence contract 判为 ready。
 
 配套稳定入口：
 
@@ -86,6 +86,8 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 - `knowledge-path-audit.sh`: 全局路径漂移只读审计入口。它扫描 `~/embedded/engineering_archive`、`~/codex/docs/archive` 等 retired 路径在 Hub、Codex、memory、历史 session、runtime rules 和 Codex live/vendor/source skill 资产中的命中，并分类为 `canonical-policy`、`provenance`、`runtime-route-candidate`、`memory-superseded` 或 `historical-session`。默认 `--scope hub`，运行时规则门禁用 `--scope runtime-rules --strict --json`，skill/agent 专项用 `--scope skills --json`，需要跨仓报告时用 `--scope all --max-matches <N> --json`；它只报告，不改写 memory、历史 session、`~/codex`、`/vsdata` 或源项目。
 - `knowledge-pcr02-owner-targets.sh`: PCR02 owner-approved target materialization 入口。默认只读检查 4 个 Hub 内目标正文是否存在，并从 owner decision landing manifest 读取 source identity，不读取 retired origin 正文；`--apply` 才要求退役源文件仍可用并按已授权 worksheet 重新生成目标正文。不修改源项目、不写 memory、不提升 embedded standards。
 - `knowledge-search.sh`: 只读检索入口。它对中英文 query term 做带覆盖率的加权召回，支持中文 2/3-gram、短词、短语、别名和同义词，综合 canonical path、registry presence、status、title/id/tags/summary/path/body 排序，并对历史 manifest 和机器 registry 降权；JSON 的 `score`、`query_coverage`、`match_kind`、`why_selected` 解释排序，零命中时给出降级词、过滤原因和 fallback。它也支持 registry-backed 过滤：`--owner`、`--status`、`--kind`、`--domain`、`--source-id`；`--source` 仍表示物理扫描源，`--source-id` 表示 registry item 的 `source.source_id`。本地倒排索引和 telemetry 都是可重建、非权威的 cache；任一写入因只读环境失败时安全回退扫描或标记 telemetry degraded，不改变命中语义和原有退出码。
+
+  搜索索引使用 SQLite 原子事务增量刷新：普通 Markdown/文本的小批增删改只更新受影响的 FTS 行；`registry/items.jsonl`、source registry 变化、索引 schema 升级、冷启动或一次变化超过 128 个文件时仍执行完整 rebuild。增量路径继续同步校验相对路径、size 和 `mtime_ns`，失败时由 rollback journal 回滚，不会用 stale index 换取低延迟；JSON 的 `index.state=updated` 会同时给出 changed/deleted 数量和事务时间。
 - 结构化过滤只返回已登记 registry item；未登记 raw file 即使命中关键词，也不能在 `--source-id` / `--status` 等过滤模式下混入结果。
 - `knowledge-metrics.sh` / `knowledge-feedback.sh`: metrics v2 只聚合当前 `knowledge-retrieval-interaction-v1` contract；旧 telemetry/feedback 继续留在忽略提交的本地 cache 中，但列入 excluded 计数。性能在 search/context 各不足 10 个当前样本时为 `pending`，不是无样本 `pass`。feedback 必须按 query 或显式 `--interaction-id` 绑定已发生的当前检索；`found` 的 `--selected-id` 必须实际出现在该 interaction 结果中，同一 interaction 只能反馈一次。工具不保存 raw query。
 - `knowledge-status.sh`: 只读控制面 dashboard。

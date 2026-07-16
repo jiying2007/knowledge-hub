@@ -57,6 +57,59 @@ def test_structured_filter_excludes_unregistered_raw_file(tmp_path):
     assert payload["filter_diagnostics"]["by_reason"]["unregistered-structured-result"] >= 1
 
 
+def test_search_incrementally_updates_changed_added_and_deleted_bodies(tmp_path):
+    root = _search_root(tmp_path)
+    initial = search(root, "raw secret marker", limit=5)
+    assert initial["index"]["state"] == "rebuilt"
+
+    existing = root / "projects/p1/current/unregistered.md"
+    existing.write_text("incremental replacement needle\n")
+    changed = search(root, "incremental replacement needle", limit=5)
+
+    assert changed["index"]["state"] == "updated"
+    assert changed["index"]["rebuilt"] is False
+    assert changed["index"]["updated"] is True
+    assert changed["index"]["changed_files"] == 1
+    assert changed["index"]["deleted_files"] == 0
+    assert changed["results"][0]["path"] == "projects/p1/current/unregistered.md"
+
+    old_query = search(root, "raw secret marker", limit=5)
+    assert all(
+        row["path"] != "projects/p1/current/unregistered.md"
+        for row in old_query["results"]
+    )
+
+    added_path = root / "projects/p1/current/added.md"
+    added_path.write_text("new incremental document token\n")
+    added = search(root, "new incremental document token", limit=5)
+    assert added["index"]["state"] == "updated"
+    assert added["index"]["changed_files"] == 1
+    assert added["results"][0]["path"] == "projects/p1/current/added.md"
+
+    added_path.unlink()
+    deleted = search(root, "new incremental document token", limit=5)
+    assert deleted["index"]["state"] == "updated"
+    assert deleted["index"]["deleted_files"] == 1
+    assert all(row["path"] != "projects/p1/current/added.md" for row in deleted["results"])
+
+
+def test_search_rebuilds_when_registry_metadata_changes(tmp_path):
+    root = _search_root(tmp_path)
+    initial = search(root, "Obsidian 受控工作台", limit=5)
+    assert initial["index"]["state"] == "rebuilt"
+
+    items_path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line]
+    rows[0]["title"] = "Obsidian 增量索引元数据"
+    items_path.write_text(_jsonl(rows))
+    refreshed = search(root, "Obsidian 增量索引元数据", limit=5)
+
+    assert refreshed["index"]["state"] == "rebuilt"
+    assert refreshed["index"]["rebuilt"] is True
+    assert refreshed["index"]["updated"] is False
+    assert refreshed["results"][0]["item_id"] == "obsidian-workbench"
+
+
 def test_search_falls_back_to_repository_scan_when_index_fails(tmp_path):
     root = _search_root(tmp_path)
 
@@ -112,7 +165,14 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
             "count": 1,
             "total_matches": 1,
             "latency_ms": 5,
-            "index": {"state": "warm", "rebuilt": False},
+            "index": {
+                "state": "updated",
+                "rebuilt": False,
+                "updated": True,
+                "lock_wait_duration_ms": 1.5,
+                "signature_duration_ms": 12.5,
+                "transaction_duration_ms": 8.5,
+            },
             "results": [{"item_id": "item-a"}],
         },
     )
@@ -122,4 +182,8 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
     assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
     assert captured["result_ids"] == ["item-a"]
     assert captured["index_rebuilt"] is False
+    assert captured["index_updated"] is True
+    assert captured["index_lock_wait_ms"] == 1.5
+    assert captured["index_signature_ms"] == 12.5
+    assert captured["index_transaction_ms"] == 8.5
     assert "private search query" not in json.dumps(captured)

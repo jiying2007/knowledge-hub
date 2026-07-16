@@ -27,6 +27,7 @@ from .common import (
     compact_json,
     display_path,
     file_sha256,
+    iter_text_file_records,
     iter_text_files,
     load_json,
     load_jsonl,
@@ -43,7 +44,15 @@ from .metrics import (
 from .model import ITEM_KINDS, ITEM_STATUSES
 
 
-INDEX_SCHEMA_VERSION = 3
+INDEX_SCHEMA_VERSION = 4
+FULL_REBUILD_DEPENDENCIES = frozenset(
+    {
+        "registry/items.jsonl",
+        "registry/sources.json",
+        "registry/retired-sources.jsonl",
+    }
+)
+MAX_INCREMENTAL_FILES = 128
 KIND_ALIASES = {
     "validation-report": "validation",
     "archive-note": "project-archive",
@@ -210,23 +219,23 @@ def _physical_sources(path: pathlib.Path, roots: Sequence[Tuple[str, pathlib.Pat
     return result
 
 
-def _signature(root: pathlib.Path) -> Tuple[str, List[pathlib.Path]]:
-    paths = sorted(iter_text_files(root), key=lambda value: value.relative_to(root).as_posix())
+def _signature(
+    root: pathlib.Path,
+) -> Tuple[str, List[pathlib.Path], Dict[str, Tuple[int, int]]]:
+    records = sorted(iter_text_file_records(root), key=lambda value: value[1])
+    paths = [path for path, _, _ in records]
     digest = hashlib.sha256()
     digest.update(str(INDEX_SCHEMA_VERSION).encode("ascii"))
-    for path in paths:
-        try:
-            stat = path.stat()
-        except OSError:
-            continue
-        relative = path.relative_to(root).as_posix()
+    file_states: Dict[str, Tuple[int, int]] = {}
+    for _, relative, file_stat in records:
+        file_states[relative] = (file_stat.st_size, file_stat.st_mtime_ns)
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
-        digest.update(str(stat.st_size).encode("ascii"))
+        digest.update(str(file_stat.st_size).encode("ascii"))
         digest.update(b":")
-        digest.update(str(stat.st_mtime_ns).encode("ascii"))
+        digest.update(str(file_stat.st_mtime_ns).encode("ascii"))
         digest.update(b"\n")
-    return digest.hexdigest(), paths
+    return digest.hexdigest(), paths, file_states
 
 
 class SearchIndex:
@@ -235,8 +244,9 @@ class SearchIndex:
     def __init__(self, root: pathlib.Path) -> None:
         self.root = root.resolve()
         self.cache_root = self.root / ".cache" / "knowledge-hub"
-        self.path = self.cache_root / "search-index-v3.sqlite3"
-        self.lock_path = self.cache_root / "search-index-v3.lock"
+        cache_name = "search-index-v{}".format(INDEX_SCHEMA_VERSION)
+        self.path = self.cache_root / "{}.sqlite3".format(cache_name)
+        self.lock_path = self.cache_root / "{}.lock".format(cache_name)
         self._ensure_cache: Optional[Tuple[float, Dict[str, Any]]] = None
 
     def _current_signature(self) -> str:
@@ -267,42 +277,244 @@ class SearchIndex:
             cached = dict(self._ensure_cache[1])
             cached["state"] = "warm-session"
             cached["rebuilt"] = False
+            cached["updated"] = False
+            cached["lock_wait_duration_ms"] = 0.0
+            cached["signature_duration_ms"] = 0.0
             return cached
-        signature, paths = _signature(self.root)
-        if not force and self._current_signature() == signature:
-            result = {"state": "warm", "mode": "local-index", "fresh": True, "rebuilt": False, "signature": signature, "document_files": len(paths)}
-            self._ensure_cache = (time.monotonic(), result)
-            return result
+        lock_started = time.monotonic()
         with self._lock():
-            signature, paths = _signature(self.root)
+            lock_wait_duration_ms = round((time.monotonic() - lock_started) * 1000, 2)
+            signature_started = time.monotonic()
+            signature, paths, file_states = _signature(self.root)
+            signature_duration_ms = round((time.monotonic() - signature_started) * 1000, 2)
             if not force and self._current_signature() == signature:
-                result = {"state": "warm", "mode": "local-index", "fresh": True, "rebuilt": False, "signature": signature, "document_files": len(paths)}
+                result = {
+                    "state": "warm",
+                    "mode": "local-index",
+                    "fresh": True,
+                    "rebuilt": False,
+                    "updated": False,
+                    "signature": signature,
+                    "document_files": len(paths),
+                    "lock_wait_duration_ms": lock_wait_duration_ms,
+                    "signature_duration_ms": signature_duration_ms,
+                }
                 self._ensure_cache = (time.monotonic(), result)
                 return result
             started = time.monotonic()
-            document_count = self._rebuild(signature, paths)
+            incremental = None
+            if not force:
+                try:
+                    incremental = self._incremental_update(signature, file_states)
+                except (OSError, sqlite3.Error, ValueError):
+                    incremental = None
+            if incremental is not None:
+                result = {
+                    "state": "updated",
+                    "mode": "local-index",
+                    "fresh": True,
+                    "rebuilt": False,
+                    "updated": True,
+                    "signature": signature,
+                    "document_files": len(paths),
+                    "document_rows": incremental["document_rows"],
+                    "changed_files": incremental["changed_files"],
+                    "deleted_files": incremental["deleted_files"],
+                    "lock_wait_duration_ms": lock_wait_duration_ms,
+                    "signature_duration_ms": signature_duration_ms,
+                    "transaction_duration_ms": incremental["transaction_duration_ms"],
+                    "update_duration_ms": round((time.monotonic() - started) * 1000, 2),
+                }
+                self._ensure_cache = (time.monotonic(), result)
+                return result
+            document_count = self._rebuild(signature, paths, file_states)
             result = {
                 "state": "rebuilt",
                 "mode": "local-index",
                 "fresh": True,
                 "rebuilt": True,
+                "updated": False,
                 "signature": signature,
                 "document_files": len(paths),
                 "document_rows": document_count,
+                "lock_wait_duration_ms": lock_wait_duration_ms,
+                "signature_duration_ms": signature_duration_ms,
                 "build_duration_ms": round((time.monotonic() - started) * 1000, 2),
             }
             self._ensure_cache = (time.monotonic(), result)
             return result
 
-    def _rebuild(self, signature: str, paths: Sequence[pathlib.Path]) -> int:
-        temporary = self.cache_root / "search-index-v3.{}.sqlite3".format(uuid.uuid4().hex)
+    def _indexed_file_states(self) -> Optional[Dict[str, Tuple[int, int]]]:
+        if not self.path.exists():
+            return None
+        try:
+            with sqlite3.connect(str(self.path)) as connection:
+                schema = connection.execute(
+                    "select value from meta where key='schema_version'"
+                ).fetchone()
+                if not schema or int(schema[0]) != INDEX_SCHEMA_VERSION:
+                    return None
+                rows = connection.execute(
+                    "select path,size,mtime_ns from indexed_files"
+                ).fetchall()
+            return {str(path): (int(size), int(mtime_ns)) for path, size, mtime_ns in rows}
+        except (sqlite3.Error, OSError, ValueError):
+            return None
+
+    def _index_inputs(
+        self,
+    ) -> Tuple[Dict[str, List[Dict[str, Any]]], List[Tuple[str, pathlib.Path]]]:
         items = registry_items(self.root)
         items_by_path: Dict[str, List[Dict[str, Any]]] = {}
         for item in items:
             path = str(item.get("path", ""))
             if path:
                 items_by_path.setdefault(path, []).append(item)
-        source_roots = _source_roots(self.root)
+        return items_by_path, _source_roots(self.root)
+
+    def _insert_path(
+        self,
+        connection: sqlite3.Connection,
+        path: pathlib.Path,
+        items_by_path: Mapping[str, Sequence[Mapping[str, Any]]],
+        source_roots: Sequence[Tuple[str, pathlib.Path]],
+    ) -> int:
+        try:
+            body = path.read_text(encoding="utf-8", errors="ignore")
+            relative = path.relative_to(self.root).as_posix()
+        except (OSError, ValueError):
+            return 0
+        linked_items = items_by_path.get(relative, []) or [{}]
+        physical = _physical_sources(path, source_roots)
+        count = 0
+        for item in linked_items:
+            item_id = str(item.get("id", ""))
+            doc_key = "{}#{}".format(relative, item_id or "unregistered")
+            metadata = _metadata_haystack(item) if item else ""
+            token_text = " ".join(search_tokens(metadata + "\n" + body))
+            title = _indexed_title(relative, body, item)
+            tags = " ".join(
+                str(value) for value in item.get("tags", []) if isinstance(value, str)
+            )
+            summary = str(item.get("summary_zh", ""))
+            cursor = connection.execute(
+                "insert into documents(doc_key,path,suffix,physical_sources,item_json,indexed_title,body) values(?,?,?,?,?,?,?)",
+                (
+                    doc_key,
+                    relative,
+                    path.suffix.lower(),
+                    compact_json(physical),
+                    compact_json(item) if item else "{}",
+                    title,
+                    body,
+                ),
+            )
+            rowid = int(cursor.lastrowid)
+            connection.execute(
+                "insert into documents_fts(rowid,title,item_id,tags,summary,path,body,tokens) values(?,?,?,?,?,?,?,?)",
+                (rowid, title, item_id, tags, summary, relative, body, token_text),
+            )
+            count += 1
+        return count
+
+    @staticmethod
+    def _delete_path(connection: sqlite3.Connection, relative: str) -> None:
+        row_ids = [
+            int(row[0])
+            for row in connection.execute(
+                "select id from documents where path=?", (relative,)
+            ).fetchall()
+        ]
+        if row_ids:
+            connection.executemany(
+                "delete from documents_fts where rowid=?",
+                ((row_id,) for row_id in row_ids),
+            )
+        connection.execute("delete from documents where path=?", (relative,))
+        connection.execute("delete from indexed_files where path=?", (relative,))
+
+    def _incremental_update(
+        self,
+        signature: str,
+        file_states: Mapping[str, Tuple[int, int]],
+    ) -> Optional[Dict[str, Any]]:
+        indexed_states = self._indexed_file_states()
+        if indexed_states is None:
+            return None
+        if any(
+            indexed_states.get(relative) != file_states.get(relative)
+            for relative in FULL_REBUILD_DEPENDENCIES
+        ):
+            return None
+        changed = sorted(
+            relative
+            for relative, state in file_states.items()
+            if indexed_states.get(relative) != state
+        )
+        deleted = sorted(set(indexed_states) - set(file_states))
+        if not changed and not deleted:
+            return None
+        if len(changed) + len(deleted) > MAX_INCREMENTAL_FILES:
+            return None
+
+        items_by_path, source_roots = self._index_inputs()
+        transaction_started = time.monotonic()
+        connection = sqlite3.connect(str(self.path))
+        try:
+            connection.execute("pragma journal_mode=delete")
+            connection.execute("pragma synchronous=normal")
+            connection.execute("begin immediate")
+            for relative in deleted:
+                self._delete_path(connection, relative)
+            for relative in changed:
+                self._delete_path(connection, relative)
+                self._insert_path(
+                    connection,
+                    self.root / relative,
+                    items_by_path,
+                    source_roots,
+                )
+                size, mtime_ns = file_states[relative]
+                connection.execute(
+                    "insert or replace into indexed_files(path,size,mtime_ns) values(?,?,?)",
+                    (relative, size, mtime_ns),
+                )
+            document_count = int(
+                connection.execute("select count(*) from documents").fetchone()[0]
+            )
+            connection.executemany(
+                "insert or replace into meta(key,value) values(?,?)",
+                (
+                    ("signature", signature),
+                    ("updated_at", utc_timestamp()),
+                    ("document_count", str(document_count)),
+                )
+            )
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+        return {
+            "document_rows": document_count,
+            "changed_files": len(changed),
+            "deleted_files": len(deleted),
+            "transaction_duration_ms": round(
+                (time.monotonic() - transaction_started) * 1000, 2
+            ),
+        }
+
+    def _rebuild(
+        self,
+        signature: str,
+        paths: Sequence[pathlib.Path],
+        file_states: Mapping[str, Tuple[int, int]],
+    ) -> int:
+        temporary = self.cache_root / "search-index-v{}.{}.sqlite3".format(
+            INDEX_SCHEMA_VERSION, uuid.uuid4().hex
+        )
+        items_by_path, source_roots = self._index_inputs()
         connection = sqlite3.connect(str(temporary))
         count = 0
         try:
@@ -311,6 +523,11 @@ class SearchIndex:
                 pragma journal_mode=off;
                 pragma synchronous=off;
                 create table meta (key text primary key, value text not null);
+                create table indexed_files (
+                    path text primary key,
+                    size integer not null,
+                    mtime_ns integer not null
+                );
                 create table documents (
                     id integer primary key,
                     doc_key text not null unique,
@@ -328,39 +545,14 @@ class SearchIndex:
                 """
             )
             for path in paths:
-                try:
-                    body = path.read_text(encoding="utf-8", errors="ignore")
-                    relative = path.relative_to(self.root).as_posix()
-                except (OSError, ValueError):
-                    continue
-                linked_items = items_by_path.get(relative, []) or [{}]
-                physical = _physical_sources(path, source_roots)
-                for item in linked_items:
-                    item_id = str(item.get("id", ""))
-                    doc_key = "{}#{}".format(relative, item_id or "unregistered")
-                    metadata = _metadata_haystack(item) if item else ""
-                    token_text = " ".join(search_tokens(metadata + "\n" + body))
-                    title = _indexed_title(relative, body, item)
-                    tags = " ".join(str(value) for value in item.get("tags", []) if isinstance(value, str))
-                    summary = str(item.get("summary_zh", ""))
-                    cursor = connection.execute(
-                        "insert into documents(doc_key,path,suffix,physical_sources,item_json,indexed_title,body) values(?,?,?,?,?,?,?)",
-                        (
-                            doc_key,
-                            relative,
-                            path.suffix.lower(),
-                            compact_json(physical),
-                            compact_json(item) if item else "{}",
-                            title,
-                            body,
-                        ),
-                    )
-                    rowid = int(cursor.lastrowid)
-                    connection.execute(
-                        "insert into documents_fts(rowid,title,item_id,tags,summary,path,body,tokens) values(?,?,?,?,?,?,?,?)",
-                        (rowid, title, item_id, tags, summary, relative, body, token_text),
-                    )
-                    count += 1
+                count += self._insert_path(connection, path, items_by_path, source_roots)
+            connection.executemany(
+                "insert into indexed_files(path,size,mtime_ns) values(?,?,?)",
+                (
+                    (relative, state[0], state[1])
+                    for relative, state in sorted(file_states.items())
+                ),
+            )
             connection.executemany(
                 "insert into meta(key,value) values(?,?)",
                 (
@@ -373,7 +565,11 @@ class SearchIndex:
             connection.commit()
         finally:
             connection.close()
-        os.replace(str(temporary), str(self.path))
+        try:
+            os.replace(str(temporary), str(self.path))
+        except Exception:
+            temporary.unlink(missing_ok=True)
+            raise
         return count
 
     def candidates(self, query: str) -> List[sqlite3.Row]:
@@ -797,6 +993,10 @@ def record_search_telemetry(
         "latency_ms": payload.get("latency_ms", 0),
         "index_state": (payload.get("index") or {}).get("state", ""),
         "index_rebuilt": bool((payload.get("index") or {}).get("rebuilt", False)),
+        "index_updated": bool((payload.get("index") or {}).get("updated", False)),
+        "index_lock_wait_ms": (payload.get("index") or {}).get("lock_wait_duration_ms", 0),
+        "index_signature_ms": (payload.get("index") or {}).get("signature_duration_ms", 0),
+        "index_transaction_ms": (payload.get("index") or {}).get("transaction_duration_ms", 0),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/search-telemetry.jsonl"

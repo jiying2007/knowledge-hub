@@ -13,6 +13,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import subprocess
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
@@ -213,17 +214,58 @@ def slugify(value: str) -> str:
     return text or "item"
 
 
-def iter_text_files(root: pathlib.Path, include_control: bool = True) -> Iterator[pathlib.Path]:
+def iter_text_file_records(
+    root: pathlib.Path,
+    include_control: bool = True,
+) -> Iterator[Tuple[pathlib.Path, str, os.stat_result]]:
     excluded_parts = {".git", ".tmp", ".cache", "__pycache__", ".pytest_cache"}
     control_roots = {"registry", "tools", "artifacts"}
-    for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
+    root = pathlib.Path(root)
+    pending = [(root, "")]
+    while pending:
+        directory, directory_relative = pending.pop()
+        try:
+            with os.scandir(directory) as scan:
+                entries = sorted(scan, key=lambda entry: entry.name)
+        except OSError:
             continue
-        relative = path.relative_to(root)
-        if any(part in excluded_parts for part in relative.parts):
-            continue
-        if not include_control and relative.parts and relative.parts[0] in control_roots:
-            continue
+        child_directories = []
+        for entry in entries:
+            try:
+                is_directory = entry.is_dir(follow_symlinks=False)
+            except OSError:
+                continue
+            if is_directory:
+                if entry.name in excluded_parts:
+                    continue
+                if not include_control and not directory_relative and entry.name in control_roots:
+                    continue
+                relative = (
+                    "{}/{}".format(directory_relative, entry.name)
+                    if directory_relative
+                    else entry.name
+                )
+                child_directories.append((pathlib.Path(entry.path), relative))
+                continue
+            if pathlib.Path(entry.name).suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            try:
+                file_stat = entry.stat()
+            except OSError:
+                continue
+            if not stat.S_ISREG(file_stat.st_mode):
+                continue
+            relative = (
+                "{}/{}".format(directory_relative, entry.name)
+                if directory_relative
+                else entry.name
+            )
+            yield pathlib.Path(entry.path), relative, file_stat
+        pending.extend(reversed(child_directories))
+
+
+def iter_text_files(root: pathlib.Path, include_control: bool = True) -> Iterator[pathlib.Path]:
+    for path, _, _ in iter_text_file_records(root, include_control=include_control):
         yield path
 
 
