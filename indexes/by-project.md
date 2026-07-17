@@ -282,6 +282,7 @@
 - LLM Agent readiness validation: `projects/llm-agent/validation/project-readiness.md`; `llm-agent-readiness-validation-20260713`
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - LLM Agent 精确源码 Quick 门禁审计 2026-07-15: `projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md`; `llm-agent-exact-source-quick-gate-audit-20260715`
+- 微信公众号批量研究工作流与二十篇文章优化评估: `projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md`; `llm-agent-wechat-account-research-assessment-20260716`
 
 ## Agent Dev Kit
 

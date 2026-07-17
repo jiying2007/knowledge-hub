@@ -456,3 +456,4 @@
 - LLM Agent 精确源码 Quick 门禁审计 2026-07-15: `projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md`; `llm-agent-exact-source-quick-gate-audit-20260715`
 - PCR02 Robot 子模块精确源码契约审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md`; `pcr02-robot-module-contract-audit-20260715`
 - Knowledge Hub Agent 运行时契约吸收决策候选: `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`; `knowledge-hub-agent-runtime-contract-absorption-20260716`
+- 微信公众号批量研究工作流与二十篇文章优化评估: `projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md`; `llm-agent-wechat-account-research-assessment-20260716`
