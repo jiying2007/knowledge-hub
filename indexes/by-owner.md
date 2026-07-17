@@ -378,6 +378,7 @@
 - `software-tool-artifact-restore-drill-20260716`
 - `llm-agent-wechat-account-research-assessment-20260716`
 - `llm-agent-exact-source-full-gate-audit-20260717`
+- `llm-agent-portable-full-gate-remediation-20260717`
 
 ## pcr02-registry-owner
 
