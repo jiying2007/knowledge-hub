@@ -49,7 +49,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## validation (38)
+## validation (39)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -121,6 +121,15 @@
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
+## llm-agent (6)
+
+- [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing`
+- [LLM Agent 权威与维护边界决策候选](../../projects/llm-agent/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
+- [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
+- [LLM Agent 维护入口](../../projects/llm-agent/current/runbooks/maintenance-entry.md) · `reviewing`
+- [LLM Agent 项目画像候选](../../projects/llm-agent/current/project-profile.md) · `reviewing`
+
 ## pcr02-ssc305 (6)
 
 - [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing`
@@ -137,14 +146,6 @@
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [Codex Local Runtime Assets 维护入口](../../domains/codex/current/runbooks/maintenance-entry.md) · `reviewing`
 - [Codex Local Runtime Assets 项目画像候选](../../domains/codex/current/project-profile.md) · `reviewing`
-
-## llm-agent (5)
-
-- [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing`
-- [LLM Agent 权威与维护边界决策候选](../../projects/llm-agent/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
-- [LLM Agent 维护入口](../../projects/llm-agent/current/runbooks/maintenance-entry.md) · `reviewing`
-- [LLM Agent 项目画像候选](../../projects/llm-agent/current/project-profile.md) · `reviewing`
 
 ## mcu (5)
 
@@ -341,6 +342,12 @@
 - [排障记录规范](../../governance/debug-record-rules.md) · `active`
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 
+## exact-source (3)
+
+- [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
+- [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
+- [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
+
 ## ai-provenance (2)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -360,11 +367,6 @@
 
 - [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing`
-
-## exact-source (2)
-
-- [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
-- [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
 
 ## external-source (2)
 
@@ -538,6 +540,10 @@
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 
+## full-gate (1)
+
+- [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
+
 ## glossary (1)
 
 - [中文术语表规范](../../governance/glossary.md) · `active`
@@ -633,6 +639,10 @@
 ## pcm (1)
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
+
+## portability (1)
+
+- [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
 
 ## pr (1)
 
