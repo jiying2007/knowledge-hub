@@ -1,7 +1,9 @@
 import argparse
 import datetime as dt
+import hashlib
 import json
 import pathlib
+import re
 import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -22,6 +24,8 @@ if not forms_path.is_absolute():
 
 REQUIRED_HUMAN_FIELDS = ["human_reviewed_by", "human_reviewed_at", "review_basis"]
 VALID_REVIEW_DECISIONS = {"accept-as-review-record", "needs-edits", "archive-only", "reject", "defer"}
+REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 FORBIDDEN_FIELDS = {
     "owner",
     "owner_decision",
@@ -68,6 +72,26 @@ def load_forms():
             continue
         forms.append((line_no, form))
     return forms
+
+def item_content_sha256(item):
+    path_text = str(item.get("path", ""))
+    if not path_text:
+        return "", "missing-item-path"
+    candidate = pathlib.Path(path_text)
+    if candidate.is_absolute():
+        return "", "absolute-item-path"
+    resolved = (root / candidate).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return "", "item-path-outside-root"
+    if not resolved.is_file():
+        return "", "item-content-missing"
+    digest = hashlib.sha256()
+    with resolved.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest(), ""
 
 def is_nonempty_string(value):
     return isinstance(value, str) and bool(value.strip())
@@ -128,6 +152,39 @@ for line_no, form in forms:
         diagnostics.append(make_diag("unknown-item", "registry/items.jsonl 中不存在该 queue_id 对应条目。", line_no=line_no, queue_id=queue_id, field="id", actual=item_id))
         continue
 
+    current_content_sha256, content_hash_error = item_content_sha256(item)
+    submitted_content_sha256 = str(form.get("content_sha256", ""))
+    if content_hash_error:
+        diagnostics.append(make_diag(
+            "item-content-sha256-unavailable",
+            "当前 registry item 正文无法生成 SHA256，不能应用人工复核表单。",
+            line_no=line_no,
+            queue_id=queue_id,
+            field="content_sha256",
+            actual=content_hash_error,
+            expected="可读取的仓内正文",
+        ))
+    elif not SHA256_RE.fullmatch(submitted_content_sha256):
+        diagnostics.append(make_diag(
+            "invalid-content-sha256",
+            "表单 content_sha256 必须是当前正文的 64 位小写 SHA256。",
+            line_no=line_no,
+            queue_id=queue_id,
+            field="content_sha256",
+            actual=submitted_content_sha256,
+            expected=current_content_sha256,
+        ))
+    elif submitted_content_sha256 != current_content_sha256:
+        diagnostics.append(make_diag(
+            "content-sha256-mismatch",
+            "表单绑定的正文 SHA256 与当前文件不一致；旧人工判断不得落地。",
+            line_no=line_no,
+            queue_id=queue_id,
+            field="content_sha256",
+            actual=submitted_content_sha256,
+            expected=current_content_sha256,
+        ))
+
     expected_missing_fields = []
     if queue_type == "ai-human-review":
         if item.get("generated_by_ai") is not True:
@@ -136,7 +193,14 @@ for line_no, form in forms:
             field for field in REQUIRED_HUMAN_FIELDS
             if not is_nonempty_string(item.get(field, ""))
         ]
-        if not expected_missing_fields and str(item.get("human_review_decision", "")) in {"needs-edits", "defer"}:
+        current_review_decision = str(item.get("human_review_decision", ""))
+        stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
+        review_content_drifted = (
+            current_review_decision in REVIEW_CONTENT_BOUND_DECISIONS
+            and bool(stored_review_sha256)
+            and stored_review_sha256 != current_content_sha256
+        )
+        if not expected_missing_fields and (current_review_decision in {"needs-edits", "defer"} or review_content_drifted):
             expected_missing_fields = ["review_resolution"]
     if queue_type == "external-source-review":
         expected_missing_fields = [
@@ -146,13 +210,14 @@ for line_no, form in forms:
     if not expected_missing_fields:
         diagnostics.append(make_diag("queue-item-no-longer-pending", "当前条目已不在待复核队列中，表单已过期或已应用。", line_no=line_no, queue_id=queue_id))
 
-    for field in ["form_type", "schema_version", "queue_type", "object_type", "id"]:
+    for field in ["form_type", "schema_version", "queue_type", "object_type", "id", "content_hash_required"]:
         expected = {
             "form_type": "review-queue-human-review",
-            "schema_version": 1,
+            "schema_version": 2,
             "queue_type": queue_type,
             "object_type": "registry-item",
             "id": item_id,
+            "content_hash_required": True,
         }[field]
         if form.get(field) != expected:
             diagnostics.append(make_diag("field-mismatch", f"表单字段 {field} 与当前 registry 队列不一致。", line_no=line_no, queue_id=queue_id, field=field, actual=form.get(field), expected=expected))
@@ -189,12 +254,6 @@ for line_no, form in forms:
             diagnostics.append(make_diag("guardrail-field-mismatch", f"guardrail 字段 {field} 不符合只读边界。", line_no=line_no, queue_id=queue_id, field=field, actual=form.get(field), expected=expected))
 
     target_status = str(item.get("status", ""))
-    if review_decision == "archive-only":
-        target_status = "archived"
-    elif review_decision == "reject":
-        target_status = "rejected"
-    elif review_decision in {"needs-edits", "defer"}:
-        target_status = str(item.get("status", "reviewing") or "reviewing")
 
     planned_updates.append({
         "line_no": line_no,
@@ -204,8 +263,10 @@ for line_no, form in forms:
         "review_decision": review_decision,
         "status_before": str(item.get("status", "")),
         "status_after": target_status,
+        "lifecycle_mutation": False,
         "will_remain_blocking": review_decision in {"needs-edits", "defer"},
-        "fields": REQUIRED_HUMAN_FIELDS + ["human_review_decision", "updated_at"],
+        "content_sha256": current_content_sha256,
+        "fields": REQUIRED_HUMAN_FIELDS + ["human_review_decision", "human_review_content_sha256", "updated_at"],
     })
 
 if diagnostics:
@@ -230,6 +291,7 @@ for update in planned_updates:
     item["human_reviewed_at"] = str(form.get("human_reviewed_at", "")).strip()
     item["review_basis"] = str(form.get("review_basis", "")).strip()
     item["human_review_decision"] = update["review_decision"]
+    item["human_review_content_sha256"] = update["content_sha256"]
     item["updated_at"] = str(form.get("human_reviewed_at", "")).strip()
     item["status"] = update["status_after"]
     if update["review_decision"] == "needs-edits":
@@ -261,11 +323,11 @@ result = {
     "planned_updates": planned_updates,
     "guardrails": {
         "owner_gate_mutation": False,
+        "lifecycle_mutation": False,
         "memory_write": False,
         "source_project_write": False,
         "active_promotion": False,
     },
-    "notes_zh": "本工具只机械落地真实人工填写的普通 review queue 表单；不生成 owner decision，不关闭 owner gate，不提升 active。",
+    "notes_zh": "本工具只机械落地真实人工填写且与当前整文件 SHA256 一致的普通 review queue 表单；正文漂移会拒绝应用。archive-only/reject 也只记录普通复核结论，不改变 lifecycle status；生命周期变更必须另走 attestation、授权和 promote/retire 工具。",
 }
 print(json.dumps(result, ensure_ascii=False, indent=2) if args.json else f"{result['status']}: {len(planned_updates)} updates")
-

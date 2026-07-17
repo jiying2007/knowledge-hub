@@ -77,6 +77,7 @@ Recommended AI provenance fields:
 - `human_reviewed_at`
 - `review_basis`
 - `human_review_decision`
+- `human_review_content_sha256`
 
 AI human review decision values:
 
@@ -88,7 +89,9 @@ reject
 defer
 ```
 
-`human_review_decision` 记录真实人工复核结论，不等同于 owner decision、active promotion 或 source 项目授权。`needs-edits` 和 `defer` 表示复核未闭环，在 product strict status 中仍是 blocker。
+`human_review_decision` 记录真实人工复核结论，不等同于 owner decision、active promotion 或 source 项目授权。`needs-edits` 和 `defer` 表示复核未闭环，在 product strict status 中仍是 blocker。普通 review queue 中的 `archive-only` 或 `reject` 也只记录内容复核结论，不得直接改变 item lifecycle status；真正的 archived/rejected 转换必须另走 hash-bound attestation、执行授权与 retire 工具。
+
+普通 review queue 表单从 schema v2 起必须为 `registry-item` 绑定当前整文件 `content_sha256`。应用成功后将该值保存为 `human_review_content_sha256`；如果后续正文发生漂移，status/index-plan 必须重新把条目放回复核队列，`knowledge-check` 必须报错。schema v1 及更早的历史复核记录不允许合成回填 hash；只有再次真实复核时才升级到 v2 绑定。
 
 Recommended external-source fields:
 

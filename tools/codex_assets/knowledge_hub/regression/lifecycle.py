@@ -929,6 +929,8 @@ def test_review_queue_json_contract():
     identity_mismatch_form["id"] = "tampered-review-queue-id"
     guardrail_mismatch_form = dict(filled_form)
     guardrail_mismatch_form["read_only"] = False
+    content_hash_mismatch_form = dict(filled_form)
+    content_hash_mismatch_form["content_sha256"] = "0" * 64
     valid_forms_path = write_review_queue_forms_jsonl([filled_form])
     duplicate_forms_path = write_review_queue_forms_jsonl([filled_form, duplicate_form])
     unknown_forms_path = write_review_queue_forms_jsonl([unknown_form])
@@ -937,6 +939,7 @@ def test_review_queue_json_contract():
     forbidden_owner_field_forms_path = write_review_queue_forms_jsonl([forbidden_owner_field_form])
     identity_mismatch_forms_path = write_review_queue_forms_jsonl([identity_mismatch_form])
     guardrail_mismatch_forms_path = write_review_queue_forms_jsonl([guardrail_mismatch_form])
+    content_hash_mismatch_forms_path = write_review_queue_forms_jsonl([content_hash_mismatch_form])
     validate_base_command = [
         "rtk",
         "bash",
@@ -962,6 +965,7 @@ def test_review_queue_json_contract():
     forbidden_owner_field_validate_result = run_cmd(queue_repo, validate_base_command + [forbidden_owner_field_forms_path])
     identity_mismatch_validate_result = run_cmd(queue_repo, validate_base_command + [identity_mismatch_forms_path])
     guardrail_mismatch_validate_result = run_cmd(queue_repo, validate_base_command + [guardrail_mismatch_forms_path])
+    content_hash_mismatch_validate_result = run_cmd(queue_repo, validate_base_command + [content_hash_mismatch_forms_path])
     validate_without_json_result = run_cmd(
         queue_repo,
         [
@@ -1041,6 +1045,11 @@ def test_review_queue_json_contract():
     except Exception as exc:
         guardrail_mismatch_validate_payload = {}
         validate_parse_errors.append(f"guardrail-mismatch-forms: {exc}")
+    try:
+        content_hash_mismatch_validate_payload = json.loads(content_hash_mismatch_validate_result["stdout"])
+    except Exception as exc:
+        content_hash_mismatch_validate_payload = {}
+        validate_parse_errors.append(f"content-hash-mismatch-forms: {exc}")
     for temp_form_path in temp_form_paths:
         try:
             temp_form_path.unlink()
@@ -1082,11 +1091,19 @@ def test_review_queue_json_contract():
         for row in guardrail_mismatch_validate_payload.get("form_validation", {}).get("diagnostics", [])
         if isinstance(row, dict)
     ]
+    content_hash_mismatch_diagnostic_codes = [
+        row.get("code")
+        for row in content_hash_mismatch_validate_payload.get("form_validation", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
     required_first_row_fields = [
         "queue_id",
         "queue_type",
         "object_type",
         "id",
+        "content_hash_required",
+        "content_hash_status",
+        "content_sha256",
         "owner",
         "status",
         "review_after",
@@ -1125,6 +1142,8 @@ def test_review_queue_json_contract():
         and first_row.get("owner_gate_mutation") is False
         and first_row.get("memory_write") is False
         and first_row.get("source_project_write") is False
+        and first_row.get("content_hash_required") is True
+        and len(first_row.get("content_sha256", "")) == 64
         and "ai-human-review" in by_review_queue.get("by_type", {})
         and "不写 memory" in " ".join(by_review_queue.get("must_not", []))
         and first_row.get("next_commands")
@@ -1165,6 +1184,7 @@ def test_review_queue_json_contract():
         and "# Knowledge Index Plan" not in first_form_text
         and "## 验证" not in first_form_text
         and first_form.get("form_type") == "review-queue-human-review"
+        and first_form.get("schema_version") == 2
         and first_form.get("status") == "human-fill-required"
         and first_form.get("read_only") is True
         and first_form.get("report_only") is True
@@ -1174,6 +1194,9 @@ def test_review_queue_json_contract():
         and first_form.get("human_reviewed_by") == ""
         and first_form.get("human_reviewed_at") == ""
         and first_form.get("review_basis") == ""
+        and first_form.get("content_hash_required") is True
+        and first_form.get("content_sha256") == first_row.get("content_sha256")
+        and "content_sha256" in first_form.get("required_binding_fields", [])
         and "owner" not in first_form
         and "owner_decision" not in first_form
         and "reviewed_by" not in first_form
@@ -1207,6 +1230,8 @@ def test_review_queue_json_contract():
         and "field-mismatch" in identity_mismatch_diagnostic_codes
         and guardrail_mismatch_validate_result["exit_code"] != 0
         and "guardrail-field-mismatch" in guardrail_mismatch_diagnostic_codes
+        and content_hash_mismatch_validate_result["exit_code"] != 0
+        and "content-sha256-mismatch" in content_hash_mismatch_diagnostic_codes
         and validate_without_json_result["exit_code"] != 0
         and "--validate-queue-forms requires --json" in validate_without_json_result["stderr"]
         and validate_wrong_section_result["exit_code"] != 0
@@ -1254,6 +1279,8 @@ def test_review_queue_json_contract():
             "identity_mismatch_diagnostic_codes": identity_mismatch_diagnostic_codes,
             "guardrail_mismatch_validate_exit_code": guardrail_mismatch_validate_result["exit_code"],
             "guardrail_mismatch_diagnostic_codes": guardrail_mismatch_diagnostic_codes,
+            "content_hash_mismatch_validate_exit_code": content_hash_mismatch_validate_result["exit_code"],
+            "content_hash_mismatch_diagnostic_codes": content_hash_mismatch_diagnostic_codes,
             "validate_without_json_exit_code": validate_without_json_result["exit_code"],
             "validate_without_json_stderr": validate_without_json_result["stderr"][:500],
             "validate_wrong_section_exit_code": validate_wrong_section_result["exit_code"],
@@ -1265,7 +1292,7 @@ def test_review_queue_json_contract():
 
 def test_review_queue_apply_tool_contract():
     repo = copy_repo("review-queue-apply-tool")
-    seed_pending_review_queue_items(repo, count=2)
+    seed_pending_review_queue_items(repo, count=3)
     forms_result = run_cmd(
         repo,
         [
@@ -1280,7 +1307,7 @@ def test_review_queue_apply_tool_contract():
             "--queue-owner",
             "leiwenjun",
             "--queue-limit",
-            "2",
+            "3",
         ],
     )
     parse_errors = []
@@ -1292,8 +1319,8 @@ def test_review_queue_apply_tool_contract():
             forms.append(json.loads(line))
         except Exception as exc:
             parse_errors.append(str(exc))
-    if len(forms) < 2:
-        expect(False, "review-queue-apply-tool-contract", "review queue apply validates and applies filled forms without owner-gate mutation", {"setup_error": "expected at least two forms", "parse_errors": parse_errors, "stdout": forms_result["stdout"][:1000]}, repo)
+    if len(forms) < 3:
+        expect(False, "review-queue-apply-tool-contract", "review queue apply validates and applies filled forms without owner-gate mutation", {"setup_error": "expected at least three forms", "parse_errors": parse_errors, "stdout": forms_result["stdout"][:1000]}, repo)
         return
 
     temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-review-queue-apply-"))
@@ -1316,24 +1343,57 @@ def test_review_queue_apply_tool_contract():
     forbidden_form["owner_decision"] = "approved"
     stale_date_form = dict(accept_form)
     stale_date_form["human_reviewed_at"] = "2000-01-01"
+    hash_mismatch_form = dict(accept_form)
+    hash_mismatch_form["content_sha256"] = "0" * 64
+    archive_only_form = dict(forms[2])
+    archive_only_form.update({
+        "human_reviewed_by": "regression-fixture-human",
+        "human_reviewed_at": today.isoformat(),
+        "review_basis": "Regression fixture records archive-only without changing lifecycle.",
+        "review_decision": "archive-only",
+    })
 
     accept_path = temp_root / "accept.jsonl"
     needs_edits_path = temp_root / "needs-edits.jsonl"
     forbidden_path = temp_root / "forbidden.jsonl"
     stale_date_path = temp_root / "stale-date.jsonl"
+    hash_mismatch_path = temp_root / "hash-mismatch.jsonl"
+    archive_only_path = temp_root / "archive-only.jsonl"
     accept_path.write_text(json.dumps(accept_form, ensure_ascii=False, separators=(",", ":")) + "\n")
     needs_edits_path.write_text(json.dumps(needs_edits_form, ensure_ascii=False, separators=(",", ":")) + "\n")
     forbidden_path.write_text(json.dumps(forbidden_form, ensure_ascii=False, separators=(",", ":")) + "\n")
     stale_date_path.write_text(json.dumps(stale_date_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    hash_mismatch_path.write_text(json.dumps(hash_mismatch_form, ensure_ascii=False, separators=(",", ":")) + "\n")
+    archive_only_path.write_text(json.dumps(archive_only_form, ensure_ascii=False, separators=(",", ":")) + "\n")
 
     before_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
     dry_run_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(accept_path), "--dry-run", "--json"])
     forbidden_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(forbidden_path), "--dry-run", "--json"])
     stale_date_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(stale_date_path), "--dry-run", "--json"])
+    hash_mismatch_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(hash_mismatch_path), "--dry-run", "--json"])
+    archive_only_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(archive_only_path), "--dry-run", "--json"])
     apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(accept_path), "--apply", "--json"])
     after_accept_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+    review_body_path = repo / str(accept_form.get("path", ""))
+    original_review_body = review_body_path.read_text()
+    try:
+        review_body_path.write_text(original_review_body + "\n<!-- regression review content drift -->\n")
+        drift_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+        drift_check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
+    finally:
+        review_body_path.write_text(original_review_body)
     needs_edits_apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(needs_edits_path), "--apply", "--json"])
     after_needs_edits_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+    archive_only_apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(archive_only_path), "--apply", "--json"])
+    after_archive_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+    archive_review_body_path = repo / str(archive_only_form.get("path", ""))
+    original_archive_review_body = archive_review_body_path.read_text()
+    try:
+        archive_review_body_path.write_text(original_archive_review_body + "\n<!-- regression terminal review content drift -->\n")
+        archive_drift_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
+        archive_drift_check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
+    finally:
+        archive_review_body_path.write_text(original_archive_review_body)
 
     payloads = {}
     for name, result in [
@@ -1341,10 +1401,18 @@ def test_review_queue_apply_tool_contract():
         ("dry_run", dry_run_result),
         ("forbidden", forbidden_result),
         ("stale_date", stale_date_result),
+        ("hash_mismatch", hash_mismatch_result),
+        ("archive_only", archive_only_result),
         ("apply", apply_result),
         ("after_accept", after_accept_status_result),
+        ("drift_status", drift_status_result),
+        ("drift_check", drift_check_result),
         ("needs_edits_apply", needs_edits_apply_result),
         ("after_needs_edits", after_needs_edits_status_result),
+        ("archive_only_apply", archive_only_apply_result),
+        ("after_archive", after_archive_status_result),
+        ("archive_drift_status", archive_drift_status_result),
+        ("archive_drift_check", archive_drift_check_result),
     ]:
         try:
             payloads[name] = json.loads(result["stdout"])
@@ -1365,6 +1433,11 @@ def test_review_queue_apply_tool_contract():
         for row in payloads.get("stale_date", {}).get("diagnostics", [])
         if isinstance(row, dict)
     ]
+    hash_mismatch_codes = [
+        row.get("code")
+        for row in payloads.get("hash_mismatch", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
     items_by_id = {}
     for line in (repo / "registry" / "items.jsonl").read_text().splitlines():
         if not line.strip():
@@ -1373,15 +1446,20 @@ def test_review_queue_apply_tool_contract():
         items_by_id[item.get("id")] = item
     accept_item_id = accept_form.get("id")
     needs_edits_item_id = needs_edits_form.get("id")
+    archive_only_item_id = archive_only_form.get("id")
     accept_item = items_by_id.get(accept_item_id, {})
     needs_edits_item = items_by_id.get(needs_edits_item_id, {})
+    archive_only_item = items_by_id.get(archive_only_item_id, {})
+    archive_drift_rows = payloads.get("archive_drift_status", {}).get("review_queues", {}).get("ai_generated_pending", [])
 
     expect(
         forms_result["exit_code"] == 0
-        and len(forms) >= 2
+        and len(forms) >= 3
         and not parse_errors
+        and all(form.get("schema_version") == 2 for form in forms)
+        and all(len(form.get("content_sha256", "")) == 64 for form in forms)
         and before_status_result["exit_code"] != 0
-        and pending_count("before") >= 2
+        and pending_count("before") >= 3
         and dry_run_result["exit_code"] == 0
         and payloads.get("dry_run", {}).get("status") == "planned"
         and payloads.get("dry_run", {}).get("applied") is False
@@ -1389,12 +1467,22 @@ def test_review_queue_apply_tool_contract():
         and "forbidden-owner-field" in forbidden_codes
         and stale_date_result["exit_code"] != 0
         and "human-reviewed-at-before-created-at" in stale_date_codes
+        and hash_mismatch_result["exit_code"] != 0
+        and "content-sha256-mismatch" in hash_mismatch_codes
+        and archive_only_result["exit_code"] == 0
+        and payloads.get("archive_only", {}).get("planned_updates", [{}])[0].get("status_before")
+            == payloads.get("archive_only", {}).get("planned_updates", [{}])[0].get("status_after")
+        and payloads.get("archive_only", {}).get("planned_updates", [{}])[0].get("lifecycle_mutation") is False
         and apply_result["exit_code"] == 0
         and payloads.get("apply", {}).get("status") == "applied"
         and pending_count("after_accept") == pending_count("before") - 1
         and accept_item.get("human_reviewed_by") == "regression-fixture-human"
         and accept_item.get("human_review_decision") == "accept-as-review-record"
+        and accept_item.get("human_review_content_sha256") == accept_form.get("content_sha256")
         and accept_item.get("review_status") == "human-reviewed-accepted"
+        and pending_count("drift_status") == pending_count("before")
+        and drift_check_result["exit_code"] != 0
+        and "human review content drift" in drift_check_result["stdout"]
         and needs_edits_apply_result["exit_code"] == 0
         and needs_edits_item.get("human_review_decision") == "needs-edits"
         and needs_edits_item.get("review_status") == "human-review-needs-edits"
@@ -1402,7 +1490,22 @@ def test_review_queue_apply_tool_contract():
         and any(
             blocker.get("id") == "review-queue-pending-product"
             for blocker in payloads.get("after_needs_edits", {}).get("strict_blockers", [])
-        ),
+        )
+        and archive_only_apply_result["exit_code"] == 0
+        and payloads.get("archive_only_apply", {}).get("status") == "applied"
+        and archive_only_item.get("status") == archive_only_form.get("read_only_context", {}).get("registry_status")
+        and archive_only_item.get("human_review_decision") == "archive-only"
+        and archive_only_item.get("human_review_content_sha256") == archive_only_form.get("content_sha256")
+        and archive_only_item.get("review_status") == "human-reviewed-archive-only"
+        and pending_count("after_archive") == pending_count("after_accept") - 1
+        and pending_count("archive_drift_status") == pending_count("before")
+        and any(
+            row.get("id") == archive_only_item_id
+            and "unresolved-content-sha256-drift" in row.get("reasons", [])
+            for row in archive_drift_rows
+        )
+        and archive_drift_check_result["exit_code"] != 0
+        and f"items:{archive_only_item_id} human review content drift" in archive_drift_check_result["stdout"],
         "review-queue-apply-tool-contract",
         "review queue apply validates and applies filled forms without owner-gate mutation",
         {
@@ -1416,12 +1519,22 @@ def test_review_queue_apply_tool_contract():
             "forbidden_codes": forbidden_codes,
             "stale_date_exit_code": stale_date_result["exit_code"],
             "stale_date_codes": stale_date_codes,
+            "hash_mismatch_exit_code": hash_mismatch_result["exit_code"],
+            "hash_mismatch_codes": hash_mismatch_codes,
+            "archive_only_payload": payloads.get("archive_only", {}),
             "apply_exit_code": apply_result["exit_code"],
             "after_accept_pending": pending_count("after_accept"),
+            "drift_pending": pending_count("drift_status"),
+            "drift_check_exit_code": drift_check_result["exit_code"],
             "needs_edits_apply_exit_code": needs_edits_apply_result["exit_code"],
             "after_needs_edits_pending": pending_count("after_needs_edits"),
+            "archive_only_apply_exit_code": archive_only_apply_result["exit_code"],
+            "after_archive_pending": pending_count("after_archive"),
+            "archive_drift_pending": pending_count("archive_drift_status"),
+            "archive_drift_check_exit_code": archive_drift_check_result["exit_code"],
             "accept_item": accept_item,
             "needs_edits_item": needs_edits_item,
+            "archive_only_item": archive_only_item,
         },
         repo,
     )

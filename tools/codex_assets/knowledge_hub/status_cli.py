@@ -1,6 +1,7 @@
 import argparse
 import collections
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
@@ -37,6 +38,27 @@ SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
 OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"
 PRODUCT_COPY_TARGET_PREFIXES = ("projects/", "domains/", "notes/")
 PRODUCT_COPY_ALLOWED_OBJECT_TYPES = {"markdown"}
+REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
+
+def repository_file_sha256(relative_path):
+    path_text = str(relative_path or "")
+    if not path_text:
+        return ""
+    candidate = pathlib.Path(path_text)
+    if candidate.is_absolute():
+        return ""
+    resolved = (root / candidate).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return ""
+    if not resolved.is_file():
+        return ""
+    digest = hashlib.sha256()
+    with resolved.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 def resolve_today():
     if args.as_of:
@@ -292,6 +314,7 @@ def review_priority_for_item(item):
 def make_review_queue_item(item, queue_type, reasons, missing_fields):
     item_id = str(item.get("id", ""))
     source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
+    content_sha256 = repository_file_sha256(item.get("path", ""))
     return {
         "queue_id": f"item:{item_id}:{queue_type}",
         "queue_type": queue_type,
@@ -301,6 +324,9 @@ def make_review_queue_item(item, queue_type, reasons, missing_fields):
         "kind": str(item.get("kind", "")),
         "domain": str(item.get("domain", "")),
         "path": str(item.get("path", "")),
+        "content_hash_required": True,
+        "content_hash_status": "bound" if content_sha256 else "unavailable",
+        "content_sha256": content_sha256,
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
@@ -359,6 +385,9 @@ def make_external_source_queue_item(source):
         "kind": "registered-source",
         "domain": "",
         "path": str(source.get("path", "")),
+        "content_hash_required": False,
+        "content_hash_status": "not-applicable",
+        "content_sha256": "",
         "owner": str(source.get("owner", "")),
         "status": str(source.get("status", "")),
         "review_after": str(source.get("review_after", "")),
@@ -397,6 +426,13 @@ def build_review_queues(items, sources):
                 field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
                 if is_blank(item.get(field))
             ]
+            current_content_sha256 = repository_file_sha256(item.get("path", ""))
+            stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
+            review_content_drifted = (
+                str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
+                and bool(stored_review_sha256)
+                and stored_review_sha256 != current_content_sha256
+            )
             if missing_fields:
                 ai_rows.append(
                     make_review_queue_item(
@@ -413,6 +449,15 @@ def build_review_queues(items, sources):
                         item,
                         "ai-human-review",
                         [f"unresolved-{review_decision}"],
+                        ["review_resolution"],
+                    )
+                )
+            elif review_content_drifted:
+                ai_rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        ["unresolved-content-sha256-drift"],
                         ["review_resolution"],
                     )
                 )

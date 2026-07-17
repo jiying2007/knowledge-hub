@@ -1,6 +1,7 @@
 import argparse
 import collections
 import datetime as dt
+import hashlib
 import json
 import os
 import pathlib
@@ -50,6 +51,8 @@ decisions = []
 errors = []
 warnings = []
 SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
 
 def user_path_prefixes():
     prefixes = [str(pathlib.Path.home())]
@@ -71,6 +74,26 @@ def display_path(value):
 
 def is_local_manifest_draft(path):
     return path.suffix == ".jsonl" and path.name.endswith(".local.jsonl")
+
+def repository_file_sha256(relative_path):
+    path_text = str(relative_path or "")
+    if not path_text:
+        return ""
+    candidate = pathlib.Path(path_text)
+    if candidate.is_absolute():
+        return ""
+    resolved = (root / candidate).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        return ""
+    if not resolved.is_file():
+        return ""
+    digest = hashlib.sha256()
+    with resolved.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 def select_source_coverage_closeout(root):
     paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
@@ -386,6 +409,7 @@ def source_looks_external(source):
 def make_review_queue_item(item, queue_type, reasons, missing_fields):
     item_id = str(item.get("id", ""))
     source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
+    content_sha256 = repository_file_sha256(item.get("path", ""))
     return {
         "queue_id": f"item:{item_id}:{queue_type}",
         "queue_type": queue_type,
@@ -395,6 +419,9 @@ def make_review_queue_item(item, queue_type, reasons, missing_fields):
         "kind": str(item.get("kind", "")),
         "domain": str(item.get("domain", "")),
         "path": str(item.get("path", "")),
+        "content_hash_required": True,
+        "content_hash_status": "bound" if content_sha256 else "unavailable",
+        "content_sha256": content_sha256,
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
@@ -445,6 +472,9 @@ def make_external_source_queue_item(source):
         "kind": "registered-source",
         "domain": "",
         "path": str(source.get("path", "")),
+        "content_hash_required": False,
+        "content_hash_status": "not-applicable",
+        "content_sha256": "",
         "owner": str(source.get("owner", "")),
         "status": str(source.get("status", "")),
         "review_after": str(source.get("review_after", "")),
@@ -482,6 +512,13 @@ def build_review_queue_view(items, sources):
                 field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
                 if is_blank(item.get(field))
             ]
+            current_content_sha256 = repository_file_sha256(item.get("path", ""))
+            stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
+            review_content_drifted = (
+                str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
+                and bool(stored_review_sha256)
+                and stored_review_sha256 != current_content_sha256
+            )
             if missing_fields:
                 rows.append(
                     make_review_queue_item(
@@ -498,6 +535,15 @@ def build_review_queue_view(items, sources):
                         item,
                         "ai-human-review",
                         [f"human-review-{review_decision}"],
+                        ["review_resolution"],
+                    )
+                )
+            elif review_content_drifted:
+                rows.append(
+                    make_review_queue_item(
+                        item,
+                        "ai-human-review",
+                        ["human-review-content-sha256-drift"],
                         ["review_resolution"],
                     )
                 )
@@ -598,7 +644,7 @@ def build_review_queue_command(include_json=False, include_forms_jsonl=False, va
 def make_review_queue_form(row):
     form = {
         "form_type": "review-queue-human-review",
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "human-fill-required",
         "read_only": True,
         "report_only": True,
@@ -616,11 +662,14 @@ def make_review_queue_form(row):
         "kind": str(row.get("kind", "")),
         "domain": str(row.get("domain", "")),
         "path": str(row.get("path", "")),
+        "content_hash_required": bool(row.get("content_hash_required", False)),
+        "content_sha256": str(row.get("content_sha256", "")),
         "source_id": str(row.get("source_id", "")),
         "review_after": str(row.get("review_after", "")),
         "priority": str(row.get("priority", "")),
         "reasons": as_list(row.get("reasons", [])),
         "missing_fields": as_list(row.get("missing_fields", [])),
+        "required_binding_fields": ["content_sha256"] if row.get("content_hash_required") else [],
         "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
         "human_reviewed_by": "",
         "human_reviewed_at": "",
@@ -645,7 +694,7 @@ def make_review_queue_form(row):
             "不得把本表单当 owner decision",
             "不得由 Codex 自动回填 human_reviewed_by/human_reviewed_at/review_basis",
         ],
-        "notes_zh": "这是人工复核填写前的只读 JSONL 骨架；工具只负责按过滤条件列出待复核对象，不写 registry，不生成结论，不提升 active。",
+        "notes_zh": "这是人工复核填写前的只读 JSONL 骨架；registry item 的 content_sha256 绑定当前整文件，正文漂移后表单必须重新导出。工具不写 registry，不生成结论，不提升 active。",
     }
     return form
 
@@ -799,13 +848,14 @@ def validate_review_queue_forms(view, all_view):
                 ))
             continue
 
-        for field in ["form_type", "schema_version", "queue_type", "object_type", "id"]:
+        for field in ["form_type", "schema_version", "queue_type", "object_type", "id", "content_hash_required"]:
             expected = {
                 "form_type": "review-queue-human-review",
-                "schema_version": 1,
+                "schema_version": 2,
                 "queue_type": row.get("queue_type", ""),
                 "object_type": row.get("object_type", ""),
                 "id": row.get("id", ""),
+                "content_hash_required": bool(row.get("content_hash_required", False)),
             }[field]
             if form.get(field) != expected:
                 diagnostics.append(make_queue_form_diagnostic(
@@ -817,6 +867,32 @@ def validate_review_queue_forms(view, all_view):
                     actual=form.get(field),
                     expected=expected,
                     action_zh="不要手改表单身份字段；重新导出当前批次表单后只填写人工字段。",
+                ))
+
+        if row.get("content_hash_required"):
+            expected_content_sha256 = str(row.get("content_sha256", ""))
+            submitted_content_sha256 = str(form.get("content_sha256", ""))
+            if not SHA256_RE.fullmatch(expected_content_sha256):
+                diagnostics.append(make_queue_form_diagnostic(
+                    "content-sha256-unavailable",
+                    "当前 registry item 正文无法生成有效 SHA256，表单不能进入人工复核。",
+                    line_no=line_no,
+                    queue_id=queue_id,
+                    field="content_sha256",
+                    actual=expected_content_sha256,
+                    expected="当前正文的 64 位小写 SHA256",
+                    action_zh="修复 registry path 或缺失正文后重新导出表单。",
+                ))
+            elif submitted_content_sha256 != expected_content_sha256:
+                diagnostics.append(make_queue_form_diagnostic(
+                    "content-sha256-mismatch",
+                    "表单绑定的正文 SHA256 与当前文件不一致，正文可能已漂移。",
+                    line_no=line_no,
+                    queue_id=queue_id,
+                    field="content_sha256",
+                    actual=submitted_content_sha256,
+                    expected=expected_content_sha256,
+                    action_zh="重新阅读当前正文并重新导出表单；不得沿用旧判断。",
                 ))
 
         for field in REVIEW_QUEUE_REQUIRED_HUMAN_FIELDS:
@@ -944,6 +1020,7 @@ def validate_review_queue_forms(view, all_view):
         "outside_filter_queue_ids": sorted(set(outside_filter_queue_ids)),
         "missing_queue_ids": missing_queue_ids,
         "required_submission_fields": REVIEW_QUEUE_REQUIRED_HUMAN_FIELDS + ["review_decision"],
+        "required_binding_fields": ["content_sha256"],
         "review_decision_candidates": sorted(REVIEW_QUEUE_FORM_DECISIONS),
         "diagnostics": diagnostics,
         "warnings": warnings_out,

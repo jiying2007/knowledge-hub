@@ -215,7 +215,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts
 rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts/manifests/review-queue.local.jsonl --apply --json
 ```
 
-`knowledge-review-queue-apply.sh` 只机械落地已校验人工复核字段；表单中出现 owner gate、active promotion、memory write、source project write 等字段会被拒绝。`needs-edits` 和 `defer` 会保留为 `max-body` blocker，直到人工补正或改判。
+`knowledge-review-queue-apply.sh` 只机械落地已校验人工复核字段。registry item 表单使用 schema v2，并绑定导出时的整文件 `content_sha256`；正文漂移会拒绝校验和 apply，成功落地后保存 `human_review_content_sha256`，后续漂移会重新入队。表单中出现 owner gate、active promotion、memory write、source project write 等字段会被拒绝。`needs-edits` 和 `defer` 会保留为 `max-body` blocker，直到人工补正或改判；`archive-only/reject` 也不会直接改变 lifecycle status，退役必须走独立内容 attestation、执行授权和 `knowledge-retire.sh`。
 
 ## 高风险授权
 

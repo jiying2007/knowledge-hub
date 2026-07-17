@@ -331,6 +331,7 @@ LOCAL_PATH_PREFIXES = (
     "templates/",
 )
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
+REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
 OWNER_DECISION_DRAFT_FIELDS = {
     "owner_decision",
     "target_decision",
@@ -2187,6 +2188,23 @@ if not args.sources_only:
                     errors.append(
                         f"frontmatter-status:{item_id} field={field} registry={registry_value} "
                         f"frontmatter={declared_value}: {rel_path.as_posix()}"
+                    )
+        human_review_content_sha256 = str(item.get("human_review_content_sha256", ""))
+        if human_review_content_sha256:
+            if not SHA256_RE.fullmatch(human_review_content_sha256):
+                errors.append(
+                    f"items:{item_id} invalid human_review_content_sha256: {human_review_content_sha256}"
+                )
+            elif (
+                str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
+                and not rel_path.is_absolute()
+                and (root / rel_path).is_file()
+            ):
+                current_content_sha256 = file_sha256(root / rel_path)
+                if current_content_sha256 != human_review_content_sha256:
+                    errors.append(
+                        f"items:{item_id} human review content drift: "
+                        f"reviewed={human_review_content_sha256} current={current_content_sha256}"
                     )
         path_text = str(item.get("path", ""))
         if domain == "root" and path_text not in {"README.md", "AGENTS.md"}:
