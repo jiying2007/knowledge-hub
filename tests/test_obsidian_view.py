@@ -1,4 +1,9 @@
-from tools.codex_assets.knowledge_hub.common import repository_root
+import json
+
+import pytest
+
+from tools.codex_assets.knowledge_hub import obsidian_view
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
 from tools.codex_assets.knowledge_hub.obsidian_view import (
     build_obsidian_views,
     obsidian_runtime_acceptance,
@@ -37,3 +42,27 @@ def test_obsidian_runtime_acceptance_requires_real_gui_evidence(tmp_path):
 """
     )
     assert obsidian_runtime_acceptance(tmp_path)["status"] == "pass"
+
+
+def test_obsidian_builder_fails_closed_when_managed_markdown_exceeds_budget(
+    tmp_path, monkeypatch
+):
+    (tmp_path / "registry").mkdir()
+    item = {
+        "id": "managed-note",
+        "title": "Managed note",
+        "kind": "runbook",
+        "domain": "projects/p",
+        "path": "projects/p/current/note.md",
+        "status": "reviewing",
+        "visibility": "team-internal",
+    }
+    (tmp_path / "registry/items.jsonl").write_text(json.dumps(item) + "\n")
+    (tmp_path / "registry/projects.json").write_text('{"projects": []}\n')
+    path = tmp_path / item["path"]
+    path.parent.mkdir(parents=True)
+    path.write_text("# Note\n\n" + "x" * 64)
+    monkeypatch.setattr(obsidian_view, "OBSIDIAN_MAX_FILE_BYTES", 16)
+
+    with pytest.raises(KnowledgeHubError, match="exceeds 16 bytes"):
+        build_obsidian_views(tmp_path)

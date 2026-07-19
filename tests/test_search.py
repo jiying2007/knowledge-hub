@@ -1,5 +1,6 @@
 import errno
 import json
+import os
 import sqlite3
 
 import pytest
@@ -11,6 +12,7 @@ from tools.codex_assets.knowledge_hub.search import (
     INDEX_SCHEMA_VERSION,
     SearchFilters,
     SearchIndex,
+    _signature,
     _index_tokens,
     _indexed_title,
     _physical_sources,
@@ -80,9 +82,14 @@ def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
             "select sql from sqlite_master where name='documents_fts'"
         ).fetchone()[0]
 
-    assert INDEX_SCHEMA_VERSION == 5
-    assert index.path.name == "search-index-v5.sqlite3"
+    assert INDEX_SCHEMA_VERSION == 7
+    assert index.path.name == "search-index-v7.sqlite3"
     assert "body unindexed" in schema.lower()
+    with sqlite3.connect(str(index.path)) as connection:
+        indexed_columns = {
+            row[1] for row in connection.execute("pragma table_info(indexed_files)")
+        }
+    assert {"ctime_ns", "device", "inode", "content_sha256"} <= indexed_columns
 
 
 def test_forced_rebuild_reuses_exact_persistent_token_provenance(monkeypatch, tmp_path):
@@ -227,6 +234,148 @@ def test_physical_sources_use_path_boundaries_and_resolve_file_symlinks(tmp_path
     assert _physical_sources(inside, roots) == ["knowledge-hub", "registered-source"]
     assert _physical_sources(collision, roots) == ["knowledge-hub"]
     assert _physical_sources(link, roots) == ["knowledge-hub"]
+
+
+def test_search_never_indexes_repository_file_symlink(tmp_path):
+    root = _search_root(tmp_path)
+    outside = tmp_path.parent / "outside-search.md"
+    outside.write_text("outside-search-confidential-marker\n", encoding="utf-8")
+    link = root / "projects/p1/current/external-link.md"
+    link.symlink_to(outside)
+
+    payload = search(root, "outside-search-confidential-marker", limit=5)
+
+    assert payload["status"] == "zero-hit"
+    assert payload["results"] == []
+
+
+def test_search_index_and_cache_directory_are_private(tmp_path):
+    root = _search_root(tmp_path)
+
+    search(root, "Obsidian", limit=5)
+    index = SearchIndex(root)
+
+    assert index.cache_root.stat().st_mode & 0o777 == 0o700
+    assert index.path.stat().st_mode & 0o777 == 0o600
+    assert index.lock_path.stat().st_mode & 0o777 == 0o600
+    assert index.token_cache_path.stat().st_mode & 0o777 == 0o600
+
+
+def test_search_signature_hashes_content_even_when_size_and_mtime_match(tmp_path):
+    root = _search_root(tmp_path)
+    target = root / "projects/p1/current/unregistered.md"
+    first_signature, _, _ = _signature(root)
+    original_stat = target.stat()
+    target.write_text("new secret marker\n", encoding="utf-8")
+    assert target.stat().st_size == original_stat.st_size
+    os.utime(target, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+
+    second_signature, _, _ = _signature(root)
+
+    assert second_signature != first_signature
+
+
+def test_warm_search_reuses_trusted_content_hashes(tmp_path):
+    root = _search_root(tmp_path)
+    index = SearchIndex(root)
+
+    first = index.ensure()
+    second = index.ensure()
+
+    assert first["state"] == "rebuilt"
+    assert second["state"] == "warm"
+    assert second["hashed_files"] == 0
+    assert second["reused_content_hashes"] == second["document_files"]
+
+
+def test_cached_signature_detects_same_size_and_mtime_content_change(tmp_path):
+    root = _search_root(tmp_path)
+    target = root / "projects/p1/current/unregistered.md"
+    index = SearchIndex(root)
+    index.ensure()
+    original_stat = target.stat()
+    target.write_text("new secret marker\n", encoding="utf-8")
+    assert target.stat().st_size == original_stat.st_size
+    os.utime(target, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+
+    payload = search(root, "new secret marker", limit=5, search_index=index)
+
+    assert payload["results"][0]["path"].endswith("unregistered.md")
+    assert payload["index"]["state"] == "updated"
+    assert payload["index"]["hashed_files"] >= 1
+
+
+def test_invalid_cached_content_hash_is_recomputed(tmp_path):
+    root = _search_root(tmp_path)
+    index = SearchIndex(root)
+    index.ensure()
+    with sqlite3.connect(str(index.path)) as connection:
+        connection.execute(
+            "update indexed_files set content_sha256='invalid' where path=?",
+            ("governance/obsidian.md",),
+        )
+        connection.commit()
+
+    payload = index.ensure()
+
+    assert payload["state"] == "warm"
+    assert payload["hashed_files"] >= 1
+    with sqlite3.connect(str(index.path)) as connection:
+        digest = connection.execute(
+            "select content_sha256 from indexed_files where path=?",
+            ("governance/obsidian.md",),
+        ).fetchone()[0]
+    assert len(digest) == 64
+
+
+def test_unchanged_content_metadata_refresh_only_rehashes_once(tmp_path):
+    root = _search_root(tmp_path)
+    target = root / "projects/p1/current/unregistered.md"
+    index = SearchIndex(root)
+    index.ensure()
+    original_stat = target.stat()
+    os.utime(
+        target,
+        ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns + 1_000_000),
+    )
+
+    refreshed = index.ensure()
+    stable = index.ensure()
+
+    assert refreshed["state"] == "warm"
+    assert refreshed["hashed_files"] == 1
+    assert refreshed["metadata_refreshed_files"] == 1
+    assert stable["hashed_files"] == 0
+    assert stable["metadata_refreshed_files"] == 0
+
+
+def test_signature_fails_closed_when_file_changes_during_read(monkeypatch, tmp_path):
+    root = _search_root(tmp_path)
+    target = root / "projects/p1/current/unregistered.md"
+    original_reader = search_module.read_repository_bytes_bounded
+
+    def mutating_reader(read_root, relative, maximum_bytes, label):
+        raw = original_reader(read_root, relative, maximum_bytes, label)
+        if relative == "projects/p1/current/unregistered.md":
+            target.write_text("new secret marker\n", encoding="utf-8")
+        return raw
+
+    monkeypatch.setattr(
+        search_module,
+        "read_repository_bytes_bounded",
+        mutating_reader,
+    )
+
+    with pytest.raises(KnowledgeHubError, match="changed during signature"):
+        _signature(root)
+
+
+def test_search_rejects_text_file_over_configured_byte_budget(monkeypatch, tmp_path):
+    root = _search_root(tmp_path)
+    monkeypatch.setattr(search_module, "SEARCH_MAX_FILE_BYTES", 16, raising=False)
+
+    with pytest.raises(KnowledgeHubError, match="search text file exceeds"):
+        search(root, "Obsidian", limit=5)
 
 
 def test_structured_filter_excludes_unregistered_raw_file(tmp_path):

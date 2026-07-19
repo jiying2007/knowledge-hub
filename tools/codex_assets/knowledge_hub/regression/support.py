@@ -60,6 +60,7 @@ def resolve_today():
 today, today_source = resolve_today()
 child_env = os.environ.copy()
 child_env["KNOWLEDGE_TELEMETRY"] = "0"
+child_env["KNOWLEDGE_PYTHON_RUNTIME"] = os.path.abspath(sys.executable)
 if today_source != "system-date":
     child_env["KNOWLEDGE_TODAY"] = today.isoformat()
 
@@ -147,7 +148,7 @@ def sync_status_index_entries(repo, item_ids, target_status):
     present = set()
     insert_at = None
     status_prefix = f"- {target_status}: `"
-    for index, line in enumerate(lines):
+    for _index, line in enumerate(lines):
         matched_id = ""
         for item_id in ids:
             if re.match(rf"^- [a-z0-9_-]+: `{re.escape(item_id)}`$", line):
@@ -565,6 +566,16 @@ def run_test(fn):
     finally:
         duration_sec = round(time.monotonic() - started_at, 3)
         records = list(getattr(test_context, "records", []))
+        if not records:
+            records = [
+                {
+                    "id": fn.__name__.replace("test_", "").replace("_", "-"),
+                    "title": "{} produced no assertion record".format(fn.__name__),
+                    "status": "fail",
+                    "details": {"reason": "regression test returned without expect()/record()"},
+                    "fixture_repo": "",
+                }
+            ]
         for result in records:
             result["duration_sec"] = duration_sec
             result["test_fn"] = fn.__name__

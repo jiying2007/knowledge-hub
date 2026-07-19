@@ -122,6 +122,13 @@
       "change_policy": "strict-current-contract"
     },
     {
+      "id": "product-policy-v1",
+      "schema": "schemas/product-policy.schema.json",
+      "applies_to": "registry/product-policy.json",
+      "authority": "registry-product-and-readiness-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
       "id": "local-workspaces-v1",
       "schema": "schemas/local-workspaces.schema.json",
       "applies_to": "local/workspaces.json",
@@ -157,7 +164,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "local-metrics-v3",
+      "id": "local-metrics-v4",
       "schema": "schemas/local-metrics.schema.json",
       "applies_to": "knowledge-metrics.sh --json",
       "authority": "derived-local-telemetry",

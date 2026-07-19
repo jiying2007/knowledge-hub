@@ -27,6 +27,7 @@ from .common import (
 from .evidence import merge_evidence_contract, new_evidence_contract, project_evidence_profile
 from .indexing import CORE_INDEXES, update_core_indexes, update_project_index, update_topic_index
 from .model import frontmatter_mirror, require_valid_item
+from .product_policy import load_product_policy, readiness_extensions_by_project
 from .store import RepositoryTransaction
 
 
@@ -123,7 +124,9 @@ def _item_domain(project: Mapping[str, Any]) -> str:
     return domain
 
 
-def _validation_expectations(project: Mapping[str, Any]) -> List[str]:
+def _validation_expectations(
+    project: Mapping[str, Any], extension: Mapping[str, Any]
+) -> List[str]:
     boundary = str(project.get("repo_boundary", ""))
     project_type = str(project.get("type", ""))
     rows = [
@@ -152,8 +155,7 @@ def _validation_expectations(project: Mapping[str, Any]) -> List[str]:
         rows.append("控制面验证：执行 check、unit、retrieval、route、link、export 和 restore drill。")
     else:
         rows.append("项目组验证：每个成员仓分别补源码、设备/平台和发布证据，不能用组级结论替代。")
-    if project["id"] in {"pcr02-ssc305", "xcrz-sigmastar-demo", "pcr02-hdi"}:
-        rows.append("ST77912 专项：补高温老化、SCLK/EMI 和端到端显示链路证据；缺任一项不得声明发布就绪。")
+    rows.extend(str(value) for value in extension.get("validation_expectations_zh", []))
     return rows
 
 
@@ -478,13 +480,23 @@ def _decision_body(project: Mapping[str, Any], path: str, paths: Mapping[str, st
     )
 
 
-def _validation_body(project: Mapping[str, Any], path: str, paths: Mapping[str, str]) -> str:
-    expectations = "\n".join("- [ ] {}".format(value) for value in _validation_expectations(project))
-    special = ""
-    if project["id"] in {"pcr02-ssc305", "xcrz-sigmastar-demo", "pcr02-hdi"}:
-        special = "\n- {}".format(
-            _link(path, "artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md", "PCR02 owner-ready 实机/发布验证路径")
+def _validation_body(
+    project: Mapping[str, Any],
+    path: str,
+    paths: Mapping[str, str],
+    project_count: int,
+    extension: Mapping[str, Any],
+) -> str:
+    expectations = "\n".join(
+        "- [ ] {}".format(value)
+        for value in _validation_expectations(project, extension)
+    )
+    related_extension = "".join(
+        "\n- {}".format(
+            _link(path, str(row["path"]), str(row["label_zh"]))
         )
+        for row in extension.get("related_links", [])
+    )
     return """# {name} readiness validation
 
 ## 结论
@@ -494,7 +506,7 @@ def _validation_body(project: Mapping[str, Any], path: str, paths: Mapping[str, 
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 30 项目 route matrix 能将 `{project_id}` 稳定解析为本项目。
+- [x] {project_count} 项目 route matrix 能将 `{project_id}` 稳定解析为本项目。
 - [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
@@ -519,16 +531,17 @@ def _validation_body(project: Mapping[str, Any], path: str, paths: Mapping[str, 
 
 - {profile_link}
 - {runbook_link}
-- {decision_link}{special}
+- {decision_link}{related_extension}
 - {project_entry_link}
 """.format(
         name=project["name"],
         project_id=project["id"],
+        project_count=project_count,
         expectations=expectations,
         profile_link=_link(path, paths["profile"], "项目画像候选"),
         runbook_link=_link(path, paths["runbook"], "维护 runbook"),
         decision_link=_link(path, paths["decision"], "边界决策候选"),
-        special=special,
+        related_extension=related_extension,
         project_entry_link=_link(path, str(project["entry"]), "项目入口"),
     )
 
@@ -581,16 +594,6 @@ def _route_document(
             + [project_id, str(project.get("name", "")), project_id.replace("-", "_")]
         )
         topic_aliases = _dedupe(existing.get("topic_aliases", []))
-        if project_id == "pcr02-ssc305":
-            topic_aliases = _dedupe(
-                topic_aliases
-                + [
-                    "ST77912",
-                    "dual screen display",
-                    "framebuffer MI_FB",
-                    "RAW_PREVIEW",
-                ]
-            )
         inventory = _item_inventory(project, items)
         source_ids = _dedupe(source_id(row) for row in inventory if source_id(row))
         configured_source_ids = _dedupe(
@@ -668,7 +671,7 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
             "",
             "## 判定边界",
             "",
-            "- structural coverage：30 项目均有四类 reviewing 入口；group 元数据不重复计入项目数。",
+            "- structural coverage：{} 项目均有四类 reviewing 入口；group 元数据不重复计入项目数。".format(len(projects)),
             "- source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。",
             "- evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。",
             "- lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。",
@@ -685,18 +688,23 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
 def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
     projects_doc = load_json(root / "registry/projects.json", {}) or {}
     projects = [dict(row) for row in projects_doc.get("projects", [])]
-    if len(projects) != 30:
-        raise KnowledgeHubError("expected 30 registered projects, found {}".format(len(projects)))
-    for project in projects:
-        if project.get("id") == "knowledge-hub":
-            project.update(
-                {
-                    "current": "governance/product/current",
-                    "archive": "governance/product/archive",
-                    "decisions": "governance/product/decisions",
-                    "validation": "governance/product/validation",
-                }
+    if not projects:
+        raise KnowledgeHubError("registry/projects.json must contain at least one project")
+    project_ids = [str(project.get("id", "")) for project in projects]
+    if any(not project_id for project_id in project_ids):
+        raise KnowledgeHubError("every registered project must define a non-empty id")
+    if len(set(project_ids)) != len(project_ids):
+        raise KnowledgeHubError("registry/projects.json contains duplicate project ids")
+    product_policy, policy_errors = load_product_policy(root)
+    readiness_extensions, extension_errors = readiness_extensions_by_project(
+        product_policy, project_ids
+    )
+    if policy_errors or extension_errors:
+        raise KnowledgeHubError(
+            "invalid product readiness policy: {}".format(
+                "; ".join(policy_errors + extension_errors)
             )
+        )
 
     items = registry_items(root)
     repositories = repository_rows(root)
@@ -721,6 +729,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
 
     for project in projects:
         project_id = str(project["id"])
+        readiness_extension = readiness_extensions.get(project_id, {})
         evidence_profile = project_evidence_profile(project)
         project["evidence_profile"] = evidence_profile
         group_ids = [str(value) for value in project.get("groups", [])]
@@ -763,7 +772,13 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
                 "{} readiness validation".format(project["name"]),
                 "validation",
                 "记录 {} 的结构成熟度、本机 source 发现流程和真实 owner、工程/设备及发布验证待办；源码可定位不等于验证完成。".format(project["name"]),
-                _validation_body(project, paths["validation"], paths),
+                _validation_body(
+                    project,
+                    paths["validation"],
+                    paths,
+                    len(projects),
+                    readiness_extension,
+                ),
             ),
         }
         for slot in SLOT_NAMES:

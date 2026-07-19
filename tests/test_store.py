@@ -102,3 +102,35 @@ def test_recovery_audit_reports_interrupted_transaction_without_writing(tmp_path
     assert result["attention_count"] == 1
     assert result["rows"][0]["recoverable"] is True
     assert backup.read_text() == "before\n"
+
+
+def test_transaction_rejects_symlink_target_even_when_it_resolves_inside_root(tmp_path):
+    real_target = tmp_path / "real.txt"
+    real_target.write_text("before\n")
+    link = tmp_path / "linked.txt"
+    link.symlink_to(real_target)
+    transaction = RepositoryTransaction(tmp_path, "symlink-target")
+    transaction.add_text("linked.txt", "after\n")
+
+    with pytest.raises(KnowledgeHubError, match="symlink"):
+        transaction.plan()
+
+    assert real_target.read_text() == "before\n"
+
+
+def test_transaction_runtime_journal_lock_and_backups_are_private(tmp_path):
+    target = tmp_path / "registry/items.jsonl"
+    target.parent.mkdir(parents=True)
+    target.write_text("before\n")
+    transaction = RepositoryTransaction(tmp_path, "private-runtime")
+    transaction.add_text("registry/items.jsonl", "after\n")
+
+    transaction.apply()
+
+    assert (tmp_path / ".tmp").stat().st_mode & 0o777 == 0o700
+    assert (tmp_path / ".tmp/transactions/private-runtime").stat().st_mode & 0o777 == 0o700
+    assert transaction.stage_root.stat().st_mode & 0o777 == 0o700
+    assert (transaction.backup_root / "registry").stat().st_mode & 0o777 == 0o700
+    assert transaction.journal_path.stat().st_mode & 0o777 == 0o600
+    assert (transaction.backup_root / "registry/items.jsonl").stat().st_mode & 0o777 == 0o600
+    assert transaction.lock_path.stat().st_mode & 0o777 == 0o600

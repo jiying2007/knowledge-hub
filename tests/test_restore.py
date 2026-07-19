@@ -34,3 +34,14 @@ def test_restore_rejects_unknown_source_mode(tmp_path):
         assert "candidate or head" in str(exc)
     else:
         raise AssertionError("unknown restore source mode was accepted")
+
+
+def test_restore_runtime_preserves_virtualenv_symlink_path(tmp_path, monkeypatch):
+    target = tmp_path / "python-base"
+    target.write_text("runtime", encoding="utf-8")
+    runtime = tmp_path / "venv" / "bin" / "python"
+    runtime.parent.mkdir(parents=True)
+    runtime.symlink_to(target)
+    monkeypatch.setattr(restore.sys, "executable", str(runtime))
+
+    assert restore._restore_runtime() == str(runtime)

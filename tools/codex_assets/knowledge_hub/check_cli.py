@@ -101,51 +101,6 @@ def file_sha256(path):
             digest.update(chunk)
     return digest.hexdigest()
 
-EXPECTED_BOUNDARY_MANIFESTS = {
-    "pcr02-tools-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-tools-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-tools-boundary-20260620.jsonl",
-        "source_id": "pcr02-project-tools",
-        "required_text": "memory-candidate-automation-ref",
-    },
-    "pcr02-knowledge-secret-config-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.jsonl",
-        "source_id": "pcr02-project-knowledge",
-        "required_text": "project-local-standard-candidate",
-    },
-    "pcr02-product-test-artifact-config-interface-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.jsonl",
-        "source_id": "pcr02-product-test",
-        "required_text": "build-artifact-generated",
-    },
-    "pcr02-scratch-archive-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-scratch-archive-boundary-20260620.jsonl",
-        "source_id": "pcr02-project-scratch",
-        "required_text": "historical-session-evidence",
-    },
-    "pcr02-root-artifacts-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-root-artifacts-boundary-20260620.jsonl",
-        "source_id": "pcr02-project-root-artifacts",
-        "required_text": "source-coverage-evidence-drift",
-    },
-    "pcr02-module-agent-rules-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-module-agent-rules-boundary-20260620.jsonl",
-        "source_id": "pcr02-module-agent-rules",
-        "required_text": "module-local-owner-gated-control-entry-rule",
-    },
-    "pcr02-agent-config-boundary-20260620": {
-        "md": "artifacts/manifests/pcr02-agent-config-boundary-20260620.md",
-        "jsonl": "artifacts/manifests/pcr02-agent-config-boundary-20260620.jsonl",
-        "source_id": "pcr02-project-agent-config",
-        "required_text": "third-party-dependency-artifact",
-    },
-}
-
 def select_source_coverage_closeout(root):
     paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
     dated = []
@@ -1096,38 +1051,6 @@ source_coverage_health = {
     "missing_required_field_rows": [],
     "invalid_checked_at_rows": [],
 }
-boundary_health = {
-    "schema_version": 1,
-    "status": "not-run",
-    "mode": "read-only-internal-evidence",
-    "scope": "pcr02-level2-boundary-manifests",
-    "source_project_read": False,
-    "owner_gate_mutation": False,
-    "memory_write": False,
-    "expected_source_ids": sorted({spec["source_id"] for spec in EXPECTED_BOUNDARY_MANIFESTS.values()}),
-    "latest_source_coverage_manifest": "",
-    "expected_boundary_count": len(EXPECTED_BOUNDARY_MANIFESTS),
-    "jsonl_manifest_count": 0,
-    "md_manifest_count": 0,
-    "row_count": 0,
-    "source_ids": [],
-    "missing_manifest_ids": [],
-    "missing_jsonl_paths": [],
-    "missing_md_paths": [],
-    "missing_registry_item_ids": [],
-    "missing_by_source_refs": [],
-    "missing_by_project_refs": [],
-    "source_id_mismatch_rows": [],
-    "missing_required_field_rows": [],
-    "invalid_checked_at_rows": [],
-    "required_text_missing": [],
-    "summary": {},
-    "hard_failures": [],
-    "warnings": [],
-    "report_only_findings": [
-        "boundary health checks Knowledge Hub manifest/registry/index evidence only and does not read PCR02 source bodies",
-    ],
-}
 route_registry_health = {
     "schema_version": 1,
     "status": "not-run",
@@ -1291,116 +1214,6 @@ if not args.sources_only:
         for covered_source_id in sorted(source_coverage_ids):
             if covered_source_id not in source_ids:
                 errors.append(f"source-coverage:{source_coverage_path.relative_to(root)} stale source {covered_source_id}")
-    boundary_health["latest_source_coverage_manifest"] = source_coverage_selection.get("selected", "")
-
-    boundary_registry_ids = set()
-    try:
-        for row in load_jsonl(root / "registry" / "items.jsonl"):
-            if row.get("id"):
-                boundary_registry_ids.add(str(row.get("id")))
-    except Exception:
-        pass
-    by_source_text = ""
-    by_project_text = ""
-    try:
-        by_source_text = (root / "indexes" / "by-source.md").read_text()
-    except Exception as exc:
-        errors.append(f"boundary-health:indexes/by-source.md unreadable: {exc}")
-    try:
-        by_project_text = (root / "indexes" / "by-project.md").read_text()
-    except Exception as exc:
-        errors.append(f"boundary-health:indexes/by-project.md unreadable: {exc}")
-    boundary_source_ids = set()
-    for item_id, spec in EXPECTED_BOUNDARY_MANIFESTS.items():
-        md_rel = spec["md"]
-        jsonl_rel = spec["jsonl"]
-        md_path = root / md_rel
-        jsonl_path = root / jsonl_rel
-        if not md_path.exists():
-            boundary_health["missing_md_paths"].append(md_rel)
-            boundary_health["missing_manifest_ids"].append(item_id)
-            errors.append(f"boundary-health:{item_id} missing markdown {md_rel}")
-        else:
-            boundary_health["md_manifest_count"] += 1
-            try:
-                md_text = md_path.read_text()
-            except Exception as exc:
-                md_text = ""
-                errors.append(f"boundary-health:{md_rel} unreadable: {exc}")
-            if spec["required_text"] not in md_text:
-                boundary_health["required_text_missing"].append({"id": item_id, "text": spec["required_text"]})
-                errors.append(f"boundary-health:{item_id} missing required text {spec['required_text']}")
-        if not jsonl_path.exists():
-            boundary_health["missing_jsonl_paths"].append(jsonl_rel)
-            if item_id not in boundary_health["missing_manifest_ids"]:
-                boundary_health["missing_manifest_ids"].append(item_id)
-            errors.append(f"boundary-health:{item_id} missing jsonl {jsonl_rel}")
-            continue
-        boundary_health["jsonl_manifest_count"] += 1
-        rows = load_jsonl(jsonl_path)
-        boundary_health["row_count"] += len(rows)
-        for row_index, row in enumerate(rows, 1):
-            row_id = str(row.get("id", f"{item_id}:{row_index}"))
-            row_source_id = str(row.get("source_id", ""))
-            if row_source_id:
-                boundary_source_ids.add(row_source_id)
-            if row_source_id != spec["source_id"]:
-                boundary_health["source_id_mismatch_rows"].append({
-                    "manifest_id": item_id,
-                    "row_id": row_id,
-                    "expected_source_id": spec["source_id"],
-                    "actual_source_id": row_source_id,
-                })
-                errors.append(f"boundary-health:{item_id} row {row_id} source_id mismatch: {row_source_id}")
-            for field in ["id", "source_id", "source_path", "classification", "decision", "status", "owner", "risk", "checked_at"]:
-                if not row.get(field):
-                    boundary_health["missing_required_field_rows"].append({
-                        "manifest_id": item_id,
-                        "row_id": row_id,
-                        "field": field,
-                    })
-                    errors.append(f"boundary-health:{item_id} row {row_id} missing {field}")
-            checked_at = str(row.get("checked_at", ""))
-            if checked_at:
-                try:
-                    dt.date.fromisoformat(checked_at)
-                except Exception:
-                    boundary_health["invalid_checked_at_rows"].append({
-                        "manifest_id": item_id,
-                        "row_id": row_id,
-                        "checked_at": checked_at,
-                    })
-                    errors.append(f"boundary-health:{item_id} row {row_id} invalid checked_at: {checked_at}")
-        if item_id not in boundary_registry_ids:
-            boundary_health["missing_registry_item_ids"].append(item_id)
-            errors.append(f"boundary-health:{item_id} missing registry item")
-        if md_rel not in by_source_text:
-            boundary_health["missing_by_source_refs"].append(md_rel)
-            errors.append(f"boundary-health:{item_id} missing by-source ref {md_rel}")
-        if md_rel not in by_project_text:
-            boundary_health["missing_by_project_refs"].append(md_rel)
-            errors.append(f"boundary-health:{item_id} missing by-project ref {md_rel}")
-    boundary_health["source_ids"] = sorted(boundary_source_ids)
-    boundary_health["missing_manifest_ids"] = sorted(set(boundary_health["missing_manifest_ids"]))
-    boundary_health["missing_jsonl_paths"] = sorted(boundary_health["missing_jsonl_paths"])
-    boundary_health["missing_md_paths"] = sorted(boundary_health["missing_md_paths"])
-    boundary_health["missing_registry_item_ids"] = sorted(boundary_health["missing_registry_item_ids"])
-    boundary_health["missing_by_source_refs"] = sorted(boundary_health["missing_by_source_refs"])
-    boundary_health["missing_by_project_refs"] = sorted(boundary_health["missing_by_project_refs"])
-    boundary_health["hard_failures"] = [message for message in errors if message.startswith("boundary-health:")]
-    boundary_health["warnings"] = [message for message in warnings if message.startswith("boundary-health:")]
-    boundary_health["status"] = "fail" if boundary_health["hard_failures"] else "pass"
-    boundary_expected_sources = set(boundary_health["expected_source_ids"])
-    boundary_health["summary"] = {
-        "expected_manifest_count": boundary_health["expected_boundary_count"],
-        "present_md_manifest_count": boundary_health["md_manifest_count"],
-        "present_jsonl_manifest_count": boundary_health["jsonl_manifest_count"],
-        "registered_item_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_registry_item_ids"]),
-        "source_coverage_count": len(boundary_expected_sources & source_coverage_ids),
-        "by_source_reference_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_by_source_refs"]),
-        "by_project_reference_count": boundary_health["expected_boundary_count"] - len(boundary_health["missing_by_project_refs"]),
-    }
-
     def owner_gate_value_filled(value):
         if value is None:
             return False
@@ -2764,7 +2577,6 @@ result = {
     "owner_target_health": owner_target_health,
     "authorization_health": authorization_health,
     "automation_safety_health": automation_safety_health,
-    "boundary_health": boundary_health,
     "route_registry_health": route_registry_health,
     "path_routing_health": path_routing_health,
     "frontmatter_status_health": frontmatter_status_health,

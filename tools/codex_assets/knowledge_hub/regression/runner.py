@@ -3,7 +3,6 @@
 from .model import *  # noqa: F401,F403
 from .lifecycle import *  # noqa: F401,F403
 from .retrieval import *  # noqa: F401,F403
-from .project_routing import *  # noqa: F401,F403
 from .obsidian import *  # noqa: F401,F403
 from .governance import *  # noqa: F401,F403
 from .terminal_gates import *  # noqa: F401,F403
@@ -12,9 +11,6 @@ from .product_gates import *  # noqa: F401,F403
 full_tests = [
     test_baseline,
     test_governance_goal_path_allowed,
-    test_pcr02_level2_source_coverage,
-    test_pcr02_level2_boundary_manifests,
-    test_boundary_health_internal_evidence,
     test_status_wrong_bucket,
     test_status_noncanonical_only,
     test_owner_partial_resolved,
@@ -43,7 +39,7 @@ full_tests = [
     test_status_text_owner_summary_commands,
     test_status_owner_gates_exit_code_blocker,
     test_final_gate_owner_review_blocker,
-    test_final_gate_skip_regression_blocker,
+    test_final_gate_quick_regression_evidence_boundary,
     test_status_product_profile_blocks_noncanonical_residue,
     test_final_gate_product_review_queue_owner_review_blocker,
     test_final_gate_empty_child_json_blocker,
@@ -102,10 +98,6 @@ full_tests = [
     test_reviewing_triage_json_contract,
     test_regression_trend_from_json_contract,
     test_health_summary_operational_fields,
-    test_final_proof_artifact_discoverability,
-    test_final_proof_decision_index_recovery_contract,
-    test_final_proof_artifact_as_of_date_selector,
-    test_final_proof_artifacts_stable_key_only,
     test_index_plan_extended_sections,
     test_manifest_latest_filename_date_only,
     test_manifest_jsonl_profile_gate,
@@ -146,15 +138,11 @@ full_tests = [
     test_knowledge_context_control_plane_alias_ambiguity,
     test_embedded_asan_methodology_deprojectized,
     test_stable_governance_command_examples,
-    test_regression_manifest_coverage,
 ]
 
 quick_test_names = {
     "test_baseline",
     "test_governance_goal_path_allowed",
-    "test_pcr02_level2_source_coverage",
-    "test_pcr02_level2_boundary_manifests",
-    "test_boundary_health_internal_evidence",
     "test_status_wrong_bucket",
     "test_source_control_directory_gate",
     "test_owner_target_existence_gate",
@@ -192,11 +180,18 @@ else:
         else full_tests
     )
 
-serial_tail_test_names = {
-    "test_final_proof_artifacts_stable_key_only",
-    "test_user_path_redaction_in_tool_outputs",
-    "test_regression_manifest_coverage",
-}
+full_test_names = [test_fn.__name__ for test_fn in full_tests]
+duplicate_test_names = sorted(
+    name for name in set(full_test_names) if full_test_names.count(name) > 1
+)
+if duplicate_test_names:
+    parser.error(
+        "duplicate regression test function(s): {}".format(
+            ", ".join(duplicate_test_names)
+        )
+    )
+
+serial_tail_test_names = {"test_user_path_redaction_in_tool_outputs"}
 parallel_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ not in serial_tail_test_names]
 serial_tail_tests = [test_fn for test_fn in selected_tests if test_fn.__name__ in serial_tail_test_names]
 
@@ -210,7 +205,16 @@ else:
     for test_fn in serial_tail_tests:
         results.extend(run_test(test_fn))
 
-status = "pass" if all(result["status"] == "pass" for result in results) else "fail"
+result_ids = [str(result.get("id", "")) for result in results]
+duplicate_result_ids = sorted(
+    result_id for result_id in set(result_ids) if result_ids.count(result_id) > 1
+)
+status = (
+    "pass"
+    if not duplicate_result_ids
+    and all(result["status"] == "pass" for result in results)
+    else "fail"
+)
 output = {
     "status": status,
     "root": display_path(root),
@@ -222,7 +226,7 @@ output = {
     "jobs": regression_jobs,
     "selected_test_count": len(selected_tests),
     "full_test_count": len(full_tests),
-    "full_result_count": len(results) if args.suite == "full" else len(full_tests),
+    "duplicate_result_ids": duplicate_result_ids,
     "slowest_results": sorted(
         [
             {

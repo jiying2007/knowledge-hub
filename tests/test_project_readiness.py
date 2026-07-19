@@ -1,4 +1,6 @@
 import datetime as dt
+import json
+import shutil
 
 from tools.codex_assets.knowledge_hub.common import load_json, project_rows, registry_items, repository_root, route_rows
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
@@ -21,7 +23,7 @@ def test_all_registered_projects_have_four_reviewing_readiness_assets():
     root = repository_root()
     projects = project_rows(root)
     items = {row["id"]: row for row in registry_items(root)}
-    assert len(projects) == 30
+    assert projects
     for project in projects:
         paths = _project_paths(project)
         assert set(paths) == set(SLOT_NAMES)
@@ -44,7 +46,7 @@ def test_project_query_route_matrix_is_complete_for_all_task_types():
     root = repository_root()
     projects = project_rows(root)
     routes = route_rows(root)
-    assert len(routes) == len(projects) == 30
+    assert len(routes) == len(projects)
     checked = 0
     for project in projects:
         for task_type in sorted(TASK_TYPES):
@@ -53,7 +55,7 @@ def test_project_query_route_matrix_is_complete_for_all_task_types():
             assert route["project_id"] == project["id"]
             assert score > 0
             checked += 1
-    assert checked == 30 * len(TASK_TYPES)
+    assert checked == len(projects) * len(TASK_TYPES)
 
 
 def test_project_routes_reference_only_current_registered_sources():
@@ -148,3 +150,67 @@ def test_readiness_documents_do_not_persist_machine_local_workspace_state():
     for path in generated_paths:
         text = path.read_text(encoding="utf-8")
         assert not any(value in text for value in forbidden), path
+
+
+def test_generator_accepts_a_31st_registry_project_without_core_code_changes(tmp_path):
+    source_root = repository_root()
+    fixture_root = tmp_path / "hub"
+    shutil.copytree(
+        source_root,
+        fixture_root,
+        ignore=shutil.ignore_patterns(".git", ".cache", ".tmp", "__pycache__"),
+    )
+    projects_path = fixture_root / "registry/projects.json"
+    projects_payload = json.loads(projects_path.read_text())
+    projects_payload["projects"].append(
+        {
+            "id": "scalable-project-31",
+            "name": "Scalable Project 31",
+            "type": "git-repository",
+            "domain": "projects/scalable-project-31",
+            "entry": "projects/scalable-project-31/README.md",
+            "current": "projects/scalable-project-31/current",
+            "archive": "projects/scalable-project-31/archive",
+            "decisions": "projects/scalable-project-31/decisions",
+            "validation": "projects/scalable-project-31/validation",
+            "groups": [],
+            "repo_boundary": "tooling",
+            "status": "registered",
+            "evidence_profile": "software-tool",
+        }
+    )
+    projects_path.write_text(json.dumps(projects_payload, ensure_ascii=False, indent=2) + "\n")
+    repositories_path = fixture_root / "registry/repositories.json"
+    repositories_payload = json.loads(repositories_path.read_text())
+    repositories_payload["repositories"].append(
+        {
+            "repo_id": "scalable-project-31",
+            "project_id": "scalable-project-31",
+            "remote_key": "example/scalable-project-31",
+            "remote_kind": "github",
+            "workspace_ref": "workspace://scalable-project-31",
+            "groups": [],
+            "aliases": ["scalable-project-31"],
+            "lifecycle": "first-party",
+            "status": "registered",
+        }
+    )
+    repositories_path.write_text(
+        json.dumps(repositories_payload, ensure_ascii=False, indent=2) + "\n"
+    )
+    entry = fixture_root / "projects/scalable-project-31/README.md"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("# Scalable Project 31\n")
+
+    payload = generate_project_readiness(
+        fixture_root, dt.date(2026, 7, 18), apply=True
+    )
+
+    assert payload["status"] == "applied"
+    assert payload["project_count"] == 31
+    assert payload["route_count"] == 31
+    assert payload["new_item_count"] == 4
+    assert payload["slot_count"] == 124
+    validation = fixture_root / "projects/scalable-project-31/validation/project-readiness.md"
+    assert validation.is_file()
+    assert "31 项目 route matrix" in validation.read_text()

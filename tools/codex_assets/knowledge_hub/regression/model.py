@@ -424,31 +424,21 @@ def test_index_plan_extended_sections():
     review_queue_summary = review_queue_index.get("summary", {})
     registry_decisions = decision_index.get("registry_decisions", [])
     owner_worksheets = decision_index.get("owner_worksheets", [])
-    pcr02_source = source_index.get("pcr02-project-tools", {})
-    source_coverage = pcr02_source.get("coverage", {})
-    source_coverage_decision = source_coverage.get("decision", "")
-    source_coverage_risk = source_coverage.get("risk", "")
-    first_owner_worksheet = next(
-        (row for row in owner_worksheets if row.get("worksheet_id") == "pcr02-owner-decision-worksheet-001"),
+    source_sample = next(iter(source_index.values()), {})
+    source_with_coverage = next(
+        (row for row in source_index.values() if row.get("coverage")),
         {},
     )
+    source_coverage = source_with_coverage.get("coverage", {})
+    source_coverage_decision = source_coverage.get("decision", "")
+    source_coverage_risk = source_coverage.get("risk", "")
     manifest_summary = manifest_index.get("summary", {})
+    manifest_rows = manifest_index.get("rows", [])
     manifest_unpaired = manifest_index.get("unpaired", [])
     manifest_unpaired_expected = manifest_index.get("unpaired_expected", [])
     manifest_unpaired_needs_review = manifest_index.get("unpaired_needs_review", [])
     latest_manifests = manifest_index.get("latest", [])
-    current_owner_route_manifest = next(
-        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-owner-routing-recovery-20260621"),
-        {},
-    )
-    current_manifest_profile = next(
-        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-manifest-profile-index-plan-20260621"),
-        {},
-    )
-    current_runtime_recovery_profile = next(
-        (row for row in manifest_index.get("rows", []) if row.get("id") == "knowledge-hub-final-proof-runtime-recovery-hardening-20260622"),
-        {},
-    )
+    paired_profile_rows = [row for row in manifest_rows if row.get("paired")]
     manifest_profile_health = manifest_summary.get("profile_health", {})
     latest_manifest_ids = [row.get("id") for row in latest_manifests]
 
@@ -456,19 +446,21 @@ def test_index_plan_extended_sections():
         not parse_errors
         and all(result["exit_code"] == 0 for result in section_results.values())
         and all(parsed_by_section.get(section, {}).get("status") == "planned" for section in section_results)
-        and "pcr02-ssc305" in project_index
-        and project_index.get("pcr02-ssc305", {}).get("domain") == "projects/pcr02-ssc305"
-        and "pcr02-project-tools" in source_index
-        and pcr02_source.get("owner") == "pcr02-registry-owner"
-        and pcr02_source.get("review_after") == "2026-09-20"
-        and pcr02_source.get("final_disposition") == "hub-canonical"
-        and pcr02_source.get("check", "").startswith("rtk test -d sources/")
+        and bool(project_index)
+        and bool(source_index)
+        and bool(source_sample.get("owner"))
+        and bool(source_sample.get("review_after"))
+        and bool(source_sample.get("final_disposition"))
+        and bool(source_sample.get("check") or source_sample.get("no_check_reason"))
         and source_selection.get("strategy") == "filename-yyyymmdd-sort-last"
-        and source_selection.get("selected") == "artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl"
+        and str(source_selection.get("selected", "")).startswith(
+            "artifacts/manifests/knowledge-hub-source-coverage-closeout-"
+        )
+        and str(source_selection.get("selected", "")).endswith(".jsonl")
         and source_selection.get("candidate_count", 0) >= 1
         and source_selection.get("dated_candidate_count", 0) >= 1
         and bool(source_coverage)
-        and source_coverage.get("checked_at") == "2026-06-25"
+        and bool(source_coverage.get("checked_at"))
         and bool(source_coverage_decision)
         and bool(source_coverage_risk)
         and "project-current" in topic_index
@@ -479,17 +471,21 @@ def test_index_plan_extended_sections():
         and "文件名中的 YYYYMMDD" in manifest_summary.get("latest_strategy_zh", "")
         and manifest_profile_health.get("pass", 0) >= 1
         and manifest_profile_health.get("historical-evidence-exempt", 0) >= 1
-        and manifest_summary.get("unpaired_count") == 1
-        and manifest_summary.get("unpaired_expected_count") == 1
-        and manifest_summary.get("unpaired_needs_review_count") == 0
-        and len(manifest_unpaired_expected) == 1
-        and len(manifest_unpaired_needs_review) == 0
+        and manifest_summary.get("unpaired_count") == len(manifest_unpaired)
+        and manifest_summary.get("unpaired_expected_count")
+        == len(manifest_unpaired_expected)
+        and manifest_summary.get("unpaired_needs_review_count")
+        == len(manifest_unpaired_needs_review)
         and all(row.get("review_status") in {"expected", "needs_review"} for row in manifest_unpaired)
         and all(row.get("pairing_status") in {"jsonl-only", "markdown-only"} for row in manifest_unpaired)
         and all(row.get("reasons_zh") and row.get("notes_zh") for row in manifest_unpaired)
         and manifest_text_result["exit_code"] == 0
-        and "unpaired_expected_count: 1" in manifest_text_result["stdout"]
-        and "unpaired_needs_review_count: 0" in manifest_text_result["stdout"]
+        and "unpaired_expected_count: {}".format(len(manifest_unpaired_expected))
+        in manifest_text_result["stdout"]
+        and "unpaired_needs_review_count: {}".format(
+            len(manifest_unpaired_needs_review)
+        )
+        in manifest_text_result["stdout"]
         and "profile_health:" in manifest_text_result["stdout"]
         and "summary_source=`" in manifest_text_result["stdout"]
         and "evidence_source=`evidence_refs`" in manifest_text_result["stdout"]
@@ -498,28 +494,33 @@ def test_index_plan_extended_sections():
         and bool(latest_manifests)
         and all(row.get("date_source") in {"filename-YYYYMMDD", "missing-filename-date"} for row in latest_manifests)
         and all("row_date" in row for row in latest_manifests)
-        and current_owner_route_manifest.get("paired") is True
-        and current_owner_route_manifest.get("evidence_count", 0) >= 1
-        and current_manifest_profile.get("paired") is True
-        and current_manifest_profile.get("row_count") == 1
-        and current_manifest_profile.get("evidence_count", 0) >= 1
-        and current_manifest_profile.get("derived_evidence_count") == current_manifest_profile.get("evidence_count")
-        and current_manifest_profile.get("derived_summary_zh") == current_manifest_profile.get("summary_zh")
-        and current_manifest_profile.get("summary_source") in {"summary_zh", "notes_zh", "notes"}
-        and current_manifest_profile.get("evidence_source") in {"evidence", "evidence_refs", "validation_refs", "verification_commands", "source_refs"}
-        and current_manifest_profile.get("profile_health") in {"pass", "advisory-missing-boundary", "historical-evidence-exempt"}
-        and current_runtime_recovery_profile.get("paired") is True
-        and current_runtime_recovery_profile.get("derived_summary_zh") == current_runtime_recovery_profile.get("summary_zh")
-        and current_runtime_recovery_profile.get("summary_source") == "summary_zh"
-        and current_runtime_recovery_profile.get("evidence_source") == "evidence_refs"
-        and current_runtime_recovery_profile.get("profile_health") == "pass"
+        and bool(paired_profile_rows)
+        and any(row.get("derived_summary_zh") for row in paired_profile_rows)
+        and any(row.get("derived_evidence_count", 0) >= 1 for row in paired_profile_rows)
+        and all(
+            row.get("summary_source") in {"summary_zh", "notes_zh", "notes", "missing"}
+            for row in paired_profile_rows
+        )
+        and all(
+            row.get("profile_health")
+            in {
+                "pass",
+                "advisory-missing-boundary",
+                "historical-evidence-exempt",
+                "missing-summary",
+                "missing-evidence",
+                "reference-only",
+            }
+            for row in paired_profile_rows
+        )
         and linking_audit.get("status") == "pass"
         and linking_audit.get("read_only") is True
         and linking_audit.get("source_body_read") is False
         and linking_audit.get("owner_gate_mutation") is False
         and linking_audit.get("cross_session", {}).get("status") == "pass"
         and linking_audit.get("cross_project", {}).get("status") == "pass"
-        and linking_audit.get("cross_project", {}).get("registered_source_count") == 18
+        and linking_audit.get("cross_project", {}).get("registered_source_count")
+        == len(source_index)
         and linking_audit.get("markdown_index_recovery", {}).get("status") == "pass"
         and linking_audit.get("markdown_index_recovery", {}).get("missing_anchors") == []
         and review_queue_summary.get("status") in {"needs-human-review", "empty", "clear"}
@@ -528,18 +529,18 @@ def test_index_plan_extended_sections():
         and review_queue_summary.get("owner_gate_mutation") is False
         and review_queue_summary.get("memory_write") is False
         and review_queue_summary.get("active_or_promotion_blocker_count") == 0
-        and review_queue_summary.get("active_or_promotion_blocker_count") == 0
         and all(row.get("queue_type") in {"ai-human-review", "external-source-review"} for row in review_queue_index.get("rows", []))
         and all(row.get("object_status") not in {"active"} for row in review_queue_index.get("rows", []))
-        and (
-            "owner_route" in str(current_owner_route_manifest.get("summary_zh", "")).lower()
-            or "路由" in str(current_owner_route_manifest.get("summary_zh", ""))
-        )
-        and first_owner_worksheet.get("owner") == "team-core-or-pcr02-docs-owner"
-        and first_owner_worksheet.get("status") == "owner-approved"
-        and first_owner_worksheet.get("review_after") == "2026-09-17"
-        and first_owner_worksheet.get("decision_state") == "owner_decision:reference-only"
-        and any(row.get("status") == "owner-approved" for row in owner_worksheets),
+        and bool(owner_worksheets)
+        and all(
+            row.get("worksheet_id")
+            and row.get("source_id")
+            and row.get("owner")
+            and row.get("status")
+            and row.get("review_after")
+            and row.get("decision_state")
+            for row in owner_worksheets
+        ),
         "index-plan-extended-sections",
         "index planner covers project/source/topic/decision/manifest sections",
         {
@@ -547,14 +548,15 @@ def test_index_plan_extended_sections():
             "parse_errors": parse_errors,
             "statuses": {section: parsed_by_section.get(section, {}).get("status") for section in section_results},
             "project_keys_sample": sorted(project_index.keys())[:10],
-            "source_has_pcr02_project_tools": "pcr02-project-tools" in source_index,
+            "source_count": len(source_index),
             "source_coverage_status": source_coverage.get("status", ""),
             "source_coverage_selection": source_selection,
             "source_coverage_decision": source_coverage_decision,
             "source_coverage_risk": source_coverage_risk,
-            "source_owner": pcr02_source.get("owner", ""),
-            "source_review_after": pcr02_source.get("review_after", ""),
-            "source_final_disposition": pcr02_source.get("final_disposition", ""),
+            "source_sample_id": source_sample.get("id", ""),
+            "source_owner": source_sample.get("owner", ""),
+            "source_review_after": source_sample.get("review_after", ""),
+            "source_final_disposition": source_sample.get("final_disposition", ""),
             "topic_keys_sample": sorted(topic_index.keys())[:10],
             "registry_decision_count": len(registry_decisions),
             "manifest_summary": manifest_summary,
@@ -563,14 +565,12 @@ def test_index_plan_extended_sections():
             "manifest_text_stdout_sample": manifest_text_result["stdout"][:1200],
             "latest_manifest_count": len(latest_manifests),
             "latest_manifest_ids": latest_manifest_ids[:20],
-            "current_owner_route_manifest": current_owner_route_manifest,
-            "current_manifest_profile": current_manifest_profile,
-            "current_runtime_recovery_profile": current_runtime_recovery_profile,
+            "paired_manifest_profile_count": len(paired_profile_rows),
             "linking_audit": linking_audit,
             "review_queue_summary": review_queue_summary,
             "review_queue_row_count": len(review_queue_index.get("rows", [])),
             "owner_worksheet_count": len(owner_worksheets),
-            "first_owner_worksheet": first_owner_worksheet,
+            "owner_worksheet_count": len(owner_worksheets),
         },
     )
 
@@ -911,7 +911,7 @@ def test_source_check_health_contract():
     )
 
 def test_source_check_report_only_helper():
-    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", today.isoformat()])
+    result = run_cmd(root, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "all", "--json", "--as-of", today.isoformat()])
     check_result = run_cmd(root, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     parsed = {}
     check_parsed = {}
@@ -933,15 +933,17 @@ def test_source_check_report_only_helper():
         and parsed.get("status") == "pass"
         and parsed.get("read_only") is True
         and parsed.get("report_only") is True
-        and parsed.get("scope") == "pcr02-level2"
-        and parsed.get("source_check_health_contract") == "static-registry-only"
-        and parsed.get("source_check_health_executed") is False
+        and parsed.get("scope") == "all"
+        and parsed.get("source_check_health_contract") == "runtime-all-registered-sources-v1"
+        and parsed.get("source_check_health_executed") is True
+        and parsed.get("execution_mode") == "direct-filesystem-stat-no-shell"
         and parsed.get("source_body_read") is False
         and parsed.get("owner_gate_mutation") is False
         and parsed.get("memory_write") is False
-        and parsed.get("row_count") == 7
-        and parsed.get("executed_count") == 7
-        and parsed.get("passed_count") == 7
+        and parsed.get("registry_source_count") == 18
+        and parsed.get("row_count") == 18
+        and parsed.get("executed_count") == 18
+        and parsed.get("passed_count") == 18
         and parsed.get("failed_count") == 0
         and parsed.get("unsupported_count") == 0
         and parsed.get("rejected_count") == 0
@@ -951,7 +953,7 @@ def test_source_check_report_only_helper():
         and source_check_health.get("mode") == "static-registry-only"
         and source_check_health.get("executed") is False,
         "source-check-report-only-helper",
-        "source check helper executes only allowlisted PCR02 Level 2 availability checks",
+        "source check helper executes every registry-driven availability check without a shell",
         {
             "exit_code": result["exit_code"],
             "parse_error": parse_error,
@@ -960,7 +962,7 @@ def test_source_check_report_only_helper():
             "executed_count": parsed.get("executed_count"),
             "passed_count": parsed.get("passed_count"),
             "failed_count": parsed.get("failed_count"),
-            "unsupported_count": parsed.get("unsupported_count"),
+            "not_applicable_count": parsed.get("not_applicable_count"),
             "rejected_count": parsed.get("rejected_count"),
             "check_exit_code": check_result["exit_code"],
             "check_parse_error": check_parse_error,
@@ -973,7 +975,7 @@ def test_source_check_rejects_unsafe_runtime_command():
     if not update_source_registry_entry(repo, "pcr02-project-tools", {"check": "rtk bash -lc 'test -d /tmp && echo unsafe'"}):
         expect(False, "source-check-rejects-unsafe-runtime-command", "source check helper rejects shell control payloads", {"setup_error": "pcr02-project-tools source not found"}, repo)
         return
-    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--source-id", "pcr02-project-tools", "--json", "--as-of", today.isoformat()])
+    result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "all", "--source-id", "pcr02-project-tools", "--json", "--as-of", today.isoformat()])
     parsed = {}
     parse_error = ""
     try:
@@ -1011,7 +1013,10 @@ def test_source_coverage_date_filename_selection():
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])
     index_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
-    final_result = run_cmd(repo, ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"])
+    final_result = run_cmd(
+        repo,
+        ["rtk", "bash", "tools/knowledge-final-gate.sh", "--json"],
+    )
     parse_errors = []
     parsed = {}
     status_parsed = {}

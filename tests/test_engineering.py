@@ -1,0 +1,173 @@
+import pathlib
+
+from tools.codex_assets.knowledge_hub import engineering
+from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.engineering import evaluate_engineering_contract
+
+
+def test_repository_engineering_contract_is_complete():
+    payload = evaluate_engineering_contract(repository_root())
+
+    assert payload["status"] == "pass"
+    assert payload["python_support"]["minimum"] == "3.10"
+    assert payload["python_support"]["ci_versions"] == [
+        "3.10",
+        "3.11",
+        "3.12",
+        "3.13",
+        "3.14",
+    ]
+    assert payload["dependencies"]["runtime_direct"] == {
+        "jsonschema": "4.26.0",
+        "pyyaml": "6.0.3",
+        "tomli": "2.4.1",
+    }
+    assert payload["dependencies"]["build_backend"] == {"setuptools": "83.0.0"}
+    assert payload["locks"]["requirements-runtime.lock"]["hash_complete"] is True
+    assert payload["locks"]["requirements-dev.lock"]["hash_complete"] is True
+    assert payload["ci"]["all_actions_sha_pinned"] is True
+    assert payload["ci"]["least_privilege_permissions"] is True
+    assert payload["ci"]["dangerous_pull_request_target"] is False
+    assert payload["ci"]["all_run_steps_governed"] is True
+    assert payload["ci_transport"]["exact_wrapper_allowlist"] is True
+    assert payload["ci_transport"]["runner_path_boundary"] is True
+    assert payload["dependabot"]["ecosystems"] == ["github-actions", "pip"]
+
+
+def test_engineering_contract_rejects_mutable_action_ref(tmp_path):
+    _write_minimal_contract(tmp_path)
+    workflow = tmp_path / ".github/workflows/quality.yml"
+    workflow.write_text(
+        workflow.read_text(encoding="utf-8").replace(
+            "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+            "actions/checkout@v6",
+        ),
+        encoding="utf-8",
+    )
+
+    payload = evaluate_engineering_contract(tmp_path)
+
+    assert payload["status"] == "fail"
+    assert payload["ci"]["all_actions_sha_pinned"] is False
+    assert any("full commit SHA" in error for error in payload["errors"])
+
+
+def test_engineering_contract_rejects_unhashed_lock_entry(tmp_path):
+    _write_minimal_contract(tmp_path)
+    lock = tmp_path / "requirements-runtime.lock"
+    lock.write_text("PyYAML==6.0.3\n", encoding="utf-8")
+
+    payload = evaluate_engineering_contract(tmp_path)
+
+    assert payload["status"] == "fail"
+    assert payload["locks"]["requirements-runtime.lock"]["hash_complete"] is False
+
+
+def test_engineering_quality_preserves_virtualenv_interpreter_symlink(tmp_path, monkeypatch):
+    target = tmp_path / "python-base"
+    target.write_text("base", encoding="utf-8")
+    virtualenv_python = tmp_path / "venv" / "bin" / "python"
+    virtualenv_python.parent.mkdir(parents=True)
+    virtualenv_python.symlink_to(target)
+    monkeypatch.setattr(engineering.sys, "executable", str(virtualenv_python))
+
+    assert engineering._current_python_executable() == str(virtualenv_python)
+
+
+def test_engineering_snapshot_is_private_and_atomic(tmp_path):
+    payload = {
+        "status": "pass",
+        "mode": "full",
+        "candidate_integrity": {
+            "unchanged": True,
+            "before_signature": "sig",
+            "after_signature": "sig",
+        },
+    }
+
+    relative = engineering._write_engineering_snapshot(tmp_path, payload)
+    path = tmp_path / relative
+
+    assert relative == ".cache/knowledge-hub/engineering-quality.json"
+    assert path.is_file()
+    assert path.stat().st_mode & 0o777 == 0o600
+
+
+def _write_minimal_contract(root: pathlib.Path) -> None:
+    (root / ".github/workflows").mkdir(parents=True)
+    (root / "pyproject.toml").write_text(
+        """[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.10"
+dependencies = [
+  "PyYAML==6.0.3",
+  "jsonschema==4.26.0",
+  "tomli==2.4.1; python_version < '3.11'",
+]
+""",
+        encoding="utf-8",
+    )
+    (root / "requirements-runtime.txt").write_text(
+        "PyYAML==6.0.3\njsonschema==4.26.0\ntomli==2.4.1; python_version < '3.11'\n",
+        encoding="utf-8",
+    )
+    (root / "requirements-dev.txt").write_text(
+        "-r requirements-runtime.txt\npytest==9.1.1\nsetuptools==83.0.0\n",
+        encoding="utf-8",
+    )
+    hashed = "package==1.0 --hash=sha256:" + "a" * 64 + "\n"
+    (root / "requirements-runtime.lock").write_text(hashed, encoding="utf-8")
+    (root / "requirements-dev.lock").write_text(hashed, encoding="utf-8")
+    (root / ".github/workflows/quality.yml").write_text(
+        """name: quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - run: rtk python -m pip install --require-hashes -r requirements-dev.lock
+      - run: rtk python -m pytest
+      - run: rtk bash tools/knowledge-check.sh --dry-run
+      - run: rtk bash tools/knowledge-retrieval-benchmark.sh --json
+      - run: rtk bash tools/knowledge-regression.sh --suite full --json
+      - run: python -m pip_audit --require-hashes -r requirements-runtime.lock
+""",
+        encoding="utf-8",
+    )
+    (root / ".github/dependabot.yml").write_text(
+        """version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: {interval: monthly}
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: monthly}
+""",
+        encoding="utf-8",
+    )
+    (root / "tools/ci").mkdir(parents=True)
+    (root / "tools/ci/rtk").write_text(
+        "tools/ci/bootstrap-path.sh|tools/knowledge-check.sh|tools/knowledge-regression.sh|"
+        "tools/knowledge-retrieval-benchmark.sh\n",
+        encoding="utf-8",
+    )
+    (root / "tools/ci/bootstrap-path.sh").write_text(
+        '"$RUNNER_TEMP"/_runner_file_commands/*\n'
+        '! -f "$GITHUB_PATH"\n'
+        '-L "$GITHUB_PATH"\n'
+        '"$GITHUB_WORKSPACE/tools/ci"\n',
+        encoding="utf-8",
+    )

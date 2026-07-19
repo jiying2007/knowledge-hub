@@ -109,7 +109,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --j
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
 ```
 
-性能判断只依据脱敏本地 metrics 和 full regression `slowest_results[0:10]`。目标为 warm search p95 ≤ 0.5 秒、context p95 ≤ 1 秒、status/默认 health ≤ 3 秒、quick final ≤ 15 秒；当前 contract 的 search/context 各不足 10 个样本时只能标为 `pending`。历史 contract 样本不删除，但不与当前实现 P95 混算；显式反馈必须绑定真实 interaction，不能靠重复反馈刷绿。未达到时先定位具体 slowest 项，不做跨模块泛化重构。
+性能判断只依据脱敏本地 metrics 和 full regression `slowest_results[0:10]`。目标为 warm search p95 ≤ 0.5 秒、检索 index preparation ≤ 5 秒、context p95 ≤ 1 秒、status/默认 health ≤ 3 秒、quick final ≤ 15 秒；当前 contract 的 search/context 各不足 10 个样本时只能标为 `pending`。known-answer benchmark 先单列 index preparation，再测 warm-interactive P95，两项均参与判定。历史 contract 样本不删除，但不与当前实现 P95 混算；显式反馈必须绑定真实 interaction，不能靠重复反馈刷绿。未达到时先定位具体 slowest 项，不做跨模块泛化重构。
 
 ## 当日待复核与历史边界
 

@@ -7,7 +7,16 @@ import posixpath
 from collections import Counter, defaultdict
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
-from .common import encode_jsonl, file_sha256, load_json, registry_items, render_markdown, split_frontmatter
+from .common import (
+    DEFAULT_MARKDOWN_MAX_BYTES,
+    encode_jsonl,
+    file_sha256,
+    load_json,
+    read_repository_utf8_bounded,
+    registry_items,
+    render_markdown,
+    split_frontmatter,
+)
 from .store import RepositoryTransaction
 
 
@@ -132,6 +141,7 @@ RUNTIME_REQUIRED_CHECKS = (
     "backlinks_working",
     "moc_navigation_working",
 )
+OBSIDIAN_MAX_FILE_BYTES = DEFAULT_MARKDOWN_MAX_BYTES
 
 
 def obsidian_runtime_acceptance(root: pathlib.Path) -> Dict[str, Any]:
@@ -304,7 +314,10 @@ def build_obsidian_views(
         if not target.exists():
             missing_files.append(path)
             continue
-        metadata, body = split_frontmatter(target.read_text(encoding="utf-8"))
+        source_text = read_repository_utf8_bounded(
+            root, path, OBSIDIAN_MAX_FILE_BYTES, "Obsidian managed Markdown"
+        )
+        metadata, body = split_frontmatter(source_text)
         had_frontmatter = bool(metadata)
         for field in CONTENT_FIELDS:
             if field in metadata and metadata[field] != item.get(field):
@@ -330,7 +343,7 @@ def build_obsidian_views(
         for field in (*CONTENT_FIELDS, *LIFECYCLE_FIELDS, "aliases", "related"):
             if metadata.get(field) not in (None, "", []):
                 property_counts[field] += 1
-        rendered[path] = render_markdown(metadata, body if had_frontmatter else target.read_text(encoding="utf-8"))
+        rendered[path] = render_markdown(metadata, body if had_frontmatter else source_text)
 
     transaction = RepositoryTransaction(root)
     for path, content in rendered.items():
@@ -340,7 +353,19 @@ def build_obsidian_views(
     _add_text(transaction, root, "indexes/obsidian/projects.md", _projects_moc(projects))
     _add_text(transaction, root, "indexes/obsidian/topics.md", _topics_moc(managed))
     home_path = root / "indexes/obsidian-home.md"
-    _add_text(transaction, root, "indexes/obsidian-home.md", _home_with_views(home_path.read_text(encoding="utf-8")))
+    _add_text(
+        transaction,
+        root,
+        "indexes/obsidian-home.md",
+        _home_with_views(
+            read_repository_utf8_bounded(
+                root,
+                "indexes/obsidian-home.md",
+                OBSIDIAN_MAX_FILE_BYTES,
+                "Obsidian home Markdown",
+            )
+        ),
+    )
     for path, content in BASE_FILES.items():
         _add_text(transaction, root, path, content)
     plan = transaction.plan()

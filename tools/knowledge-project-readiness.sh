@@ -6,4 +6,4 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$ROOT"
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
-exec rtk python3 -m tools.codex_assets.knowledge_hub.project_readiness_cli "$@"
+exec "$ROOT/tools/ci/python-runtime.sh" -m tools.codex_assets.knowledge_hub.project_readiness_cli "$@"

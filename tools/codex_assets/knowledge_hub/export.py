@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime as dt
-import json
 import os
 import pathlib
 import posixpath
@@ -12,7 +11,19 @@ import urllib.parse
 import uuid
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
-from .common import KnowledgeHubError, encode_jsonl, file_sha256, pretty_json, registry_items, utc_timestamp
+from .common import (
+    KnowledgeHubError,
+    bytes_sha256,
+    encode_jsonl,
+    ensure_private_directory,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    file_sha256,
+    pretty_json,
+    read_repository_bytes_bounded,
+    registry_items,
+    utc_timestamp,
+)
 from .security import SCANNER_VERSION, scan_secret_text
 
 
@@ -32,6 +43,8 @@ DENY_PREFIXES = (
 MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]\n]+)\]\(([^)\n]+)\)")
 IMAGE_LINK = re.compile(r"!\[([^\]\n]*)\]\(([^)\n]+)\)")
 WIKI_LINK = re.compile(r"(?<!!)\[\[([^\]\n]+)\]\]")
+EXPORT_MAX_FILE_BYTES = 8 * 1024 * 1024
+EXPORT_MAX_TOTAL_BYTES = 64 * 1024 * 1024
 
 
 def _eligible(item: Mapping[str, Any]) -> Tuple[bool, str]:
@@ -88,6 +101,7 @@ def plan_team_export(root: pathlib.Path) -> Dict[str, Any]:
     excluded: Dict[str, int] = {}
     errors: List[Dict[str, Any]] = []
     seen_paths: Set[str] = set()
+    selected_bytes = 0
     for item in registry_items(root):
         eligible, reason = _eligible(item)
         if not eligible:
@@ -98,10 +112,50 @@ def plan_team_export(root: pathlib.Path) -> Dict[str, Any]:
             continue
         seen_paths.add(path)
         source = root / path
-        if not source.is_file():
+        if source.is_symlink():
+            errors.append(
+                {
+                    "id": str(item.get("id", "")),
+                    "path": path,
+                    "error": "unsafe-symlink-or-root-escape",
+                }
+            )
+            continue
+        if not source.exists():
             errors.append({"id": str(item.get("id", "")), "path": path, "error": "body-missing"})
             continue
-        text = source.read_text(encoding="utf-8", errors="ignore")
+        try:
+            raw = read_repository_bytes_bounded(
+                root,
+                path,
+                EXPORT_MAX_FILE_BYTES,
+                "team export body",
+            )
+        except KnowledgeHubError as exc:
+            error = (
+                "body-byte-budget-exceeded"
+                if "exceeds" in str(exc)
+                else "unsafe-symlink-or-root-escape"
+            )
+            errors.append(
+                {
+                    "id": str(item.get("id", "")),
+                    "path": path,
+                    "error": error,
+                }
+            )
+            continue
+        selected_bytes += len(raw)
+        if selected_bytes > EXPORT_MAX_TOTAL_BYTES:
+            errors.append(
+                {
+                    "id": str(item.get("id", "")),
+                    "path": path,
+                    "error": "export-total-byte-budget-exceeded",
+                }
+            )
+            continue
+        text = raw.decode("utf-8", errors="ignore")
         findings = scan_secret_text(text)
         if findings:
             errors.append(
@@ -124,8 +178,8 @@ def plan_team_export(root: pathlib.Path) -> Dict[str, Any]:
                 "status": item.get("status", ""),
                 "owner": item.get("owner", ""),
                 "review_after": item.get("review_after", ""),
-                "sha256": file_sha256(source),
-                "size": source.stat().st_size,
+                "sha256": bytes_sha256(raw),
+                "size": len(raw),
                 "review_provenance": _review_provenance(item),
             }
         )
@@ -135,6 +189,9 @@ def plan_team_export(root: pathlib.Path) -> Dict[str, Any]:
         "status": "ready" if selected and not errors else "blocked",
         "policy": "active-team-internal-canonical-markdown-only",
         "selected_count": len(selected),
+        "selected_bytes": selected_bytes,
+        "maximum_file_bytes": EXPORT_MAX_FILE_BYTES,
+        "maximum_total_bytes": EXPORT_MAX_TOTAL_BYTES,
         "selected": sorted(selected, key=lambda row: str(row["path"])),
         "excluded_by_reason": dict(sorted(excluded.items())),
         "secret_scan": {
@@ -250,7 +307,7 @@ def _link_closure(root: pathlib.Path, paths: Sequence[str]) -> Dict[str, Any]:
 
 def _write_incomplete(staging: pathlib.Path, destination: pathlib.Path, reason: str) -> None:
     try:
-        staging.mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(staging)
         payload = {
             "schema_version": 1,
             "status": "incomplete",
@@ -258,15 +315,28 @@ def _write_incomplete(staging: pathlib.Path, destination: pathlib.Path, reason: 
             "reason": reason,
             "generated_at": utc_timestamp(),
         }
-        (staging / ".incomplete.json").write_text(pretty_json(payload) + "\n", encoding="utf-8")
-    except OSError:
+        marker = staging / ".incomplete.json"
+        marker.write_text(pretty_json(payload) + "\n", encoding="utf-8")
+        ensure_private_file(marker)
+    except (KnowledgeHubError, OSError):
         pass
+
+
+def _ensure_private_parent(root: pathlib.Path, parent: pathlib.Path) -> None:
+    ensure_private_directory(root)
+    ensure_private_directory_tree(root, parent)
+
+
+def _write_private_text(root: pathlib.Path, path: pathlib.Path, text: str) -> None:
+    _ensure_private_parent(root, path.parent)
+    path.write_text(text, encoding="utf-8")
+    ensure_private_file(path)
 
 
 def apply_team_export(
     root: pathlib.Path,
     today: dt.date,
-    output: pathlib.Path = None,
+    output: Optional[pathlib.Path] = None,
 ) -> Dict[str, Any]:
     plan = plan_team_export(root)
     if plan["status"] != "ready":
@@ -280,7 +350,7 @@ def apply_team_export(
         raise KnowledgeHubError("export destination already exists")
     destination.parent.mkdir(parents=True, exist_ok=True)
     staging = destination.parent / "{}.staging-{}".format(destination.name, uuid.uuid4().hex[:8])
-    staging.mkdir()
+    ensure_private_directory(staging)
     try:
         rows: List[Dict[str, Any]] = []
         rewrites: List[Dict[str, str]] = []
@@ -288,15 +358,23 @@ def apply_team_export(
         item_by_id = {str(row.get("id", "")): row for row in registry_items(root)}
         selected_paths = {str(row["path"]) for row in plan["selected"]}
         for row in plan["selected"]:
-            source = root / row["path"]
             target = staging / row["path"]
-            target.parent.mkdir(parents=True, exist_ok=True)
+            raw = read_repository_bytes_bounded(
+                root,
+                str(row["path"]),
+                EXPORT_MAX_FILE_BYTES,
+                "team export body",
+            )
+            if bytes_sha256(raw) != row["sha256"]:
+                raise KnowledgeHubError(
+                    "team export source changed after planning: {}".format(row["path"])
+                )
             rewritten, file_rewrites = _rewrite_links(
-                source.read_text(encoding="utf-8"),
+                raw.decode("utf-8", errors="ignore"),
                 str(row["path"]),
                 selected_paths,
             )
-            target.write_text(rewritten, encoding="utf-8")
+            _write_private_text(staging, target, rewritten)
             rewrites.extend(file_rewrites)
             exported = dict(row)
             exported["source_sha256"] = exported.pop("sha256")
@@ -305,10 +383,14 @@ def apply_team_export(
             rows.append(exported)
             selected_items.append(_export_item(item_by_id[str(row["id"])]))
         registry_dir = staging / "registry"
-        registry_dir.mkdir(parents=True)
-        (registry_dir / "items.jsonl").write_text(encode_jsonl(selected_items), encoding="utf-8")
+        ensure_private_directory(registry_dir)
+        _write_private_text(
+            staging,
+            registry_dir / "items.jsonl",
+            encode_jsonl(selected_items),
+        )
         indexes_dir = staging / "indexes"
-        indexes_dir.mkdir(parents=True)
+        ensure_private_directory(indexes_dir)
         index_rows = [
             "# Team export index",
             "",
@@ -317,12 +399,17 @@ def apply_team_export(
         ]
         for row in sorted(rows, key=lambda value: str(value["path"])):
             index_rows.append("- [{}](../{}) · `{}`".format(row["title"], row["path"], row["id"]))
-        (indexes_dir / "team-index.md").write_text("\n".join(index_rows) + "\n", encoding="utf-8")
-        (staging / "EXPORT.md").write_text(
+        _write_private_text(
+            staging,
+            indexes_dir / "team-index.md",
+            "\n".join(index_rows) + "\n",
+        )
+        _write_private_text(
+            staging,
+            staging / "EXPORT.md",
             "# Knowledge Hub team export\n\n"
             "该目录只包含导出时为 active、team-internal 且通过 owner-decision 排除规则的 canonical Markdown。"
             "它不是完整备份，不包含 reviewing/历史/control/vault，也不授予 owner decision 或发布权限。\n",
-            encoding="utf-8",
         )
         supporting_paths = ("registry/items.jsonl", "indexes/team-index.md", "EXPORT.md")
         closure = _link_closure(
@@ -373,8 +460,13 @@ def apply_team_export(
                 "finding_count": 0,
             },
         }
-        (staging / "manifest.json").write_text(pretty_json(manifest) + "\n", encoding="utf-8")
+        _write_private_text(
+            staging,
+            staging / "manifest.json",
+            pretty_json(manifest) + "\n",
+        )
         os.replace(str(staging), str(destination))
+        os.chmod(str(destination), 0o700)
     except Exception as exc:
         _write_incomplete(staging, destination, type(exc).__name__)
         if isinstance(exc, KnowledgeHubError):

@@ -54,7 +54,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任�
 ```
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
-预检和检索不会修改受 Git 管理的知识资产；默认只向 `.cache/knowledge-hub/` 写入脱敏 telemetry。只读文件系统、权限受限沙箱或本地 cache 不可用时，业务结果继续返回，JSON 的 `telemetry.status=degraded` 会说明降级原因；要求完全不尝试本地观测写入时使用 `--no-telemetry`。
+预检和检索不会修改受 Git 管理的知识资产；默认只向 `.cache/knowledge-hub/` 写入可重建索引和脱敏 telemetry。只读文件系统、权限受限沙箱或本地 cache 不可用时，业务结果继续返回，JSON 的 `telemetry.status=degraded` 会说明降级原因；要求完全不尝试本地观测写入时使用 `--no-telemetry`。运行时保留由 `tools/knowledge-runtime-maintenance.sh` 管理：默认只规划，显式 `--apply` 也只删除旧 schema 索引和已终结且过期的事务，不删除 telemetry 或未完成事务。
 Agent 默认使用 `--summary-json --context-budget small --limit 3`，只装配 route、候选索引、风险和原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并使用 `--json` 回退完整证据。`--context-budget small|normal|deep` 和 `--limit` 会共同约束候选与全文搜索结果。任何输出都不代表条目已提升 active 或 owner 已签收。
 在 `~/knowledge-hub` 内自举维护时，`repo_route` 表示当前 cwd 属于 Knowledge Hub 仓库，`route` 表示 query 目标；如果 query 明确命中 PCR02、agent-dev-kit 等项目别名，预检仍应路由到目标项目。检查 Hub 自身治理上下文可用：
 
@@ -103,21 +103,35 @@ rtk bash ~/knowledge-hub/tools/knowledge-path-audit.sh --scope runtime-rules --s
 rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all --json
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode contract --json
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json
 ```
 
-`knowledge-final-gate.sh` 只有一个终态 profile：`product`。`--regression-suite quick` 适合日常收口；`--regression-suite full` 用于高风险工具改动和终态证明。
+`knowledge-final-gate.sh` 只有一个终态 profile：`product`。`--summary-json` 提供有界首屏，`--json` 保留完整取证；`--regression-suite quick` 适合日常收口，`--regression-suite full` 用于高风险工具改动和终态证明。
+
+工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对 Python 支持矩阵、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行 Ruff 双层门禁、mypy、Bandit、核心覆盖率、无隔离 build、Hub check、retrieval、full regression、依赖漏洞审计和 CycloneDX SBOM。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
-产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、tracked dependency manifests、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 30 个规范项目的真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。`4/4 structural coverage` 或 30/30 本机 source mapping 都不代表内容已签收或已验证；`pcr02` 只作为 group 元数据，不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
+产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。工程 contract 始终是 hard check；full profile 还要求新鲜且 signature 匹配的工程质量快照。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、两份 hash lock 与 CI contract 文件均已跟踪、full engineering、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 `registry/projects.json` 当前登记的全部规范项目真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。当前基线是 30 个项目；该数量不是代码常量，新增第 31 个项目后 readiness、route matrix、slot 和门禁分母会从 registry 动态扩展。`4/4 structural coverage` 或全量本机 source mapping 都不代表内容已签收或已验证；项目专项 readiness/owner 条件由 `registry/product-policy.json` 声明，`pcr02` group 元数据不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
 
-长期采用的调用量继续统计当前 interaction contract 的真实交互；性能另按当前 `performance_contract` 聚合，旧实现的真实慢样本保留为 usage/provenance，但不冒充当前实现 P95。性能至少需要 10 个 search 与 10 个 context 当前性能样本，显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
+本机首次建立工程环境可使用以下受控流程；如果本机没有 `python3.14`，可换成支持范围内的 3.10–3.13：
+
+```bash
+rtk python3.14 -m venv .tmp/engineering/venv
+rtk .tmp/engineering/venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
+rtk env PATH="$PWD/.tmp/engineering/venv/bin:$PATH" bash tools/knowledge-engineering-check.sh --mode full --json
+```
+
+`pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 覆盖 Python 3.10–3.14，权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。
+
+长期采用的调用量继续统计当前 interaction contract 的真实交互；metrics v4 使用 `knowledge-retrieval-performance-v2` 分别报告 `warm_interactive`、`index_preparation` 与 report-only 的 `end_to_end_observed`，不再把 cold rebuild 混入 warm SLA，也不隐藏真实端到端等待。旧 performance contract 的真实慢样本保留为 usage/provenance，但不被静默按新口径重解释。warm 性能至少需要 10 个 search 与 10 个 context 当前样本；准备阶段观测到时还必须满足 5000 ms 上限。显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
 
 高风险脚本或回归改动后，可用 `rtk bash ~/knowledge-hub/tools/knowledge-regression-trend.sh --run --suite full --json` 只保留 full regression slowest 10 与失败 ID，不做无证据的泛化重构。
 
@@ -127,15 +141,19 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 rtk bash ~/knowledge-hub/tools/knowledge-project-readiness.sh --check --json
 rtk bash ~/knowledge-hub/tools/knowledge-retrieval-benchmark.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --check --json
-rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json
+rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --summary-json
 rtk bash ~/knowledge-hub/tools/knowledge-export.sh --plan --json
 rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-13 --json
 rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --as-of 2026-07-13 --json
+rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode full --json
 ```
 
-其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布。
+检索基准 contract v2 会先单列一次索引准备，再测量 `warm-interactive` 查询：warm search P95 上限为 500 ms，冷建库、schema 升级或增量刷新等 index preparation 上限为 5000 ms。两项都会参与判定，避免把冷启动混入交互 P95，也避免通过预热掩盖冷启动债务。
+
+其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，并通过 `tools/ci/python-runtime.sh` 绑定调用方已验证的绝对解释器路径，不复制虚拟环境、不联网安装依赖、不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布。
 
 当前产品状态与证据缺口以 `governance/product/validation/project-readiness.md` 和实时 `knowledge-final-gate.sh` 输出为准。`governance/status/knowledge-hub-operational-maturity.md` 仅保留 2026-07-13 历史快照；2026-07 运营批次和交付记录分别见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 与 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`，均不替代当前 owner、设备、发布或回滚证据。
+本轮覆盖功能、性能、安全、扩展性、维护性、运行时支持和供应链的验证候选见 `governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md`；该候选保持 `reviewing / manual-validation-pending`，不会把本地自动化结果冒充 GUI、实机、发布、生产回滚、人工复核或长期采用证据。
 
 ## 目录边界
 
@@ -215,7 +233,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts
 rtk bash ~/knowledge-hub/tools/knowledge-review-queue-apply.sh --forms artifacts/manifests/review-queue.local.jsonl --apply --json
 ```
 
-`knowledge-review-queue-apply.sh` 只机械落地已校验人工复核字段。registry item 表单使用 schema v2，并绑定导出时的整文件 `content_sha256`；正文漂移会拒绝校验和 apply，成功落地后保存 `human_review_content_sha256`，后续漂移会重新入队。表单中出现 owner gate、active promotion、memory write、source project write 等字段会被拒绝。`needs-edits` 和 `defer` 会保留为 `max-body` blocker，直到人工补正或改判；`archive-only/reject` 也不会直接改变 lifecycle status，退役必须走独立内容 attestation、执行授权和 `knowledge-retire.sh`。
+`knowledge-review-queue-apply.sh` 只机械落地已校验人工复核字段。registry item 表单使用 schema v2，并绑定导出时的整文件 `content_sha256`；正文漂移会拒绝校验和 apply，成功落地后保存 `human_review_content_sha256`，后续漂移会重新入队。表单中出现 owner gate、active promotion、memory write、source project write 等字段会被拒绝。`needs-edits` 和 `defer` 会继续阻断人工复核闭环，直到人工补正或改判；`archive-only/reject` 也不会直接改变 lifecycle status，退役必须走独立内容 attestation、执行授权和 `knowledge-retire.sh`。
 
 ## 高风险授权
 

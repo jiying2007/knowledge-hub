@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 import statistics
 import time
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .common import load_json, route_rows, utc_timestamp
 from .context import _query_route_selection
@@ -31,11 +31,12 @@ def _percentile(values: Sequence[float], fraction: float) -> float:
 
 def run_retrieval_benchmark(
     root: pathlib.Path,
-    cases_path: pathlib.Path = None,
+    cases_path: Optional[pathlib.Path] = None,
     top_k: int = 3,
     minimum_hit_rate: float = 0.95,
     minimum_mrr: float = 0.85,
     maximum_p95_ms: float = 500.0,
+    maximum_index_preparation_ms: float = 5000.0,
 ) -> Dict[str, Any]:
     path = cases_path or root / DEFAULT_CASES
     payload = load_json(path, {}) or {}
@@ -45,8 +46,18 @@ def run_retrieval_benchmark(
     latencies: List[float] = []
     reciprocal_ranks: List[float] = []
     hit_count = 0
-    started = time.monotonic()
+    overall_started = time.monotonic()
     search_index = SearchIndex(root)
+    preparation_started = time.monotonic()
+    preparation = search_index.ensure()
+    preparation_duration_ms = round(
+        (time.monotonic() - preparation_started) * 1000,
+        2,
+    )
+    index_preparation_target_met = (
+        preparation_duration_ms <= maximum_index_preparation_ms
+    )
+    measurement_started = time.monotonic()
     for case in cases:
         result = search(
             root,
@@ -84,6 +95,10 @@ def run_retrieval_benchmark(
                 "latency_ms": latency,
             }
         )
+    measured_queries_duration_ms = round(
+        (time.monotonic() - measurement_started) * 1000,
+        2,
+    )
     count = len(cases)
     hit_rate = hit_count / count if count else 0.0
     mrr = statistics.mean(reciprocal_ranks) if reciprocal_ranks else 0.0
@@ -142,6 +157,7 @@ def run_retrieval_benchmark(
         and hit_rate >= minimum_hit_rate
         and mrr >= minimum_mrr
         and latency_target_met
+        and index_preparation_target_met
         and route_accuracy == 1.0
         else "fail"
     )
@@ -150,10 +166,11 @@ def run_retrieval_benchmark(
     except ValueError:
         case_file = str(path)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "read_only": True,
         "generated_at": utc_timestamp(),
         "status": status,
+        "measurement_profile": "warm-interactive",
         "case_file": case_file,
         "case_count": count + route_case_count,
         "search_case_count": count,
@@ -168,13 +185,29 @@ def run_retrieval_benchmark(
             "minimum_hit_rate": minimum_hit_rate,
             "minimum_mrr": minimum_mrr,
             "maximum_p95_ms": maximum_p95_ms,
+            "maximum_index_preparation_ms": maximum_index_preparation_ms,
         },
         "latency_target_met": latency_target_met,
+        "index_preparation_target_met": index_preparation_target_met,
+        "index_preparation": {
+            "state": preparation.get("state", ""),
+            "rebuilt": bool(preparation.get("rebuilt", False)),
+            "updated": bool(preparation.get("updated", False)),
+            "duration_ms": preparation_duration_ms,
+            "document_files": int(preparation.get("document_files", 0)),
+            "document_rows": int(preparation.get("document_rows", 0)),
+            "hashed_files": int(preparation.get("hashed_files", 0)),
+            "reused_content_hashes": int(
+                preparation.get("reused_content_hashes", 0)
+            ),
+        },
         "latency_ms": {
             "p50": round(_percentile(latencies, 0.50), 2),
             "p95": round(p95_ms, 2),
             "max": round(max(latencies) if latencies else 0.0, 2),
-            "total": round((time.monotonic() - started) * 1000, 2),
+            "index_preparation": preparation_duration_ms,
+            "measured_queries": measured_queries_duration_ms,
+            "total": round((time.monotonic() - overall_started) * 1000, 2),
         },
         "failures": [row for row in rows if not row["hit"]],
         "route_failures": [row for row in route_results if not row["hit"]],

@@ -8,11 +8,17 @@ import json
 import os
 import pathlib
 import re
+import sys
 import time
+import uuid
 from collections import Counter
-from typing import Any, Dict, List, Mapping, Sequence, Set
+from typing import Any, Dict, Mapping, Set
 
 from .common import (
+    KnowledgeHubError,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    load_json,
     parse_json_output,
     pretty_json,
     project_rows,
@@ -24,63 +30,145 @@ from .common import (
     working_tree_signature,
 )
 from .context import TASK_TYPES, _query_route
+from .engineering import engineering_snapshot_path, evaluate_engineering_contract
 from .evidence import evaluate_evidence_contract
 from .export import plan_team_export
 from .link_audit import audit_links
 from .metrics import local_metrics
 from .obsidian_view import build_obsidian_views
 from .project_readiness import SLOT_NAMES, _project_paths, _repo_rows_for_project, _workspace_state
+from .product_policy import (
+    evaluate_specialized_owner_requirements,
+    load_product_policy,
+)
 from .retrieval import run_retrieval_benchmark
 from .schemas import validate_instance, validate_schema_catalog
 from .store import incomplete_transactions
 
 
-FINAL_PROOF_INDEX_PATHS = (
-    "indexes/by-owner.md",
-    "indexes/by-status.md",
-    "indexes/by-review-date.md",
-    "indexes/by-topic.md",
-    "indexes/by-decision.md",
-)
-FINAL_PROOF_SEED_IDS = (
-    "knowledge-hub-owner-handoff-final-gate-hardening-20260622",
-    "knowledge-hub-final-gate-evidence-recovery-20260622",
-    "knowledge-hub-recovery-search-manual-hardening-20260622",
-    "knowledge-hub-final-proof-maintenance-hardening-20260622",
-    "knowledge-hub-owner-queue-command-hardening-20260622",
-    "knowledge-hub-final-recovery-discoverability-hardening-20260622",
-    "knowledge-hub-final-proof-summary-readability-hardening-20260622",
-    "knowledge-hub-source-check-snapshot-evidence-readability-20260622",
-    "knowledge-hub-report-only-maintenance-tools-20260622",
-    "knowledge-hub-owner-inbox-final-gate-audit-20260622",
-)
-SPECIALIZED_OWNER_ATTESTATION_REF = (
-    "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"
-)
-SPECIALIZED_OWNER_DECISION_STATUS = "accepted-boundary-evidence-pending"
-SPECIALIZED_OWNER_DECISIONS = {
-    "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711": (
-        "accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing"
-    ),
-    "pcr02-st77912-fb-mi-fb-boundary-decision-20260711": (
-        "accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing"
-    ),
-    "pcr02-camera-raw-preview-virtual-stream-architecture-20260711": (
-        "accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing"
-    ),
-}
+def _source_runtime_ready(payload: Mapping[str, Any], exit_code: int) -> bool:
+    registry_count = int(payload.get("registry_source_count", 0) or 0)
+    row_count = int(payload.get("row_count", 0) or 0)
+    executed_count = int(payload.get("executed_count", 0) or 0)
+    not_applicable_count = int(payload.get("not_applicable_count", 0) or 0)
+    selected_ids = [str(value) for value in payload.get("selected_source_ids", [])]
+    expected_ids = [str(value) for value in payload.get("expected_source_ids", [])]
+    return bool(
+        exit_code == 0
+        and payload.get("status") == "pass"
+        and payload.get("scope") == "all"
+        and payload.get("source_check_health_executed") is True
+        and registry_count > 0
+        and row_count == registry_count
+        and executed_count + not_applicable_count == row_count
+        and len(selected_ids) == registry_count
+        and selected_ids == expected_ids
+    )
 
 
-def product_snapshot_path(root: pathlib.Path) -> pathlib.Path:
-    return root / ".cache/knowledge-hub/final-gate-product.json"
+def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    blocker_rows = [
+        {
+            key: row.get(key)
+            for key in (
+                "id",
+                "check",
+                "severity",
+                "gap_type",
+                "codex_auto_can_complete",
+                "requires_owner_decision",
+                "source_id",
+                "field",
+            )
+            if key in row
+        }
+        for row in payload.get("blockers", [])
+        if isinstance(row, Mapping)
+    ]
+    content = payload.get("content_readiness", {}) or {}
+    project = content.get("project_readiness", {}) or {}
+    owner = payload.get("owner_and_real_evidence", {}) or {}
+    delivery = payload.get("delivery_readiness", {}) or {}
+    adoption = payload.get("adoption", {}) or {}
+    return {
+        "schema_version": 1,
+        "projection": "product-final-gate-summary-v1",
+        "generated_at": payload.get("generated_at", ""),
+        "as_of": payload.get("as_of", ""),
+        "final_profile": payload.get("final_profile", ""),
+        "regression_suite": payload.get("regression_suite", ""),
+        "gate_status": payload.get("gate_status", ""),
+        "overall_status": payload.get("overall_status", ""),
+        "platform_productization_complete": payload.get(
+            "platform_productization_complete", False
+        ),
+        "platform_release_complete": payload.get("platform_release_complete", False),
+        "terminal_maturity": payload.get("terminal_maturity", False),
+        "hard_checks": (payload.get("platform_status", {}) or {}).get(
+            "hard_checks", {}
+        ),
+        "blocker_count": len(blocker_rows),
+        "blockers": blocker_rows,
+        "content": {
+            "status": content.get("status", ""),
+            "project_count": project.get("project_count", 0),
+            "structural_ready_count": project.get("structural_ready_count", 0),
+            "evidence_ready_count": project.get("evidence_ready_count", 0),
+            "evidence_field_complete_count": project.get(
+                "evidence_field_complete_count", 0
+            ),
+        },
+        "owner_and_real_evidence": {
+            "status": owner.get("status", ""),
+            "owner_gate_open_count": owner.get("owner_gate_open_count", 0),
+            "review_queue_pending_count": owner.get(
+                "review_queue_pending_count", 0
+            ),
+            "pending_project_count": len(owner.get("pending_project_ids", [])),
+            "pending_specialized_owner_candidate_count": owner.get(
+                "pending_specialized_owner_candidate_count", 0
+            ),
+        },
+        "delivery": {
+            "status": delivery.get("status", ""),
+            "engineering_quality_ready": delivery.get(
+                "engineering_quality_ready", False
+            ),
+            "full_regression_ready": delivery.get("full_regression_ready", False),
+        },
+        "adoption": {
+            "ready": adoption.get("ready", False),
+            "invocation_count": adoption.get("invocation_count", 0),
+            "feedback_count": adoption.get("feedback_count", 0),
+            "observation_days": adoption.get("observation_days", 0),
+        },
+        "snapshot": payload.get("snapshot", ""),
+        "conclusion_zh": payload.get("conclusion_zh", ""),
+        "next_actions_zh": list(payload.get("next_actions_zh", []))[:10],
+        "duration_ms": payload.get("duration_ms", 0),
+    }
 
 
-def _write_snapshot(root: pathlib.Path, payload: Mapping[str, Any]) -> str:
-    path = product_snapshot_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(".tmp")
+def product_snapshot_path(root: pathlib.Path, regression_suite: str) -> pathlib.Path:
+    if regression_suite not in {"quick", "full"}:
+        raise ValueError("regression_suite must be quick or full")
+    return root / ".cache/knowledge-hub/final-gate-product-{}.json".format(
+        regression_suite
+    )
+
+
+def _write_snapshot(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+    regression_suite: str,
+) -> str:
+    path = product_snapshot_path(root, regression_suite)
+    ensure_private_directory_tree(root, path.parent)
+    temporary = path.with_name("{}.tmp-{}".format(path.name, uuid.uuid4().hex))
     temporary.write_text(pretty_json(dict(payload)) + "\n", encoding="utf-8")
+    ensure_private_file(temporary)
     os.replace(str(temporary), str(path))
+    ensure_private_file(path)
     return str(path.relative_to(root))
 
 
@@ -99,7 +187,18 @@ def _git_delivery_state(root: pathlib.Path) -> Dict[str, Any]:
     dirty_rows = [line for line in status_result["stdout"].splitlines() if line.strip()]
     if dirty_rows == ["ok"]:
         dirty_rows = []
-    required_manifests = ("pyproject.toml", "requirements-runtime.txt", "requirements-dev.txt")
+    required_manifests = (
+        "pyproject.toml",
+        "requirements-runtime.txt",
+        "requirements-dev.txt",
+        "requirements-runtime.lock",
+        "requirements-dev.lock",
+        ".github/workflows/quality.yml",
+        ".github/dependabot.yml",
+        "tools/ci/rtk",
+        "tools/ci/bootstrap-path.sh",
+        "tools/ci/python-runtime.sh",
+    )
     tracked_result = run_rtk(
         root,
         ["git", "ls-files", "--"] + list(required_manifests),
@@ -115,6 +214,59 @@ def _git_delivery_state(root: pathlib.Path) -> Dict[str, Any]:
         "required_dependency_manifests": list(required_manifests),
         "tracked_dependency_manifests": sorted(tracked),
         "dependency_manifests_tracked": tracked == set(required_manifests),
+        "required_release_contract_files": list(required_manifests),
+        "tracked_release_contract_files": sorted(tracked),
+        "release_contract_files_tracked": tracked == set(required_manifests),
+    }
+
+
+def _engineering_quality_state(
+    root: pathlib.Path,
+    signature: str,
+    max_age_hours: int = 24,
+) -> Dict[str, Any]:
+    path = engineering_snapshot_path(root)
+    if not path.is_file() or path.is_symlink():
+        return {
+            "status": "missing",
+            "fresh": False,
+            "signature_matches": False,
+            "path": str(path.relative_to(root)),
+        }
+    try:
+        payload = load_json(path, {}) or {}
+        age_seconds = max(0.0, time.time() - path.stat().st_mtime)
+    except (KnowledgeHubError, OSError, ValueError):
+        return {
+            "status": "invalid",
+            "fresh": False,
+            "signature_matches": False,
+            "path": str(path.relative_to(root)),
+        }
+    integrity = payload.get("candidate_integrity", {})
+    signature_matches = (
+        isinstance(integrity, Mapping)
+        and integrity.get("before_signature") == signature
+        and integrity.get("after_signature") == signature
+    )
+    fresh = bool(
+        payload.get("status") == "pass"
+        and payload.get("mode") == "full"
+        and isinstance(integrity, Mapping)
+        and integrity.get("unchanged") is True
+        and signature_matches
+        and age_seconds <= max_age_hours * 3600
+    )
+    return {
+        "status": payload.get("status", "invalid"),
+        "mode": payload.get("mode", ""),
+        "fresh": fresh,
+        "signature_matches": signature_matches,
+        "age_seconds": round(age_seconds, 1),
+        "path": str(path.relative_to(root)),
+        "generated_at": payload.get("generated_at", ""),
+        "failed_checks": list(payload.get("errors", []))[:20],
+        "sbom": payload.get("sbom", {}),
     }
 
 
@@ -363,89 +515,6 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
     }
 
 
-def _proof_artifacts(root: pathlib.Path, as_of: str, items: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
-    suffix = as_of.replace("-", "")
-    items_by_id = {str(row.get("id", "")): row for row in items if row.get("id")}
-    dynamic_ids = []
-    for item_id, row in items_by_id.items():
-        tags = row.get("tags", []) if isinstance(row.get("tags"), list) else []
-        path = str(row.get("path", ""))
-        review_status = str(row.get("review_status", ""))
-        if (
-            row.get("domain") == "governance"
-            and row.get("kind") == "audit"
-            and (row.get("created_at") == as_of or row.get("updated_at") == as_of)
-            and "governance" in tags
-            and path.startswith("artifacts/manifests/knowledge-hub-")
-            and path.endswith("-{}.md".format(suffix))
-            and (review_status.endswith("-applied") or review_status.endswith("-registered"))
-        ):
-            dynamic_ids.append(item_id)
-    expected_ids = list(dict.fromkeys(list(FINAL_PROOF_SEED_IDS) + sorted(dynamic_ids)))
-    index_text = {}
-    for relative in FINAL_PROOF_INDEX_PATHS:
-        try:
-            index_text[relative] = (root / relative).read_text(encoding="utf-8")
-        except OSError:
-            index_text[relative] = ""
-    missing_registry = []
-    missing_md = []
-    missing_jsonl = []
-    missing_indexes: Dict[str, List[str]] = {}
-    rows = []
-    for item_id in expected_ids:
-        item = items_by_id.get(item_id, {})
-        path = str(item.get("path", ""))
-        jsonl_path = str(pathlib.PurePosixPath(path).with_suffix(".jsonl")) if path else ""
-        if not item:
-            missing_registry.append(item_id)
-        if not path or not (root / path).is_file():
-            missing_md.append({"id": item_id, "path": path})
-        if not jsonl_path or not (root / jsonl_path).is_file():
-            missing_jsonl.append({"id": item_id, "path": jsonl_path})
-        index_gaps = [
-            relative
-            for relative, text in index_text.items()
-            if item_id not in text and (not path or path not in text) and (not jsonl_path or jsonl_path not in text)
-        ]
-        if index_gaps:
-            missing_indexes[item_id] = index_gaps
-        rows.append(
-            {
-                "id": item_id,
-                "path": path,
-                "jsonl_path": jsonl_path,
-                "status": "pass" if item and path and (root / path).is_file() and jsonl_path and (root / jsonl_path).is_file() and not index_gaps else "fail",
-            }
-        )
-    status = "pass" if not missing_registry and not missing_md and not missing_jsonl and not missing_indexes else "fail"
-    return {
-        "status": status,
-        "selection_mode": "seed-plus-dynamic-governance-by-as-of-date",
-        "selection_date": as_of,
-        "dynamic_selector": {"date": as_of, "suffix": suffix},
-        "seed_ids": list(FINAL_PROOF_SEED_IDS),
-        "dynamic_ids": sorted(dynamic_ids),
-        "baseline_dynamic_ids": [],
-        "selection_dynamic_ids": sorted(dynamic_ids),
-        "baseline_selection_overlap_ids": [],
-        "expected_ids": expected_ids,
-        "expected_count": len(expected_ids),
-        "dynamic_count": len(dynamic_ids),
-        "baseline_dynamic_count": 0,
-        "selection_dynamic_count": len(dynamic_ids),
-        "baseline_selection_overlap_count": 0,
-        "registered_count": len(expected_ids) - len(missing_registry),
-        "paired_count": len(expected_ids) - len(missing_md) - len(missing_jsonl),
-        "indexed_count": len(expected_ids) - len(missing_indexes),
-        "missing_registry": missing_registry,
-        "missing_md": missing_md,
-        "missing_jsonl": missing_jsonl,
-        "missing_indexes": missing_indexes,
-        "rows": rows,
-    }
-
-
 def run_product_gate(
     root: pathlib.Path,
     as_of: str,
@@ -471,13 +540,13 @@ def run_product_gate(
         ),
         "source_check_result": lambda: run_rtk(
             root,
-            ["bash", "tools/knowledge-source-check.sh", "--scope", "pcr02-level2", "--json", "--as-of", as_of],
+            ["bash", "tools/knowledge-source-check.sh", "--scope", "all", "--json", "--as-of", as_of],
             timeout=60,
             accepted_exit_codes=(0, 1),
         ),
         "unit_result": lambda: run_rtk(
             root,
-            ["python3", "-m", "pytest", "-q"],
+            [sys.executable, "-m", "pytest", "-q"],
             timeout=90,
             accepted_exit_codes=(0, 1, 4, 5),
         ),
@@ -485,6 +554,7 @@ def run_product_gate(
         "links": lambda: audit_links(root),
         "obsidian_view": lambda: build_obsidian_views(root),
         "schema_catalog": lambda: validate_schema_catalog(root),
+        "engineering_contract": lambda: evaluate_engineering_contract(root),
         "metrics": lambda: local_metrics(root),
         "readiness": lambda: _project_readiness(root),
         "export_plan": lambda: plan_team_export(root),
@@ -515,6 +585,7 @@ def run_product_gate(
     links = results["links"]
     obsidian_view = results["obsidian_view"]
     schema_catalog = results["schema_catalog"]
+    engineering_contract = results["engineering_contract"]
     metrics = results["metrics"]
     # Benchmark latency in isolation so concurrent gate work cannot invalidate the warm p95 contract.
     retrieval = run_retrieval_benchmark(root)
@@ -524,6 +595,7 @@ def run_product_gate(
     restore_head = results["restore_head"]
     restore = restore_head if git_delivery["worktree_clean"] else restore_candidate
     incomplete = results["incomplete"]
+    engineering_quality = _engineering_quality_state(root, signature)
     try:
         check_payload = parse_json_output(check_result)
     except Exception as exc:
@@ -581,36 +653,27 @@ def run_product_gate(
             self_test_override=True,
             notes_zh="仅供嵌套回归夹具避免递归恢复演练；真实 product gate 不接受该覆盖。",
         )
+    if (
+        os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1"
+        and not engineering_quality.get("fresh", False)
+    ):
+        engineering_quality = dict(
+            engineering_quality,
+            status="skipped-for-inner-regression",
+            fresh=True,
+            self_test_override=True,
+            notes_zh="仅供嵌套回归夹具避免依赖外层工程快照；真实 product full gate 不接受该覆盖。",
+        )
     candidate_integrity = _candidate_integrity(root, signature)
     items = registry_items(root)
     items_by_id = {str(row.get("id", "")): row for row in items}
-    pcr_items = {}
-    specialized_owner_ready_ids = []
-    for item_id, expected_decision in SPECIALIZED_OWNER_DECISIONS.items():
-        row = items_by_id.get(item_id, {})
-        owner_ready = (
-            row.get("decision_owner") == "leiwenjun"
-            and row.get("decision_status") == SPECIALIZED_OWNER_DECISION_STATUS
-            and row.get("owner_attestation_ref") == SPECIALIZED_OWNER_ATTESTATION_REF
-            and row.get("owner_decision") == expected_decision
-        )
-        pcr_items[item_id] = {
-            "status": row.get("status", "missing"),
-            "path": row.get("path", ""),
-            "decision_owner": row.get("decision_owner", "unassigned"),
-            "decision_status": row.get("decision_status", "candidate"),
-            "owner_attestation_ref": row.get("owner_attestation_ref", ""),
-            "owner_decision": row.get("owner_decision", ""),
-            "owner_ready": owner_ready,
-            "manual_validation_pending": row.get("manual_validation_pending", True),
-        }
-        if owner_ready:
-            specialized_owner_ready_ids.append(item_id)
-    specialized_owner_ready_ids.sort()
-    pending_specialized_owner_ids = sorted(
-        set(SPECIALIZED_OWNER_DECISIONS) - set(specialized_owner_ready_ids)
+    product_policy, product_policy_errors = load_product_policy(root)
+    specialized_owner = evaluate_specialized_owner_requirements(
+        product_policy, items_by_id
     )
-    proof_artifacts = _proof_artifacts(root, as_of, items)
+    specialized_policy_errors = product_policy_errors + specialized_owner["errors"]
+    specialized_owner_ready_ids = specialized_owner["ready_ids"]
+    pending_specialized_owner_ids = specialized_owner["pending_ids"]
     status_counts = Counter(str(row.get("status", "unknown")) for row in items)
     active_domain = [
         row
@@ -620,11 +683,17 @@ def run_product_gate(
         and not str(row.get("path", "")).startswith("artifacts/manifests/")
     ]
     status_value = str(status_payload.get("status", "unparseable"))
-    status_technical_ready = status_value in {"ok", "needs-owner-review", "partial"}
+    status_control_plane_ready = status_value in {"ok", "needs-owner-review", "partial"}
     hard_checks = {
         "knowledge_check": check_result["exit_code"] == 0 and check_payload.get("status") == "pass",
-        "product_status": status_result["exit_code"] in {0, 1} and status_technical_ready,
-        "source_check_runtime": source_check_result["exit_code"] == 0 and source_check_payload.get("status") == "pass",
+        "product_status": status_result["exit_code"] in {0, 1} and status_control_plane_ready,
+        "source_check_runtime": _source_runtime_ready(
+            source_check_payload, source_check_result["exit_code"]
+        ),
+        "product_policy": not specialized_policy_errors,
+        "engineering_contract": engineering_contract.get("status") == "pass",
+        "engineering_quality": regression_suite != "full"
+        or engineering_quality.get("fresh", False),
         "shared_unit_tests": unit_result["exit_code"] == 0,
         "full_regression": regression_suite != "full"
         or (regression_result["exit_code"] == 0 and regression_payload.get("status") == "pass"),
@@ -644,7 +713,6 @@ def run_product_gate(
         and obsidian_view.get("content_mirror_drift_count") == 0
         and obsidian_view.get("transaction", {}).get("changed_count") == 0,
         "schema_catalog": schema_catalog["status"] == "pass",
-        "proof_artifacts": proof_artifacts["status"] == "pass",
     }
     blockers = [name for name, passed in hard_checks.items() if not passed]
     gate_status = "pass" if not blockers else "fail"
@@ -660,6 +728,7 @@ def run_product_gate(
         not project_boundary_owner_ready
         or owner_gate_open_count > 0
         or bool(pending_specialized_owner_ids)
+        or bool(specialized_policy_errors)
     )
     evidence_ready = project_evidence_ready and owner_gate_open_count == 0 and review_queue_pending_count == 0
     adoption_ready = bool(metrics.get("adoption", {}).get("ready", False))
@@ -667,6 +736,7 @@ def run_product_gate(
     delivery_ready = (
         git_delivery["worktree_clean"]
         and git_delivery["dependency_manifests_tracked"]
+        and engineering_quality.get("fresh", False)
         and restore_head.get("fresh", False)
         and full_regression_ready
     )
@@ -688,14 +758,19 @@ def run_product_gate(
     )
     if not owner_decision_pending:
         owner_evidence_clause = (
-            "30 项 authority-boundary owner 与 3 项 PCR02 专项 owner 决定均已绑定；"
+            "{} 项 authority-boundary owner 与 {} 项声明式专项 owner 要求均已绑定；"
             "真实 source/device/platform/release evidence 尚未闭环，"
-        )
+        ).format(readiness["project_count"], specialized_owner["item_count"])
     else:
         owner_evidence_clause = (
-            "30 项 authority-boundary owner 已绑定，仍有 {} 项专项或队列 owner 决定待处理；"
+            "{} 项 authority-boundary owner 已登记，仍有 {} 项专项、策略或队列 owner 决定待处理；"
             "真实 source/device/platform/release evidence 尚未闭环，"
-        ).format(len(pending_specialized_owner_ids) + owner_gate_open_count)
+        ).format(
+            readiness["project_count"],
+            len(pending_specialized_owner_ids)
+            + owner_gate_open_count
+            + len(specialized_policy_errors),
+        )
     if gate_status != "pass":
         conclusion_zh = "产品门禁存在技术阻断，必须先修复 blockers。"
     elif not delivery_ready:
@@ -708,8 +783,8 @@ def run_product_gate(
         else:
             conclusion_zh = (
                 "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
-                "30 个项目的真实 owner/source/device/platform/release evidence 也尚未闭环，"
-                "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+                + "{} 个登记项目的真实 owner/source/device/platform/release evidence 也尚未闭环，".format(readiness["project_count"])
+                + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
             )
     elif not evidence_ready:
         if project_boundary_owner_ready:
@@ -721,8 +796,8 @@ def run_product_gate(
         else:
             conclusion_zh = (
                 "平台发布、结构、检索、链接、导出和恢复门禁已通过；"
-                "30 个项目的真实 owner/source/device/platform/release evidence 尚未闭环，"
-                "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
+                + "{} 个登记项目的真实 owner/source/device/platform/release evidence 尚未闭环，".format(readiness["project_count"])
+                + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
             )
     else:
         conclusion_zh = "平台和项目证据均达到终态门槛。"
@@ -756,11 +831,16 @@ def run_product_gate(
             "command": diff_result["command"],
         },
         "candidate_integrity": candidate_integrity,
+        "engineering_contract": engineering_contract,
+        "engineering_quality": engineering_quality,
     }
     blocker_metadata = {
         "knowledge_check": ("knowledge-check-failed", "governance"),
         "product_status": ("product-status-failed", "governance"),
         "source_check_runtime": ("source-check-runtime-failed", "source-coverage"),
+        "product_policy": ("product-policy-invalid", "configuration"),
+        "engineering_contract": ("engineering-contract-invalid", "engineering"),
+        "engineering_quality": ("engineering-quality-evidence-missing", "engineering"),
         "shared_unit_tests": ("shared-unit-tests-failed", "test"),
         "full_regression": ("full-regression-failed", "regression"),
         "git_diff_check": ("git-diff-check-failed", "worktree"),
@@ -774,7 +854,6 @@ def run_product_gate(
         "restore_drill": ("restore-drill-required", "recovery"),
         "obsidian_views": ("obsidian-views-failed", "obsidian"),
         "schema_catalog": ("schema-catalog-failed", "schema"),
-        "proof_artifacts": ("proof-artifacts-failed", "evidence"),
     }
     blocker_rows = []
     for blocker in blockers:
@@ -872,14 +951,18 @@ def run_product_gate(
         if project_boundary_owner_ready:
             if pending_specialized_owner_ids:
                 next_actions_zh.append(
-                    "30 项 authority-boundary owner 与 owner_ref 已绑定；仍需真实 owner 处理 {} 个 PCR02 专项候选，并为 {} 个 evidence-pending 项目补真实证据。".format(
-                        len(pending_specialized_owner_ids), pending_evidence_count
+                    "{} 项 authority-boundary owner 与 owner_ref 已绑定；仍需真实 owner 处理 {} 个声明式专项候选，并为 {} 个 evidence-pending 项目补真实证据。".format(
+                        readiness["project_count"],
+                        len(pending_specialized_owner_ids),
+                        pending_evidence_count,
                     )
                 )
             else:
                 next_actions_zh.append(
-                    "30 项 authority-boundary owner 与 3 项 PCR02 专项 owner 决定均已绑定；继续为 {} 个 evidence-pending 项目补真实证据。".format(
-                        pending_evidence_count
+                    "{} 项 authority-boundary owner 与 {} 项声明式专项 owner 要求均已绑定；继续为 {} 个 evidence-pending 项目补真实证据。".format(
+                        readiness["project_count"],
+                        specialized_owner["item_count"],
+                        pending_evidence_count,
                     )
                 )
         else:
@@ -888,7 +971,7 @@ def run_product_gate(
                     pending_evidence_count
                 )
             )
-        next_actions_zh.append("优先补 PCR02 ST77912 高温、SCLK/EMI、端到端显示和发布回滚证据。")
+        next_actions_zh.extend(specialized_owner["evidence_priority_messages_zh"])
     if not delivery_ready:
         next_actions_zh.append(
             "在门禁全绿后形成 clean committed HEAD，并用 full regression 与 HEAD git archive 恢复演练复核交付。"
@@ -927,7 +1010,9 @@ def run_product_gate(
             "blockers": blockers,
             "knowledge_check_errors": check_payload.get("errors", [])[:20],
             "knowledge_status": status_value,
-            "status_technical_ready": status_technical_ready,
+            "status_control_plane_ready": status_control_plane_ready,
+            "status_technical_ready": False,
+            "status_technical_readiness_reason": "knowledge-status 只声明控制面与 source runtime；产品技术就绪仅由本 final gate 全部 hard_checks 判定。",
             "unit_summary": unit_result.get("stdout", "").strip().splitlines()[-1] if unit_result.get("stdout", "").strip() else "",
             "full_regression": {
                 "status": regression_payload.get("status", "unparseable"),
@@ -939,6 +1024,8 @@ def run_product_gate(
                 "exit_code": regression_result.get("exit_code", 0),
             },
             "candidate_integrity": candidate_integrity,
+            "engineering_contract": engineering_contract,
+            "engineering_quality": engineering_quality,
             "incomplete_transactions": incomplete,
         },
         "content_readiness": {
@@ -975,7 +1062,6 @@ def run_product_gate(
             "authority": "registry-and-hub-gates",
         },
         "schema_catalog": schema_catalog,
-        "proof_artifacts": proof_artifacts,
         "operational_readiness": {
             "status": "pass" if hard_checks["team_export_plan"] and hard_checks["restore_drill"] else "fail",
             "team_export": {
@@ -993,6 +1079,8 @@ def run_product_gate(
             "status": "pass" if delivery_ready else "candidate",
             "platform_release_complete": gate_status == "pass" and delivery_ready,
             "requires_full_regression": True,
+            "requires_engineering_quality": True,
+            "engineering_quality_ready": engineering_quality.get("fresh", False),
             "full_regression_ready": full_regression_ready,
             "git": git_delivery,
             "candidate_restore": restore_candidate,
@@ -1033,6 +1121,9 @@ def run_product_gate(
             "owner_ref_ready_count": readiness["owner_ref_ready_count"],
             "owner_boundary_ready_count": readiness["owner_boundary_ready_count"],
             "owner_decision_status": "pending" if owner_decision_pending else "ready",
+            "specialized_owner_policy_status": specialized_owner["status"],
+            "specialized_owner_policy_errors": specialized_policy_errors,
+            "specialized_owner_policy_count": specialized_owner["policy_count"],
             "specialized_owner_ready_candidate_count": len(specialized_owner_ready_ids),
             "specialized_owner_ready_candidate_ids": specialized_owner_ready_ids,
             "pending_specialized_owner_candidate_count": len(pending_specialized_owner_ids),
@@ -1040,15 +1131,8 @@ def run_product_gate(
             "owner_gate_open_count": owner_gate_open_count,
             "review_queue_pending_count": review_queue_pending_count,
             "pending_project_ids": [row["project_id"] for row in readiness["rows"] if row["evidence_status"] != "ready"],
-            "pcr02_owner_ready_candidates": pcr_items,
-            "pcr02_required_evidence": [
-                "真实 decision owner",
-                "ST77912 高温老化",
-                "SCLK/EMI",
-                "端到端显示链路",
-                "目标设备与发布制品身份",
-                "回滚和复测",
-            ],
+            "specialized_owner_requirements": specialized_owner["items"],
+            "specialized_required_evidence": specialized_owner["required_evidence_zh"],
         },
         "summary": {
             "final_profile": "product",
@@ -1094,5 +1178,9 @@ def run_product_gate(
         payload["summary"]["platform_status"] = "fail"
         payload["summary"]["platform_release_complete"] = False
         payload["conclusion_zh"] = "产品门禁输出未通过机器可读 schema 实例校验。"
-    payload["snapshot"] = _write_snapshot(root, payload)
+    if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
+        payload["local_cache_written"] = False
+        payload["snapshot"] = ""
+    else:
+        payload["snapshot"] = _write_snapshot(root, payload, regression_suite)
     return payload

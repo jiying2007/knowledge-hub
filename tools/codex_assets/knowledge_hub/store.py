@@ -18,7 +18,18 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
-from .common import KnowledgeHubError, bytes_sha256, file_sha256, normalize_relpath, pretty_json, resolve_inside, utc_timestamp
+from .common import (
+    KnowledgeHubError,
+    bytes_sha256,
+    ensure_private_directory,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    file_sha256,
+    normalize_relpath,
+    pretty_json,
+    resolve_inside,
+    utc_timestamp,
+)
 
 
 def _fsync_directory(path: pathlib.Path) -> None:
@@ -105,8 +116,12 @@ class RepositoryTransaction:
 
     @contextlib.contextmanager
     def _lock(self) -> Iterable[None]:
-        self.lock_path.parent.mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(self.root / ".tmp")
+        ensure_private_directory(self.lock_path.parent)
+        if self.lock_path.is_symlink():
+            raise KnowledgeHubError("transaction lock must not be a symlink")
         with self.lock_path.open("a+") as handle:
+            os.chmod(str(self.lock_path), 0o600)
             try:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError as exc:
@@ -117,13 +132,17 @@ class RepositoryTransaction:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _write_journal(self, payload: Mapping[str, Any]) -> None:
-        self.runtime_root.mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(self.root / ".tmp")
+        ensure_private_directory(self.root / ".tmp" / "transactions")
+        ensure_private_directory(self.runtime_root)
         temporary = self.journal_path.with_suffix(".tmp")
         with temporary.open("w", encoding="utf-8") as handle:
+            os.chmod(str(temporary), 0o600)
             handle.write(pretty_json(dict(payload)) + "\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(str(temporary), str(self.journal_path))
+        ensure_private_file(self.journal_path)
         _fsync_directory(self.journal_path.parent)
 
     def _stage(self, changed: List[Dict[str, Any]]) -> None:
@@ -132,14 +151,18 @@ class RepositoryTransaction:
             target = resolve_inside(self.root, relative)
             staged = self.stage_root / relative
             backup = self.backup_root / relative
-            staged.parent.mkdir(parents=True, exist_ok=True)
+            ensure_private_directory(self.stage_root)
+            ensure_private_directory_tree(self.stage_root, staged.parent)
             with staged.open("wb") as handle:
+                os.chmod(str(staged), 0o600)
                 handle.write(self.writes[relative].content)
                 handle.flush()
                 os.fsync(handle.fileno())
             if target.exists():
-                backup.parent.mkdir(parents=True, exist_ok=True)
+                ensure_private_directory(self.backup_root)
+                ensure_private_directory_tree(self.backup_root, backup.parent)
                 shutil.copy2(str(target), str(backup))
+                ensure_private_file(backup)
                 with backup.open("rb") as handle:
                     os.fsync(handle.fileno())
                 _fsync_directory(backup.parent)

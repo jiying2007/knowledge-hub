@@ -1297,79 +1297,88 @@ def read_relative_text(relative_path):
         return ""
 
 def build_linking_audit():
-    required_level2_sources = {
-        "pcr02-project-tools",
-        "pcr02-project-knowledge",
-        "pcr02-product-test",
-        "pcr02-project-scratch",
-        "pcr02-project-root-artifacts",
-        "pcr02-module-agent-rules",
-        "pcr02-project-agent-config",
-    }
-    required_topics = {"project-current", "project-archive"}
+    project_ids = sorted(by_project)
+    source_ids = sorted(by_source)
+    topic_ids = sorted(by_topic)
+    topic_index_anchors = sorted(
+        {
+            str(row.get("domain", ""))
+            for row in by_topic.values()
+            if row.get("domain")
+        }
+    )
+    decision_ids = sorted(
+        str(row.get("decision_id", ""))
+        for row in decisions
+        if row.get("decision_id")
+    )
     required_index_anchors = {
         "by_project": {
             "path": "indexes/by-project.md",
-            "anchors": ["projects/pcr02-ssc305", "indexes/by-decision.md", "pcr02-owner-review-package-20260618.md"],
+            "anchors": project_ids,
         },
         "by_source": {
             "path": "indexes/by-source.md",
-            "anchors": ["pcr02-project-docs", "pcr02-project-tools", "pcr02-level2-source-check-execution-snapshot-20260621.md"],
+            "anchors": source_ids,
         },
         "by_topic": {
             "path": "indexes/by-topic.md",
-            "anchors": [
-                "## 优先恢复主题速查",
-                "## 历史治理台账",
-                "PCR02",
-                "Knowledge Hub final gate",
-                "knowledge-hub-proof-search-runtime-hardening-20260622.md",
-                "memory auto-curation",
-                "Codex archive",
-            ],
+            "anchors": topic_index_anchors,
         },
         "by_decision": {
             "path": "indexes/by-decision.md",
-            "anchors": ["pcr02-owner-decision-worksheet-001", "pcr02-owner-decision-worksheet-007", "pcr02-project-docs-owner-decision-landing-20260623"],
+            "anchors": decision_ids,
         },
     }
 
-    missing_cross_session = []
-    pcr02_project = by_project.get("pcr02-ssc305", {})
-    source_ids = set(by_source.keys())
-    topic_ids = set(by_topic.keys())
-    owner_worksheets = by_decision.get("owner_worksheets", [])
-    registry_decisions = by_decision.get("registry_decisions", [])
-
-    cross_session_checks = {
-        "project_recoverable": bool(pcr02_project) and pcr02_project.get("domain") == "projects/pcr02-ssc305",
-        "source_recoverable": "pcr02-project-docs" in source_ids and required_level2_sources.issubset(source_ids),
-        "topic_recoverable": required_topics.issubset(topic_ids),
-        "decision_recoverable": len(owner_worksheets) >= 7 and bool(registry_decisions),
-        "handoff_recoverable": any("pcr02-governance-handoff" in item_id for item_id in pcr02_project.get("items", [])),
+    expected_project_ids = {
+        str(row.get("id", "")) for row in projects if row.get("id")
     }
-    for check_id, passed in cross_session_checks.items():
-        if not passed:
-            missing_cross_session.append(check_id)
+    expected_source_ids = {
+        str(row.get("id", "")) for row in sources if row.get("id")
+    }
+    expected_topic_ids = {
+        str(row.get("id", "")) for row in topics if row.get("id")
+    }
+    expected_decision_ids = set(decision_ids)
+    recovered_decision_ids = {
+        str(row.get("decision_id", ""))
+        for row in by_decision.get("registry_decisions", [])
+        if row.get("decision_id")
+    }
+    cross_session_checks = {
+        "project_registry_recoverable": expected_project_ids == set(by_project),
+        "source_registry_recoverable": expected_source_ids == set(by_source),
+        "topic_registry_recoverable": expected_topic_ids == set(by_topic),
+        "decision_registry_recoverable": expected_decision_ids
+        == recovered_decision_ids,
+    }
+    missing_cross_session = sorted(
+        check_id for check_id, passed in cross_session_checks.items() if not passed
+    )
 
-    missing_cross_project = []
-    pcr02_sources = {source_id: by_source.get(source_id, {}) for source_id in {"pcr02-project-docs"} | required_level2_sources}
-    pcr02_sources_with_provenance = []
-    for source_id, source in pcr02_sources.items():
+    missing_source_provenance = []
+    for source_id, source in sorted(by_source.items()):
         has_check_or_reason = bool(str(source.get("check", "")).strip() or str(source.get("no_check_reason", "")).strip())
         has_provenance = all(str(source.get(field, "")).strip() for field in ["path", "owner", "review_after", "source_strategy", "final_disposition"]) and has_check_or_reason
-        if has_provenance:
-            pcr02_sources_with_provenance.append(source_id)
-        else:
-            missing_cross_project.append(f"source-provenance:{source_id}")
-    project_specific_not_team_promoted = not any(
-        str(item.get("path", "")).startswith("domains/embedded/standards/")
-        and str((item.get("source") or {}).get("source_id", "")) == "pcr02-project-docs"
-        for item in items
-        if isinstance(item.get("source", {}), dict)
+        if not has_provenance:
+            missing_source_provenance.append(source_id)
+    item_source_refs = sorted(
+        {
+            str((item.get("source") or {}).get("source_id", ""))
+            for item in items
+            if isinstance(item.get("source", {}), dict)
+            and (item.get("source") or {}).get("source_id")
+        }
     )
-    if not project_specific_not_team_promoted:
-        missing_cross_project.append("project-specific-promoted-to-team-standards")
+    unknown_item_source_ids = sorted(set(item_source_refs) - expected_source_ids)
+    missing_cross_project = [
+        "source-provenance:{}".format(source_id)
+        for source_id in missing_source_provenance
+    ] + [
+        "unknown-item-source:{}".format(source_id)
+        for source_id in unknown_item_source_ids
+    ]
 
     markdown_missing = []
     markdown_index_recovery = {}
@@ -1390,7 +1399,7 @@ def build_linking_audit():
     markdown_status = "pass" if not markdown_missing else "fail"
     status = "pass" if cross_session_status == "pass" and cross_project_status == "pass" and markdown_status == "pass" else "fail"
     return {
-        "contract_version": 1,
+        "contract_version": 2,
         "status": status,
         "read_only": True,
         "source_body_read": False,
@@ -1407,13 +1416,11 @@ def build_linking_audit():
         },
         "cross_project": {
             "status": cross_project_status,
-            "pcr02_project_present": bool(pcr02_project),
             "registered_source_count": len(by_source),
-            "pcr02_level2_source_ids_present": required_level2_sources.issubset(source_ids),
-            "required_topic_ids_present": required_topics.issubset(topic_ids),
-            "decision_refs_present": len(owner_worksheets) >= 7 and bool(registry_decisions),
-            "provenance_fields_present": len(pcr02_sources_with_provenance) == len(pcr02_sources),
-            "project_specific_not_team_promoted": project_specific_not_team_promoted,
+            "item_source_ref_count": len(item_source_refs),
+            "unknown_item_source_ids": unknown_item_source_ids,
+            "source_provenance_complete": not missing_source_provenance,
+            "missing_source_provenance_ids": missing_source_provenance,
             "missing": missing_cross_project,
         },
         "markdown_index_recovery": {
@@ -1429,7 +1436,7 @@ def build_linking_audit():
             "runtime:index_plan.indexes.by_decision",
             "runtime:checks.knowledge_regression",
         ],
-        "limitations_zh": "只证明 registry/index/search 恢复链路；不证明 owner decision 已签收，不读取 PCR02 源项目正文。",
+        "limitations_zh": "只证明当前 registry/index/search 恢复链路；不证明 owner decision 已签收，也不读取任何源项目正文。",
     }
 
 linking_audit = build_linking_audit()

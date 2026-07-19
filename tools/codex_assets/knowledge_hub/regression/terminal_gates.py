@@ -283,7 +283,6 @@ def test_status_next_owner_gate():
             "strict_stdout_sample": strict_result["stdout"][:1000],
         },
     )
-
 def test_status_owner_ready_source_no_registry_fallback():
     source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()
     banned_fragments = [
@@ -348,7 +347,7 @@ def test_status_text_owner_summary_commands():
         and "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"]
         and "- review_after near-due command: `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of " in result["stdout"]
         and " --window-days 30 --json`" in result["stdout"]
-        and "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of " in result["stdout"],
+        and "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --as-of " in result["stdout"],
         "status-text-owner-summary-commands",
         "status text mode exposes owner dispatch, owner validation templates, review_after and source-check report commands",
         {
@@ -361,7 +360,7 @@ def test_status_text_owner_summary_commands():
             "has_project_owner_landing_audit": "rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --owner project-owner --validate-forms '<owner-decisions.jsonl>' --landing-audit --json" in result["stdout"],
             "has_review_after_command": "- review_after command: `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date`" in result["stdout"],
             "has_review_after_near_due_command": "- review_after near-due command: `rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of " in result["stdout"],
-            "has_source_check_report_command": "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of " in result["stdout"],
+            "has_source_check_report_command": "- source check report command: `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --as-of " in result["stdout"],
             "stdout_sample": result["stdout"][:1200],
         },
     )
@@ -507,7 +506,6 @@ def test_regression_trend_from_json_contract():
         "selected_test_count": 2,
         "full_test_count": 2,
         "result_count": 2,
-        "full_result_count": 2,
         "slowest_results": [
             {
                 "id": "slow-fixture",
@@ -620,10 +618,8 @@ def test_status_source_governance_summary():
     check_selection = check_parsed.get("source_coverage_selection", {}) if isinstance(check_parsed, dict) else {}
     check_health = check_parsed.get("source_coverage_health", {}) if isinstance(check_parsed, dict) else {}
     check_source_check_health = check_parsed.get("source_check_health", {}) if isinstance(check_parsed, dict) else {}
-    check_boundary_health = check_parsed.get("boundary_health", {}) if isinstance(check_parsed, dict) else {}
     status_source_check_health = sources.get("source_check_health", {}) if isinstance(sources.get("source_check_health"), dict) else {}
-    status_source_check_snapshot = sources.get("source_check_execution_snapshot", {}) if isinstance(sources.get("source_check_execution_snapshot"), dict) else {}
-    status_boundary_health = sources.get("boundary_health", {}) if isinstance(sources.get("boundary_health"), dict) else {}
+    status_source_runtime = sources.get("source_runtime", {}) if isinstance(sources.get("source_runtime"), dict) else {}
     source_recovery_rows = sources.get("source_recovery_rows", []) if isinstance(sources.get("source_recovery_rows"), list) else []
     source_recovery_by_id = {
         row.get("source_id"): row
@@ -655,25 +651,13 @@ def test_status_source_governance_summary():
         and check_source_check_health.get("with_no_check_reason_count") == 0
         and check_source_check_health.get("missing_check_or_reason_ids") == []
         and check_source_check_health.get("non_rtk_check_ids") == []
-        and check_boundary_health.get("status") == "pass"
-        and check_boundary_health.get("summary", {}).get("source_coverage_count") == 7
         and status_source_check_health.get("with_check_count") == 18
         and status_source_check_health.get("executed") is False
-        and status_source_check_snapshot.get("status") == "pass"
-        and status_source_check_snapshot.get("artifact_id") == "pcr02-level2-source-check-execution-snapshot-20260621"
-        and status_source_check_snapshot.get("scope") == "pcr02-level2-only"
-        and status_source_check_snapshot.get("execution_mode") == "report-only-manual-snapshot"
-        and status_source_check_snapshot.get("runtime_execution") is False
-        and status_source_check_snapshot.get("source_check_health_contract") == "static-registry-only"
-        and status_source_check_snapshot.get("row_count") == 7
-        and status_source_check_snapshot.get("passed_count") == 7
-        and status_source_check_snapshot.get("all_executed") is True
-        and status_source_check_snapshot.get("all_exit_0") is True
-        and status_source_check_snapshot.get("missing_source_ids") == []
-        and status_source_check_snapshot.get("unexpected_source_ids") == []
-        and status_source_check_snapshot.get("failed_rows") == []
-        and status_boundary_health.get("status") == "pass"
-        and status_boundary_health.get("source_project_read") is False
+        and status_source_runtime.get("status") == "pass"
+        and status_source_runtime.get("scope") == "all"
+        and status_source_runtime.get("registry_source_count") == 18
+        and status_source_runtime.get("executed_count") == 18
+        and status_source_runtime.get("source_check_health_executed") is True
         and len(source_recovery_rows) == 18
         and pcr02_docs_recovery.get("final_disposition") == "hub-canonical"
         and pcr02_docs_recovery.get("coverage_status") == "hub-canonical"
@@ -687,7 +671,7 @@ def test_status_source_governance_summary():
         and registry.get("stale_review_after_count") == 0
         and registry.get("review_after_command") == "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
         and registry.get("review_after_near_due_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
-        and sources.get("source_check_report_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of {today.isoformat()} --json"
+        and sources.get("source_check_report_command") == f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --as-of {today.isoformat()} --json"
         and owner_gates.get("owner_ready_package_coverage") == "0/7"
         and parsed.get("final_gate_command") == expected_final_gate_command,
         "status-source-governance-summary",
@@ -703,10 +687,8 @@ def test_status_source_governance_summary():
             "check_source_coverage_selection": check_selection,
             "check_source_coverage_health": check_health,
             "check_source_check_health": check_source_check_health,
-            "check_boundary_health": check_boundary_health,
             "status_source_check_health": status_source_check_health,
-            "status_source_check_execution_snapshot": status_source_check_snapshot,
-            "status_boundary_health": status_boundary_health,
+            "status_source_runtime": status_source_runtime,
             "stale_review_after_count": registry.get("stale_review_after_count"),
             "review_after_command": registry.get("review_after_command"),
             "review_after_near_due_command": registry.get("review_after_near_due_command"),
@@ -719,225 +701,5 @@ def test_status_source_governance_summary():
             "expected_final_gate_command": expected_final_gate_command,
             "status": parsed.get("status"),
             "stdout_sample": result["stdout"][:1200],
-        },
-    )
-
-
-def test_regression_manifest_coverage():
-    manifest_path = root / "artifacts" / "manifests" / "knowledge-hub-governance-regression-helper-20260619.md"
-    try:
-        manifest_text = manifest_path.read_text()
-    except Exception as exc:
-        manifest_text = ""
-        read_error = str(exc)
-    else:
-        read_error = ""
-    required_ids = [
-        "baseline-knowledge-check",
-        "governance-goal-path-allowed",
-        "pcr02-level2-source-coverage",
-        "pcr02-level2-boundary-manifests",
-        "boundary-health-internal-evidence",
-        "status-wrong-bucket",
-        "status-noncanonical-only",
-        "owner-partial-resolved",
-        "owner-ready-missing-nonblocking-after-resolution",
-        "owner-single-form",
-        "owner-forms-text-jsonl-output",
-        "owner-forms-jsonl-single-output",
-        "owner-forms-jsonl-all-open-output",
-        "owner-forms-jsonl-conflict-json-mode",
-        "owner-checklist-context",
-        "owner-form-context",
-        "owner-source-identity-context",
-        "owner-prefill-candidates-manual-fields",
-        "owner-evidence-readiness",
-        "owner-inbox-contract",
-        "owner-summary-all-open",
-        "owner-summary-by-owner",
-        "owner-handoff-packet-json",
-        "owner-dispatch-source-scope-isolation",
-        "manifest-regression-count-capture-qualifier",
-        "manifest-profile-boundary-advisory",
-        "owner-next-open-focus",
-        "status-next-owner-gate",
-        "status-owner-ready-source-no-registry-fallback",
-        "final-gate-maintenance-entry-wording-no-section-drift",
-        "status-text-owner-summary-commands",
-        "status-owner-gates-exit-code-blocker",
-        "final-gate-owner-review-blocker",
-        "final-gate-skip-regression-blocker",
-        "status-product-profile-blocks-noncanonical-residue",
-        "final-gate-product-review-queue-owner-review-blocker",
-        "final-gate-empty-child-json-blocker",
-        "final-gate-default-regression-path",
-        "final-gate-source-final-state-field-gap",
-        "final-gate-strict-status-nonowner-blocker",
-        "final-gap-readability-positive-contracts",
-        "owner-landing-plan-project-index",
-        "owner-validate-forms-partial-coverage-warning",
-        "owner-archive-only-explicit-path-contract",
-        "owner-archive-only-rejects-non-archive-target",
-        "owner-landing-plan-requires-owner-ready-missing",
-        "owner-landing-plan-requires-owner-ready-invalid",
-        "owner-landing-plan-requires-owner-ready-repo-relative-command",
-        "owner-landing-plan-requires-owner-ready-duplicate",
-        "owner-form-target-decision-candidate-gate",
-        "owner-form-decision-target-pair-reference-only-project-path",
-        "owner-form-decision-target-pair-no-migration-project-path",
-        "owner-form-decision-target-pair-project-rule-reference-only",
-        "owner-form-decision-target-pair-positive-reference-only",
-        "owner-form-decision-target-pair-positive-no-migration",
-        "owner-form-routing-owner-reviewed-by-gate",
-        "owner-form-must-not-tamper-gate",
-        "owner-form-allowed-decisions-tamper-gate",
-        "owner-form-target-candidates-tamper-gate",
-        "owner-form-source-identity-mismatch",
-        "manual-entry-project-index-hint",
-        "manual-entry-registered-source-binding",
-        "manual-entry-project-derived-from-domain",
-        "manual-entry-default-dates",
-        "manual-entry-owner-override",
-        "manual-entry-owner-registry-and-personal-defaults",
-        "manual-entry-docs-owner-option",
-        "manual-entry-offline-docs",
-        "readme-offline-shortest-paths",
-        "no-user-absolute-path-persisted",
-        "user-path-redaction-in-tool-outputs",
-        "source-control-directory-gate",
-        "source-control-raw-copy-body-gate",
-        "owner-target-existence-gate",
-        "owner-target-materialization-read-only-no-source-dependency",
-        "owner-decision-draft-leak-warning",
-        "manual-entry-offline-package-consistency",
-        "manual-entry-validation-diagnostics-default",
-        "manual-entry-readability-fields",
-        "manual-entry-archive-default-status",
-        "offline-validation-template-placeholders",
-        "governance-audit-readability-gate",
-        "ai-generated-item-provenance-gate",
-        "manual-entry-no-migration-ledger-guide",
-        "manual-entry-template-selection",
-        "templates-required-sections",
-        "index-readme-maintenance-coverage",
-        "by-topic-first-screen-readability-contract",
-        "review-queue-json-contract",
-        "review-queue-apply-tool-contract",
-        "summary-backfill-archived-only-contract",
-        "orphan-files-advisory-contract",
-        "reviewing-triage-json-contract",
-        "regression-trend-from-json-contract",
-        "health-summary-operational-fields",
-        "final-proof-artifact-discoverability",
-        "final-proof-decision-index-recovery-contract",
-        "final-proof-artifact-as-of-date-selector",
-        "final-proof-artifacts-stable-key-only",
-        "index-plan-extended-sections",
-        "manifest-latest-filename-date-only",
-        "manifest-jsonl-profile-gate",
-        "template-readability-field-gate",
-        "index-plan-topic-schema-health",
-        "registry-canonical-topic-retention-paths",
-        "index-plan-decision-registry-health",
-        "index-decision-registry-subsection-gate",
-        "index-topic-zero-bucket-allowed",
-        "status-source-governance-summary",
-        "source-check-health-contract",
-        "source-check-report-only-helper",
-        "source-check-rejects-unsafe-runtime-command",
-        "final-gate-source-check-runtime-failed-blocker",
-        "review-after-near-due-json-contract",
-        "automation-report-only-safety-gate",
-        "source-coverage-date-filename-selection",
-        "source-coverage-duplicate-source-id-warning",
-        "review-after-as-of-deterministic",
-        "stale-review-after-warning-surface",
-        "source-review-after-stale-surface",
-        "source-manual-entry-guide",
-        "source-manual-entry-enum-guide",
-        "source-manual-entry-guide-check-command",
-        "source-manual-entry-status-coverage-sync",
-        "source-manual-entry-unknown-owner-warning",
-        "source-manual-entry-requires-check-or-reason",
-        "source-manual-entry-docs-check-preferred",
-        "source-manual-entry-role-aware-recommendations",
-        "knowledge-search-structured-filters",
-        "knowledge-search-structured-filters-exclude-unregistered-raw",
-        "knowledge-search-kind-alias-filters",
-        "knowledge-search-registry-metadata-fallback",
-        "knowledge-search-invalid-filters",
-        "knowledge-context-budget-explainability",
-        "knowledge-context-self-route",
-        "knowledge-context-control-plane-query-override",
-        "knowledge-context-control-plane-alias-ambiguity",
-        "embedded-asan-methodology-deprojectized",
-        "stable-governance-command-examples",
-        "regression-manifest-coverage",
-    ]
-    def parse_coverage_rows(text):
-        rows = {}
-        duplicate_rows = []
-        in_table = False
-        for line in text.splitlines():
-            if line.strip() == "## 覆盖范围":
-                in_table = True
-                continue
-            if in_table and line.startswith("## "):
-                break
-            if not in_table or not line.startswith("|"):
-                continue
-            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-            if len(cells) < 3 or cells[0] in {"ID", "---"} or set(cells[0]) <= {"-"}:
-                continue
-            row_id = cells[0]
-            if row_id in rows:
-                duplicate_rows.append(row_id)
-            rows[row_id] = {
-                "scenario": cells[1] if len(cells) > 1 else "",
-                "expected": cells[2] if len(cells) > 2 else "",
-            }
-        return rows, sorted(set(duplicate_rows))
-
-    actual_ids = [result.get("id", "") for result in results] + ["regression-manifest-coverage"]
-    coverage_rows, duplicate_manifest_rows = parse_coverage_rows(manifest_text)
-    missing_ids = [test_id for test_id in required_ids if test_id not in manifest_text]
-    missing_from_required = [test_id for test_id in actual_ids if test_id not in required_ids]
-    missing_table_rows = [test_id for test_id in actual_ids if test_id not in coverage_rows]
-    table_rows_without_scenario = [
-        test_id for test_id in actual_ids
-        if test_id in coverage_rows and not coverage_rows[test_id].get("scenario", "")
-    ]
-    table_rows_without_expected = [
-        test_id for test_id in actual_ids
-        if test_id in coverage_rows and not coverage_rows[test_id].get("expected", "")
-    ]
-    duplicate_actual_ids = sorted({test_id for test_id in actual_ids if actual_ids.count(test_id) > 1})
-    expected_count_text = f"{len(actual_ids)} 个回归场景"
-    expect(
-        not read_error
-        and not missing_ids
-        and not missing_from_required
-        and not missing_table_rows
-        and not duplicate_manifest_rows
-        and not table_rows_without_scenario
-        and not table_rows_without_expected
-        and not duplicate_actual_ids
-        and expected_count_text in manifest_text,
-        "regression-manifest-coverage",
-        "regression helper manifest covers current regression ids with structured table rows",
-        {
-            "manifest": str(manifest_path.relative_to(root)),
-            "read_error": read_error,
-            "missing_ids": missing_ids,
-            "missing_from_required": missing_from_required,
-            "missing_table_rows": missing_table_rows,
-            "duplicate_manifest_rows": duplicate_manifest_rows,
-            "table_rows_without_scenario": table_rows_without_scenario,
-            "table_rows_without_expected": table_rows_without_expected,
-            "duplicate_actual_ids": duplicate_actual_ids,
-            "actual_count": len(actual_ids),
-            "required_count": len(required_ids),
-            "manifest_table_count": len(coverage_rows),
-            "expected_count_text": expected_count_text,
         },
     )

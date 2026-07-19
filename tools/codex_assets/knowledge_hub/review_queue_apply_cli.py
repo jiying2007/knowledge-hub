@@ -52,7 +52,7 @@ def load_items():
         try:
             item = json.loads(line)
         except Exception as exc:
-            raise SystemExit(f"registry/items.jsonl:{line_no}: invalid JSON: {exc}")
+            raise SystemExit(f"registry/items.jsonl:{line_no}: invalid JSON: {exc}") from exc
         rows.append(item)
     return rows
 
@@ -61,7 +61,7 @@ def load_forms():
     try:
         lines = forms_path.read_text().splitlines()
     except Exception as exc:
-        raise SystemExit(f"cannot read forms JSONL: {exc}")
+        raise SystemExit(f"cannot read forms JSONL: {exc}") from exc
     for line_no, line in enumerate(lines, 1):
         if not line.strip():
             continue

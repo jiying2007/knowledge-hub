@@ -168,7 +168,7 @@ def _reviewing_triage(items: List[Dict[str, Any]], as_of: dt.date) -> Dict[str, 
 
 
 def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    path = product_snapshot_path(root)
+    path = product_snapshot_path(root, "quick")
     if not path.exists():
         return {}, {"state": "missing", "path": str(path.relative_to(root)), "age_seconds": None, "fresh": False}
     try:
@@ -178,11 +178,38 @@ def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[
     age = max(0.0, dt.datetime.now().timestamp() - path.stat().st_mtime)
     current_signature = working_tree_signature(root)
     signature_matches = payload.get("working_tree_signature") == current_signature
+    operational_readiness = payload.get("operational_readiness")
+    operational_structure_valid = isinstance(operational_readiness, Mapping)
+    if not operational_structure_valid:
+        operational_readiness = {}
+    restore_drill = operational_readiness.get("restore_drill")
+    restore_structure_valid = isinstance(restore_drill, Mapping)
+    if not restore_structure_valid:
+        restore_drill = {}
+    platform_status = payload.get("platform_status")
+    platform_structure_valid = isinstance(platform_status, Mapping)
+    if not platform_structure_valid:
+        platform_status = {}
+    engineering_quality = platform_status.get("engineering_quality")
+    engineering_structure_valid = isinstance(engineering_quality, Mapping)
+    if not engineering_structure_valid:
+        engineering_quality = {}
+    production_evidence = (
+        payload.get("regression_suite") == "quick"
+        and payload.get("local_cache_written") is True
+        and operational_structure_valid
+        and restore_structure_valid
+        and platform_structure_valid
+        and engineering_structure_valid
+        and not restore_drill.get("self_test_override", False)
+        and not engineering_quality.get("self_test_override", False)
+    )
     fresh = (
         age <= max_age_hours * 3600
         and payload.get("as_of") == as_of
         and payload.get("final_profile") == "product"
         and signature_matches
+        and production_evidence
     )
     return payload, {
         "state": "fresh" if fresh else "stale",
@@ -190,6 +217,7 @@ def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[
         "age_seconds": round(age, 1),
         "fresh": fresh,
         "signature_matches": signature_matches,
+        "production_evidence": production_evidence,
         "generated_at": payload.get("generated_at", ""),
     }
 

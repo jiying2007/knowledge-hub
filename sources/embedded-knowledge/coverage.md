@@ -19,3 +19,11 @@ embedded-knowledge 的 2026-06-24 source canonicalization 记录已被 2026-06-2
 - `registry/sources.json`
 - `artifacts/manifests/knowledge-hub-source-coverage-closeout-20260624.jsonl`
 - `sources/embedded-knowledge/inventory.jsonl`
+
+## 2026-07-18 远端身份复核
+
+- Remote：`ssh://git@192.168.1.4:10022/embedded/knowledge.git`。
+- Verified ref：`refs/heads/main` = `cadbf4d6777319c8d43b15f842cbea002cd94cef`。
+- Scope：项目 dev 副本中的 178 个非缓存文件由该 commit 精确保留；7 篇 SSC305 方法已提炼为 PCR02/SSC305 reviewing 候选，工具和仓库治理文件保持 source reference。
+- Boundary：不复制第二套可执行工具，不提升 active，不修改远端；13 个 `.pyc` 和嵌套 `.git` 不进入长期正文。
+- Evidence：`projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md`、`artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl`。

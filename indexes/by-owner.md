@@ -379,6 +379,17 @@
 - `llm-agent-wechat-account-research-assessment-20260716`
 - `llm-agent-exact-source-full-gate-audit-20260717`
 - `llm-agent-portable-full-gate-remediation-20260717`
+- `gd32l235-battery-rail-drop-mcu-reboot-20260717`
+- `gd32l235-v1-1-38-nas-release-20260718`
+- `agent-dev-kit-harness-readiness-decision-20260717`
+- `xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
+- `xcrz-sigmastar-demo-pcr02-qivw-vad-short-term-implementation-validation-20260718`
+- `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
+- `xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
+- `knowledge-hub-terminal-closure-validation-20260718`
+- `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
+- `pcr02-ssc305-embedded-knowledge-absorption-validation-20260718`
+- `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 
 ## pcr02-registry-owner
 

@@ -143,6 +143,13 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
             "registry/agent-review-policy.json",
             load_json(proposal_policy, {}),
         )
+    product_policy = root / "registry/product-policy.json"
+    if product_policy.is_file():
+        yield (
+            "product-policy-v1",
+            "registry/product-policy.json",
+            load_json(product_policy, {}),
+        )
 
 
 def validate_schema_catalog(root: pathlib.Path) -> Dict[str, Any]:

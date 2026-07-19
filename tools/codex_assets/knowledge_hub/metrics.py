@@ -11,14 +11,23 @@ import pathlib
 import secrets
 from typing import Any, Dict, List, Mapping, Sequence
 
-from .common import compact_json, load_jsonl, utc_timestamp
+from .common import (
+    compact_json,
+    ensure_private_directory,
+    load_jsonl,
+    utc_timestamp,
+)
 
 
 INTERACTIVE_TELEMETRY_SCHEMA_VERSION = 3
 INTERACTION_CONTRACT = "knowledge-retrieval-interaction-v1"
-PERFORMANCE_CONTRACT = "knowledge-retrieval-performance-v1"
+PERFORMANCE_CONTRACT = "knowledge-retrieval-performance-v2"
 FEEDBACK_SCHEMA_VERSION = 2
+LOCAL_METRICS_SCHEMA_VERSION = 4
 MINIMUM_PERFORMANCE_SAMPLE_COUNT = 10
+SEARCH_WARM_TARGET_MS = 500.0
+CONTEXT_WARM_TARGET_MS = 1000.0
+INDEX_PREPARATION_TARGET_MS = 5000.0
 
 
 def make_interaction_id(
@@ -77,6 +86,47 @@ def _percentile(values: Sequence[float], fraction: float) -> float:
     return round(float(ordered[max(0, min(position, len(ordered) - 1))]), 2)
 
 
+def _numeric_latency(value: Any) -> float:
+    try:
+        return max(0.0, float(value or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _index_preparation_latency(row: Mapping[str, Any]) -> float:
+    timings = row.get("search_stage_timing") or row.get("stage_timing") or {}
+    if not isinstance(timings, Mapping):
+        timings = {}
+    measured = _numeric_latency(timings.get("index_ensure_ms"))
+    if measured:
+        return measured
+    # Fail closed for an otherwise current preparation sample: do not hide its
+    # end-to-end cost merely because an optional stage timer is absent.
+    return _numeric_latency(row.get("latency_ms"))
+
+
+def _performance_samples(
+    rows: Sequence[Mapping[str, Any]],
+) -> Dict[str, List[float]]:
+    samples: Dict[str, List[float]] = {
+        "warm": [],
+        "preparation": [],
+        "end_to_end": [],
+        "unclassified": [],
+    }
+    for row in rows:
+        latency = _numeric_latency(row.get("latency_ms"))
+        samples["end_to_end"].append(latency)
+        index_state = str(row.get("index_state", "")).strip()
+        if index_state == "warm":
+            samples["warm"].append(latency)
+        elif index_state in {"rebuilt", "updated"}:
+            samples["preparation"].append(_index_preparation_latency(row))
+        else:
+            samples["unclassified"].append(latency)
+    return samples
+
+
 def _date(value: Any) -> dt.date:
     text = str(value or "")
     try:
@@ -86,8 +136,17 @@ def _date(value: Any) -> dt.date:
 
 
 def _append_locked(path: pathlib.Path, row: Mapping[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
+    ensure_private_directory(path.parent)
+    flags = (
+        os.O_APPEND
+        | os.O_CREAT
+        | os.O_WRONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    descriptor = os.open(str(path), flags, 0o600)
+    os.fchmod(descriptor, 0o600)
+    with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
         handle.write(compact_json(row) + "\n")
         handle.flush()
@@ -268,12 +327,10 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     found_rate = round(found_count / float(feedback_count), 4) if feedback_count else 0.0
     performance_search_rows = _current_performance_rows(search_rows)
     performance_context_rows = _current_performance_rows(context_rows)
-    search_latencies = [
-        float(row.get("latency_ms", 0) or 0) for row in performance_search_rows
-    ]
-    context_latencies = [
-        float(row.get("latency_ms", 0) or 0) for row in performance_context_rows
-    ]
+    search_samples = _performance_samples(performance_search_rows)
+    context_samples = _performance_samples(performance_context_rows)
+    search_latencies = search_samples["warm"]
+    context_latencies = context_samples["warm"]
     zero_hits = sum(1 for row in search_rows if int(row.get("result_count", 0) or 0) == 0)
     search_p95 = _percentile(search_latencies, 0.95)
     context_p95 = _percentile(context_latencies, 0.95)
@@ -281,15 +338,25 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
         len(search_latencies) >= MINIMUM_PERFORMANCE_SAMPLE_COUNT
         and len(context_latencies) >= MINIMUM_PERFORMANCE_SAMPLE_COUNT
     )
+    preparation_search_p95 = _percentile(search_samples["preparation"], 0.95)
+    preparation_context_p95 = _percentile(context_samples["preparation"], 0.95)
+    preparation_observed = bool(
+        search_samples["preparation"] or context_samples["preparation"]
+    )
+    preparation_failed = (
+        preparation_search_p95 > INDEX_PREPARATION_TARGET_MS
+        or preparation_context_p95 > INDEX_PREPARATION_TARGET_MS
+    )
     performance_ready = (
         performance_evaluable
-        and search_p95 <= 500.0
-        and context_p95 <= 1000.0
+        and search_p95 <= SEARCH_WARM_TARGET_MS
+        and context_p95 <= CONTEXT_WARM_TARGET_MS
+        and not preparation_failed
     )
     evaluable = usage_evaluable and performance_evaluable
     adoption_ready = evaluable and feedback_count >= 10 and found_rate >= 0.8 and performance_ready
     return {
-        "schema_version": 3,
+        "schema_version": LOCAL_METRICS_SCHEMA_VERSION,
         "status": "pass",
         "measurement_contract": {
             "interaction_contract": INTERACTION_CONTRACT,
@@ -321,10 +388,46 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
         "performance": {
             "search_p95_ms": search_p95,
             "context_p95_ms": context_p95,
-            "search_target_ms": 500,
-            "context_target_ms": 1000,
+            "search_target_ms": SEARCH_WARM_TARGET_MS,
+            "context_target_ms": CONTEXT_WARM_TARGET_MS,
             "search_sample_count": len(search_latencies),
             "context_sample_count": len(context_latencies),
+            "warm_interactive": {
+                "search_p95_ms": search_p95,
+                "context_p95_ms": context_p95,
+                "search_target_ms": SEARCH_WARM_TARGET_MS,
+                "context_target_ms": CONTEXT_WARM_TARGET_MS,
+                "search_sample_count": len(search_latencies),
+                "context_sample_count": len(context_latencies),
+                "minimum_sample_count_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
+                "evaluable": performance_evaluable,
+            },
+            "index_preparation": {
+                "search_p95_ms": preparation_search_p95,
+                "context_p95_ms": preparation_context_p95,
+                "maximum_target_ms": INDEX_PREPARATION_TARGET_MS,
+                "search_sample_count": len(search_samples["preparation"]),
+                "context_sample_count": len(context_samples["preparation"]),
+                "observed": preparation_observed,
+                "status": (
+                    "fail"
+                    if preparation_failed
+                    else ("pass" if preparation_observed else "not-observed")
+                ),
+            },
+            "end_to_end_observed": {
+                "search_p95_ms": _percentile(search_samples["end_to_end"], 0.95),
+                "context_p95_ms": _percentile(context_samples["end_to_end"], 0.95),
+                "search_sample_count": len(search_samples["end_to_end"]),
+                "context_sample_count": len(context_samples["end_to_end"]),
+                "thresholded": False,
+            },
+            "excluded_non_warm_sample_count": (
+                len(search_samples["preparation"])
+                + len(context_samples["preparation"])
+                + len(search_samples["unclassified"])
+                + len(context_samples["unclassified"])
+            ),
             "excluded_stale_contract_sample_count": (
                 len(search_rows)
                 + len(context_rows)
@@ -333,14 +436,21 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             ),
             "minimum_sample_count_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
             "evaluable": performance_evaluable,
-            "status": "pass" if performance_ready else ("fail" if performance_evaluable else "pending"),
+            "status": (
+                "pass"
+                if performance_ready
+                else ("fail" if performance_evaluable or preparation_failed else "pending")
+            ),
         },
         "adoption": {
             "evaluable": evaluable,
             "ready": adoption_ready,
             "criteria": {
                 "observation_days_or_invocations": "observation_days >= 30 or invocation_count >= 50",
-                "sample_kind": "current-contract interactive telemetry only",
+                "sample_kind": (
+                    "current performance-contract warm interactions; index preparation "
+                    "is measured separately and end-to-end latency remains report-only"
+                ),
                 "minimum_performance_samples_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
                 "minimum_feedback_count": 10,
                 "minimum_found_rate": 0.8,

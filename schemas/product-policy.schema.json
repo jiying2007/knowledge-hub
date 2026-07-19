@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/product-policy.schema.json",
+  "title": "Knowledge Hub product policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "project_readiness_extensions",
+    "specialized_owner_requirements",
+    "specialized_required_evidence_zh",
+    "evidence_priority_messages_zh"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "project_readiness_extensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "project_ids", "validation_expectations_zh", "related_links"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "project_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "validation_expectations_zh": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "related_links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["path", "label_zh"],
+              "properties": {
+                "path": {"type": "string", "minLength": 1},
+                "label_zh": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "specialized_owner_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label_zh", "item_requirements"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label_zh": {"type": "string", "minLength": 1},
+          "item_requirements": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["item_id", "expected"],
+              "properties": {
+                "item_id": {"type": "string", "minLength": 1},
+                "expected": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "type": ["string", "number", "integer", "boolean", "null"]
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "specialized_required_evidence_zh": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "evidence_priority_messages_zh": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": false
+}

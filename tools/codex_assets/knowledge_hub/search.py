@@ -18,19 +18,21 @@ import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Set, Tuple
 
 import yaml
 
 from .common import (
     KnowledgeHubError,
+    bytes_sha256,
     compact_json,
-    display_path,
-    file_sha256,
+    ensure_private_directory,
+    ensure_private_file,
     iter_text_file_records,
     iter_text_files,
     load_json,
     load_jsonl,
+    read_repository_bytes_bounded,
     registry_items,
     source_id,
     utc_timestamp,
@@ -45,7 +47,7 @@ from .metrics import (
 from .model import ITEM_KINDS, ITEM_STATUSES
 
 
-INDEX_SCHEMA_VERSION = 5
+INDEX_SCHEMA_VERSION = 7
 TOKEN_CACHE_SCHEMA_VERSION = 2
 TOKEN_CACHE_MAX_ENTRIES = 10000
 TOKEN_CACHE_MAX_VALUE_BYTES = 4 * 1024 * 1024
@@ -58,6 +60,8 @@ FULL_REBUILD_DEPENDENCIES = frozenset(
     }
 )
 MAX_INCREMENTAL_FILES = 128
+SEARCH_MAX_FILE_BYTES = 8 * 1024 * 1024
+SEARCH_MAX_TOTAL_BYTES = 256 * 1024 * 1024
 KIND_ALIASES = {
     "validation-report": "validation",
     "archive-note": "project-archive",
@@ -94,6 +98,13 @@ SEARCH_MAX_LIMIT = 100
 SEARCH_MAX_QUERY_CHARS = 4096
 SEARCH_MAX_FILTER_VALUES = 32
 SEARCH_MAX_FILTER_VALUE_CHARS = 256
+CONTENT_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+
+FileState = Tuple[int, int, int, int, int, str]
+
+
+class SearchBoundaryError(KnowledgeHubError):
+    """A security or resource boundary that must not degrade to repository scan."""
 
 
 def _validate_filter_values(name: str, values: Sequence[str]) -> None:
@@ -228,7 +239,10 @@ class _PersistentTokenCache:
         self.entry_count = 0
         self.status = "ready"
         try:
-            path.parent.mkdir(parents=True, exist_ok=True)
+            ensure_private_directory(path.parent)
+            if path.is_symlink():
+                raise KnowledgeHubError("token cache must not be a symlink")
+            ensure_private_file(path)
             self.connection = sqlite3.connect(str(path))
             self.connection.execute("pragma journal_mode=delete")
             self.connection.execute("pragma synchronous=normal")
@@ -241,8 +255,8 @@ class _PersistentTokenCache:
                 )
                 """
             )
-            os.chmod(path, 0o600)
-        except (OSError, sqlite3.Error):
+            ensure_private_file(path)
+        except (KnowledgeHubError, OSError, sqlite3.Error):
             self._disable()
 
     def _disable(self) -> None:
@@ -361,10 +375,12 @@ class _PersistentTokenCache:
             self.pending = {}
             self.pending_bytes = 0
         except sqlite3.Error:
-            try:
-                self.connection.rollback()
-            except sqlite3.Error:
-                pass
+            connection = self.connection
+            if connection is not None:
+                try:
+                    connection.rollback()
+                except sqlite3.Error:
+                    pass
             self._disable()
 
     def stats(self) -> Dict[str, Any]:
@@ -472,20 +488,100 @@ def _physical_sources(path: pathlib.Path, roots: Sequence[Tuple[str, pathlib.Pat
 
 def _signature(
     root: pathlib.Path,
-) -> Tuple[str, List[pathlib.Path], Dict[str, Tuple[int, int]]]:
+    previous_states: Optional[Mapping[str, FileState]] = None,
+    stats: Optional[Dict[str, int]] = None,
+) -> Tuple[str, List[pathlib.Path], Dict[str, FileState]]:
     records = sorted(iter_text_file_records(root), key=lambda value: value[1])
     paths = [path for path, _, _ in records]
     digest = hashlib.sha256()
     digest.update(str(INDEX_SCHEMA_VERSION).encode("ascii"))
-    file_states: Dict[str, Tuple[int, int]] = {}
+    file_states: Dict[str, FileState] = {}
+    total_bytes = 0
+    hashed_files = 0
+    reused_content_hashes = 0
     for _, relative, file_stat in records:
-        file_states[relative] = (file_stat.st_size, file_stat.st_mtime_ns)
+        if file_stat.st_size > SEARCH_MAX_FILE_BYTES:
+            raise SearchBoundaryError(
+                "search text file exceeds {} bytes: {}".format(
+                    SEARCH_MAX_FILE_BYTES, relative
+                )
+            )
+        total_bytes += file_stat.st_size
+        if total_bytes > SEARCH_MAX_TOTAL_BYTES:
+            raise SearchBoundaryError(
+                "search text corpus exceeds {} bytes".format(
+                    SEARCH_MAX_TOTAL_BYTES
+                )
+            )
+        identity = (
+            file_stat.st_size,
+            file_stat.st_mtime_ns,
+            file_stat.st_ctime_ns,
+            file_stat.st_dev,
+            file_stat.st_ino,
+        )
+        previous = (previous_states or {}).get(relative)
+        if (
+            previous is not None
+            and previous[:5] == identity
+            and CONTENT_SHA256_PATTERN.fullmatch(str(previous[5])) is not None
+        ):
+            content_sha256 = str(previous[5])
+            reused_content_hashes += 1
+        else:
+            try:
+                raw = read_repository_bytes_bounded(
+                    root,
+                    relative,
+                    SEARCH_MAX_FILE_BYTES,
+                    "search text file",
+                )
+                post_read_stat = (root / relative).lstat()
+                verification_raw = read_repository_bytes_bounded(
+                    root,
+                    relative,
+                    SEARCH_MAX_FILE_BYTES,
+                    "search text file verification",
+                )
+                verification_stat = (root / relative).lstat()
+            except (KnowledgeHubError, OSError) as exc:
+                raise SearchBoundaryError(str(exc)) from exc
+            post_read_identity = (
+                post_read_stat.st_size,
+                post_read_stat.st_mtime_ns,
+                post_read_stat.st_ctime_ns,
+                post_read_stat.st_dev,
+                post_read_stat.st_ino,
+            )
+            verification_identity = (
+                verification_stat.st_size,
+                verification_stat.st_mtime_ns,
+                verification_stat.st_ctime_ns,
+                verification_stat.st_dev,
+                verification_stat.st_ino,
+            )
+            if (
+                post_read_identity != identity
+                or verification_identity != identity
+                or verification_raw != raw
+            ):
+                raise SearchBoundaryError(
+                    "search text file changed during signature: {}".format(relative)
+                )
+            content_sha256 = bytes_sha256(raw)
+            hashed_files += 1
+        file_states[relative] = identity + (content_sha256,)
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
-        digest.update(str(file_stat.st_size).encode("ascii"))
-        digest.update(b":")
-        digest.update(str(file_stat.st_mtime_ns).encode("ascii"))
+        digest.update(content_sha256.encode("ascii"))
         digest.update(b"\n")
+    if stats is not None:
+        stats.update(
+            {
+                "hashed_files": hashed_files,
+                "reused_content_hashes": reused_content_hashes,
+            }
+        )
     return digest.hexdigest(), paths, file_states
 
 
@@ -503,25 +599,28 @@ class SearchIndex:
             TOKEN_CACHE_SCHEMA_VERSION
         )
         self._token_cache_stats: Dict[str, Any] = {}
-        self._ensure_cache: Optional[Tuple[float, Dict[str, Any]]] = None
 
     def _current_signature(self) -> str:
         if not self.path.exists():
             return ""
         try:
+            ensure_private_file(self.path)
             with sqlite3.connect(str(self.path)) as connection:
                 row = connection.execute("select value from meta where key='signature'").fetchone()
                 schema = connection.execute("select value from meta where key='schema_version'").fetchone()
             if not row or not schema or int(schema[0]) != INDEX_SCHEMA_VERSION:
                 return ""
             return str(row[0])
-        except (sqlite3.Error, OSError, ValueError):
+        except (KnowledgeHubError, sqlite3.Error, OSError, ValueError):
             return ""
 
     @contextlib.contextmanager
-    def _lock(self) -> Iterable[None]:
-        self.cache_root.mkdir(parents=True, exist_ok=True)
+    def _lock(self) -> Iterator[None]:
+        ensure_private_directory(self.cache_root)
+        if self.lock_path.is_symlink():
+            raise KnowledgeHubError("search index lock must not be a symlink")
         with self.lock_path.open("a+") as handle:
+            os.chmod(str(self.lock_path), 0o600)
             fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
             try:
                 yield
@@ -529,21 +628,23 @@ class SearchIndex:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def ensure(self, force: bool = False) -> Dict[str, Any]:
-        if not force and self._ensure_cache and time.monotonic() - self._ensure_cache[0] <= 30.0:
-            cached = dict(self._ensure_cache[1])
-            cached["state"] = "warm-session"
-            cached["rebuilt"] = False
-            cached["updated"] = False
-            cached["lock_wait_duration_ms"] = 0.0
-            cached["signature_duration_ms"] = 0.0
-            return cached
         lock_started = time.monotonic()
         with self._lock():
             lock_wait_duration_ms = round((time.monotonic() - lock_started) * 1000, 2)
             signature_started = time.monotonic()
-            signature, paths, file_states = _signature(self.root)
+            indexed_states = None if force else self._indexed_file_states()
+            signature_stats: Dict[str, int] = {}
+            signature, paths, file_states = _signature(
+                self.root,
+                previous_states=indexed_states,
+                stats=signature_stats,
+            )
             signature_duration_ms = round((time.monotonic() - signature_started) * 1000, 2)
             if not force and self._current_signature() == signature:
+                metadata_refreshed_files = self._refresh_indexed_file_states(
+                    file_states,
+                    indexed_states,
+                )
                 result = {
                     "state": "warm",
                     "mode": "local-index",
@@ -554,14 +655,19 @@ class SearchIndex:
                     "document_files": len(paths),
                     "lock_wait_duration_ms": lock_wait_duration_ms,
                     "signature_duration_ms": signature_duration_ms,
+                    "metadata_refreshed_files": metadata_refreshed_files,
                 }
-                self._ensure_cache = (time.monotonic(), result)
+                result.update(signature_stats)
                 return result
             started = time.monotonic()
             incremental = None
             if not force:
                 try:
-                    incremental = self._incremental_update(signature, file_states)
+                    incremental = self._incremental_update(
+                        signature,
+                        file_states,
+                        indexed_states=indexed_states,
+                    )
                 except (OSError, sqlite3.Error, ValueError):
                     incremental = None
             if incremental is not None:
@@ -581,7 +687,7 @@ class SearchIndex:
                     "transaction_duration_ms": incremental["transaction_duration_ms"],
                     "update_duration_ms": round((time.monotonic() - started) * 1000, 2),
                 }
-                self._ensure_cache = (time.monotonic(), result)
+                result.update(signature_stats)
                 return result
             document_count = self._rebuild(signature, paths, file_states)
             result = {
@@ -597,14 +703,15 @@ class SearchIndex:
                 "signature_duration_ms": signature_duration_ms,
                 "build_duration_ms": round((time.monotonic() - started) * 1000, 2),
             }
+            result.update(signature_stats)
             result.update(self._token_cache_stats)
-            self._ensure_cache = (time.monotonic(), result)
             return result
 
-    def _indexed_file_states(self) -> Optional[Dict[str, Tuple[int, int]]]:
+    def _indexed_file_states(self) -> Optional[Dict[str, FileState]]:
         if not self.path.exists():
             return None
         try:
+            ensure_private_file(self.path)
             with sqlite3.connect(str(self.path)) as connection:
                 schema = connection.execute(
                     "select value from meta where key='schema_version'"
@@ -612,11 +719,50 @@ class SearchIndex:
                 if not schema or int(schema[0]) != INDEX_SCHEMA_VERSION:
                     return None
                 rows = connection.execute(
-                    "select path,size,mtime_ns from indexed_files"
+                    "select path,size,mtime_ns,ctime_ns,device,inode,content_sha256 "
+                    "from indexed_files"
                 ).fetchall()
-            return {str(path): (int(size), int(mtime_ns)) for path, size, mtime_ns in rows}
-        except (sqlite3.Error, OSError, ValueError):
+            return {
+                str(path): (
+                    int(size),
+                    int(mtime_ns),
+                    int(ctime_ns),
+                    int(device),
+                    int(inode),
+                    str(content_sha256),
+                )
+                for path, size, mtime_ns, ctime_ns, device, inode, content_sha256 in rows
+            }
+        except (KnowledgeHubError, sqlite3.Error, OSError, ValueError):
             return None
+
+    def _refresh_indexed_file_states(
+        self,
+        file_states: Mapping[str, FileState],
+        indexed_states: Optional[Mapping[str, FileState]],
+    ) -> int:
+        if indexed_states is None:
+            return 0
+        changed = [
+            (relative, state)
+            for relative, state in file_states.items()
+            if indexed_states.get(relative) != state
+        ]
+        if not changed:
+            return 0
+        with sqlite3.connect(str(self.path)) as connection:
+            connection.executemany(
+                "insert or replace into indexed_files"
+                "(path,size,mtime_ns,ctime_ns,device,inode,content_sha256) "
+                "values(?,?,?,?,?,?,?)",
+                (
+                    (relative,) + tuple(state)
+                    for relative, state in changed
+                ),
+            )
+            connection.commit()
+        ensure_private_file(self.path)
+        return len(changed)
 
     def _index_inputs(
         self,
@@ -638,10 +784,18 @@ class SearchIndex:
         token_cache: Optional[_PersistentTokenCache] = None,
     ) -> int:
         try:
-            body = path.read_text(encoding="utf-8", errors="ignore")
             relative = path.relative_to(self.root).as_posix()
-        except (OSError, ValueError):
+        except ValueError:
             return 0
+        try:
+            body = read_repository_bytes_bounded(
+                self.root,
+                relative,
+                SEARCH_MAX_FILE_BYTES,
+                "search text file",
+            ).decode("utf-8", errors="ignore")
+        except KnowledgeHubError as exc:
+            raise SearchBoundaryError(str(exc)) from exc
         linked_items = items_by_path.get(relative, []) or [{}]
         physical = _physical_sources(path, source_roots)
         count = 0
@@ -672,7 +826,9 @@ class SearchIndex:
                     body,
                 ),
             )
-            rowid = int(cursor.lastrowid)
+            if cursor.lastrowid is None:
+                raise KnowledgeHubError("SQLite did not return a document row id")
+            rowid = cursor.lastrowid
             connection.execute(
                 "insert into documents_fts(rowid,title,item_id,tags,summary,path,body,tokens) values(?,?,?,?,?,?,?,?)",
                 (rowid, title, item_id, tags, summary, relative, body, token_text),
@@ -699,9 +855,11 @@ class SearchIndex:
     def _incremental_update(
         self,
         signature: str,
-        file_states: Mapping[str, Tuple[int, int]],
+        file_states: Mapping[str, FileState],
+        indexed_states: Optional[Mapping[str, FileState]] = None,
     ) -> Optional[Dict[str, Any]]:
-        indexed_states = self._indexed_file_states()
+        if indexed_states is None:
+            indexed_states = self._indexed_file_states()
         if indexed_states is None:
             return None
         if any(
@@ -737,10 +895,20 @@ class SearchIndex:
                     items_by_path,
                     source_roots,
                 )
-                size, mtime_ns = file_states[relative]
+                size, mtime_ns, ctime_ns, device, inode, content_sha256 = file_states[relative]
                 connection.execute(
-                    "insert or replace into indexed_files(path,size,mtime_ns) values(?,?,?)",
-                    (relative, size, mtime_ns),
+                    "insert or replace into indexed_files"
+                    "(path,size,mtime_ns,ctime_ns,device,inode,content_sha256) "
+                    "values(?,?,?,?,?,?,?)",
+                    (
+                        relative,
+                        size,
+                        mtime_ns,
+                        ctime_ns,
+                        device,
+                        inode,
+                        content_sha256,
+                    ),
                 )
             document_count = int(
                 connection.execute("select count(*) from documents").fetchone()[0]
@@ -772,7 +940,7 @@ class SearchIndex:
         self,
         signature: str,
         paths: Sequence[pathlib.Path],
-        file_states: Mapping[str, Tuple[int, int]],
+        file_states: Mapping[str, FileState],
     ) -> int:
         temporary = self.cache_root / "search-index-v{}.{}.sqlite3".format(
             INDEX_SCHEMA_VERSION, uuid.uuid4().hex
@@ -780,6 +948,7 @@ class SearchIndex:
         items_by_path, source_roots = self._index_inputs()
         token_cache = _PersistentTokenCache(self.token_cache_path)
         connection = sqlite3.connect(str(temporary))
+        os.chmod(str(temporary), 0o600)
         count = 0
         try:
             connection.executescript(
@@ -790,7 +959,11 @@ class SearchIndex:
                 create table indexed_files (
                     path text primary key,
                     size integer not null,
-                    mtime_ns integer not null
+                    mtime_ns integer not null,
+                    ctime_ns integer not null,
+                    device integer not null,
+                    inode integer not null,
+                    content_sha256 text not null
                 );
                 create table documents (
                     id integer primary key,
@@ -817,9 +990,11 @@ class SearchIndex:
                     token_cache=token_cache,
                 )
             connection.executemany(
-                "insert into indexed_files(path,size,mtime_ns) values(?,?,?)",
+                "insert into indexed_files"
+                "(path,size,mtime_ns,ctime_ns,device,inode,content_sha256) "
+                "values(?,?,?,?,?,?,?)",
                 (
-                    (relative, state[0], state[1])
+                    (relative,) + tuple(state)
                     for relative, state in sorted(file_states.items())
                 ),
             )
@@ -839,6 +1014,7 @@ class SearchIndex:
             self._token_cache_stats = token_cache.stats()
         try:
             os.replace(str(temporary), str(self.path))
+            ensure_private_file(self.path)
         except Exception:
             temporary.unlink(missing_ok=True)
             raise
@@ -848,7 +1024,7 @@ class SearchIndex:
         self,
         query: str,
         candidate_limit: Optional[int] = None,
-    ) -> List[sqlite3.Row]:
+    ) -> List[Dict[str, Any]]:
         candidate_limit = candidate_limit or self.CANDIDATE_LIMIT
         expanded_query = " ".join(
             variant
@@ -875,7 +1051,7 @@ class SearchIndex:
                 ).fetchall()
             except sqlite3.Error:
                 rows = connection.execute("select d.*, 0.0 as fts_rank from documents d").fetchall()
-            return rows
+            return [dict(row) for row in rows]
         finally:
             connection.close()
 
@@ -987,10 +1163,35 @@ def _scan_candidates(root: pathlib.Path) -> List[Dict[str, Any]]:
             items_by_path.setdefault(relative, []).append(item)
     source_roots = _source_roots(root)
     rows: List[Dict[str, Any]] = []
+    total_bytes = 0
     for path in iter_text_files(root):
         try:
             relative = path.relative_to(root).as_posix()
-            body = path.read_text(encoding="utf-8", errors="ignore")
+            file_size = path.lstat().st_size
+            if file_size > SEARCH_MAX_FILE_BYTES:
+                raise SearchBoundaryError(
+                    "search text file exceeds {} bytes: {}".format(
+                        SEARCH_MAX_FILE_BYTES, relative
+                    )
+                )
+            total_bytes += file_size
+            if total_bytes > SEARCH_MAX_TOTAL_BYTES:
+                raise SearchBoundaryError(
+                    "search text corpus exceeds {} bytes".format(
+                        SEARCH_MAX_TOTAL_BYTES
+                    )
+                )
+            raw = read_repository_bytes_bounded(
+                root,
+                relative,
+                SEARCH_MAX_FILE_BYTES,
+                "search text file",
+            )
+            body = raw.decode("utf-8", errors="ignore")
+        except SearchBoundaryError:
+            raise
+        except KnowledgeHubError as exc:
+            raise SearchBoundaryError(str(exc)) from exc
         except (OSError, ValueError):
             continue
         for item in items_by_path.get(relative, []) or [{}]:
@@ -1067,8 +1268,8 @@ def _score(
         score += id_hits * 55
         if id_hits:
             reasons.append("id-tokens")
-    for field, weight, reason in ((tags, 45, "tag-tokens"), (summary, 40, "summary-tokens"), (path_text, 30, "path-tokens")):
-        hits = sum(1 for term in terms if _term_matches(term, field))
+    for field_text, weight, reason in ((tags, 45, "tag-tokens"), (summary, 40, "summary-tokens"), (path_text, 30, "path-tokens")):
+        hits = sum(1 for term in terms if _term_matches(term, field_text))
         if hits:
             score += hits * weight
             reasons.append(reason)
@@ -1157,6 +1358,8 @@ def search(
             candidate_limit=candidate_limit,
         )
         candidate_ready = time.monotonic()
+    except SearchBoundaryError:
+        raise
     except (KnowledgeHubError, OSError, sqlite3.Error) as exc:
         failed_at = time.monotonic()
         if index_ready is None:

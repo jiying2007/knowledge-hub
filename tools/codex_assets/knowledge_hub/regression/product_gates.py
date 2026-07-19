@@ -63,6 +63,7 @@ def test_final_gate_owner_review_blocker():
     result, payload = _run_product_gate(repo)
     terminal_result, terminal_payload = _run_product_gate(repo, "--require-terminal")
     owner = payload.get("owner_and_real_evidence", {})
+    project_count = int(owner.get("project_count", 0) or 0)
     owner_gap = next(
         (row for row in payload.get("gap_map", []) if row.get("gap_id") == "owner-and-real-evidence-pending"),
         {},
@@ -77,9 +78,10 @@ def test_final_gate_owner_review_blocker():
         and payload.get("terminal_maturity") is False
         and owner.get("status") == "needs-owner-review"
         and owner.get("project_boundary_owner_ready") is True
-        and owner.get("decision_owner_ready_count") == 30
-        and owner.get("owner_ref_ready_count") == 30
-        and owner.get("owner_boundary_ready_count") == 30
+        and project_count > 0
+        and owner.get("decision_owner_ready_count") == project_count
+        and owner.get("owner_ref_ready_count") == project_count
+        and owner.get("owner_boundary_ready_count") == project_count
         and owner.get("specialized_owner_ready_candidate_count") == 3
         and owner.get("pending_specialized_owner_candidate_count") == 0
         and owner.get("owner_gate_open_count") == 7
@@ -103,12 +105,12 @@ def test_final_gate_owner_review_blocker():
     )
 
 
-def test_final_gate_skip_regression_blocker():
-    result_id = "final-gate-skip-regression-blocker"
+def test_final_gate_quick_regression_evidence_boundary():
+    result_id = "final-gate-quick-regression-evidence-boundary"
     title = "quick product gate cannot be mistaken for full terminal regression evidence"
     if _skip_inside_product_gate(result_id, title):
         return
-    result, payload = _run_product_gate(root, extra_env="KNOWLEDGE_FINAL_GATE_SKIP_REGRESSION=1")
+    result, payload = _run_product_gate(root)
     regression = payload.get("checks", {}).get("knowledge_regression", {})
     expect(
         result["exit_code"] == 0
@@ -198,32 +200,41 @@ def test_final_gate_empty_child_json_blocker():
 
 def test_final_gate_default_regression_path():
     result_id = "final-gate-default-regression-path"
-    title = "full product gate consumes the modular 140-result regression contract"
+    title = "full product gate consumes the selected modular regression contract"
     if _skip_inside_product_gate(result_id, title):
         return
     repo = copy_repo(result_id)
+    fixture_module = (
+        repo
+        / "tools"
+        / "codex_assets"
+        / "knowledge_hub"
+        / "regression_fixture_cli.py"
+    )
+    fixture_module.write_text(
+        "import json\n"
+        "print(json.dumps({!r}, separators=(',', ':')))\n".format(
+            {
+                "status": "pass",
+                "suite": "full",
+                "full_regression_executed": True,
+                "selected_test_count": 1,
+                "full_test_count": 1,
+                "result_count": 1,
+                "slowest_results": [],
+            }
+        ),
+        encoding="utf-8",
+    )
     (repo / "tools" / "knowledge-regression.sh").write_text(
         "#!/usr/bin/env bash\n"
         "set -euo pipefail\n"
-        "SCRIPT_DIR=\"$(cd \"$(dirname \"${{BASH_SOURCE[0]}}\")\" && pwd)\"\n"
+        "SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n"
         "ROOT=\"$(cd \"$SCRIPT_DIR/..\" && pwd)\"\n"
         "cd \"$ROOT\"\n"
-        "export PYTHONPATH=\"$ROOT${{PYTHONPATH:+:$PYTHONPATH}}\"\n"
-        "printf '%s\\n' '{}'\n".format(
-            json.dumps(
-                {
-                    "status": "pass",
-                    "suite": "full",
-                    "full_regression_executed": True,
-                    "selected_test_count": 137,
-                    "full_test_count": 137,
-                    "result_count": 140,
-                    "full_result_count": 140,
-                    "slowest_results": [],
-                },
-                separators=(",", ":"),
-            ),
-        ),
+        "export PYTHONPATH=\"$ROOT${PYTHONPATH:+:$PYTHONPATH}\"\n"
+        "exec \"$ROOT/tools/ci/python-runtime.sh\" -m "
+        "tools.codex_assets.knowledge_hub.regression_fixture_cli \"$ROOT\" \"$@\"\n",
         encoding="utf-8",
     )
     setup_error = init_temp_git_repo(repo)
@@ -241,7 +252,7 @@ def test_final_gate_default_regression_path():
         and payload.get("regression_suite") == "full"
         and regression.get("status") == "pass"
         and regression.get("full_regression_executed") is True
-        and regression.get("result_count") == 140
+        and regression.get("result_count") == 1
         and "--json --suite full --as-of {}".format(today.isoformat()) in regression.get("command", "")
         and payload.get("platform_status", {}).get("hard_checks", {}).get("full_regression") is True
         and payload.get("summary", {}).get("full_regression_ready") is True,
@@ -252,6 +263,10 @@ def test_final_gate_default_regression_path():
             "final_status": payload.get("final_status"),
             "regression": regression,
             "summary": payload.get("summary", {}),
+            "hard_checks": payload.get("platform_status", {}).get(
+                "hard_checks", {}
+            ),
+            "blockers": payload.get("blockers", []),
         },
         repo,
     )

@@ -96,7 +96,6 @@ output = {
     "selected_test_count": payload.get("selected_test_count", 0) if isinstance(payload, dict) else 0,
     "full_test_count": payload.get("full_test_count", 0) if isinstance(payload, dict) else 0,
     "result_count": payload.get("result_count", len(results)) if isinstance(payload, dict) else 0,
-    "full_result_count": payload.get("full_result_count", 0) if isinstance(payload, dict) else 0,
     "failed_count": len(failed_ids),
     "failed_ids": failed_ids,
     "slowest_results": slowest[: args.top],
@@ -118,4 +117,3 @@ else:
 
 if output["regression_status"] != "pass" or output["failed_count"]:
     raise SystemExit(1)
-

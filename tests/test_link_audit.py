@@ -1,7 +1,10 @@
 import json
 
-from tools.codex_assets.knowledge_hub.common import repository_root
-from tools.codex_assets.knowledge_hub.link_audit import audit_links
+import pytest
+
+from tools.codex_assets.knowledge_hub import link_audit
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.link_audit import audit_links, link_audit_summary
 
 
 def _write_registry(root, status):
@@ -55,6 +58,17 @@ def test_reviewing_missing_attachment_is_blocking(tmp_path):
     assert payload["blocking_broken_count"] == 1
 
 
+def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, monkeypatch):
+    _write_registry(tmp_path, "reviewing")
+    path = tmp_path / "projects/p/current/note.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("# Note\n\n" + "x" * 64)
+    monkeypatch.setattr(link_audit, "LINK_AUDIT_MAX_FILE_BYTES", 16)
+
+    with pytest.raises(KnowledgeHubError, match="exceeds 16 bytes"):
+        audit_links(tmp_path)
+
+
 def test_repository_readiness_links_and_bases_are_valid():
     payload = audit_links(repository_root())
     assert payload["status"] == "pass"
@@ -65,3 +79,20 @@ def test_repository_readiness_links_and_bases_are_valid():
     assert payload["managed_property_error_count"] == 0
     assert payload["project_moc_orphan_count"] == 0
     assert payload["missing_moc_count"] == 0
+
+
+def test_link_audit_summary_caps_historical_warning_details():
+    payload = {
+        "status": "pass",
+        "historical_warning_count": 50,
+        "historical_warnings": [{"path": str(index)} for index in range(50)],
+        "blocking_broken": [],
+        "obsidian_bases": [{"path": "a.base"}],
+    }
+
+    summary = link_audit_summary(payload)
+
+    assert summary["projection"] == "link-audit-summary-v1"
+    assert summary["historical_warning_count"] == 50
+    assert len(summary["historical_warning_sample"]) == 10
+    assert "historical_warnings" not in summary

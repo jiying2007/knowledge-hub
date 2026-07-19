@@ -310,6 +310,17 @@ Invariants:
 - `entry` 必须存在。
 - `status` 只能使用 `registered` 或 `retired`；当前可路由记录使用 `registered`。
 
+项目总数不得作为工具常量。readiness 文档数、route matrix 和 product gate 分母必须从本文件当前唯一 `id` 集合动态计算。项目专用验证补充不得写入 Python 条件分支，统一由 `registry/product-policy.json#project_readiness_extensions` 按 `project_ids` 声明。
+
+## product-policy.json
+
+声明产品门禁与项目 readiness 的可扩展策略，受 `schemas/product-policy.schema.json` 约束：
+
+- `project_readiness_extensions` 只补充指定项目的验证待办和 related 链接，不改变 lifecycle。
+- `specialized_owner_requirements` 以 item id 和期望字段精确绑定专项 owner 条件；工具只核对，不生成决定或 attestation。
+- `specialized_required_evidence_zh` 与 `evidence_priority_messages_zh` 只描述真实证据缺口和优先级，不构成通过证据。
+- policy 引用不存在的 project、重复 item requirement 或 schema 非法时必须 fail-closed。
+
 ## repositories.json
 
 登记 Git 仓库到 Hub 项目的映射，是跨路径、跨机器路由的主要真源。

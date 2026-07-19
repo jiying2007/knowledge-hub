@@ -25,16 +25,6 @@ if args.review_queue_limit < 1:
 
 errors = []
 DISPLAY_TOOL_ROOT = "~/knowledge-hub/tools"
-SOURCE_CHECK_SNAPSHOT_ID = "pcr02-level2-source-check-execution-snapshot-20260621"
-SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS = [
-    "pcr02-project-tools",
-    "pcr02-project-knowledge",
-    "pcr02-product-test",
-    "pcr02-project-scratch",
-    "pcr02-project-root-artifacts",
-    "pcr02-module-agent-rules",
-    "pcr02-project-agent-config",
-]
 OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"
 PRODUCT_COPY_TARGET_PREFIXES = ("projects/", "domains/", "notes/")
 PRODUCT_COPY_ALLOWED_OBJECT_TYPES = {"markdown"}
@@ -189,73 +179,6 @@ def run_json(command):
         "payload": payload,
         "parse_error": parse_error,
         "stderr": completed.stderr.strip(),
-    }
-
-def build_source_check_snapshot_summary():
-    items_by_id = {
-        str(row.get("id", "")): row
-        for row in load_jsonl(root / "registry" / "items.jsonl")
-        if row.get("id")
-    }
-    item = items_by_id.get(SOURCE_CHECK_SNAPSHOT_ID, {})
-    md_relative = str(item.get("path", "")) if item else ""
-    jsonl_relative = str(pathlib.Path(md_relative).with_suffix(".jsonl")) if md_relative else ""
-    jsonl_path = root / jsonl_relative if jsonl_relative else root / "__missing__.jsonl"
-    rows = load_jsonl(jsonl_path) if jsonl_relative and jsonl_path.is_file() else []
-    row_source_ids = [
-        str(row.get("source_id", ""))
-        for row in rows
-        if row.get("source_id")
-    ]
-    expected_set = set(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
-    row_source_id_set = set(row_source_ids)
-    failed_rows = [
-        {
-            "id": row.get("id", ""),
-            "source_id": row.get("source_id", ""),
-            "status": row.get("status", ""),
-            "exit_code": row.get("exit_code", None),
-            "executed": row.get("executed", None),
-            "execution_mode": row.get("execution_mode", ""),
-        }
-        for row in rows
-        if row.get("status") != "pass"
-        or row.get("exit_code") != 0
-        or row.get("executed") is not True
-        or row.get("execution_mode") != "report-only-manual"
-    ]
-    status = (
-        "pass"
-        if item
-        and bool(md_relative and (root / md_relative).is_file())
-        and bool(jsonl_relative and jsonl_path.is_file())
-        and len(rows) == len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS)
-        and not sorted(expected_set - row_source_id_set)
-        and not sorted(row_source_id_set - expected_set)
-        and not failed_rows
-        else "fail"
-    )
-    return {
-        "status": status,
-        "artifact_id": SOURCE_CHECK_SNAPSHOT_ID,
-        "scope": "pcr02-level2-only",
-        "execution_mode": "report-only-manual-snapshot",
-        "runtime_execution": False,
-        "source_check_health_contract": "static-registry-only",
-        "md_path": md_relative,
-        "jsonl_path": jsonl_relative,
-        "expected_source_ids": SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS,
-        "covered_source_ids": sorted(row_source_id_set),
-        "expected_count": len(SOURCE_CHECK_SNAPSHOT_EXPECTED_SOURCE_IDS),
-        "row_count": len(rows),
-        "passed_count": len(rows) - len(failed_rows),
-        "missing_source_ids": sorted(expected_set - row_source_id_set),
-        "unexpected_source_ids": sorted(row_source_id_set - expected_set),
-        "failed_rows": failed_rows,
-        "all_executed": bool(rows) and all(row.get("executed") is True for row in rows),
-        "all_exit_0": bool(rows) and all(row.get("exit_code") == 0 for row in rows),
-        "checked_at": sorted({str(row.get("checked_at", "")) for row in rows if row.get("checked_at")}),
-        "limitations_zh": "仅为 2026-06-21 report-only 手动快照，只证明 7 个 PCR02 Level 2 source 的路径或文件当时存在；不证明内容正确、语义可迁移、owner 签收或 active promotion。",
     }
 
 def count_by(rows, field):
@@ -562,6 +485,7 @@ review_queues = build_review_queues(items, sources)
 
 knowledge_check = run_json(["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", today.isoformat()])
 owner_gates = run_json(["rtk", "bash", "tools/knowledge-owner-gates.sh", "--status", "all", "--json"])
+source_runtime = run_json(["rtk", "bash", "tools/knowledge-source-check.sh", "--scope", "all", "--json", "--as-of", today.isoformat()])
 
 stale_items = []
 for item in items:
@@ -581,6 +505,7 @@ if latest_source_coverage_path:
 
 owner_payload = owner_gates["payload"]
 check_payload = knowledge_check["payload"]
+source_runtime_payload = source_runtime["payload"]
 active_exposure_count = int(owner_payload.get("active_exposure_count", 0) or 0)
 open_owner_gate_count = int(owner_payload.get("open_count", 0) or 0)
 owner_ready_package_count = int(owner_payload.get("owner_ready_package_count", 0) or 0)
@@ -1433,6 +1358,12 @@ product_noncanonical_blocking_count = int(product_noncanonical_residue_audit.get
 
 fix_blocking = (
     knowledge_check["exit_code"] != 0
+    or source_runtime["exit_code"] != 0
+    or source_runtime_payload.get("status") != "pass"
+    or source_runtime_payload.get("scope") != "all"
+    or source_runtime_payload.get("source_check_health_executed") is not True
+    or int(source_runtime_payload.get("row_count", 0) or 0)
+    != int(source_runtime_payload.get("registry_source_count", 0) or 0)
     or owner_gates_failed
     or active_exposure_count
     or owner_ready_row_schema_errors
@@ -1459,9 +1390,8 @@ else:
 review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date"
 source_review_after_command = "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source"
 review_after_near_due_command = f"rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of {today.isoformat()} --window-days 30 --json"
-source_check_report_command = f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope pcr02-level2 --as-of {today.isoformat()} --json"
+source_check_report_command = f"rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --as-of {today.isoformat()} --json"
 source_check_health = check_payload.get("source_check_health", {}) if isinstance(check_payload.get("source_check_health", {}), dict) else {}
-source_check_execution_snapshot = build_source_check_snapshot_summary()
 source_stale_review_after_ids = set(source_check_health.get("stale_review_after_ids", []) or [])
 source_check_rows = {
     str(row.get("source_id", "")): row
@@ -1651,6 +1581,16 @@ if errors:
         "summary_zh": "status dashboard 自身读取或解析失败，不能作为终态证据。",
         "commands": ["rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json"],
     })
+if source_runtime["exit_code"] != 0 or source_runtime_payload.get("status") != "pass":
+    strict_blockers.append({
+        "id": "source-runtime-check-failed",
+        "severity": "blocker",
+        "count": int(source_runtime_payload.get("failed_count", 0) or 0),
+        "summary_zh": "全部登记 source 的只读 runtime availability check 未通过，status 不得声明控制面 ready。",
+        "commands": [source_check_report_command],
+        "exit_code": source_runtime["exit_code"],
+        "parse_error": source_runtime.get("parse_error", ""),
+    })
 if knowledge_check["exit_code"] != 0:
     strict_blockers.append({
         "id": "knowledge-check-failed",
@@ -1776,6 +1716,13 @@ result = {
     "final_profile": args.final_profile,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "status": status,
+    "technical_readiness": {
+        "status": "not-evaluated-by-status",
+        "product_ready_claimed": False,
+        "live_checks": ["knowledge-check", "source-runtime-all"],
+        "required_authority": "knowledge-final-gate --final-profile product",
+        "notes_zh": "本 dashboard 只声明控制面与 source runtime 状态；unit/link/Obsidian/retrieval/restore/CI 等技术就绪必须读取 product final gate。",
+    },
     "today": today.isoformat(),
     "as_of_source": today_source,
     "owner_blocker_source": owner_blocker_source,
@@ -1804,13 +1751,17 @@ result = {
         "latest_coverage_selection": latest_source_coverage_selection,
         "source_coverage_health": check_payload.get("source_coverage_health", {}),
         "source_check_health": source_check_health,
-        "source_check_execution_snapshot": source_check_execution_snapshot,
+        "source_runtime": dict(
+            source_runtime_payload,
+            exit_code=source_runtime["exit_code"],
+            command=shell_command(source_runtime["command"]),
+            parse_error=source_runtime.get("parse_error", ""),
+        ),
         "source_recovery_rows": source_recovery_rows,
         "stale_review_after_count": len(stale_sources),
         "stale_review_after_sample": stale_sources[:10],
         "review_after_command": source_review_after_command,
         "source_check_report_command": source_check_report_command,
-        "boundary_health": check_payload.get("boundary_health", {}),
         "product_source_inventory_audit": product_source_inventory_audit,
         "product_noncanonical_residue_audit": product_noncanonical_residue_audit,
     },
@@ -1882,6 +1833,7 @@ print(f"- today: {today.isoformat()}")
 print(f"- knowledge-check: {result['knowledge_check']['status']} (exit={knowledge_check['exit_code']}, errors={result['knowledge_check']['error_count']}, warnings={result['knowledge_check']['warning_count']})")
 print(f"- registry items: {len(items)}")
 print(f"- registered sources: {len(sources)}")
+print(f"- source runtime: {source_runtime_payload.get('status', '<missing>')} executed={source_runtime_payload.get('executed_count', 0)}/{source_runtime_payload.get('registry_source_count', 0)}")
 print(f"- review queues: pending={review_queues['summary']['total_pending_count']}, ai={review_queues['summary']['ai_generated_pending_count']}, external={review_queues['summary']['external_source_pending_count']}, active_or_promotion={review_queue_blocking_count}, product_blocking={review_queue_product_blocking_count}")
 print(f"- product source inventory: {product_source_inventory_audit['status']} blockers={product_source_inventory_audit['blocker_count']}")
 print(f"- owner gates: open={open_owner_gate_count}, resolved={owner_payload.get('resolved_count', 0)}, active_exposure={active_exposure_count}")

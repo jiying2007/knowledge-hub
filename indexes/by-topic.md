@@ -458,3 +458,13 @@
 - Knowledge Hub Agent 运行时契约吸收决策候选: `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`; `knowledge-hub-agent-runtime-contract-absorption-20260716`
 - 微信公众号批量研究工作流与二十篇文章优化评估: `projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md`; `llm-agent-wechat-account-research-assessment-20260716`
 - LLM Agent 精确源码 Full 门禁审计 2026-07-17: `projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md`; `llm-agent-exact-source-full-gate-audit-20260717`
+- GD32L235 电池供电跳变与 MCU 循环重启排障记录: `projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md`; `gd32l235-battery-rail-drop-mcu-reboot-20260717`
+- Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选: `projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md`; `agent-dev-kit-harness-readiness-decision-20260717`
+- PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md`; `xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
+- PCR02 AISpeech VAD 与 QIVW 短期优化落地验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md`; `xcrz-sigmastar-demo-pcr02-qivw-vad-short-term-implementation-validation-20260718`
+- PCR02 遗留 QIVW 回调与 APP diag provider 优化验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md`; `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
+- PCR02 QIVW VAD gate 显式参数化更正与验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md`; `xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
+- Knowledge Hub 全面终态闭环优化验证 2026-07-18: `governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md`; `knowledge-hub-terminal-closure-validation-20260718`
+- xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md`; `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
+- embedded/knowledge SSC305 方法与工具引用吸收验证: `projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md`; `pcr02-ssc305-embedded-knowledge-absorption-validation-20260718`
+- LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md`; `llm-agent-adk-v3-1-rc3-release-closure-20260718`

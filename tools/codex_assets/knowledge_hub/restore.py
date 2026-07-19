@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import shutil
+import sys
 import tarfile
 import tempfile
 import time
@@ -58,6 +59,13 @@ def _head_revision(root: pathlib.Path) -> str:
     if not revision:
         raise KnowledgeHubError("HEAD revision is unavailable")
     return revision
+
+
+def _restore_runtime() -> str:
+    runtime = pathlib.Path(os.path.abspath(sys.executable))
+    if not runtime.is_file():
+        raise KnowledgeHubError("restore runtime interpreter is unavailable")
+    return str(runtime)
 
 
 def _copy_candidate(root: pathlib.Path, restored: pathlib.Path) -> Dict[str, Any]:
@@ -128,6 +136,8 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
     started = time.monotonic()
     candidate_signature = working_tree_signature(root)
     source_revision = _head_revision(root)
+    runtime_python = _restore_runtime()
+    runtime_env = {"KNOWLEDGE_PYTHON_RUNTIME": runtime_python}
     checks: Dict[str, Any] = {}
     with tempfile.TemporaryDirectory(prefix="knowledge-hub-restore-") as directory:
         temporary_root = pathlib.Path(directory)
@@ -161,7 +171,8 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
         )
         commands = {
             "dependency_imports": [
-                "python3",
+                "bash",
+                "tools/ci/python-runtime.sh",
                 "-c",
                 "import jsonschema, pytest, yaml",
             ],
@@ -174,7 +185,13 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
                 "--as-of",
                 as_of,
             ],
-            "unit_tests": ["python3", "-m", "pytest", "-q"],
+            "unit_tests": [
+                "bash",
+                "tools/ci/python-runtime.sh",
+                "-m",
+                "pytest",
+                "-q",
+            ],
             "link_audit": ["bash", "tools/knowledge-link-audit.sh", "--json", "--strict"],
             "obsidian_view": ["bash", "tools/knowledge-obsidian-view-build.sh", "--check", "--json"],
             "retrieval_benchmark": ["bash", "tools/knowledge-retrieval-benchmark.sh", "--json"],
@@ -211,14 +228,15 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
             ],
         }
         for name, command in commands.items():
+            command_env = dict(runtime_env)
+            if name == "product_gate_smoke":
+                command_env["KNOWLEDGE_FINAL_GATE_INNER_REGRESSION"] = "1"
             result = run_rtk(
                 restored,
                 command,
                 timeout=180,
                 accepted_exit_codes=(0, 1, 2, 4, 5),
-                extra_env={"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION": "1"}
-                if name == "product_gate_smoke"
-                else None,
+                extra_env=command_env,
             )
             parsed_status = ""
             reported_errors: List[Any] = []
@@ -263,6 +281,8 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
         "dependency_baseline": {
             "runtime": "requirements-runtime.txt",
             "development": "requirements-dev.txt",
+            "runtime_injected": True,
+            "runtime_selector": "tools/ci/python-runtime.sh",
             "installation_performed": False,
         },
         "cache_included": any(path.startswith(".cache/") for path in paths),

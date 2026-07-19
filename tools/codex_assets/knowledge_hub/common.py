@@ -8,6 +8,7 @@ implementation for registry parsing, frontmatter and path handling.
 from __future__ import annotations
 
 import datetime as dt
+import errno
 import hashlib
 import json
 import os
@@ -15,12 +16,20 @@ import pathlib
 import re
 import stat
 import subprocess
-from typing import Any, Dict, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 import yaml
+from yaml.events import AliasEvent
 
 
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".jsonl", ".csv"}
+DEFAULT_JSON_MAX_BYTES = 16 * 1024 * 1024
+DEFAULT_JSONL_MAX_BYTES = 64 * 1024 * 1024
+DEFAULT_MARKDOWN_MAX_BYTES = 8 * 1024 * 1024
+MAX_FRONTMATTER_BYTES = 256 * 1024
+MAX_YAML_ALIASES = 64
+MAX_YAML_NODES = 10000
+MAX_YAML_DEPTH = 64
 ALLOWED_STATUSES = {"draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"}
 CURRENT_KINDS = {"project-current", "architecture", "decision", "runbook", "standard", "validation"}
 RECENT_KINDS = {"debug-record", "project-archive", "codex-session"}
@@ -63,20 +72,28 @@ def pretty_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2, sort_keys=False)
 
 
-def load_json(path: pathlib.Path, default: Any = None) -> Any:
+def load_json(
+    path: pathlib.Path,
+    default: Any = None,
+    maximum_bytes: int = DEFAULT_JSON_MAX_BYTES,
+) -> Any:
     if not path.exists():
         return default
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(read_utf8_bounded(path, maximum_bytes, "JSON file"))
     except (OSError, json.JSONDecodeError) as exc:
         raise KnowledgeHubError("invalid JSON {}: {}".format(path, exc)) from exc
 
 
-def load_jsonl(path: pathlib.Path) -> List[Dict[str, Any]]:
+def load_jsonl(
+    path: pathlib.Path,
+    maximum_bytes: int = DEFAULT_JSONL_MAX_BYTES,
+) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     if not path.exists():
         return rows
-    for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    text = read_utf8_bounded(path, maximum_bytes, "JSONL file")
+    for line_no, line in enumerate(text.splitlines(), 1):
         if not line.strip():
             continue
         try:
@@ -96,9 +113,27 @@ def encode_jsonl(rows: Iterable[Mapping[str, Any]]) -> str:
 
 def file_sha256(path: pathlib.Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(1024 * 1024), b""):
+    try:
+        file_stat = path.lstat()
+    except OSError as exc:
+        raise KnowledgeHubError("unable to stat file for SHA256: {}".format(path)) from exc
+    if stat.S_ISLNK(file_stat.st_mode):
+        raise KnowledgeHubError("file for SHA256 must not be a symlink: {}".format(path))
+    if not stat.S_ISREG(file_stat.st_mode):
+        raise KnowledgeHubError("file for SHA256 must be regular: {}".format(path))
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(str(path), flags)
+    except OSError as exc:
+        raise KnowledgeHubError("unable to open file for SHA256: {}".format(path)) from exc
+    try:
+        opened_stat = os.fstat(descriptor)
+        if not stat.S_ISREG(opened_stat.st_mode):
+            raise KnowledgeHubError("file for SHA256 must be regular: {}".format(path))
+        for block in iter(lambda: os.read(descriptor, 1024 * 1024), b""):
             digest.update(block)
+    finally:
+        os.close(descriptor)
     return digest.hexdigest()
 
 
@@ -115,15 +150,150 @@ def read_bytes_bounded(
 
     if maximum_bytes < 1:
         raise KnowledgeHubError("{} byte budget must be positive".format(label))
-    if not path.is_file():
+    try:
+        file_stat = path.lstat()
+    except OSError as exc:
+        raise KnowledgeHubError("{} must be a regular file".format(label)) from exc
+    if stat.S_ISLNK(file_stat.st_mode):
+        raise KnowledgeHubError("{} must not be a symlink".format(label))
+    if not stat.S_ISREG(file_stat.st_mode):
         raise KnowledgeHubError("{} must be a regular file".format(label))
-    with path.open("rb") as handle:
-        raw = handle.read(maximum_bytes + 1)
-    if len(raw) > maximum_bytes:
-        raise KnowledgeHubError(
-            "{} exceeds {} bytes".format(label, maximum_bytes)
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(str(path), flags)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise KnowledgeHubError("{} must not be a symlink".format(label)) from exc
+        raise KnowledgeHubError("{} could not be opened".format(label)) from exc
+    try:
+        return _read_descriptor_bounded(descriptor, maximum_bytes, label)
+    finally:
+        os.close(descriptor)
+
+
+def _read_descriptor_bounded(
+    descriptor: int,
+    maximum_bytes: int,
+    label: str,
+) -> bytes:
+    file_stat = os.fstat(descriptor)
+    if not stat.S_ISREG(file_stat.st_mode):
+        raise KnowledgeHubError("{} must be a regular file".format(label))
+    if file_stat.st_size > maximum_bytes:
+        raise KnowledgeHubError("{} exceeds {} bytes".format(label, maximum_bytes))
+    chunks: List[bytes] = []
+    total = 0
+    while total <= maximum_bytes:
+        block = os.read(descriptor, min(1024 * 1024, maximum_bytes + 1 - total))
+        if not block:
+            break
+        chunks.append(block)
+        total += len(block)
+    if total > maximum_bytes:
+        raise KnowledgeHubError("{} exceeds {} bytes".format(label, maximum_bytes))
+    return b"".join(chunks)
+
+
+def read_repository_bytes_bounded(
+    root: pathlib.Path,
+    relative: str,
+    maximum_bytes: int,
+    label: str,
+) -> bytes:
+    """Read a repository-relative regular file without following any symlink component."""
+
+    if maximum_bytes < 1:
+        raise KnowledgeHubError("{} byte budget must be positive".format(label))
+    safe = normalize_relpath(relative)
+    parts = pathlib.PurePosixPath(safe).parts
+    directory_flags = (
+        os.O_RDONLY
+        | getattr(os, "O_CLOEXEC", 0)
+        | getattr(os, "O_DIRECTORY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    file_flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    directory_descriptor = -1
+    file_descriptor = -1
+    try:
+        directory_descriptor = os.open(str(pathlib.Path(root).resolve()), directory_flags)
+        for component in parts[:-1]:
+            next_descriptor = os.open(
+                component,
+                directory_flags,
+                dir_fd=directory_descriptor,
+            )
+            os.close(directory_descriptor)
+            directory_descriptor = next_descriptor
+        file_descriptor = os.open(
+            parts[-1],
+            file_flags,
+            dir_fd=directory_descriptor,
         )
-    return raw
+        return _read_descriptor_bounded(file_descriptor, maximum_bytes, label)
+    except OSError as exc:
+        if exc.errno in {errno.ELOOP, errno.ENOTDIR}:
+            raise KnowledgeHubError(
+                "{} path contains a symlink or invalid directory component".format(label)
+            ) from exc
+        if exc.errno == errno.ENOENT:
+            raise KnowledgeHubError("{} must be a regular file".format(label)) from exc
+        raise KnowledgeHubError("{} could not be opened safely".format(label)) from exc
+    finally:
+        if file_descriptor >= 0:
+            os.close(file_descriptor)
+        if directory_descriptor >= 0:
+            os.close(directory_descriptor)
+
+
+def read_repository_utf8_bounded(
+    root: pathlib.Path,
+    relative: str,
+    maximum_bytes: int,
+    label: str,
+) -> str:
+    raw = read_repository_bytes_bounded(root, relative, maximum_bytes, label)
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise KnowledgeHubError("{} must be valid UTF-8".format(label)) from exc
+
+
+def ensure_private_directory(path: pathlib.Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink() or not path.is_dir():
+        raise KnowledgeHubError("private cache path must be a real directory: {}".format(path))
+    os.chmod(str(path), 0o700)
+
+
+def ensure_private_directory_tree(anchor: pathlib.Path, target: pathlib.Path) -> None:
+    """Create every directory below an existing trusted anchor with mode 0700."""
+
+    anchor_path = pathlib.Path(anchor)
+    target_path = pathlib.Path(target)
+    try:
+        relative = target_path.relative_to(anchor_path)
+    except ValueError as exc:
+        raise KnowledgeHubError(
+            "private directory target must stay below its anchor: {}".format(target_path)
+        ) from exc
+    if anchor_path.is_symlink() or not anchor_path.is_dir():
+        raise KnowledgeHubError(
+            "private directory anchor must be a real directory: {}".format(anchor_path)
+        )
+    current = anchor_path
+    for component in relative.parts:
+        current = current / component
+        ensure_private_directory(current)
+
+
+def ensure_private_file(path: pathlib.Path) -> None:
+    if not path.exists():
+        return
+    file_stat = path.lstat()
+    if stat.S_ISLNK(file_stat.st_mode) or not stat.S_ISREG(file_stat.st_mode):
+        raise KnowledgeHubError("private cache file must be regular and not a symlink: {}".format(path))
+    os.chmod(str(path), 0o600)
 
 
 def read_utf8_bounded(
@@ -150,9 +320,21 @@ def normalize_relpath(value: str) -> str:
 
 def resolve_inside(root: pathlib.Path, relative: str) -> pathlib.Path:
     safe = normalize_relpath(relative)
-    target = (root / safe).resolve(strict=False)
+    root_resolved = root.resolve()
+    current = root_resolved
+    for component in pathlib.PurePosixPath(safe).parts:
+        current = current / component
+        try:
+            component_stat = current.lstat()
+        except FileNotFoundError:
+            break
+        except OSError as exc:
+            raise KnowledgeHubError("unable to inspect repository path: {}".format(relative)) from exc
+        if stat.S_ISLNK(component_stat.st_mode):
+            raise KnowledgeHubError("repository path must not contain a symlink: {}".format(relative))
+    target = (root_resolved / safe).resolve(strict=False)
     try:
-        target.relative_to(root.resolve())
+        target.relative_to(root_resolved)
     except ValueError as exc:
         raise KnowledgeHubError("path escapes Knowledge Hub root: {}".format(relative)) from exc
     return target
@@ -175,6 +357,37 @@ def display_path(value: Any) -> str:
     return text
 
 
+class _BoundedSafeLoader(yaml.SafeLoader):
+    def __init__(self, stream: Any) -> None:
+        super().__init__(stream)
+        self._knowledge_alias_count = 0
+        self._knowledge_node_count = 0
+        self._knowledge_depth = 0
+
+    def compose_node(self, parent: Any, index: Any) -> Any:
+        if self.check_event(AliasEvent):
+            self._knowledge_alias_count += 1
+            if self._knowledge_alias_count > MAX_YAML_ALIASES:
+                raise yaml.YAMLError(
+                    "frontmatter alias budget exceeds {}".format(MAX_YAML_ALIASES)
+                )
+        self._knowledge_depth += 1
+        if self._knowledge_depth > MAX_YAML_DEPTH:
+            raise yaml.YAMLError(
+                "frontmatter depth exceeds {}".format(MAX_YAML_DEPTH)
+            )
+        try:
+            node = super().compose_node(parent, index)
+        finally:
+            self._knowledge_depth -= 1
+        self._knowledge_node_count += 1
+        if self._knowledge_node_count > MAX_YAML_NODES:
+            raise yaml.YAMLError(
+                "frontmatter node budget exceeds {}".format(MAX_YAML_NODES)
+            )
+        return node
+
+
 def split_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
     if not text.startswith("---\n"):
         return {}, text
@@ -182,8 +395,12 @@ def split_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
     if marker < 0:
         raise KnowledgeHubError("unterminated Markdown frontmatter")
     raw = text[4:marker]
+    if len(raw.encode("utf-8")) > MAX_FRONTMATTER_BYTES:
+        raise KnowledgeHubError(
+            "Markdown frontmatter exceeds {} bytes".format(MAX_FRONTMATTER_BYTES)
+        )
     try:
-        metadata = yaml.safe_load(raw) or {}
+        metadata = yaml.load(raw, Loader=_BoundedSafeLoader) or {}
     except yaml.YAMLError as exc:
         raise KnowledgeHubError("invalid YAML frontmatter: {}".format(exc)) from exc
     if not isinstance(metadata, dict):
@@ -193,7 +410,9 @@ def split_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
 
 def load_markdown(path: pathlib.Path) -> Tuple[Dict[str, Any], str]:
     try:
-        return split_frontmatter(path.read_text(encoding="utf-8"))
+        return split_frontmatter(
+            read_utf8_bounded(path, DEFAULT_MARKDOWN_MAX_BYTES, "Markdown file")
+        )
     except OSError as exc:
         raise KnowledgeHubError("unable to read Markdown {}: {}".format(path, exc)) from exc
 
@@ -266,6 +485,8 @@ def iter_text_file_records(
         child_directories = []
         for entry in entries:
             try:
+                if entry.is_symlink():
+                    continue
                 is_directory = entry.is_dir(follow_symlinks=False)
             except OSError:
                 continue
@@ -284,7 +505,7 @@ def iter_text_file_records(
             if pathlib.Path(entry.name).suffix.lower() not in TEXT_SUFFIXES:
                 continue
             try:
-                file_stat = entry.stat()
+                file_stat = entry.stat(follow_symlinks=False)
             except OSError:
                 continue
             if not stat.S_ISREG(file_stat.st_mode):
@@ -353,7 +574,7 @@ def parse_json_output(result: Mapping[str, Any]) -> Dict[str, Any]:
 
 
 def working_tree_signature(root: pathlib.Path) -> str:
-    """Fingerprint the current Git candidate without hashing large tracked assets."""
+    """Content-hash the current Git candidate without trusting size or mtime."""
 
     result = run_rtk(
         root,
@@ -367,15 +588,26 @@ def working_tree_signature(root: pathlib.Path) -> str:
         if not path.exists():
             digest.update(("missing\0{}\n".format(relative)).encode("utf-8"))
             continue
-        stat = path.lstat()
+        file_stat = path.lstat()
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
-        digest.update(str(stat.st_size).encode("ascii"))
+        digest.update(str(stat.S_IFMT(file_stat.st_mode)).encode("ascii"))
         digest.update(b":")
-        digest.update(str(stat.st_mtime_ns).encode("ascii"))
+        if stat.S_ISLNK(file_stat.st_mode):
+            digest.update(b"symlink:")
+            digest.update(os.readlink(str(path)).encode("utf-8", errors="surrogateescape"))
+        elif stat.S_ISREG(file_stat.st_mode):
+            digest.update(file_sha256(path).encode("ascii"))
+        else:
+            digest.update(b"unsupported")
         digest.update(b"\n")
     return digest.hexdigest()
 
 
 def utc_timestamp() -> str:
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    return (
+        dt.datetime.now(dt.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )

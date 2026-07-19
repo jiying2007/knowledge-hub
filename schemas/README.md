@@ -21,6 +21,7 @@
 - `artifact-restore-drill.schema.json`：checksum-bound release source 的隔离复制、负例检测、恢复与 source 不变契约。
 - `compliance-eval.schema.json`：批量动作合规用例 v2 的脱敏结果契约，包含最小样本门槛与 high-risk false-allow 汇总。
 - `project-readiness.schema.json`：项目能力矩阵契约。
+- `product-policy.schema.json`：项目 readiness 扩展、专项 owner 要求和真实证据优先级的声明式策略。
 - `local-workspaces.schema.json`：未跟踪的本机 Git workspace 发现结果契约。
 - `final-gate-product.schema.json`：唯一 product 终态门禁契约。
 - `obsidian-view-build.schema.json`：managed Properties、MOC 和 Base 构建契约。

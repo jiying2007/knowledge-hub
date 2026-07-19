@@ -19,6 +19,8 @@ def _interaction(
     latency_ms=120,
     result_ids=("item-a",),
     performance_contract=metrics.PERFORMANCE_CONTRACT,
+    index_state="warm",
+    index_ensure_ms=40,
 ):
     query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
     row = {
@@ -32,6 +34,8 @@ def _interaction(
         "result_count": len(result_ids),
         "result_ids": list(result_ids),
         "latency_ms": latency_ms,
+        "index_state": index_state,
+        "stage_timing": {"index_ensure_ms": index_ensure_ms},
         "raw_query_stored": False,
     }
     if performance_contract:
@@ -65,7 +69,7 @@ def test_metrics_do_not_store_raw_queries(tmp_path):
     assert recorded["raw_query_stored"] is False
     assert "sensitive query body" not in stored
     assert payload["privacy"]["raw_query_stored"] is False
-    assert payload["schema_version"] == 3
+    assert payload["schema_version"] == 4
     assert payload["usage"]["invocation_count"] == 1
     assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
     assert payload["retrieval"]["feedback_count"] == 1
@@ -113,7 +117,7 @@ def test_metrics_keep_usage_but_exclude_stale_performance_contract(tmp_path):
             "historical-performance",
             recorded_at="2026-07-13T00:00:01Z",
             latency_ms=9999,
-            performance_contract=None,
+            performance_contract="knowledge-retrieval-performance-v1",
         ),
     ]
     (cache / "search-telemetry.jsonl").write_text(
@@ -127,6 +131,80 @@ def test_metrics_keep_usage_but_exclude_stale_performance_contract(tmp_path):
     assert payload["performance"]["search_p95_ms"] == 120
     assert payload["performance"]["excluded_stale_contract_sample_count"] == 1
     assert payload["measurement_contract"]["performance_contract"] == metrics.PERFORMANCE_CONTRACT
+
+
+def test_metrics_separate_index_preparation_from_warm_interactive_sla(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    search_rows = [
+        _interaction(
+            "search-{}".format(index),
+            recorded_at="2026-07-13T00:00:{:02d}Z".format(index),
+        )
+        for index in range(metrics.MINIMUM_PERFORMANCE_SAMPLE_COUNT)
+    ]
+    context_rows = [
+        _interaction(
+            "context-{}".format(index),
+            kind="context",
+            recorded_at="2026-07-13T00:01:{:02d}Z".format(index),
+            latency_ms=240,
+        )
+        for index in range(metrics.MINIMUM_PERFORMANCE_SAMPLE_COUNT)
+    ]
+    search_rows.append(
+        _interaction(
+            "search-rebuild",
+            recorded_at="2026-07-13T00:02:00Z",
+            latency_ms=4700,
+            index_state="rebuilt",
+            index_ensure_ms=4500,
+        )
+    )
+    context_rows.append(
+        _interaction(
+            "context-rebuild",
+            kind="context",
+            recorded_at="2026-07-13T00:02:01Z",
+            latency_ms=4800,
+            index_state="rebuilt",
+            index_ensure_ms=4600,
+        )
+    )
+    (cache / "search-telemetry.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in search_rows)
+    )
+    (cache / "context-telemetry.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in context_rows)
+    )
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["performance"]["status"] == "pass"
+    assert payload["performance"]["search_p95_ms"] == 120
+    assert payload["performance"]["context_p95_ms"] == 240
+    assert payload["performance"]["index_preparation"]["status"] == "pass"
+    assert payload["performance"]["index_preparation"]["search_p95_ms"] == 4500
+    assert payload["performance"]["end_to_end_observed"]["search_p95_ms"] == 4700
+    assert payload["performance"]["excluded_non_warm_sample_count"] == 2
+
+
+def test_metrics_fail_when_index_preparation_exceeds_bound(tmp_path):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    rebuilt = _interaction(
+        "slow-rebuild",
+        latency_ms=6200,
+        index_state="rebuilt",
+        index_ensure_ms=6000,
+    )
+    (cache / "search-telemetry.jsonl").write_text(json.dumps(rebuilt) + "\n")
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["performance"]["evaluable"] is False
+    assert payload["performance"]["index_preparation"]["status"] == "fail"
+    assert payload["performance"]["status"] == "fail"
 
 
 def test_metrics_require_enough_current_search_and_context_samples(tmp_path):

@@ -146,7 +146,7 @@ related:
 
 2026-07-16 pre-close checkpoint：修复恢复 wrapper 的调用方相对路径兼容并刷新 Obsidian 生成视图后，candidate restore 通过；随后 full terminal gate 的 18 项 hard check 全部为真，shared pytest、140/140 full regression 与输出 schema 均通过，`platform_productization_complete=true`。命令按契约返回 2：当前批次仍是 dirty delivery candidate，普通内容复核队列为 1，30 项 evidence-ready 为 0，当前性能代际与真实 feedback 也未达到采用门槛。因此 S5 的工程预收口完成，但长期资产终态仍是 external-blocked；本段写入后必须重新生成候选恢复快照并完成 S6 的 committed HEAD 验证。
 
-首次 committed HEAD full gate 暴露 3 个非确定性 regression 失败：`final-proof-artifacts-stable-key-only`、`status-next-owner-gate` 与 `user-path-redaction-in-tool-outputs`。三项在相同 inner-regression 环境单独复跑均通过；源码核验确认 `copy_repo()` 会复制正被其他 worker 更新的非权威根 `.cache`，同时 final-proof 用例在 4-worker suite 内再次启动真实根 final gate，形成可变 cache 混合快照与嵌套全局 cache 竞争。修复只将 `.cache` 排除出 fixture，并把真实根 final gate/路径脱敏两项移到 serial tail，没有删除或放宽断言；随后 4-worker full suite 恢复为 137 个测试函数、140/140 结果通过。committed release 仍须以修复提交后的 HEAD restore 和 full terminal gate 为准。
+首次 committed HEAD full gate 曾暴露 3 个非确定性 regression 失败。源码核验确认 `copy_repo()` 会复制正被其他 worker 更新的非权威根 `.cache`，且一项历史 proof 用例会在并行 suite 内再次启动真实根 final gate，形成嵌套全局 cache 竞争。当前实现已删除历史 proof 对当前门禁的依赖，并把 quick/full 正式快照隔离；inner-regression 不再写正式快照。committed release 仍须以修复提交后的 HEAD restore 和 full terminal gate 为准。
 
 ## 自动结构检查
 
@@ -414,6 +414,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 | 增量索引性能 | v4 cold build、单文件 Markdown 更新、signature 5 次、`knowledge-retrieval-benchmark.sh --json` | cold build 2728.49ms；单文件增量 227.79ms、事务 38.11ms；signature 33.28–37.16ms；benchmark P95 133.20ms，语义指标保持 1.0 |
 | 冷启动 v5 rebuild | clean `222730b` 临时空 cache、cProfile、等价性检查、`knowledge-retrieval-benchmark.sh --json` | v4 clean cold 2137.17–2318.64ms；v5 为 1557.00–1589.43ms，中位数下降约 28.6%；benchmark P95 134.28ms，hit/MRR/route 均为 1.0 |
 | 持久 token provenance 与性能代际 | 精确输入 cache 原型、两次 forced rebuild、阶段 timing、metrics v3、`knowledge-retrieval-benchmark.sh --json` | 原型改善 40.35%；真实首次 miss 1984.95ms，随后 1072/1072 hit 为 1177.19ms，改善 40.69%；warm benchmark P95 140.46ms，hit/MRR/route 均为 1.0；cache 损坏/输入变化 fail-open 负例通过。 |
+| v7 freshness hash 复用与 cold/warm 分层 | 同大小同 mtime 篡改、损坏 digest、forced rebuild、两次 294-case benchmark | 1082 个文件 forced rebuild 的 index ensure 为 1714.25ms（signature 210.52ms、build 1502.88ms）；warm preparation 为 48.20ms，1082/1082 hash 复用；benchmark 20/20 hit、MRR 1.0、274/274 route，P50 171.16ms、P95 226.06ms、max 256.49ms。冷准备与 warm 查询分别受 5000ms/500ms 门槛约束，不删除历史 telemetry、不放宽质量门槛。 |
 | Full regression | `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-16` | 首轮暴露 1 个 gap-contract drift；定向修复后 pass，137 个测试函数、140/140 结果通过、失败列表为空 |
 | Candidate restore | `rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-16 --json` | pass；1361 个 candidate path 全部复制，missing/hash mismatch 均为 0，unit/link/Obsidian/retrieval/project/export/search/context/product smoke 全部通过 |
 | 控制面完整门禁 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16` | 发布锚点 `9a1a363`：`gate_status=pass`、`platform_productization_complete=true`、`platform_release_complete=true`，HEAD restore 精确匹配该 commit |

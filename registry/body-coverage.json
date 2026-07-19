@@ -98,9 +98,9 @@
       "coverage_mode": "governance-baseline",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 26,
-      "inventory_sha256": "da0dc658f7d80a36a7701795694bbae70a00a5c35be6f9ec3294ce20e358d089",
-      "reason_zh": "2026-07-16 显式加入已逐条注册的 Agent 运行时契约吸收候选与软件工具制品隔离恢复报告后，重新冻结 Hub 治理正文路径；Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
+      "expected_markdown_count": 27,
+      "inventory_sha256": "c0e3b6dfe730da6e7aad0e34eaecd3ad2c7e827255b6fd56904f0a019a2eea27",
+      "reason_zh": "2026-07-18 新增并精确登记 Knowledge Hub 全面终态闭环优化验证候选后，按路径 inventory 重新冻结 27 个 Hub 治理正文；本次只复核新增路径与集合完整性，不重新签收历史正文。Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",
@@ -128,9 +128,9 @@
       "coverage_mode": "archive-corpus",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 25,
-      "inventory_sha256": "b1027b1760d22d7dce1b46a6b23ae1b23b34b252b53505784523f64cd0885010",
-      "reason_zh": "2026-07-15 规范入口硬切时显式复核并冻结 xcrz-sigmastar-demo 应用归档正文路径；该集合只覆盖应用、诊断、媒体、模块联调和会话历史语料，不表示当前项目事实、owner 决策或 active 提升。"
+      "expected_markdown_count": 26,
+      "inventory_sha256": "24c173a0d0dab8a82811740e43652807e93e2165d5d464f40b38f4127c1d4678",
+      "reason_zh": "2026-07-18 因新增并精确登记 PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 评估正文，按路径 inventory 重新冻结 26 个 xcrz-sigmastar-demo 应用归档正文；本次只复核新增路径与集合完整性，不重新签收历史正文。该集合只覆盖应用、诊断、媒体、模块联调和会话历史语料，不表示当前项目事实、owner 决策或 active 提升。"
     }
   ]
 }

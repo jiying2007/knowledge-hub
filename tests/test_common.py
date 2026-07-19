@@ -1,5 +1,3 @@
-import pathlib
-
 import pytest
 
 from tools.codex_assets.knowledge_hub.common import (
@@ -7,6 +5,7 @@ from tools.codex_assets.knowledge_hub.common import (
     iter_text_file_records,
     iter_text_files,
     normalize_relpath,
+    read_bytes_bounded,
     render_markdown,
     split_frontmatter,
 )
@@ -83,3 +82,40 @@ def test_iter_text_files_can_exclude_control_roots(tmp_path):
     }
 
     assert actual == {"notes/keep.md"}
+
+
+def test_iter_text_files_never_follows_file_or_directory_symlinks(tmp_path):
+    outside_file = tmp_path.parent / "outside-text.md"
+    outside_file.write_text("outside secret marker\n", encoding="utf-8")
+    outside_directory = tmp_path.parent / "outside-directory"
+    outside_directory.mkdir()
+    (outside_directory / "nested.md").write_text("nested outside\n", encoding="utf-8")
+    (tmp_path / "notes").mkdir()
+    (tmp_path / "notes/safe.md").write_text("safe\n", encoding="utf-8")
+    (tmp_path / "notes/file-link.md").symlink_to(outside_file)
+    (tmp_path / "linked-directory").symlink_to(outside_directory, target_is_directory=True)
+
+    actual = {
+        path.relative_to(tmp_path).as_posix()
+        for path in iter_text_files(tmp_path)
+    }
+
+    assert actual == {"notes/safe.md"}
+
+
+def test_bounded_reader_rejects_final_component_symlink(tmp_path):
+    outside = tmp_path.parent / "bounded-outside.md"
+    outside.write_text("outside\n", encoding="utf-8")
+    link = tmp_path / "inside-link.md"
+    link.symlink_to(outside)
+
+    with pytest.raises(KnowledgeHubError, match="symlink"):
+        read_bytes_bounded(link, 1024, "test input")
+
+
+def test_frontmatter_rejects_excessive_yaml_aliases():
+    aliases = "\n".join("  - *shared" for _ in range(65))
+    text = "---\nshared: &shared [value]\nexpanded:\n{}\n---\n# body\n".format(aliases)
+
+    with pytest.raises(KnowledgeHubError, match="alias budget"):
+        split_frontmatter(text)

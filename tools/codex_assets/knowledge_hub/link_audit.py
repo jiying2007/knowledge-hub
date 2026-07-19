@@ -9,7 +9,14 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 
 import yaml
 
-from .common import project_rows, registry_items, split_frontmatter, utc_timestamp
+from .common import (
+    DEFAULT_MARKDOWN_MAX_BYTES,
+    project_rows,
+    read_repository_utf8_bounded,
+    registry_items,
+    split_frontmatter,
+    utc_timestamp,
+)
 from .obsidian_view import CONTENT_FIELDS, LIFECYCLE_FIELDS, is_managed_markdown
 
 
@@ -46,6 +53,8 @@ BASE_ALLOWED_PROPERTIES = {
     "project_id",
     "readiness_slot",
 }
+LINK_AUDIT_MAX_FILE_BYTES = DEFAULT_MARKDOWN_MAX_BYTES
+LINK_AUDIT_MAX_BASE_BYTES = 1024 * 1024
 
 
 def _excluded(path: pathlib.Path, root: pathlib.Path) -> bool:
@@ -54,7 +63,11 @@ def _excluded(path: pathlib.Path, root: pathlib.Path) -> bool:
 
 
 def _markdown_paths(root: pathlib.Path) -> List[pathlib.Path]:
-    return sorted(path for path in root.rglob("*.md") if path.is_file() and not _excluded(path, root))
+    return sorted(
+        path
+        for path in root.rglob("*.md")
+        if path.is_file() and not path.is_symlink() and not _excluded(path, root)
+    )
 
 
 def _without_fenced_code(text: str) -> str:
@@ -118,8 +131,13 @@ def _slug(value: str) -> str:
     return re.sub(r"[\s-]+", "-", value).strip("-")
 
 
-def _document_anchors(path: pathlib.Path) -> Set[str]:
-    text = _without_fenced_code(path.read_text(encoding="utf-8"))
+def _document_anchors(root: pathlib.Path, path: pathlib.Path) -> Set[str]:
+    relative = path.relative_to(root).as_posix()
+    text = _without_fenced_code(
+        read_repository_utf8_bounded(
+            root, relative, LINK_AUDIT_MAX_FILE_BYTES, "link audit Markdown"
+        )
+    )
     anchors: Set[str] = set()
     occurrences: Dict[str, int] = {}
     for raw in HEADING.findall(text):
@@ -135,11 +153,16 @@ def _document_anchors(path: pathlib.Path) -> Set[str]:
     return anchors
 
 
-def _anchor_present(path: pathlib.Path, fragment: str, cache: Dict[pathlib.Path, Set[str]]) -> bool:
+def _anchor_present(
+    root: pathlib.Path,
+    path: pathlib.Path,
+    fragment: str,
+    cache: Dict[pathlib.Path, Set[str]],
+) -> bool:
     if not fragment or path.suffix.lower() != ".md":
         return True
     if path not in cache:
-        cache[path] = _document_anchors(path)
+        cache[path] = _document_anchors(root, path)
     candidate = fragment.lstrip("^").strip()
     return candidate in cache[path] or candidate.lower() in cache[path] or _slug(candidate) in cache[path]
 
@@ -183,7 +206,14 @@ def _base_audit(root: pathlib.Path) -> List[Dict[str, Any]]:
             continue
         errors = []
         try:
-            payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            payload = yaml.safe_load(
+                read_repository_utf8_bounded(
+                    root,
+                    path.relative_to(root).as_posix(),
+                    LINK_AUDIT_MAX_BASE_BYTES,
+                    "Obsidian Base",
+                )
+            ) or {}
         except (OSError, yaml.YAMLError) as exc:
             payload = {}
             errors.append("invalid YAML: {}".format(exc))
@@ -223,7 +253,11 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
     item_by_path = {str(row.get("path", "")): row for row in items if row.get("path")}
     item_by_id = {str(row.get("id", "")): row for row in items if row.get("id")}
     markdown_paths = _markdown_paths(root)
-    all_files = sorted(path for path in root.rglob("*") if path.is_file() and not _excluded(path, root))
+    all_files = sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file() and not path.is_symlink() and not _excluded(path, root)
+    )
     incoming: Dict[str, int] = {}
     broken: List[Dict[str, Any]] = []
     warning_broken: List[Dict[str, Any]] = []
@@ -239,7 +273,14 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
     for source in markdown_paths:
         relative_source = source.relative_to(root).as_posix()
         try:
-            text = _without_fenced_code(source.read_text(encoding="utf-8"))
+            text = _without_fenced_code(
+                read_repository_utf8_bounded(
+                    root,
+                    relative_source,
+                    LINK_AUDIT_MAX_FILE_BYTES,
+                    "link audit Markdown",
+                )
+            )
         except OSError as exc:
             broken.append({"source": relative_source, "target": "", "reason": str(exc), "status": "blocking"})
             continue
@@ -256,7 +297,7 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
                 fragment = _fragment(raw)
                 if fragment:
                     anchor_count += 1
-                    if not _anchor_present(target, fragment, anchor_cache):
+                    if not _anchor_present(root, target, fragment, anchor_cache):
                         source_item = item_by_path.get(relative_source, {})
                         source_status = str(source_item.get("status", ""))
                         blocking = _blocking_source(relative_source, source_status)
@@ -309,7 +350,7 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
                 incoming[relative_target] = incoming.get(relative_target, 0) + 1
                 if fragment:
                     anchor_count += 1
-                    if not _anchor_present(target, fragment, anchor_cache):
+                    if not _anchor_present(root, target, fragment, anchor_cache):
                         state = "missing-anchor"
                     else:
                         continue
@@ -355,7 +396,14 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
             managed_property_errors.append({"path": relative_path, "reason": "missing-managed-document"})
             continue
         try:
-            metadata, _ = split_frontmatter(target.read_text(encoding="utf-8"))
+            metadata, _ = split_frontmatter(
+                read_repository_utf8_bounded(
+                    root,
+                    relative_path,
+                    LINK_AUDIT_MAX_FILE_BYTES,
+                    "managed Markdown",
+                )
+            )
         except (OSError, ValueError) as exc:
             managed_property_errors.append({"path": relative_path, "reason": "invalid-frontmatter", "detail": str(exc)})
             continue
@@ -425,7 +473,13 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
         "indexes/by-topic.md",
     } if obsidian_contract_enabled else set()
     missing_mocs = sorted(path for path in required_mocs if not (root / path).exists())
-    gitignore = (root / ".gitignore").read_text(encoding="utf-8") if (root / ".gitignore").exists() else ""
+    gitignore = (
+        read_repository_utf8_bounded(
+            root, ".gitignore", LINK_AUDIT_MAX_BASE_BYTES, "gitignore"
+        )
+        if (root / ".gitignore").exists()
+        else ""
+    )
     private_config_ignored = not obsidian_contract_enabled or any(
         line.strip().rstrip("/") == ".obsidian" for line in gitignore.splitlines() if not line.lstrip().startswith("#")
     )
@@ -484,4 +538,35 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
         "obsidian_bases": bases,
         "base_failure_count": len(base_failures),
         "notes_zh": "标准链接、锚点、附件、Properties、related、MOC 和 Base 均受审计；archive 历史断链只报告。Backlinks 和 Graph 只用于发现关系，不决定生命周期。",
+    }
+
+
+def link_audit_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "projection": "link-audit-summary-v1",
+        "generated_at": payload.get("generated_at", ""),
+        "status": payload.get("status", "fail"),
+        "markdown_file_count": payload.get("markdown_file_count", 0),
+        "standard_link_count": payload.get("standard_link_count", 0),
+        "blocking_broken_count": payload.get("blocking_broken_count", 0),
+        "blocking_broken_sample": list(payload.get("blocking_broken", []))[:20],
+        "historical_warning_count": payload.get("historical_warning_count", 0),
+        "historical_warning_sample": list(payload.get("historical_warnings", []))[:10],
+        "readiness_without_inbound_count": payload.get(
+            "readiness_without_inbound_count", 0
+        ),
+        "active_or_reviewing_without_inbound_count": payload.get(
+            "active_or_reviewing_without_inbound_count", 0
+        ),
+        "managed_frontmatter_coverage_percent": payload.get(
+            "managed_frontmatter_coverage_percent", 0
+        ),
+        "managed_property_error_count": payload.get(
+            "managed_property_error_count", 0
+        ),
+        "project_moc_orphan_count": payload.get("project_moc_orphan_count", 0),
+        "missing_moc_count": payload.get("missing_moc_count", 0),
+        "base_failure_count": payload.get("base_failure_count", 0),
+        "obsidian_base_count": len(payload.get("obsidian_bases", [])),
     }

@@ -38,6 +38,11 @@ CANONICAL_ROUTES = {
     "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
 }
 
+DETECTOR_CONFIG_PATHS = {
+    "tools/codex_assets/knowledge_hub/check_cli.py",
+    "tools/codex_assets/knowledge_hub/path_audit_cli.py",
+}
+
 memory_note_dir = home / ".codex" / "memories" / "extensions" / "ad_hoc" / "notes"
 memory_supersession_notes = sorted(memory_note_dir.glob("*knowledge-hub-hardcut-path-routing*.md"))
 memory_supersession_note = memory_supersession_notes[-1] if memory_supersession_notes else None
@@ -100,6 +105,8 @@ def classify(scope, rel_path, line_text):
         return "runtime-route-candidate"
     if scope == "codex" or scope.startswith("skills-"):
         return "runtime-route-candidate"
+    if normalized in DETECTOR_CONFIG_PATHS:
+        return "detector-config"
     if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/source-lifecycle-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
         return "canonical-policy"
     if normalized.startswith("domains/codex/archive/codex-archive/"):

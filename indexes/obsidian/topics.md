@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## manual-validation-pending (131)
+## manual-validation-pending (132)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -13,7 +13,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## no-active-promotion (128)
+## no-active-promotion (129)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## ai-generated (123)
+## ai-generated (124)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
@@ -49,7 +49,7 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
-## validation (40)
+## validation (42)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -57,6 +57,15 @@
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
+
+## decision (31)
+
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+- [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [Firmware Release Tools 权威与维护边界决策候选](../../projects/firmware-release-tools/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [Firmware Toolchains 权威与维护边界决策候选](../../projects/firmware-toolchains/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [GD32L235 Firmware 权威与维护边界决策候选](../../projects/gd32l235/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
 ## runbook (31)
 
@@ -66,15 +75,6 @@
 - [Firmware Toolchains 维护入口](../../projects/firmware-toolchains/current/runbooks/maintenance-entry.md) · `reviewing`
 - [GD32L235 Firmware 维护入口](../../projects/gd32l235/current/runbooks/maintenance-entry.md) · `reviewing`
 - [HC32F072 Firmware 维护入口](../../projects/hc32f072/current/runbooks/maintenance-entry.md) · `reviewing`
-
-## decision (30)
-
-- [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Codex Local Runtime Assets 权威与维护边界决策候选](../../domains/codex/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Firmware Release Tools 权威与维护边界决策候选](../../projects/firmware-release-tools/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Firmware Toolchains 权威与维护边界决策候选](../../projects/firmware-toolchains/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [GD32L235 Firmware 权威与维护边界决策候选](../../projects/gd32l235/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [HC32F072 Firmware 权威与维护边界决策候选](../../projects/hc32f072/decisions/project-boundary-decision-candidate.md) · `reviewing`
 
 ## profile (30)
 
@@ -94,6 +94,15 @@
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
 
+## pcr02 (13)
+
+- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+- [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
+- [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
+- [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
+- [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
 ## zh-cn (11)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -103,34 +112,25 @@
 - [中文术语表规范](../../governance/glossary.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
 
-## knowledge-hub (9)
+## knowledge-hub (10)
 
 - [Knowledge Hub root](../../README.md) · `active`
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
 - [Knowledge Hub 权威与维护边界决策候选](../../governance/product/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Knowledge Hub 维护入口](../../governance/product/current/runbooks/maintenance-entry.md) · `reviewing`
 
-## pcr02 (9)
-
-- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
-- [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
-- [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
-- [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
-- [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
-
-## llm-agent (7)
+## llm-agent (8)
 
 - [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing`
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
 - [LLM Agent 权威与维护边界决策候选](../../projects/llm-agent/decisions/project-boundary-decision-candidate.md) · `reviewing`
 - [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
-- [LLM Agent 维护入口](../../projects/llm-agent/current/runbooks/maintenance-entry.md) · `reviewing`
 
-## pcr02-ssc305 (6)
+## pcr02-ssc305 (7)
 
 - [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing`
 - [PCR02 SSC305 SDK readiness validation](../../projects/pcr02-ssc305/validation/project-readiness.md) · `reviewing`
@@ -138,6 +138,15 @@
 - [PCR02 SSC305 SDK 维护入口](../../projects/pcr02-ssc305/current/runbooks/maintenance-entry.md) · `reviewing`
 - [PCR02 SSC305 SDK 项目画像候选](../../projects/pcr02-ssc305/current/project-profile.md) · `reviewing`
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+
+## agent-dev-kit (6)
+
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+- [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
+- [Agent Dev Kit 维护入口](../../projects/agent-dev-kit/current/runbooks/maintenance-entry.md) · `reviewing`
+- [Agent Dev Kit 项目画像候选](../../projects/agent-dev-kit/current/project-profile.md) · `reviewing`
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
 ## codex (5)
 
@@ -154,13 +163,6 @@
 - [MCU Firmware Group 维护入口](../../projects/mcu/current/runbooks/maintenance-entry.md) · `reviewing`
 - [MCU Firmware Group 项目画像候选](../../projects/mcu/current/project-profile.md) · `reviewing`
 - [MCU NAS 发布制品与契约验证 2026-07-15](../../projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md) · `reviewing`
-
-## agent-dev-kit (4)
-
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Agent Dev Kit 权威与维护边界决策候选](../../projects/agent-dev-kit/decisions/project-boundary-decision-candidate.md) · `reviewing`
-- [Agent Dev Kit 维护入口](../../projects/agent-dev-kit/current/runbooks/maintenance-entry.md) · `reviewing`
-- [Agent Dev Kit 项目画像候选](../../projects/agent-dev-kit/current/project-profile.md) · `reviewing`
 
 ## app-main (4)
 
@@ -349,6 +351,18 @@
 - [排障记录规范](../../governance/debug-record-rules.md) · `active`
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 
+## qivw (3)
+
+- [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
+- [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
+- [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
+
+## vad (3)
+
+- [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
+- [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
+- [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
+
 ## ai-provenance (2)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -404,6 +418,11 @@
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
 - [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
 
+## provenance (2)
+
+- [embedded/knowledge SSC305 方法与工具引用吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
+- [xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
+
 ## qr-scan (2)
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
@@ -428,6 +447,11 @@
 
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing`
+
+## source-absorption (2)
+
+- [embedded/knowledge SSC305 方法与工具引用吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
+- [xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
 
 ## st77912 (2)
 
@@ -455,9 +479,21 @@
 
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
+## ai-coding (1)
+
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+
+## aispeech (1)
+
+- [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
+
 ## android-camera-hal (1)
 
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+
+## app-diag (1)
+
+- [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
 
 ## archive (1)
 
@@ -531,6 +567,10 @@
 
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
+## deletion (1)
+
+- [xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
+
 ## display (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -538,6 +578,18 @@
 ## embedded (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
+
+## embedded-knowledge (1)
+
+- [embedded/knowledge SSC305 方法与工具引用吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
+
+## engineering-quality (1)
+
+- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
+
+## explicit-config (1)
+
+- [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
 
 ## fbdev (1)
 
@@ -562,6 +614,10 @@
 ## hard-float (1)
 
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
+## harness-readiness (1)
+
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
 
 ## high-load (1)
 
@@ -679,9 +735,17 @@
 
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 
+## rc3 (1)
+
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
+
 ## release (1)
 
 - [MCU NAS 发布制品与契约验证 2026-07-15](../../projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md) · `reviewing`
+
+## release-candidate (1)
+
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
 ## report-only (1)
 
@@ -738,6 +802,10 @@
 ## templates (1)
 
 - [中文长期资产模板集](../../templates/README.md) · `active`
+
+## terminal-closure (1)
+
+- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 
 ## terminology (1)
 

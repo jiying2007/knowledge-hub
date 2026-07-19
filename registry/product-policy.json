@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "project_readiness_extensions": [
+    {
+      "id": "pcr02-display-release-v1",
+      "project_ids": [
+        "pcr02-ssc305",
+        "xcrz-sigmastar-demo",
+        "pcr02-hdi"
+      ],
+      "validation_expectations_zh": [
+        "ST77912 专项：补高温老化、SCLK/EMI 和端到端显示链路证据；缺任一项不得声明发布就绪。"
+      ],
+      "related_links": [
+        {
+          "path": "artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md",
+          "label_zh": "PCR02 owner-ready 实机/发布验证路径"
+        }
+      ]
+    }
+  ],
+  "specialized_owner_requirements": [
+    {
+      "id": "pcr02-display-boundary-owner-v1",
+      "label_zh": "PCR02 显示边界专项 owner 要求",
+      "item_requirements": [
+        {
+          "item_id": "pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711",
+          "expected": {
+            "decision_owner": "leiwenjun",
+            "decision_status": "accepted-boundary-evidence-pending",
+            "owner_attestation_ref": "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md",
+            "owner_decision": "accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing"
+          }
+        },
+        {
+          "item_id": "pcr02-st77912-fb-mi-fb-boundary-decision-20260711",
+          "expected": {
+            "decision_owner": "leiwenjun",
+            "decision_status": "accepted-boundary-evidence-pending",
+            "owner_attestation_ref": "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md",
+            "owner_decision": "accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing"
+          }
+        },
+        {
+          "item_id": "pcr02-camera-raw-preview-virtual-stream-architecture-20260711",
+          "expected": {
+            "decision_owner": "leiwenjun",
+            "decision_status": "accepted-boundary-evidence-pending",
+            "owner_attestation_ref": "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md",
+            "owner_decision": "accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing"
+          }
+        }
+      ]
+    }
+  ],
+  "specialized_required_evidence_zh": [
+    "真实 decision owner",
+    "ST77912 高温老化",
+    "SCLK/EMI",
+    "端到端显示链路",
+    "目标设备与发布制品身份",
+    "回滚和复测"
+  ],
+  "evidence_priority_messages_zh": [
+    "优先补 PCR02 ST77912 高温、SCLK/EMI、端到端显示和发布回滚证据。"
+  ]
+}

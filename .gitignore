@@ -24,6 +24,9 @@ artifacts/manifests/*.local.jsonl
 *.tmp
 *.bak
 reports/generated/
+build/
+dist/
+*.egg-info/
 
 # Heavy or binary artifacts should be referenced from registry, not committed.
 artifacts/raw/

@@ -1,15 +1,16 @@
 [build-system]
-requires = ["setuptools>=44"]
+requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "knowledge-hub-tools"
 version = "2.0.0"
 description = "Local-first Knowledge Hub tooling"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
-    "PyYAML==5.3.1",
-    "jsonschema==4.23.0",
+    "PyYAML==6.0.3",
+    "jsonschema==4.26.0",
+    "tomli==2.4.1; python_version < '3.11'",
 ]
 
 [tool.setuptools.packages.find]
@@ -17,4 +18,63 @@ include = ["tools*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q --strict-config --strict-markers"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = [".cache", ".tmp", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+files = [
+    "tools/codex_assets/knowledge_hub/common.py",
+    "tools/codex_assets/knowledge_hub/engineering.py",
+    "tools/codex_assets/knowledge_hub/export.py",
+    "tools/codex_assets/knowledge_hub/metrics.py",
+    "tools/codex_assets/knowledge_hub/product_gate.py",
+    "tools/codex_assets/knowledge_hub/product_policy.py",
+    "tools/codex_assets/knowledge_hub/retrieval.py",
+    "tools/codex_assets/knowledge_hub/runtime_maintenance.py",
+    "tools/codex_assets/knowledge_hub/search.py",
+    "tools/codex_assets/knowledge_hub/source_runtime.py",
+]
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+show_error_codes = true
+follow_imports = "skip"
+
+[tool.coverage.run]
+branch = true
+source = ["tools.codex_assets.knowledge_hub"]
+data_file = ".tmp/engineering/.coverage"
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
+skip_covered = true
+include = [
+    "tools/codex_assets/knowledge_hub/common.py",
+    "tools/codex_assets/knowledge_hub/engineering.py",
+    "tools/codex_assets/knowledge_hub/export.py",
+    "tools/codex_assets/knowledge_hub/metrics.py",
+    "tools/codex_assets/knowledge_hub/product_policy.py",
+    "tools/codex_assets/knowledge_hub/retrieval.py",
+    "tools/codex_assets/knowledge_hub/runtime_maintenance.py",
+    "tools/codex_assets/knowledge_hub/search.py",
+    "tools/codex_assets/knowledge_hub/source_runtime.py",
+]
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".cache", ".tmp"]
+skips = ["B101"]

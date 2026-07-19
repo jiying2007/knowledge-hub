@@ -72,6 +72,37 @@ def test_export_blocks_generic_password_assignment(tmp_path):
     assert plan_team_export(tmp_path)["status"] == "blocked"
 
 
+def test_export_blocks_repository_file_symlink_even_when_target_is_text(tmp_path):
+    (tmp_path / "registry").mkdir()
+    item = _row("linked", "domains/embedded/runbooks/linked.md")
+    outside = tmp_path.parent / "outside-export.md"
+    outside.write_text("# outside export marker\n", encoding="utf-8")
+    path = tmp_path / item["path"]
+    path.parent.mkdir(parents=True)
+    path.symlink_to(outside)
+    (tmp_path / "registry/items.jsonl").write_text(json.dumps(item) + "\n")
+
+    plan = plan_team_export(tmp_path)
+
+    assert plan["status"] == "blocked"
+    assert plan["errors"][0]["error"] == "unsafe-symlink-or-root-escape"
+
+
+def test_export_rejects_body_over_configured_byte_budget(monkeypatch, tmp_path):
+    (tmp_path / "registry").mkdir()
+    item = _row("large", "domains/embedded/runbooks/large.md")
+    path = tmp_path / item["path"]
+    path.parent.mkdir(parents=True)
+    path.write_text("# body larger than test budget\n")
+    (tmp_path / "registry/items.jsonl").write_text(json.dumps(item) + "\n")
+    monkeypatch.setattr(export_module, "EXPORT_MAX_FILE_BYTES", 16, raising=False)
+
+    plan = plan_team_export(tmp_path)
+
+    assert plan["status"] == "blocked"
+    assert plan["errors"][0]["error"] == "body-byte-budget-exceeded"
+
+
 def test_export_rewrites_links_to_excluded_content(tmp_path):
     (tmp_path / "registry").mkdir()
     active = _row("active", "domains/embedded/runbooks/active.md")
@@ -112,3 +143,19 @@ def test_export_publish_failure_never_exposes_partial_destination(tmp_path, monk
     staging = list(output.parent.glob(output.name + ".staging-*"))
     assert len(staging) == 1
     assert (staging[0] / ".incomplete.json").is_file()
+
+
+def test_export_output_tree_is_private(tmp_path):
+    (tmp_path / "registry").mkdir()
+    item = _row("active", "domains/embedded/runbooks/active.md")
+    path = tmp_path / item["path"]
+    path.parent.mkdir(parents=True)
+    path.write_text("# Active\n")
+    (tmp_path / "registry/items.jsonl").write_text(json.dumps(item) + "\n")
+    output = tmp_path.parent / "private-export"
+
+    apply_team_export(tmp_path, dt.date(2026, 7, 13), output)
+
+    assert output.stat().st_mode & 0o777 == 0o700
+    assert (output / item["path"]).stat().st_mode & 0o777 == 0o600
+    assert (output / "manifest.json").stat().st_mode & 0o777 == 0o600
