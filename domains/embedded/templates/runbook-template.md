@@ -3,7 +3,8 @@ title: Runbook 模板
 doc_type: runbook
 knowledge_type: process
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: template-owner
 created: 2026-05-12
 last_updated: 2026-05-12

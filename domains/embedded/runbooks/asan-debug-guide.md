@@ -1,12 +1,36 @@
 ---
-title: ASAN 调试方法论（团队级）
 doc_type: runbook
 knowledge_type: debug-methodology
 maturity: active
-status: active
-owner: team-core
 created: 2026-05-12
 last_updated: 2026-06-29
+related:
+- asan-offline-symbolize-guide.md
+- crash-triage-checklist.md
+aliases:
+- ASAN 调试方法论（团队级）
+id: embedded-asan-debug-guide-20260629
+title: ASAN 调试方法论（团队级）
+kind: runbook
+domain: embedded
+path: domains/embedded/runbooks/asan-debug-guide.md
+scope: team-general
+visibility: team-internal
+status: active
+owner: team-core
+source:
+  type: hub-active-promotion
+  source_manifest: artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl
+  provenance_manifest: artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+  from: split-approved ASAN candidate rewritten without PCR02-specific paths; active promotion authorized on 2026-06-29; PCR02
+    source path is evidence provenance, not active source binding
+review_after: '2026-09-29'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: verified
+promotion: none
+promotion_decision: active-team-runbook authorized for domains/embedded/runbooks only; promotion field remains none and does
+  not authorize standards promotion, source project write, memory write or remote publish
 tags:
 - asan
 - address-sanitizer
@@ -15,26 +39,39 @@ tags:
 - methodology
 - embedded
 - team-runbook
-related:
-- asan-offline-symbolize-guide.md
-- crash-triage-checklist.md
 validation_refs:
+- domains/embedded/runbooks/asan-debug-guide.md
 - domains/embedded/runbooks/asan-offline-symbolize-guide.md
 - domains/embedded/runbooks/crash-triage-checklist.md
 - domains/embedded/tools/debug/README.md
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.jsonl
+- artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.jsonl
+- artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl
+- registry/authorizations.jsonl
+- rtk bash tools/knowledge-regression.sh --test test_embedded_asan_methodology_deprojectized --json
+evidence_strength: user-authorization-plus-owner-decision-split-boundary-and-deprojectization-gate
+evidence_refs:
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- artifacts/manifests/pcr02-asan-split-targets-20260618.md
+- projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md
+- domains/embedded/runbooks/asan-debug-guide.md
+- artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.jsonl
+- artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.jsonl
+- artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl
+- registry/authorizations.jsonl
+created_at: '2026-06-29'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-06-29'
 summary_zh: 团队级 ASAN 调试方法论，已从 PCR02 project-local runbook 的 split-approved 边界中去项目化重写，并按 2026-06-29 用户明确授权提升为 active；项目命令和路径必须留在项目本地
   runbook，不提升到 embedded standards。
-id: embedded-asan-debug-guide-20260629
-kind: runbook
-domain: embedded
-path: domains/embedded/runbooks/asan-debug-guide.md
-scope: team-general
-visibility: team-internal
-review_after: '2026-09-29'
-review_status: human-reviewed-accepted
-promotion: none
-aliases:
-- ASAN 调试方法论（团队级）
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # ASAN 调试方法论（团队级）

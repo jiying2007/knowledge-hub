@@ -1,16 +1,59 @@
 ---
-title: DVR 录像回放解耦会话归档
 doc_type: owner-approved-target
-status: archived
-owner: team-core
 source_id: pcr02-project-docs
 source_path: reports/2026-06-16-dvr-record-replay-session-archive.md
 source_sha256: 266a1c2706da87b39d9e4b204ccece61b0ec9c7a95183c64324e95f606c1dadc
 source_size: 6697
 owner_decision: archive-only
 worksheet_id: pcr02-owner-decision-worksheet-007
-review_after: 2026-09-17
 generated_at: 2026-06-24
+id: pcr02-dvr-session-archive-only-20260624
+title: PCR02 DVR 录像回放 session archive 归档目标 2026-06-24
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: owner-approved-target-materialization
+  source_id: pcr02-project-docs
+  source_path: reports/2026-06-16-dvr-record-replay-session-archive.md
+  source_sha256: 266a1c2706da87b39d9e4b204ccece61b0ec9c7a95183c64324e95f606c1dadc
+  source_manifest: artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl
+review_after: '2026-09-17'
+review_status: owner-approved-archive-only-target-materialized
+promotion: none
+promotion_decision: none
+tags:
+- pcr02
+- dvr
+- session-archive
+- archive-only
+- no-memory-write
+- owner-decision
+- source-control
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- sources/pcr02-project-docs/inventory.jsonl
+evidence_strength: owner-decision-landing-plus-source-sha-target-materialization
+evidence_refs:
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md
+- sources/pcr02-project-docs/inventory.jsonl
+created_at: '2026-06-24'
+updated_at: '2026-06-24'
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-06-24'
+summary_zh: 按 owner 决策将 DVR 录像回放 session archive 作为 archive-only 目标落地；handoff、dirty-state 和 memory candidates 不进入 active facts。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # DVR 录像回放解耦会话归档

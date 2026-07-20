@@ -1,4 +1,13 @@
 ---
+related:
+- indexes/obsidian-home.md
+target_version: null
+test_environment: null
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- 软件工具干净源码验证审计 2026-07-15
 id: software-tool-evidence-audit-20260715
 title: 软件工具干净源码验证审计 2026-07-15
 kind: validation
@@ -8,10 +17,14 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: manual-entry:knowledge-new.sh
+  source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -20,31 +33,26 @@ tags:
 - validation
 - clean-source
 - manual-validation-pending
-related:
-- indexes/obsidian-home.md
-validation_refs: []
-artifact_refs: []
-target_version: null
-test_environment: null
-summary_zh: 核验五个软件工具精确 Git commit、MM32SPIN Validator 无 HEAD source snapshot 及三套本地 release 目录；测试和 checksum 结果可审计，但远端留存、回滚、设备采用及
-  Validator 的发布源码 provenance 仍待补齐。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+validation_refs:
+- governance/product/validation/software-tool-evidence-audit-20260715.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- governance/product/validation/software-tool-evidence-audit-20260715.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- 软件工具干净源码验证审计 2026-07-15
+summary_zh: 核验五个软件工具精确 Git commit、MM32SPIN Validator 无 HEAD source snapshot 及三套本地 release 目录；测试和 checksum 结果可审计，但远端留存、回滚、设备采用及
+  Validator 的发布源码 provenance 仍待补齐。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # 软件工具干净源码验证审计 2026-07-15

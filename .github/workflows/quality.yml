@@ -41,7 +41,7 @@ jobs:
   engineering:
     name: Engineering and supply chain
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -59,11 +59,21 @@ jobs:
         run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
       - name: Run full engineering gate
         run: rtk python3 -m tools.codex_assets.knowledge_hub.engineering_cli --mode full --json
-      - name: Upload CycloneDX SBOM
+      - name: Run deterministic compliance verdict matrix
+        run: rtk bash tools/knowledge-compliance-eval.sh --root tests/fixtures/agent_compliance_root --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --require-verdict-coverage --json
+      - name: Verify remote checkout in an offsite runner
+        run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --json
+      - name: Run product final gate
+        run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
+      - name: Upload quality evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: knowledge-hub-sbom
-          path: .tmp/engineering/knowledge-hub.cdx.json
+          name: knowledge-hub-quality-evidence
+          path: |
+            .tmp/engineering/knowledge-hub.cdx.json
+            .cache/knowledge-hub/engineering-quality.json
+            .cache/knowledge-hub/restore-drill-head.json
+            .cache/knowledge-hub/final-gate-product-full.json
           if-no-files-found: warn
           retention-days: 30

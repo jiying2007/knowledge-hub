@@ -23,7 +23,7 @@ def main(argv=None) -> int:
         today, _ = resolve_today(args.as_of)
         root = repository_root()
         payload = run_restore_drill(root, today.isoformat(), source_mode=args.source_mode)
-        schema_validation = validate_instance(root, "restore-drill-v1", payload)
+        schema_validation = validate_instance(root, "restore-drill-v2", payload)
         payload["schema_validation"] = schema_validation
         if schema_validation["status"] != "pass":
             payload["status"] = "fail"

@@ -1,4 +1,12 @@
 ---
+aliases:
+- PCR02 项目组规范入口边界
+authorization_ref: auth-20260715-pcr02-canonical-hardcut
+related:
+- projects/pcr02-ssc305/README.md
+- projects/xcrz-sigmastar-demo/README.md
+- registry/project-groups.json
+- registry/project-routes.json
 id: pcr02-ssc305-canonical-hardcut-20260715
 title: PCR02 项目组规范入口边界决策候选
 kind: decision
@@ -8,7 +16,13 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: user-directed-hub-maintenance
+  from: current-session canonical project-group boundary consolidation
 review_after: '2026-10-15'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; canonical project-group boundary candidate only, no active promotion or owner decision
 tags:
@@ -17,29 +31,32 @@ tags:
 - project-boundary
 - project-routing
 - single-source-of-truth
-aliases:
-- PCR02 项目组规范入口边界
-generated_by_ai: true
-ai_role: drafted-and-verified-under-user-direction
-ai_model_or_tool: Codex
-ai_generated_at: '2026-07-15'
-manual_validation_pending: false
-review_status: human-reviewed-accepted
-decision_owner: unassigned
-authorization_ref: auth-20260715-pcr02-canonical-hardcut
-summary_zh: 定义 PCR02 项目组唯一当前知识入口与仓库归属：SSC305 平台事实进入 pcr02-ssc305，应用事实进入 xcrz-sigmastar-demo，pcr02 仅作为项目组关系标识。
-related:
-- projects/pcr02-ssc305/README.md
-- projects/xcrz-sigmastar-demo/README.md
-- registry/project-groups.json
-- registry/project-routes.json
 validation_refs:
+- projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md
 - rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-15
+- rtk bash tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-15
 - rtk bash tools/knowledge-link-audit.sh --json --strict
 - rtk python3 -m pytest -q
 - rtk bash tools/knowledge-regression.sh --json --suite full --as-of 2026-07-15
-- rtk bash tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-15
 - rtk git diff --check
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md
+- rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-15
+- rtk bash tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-15
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-15'
+manual_validation_pending: false
+decision_owner: unassigned
+summary_zh: 定义 PCR02 项目组唯一当前知识入口与仓库归属：SSC305 平台事实进入 pcr02-ssc305，应用事实进入 xcrz-sigmastar-demo，pcr02 仅作为项目组关系标识。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 项目组规范入口边界决策候选

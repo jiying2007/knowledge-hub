@@ -189,6 +189,32 @@ def build_evidence_pack(
     # Explicit active constraints are a completeness surface, not a retrieval guess.
     for item in items:
         contract = _contract(item)
+        guard = contract.get("guard")
+        guard_query_match = any(
+            str(term).casefold() in query.casefold()
+            for term in (
+                guard.get("when_any", []) if isinstance(guard, Mapping) else []
+            )
+            if str(term).strip()
+        )
+        if (
+            item.get("status") in TERMINAL_STATUSES
+            and contract.get("role") == "constraint"
+            and _scope_matches(contract, scope_refs)
+            and guard_query_match
+            and len(lifecycle_excluded) < 5
+            and not any(
+                row.get("id") == str(item.get("id", ""))
+                for row in lifecycle_excluded
+            )
+        ):
+            lifecycle_excluded.append(
+                {
+                    "id": str(item.get("id", "")),
+                    "status": str(item.get("status", "")),
+                    "reason": "non-serviceable-lifecycle",
+                }
+            )
         if (
             _is_active_authority(item)
             and contract.get("role") == "constraint"
@@ -200,7 +226,10 @@ def build_evidence_pack(
             item.get("status") in PROVISIONAL_STATUSES
             and contract.get("role") == "constraint"
             and _scope_matches(contract, scope_refs)
-            and str(item.get("id", "")) in selected_ids
+            and (
+                str(item.get("id", "")) in selected_ids
+                or guard_query_match
+            )
         ):
             _append_unique(pack["provisional"], _pack_item(item))
 

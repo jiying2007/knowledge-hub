@@ -7,6 +7,7 @@ import pytest
 
 from tools.codex_assets.knowledge_hub import metrics
 from tools.codex_assets.knowledge_hub import search as search_module
+from tools.codex_assets.knowledge_hub import search_cli
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.search import (
     INDEX_SCHEMA_VERSION,
@@ -32,6 +33,9 @@ def _search_root(tmp_path):
     (tmp_path / "projects/p1/current").mkdir(parents=True)
     (tmp_path / "governance/obsidian.md").write_text("# Obsidian\n\nBacklinks 和 Graph 作为受控工作台视图。\n")
     (tmp_path / "projects/p1/current/unregistered.md").write_text("raw secret marker\n")
+    (tmp_path / "projects/p1/current/unregistered-only.md").write_text(
+        "orphan-only-7d3c9e\n"
+    )
     items = [
         {
             "id": "obsidian-workbench",
@@ -45,7 +49,20 @@ def _search_root(tmp_path):
             "summary_zh": "使用 Backlinks 建立关系导航。",
             "review_after": "2026-10-13",
             "tags": ["obsidian", "backlinks"],
-        }
+        },
+        {
+            "id": "body-fixture",
+            "title": "Registered body fixture",
+            "kind": "project-current",
+            "domain": "projects/p1",
+            "path": "projects/p1/current/unregistered.md",
+            "status": "reviewing",
+            "owner": "owner-a",
+            "source": {"type": "manual"},
+            "summary_zh": "用于验证受治理正文增量索引。",
+            "review_after": "2026-10-13",
+            "tags": ["body-fixture"],
+        },
     ]
     (tmp_path / "registry/items.jsonl").write_text(_jsonl(items))
     (tmp_path / "registry/sources.json").write_text('{"sources": []}\n')
@@ -62,6 +79,7 @@ def test_search_supports_chinese_synonym_and_registry_ranking(tmp_path):
     assert payload["status"] == "pass"
     assert payload["index"]["mode"] == "local-index"
     assert payload["zero_hit"]["is_zero_hit"] is False
+    assert payload["pagination"]["signature_bound"] is True
     assert payload["timing"]["total_ms"] == payload["latency_ms"]
     assert set(payload["timing"]) == {
         "validation_ms",
@@ -70,6 +88,56 @@ def test_search_supports_chinese_synonym_and_registry_ranking(tmp_path):
         "ranking_ms",
         "total_ms",
     }
+
+
+def test_root_authority_does_not_outrank_specific_metadata_on_body_only_term(tmp_path):
+    root = _search_root(tmp_path)
+    (root / "README.md").write_text("# Knowledge Hub\n\n性能治理只在正文中出现。\n")
+    (root / "projects/p1/current/performance.md").write_text(
+        "# 构建优化手册\n\n用可复现基准验证性能和效率。\n"
+    )
+    items = [
+        json.loads(line)
+        for line in (root / "registry/items.jsonl").read_text().splitlines()
+        if line.strip()
+    ]
+    items.extend(
+        [
+            {
+                "id": "hub-root",
+                "title": "Knowledge Hub root",
+                "kind": "architecture",
+                "domain": "root",
+                "path": "README.md",
+                "status": "active",
+                "owner": "owner-a",
+                "source": {"type": "manual"},
+                "summary_zh": "统一知识控制面。",
+                "review_after": "2026-10-13",
+                "tags": ["knowledge-hub"],
+            },
+            {
+                "id": "performance-runbook",
+                "title": "构建优化手册",
+                "kind": "runbook",
+                "domain": "projects/p1",
+                "path": "projects/p1/current/performance.md",
+                "status": "reviewing",
+                "owner": "owner-a",
+                "source": {"type": "manual"},
+                "summary_zh": "用基准定位编译效率问题。",
+                "review_after": "2026-10-13",
+                "tags": ["optimization"],
+            },
+        ]
+    )
+    (root / "registry/items.jsonl").write_text(_jsonl(items))
+
+    payload = search(root, "性能", limit=5, rebuild_index=True)
+
+    assert payload["results"][0]["id"] == "performance-runbook"
+    root_result = next(row for row in payload["results"] if row["id"] == "hub-root")
+    assert "root-body-only-penalty" in root_result["why_selected"]
 
 
 def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
@@ -82,8 +150,8 @@ def test_search_schema_avoids_duplicate_body_inverted_index(tmp_path):
             "select sql from sqlite_master where name='documents_fts'"
         ).fetchone()[0]
 
-    assert INDEX_SCHEMA_VERSION == 7
-    assert index.path.name == "search-index-v7.sqlite3"
+    assert INDEX_SCHEMA_VERSION == 8
+    assert index.path.name == "search-index-v8.sqlite3"
     assert "body unindexed" in schema.lower()
     with sqlite3.connect(str(index.path)) as connection:
         indexed_columns = {
@@ -285,7 +353,7 @@ def test_warm_search_reuses_trusted_content_hashes(tmp_path):
     assert first["state"] == "rebuilt"
     assert second["state"] == "warm"
     assert second["hashed_files"] == 0
-    assert second["reused_content_hashes"] == second["document_files"]
+    assert second["reused_content_hashes"] == second["signature_files"]
 
 
 def test_cached_signature_detects_same_size_and_mtime_content_change(tmp_path):
@@ -378,14 +446,99 @@ def test_search_rejects_text_file_over_configured_byte_budget(monkeypatch, tmp_p
         search(root, "Obsidian", limit=5)
 
 
-def test_structured_filter_excludes_unregistered_raw_file(tmp_path):
+def test_default_search_excludes_unregistered_raw_file(tmp_path):
     root = _search_root(tmp_path)
-    payload = search(root, "secret marker", limit=5, filters=SearchFilters(owners=("owner-a",)))
+    payload = search(root, "orphan-only-7d3c9e", limit=5)
     assert payload["results"] == []
     assert payload["status"] == "zero-hit"
-    assert payload["index"]["candidate_limit"] == SearchIndex.STRUCTURED_CANDIDATE_LIMIT
+    assert payload["index"]["candidate_limit"] == SearchIndex.CANDIDATE_LIMIT
     assert payload["zero_hit"]["is_zero_hit"] is True
-    assert payload["filter_diagnostics"]["by_reason"]["unregistered-structured-result"] >= 1
+    assert "unregistered-structured-result" not in payload["filter_diagnostics"]["by_reason"]
+    assert payload["schema_validation"]["status"] == "pass"
+
+
+def test_long_unrelated_query_does_not_match_generic_template_terms(tmp_path):
+    root = _search_root(tmp_path)
+    payload = search(
+        root,
+        "completely impossible zero result sentinel",
+        limit=5,
+    )
+
+    assert payload["status"] == "zero-hit"
+    assert payload["results"] == []
+
+
+def test_search_redacts_private_endpoint_from_preview(tmp_path):
+    root = _search_root(tmp_path)
+    target = root / "governance/obsidian.md"
+    target.write_text(
+        "# Obsidian\n\nPrivate endpoint 172.16.16.27:5555 is diagnostic only.\n"
+    )
+
+    payload = search(root, "private endpoint", limit=5)
+
+    result = payload["results"][0]
+    assert result["preview_redacted"] is True
+    assert "172.16.16.27" not in result["preview"]
+    assert "[内部端点已脱敏]" in result["preview"]
+
+
+def test_search_cursor_is_signature_and_query_bound(tmp_path):
+    root = _search_root(tmp_path)
+    first = search(root, "owner-a", limit=1)
+
+    assert first["pagination"]["has_more"] is True
+    cursor = first["pagination"]["next_cursor"]
+    second = search(root, "owner-a", limit=1, cursor=cursor)
+    assert second["pagination"]["offset"] == 1
+    assert second["results"] != first["results"]
+
+    with pytest.raises(KnowledgeHubError, match="does not match"):
+        search(root, "different query", limit=1, cursor=cursor)
+
+    (root / "projects/p1/current/unregistered.md").write_text("owner-a changed\n")
+    with pytest.raises(KnowledgeHubError, match="stale"):
+        search(root, "owner-a", limit=1, cursor=cursor)
+
+
+def test_authority_lane_is_merged_before_generic_candidate_cutoff(tmp_path):
+    root = _search_root(tmp_path)
+
+    class AuthorityIndex:
+        CANDIDATE_LIMIT = 1
+        STRUCTURED_CANDIDATE_LIMIT = 1
+
+        def ensure(self, force=False):
+            return {
+                "state": "warm",
+                "mode": "local-index",
+                "fresh": True,
+                "signature": "a" * 64,
+            }
+
+        def candidates(self, query, candidate_limit=None):
+            return search_module._scan_candidates(root)[1:2]
+
+        def authority_candidates(self, query, candidate_limit=None):
+            return search_module._scan_candidates(root)[:1]
+
+    payload = search(root, "Obsidian", limit=5, search_index=AuthorityIndex())
+
+    assert payload["results"][0]["id"] == "obsidian-workbench"
+    assert payload["index"]["authority_candidate_count"] == 1
+
+
+def test_search_summary_projection_omits_preview_and_enforces_budget(tmp_path):
+    root = _search_root(tmp_path)
+    payload = search(root, "Obsidian", limit=5)
+    summary = search_cli.search_summary(payload)
+
+    assert summary["projection"] == "knowledge-search-summary-v1"
+    assert "preview" not in summary["results"][0]
+    assert search_cli._serialized_json(summary, 64 * 1024)
+    with pytest.raises(KnowledgeHubError, match="output exceeds"):
+        search_cli._serialized_json(summary, 16)
 
 
 def test_zero_hit_trace_returns_registered_item_hidden_by_wrong_filter(tmp_path):
@@ -537,15 +690,33 @@ def test_search_incrementally_updates_changed_added_and_deleted_bodies(tmp_path)
 
     added_path = root / "projects/p1/current/added.md"
     added_path.write_text("new incremental document token\n")
+    items_path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in items_path.read_text().splitlines() if line]
+    rows.append(
+        {
+            "id": "added-item",
+            "title": "New incremental document",
+            "kind": "project-current",
+            "domain": "projects/p1",
+            "path": "projects/p1/current/added.md",
+            "status": "reviewing",
+            "owner": "owner-a",
+            "source": {"type": "manual"},
+            "summary_zh": "新增受治理正文。",
+            "review_after": "2026-10-13",
+            "tags": ["incremental"],
+        }
+    )
+    items_path.write_text(_jsonl(rows))
     added = search(root, "new incremental document token", limit=5)
-    assert added["index"]["state"] == "updated"
-    assert added["index"]["changed_files"] == 1
+    assert added["index"]["state"] == "rebuilt"
     assert added["results"][0]["path"] == "projects/p1/current/added.md"
 
+    rows = [row for row in rows if row["id"] != "added-item"]
+    items_path.write_text(_jsonl(rows))
     added_path.unlink()
     deleted = search(root, "new incremental document token", limit=5)
-    assert deleted["index"]["state"] == "updated"
-    assert deleted["index"]["deleted_files"] == 1
+    assert deleted["index"]["state"] == "rebuilt"
     assert all(row["path"] != "projects/p1/current/added.md" for row in deleted["results"])
 
 

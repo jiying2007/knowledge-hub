@@ -3,7 +3,8 @@ title: 标准文档模板
 doc_type: standard
 knowledge_type: guideline
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: template-owner
 created: 2026-05-12
 last_updated: 2026-05-12

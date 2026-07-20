@@ -1,4 +1,30 @@
 ---
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+decision_status: accepted-boundary-evidence-pending
+decision_date: '2026-07-16'
+aliases:
+- PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
+owner_roles_required:
+- PCR02 product decision owner
+- display/BSP owner
+- hardware/EMC owner
+- release owner
+evidence_readiness:
+  owner: accepted-boundary-evidence-pending
+  source: pending-current-commit-and-artifact-identity
+  device: pending-real-device-or-lab-evidence
+  release: pending-release-and-rollback-evidence
+  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing
 id: pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711
 title: PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
 kind: decision
@@ -12,8 +38,9 @@ source:
   type: manual
   from: Codex analysis of PCR02 ST77912 dual LCD SPI clock/FPS tradeoff
 review_after: '2026-10-11'
-created_at: 2026-07-11
-updated_at: '2026-07-16'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; owner accepted 36MHz stable baseline and higher clocks as validation-only; high-temperature, SCLK/EMI,
   device, release and rollback evidence remain pending
@@ -29,23 +56,11 @@ tags:
 - decision-candidate
 - manual-validation-pending
 - no-active-promotion
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 validation_refs:
 - projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md
 - artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-summary_zh: PCR02 双 ST77912 小屏走 fbtft/SPI，不受 mi_fb 控制。双屏 240x240 RGB565 满帧 30fps 需要 55.296Mbit/s 纯像素带宽，54MHz 理论上已不足以稳定支撑；若业务需要
-  20-25fps 观感，应优先采用 43-54MHz 分档验证、局部刷新/交错提交和驱动 staging，而不是继续按双屏满帧 30fps 设计。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
 evidence_strength: source-code-plus-schematic-plus-device-observation-pending-aging-validation
 evidence_refs:
 - ~/PCR02_MAIN_V2.0_20251211.pdf
@@ -53,33 +68,20 @@ evidence_refs:
 - SourceCode/kernel/drivers/sstar/mspi/drv_mspi.c
 - SourceCode/kernel/drivers/sstar/mspi/iford/hal_mspireg.h
 - SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
+created_at: '2026-07-11'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
-ai_generated_at: 2026-07-11
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
-decision_owner: leiwenjun
-decision_status: accepted-boundary-evidence-pending
-decision_date: '2026-07-16'
-aliases:
-- PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
+ai_generated_at: '2026-07-11'
 manual_validation_pending: true
-review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
-owner_roles_required:
-- PCR02 product decision owner
-- display/BSP owner
-- hardware/EMC owner
-- release owner
-evidence_readiness:
-  owner: accepted-boundary-evidence-pending
-  source: pending-current-commit-and-artifact-identity
-  device: pending-real-device-or-lab-evidence
-  release: pending-release-and-rollback-evidence
-  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
-owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
-owner_decision: accept-36mhz-stable-baseline-higher-clocks-validation-only-remain-reviewing
+decision_owner: leiwenjun
+summary_zh: PCR02 双 ST77912 小屏走 fbtft/SPI，不受 mi_fb 控制。双屏 240x240 RGB565 满帧 30fps 需要 55.296Mbit/s 纯像素带宽，54MHz 理论上已不足以稳定支撑；若业务需要
+  20-25fps 观感，应优先采用 43-54MHz 分档验证、局部刷新/交错提交和驱动 staging，而不是继续按双屏满帧 30fps 设计。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选

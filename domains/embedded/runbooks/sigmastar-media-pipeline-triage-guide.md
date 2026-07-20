@@ -3,7 +3,8 @@ title: SigmaStar 媒体链路排障指南
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-17
 last_updated: 2026-05-17

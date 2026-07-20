@@ -1,27 +1,28 @@
 ---
-title: PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录
 related:
 - xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514
-artifact_refs:
-- device:/customer/bin/prog_pcr02#buildid=12b409b4155645bc19f5af5fb099d302d9663302
-evidence_strength: runtime-confirmed-with-scoped-limitations
 incident_id: xcrz-display-cpu-20260713
 severity: performance-investigation
 affected_version: prog_pcr02 BuildID 12b409b4155645bc19f5af5fb099d302d9663302
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
 id: xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713
+title: PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录
 kind: debug-record
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: session-debug-summary
+  from: 2026-07-13 read-only ADB verification; endpoint and raw artifacts excluded
+  source_sha256: a274ba6016d703aebbdf351fe24a832414ac1152f16d4ec8b20db7d127cc522a
 review_after: '2026-08-13'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - display
@@ -30,6 +31,17 @@ tags:
 - spi
 - performance
 - adb
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+artifact_refs:
+- device:/customer/bin/prog_pcr02#buildid=12b409b4155645bc19f5af5fb099d302d9663302
+evidence_strength: runtime-confirmed-with-scoped-limitations
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-13'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: OpenAI Codex
@@ -37,7 +49,10 @@ ai_generated_at: '2026-07-13'
 manual_validation_pending: true
 summary_zh: ADB 实机确认 sensor_disp0 是双屏 LVGL 渲染主线程、sensor_disp1 是共享 flush worker；部署版本 full_refresh=1，双屏共享 36 MHz SPI0 并发生理论带宽超订阅，整机高
   system CPU 则为多条媒体与传感器链路叠加。
-promotion_decision: none; capture does not authorize active promotion or owner decision
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录

@@ -65,6 +65,47 @@ AGENT_CAPABILITIES = {
     "exceptions_recommended",
     "shadow_auto_stage_eligible",
 }
+CONTENT_REVIEW_STATUSES = {"accepted", "pending", "not-required"}
+EVIDENCE_VALIDATION_STATUSES = {"verified", "pending", "historical"}
+TEMPORARY_PATH_RE = re.compile(r"(?<![A-Za-z0-9_])(?:file://)?/tmp(?:/|$)")
+FRONTMATTER_MIRROR_FIELDS = (
+    "id",
+    "title",
+    "kind",
+    "domain",
+    "path",
+    "scope",
+    "visibility",
+    "status",
+    "owner",
+    "source",
+    "review_after",
+    "review_status",
+    "content_review_status",
+    "evidence_validation_status",
+    "promotion",
+    "promotion_decision",
+    "tags",
+    "validation_refs",
+    "artifact_refs",
+    "evidence_strength",
+    "evidence_refs",
+    "created_at",
+    "updated_at",
+    "generated_by_ai",
+    "ai_role",
+    "ai_model_or_tool",
+    "ai_generated_at",
+    "manual_validation_pending",
+    "manual_validation_reason",
+    "decision_owner",
+    "summary_zh",
+    "primary_language",
+    "source_language",
+    "translation_status",
+    "terminology_status",
+    "agent_contract",
+)
 
 
 def _iso_date(value: Any, field: str) -> dt.date:
@@ -78,7 +119,33 @@ def domain_root(domain: str) -> str:
     return domain.split("/", 1)[0]
 
 
-def validate_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]] = None) -> List[str]:
+def _temporary_metadata_paths(value: Any, field: str) -> List[str]:
+    """Return stable field paths whose durable metadata points into /tmp."""
+
+    matches: List[str] = []
+    if isinstance(value, str):
+        if TEMPORARY_PATH_RE.search(value):
+            matches.append(field)
+        return matches
+    if isinstance(value, Mapping):
+        for key in sorted(value, key=str):
+            matches.extend(
+                _temporary_metadata_paths(value[key], "{}.{}".format(field, key))
+            )
+        return matches
+    if isinstance(value, list):
+        for index, row in enumerate(value):
+            matches.extend(
+                _temporary_metadata_paths(row, "{}[{}]".format(field, index))
+            )
+    return matches
+
+
+def validate_item(
+    item: Mapping[str, Any],
+    existing_ids: Optional[Iterable[str]] = None,
+    existing_paths: Optional[Iterable[str]] = None,
+) -> List[str]:
     """Return deterministic validation errors for one registry item."""
 
     errors: List[str] = []
@@ -113,6 +180,8 @@ def validate_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]]
             path = normalize_relpath(path)
         except KnowledgeHubError as exc:
             errors.append(str(exc))
+    if path and existing_paths is not None and path in set(existing_paths):
+        errors.append("duplicate path {}".format(path))
     domain = str(item.get("domain", ""))
     root = domain_root(domain) if domain else ""
     if root not in {"root", "governance", "projects", "notes", "embedded", "patents", "codex"}:
@@ -145,13 +214,61 @@ def validate_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]]
     if not isinstance(source, dict):
         errors.append("source must be an object")
     validation_refs = item.get("validation_refs")
-    if not isinstance(validation_refs, list) or any(not str(value).strip() for value in validation_refs):
+    if not isinstance(validation_refs, list) or any(
+        not isinstance(value, str) or not value.strip() for value in validation_refs
+    ):
         errors.append("validation_refs must be a list of non-empty strings")
     if status in {"active", "reviewing"} and not validation_refs:
         errors.append("active/reviewing item requires validation_refs")
     tags = item.get("tags")
     if not isinstance(tags, list) or not tags or any(not str(value).strip() for value in tags):
         errors.append("tags must be a non-empty list")
+
+    for field in ("artifact_refs", "evidence_refs"):
+        value = item.get(field)
+        if value is not None and (
+            not isinstance(value, list)
+            or any(not isinstance(row, str) or not row.strip() for row in value)
+        ):
+            errors.append("{} must be a list of non-empty strings".format(field))
+    content_review_status = str(item.get("content_review_status", ""))
+    evidence_validation_status = str(item.get("evidence_validation_status", ""))
+    if content_review_status and content_review_status not in CONTENT_REVIEW_STATUSES:
+        errors.append("invalid content_review_status {}".format(content_review_status))
+    if evidence_validation_status and evidence_validation_status not in EVIDENCE_VALIDATION_STATUSES:
+        errors.append(
+            "invalid evidence_validation_status {}".format(evidence_validation_status)
+        )
+    if item.get("searchable") is not None and not isinstance(item.get("searchable"), bool):
+        errors.append("searchable must be boolean")
+    if status in {"active", "reviewing"}:
+        for field in ("source", "validation_refs", "artifact_refs", "evidence_refs"):
+            for match in _temporary_metadata_paths(item.get(field), field):
+                errors.append(
+                    "active/reviewing durable metadata must not reference temporary path: {}".format(
+                        match
+                    )
+                )
+        for field in (
+            "summary_zh",
+            "primary_language",
+            "source_language",
+            "translation_status",
+            "terminology_status",
+            "evidence_strength",
+            "content_review_status",
+            "evidence_validation_status",
+        ):
+            value = str(item.get(field, "")).strip()
+            if not value or value.lower() in {"none", "null"}:
+                errors.append("active/reviewing item requires {}".format(field))
+        if not item.get("evidence_refs"):
+            errors.append("active/reviewing item requires evidence_refs")
+    if status == "active":
+        if content_review_status != "accepted":
+            errors.append("active item requires content_review_status accepted")
+        if evidence_validation_status != "verified":
+            errors.append("active item requires evidence_validation_status verified")
 
     created = updated = None
     for field in ("created_at", "updated_at", "review_after"):
@@ -355,8 +472,16 @@ def _validate_agent_contract(value: Any) -> List[str]:
     return errors
 
 
-def require_valid_item(item: Mapping[str, Any], existing_ids: Optional[Iterable[str]] = None) -> None:
-    errors = validate_item(item, existing_ids=existing_ids)
+def require_valid_item(
+    item: Mapping[str, Any],
+    existing_ids: Optional[Iterable[str]] = None,
+    existing_paths: Optional[Iterable[str]] = None,
+) -> None:
+    errors = validate_item(
+        item,
+        existing_ids=existing_ids,
+        existing_paths=existing_paths,
+    )
     if errors:
         raise KnowledgeHubError("invalid registry item {}: {}".format(item.get("id", "<unknown>"), "; ".join(errors)))
 
@@ -376,31 +501,23 @@ def assert_transition(before: str, after: str) -> None:
 
 
 def frontmatter_mirror(item: Mapping[str, Any]) -> Dict[str, Any]:
-    keys = [
-        "id",
-        "title",
-        "kind",
-        "domain",
-        "scope",
-        "visibility",
-        "status",
-        "owner",
-        "review_after",
-        "review_status",
-        "promotion",
-        "tags",
-        "generated_by_ai",
-        "ai_role",
-        "ai_model_or_tool",
-        "ai_generated_at",
-        "manual_validation_pending",
-        "decision_owner",
-        "summary_zh",
-        "primary_language",
-        "source_language",
-        "translation_status",
-        "terminology_status",
-        "promotion_decision",
-        "agent_contract",
-    ]
-    return {key: item[key] for key in keys if key in item}
+    return {
+        key: item[key]
+        for key in FRONTMATTER_MIRROR_FIELDS
+        if key in item
+    }
+
+
+def merge_frontmatter_mirror(
+    metadata: Mapping[str, Any],
+    item: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Replace every registry-owned frontmatter field atomically."""
+
+    merged = {
+        key: value
+        for key, value in metadata.items()
+        if key not in FRONTMATTER_MIRROR_FIELDS
+    }
+    merged.update(frontmatter_mirror(item))
+    return merged

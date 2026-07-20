@@ -1,13 +1,30 @@
 ---
+aliases:
+- PCR02 prog_pcr02 高负载调试手段
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: pcr02-prog-pcr02-high-load-debug-runbook-20260702
 title: PCR02 prog_pcr02 高负载调试手段
 kind: runbook
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
 owner: leiwenjun
-created_at: 2026-07-02
-updated_at: 2026-07-02
+source:
+  type: generated-from-debug-session
+  from: 2026-07-02 prog_pcr02 high-load monitoring and thread naming session
+  evidence_item: pcr02-prog-pcr02-high-load-monitoring-20260702
 review_after: '2026-10-02'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: verified
+promotion: none
+promotion_decision: none; project-local reviewing runbook candidate derived from debug evidence, no active promotion, no release
+  gate and no owner decision
 tags:
 - pcr02
 - prog_pcr02
@@ -19,33 +36,42 @@ tags:
 - reviewing-followup
 - candidate-runbook
 - no-active-promotion
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md
+- rtk bash tools/knowledge-check.sh --dry-run --json --explain pcr02-prog-pcr02-high-load-debug-runbook-20260702
+- rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: derived-from-three-runtime-capture-windows
+evidence_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md
+- field-capture-sha256:806c75829c9140bfdda99b3d7aea354dd0b176f7e137b0216d51dd294105d5fa; raw capture not retained
+created_at: '2026-07-02'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-02'
 summary_zh: 沉淀 PCR02 prog_pcr02 高负载现场只读调试手段：ADB 低扰动 10 分钟采集、线程 CPU jiffies 排序、上下文切换排序、wchan/state 判断、热点 TID 定向复采、源码级聚合计数建议和
   DDR/MIU 证据缺口边界。
-path: projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md
-scope: project-specific
-visibility: team-internal
-review_status: human-reviewed-accepted
-promotion: none
-aliases:
-- PCR02 prog_pcr02 高负载调试手段
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 prog_pcr02 高负载调试手段
 
 ## Scope
 
-本 runbook 适用于 PCR02/SigmaStar SSC305 设备上 `/customer/bin/prog_pcr02` 出现高 load、高 CPU、线程调度竞争或媒体链路疑似阻塞时的现场只读排查。默认设备通过 ADB 连接，例如 `172.16.16.27:5555`。
+本 runbook 适用于 PCR02/SigmaStar SSC305 设备上 `/customer/bin/prog_pcr02` 出现高 load、高 CPU、线程调度竞争或媒体链路疑似阻塞时的现场只读排查。设备端点由授权环境注入，不在长期正文保存。
 
 本手段只做只读采集，不重启设备，不 kill 进程，不清缓存，不修改设备文件。
 
 ## Preconditions
 
-- ADB 已连接：`rtk adb connect 172.16.16.27:5555`
-- 目标进程存在：`rtk adb -s 172.16.16.27:5555 shell "pidof prog_pcr02"`
+- 已设置本次授权端点：`PCR02_ADB_ENDPOINT=<authorized-endpoint>`
+- ADB 已连接：`rtk adb connect "${PCR02_ADB_ENDPOINT}"`
+- 目标进程存在：`rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "pidof prog_pcr02"`
 - 设备负载较高时，ADB 单轮 shell 可能显著慢于采样间隔；判断采集时长应以首尾样本墙钟时间为准，不只看样本数。
 
 ## Low-Overhead 10-Minute Capture
@@ -65,8 +91,8 @@ related:
 最小手工流程：
 
 ```bash
-rtk adb connect 172.16.16.27:5555
-rtk adb -s 172.16.16.27:5555 shell "date; uptime; pidof prog_pcr02; ps -T | grep prog_pcr02 | head -40"
+rtk adb connect "${PCR02_ADB_ENDPOINT}"
+rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "date; uptime; pidof prog_pcr02; ps -T | grep prog_pcr02 | head -40"
 ```
 
 采集完成后必须计算：
@@ -96,13 +122,13 @@ rtk rg -n "^===== SAMPLE" /tmp/<capture-log>.log | rtk tail
 对热点 TID 做短周期二次采集：
 
 ```bash
-rtk adb -s 172.16.16.27:5555 shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid ===; cat /proc/\$pid/task/\$tid/comm; cat /proc/\$pid/task/\$tid/status | egrep 'State|voluntary|nonvoluntary'; cat /proc/\$pid/task/\$tid/wchan; cat /proc/\$pid/task/\$tid/stat; done"
+rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid ===; cat /proc/\$pid/task/\$tid/comm; cat /proc/\$pid/task/\$tid/status | egrep 'State|voluntary|nonvoluntary'; cat /proc/\$pid/task/\$tid/wchan; cat /proc/\$pid/task/\$tid/stat; done"
 ```
 
 若内核启用了 stack：
 
 ```bash
-rtk adb -s 172.16.16.27:5555 shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid stack ===; cat /proc/\$pid/task/\$tid/stack 2>/dev/null; done"
+rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid stack ===; cat /proc/\$pid/task/\$tid/stack 2>/dev/null; done"
 ```
 
 ## Source-Mapped Hot Thread Capture
@@ -131,7 +157,7 @@ rtk adb -s 172.16.16.27:5555 shell "pid=\$(pidof prog_pcr02); for tid in 807 785
 
 第四轮基线证据：
 
-- Raw artifact ref: `/tmp/pcr02_source_hot_threads_20260702_205632.log`
+- Raw artifact identity: `field-capture-sha256:7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174`；raw capture 未长期保留。
 - SHA256: `7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174`
 - Window: 2026-07-02 20:56:33-21:02:51 CST
 - Result: `hdi_vi_out3`、`sensor_disp0`、`hdi_ai_prc0`、`pool_04`、`sensor_tof0` 是源码可追优先插桩对象。
@@ -165,10 +191,10 @@ Linux 通用 `/proc/meminfo` 只能说明内存容量、缓存、Dirty/Writeback
 
 - 原始日志不复制进 Knowledge Hub 正文。
 - 归档正文只保存：时间窗口、样本数、sha256、负载摘要、热点表、负面发现、下一步。
-- 设备 IP、进程路径和本机 `/tmp` 证据路径可作为项目本地证据引用；不得提升为团队通用规则。
+- 设备端点和本机临时证据路径不得进入长期正文；只保留脱敏参数名、内容哈希和可复核结论。
 
 ## Provenance
 
 - Generated from 2026-07-02 PCR02 high-load field monitoring session.
 - Evidence record: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`
-- Latest raw artifact ref: `/tmp/pcr02_source_hot_threads_20260702_205632.log`, sha256 `7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174`.
+- Latest raw artifact identity: `field-capture-sha256:7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174`; raw capture not retained.

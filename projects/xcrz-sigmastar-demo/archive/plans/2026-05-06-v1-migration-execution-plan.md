@@ -1,13 +1,42 @@
 ---
-title: V1 到主分支迁移执行计划
 doc_type: plan
 knowledge_type: process
 maturity: draft
-status: archived
-owner: team-core
 created: 2026-05-06
 last_updated: 2026-05-12
-tags: [v1, migration, plan]
+id: pcr02-v1-migration-execution-plan-archive-20260506
+title: V1 到主分支迁移执行计划
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-05-06-v1-migration-execution-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: plans/2026-05-06-v1-migration-execution-plan.md
+  source_sha256: 1fe1d8618f9d23d83687f396039399be9fb2fa27dbec902e6a27c0f347fe7163
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical migration provenance only, no active promotion and not current migration state
+tags:
+- pcr02
+- archive-only
+- historical-plan
+- historical-migration-provenance
+- no-active-promotion
+- v1
+- migration
+- plan
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-05-06-v1-migration-execution-plan.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-06 V1 到主分支迁移执行计划；仅作 PCR02 历史计划 provenance，不代表当前迁移态、当前执行计划或 active 决策。
 ---
 
 # V1 到主分支迁移执行计划

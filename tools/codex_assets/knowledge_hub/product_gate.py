@@ -41,7 +41,10 @@ from .product_policy import (
     evaluate_specialized_owner_requirements,
     load_product_policy,
 )
-from .retrieval import run_retrieval_benchmark
+from .retrieval import (
+    retrieval_benchmark_summary,
+    run_retrieval_benchmark_serialized,
+)
 from .schemas import validate_instance, validate_schema_catalog
 from .store import incomplete_transactions
 
@@ -64,6 +67,27 @@ def _source_runtime_ready(payload: Mapping[str, Any], exit_code: int) -> bool:
         and len(selected_ids) == registry_count
         and selected_ids == expected_ids
     )
+
+
+def _unit_test_evidence_reuse_mode(
+    regression_suite: str,
+    reuse_engineering_evidence: bool,
+    engineering_quality: Mapping[str, Any],
+) -> str:
+    check_statuses = engineering_quality.get("check_statuses", {})
+    eligible = bool(
+        engineering_quality.get("fresh")
+        and isinstance(check_statuses, Mapping)
+        and check_statuses.get("coverage") == "pass"
+        and check_statuses.get("coverage_report") == "pass"
+    )
+    if not eligible:
+        return "disabled"
+    if reuse_engineering_evidence:
+        return "explicit"
+    if regression_suite == "quick":
+        return "automatic-quick"
+    return "disabled"
 
 
 def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
@@ -90,9 +114,15 @@ def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
     owner = payload.get("owner_and_real_evidence", {}) or {}
     delivery = payload.get("delivery_readiness", {}) or {}
     adoption = payload.get("adoption", {}) or {}
+    local_metrics = (
+        (payload.get("operational_readiness", {}) or {}).get("local_metrics", {})
+        or {}
+    )
+    usage = local_metrics.get("usage", {}) or {}
+    retrieval = local_metrics.get("retrieval", {}) or {}
     return {
-        "schema_version": 1,
-        "projection": "product-final-gate-summary-v1",
+        "schema_version": 2,
+        "projection": "product-final-gate-summary-v2",
         "generated_at": payload.get("generated_at", ""),
         "as_of": payload.get("as_of", ""),
         "final_profile": payload.get("final_profile", ""),
@@ -102,8 +132,13 @@ def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "platform_productization_complete": payload.get(
             "platform_productization_complete", False
         ),
-        "platform_release_complete": payload.get("platform_release_complete", False),
-        "terminal_maturity": payload.get("terminal_maturity", False),
+        "local_delivery_complete": payload.get("local_delivery_complete", False),
+        "remote_published": payload.get("remote_published", False),
+        "offsite_restore_verified": payload.get(
+            "offsite_restore_verified", False
+        ),
+        "adoption_ready": payload.get("adoption_ready", False),
+        "terminal": payload.get("terminal", False),
         "hard_checks": (payload.get("platform_status", {}) or {}).get(
             "hard_checks", {}
         ),
@@ -131,6 +166,13 @@ def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         },
         "delivery": {
             "status": delivery.get("status", ""),
+            "local_delivery_complete": delivery.get(
+                "local_delivery_complete", False
+            ),
+            "remote_published": delivery.get("remote_published", False),
+            "offsite_restore_verified": delivery.get(
+                "offsite_restore_verified", False
+            ),
             "engineering_quality_ready": delivery.get(
                 "engineering_quality_ready", False
             ),
@@ -138,9 +180,10 @@ def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         },
         "adoption": {
             "ready": adoption.get("ready", False),
-            "invocation_count": adoption.get("invocation_count", 0),
-            "feedback_count": adoption.get("feedback_count", 0),
-            "observation_days": adoption.get("observation_days", 0),
+            "evaluable": adoption.get("evaluable", False),
+            "invocation_count": usage.get("invocation_count", 0),
+            "feedback_count": retrieval.get("feedback_count", 0),
+            "observation_days": usage.get("observation_days", 0),
         },
         "snapshot": payload.get("snapshot", ""),
         "conclusion_zh": payload.get("conclusion_zh", ""),
@@ -266,6 +309,11 @@ def _engineering_quality_state(
         "path": str(path.relative_to(root)),
         "generated_at": payload.get("generated_at", ""),
         "failed_checks": list(payload.get("errors", []))[:20],
+        "check_statuses": {
+            str(name): str(row.get("status", ""))
+            for name, row in (payload.get("checks", {}) or {}).items()
+            if isinstance(row, Mapping)
+        },
         "sbom": payload.get("sbom", {}),
     }
 
@@ -297,6 +345,9 @@ def _restore_state(
             "source_mode": source_mode,
             "fresh": False,
             "source_matches": False,
+            "remote_checkout_verified": False,
+            "remote_published_ref_verified": False,
+            "offsite_environment_verified": False,
             "path": str(path.relative_to(root)),
         }
     try:
@@ -307,6 +358,9 @@ def _restore_state(
             "source_mode": source_mode,
             "fresh": False,
             "source_matches": False,
+            "remote_checkout_verified": False,
+            "remote_published_ref_verified": False,
+            "offsite_environment_verified": False,
             "path": str(path.relative_to(root)),
         }
     age = max(0.0, dt.datetime.now().timestamp() - path.stat().st_mtime)
@@ -335,6 +389,16 @@ def _restore_state(
         "copied_file_count": payload.get("copied_file_count", 0),
         "failed_checks": payload.get("failed_checks", []),
         "generated_at": payload.get("generated_at", ""),
+        "execution_environment": payload.get("execution_environment", {}),
+        "remote_checkout_verified": bool(
+            fresh and payload.get("remote_checkout_verified", False)
+        ),
+        "remote_published_ref_verified": bool(
+            fresh and payload.get("remote_published_ref_verified", False)
+        ),
+        "offsite_environment_verified": bool(
+            fresh and payload.get("offsite_environment_verified", False)
+        ),
     }
 
 
@@ -418,13 +482,10 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         )
         if evidence:
             ready_project_ids.add(project_id)
-        profile_item = slot_items["profile"]
-        runbook_item = slot_items["runbook"]
         reusable = (
             evidence
-            and profile_item.get("status") == "active"
-            and runbook_item.get("status") == "active"
-            and profile_item.get("decision_owner") not in {"", "unassigned"}
+            and validation_item.get("status") == "active"
+            and validation_item.get("decision_owner") not in {"", "unassigned"}
         )
         reusable_asset_ready += int(reusable)
         rows.append(
@@ -519,11 +580,28 @@ def run_product_gate(
     root: pathlib.Path,
     as_of: str,
     regression_suite: str = "quick",
+    reuse_engineering_evidence: bool = False,
 ) -> Dict[str, Any]:
     if regression_suite not in {"quick", "full"}:
         raise ValueError("regression_suite must be quick or full")
     started = time.monotonic()
     signature = working_tree_signature(root)
+    preflight_engineering_quality = _engineering_quality_state(root, signature)
+    unit_test_reuse_mode = _unit_test_evidence_reuse_mode(
+        regression_suite,
+        reuse_engineering_evidence,
+        preflight_engineering_quality,
+    )
+    reuse_unit_tests = unit_test_reuse_mode != "disabled"
+    engineering_check_statuses = preflight_engineering_quality.get(
+        "check_statuses", {}
+    )
+    reuse_full_regression = bool(
+        reuse_engineering_evidence
+        and regression_suite == "full"
+        and preflight_engineering_quality.get("fresh")
+        and engineering_check_statuses.get("full_regression") == "pass"
+    )
     git_delivery = _git_delivery_state(root)
     tasks = {
         "check_result": lambda: run_rtk(
@@ -544,11 +622,23 @@ def run_product_gate(
             timeout=60,
             accepted_exit_codes=(0, 1),
         ),
-        "unit_result": lambda: run_rtk(
-            root,
-            [sys.executable, "-m", "pytest", "-q"],
-            timeout=90,
-            accepted_exit_codes=(0, 1, 4, 5),
+        "unit_result": lambda: (
+            {
+                "command": "snapshot:{}#coverage".format(
+                    preflight_engineering_quality.get("path", "")
+                ),
+                "exit_code": 0,
+                "stdout": "full engineering coverage/pytest evidence reused",
+                "stderr": "",
+                "duration_sec": 0,
+            }
+            if reuse_unit_tests
+            else run_rtk(
+                root,
+                [sys.executable, "-m", "pytest", "-q"],
+                timeout=90,
+                accepted_exit_codes=(0, 1, 4, 5),
+            )
         ),
         "diff_result": lambda: run_rtk(root, ["git", "diff", "--check"], timeout=20, accepted_exit_codes=(0, 1)),
         "links": lambda: audit_links(root),
@@ -587,8 +677,18 @@ def run_product_gate(
     schema_catalog = results["schema_catalog"]
     engineering_contract = results["engineering_contract"]
     metrics = results["metrics"]
-    # Benchmark latency in isolation so concurrent gate work cannot invalidate the warm p95 contract.
-    retrieval = run_retrieval_benchmark(root)
+    # Functional regression workers validate retrieval quality under load, while
+    # standalone/engineering gates own latency enforcement in an isolated probe.
+    inner_regression = (
+        os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1"
+    )
+    retrieval = retrieval_benchmark_summary(
+        run_retrieval_benchmark_serialized(
+            root,
+            enable_extended_probes=not inner_regression,
+            enforce_performance_thresholds=not inner_regression,
+        )
+    )
     readiness = results["readiness"]
     export_plan = results["export_plan"]
     restore_candidate = results["restore_candidate"]
@@ -621,30 +721,47 @@ def run_product_gate(
         "full_regression_executed": False,
     }
     if regression_suite == "full":
-        regression_result = run_rtk(
-            root,
-            [
-                "bash",
-                "tools/knowledge-regression.sh",
-                "--json",
-                "--suite",
-                "full",
-                "--as-of",
-                as_of,
-            ],
-            timeout=300,
-            accepted_exit_codes=(0, 1),
-            extra_env={"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION": "1"},
-        )
-        try:
-            regression_payload = parse_json_output(regression_result)
-        except Exception as exc:
+        if reuse_full_regression:
+            regression_result = {
+                "command": "snapshot:{}#full_regression".format(
+                    preflight_engineering_quality.get("path", "")
+                ),
+                "exit_code": 0,
+                "stdout": "full engineering regression evidence reused",
+                "stderr": "",
+                "duration_sec": 0,
+            }
             regression_payload = {
-                "status": "unparseable",
+                "status": "pass",
                 "suite": "full",
                 "full_regression_executed": True,
-                "parse_error": str(exc),
+                "evidence_source": "fresh-engineering-snapshot",
             }
+        else:
+            regression_result = run_rtk(
+                root,
+                [
+                    "bash",
+                    "tools/knowledge-regression.sh",
+                    "--summary-json",
+                    "--suite",
+                    "full",
+                    "--as-of",
+                    as_of,
+                ],
+                timeout=300,
+                accepted_exit_codes=(0, 1),
+                extra_env={"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION": "1"},
+            )
+            try:
+                regression_payload = parse_json_output(regression_result)
+            except Exception as exc:
+                regression_payload = {
+                    "status": "unparseable",
+                    "suite": "full",
+                    "full_regression_executed": True,
+                    "parse_error": str(exc),
+                }
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1" and not restore.get("fresh", False):
         restore = dict(
             restore,
@@ -733,12 +850,27 @@ def run_product_gate(
     evidence_ready = project_evidence_ready and owner_gate_open_count == 0 and review_queue_pending_count == 0
     adoption_ready = bool(metrics.get("adoption", {}).get("ready", False))
     full_regression_ready = regression_suite == "full" and hard_checks["full_regression"]
-    delivery_ready = (
+    local_delivery_complete = (
         git_delivery["worktree_clean"]
         and git_delivery["dependency_manifests_tracked"]
         and engineering_quality.get("fresh", False)
         and restore_head.get("fresh", False)
         and full_regression_ready
+    )
+    remote_published = bool(
+        restore_head.get("remote_published_ref_verified", False)
+    )
+    offsite_restore_verified = bool(
+        restore_head.get("offsite_environment_verified", False)
+        and restore_head.get("fresh", False)
+    )
+    terminal = bool(
+        gate_status == "pass"
+        and evidence_ready
+        and adoption_ready
+        and local_delivery_complete
+        and remote_published
+        and offsite_restore_verified
     )
     content_status = (
         "needs-fix"
@@ -753,7 +885,7 @@ def run_product_gate(
         else "needs-owner-review"
         if not evidence_ready
         else "mature"
-        if adoption_ready and full_regression_ready and delivery_ready
+        if terminal
         else "partial"
     )
     if not owner_decision_pending:
@@ -773,7 +905,7 @@ def run_product_gate(
         )
     if gate_status != "pass":
         conclusion_zh = "产品门禁存在技术阻断，必须先修复 blockers。"
-    elif not delivery_ready:
+    elif not local_delivery_complete:
         if project_boundary_owner_ready:
             conclusion_zh = (
                 "平台候选、结构、检索、链接、导出和恢复门禁已通过，但 committed release 尚未闭环；"
@@ -786,6 +918,16 @@ def run_product_gate(
                 + "{} 个登记项目的真实 owner/source/device/platform/release evidence 也尚未闭环，".format(readiness["project_count"])
                 + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
             )
+    elif not remote_published:
+        conclusion_zh = (
+            "本地交付证据已闭环，但当前结果没有绑定远端 push 事件；"
+            "remote_published 保持 false，不能把本地提交当作远端发布。"
+        )
+    elif not offsite_restore_verified:
+        conclusion_zh = (
+            "远端提交证据存在，但尚未在独立 offsite 环境完成匹配 HEAD 的恢复演练；"
+            "offsite_restore_verified 保持 false。"
+        )
     elif not evidence_ready:
         if project_boundary_owner_ready:
             conclusion_zh = (
@@ -799,8 +941,12 @@ def run_product_gate(
                 + "{} 个登记项目的真实 owner/source/device/platform/release evidence 尚未闭环，".format(readiness["project_count"])
                 + "因此不能声明 Knowledge Hub 已达到全面终态成熟。"
             )
+    elif not adoption_ready:
+        conclusion_zh = (
+            "平台、远端和项目证据已闭环，但真实采用与人工反馈尚未达到门槛。"
+        )
     else:
-        conclusion_zh = "平台和项目证据均达到终态门槛。"
+        conclusion_zh = "本地交付、远端发布、异地恢复、项目证据和真实采用均达到终态门槛。"
     source_runtime_payload = dict(source_check_payload)
     source_runtime_payload["runtime_execution"] = not bool(source_runtime_payload.get("plan_only", False))
     checks = {
@@ -917,13 +1063,43 @@ def run_product_gate(
                 "specialized_owner_pending_count": len(pending_specialized_owner_ids),
             }
         )
-    if not delivery_ready:
+    if not local_delivery_complete:
         blocker_rows.append(
             {
-                "id": "committed-release-evidence-pending",
+                "id": "local-delivery-evidence-pending",
                 "severity": "release-readiness",
                 "gap_type": "delivery",
                 "codex_auto_can_complete": True,
+                "requires_owner_decision": False,
+            }
+        )
+    if not remote_published:
+        blocker_rows.append(
+            {
+                "id": "remote-publish-evidence-pending",
+                "severity": "release-readiness",
+                "gap_type": "remote-publish",
+                "codex_auto_can_complete": False,
+                "requires_owner_decision": False,
+            }
+        )
+    if not offsite_restore_verified:
+        blocker_rows.append(
+            {
+                "id": "offsite-restore-evidence-pending",
+                "severity": "recovery-readiness",
+                "gap_type": "offsite-recovery",
+                "codex_auto_can_complete": False,
+                "requires_owner_decision": False,
+            }
+        )
+    if not adoption_ready:
+        blocker_rows.append(
+            {
+                "id": "real-adoption-evidence-pending",
+                "severity": "adoption-readiness",
+                "gap_type": "adoption",
+                "codex_auto_can_complete": False,
                 "requires_owner_decision": False,
             }
         )
@@ -972,9 +1148,17 @@ def run_product_gate(
                 )
             )
         next_actions_zh.extend(specialized_owner["evidence_priority_messages_zh"])
-    if not delivery_ready:
+    if not local_delivery_complete:
         next_actions_zh.append(
             "在门禁全绿后形成 clean committed HEAD，并用 full regression 与 HEAD git archive 恢复演练复核交付。"
+        )
+    if not remote_published:
+        next_actions_zh.append(
+            "由远端 push CI 绑定 GITHUB_SHA 与当前 HEAD，形成 remote_published 证据；本地状态不得代替。"
+        )
+    if not offsite_restore_verified:
+        next_actions_zh.append(
+            "在 github-hosted 等独立环境对远端 checkout 执行匹配 HEAD 的恢复演练。"
         )
     if not adoption_ready:
         next_actions_zh.append(
@@ -985,7 +1169,7 @@ def run_product_gate(
     )
 
     payload: Dict[str, Any] = {
-        "schema_version": 2,
+        "schema_version": 3,
         "root": "~/knowledge-hub",
         "generated_at": utc_timestamp(),
         "as_of": as_of,
@@ -996,10 +1180,21 @@ def run_product_gate(
         "maturity_status": overall_status,
         "overall_status": overall_status,
         "platform_productization_complete": gate_status == "pass",
-        "platform_release_complete": gate_status == "pass" and delivery_ready,
-        "terminal_maturity": overall_status == "mature" and delivery_ready,
+        "local_delivery_complete": local_delivery_complete,
+        "remote_published": remote_published,
+        "offsite_restore_verified": offsite_restore_verified,
+        "adoption_ready": adoption_ready,
+        "terminal": terminal,
         "final_profile": "product",
         "regression_suite": regression_suite,
+        "engineering_evidence_reuse": {
+            "requested": reuse_engineering_evidence,
+            "unit_test_policy": unit_test_reuse_mode,
+            "snapshot_fresh": bool(preflight_engineering_quality.get("fresh")),
+            "unit_tests_reused": reuse_unit_tests,
+            "full_regression_reused": reuse_full_regression,
+            "source": preflight_engineering_quality.get("path", ""),
+        },
         "tracked_files_written": not candidate_integrity["unchanged"],
         "local_cache_written": True,
         "working_tree_signature": signature,
@@ -1039,7 +1234,7 @@ def run_product_gate(
             "active_domain_knowledge_count": len(active_domain),
             "active_domain_knowledge_ids": [row.get("id", "") for row in active_domain],
             "project_readiness": readiness,
-            "interpretation_zh": "4/4 structural coverage 表示入口和路由完整；不表示项目事实、owner、源码、实机或发布证据完成。",
+            "interpretation_zh": "单一 evidence contract structural coverage 表示入口和路由完整；不表示项目事实、owner、源码、实机或发布证据完成。",
         },
         "retrieval_quality": retrieval,
         "retrieval": retrieval,
@@ -1076,8 +1271,18 @@ def run_product_gate(
             "local_metrics": metrics,
         },
         "delivery_readiness": {
-            "status": "pass" if delivery_ready else "candidate",
-            "platform_release_complete": gate_status == "pass" and delivery_ready,
+            "status": (
+                "pass"
+                if local_delivery_complete
+                and remote_published
+                and offsite_restore_verified
+                else "local-complete"
+                if local_delivery_complete
+                else "candidate"
+            ),
+            "local_delivery_complete": local_delivery_complete,
+            "remote_published": remote_published,
+            "offsite_restore_verified": offsite_restore_verified,
             "requires_full_regression": True,
             "requires_engineering_quality": True,
             "engineering_quality_ready": engineering_quality.get("fresh", False),
@@ -1087,8 +1292,8 @@ def run_product_gate(
             "head_restore": restore_head,
             "interpretation_zh": (
                 "clean HEAD、当前 commit 的 git archive 恢复、固定依赖清单和 full regression 均已验证。"
-                if delivery_ready
-                else "当前仅可声明交付候选；未形成可复核的 committed release。"
+                if local_delivery_complete
+                else "当前仅可声明交付候选；未形成可复核的本地 committed HEAD。"
             ),
         },
         "adoption": metrics.get("adoption", {}),
@@ -1145,14 +1350,17 @@ def run_product_gate(
             "project_boundary_owner_ready": project_boundary_owner_ready,
             "full_regression_ready": full_regression_ready,
             "adoption_ready": adoption_ready,
-            "platform_release_complete": gate_status == "pass" and delivery_ready,
+            "local_delivery_complete": local_delivery_complete,
+            "remote_published": remote_published,
+            "offsite_restore_verified": offsite_restore_verified,
+            "terminal": terminal,
         },
         "conclusion_zh": conclusion_zh,
         "next_actions_zh": next_actions_zh,
         "duration_ms": round((time.monotonic() - started) * 1000, 2),
     }
     payload["operations"] = payload["operational_readiness"]
-    schema_instance = validate_instance(root, "final-gate-product-v2", payload)
+    schema_instance = validate_instance(root, "final-gate-product-v3", payload)
     payload["schema_instance_validation"] = schema_instance
     if schema_instance["status"] != "pass":
         payload["gate_status"] = "fail"
@@ -1160,8 +1368,11 @@ def run_product_gate(
         payload["maturity_status"] = "needs-fix"
         payload["overall_status"] = "needs-fix"
         payload["platform_productization_complete"] = False
-        payload["platform_release_complete"] = False
-        payload["terminal_maturity"] = False
+        payload["local_delivery_complete"] = False
+        payload["remote_published"] = False
+        payload["offsite_restore_verified"] = False
+        payload["adoption_ready"] = False
+        payload["terminal"] = False
         payload["platform_status"]["status"] = "fail"
         payload["platform_status"]["hard_checks"]["final_gate_schema_instance"] = False
         payload["platform_status"]["blockers"].append("final_gate_schema_instance")
@@ -1176,7 +1387,11 @@ def run_product_gate(
         )
         payload["summary"]["final_status"] = "needs-fix"
         payload["summary"]["platform_status"] = "fail"
-        payload["summary"]["platform_release_complete"] = False
+        payload["summary"]["local_delivery_complete"] = False
+        payload["summary"]["remote_published"] = False
+        payload["summary"]["offsite_restore_verified"] = False
+        payload["summary"]["adoption_ready"] = False
+        payload["summary"]["terminal"] = False
         payload["conclusion_zh"] = "产品门禁输出未通过机器可读 schema 实例校验。"
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         payload["local_cache_written"] = False

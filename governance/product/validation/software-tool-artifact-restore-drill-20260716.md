@@ -1,4 +1,14 @@
 ---
+related:
+- governance/product/validation/software-tool-evidence-audit-20260715.md
+- artifacts/manifests/llm-tools-release-evidence-20260715.jsonl
+target_version: ota-packager v1.0.0; sigmastar-flasher v1.0.0; mm32spin-validator v0.1.0
+test_environment: Linux isolated temporary deployment; source release directories read-only
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- 软件工具制品隔离恢复演练 2026-07-16
 id: software-tool-artifact-restore-drill-20260716
 title: 软件工具制品隔离恢复演练 2026-07-16
 kind: validation
@@ -12,8 +22,9 @@ source:
   type: lab-test
   from: workspace://llm-tools/releases
 review_after: '2026-10-16'
-created_at: '2026-07-16'
-updated_at: '2026-07-16'
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; isolated restore evidence does not authorize release, evidence-ready status or active promotion
 tags:
@@ -24,9 +35,6 @@ tags:
 - artifact-integrity
 - ai-generated
 - manual-validation-pending
-related:
-- governance/product/validation/software-tool-evidence-audit-20260715.md
-- artifacts/manifests/llm-tools-release-evidence-20260715.jsonl
 validation_refs:
 - rtk bash ~/knowledge-hub/tools/knowledge-artifact-restore-drill.sh --release-root releases/<tool>/<version> --source-label
   workspace://llm-tools/releases/<tool>/<version> --json
@@ -34,28 +42,22 @@ artifact_refs:
 - workspace://llm-tools/releases/ota-packager/v1.0.0
 - workspace://llm-tools/releases/sigmastar-flasher/v1.0.0
 - workspace://llm-tools/releases/mm32spin-validator/v0.1.0
-target_version: ota-packager v1.0.0; sigmastar-flasher v1.0.0; mm32spin-validator v0.1.0
-test_environment: Linux isolated temporary deployment; source release directories read-only
-summary_zh: 在不修改外部 release 目录的前提下，对三套 checksum-bound 软件制品执行源校验、临时部署、故意破坏检测、精确恢复和源不变复核；三套均通过。该证据只证明本地制品集可恢复，不证明远端留存、设备或生产回滚。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: checked
 evidence_strength: direct-command
 evidence_refs:
 - governance/product/validation/software-tool-evidence-audit-20260715.md
 - artifacts/manifests/llm-tools-release-evidence-20260715.jsonl
+created_at: '2026-07-16'
+updated_at: '2026-07-19'
 generated_by_ai: true
-ai_role: drafted-and-verified
+ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-16'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- 软件工具制品隔离恢复演练 2026-07-16
+summary_zh: 在不修改外部 release 目录的前提下，对三套 checksum-bound 软件制品执行源校验、临时部署、故意破坏检测、精确恢复和源不变复核；三套均通过。该证据只证明本地制品集可恢复，不证明远端留存、设备或生产回滚。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: checked
 ---
 
 # 软件工具制品隔离恢复演练 2026-07-16

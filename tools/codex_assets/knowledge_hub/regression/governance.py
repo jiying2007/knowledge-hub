@@ -1209,8 +1209,14 @@ def test_final_gap_readability_positive_contracts():
         if gap.get("requires_owner_decision") is not True
         and gap.get("gap_type") not in {"owner-review"}
     ]
+    terminal_gap_contracts = {
+        "local-delivery-evidence-pending": ("delivery", True),
+        "remote-publish-evidence-pending": ("remote-publish", False),
+        "offsite-restore-evidence-pending": ("offsite-recovery", False),
+        "real-adoption-evidence-pending": ("adoption", False),
+    }
     expected_delivery_gaps = [
-        gap for gap in non_owner_gaps if gap.get("gap_id") == "committed-release-evidence-pending"
+        gap for gap in non_owner_gaps if gap.get("gap_id") in terminal_gap_contracts
     ]
     expected_external_evidence_gaps = [
         gap for gap in non_owner_gaps if gap.get("gap_id") == "owner-and-real-evidence-pending"
@@ -1218,7 +1224,11 @@ def test_final_gap_readability_positive_contracts():
     invalid_expected_gaps = [
         gap
         for gap in expected_delivery_gaps
-        if gap.get("gap_type") != "delivery" or gap.get("codex_auto_can_complete") is not True
+        if (
+            gap.get("gap_type"),
+            gap.get("codex_auto_can_complete"),
+        )
+        != terminal_gap_contracts[str(gap.get("gap_id"))]
     ] + [
         gap
         for gap in expected_external_evidence_gaps
@@ -1228,7 +1238,7 @@ def test_final_gap_readability_positive_contracts():
         gap
         for gap in non_owner_gaps
         if gap.get("gap_id")
-        not in {"committed-release-evidence-pending", "owner-and-real-evidence-pending"}
+        not in {*terminal_gap_contracts, "owner-and-real-evidence-pending"}
     ]
     expect(
         check_result["exit_code"] == 0
@@ -1237,12 +1247,12 @@ def test_final_gap_readability_positive_contracts():
         and final_parsed.get("final_status") == "needs-owner-review"
         and not missing_readability_fields
         and not missing_source_fields
-        and len(expected_delivery_gaps) <= 1
+        and len(expected_delivery_gaps) <= len(terminal_gap_contracts)
         and len(expected_external_evidence_gaps) <= 1
         and not invalid_expected_gaps
         and not unexpected_non_owner_gaps,
         "final-gap-readability-positive-contracts",
-        "current repository has no automatic product gaps while owner evidence remains explicit",
+        "current repository exposes owner evidence and terminal delivery axes without hidden product gaps",
         {
             "knowledge_check_exit_code": check_result["exit_code"],
             "knowledge_check_status": check_parsed.get("status"),
@@ -2239,7 +2249,7 @@ def test_review_after_as_of_deterministic():
     if setup_error:
         expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", setup_error, repo)
         return
-    item_id = "pcr02-build-and-deploy-guide"
+    item_id = "pcr02-camera-raw-preview-virtual-stream-architecture-20260711"
     path = repo / "registry" / "items.jsonl"
     lines = path.read_text().splitlines()
     updated_lines = []
@@ -2251,7 +2261,6 @@ def test_review_after_as_of_deterministic():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-06-30"
-            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -2260,9 +2269,19 @@ def test_review_after_as_of_deterministic():
         expect(False, "review-after-as-of-deterministic", "--as-of fixes review_after warning semantics for check/status/final-gate", {"setup_error": f"missing {item_id}"}, repo)
         return
     path.write_text("\n".join(updated_lines) + "\n")
-    sync_status_index_entries(repo, [item_id], "reviewing")
-    body_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
-    body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
+    sync_review_date_index_entries(repo, [item_id], "2026-06-30")
+    body_path = (
+        repo
+        / "projects"
+        / "xcrz-sigmastar-demo"
+        / "decisions"
+        / "camera-raw-preview-virtual-stream-architecture-20260711.md"
+    )
+    body_path.write_text(
+        body_path.read_text().replace(
+            "review_after: '2026-10-11'", "review_after: '2026-06-30'", 1
+        )
+    )
 
     past_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-06-01"])
     future_check = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics", "--as-of", "2026-07-01"])
@@ -2336,7 +2355,7 @@ def test_review_after_as_of_deterministic():
 
 def test_stale_review_after_warning_surface():
     repo = copy_repo("stale-review-after")
-    item_id = "pcr02-build-and-deploy-guide"
+    item_id = "pcr02-camera-raw-preview-virtual-stream-architecture-20260711"
     path = repo / "registry" / "items.jsonl"
     lines = path.read_text().splitlines()
     updated_lines = []
@@ -2348,7 +2367,6 @@ def test_stale_review_after_warning_surface():
         row = json.loads(line)
         if row.get("id") == item_id:
             row["review_after"] = "2026-01-01"
-            row["status"] = "reviewing"
             mutated = True
             updated_lines.append(json.dumps(row, ensure_ascii=False, separators=(",", ":")))
         else:
@@ -2357,9 +2375,19 @@ def test_stale_review_after_warning_surface():
         expect(False, "stale-review-after-warning-surface", "stale review_after is surfaced as warning and status action", {"setup_error": f"missing {item_id}"}, repo)
         return
     path.write_text("\n".join(updated_lines) + "\n")
-    sync_status_index_entries(repo, [item_id], "reviewing")
-    body_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "project-build-and-deploy-guide.md"
-    body_path.write_text(body_path.read_text().replace("status: archived", "status: reviewing", 1))
+    sync_review_date_index_entries(repo, [item_id], "2026-01-01")
+    body_path = (
+        repo
+        / "projects"
+        / "xcrz-sigmastar-demo"
+        / "decisions"
+        / "camera-raw-preview-virtual-stream-architecture-20260711.md"
+    )
+    body_path.write_text(
+        body_path.read_text().replace(
+            "review_after: '2026-10-11'", "review_after: '2026-01-01'", 1
+        )
+    )
 
     check_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--json"])

@@ -75,7 +75,7 @@ def test_final_gate_owner_review_blocker():
         and payload.get("gate_status") == "pass"
         and payload.get("final_status") == "needs-owner-review"
         and payload.get("platform_productization_complete") is True
-        and payload.get("terminal_maturity") is False
+        and payload.get("terminal") is False
         and owner.get("status") == "needs-owner-review"
         and owner.get("project_boundary_owner_ready") is True
         and project_count > 0
@@ -119,7 +119,7 @@ def test_final_gate_quick_regression_evidence_boundary():
         and regression.get("status") == "not-run"
         and regression.get("full_regression_executed") is False
         and payload.get("summary", {}).get("full_regression_ready") is False
-        and payload.get("terminal_maturity") is False,
+        and payload.get("terminal") is False,
         result_id,
         title,
         {
@@ -253,7 +253,8 @@ def test_final_gate_default_regression_path():
         and regression.get("status") == "pass"
         and regression.get("full_regression_executed") is True
         and regression.get("result_count") == 1
-        and "--json --suite full --as-of {}".format(today.isoformat()) in regression.get("command", "")
+        and "--summary-json --suite full --as-of {}".format(today.isoformat())
+        in regression.get("command", "")
         and payload.get("platform_status", {}).get("hard_checks", {}).get("full_regression") is True
         and payload.get("summary", {}).get("full_regression_ready") is True,
         result_id,

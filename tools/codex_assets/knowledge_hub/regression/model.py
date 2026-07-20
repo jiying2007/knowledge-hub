@@ -570,7 +570,6 @@ def test_index_plan_extended_sections():
             "review_queue_summary": review_queue_summary,
             "review_queue_row_count": len(review_queue_index.get("rows", [])),
             "owner_worksheet_count": len(owner_worksheets),
-            "owner_worksheet_count": len(owner_worksheets),
         },
     )
 

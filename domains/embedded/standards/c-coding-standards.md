@@ -3,7 +3,8 @@ title: 项目定制 C 语言代码规范
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12

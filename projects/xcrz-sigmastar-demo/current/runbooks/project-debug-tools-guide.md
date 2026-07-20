@@ -1,15 +1,50 @@
 ---
-title: PCR02 项目调试工具入口
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-18
 last_updated: 2026-07-02
-tags: [pcr02, tools, debug, knowledge]
-related: [project-build-and-deploy-guide.md, ../architecture/project-overview-design.md]
-validation_refs: [../../tools/debug/project-knowledge-debug.sh, sources/pcr02-project-tools/README.md, artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl]
+related:
+- project-build-and-deploy-guide.md
+- ../architecture/project-overview-design.md
+id: pcr02-debug-tools-guide
+title: PCR02 项目调试工具入口
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: runbooks/project-debug-tools-guide.md
+  source_sha256: eb247d7ab306e9e6960a643fbb509492e3971204dc1c43f9190f434c7918b44d
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- tools
+- debug
+- knowledge
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+- sources/pcr02-project-tools/README.md
+- artifacts/manifests/pcr02-retired-body-prune-20260625.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 本手册定义当前项目如何使用已迁移到 Knowledge Hub 的 PCR02 调试工具说明和项目 wrapper。旧团队知识库路径只作为 retired origin provenance，不再作为当前知识入口。该条目当前为
+  archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # PCR02 项目调试工具入口

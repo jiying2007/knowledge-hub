@@ -86,3 +86,46 @@ def test_compliance_eval_enforces_minimum_cases_and_input_budgets(tmp_path):
     cases.write_text("x" * (1024 * 1024 + 1))
     with pytest.raises(KnowledgeHubError, match="exceeds"):
         evaluate_compliance_cases(root, cases)
+
+
+def test_compliance_eval_can_require_allow_block_and_needs_review(tmp_path):
+    root = _root(tmp_path)
+    cases = tmp_path / "cases.jsonl"
+    rows = [
+        {
+            "case_id": "block",
+            "task": "push main",
+            "candidate": "git push --force origin main",
+            "scope_refs": ["repository:demo"],
+            "expected_verdict": "BLOCK",
+        },
+        {
+            "case_id": "allow",
+            "task": "push main",
+            "candidate": "git push origin main",
+            "scope_refs": ["repository:demo"],
+            "expected_verdict": "ALLOW",
+        },
+        {
+            "case_id": "review",
+            "task": "uncovered action",
+            "candidate": "inspect state",
+            "scope_refs": ["repository:other"],
+            "expected_verdict": "NEEDS_REVIEW",
+        },
+    ]
+    cases.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    payload = evaluate_compliance_cases(
+        root,
+        cases,
+        require_verdict_coverage=True,
+    )
+
+    assert payload["status"] == "pass"
+    assert payload["verdict_coverage"]["status"] == "pass"
+    assert payload["verdict_coverage"]["observed_counts"] == {
+        "ALLOW": 1,
+        "BLOCK": 1,
+        "NEEDS_REVIEW": 1,
+    }

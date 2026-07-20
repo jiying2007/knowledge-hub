@@ -1,13 +1,45 @@
 ---
-title: SW 光敏（软光敏）阈值标定流程
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12
-tags: [irlight, sensor, calibration]
+id: pcr02-irlight-sw-threshold-calibration
+title: SW 光敏（软光敏）阈值标定流程
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/irlight-sw-threshold-calibration.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: runbooks/irlight-sw-threshold-calibration.md
+  source_sha256: 1f82c6a5b6307083376466d4e78805ecff7344462681cb17c33b55e70235acae
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- irlight
+- sensor
+- calibration
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/irlight-sw-threshold-calibration.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: '> 适用于：modules/sensor/ir/irlight.h 中的 SW_D2N_IR_OFF/ON 和 SW_N2D_IR_OFF/ON 四个常量。该条目当前为 archived retired-source
+  provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。'
 ---
 
 # SW 光敏（软光敏）阈值标定流程

@@ -1,17 +1,45 @@
 ---
-title: Diag 测试使用指南
 doc_type: runbook
 knowledge_type: guideline
 maturity: active
-status: archived
-owner: team-core
 created: 2026-05-26
 last_updated: 2026-06-09
-tags: [diag, prog-cli, prog-tool, tester-runbook]
 related:
-  - ../standards/diag-command-metadata-standard.md
-  - ../architecture/diag-command-architecture-final.md
-validation_refs: []
+- ../standards/diag-command-metadata-standard.md
+- ../architecture/diag-command-architecture-final.md
+id: pcr02-diag-usage-guide
+title: Diag 测试使用指南
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/diag-usage-guide.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: runbooks/diag-usage-guide.md
+  source_sha256: f08a4cc8899fc0fa8b3a04f62b81ffb13d4687310a68bdf7cd62dbbcccc4a867
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/diag-usage-guide.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-11'
+summary_zh: 本文面向设备侧测试人员，说明如何通过 prog_cli 和 prog_tool 执行常用 diag 命令、判断返回结果、 记录问题现象，并规避电机、OTA、温度阈值等有副作用操作的风险。该条目当前为 archived retired-source
+  provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # Diag 测试使用指南

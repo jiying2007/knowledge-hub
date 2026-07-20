@@ -1,11 +1,59 @@
 ---
-title: PCR02 DVR 协议手工同步与 sensor include 构建修复
 doc_type: project-archive
-status: archived
-owner: leiwenjun
 created: 2026-07-11
 last_updated: 2026-07-11
-tags: [pcr02, dvr, proto, sensor, build-fix, codex-archive-migration]
+id: pcr02-dvr-protocol-sync-build-fix-20260630
+title: PCR02 DVR 协议手工同步与 sensor include 构建修复
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: codex-archive-migration
+  source_id: codex-archive
+  source_path: domains/codex/archive/codex-archive/debug-notes/20260630-034504-pcr02-dvr-protocol-sync-build-fix.md
+  source_sha256: e96038f4e2da3c46baa5ac26d23db4d9a8276c01d3c1325b63f66e21854db45b
+  coverage_row: CAFC-20260711-003
+review_after: '2026-10-11'
+review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; historical DVR protocol sync migration, no active promotion and no E2E validation claim
+tags:
+- pcr02
+- dvr
+- proto
+- sensor
+- DeviceType
+- oneof
+- build-fix
+- archive-only
+- codex-archive-migration
+- deleted-tombstoned
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "DVR 协议手工同步"
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+evidence_strength: codex-archive-source-plus-subagent-read-only-audit-plus-final-coverage-and-tombstone
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md
+- artifacts/manifests/codex-archive-final-body-coverage-20260711.jsonl#CAFC-20260711-003
+- artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-043
+- subagent:019f4cec-70fd-7360-b598-3c358ba58009
+created_at: '2026-07-11'
+updated_at: '2026-07-11'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-11'
+summary_zh: 从旧 Codex archive 迁移 PCR02 DVR 协议手工同步和构建修复：保留 `SOC_REBOOT/SOC_SLEEP/SOC_SHUTDOWN/DVR_RECORD/DVR_REPLAY` 编号 18..22、oneof
+  27..31、二进制不同步边界和 `sensor/video/video_raw_frame_hub.h` include 修复；archive-only，不声明端到端联调完成。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 DVR 协议手工同步与 sensor include 构建修复

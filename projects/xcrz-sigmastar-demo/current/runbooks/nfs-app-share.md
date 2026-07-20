@@ -1,13 +1,59 @@
 ---
-title: PCR02 app NFS 共享挂载手册
 doc_type: runbook
-status: archived
-owner: leiwenjun
 source_id: local-runtime-config
 source_path: ~/nfs/README-nfs-app.md
 captured_at: 2026-07-02
 last_verified: 2026-07-02
-review_after: 2026-10-02
+id: pcr02-nfs-app-share-runbook-20260702
+title: PCR02 app NFS 共享挂载手册 2026-07-02
+kind: runbook
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/nfs-app-share.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: generated-from-runtime-config
+  from: current-session NFS configuration and local runbook
+  source_path: ~/nfs/README-nfs-app.md
+review_after: '2026-10-02'
+review_status: session-archived-current-runbook
+promotion: none
+promotion_decision: none
+tags:
+- pcr02
+- nfs
+- app-share
+- runbook
+- mount
+- sigmastar
+- device-mount
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/nfs-app-share.md
+- rtk test -f ~/nfs/README-nfs-app.md
+- rtk findmnt ~/nfs/app
+- rtk showmount -e 127.0.0.1
+- rtk systemctl is-enabled nfs-kernel-server
+- rtk findmnt --verify --verbose
+- rtk mount ~/nfs/app
+evidence_strength: runtime-config-verified-plus-fstab-remount-smoke
+evidence_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/nfs-app-share.md
+- ~/nfs/README-nfs-app.md
+- /etc/fstab.bak-nfs-app-20260702131334
+created_at: '2026-07-02'
+updated_at: '2026-07-02'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-02'
+summary_zh: 记录 PCR02/SigmaStar demo app 输出目录通过主机 NFS 共享给嵌入式设备挂载的当前配置、设备端 mount 命令、重启持久化验证和回滚方式；只归档路径、命令和验证摘要，不归档 app 产物、raw
+  log、凭证或完整会话。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: not-required
 ---
 
 # PCR02 app NFS 共享挂载手册
@@ -22,36 +68,36 @@ review_after: 2026-10-02
 
 将 SigmaStar demo app 输出目录通过主机 NFS 导出，供嵌入式设备挂载使用。
 
-主机导出路径：
+主机导出路径（由受控环境提供）：
 
 ```text
-~/nfs/app
+<HOST_EXPORT_DIR>
 ```
 
-真实源目录：
+真实源目录（不得把本机绝对路径固化进长期知识）：
 
 ```text
-~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/out/arm/app
+<SOURCE_APP_DIR>
 ```
 
-设备侧优先使用的主机 IP：
+设备侧使用的 NFS 主机地址：
 
 ```text
-192.168.1.41
+<NFS_SERVER>
 ```
 
 ## 主机配置
 
-`~/nfs/app` 是一个持久化 bind mount。Hub 归档中主机 home 路径统一写成 `~`；写入 `/etc/fstab` 或设备端 mount 命令时必须展开为主机真实 home 目录。
+`<HOST_EXPORT_DIR>` 是一个持久化 bind mount。写入 `/etc/fstab` 或设备端 mount 命令时，必须从受控部署配置取得真实绝对路径。
 
 ```fstab
-~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/out/arm/app ~/nfs/app none bind,nofail,x-systemd.requires-mounts-for=/vsdata 0 0
+<SOURCE_APP_DIR> <HOST_EXPORT_DIR> none bind,nofail,x-systemd.requires-mounts-for=/vsdata 0 0
 ```
 
 NFS 导出配置在 `/etc/exports`：
 
 ```exports
-~/nfs/app *(rw,sync,no_subtree_check,no_root_squash,insecure)
+<HOST_EXPORT_DIR> *(rw,sync,no_subtree_check,no_root_squash,insecure)
 ```
 
 `nfs-kernel-server` 已设置为开机自启。
@@ -62,14 +108,14 @@ NFSv3 常用命令：
 
 ```sh
 mkdir -p /mnt/app
-mount -t nfs -o nolock,vers=3 192.168.1.41:~/nfs/app /mnt/app
+mount -t nfs -o nolock,vers=3 <NFS_SERVER>:<HOST_EXPORT_DIR> /mnt/app
 ```
 
 若设备支持 NFSv4，可测试：
 
 ```sh
 mkdir -p /mnt/app
-mount -t nfs -o vers=4 192.168.1.41:~/nfs/app /mnt/app
+mount -t nfs -o vers=4 <NFS_SERVER>:<HOST_EXPORT_DIR> /mnt/app
 ```
 
 设备侧验证：

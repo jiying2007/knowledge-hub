@@ -1,15 +1,44 @@
 ---
-title: Sigmastar AOV 与光敏控制全面分析
 doc_type: report
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-08
 last_updated: 2026-05-12
-tags: [aov, lightsensor, analysis]
 related: []
-validation_refs: []
+id: pcr02-aov-lightsensor-analysis-validation-report-20260508
+title: Sigmastar AOV 与光敏控制全面分析
+kind: validation
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/reports/2026-05-08-sigmastar-aov-lightsensor-analysis-report.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-08-sigmastar-aov-lightsensor-analysis-report.md
+  source_sha256: 7bf597efdecb21cddeff47d45b70226ed31edddde6784d48a9f41f0970507e36
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical AOV/light-sensor evidence only, no active promotion and not current hardware
+  policy
+tags:
+- pcr02
+- validation
+- archive-only
+- historical-evidence
+- no-active-promotion
+- aov
+- lightsensor
+- analysis
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/reports/2026-05-08-sigmastar-aov-lightsensor-analysis-report.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-08 Sigmastar AOV 与光敏控制分析报告；仅作历史分析 evidence，不代表当前 AOV 策略、光敏阈值或 active 硬件控制规则。
 ---
 
 # Sigmastar AOV 与光敏控制全面分析

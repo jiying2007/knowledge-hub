@@ -2,9 +2,16 @@ import datetime as dt
 import json
 import shutil
 
-from tools.codex_assets.knowledge_hub.common import load_json, project_rows, registry_items, repository_root, route_rows
+from tools.codex_assets.knowledge_hub.common import (
+    load_json,
+    project_rows,
+    registry_items,
+    repository_root,
+    route_rows,
+)
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
 from tools.codex_assets.knowledge_hub.project_readiness import (
+    RETIRED_PROJECTION_SLOTS,
     SLOT_NAMES,
     _preserve_existing_readiness_item,
     _project_paths,
@@ -19,7 +26,7 @@ OWNER_ATTESTATION_REF = {
 }
 
 
-def test_all_registered_projects_have_four_reviewing_readiness_assets():
+def test_all_registered_projects_have_one_reviewing_evidence_contract():
     root = repository_root()
     projects = project_rows(root)
     items = {row["id"]: row for row in registry_items(root)}
@@ -36,10 +43,36 @@ def test_all_registered_projects_have_four_reviewing_readiness_assets():
             assert item["manual_validation_pending"] is True
             assert item["promotion"] == "none"
             assert item["generated_by_ai"] is True
-            if slot == "validation":
-                assert item["evidence_contract"]["status"] == "pending"
-                assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
+            assert item["searchable"] is (
+                project["id"] == "knowledge-hub" and slot == "validation"
+            )
+            assert slot == "validation"
+            assert item["evidence_contract"]["status"] == "pending"
+            assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
             assert (root / path).is_file()
+
+
+def test_retired_readiness_projections_are_absent_and_fully_ledgered():
+    root = repository_root()
+    projects = project_rows(root)
+    items = registry_items(root)
+    ledger_path = (
+        root
+        / "artifacts/manifests/project-readiness-projection-retirement-20260719.jsonl"
+    )
+    ledger = [json.loads(line) for line in ledger_path.read_text().splitlines() if line]
+
+    assert not {
+        str(item.get("readiness_slot", "")) for item in items
+    }.intersection(RETIRED_PROJECTION_SLOTS)
+    assert len(ledger) == len(projects) * len(RETIRED_PROJECTION_SLOTS) == 90
+    assert len({row["retired_id"] for row in ledger}) == len(ledger)
+    assert len({row["retired_path"] for row in ledger}) == len(ledger)
+    assert {row["project_id"] for row in ledger} == {
+        str(project["id"]) for project in projects
+    }
+    assert all(row["status"] == "retired-generated-projection" for row in ledger)
+    assert all(not (root / row["retired_path"]).exists() for row in ledger)
 
 
 def test_project_query_route_matrix_is_complete_for_all_task_types():
@@ -129,6 +162,7 @@ def test_existing_owner_lifecycle_and_evidence_are_preserved():
         "software-tool",
     )
     assert preserved["status"] == "active"
+    assert preserved["searchable"] is False
     assert preserved["decision_owner"] == "owner-123"
     assert preserved["manual_validation_pending"] is False
     assert preserved["evidence_contract"] == existing["evidence_contract"]
@@ -209,8 +243,9 @@ def test_generator_accepts_a_31st_registry_project_without_core_code_changes(tmp
     assert payload["status"] == "applied"
     assert payload["project_count"] == 31
     assert payload["route_count"] == 31
-    assert payload["new_item_count"] == 4
-    assert payload["slot_count"] == 124
+    assert payload["new_item_count"] == 1
+    assert payload["slot_count"] == 31
+    assert payload["evidence_contract_count"] == 31
     validation = fixture_root / "projects/scalable-project-31/validation/project-readiness.md"
     assert validation.is_file()
     assert "31 项目 route matrix" in validation.read_text()

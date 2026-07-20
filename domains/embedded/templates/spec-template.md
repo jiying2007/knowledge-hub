@@ -3,7 +3,8 @@ title: 规格文档模板
 doc_type: spec
 knowledge_type: decision
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: template-owner
 created: 2026-05-12
 last_updated: 2026-05-12

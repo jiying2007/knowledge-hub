@@ -25,22 +25,22 @@ parser.add_argument("--strict", action="store_true", help="Return non-zero when 
 args = parser.parse_args(argv)
 
 TERMS = [
+    ("~/embedded/knowledge", "~/embedded/knowledge"),
+    ("~/embedded/knowledge", str(home / "embedded" / "knowledge")),
+    ("EMBEDDED_KNOWLEDGE_HOME", "EMBEDDED_KNOWLEDGE_HOME"),
     ("~/embedded/engineering_archive", "~/embedded/engineering_archive"),
     ("~/embedded/engineering_archive", str(home / "embedded" / "engineering_archive")),
     ("~/codex/docs/archive", "~/codex/docs/archive"),
     ("~/codex/docs/archive", str(home / "codex" / "docs" / "archive")),
 ]
 
-CANONICAL_ROUTES = {
-    "~/embedded/engineering_archive": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive",
-    "~/embedded/engineering_archive/pcr02": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02",
-    "~/codex/docs/archive": "~/knowledge-hub/domains/codex/archive/codex-archive",
-    "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
-}
+CANONICAL_ROUTES = {}
 
 DETECTOR_CONFIG_PATHS = {
+    "tests/fixtures/retrieval_cases.json",
     "tools/codex_assets/knowledge_hub/check_cli.py",
     "tools/codex_assets/knowledge_hub/path_audit_cli.py",
+    "tools/codex_assets/knowledge_hub/retrieval.py",
 }
 
 memory_note_dir = home / ".codex" / "memories" / "extensions" / "ad_hoc" / "notes"
@@ -111,7 +111,7 @@ def classify(scope, rel_path, line_text):
         return "canonical-policy"
     if normalized.startswith("domains/codex/archive/codex-archive/"):
         return "provenance"
-    if normalized.startswith("sources/") or normalized == "registry/sources.json":
+    if normalized.startswith("sources/") or normalized in {"registry/sources.json", "registry/retired-sources.jsonl"}:
         return "provenance"
     if normalized.startswith("artifacts/manifests/") or normalized.startswith("registry/authorizations") or normalized.startswith("registry/automation-runs"):
         return "provenance"
@@ -180,6 +180,7 @@ payload = {
     "scope": args.scope,
     "searched_terms": sorted({display for display, _term in TERMS}),
     "canonical_routes": CANONICAL_ROUTES,
+    "hard_cut_policy": "no alias, shim, fallback or dual route",
     "memory_supersession": {
         "active": memory_supersession_active,
         "note": rel(memory_supersession_note) if memory_supersession_note else None,
@@ -192,7 +193,7 @@ payload = {
         "truncated": len(all_rows) >= args.max_matches,
     },
     "next_actions_zh": [
-        "Hub 内 canonical-policy/provenance 命中通常保留。",
+        "detector-config 和不可执行 provenance 命中可保留，但不得形成 alias、shim、fallback 或双路由。",
         "runtime-route-candidate 需要在对应仓库、skill、agent metadata、memory candidate 或 Codex 资产链路中修复。",
         "memory-superseded 表示旧 memory 文字已被硬切换 note 废止，不能作为当前路径路由。",
         "historical-session 只作为历史证据；当前活动 session 可能包含本次查询和工具输出，不作为路径路由。",

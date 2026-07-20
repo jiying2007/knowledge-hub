@@ -1,17 +1,65 @@
 ---
-title: PCR02 core/GDB 离线排障归档 2026-06-23
 doc_type: debug-record
 knowledge_type: incident-learning
 maturity: archived
-status: archived
-owner: leiwenjun
 created: 2026-07-11
 last_updated: 2026-07-11
-tags: [pcr02, prog_pcr02, core, gdb, buildid, motor-temperature, navigation, codex-archive-migration]
 related:
-  - ../../current/runbooks/project-debug-tools-guide.md
-  - ../../../../domains/embedded/runbooks/gdb-debug-guide.md
-  - 2026-07-02-prog-pcr02-core-gdb-selection.md
+- ../../current/runbooks/project-debug-tools-guide.md
+- ../../../../domains/embedded/runbooks/gdb-debug-guide.md
+- 2026-07-02-prog-pcr02-core-gdb-selection.md
+id: pcr02-core-gdb-triage-20260623
+title: PCR02 core/GDB 离线排障归档 2026-06-23
+kind: debug-record
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: codex-archive-migration
+  source_id: codex-archive
+  source_path: domains/codex/archive/codex-archive/debug-notes/20260623-075032-pcr02-core-gdb-triage.md
+  source_sha256: 88d4a2ab2ba7fc8a2039870f0d4135d545e90594709751b5ce6c179638b79c17
+  coverage_row: CAFC-20260711-002
+review_after: '2026-10-11'
+review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; historical crash evidence migration, no active promotion and no fix-complete claim
+tags:
+- pcr02
+- prog_pcr02
+- core
+- gdb
+- buildid
+- motor-temperature
+- navigation
+- archive-only
+- codex-archive-migration
+- deleted-tombstoned
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 core GDB triage"
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+evidence_strength: codex-archive-source-plus-subagent-read-only-audit-plus-final-coverage-and-tombstone
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md
+- artifacts/manifests/codex-archive-final-body-coverage-20260711.jsonl#CAFC-20260711-002
+- artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-042
+- subagent:019f4cec-70fd-7360-b598-3c358ba58009
+created_at: '2026-07-11'
+updated_at: '2026-07-11'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-11'
+summary_zh: 从旧 Codex archive 迁移 PCR02 core/GDB 离线排障：保留 BuildID 配对、MotorTemperatureController `context_` 空指针、`-77` under-temp
+  路径、NaviCtrl/ObstacleMap 低置信边界和修复方向；archive-only，不声明修复完成。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 core/GDB 离线排障归档 2026-06-23

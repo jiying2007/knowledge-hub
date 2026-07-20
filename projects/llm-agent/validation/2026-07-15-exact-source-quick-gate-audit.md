@@ -1,4 +1,14 @@
 ---
+related:
+- projects/llm-agent/validation/project-readiness.md
+- governance/product/validation/project-readiness.md
+target_version: llm_agent@1d7730af7afe0217fd387533cd490d64eca51e7e with seven exact gitlinks
+test_environment: isolated local clones under /tmp; current host runtime dependencies; no remote network
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- LLM Agent 精确源码 Quick 门禁审计 2026-07-15
 id: llm-agent-exact-source-quick-gate-audit-20260715
 title: LLM Agent 精确源码 Quick 门禁审计 2026-07-15
 kind: validation
@@ -8,10 +18,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: 本机已登记 source 的精确 Git commit 隔离验证
+  source_sha256: 8d1325277b98b58725e6c4bc7d1c14b1b6a162e9586e86201d58ac585a849653
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -19,33 +33,26 @@ tags:
 - exact-source
 - validation
 - quick-gate
-related:
-- projects/llm-agent/validation/project-readiness.md
-- governance/product/validation/project-readiness.md
 validation_refs:
+- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-artifact_refs: []
-target_version: llm_agent@1d7730af7afe0217fd387533cd490d64eca51e7e with seven exact gitlinks
-test_environment: isolated local clones under /tmp; current host runtime dependencies; no remote network
-summary_zh: 在根仓与 7 个 gitlink 精确 commit 的隔离克隆中执行 smoke 和 quick 聚合门禁；12/12 与 56/56 通过，但 full、正式 artifact、release 和 rollback
-  仍待闭环。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- LLM Agent 精确源码 Quick 门禁审计 2026-07-15
+summary_zh: 在根仓与 7 个 gitlink 精确 commit 的隔离克隆中执行 smoke 和 quick 聚合门禁；12/12 与 56/56 通过，但 full、正式 artifact、release 和 rollback
+  仍待闭环。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # LLM Agent 精确源码 Quick 门禁审计 2026-07-15

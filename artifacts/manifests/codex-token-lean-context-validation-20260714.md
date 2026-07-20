@@ -3,13 +3,21 @@ id: codex-token-lean-context-validation-20260714
 title: Codex token-lean 固定上下文优化验证候选
 kind: validation
 domain: codex
+path: artifacts/manifests/codex-token-lean-context-validation-20260714.md
 scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: generated
+  from: current Codex token-context optimization session against ~/codex and Knowledge Hub validation outputs
+  source_sha256: 0cb281e9ff1b11b289d4931f0ca7cadedc7b29b4fe286cf2a2d36906d1666a3f
 review_after: '2026-10-14'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - codex
 - token-lean
@@ -17,6 +25,15 @@ tags:
 - knowledge-hub
 - validation-candidate
 - no-active-promotion
+validation_refs:
+- artifacts/manifests/codex-token-lean-context-validation-20260714.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- artifacts/manifests/codex-token-lean-context-validation-20260714.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-14'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -28,7 +45,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # Codex token-lean 固定上下文优化验证候选

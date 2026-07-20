@@ -1,15 +1,42 @@
 ---
-title: PCR02 Diag V4 Hybrid RefCount + 发现先行 实现计划
 doc_type: plan
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-10
 last_updated: 2026-05-12
-tags: [diag, v4, refcount]
 related: []
-validation_refs: []
+id: pcr02-diag-v4-hybrid-refcount-discovery-plan-archive-20260510
+title: PCR02 Diag V4 Hybrid RefCount + 发现先行 实现计划
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-05-10-diag-v4-hybrid-refcount-discovery-implementation-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: plans/2026-05-10-diag-v4-hybrid-refcount-discovery-implementation-plan.md
+  source_sha256: 3bd87b72ea701dc448655bfe1d6cd63caf680c241611d50c9c01567576470e0e
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical diag implementation plan only, no active promotion and not current diag contract
+tags:
+- pcr02
+- archive-only
+- historical-plan
+- no-active-promotion
+- diag
+- refcount
+- v4
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-05-10-diag-v4-hybrid-refcount-discovery-implementation-plan.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-10 PCR02 Diag V4 Hybrid RefCount 与发现先行实现计划；仅作历史实现计划 provenance，不代表当前诊断架构唯一事实或 active 运行规则。
 ---
 
 # PCR02 Diag V4 Hybrid RefCount + 发现先行 实现计划

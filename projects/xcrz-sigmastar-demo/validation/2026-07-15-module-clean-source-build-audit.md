@@ -1,4 +1,15 @@
 ---
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+target_version: null
+test_environment: null
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- PCR02 API/App/HDI/MP4 精确源码构建审计
 id: pcr02-module-clean-source-build-audit-20260715
 title: PCR02 API/App/HDI/MP4 精确源码构建审计
 kind: validation
@@ -8,10 +19,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: manual-entry:knowledge-new.sh
+  source_sha256: 5ab54a08005891fcff3fe0e9c2b1581f465c7b993ed935144733fa6ce5ef2e8f
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -20,33 +35,26 @@ tags:
 - validation
 - build
 - manual-validation-pending
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-validation_refs: []
-artifact_refs: []
-target_version: null
-test_environment: null
-summary_zh: 在精确组合源码、精确 SDK commit 与派生可迁移配置下复核 API/App/HDI/MP4 object build；API、App、MP4 返回 0，HDI 因 SDK 缺少 cam_dev_wrapper.h
-  返回 2，四项证据契约均继续 pending。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- PCR02 API/App/HDI/MP4 精确源码构建审计
+summary_zh: 在精确组合源码、精确 SDK commit 与派生可迁移配置下复核 API/App/HDI/MP4 object build；API、App、MP4 返回 0，HDI 因 SDK 缺少 cam_dev_wrapper.h
+  返回 2，四项证据契约均继续 pending。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 API/App/HDI/MP4 精确源码构建审计

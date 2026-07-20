@@ -34,7 +34,7 @@ aliases:
 - llm-agent-adk-v3-1-rc2-release-closure
 related:
 - projects/llm-agent/README.md
-- projects/llm-agent/current/project-profile.md
+- indexes/project-readiness.md
 - projects/llm-agent/validation/project-readiness.md
 - projects/agent-dev-kit/README.md
 ---

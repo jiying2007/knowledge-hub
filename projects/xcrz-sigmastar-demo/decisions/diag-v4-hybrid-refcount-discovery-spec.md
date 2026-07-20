@@ -1,15 +1,42 @@
 ---
-title: PCR02 Diag V4 终态设计（Hybrid RefCount + 发现先行）
 doc_type: spec
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-10
 last_updated: 2026-05-12
-tags: [diag, v4, spec]
 related: []
-validation_refs: []
+id: pcr02-diag-v4-hybrid-refcount-discovery-spec
+title: PCR02 Diag V4 终态设计（Hybrid RefCount + 发现先行）
+summary_zh: 记录 PCR02 Diag V4 的 Hybrid RefCount 生命周期、发现式 CLI、分层版本与事务化维护设计；当前仅作 archived retired-source provenance，不代表现行项目事实或已签收决策。
+kind: decision
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/decisions/diag-v4-hybrid-refcount-discovery-spec.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: specs/2026-05-10-diag-v4-hybrid-refcount-discovery-spec.md
+  source_sha256: 5bee162de9ac7af9c93aa0803f5a0557e3673f7b25e78b305e4178943b2bc410
+review_after: '2026-10-16'
+review_status: delegated…2200 tokens truncated…用操作的风险。该条目当前为 archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active
+  决策或 owner 签收。
+promotion: none
+tags:
+- pcr02
+- decisions
+- diag
+- v4
+- spec
+validation_refs:
+- projects/xcrz-sigmastar-demo/decisions/diag-v4-hybrid-refcount-discovery-spec.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
 ---
 
 # PCR02 Diag V4 终态设计（Hybrid RefCount + 发现先行）

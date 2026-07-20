@@ -1,17 +1,76 @@
 ---
-title: PCR02 GROS、SSC305 build hardcut 与 HDI warning zero 历史归档 2026-05-17 至 2026-05-21
 doc_type: project-archive
 knowledge_type: historical-session
 maturity: archived
-status: archived
-owner: leiwenjun
 created: 2026-07-10
 last_updated: 2026-07-10
-tags: [pcr02, ssc305, gros, build, cmake, hdi, warning-zero, codex-archive-migration]
 related:
-  - ../source-audit/pcr02_imssv05c13_sdk_migration_plan_20260530.md
-  - ../../../../current/runbooks/project-build-and-deploy-guide.md
-  - ../../../../current/architecture/hdi-api-app-functional-overview.md
+- ../source-audit/pcr02_imssv05c13_sdk_migration_plan_20260530.md
+- ../../../../current/runbooks/project-build-and-deploy-guide.md
+- ../../../../current/architecture/hdi-api-app-functional-overview.md
+id: pcr02-build-gros-hdi-history-20260517-20260521
+title: PCR02 GROS、SSC305 build hardcut 与 HDI warning zero 历史归档
+kind: project-archive
+domain: projects/pcr02-ssc305
+path: projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: codex-archive-migration
+  source_id: codex-archive
+  source_path:
+  - domains/codex/archive/codex-archive/session-wrap/20260517-154205-pcr02-gros-session-wrap.md
+  - domains/codex/archive/codex-archive/session-wrap/20260518-223733-pcr02-ssc305-session-wrap.md
+  - domains/codex/archive/codex-archive/session-wrap/20260521-091035-session-wrap-hdi-warning-zero.md
+  preflight_rows:
+  - CAEF-20260710-021
+  - CAEF-20260710-022
+  - CAEF-20260710-023
+review_after: '2026-10-21'
+review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; historical build/session migration from old Codex archive, old bodies deleted by separate tombstone
+  execution, no active promotion and no current build truth claim
+tags:
+- pcr02
+- ssc305
+- gros
+- build
+- cmake
+- hdi
+- warning-zero
+- WARN_COUNT=0
+- fb5994d31
+- archive-only
+- historical-session
+- codex-archive-migration
+- deleted-tombstoned
+validation_refs:
+- projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 GROS SSC305 HDI warning zero"
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "fb5994d31"
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "WARN_COUNT=0"
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+evidence_strength: codex-archive-source-plus-subagent-read-only-audit-plus-delete-tombstone
+evidence_refs:
+- projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md
+- artifacts/manifests/codex-archive-extract-first-preflight-20260710.jsonl#CAEF-20260710-021..023
+- artifacts/manifests/codex-archive-removal-execution-20260710-pcr02-session-wrap-027-031.jsonl#CARE-20260710-029..031
+- subagent:019f4c15-6bf6-78c2-b096-adbdf11c5df6
+created_at: '2026-07-10'
+updated_at: '2026-07-11'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+summary_zh: 从旧 Codex archive 迁移 PCR02 2026-05-17 至 2026-05-21 GROS/CMake/sysroot、SSC305 build.sh hardcut、fb5994d31 和 modules/hdi
+  warning zero 历史会话；保留 WARN_COUNT=0 口径；旧正文已按 CARE-20260710-029..031 删除并 tombstone，archive-only，不替代当前构建 runbook。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 GROS、SSC305 build hardcut 与 HDI warning zero 历史归档 2026-05-17 至 2026-05-21

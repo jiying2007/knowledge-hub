@@ -212,22 +212,27 @@ def test_knowledge_search_kind_alias_filters():
         },
     )
 
-def test_knowledge_search_registry_metadata_fallback():
-    repo = copy_repo("knowledge-search-registry-metadata-fallback")
+def test_knowledge_search_rejects_metadata_only_item():
+    repo = copy_repo("knowledge-search-metadata-only-hard-cut")
     marker = "metadata-only-search-fixture-20260622"
     fixture_item = {
         "id": marker,
         "title": "Metadata only search fixture",
         "kind": "audit",
         "domain": "governance",
-        "path": "README.md",
-        "status": "reviewing",
+        "path": "artifacts/manifests/metadata-only-search-fixture-20260622.md",
+        "scope": "team-general",
+        "visibility": "team-internal",
+        "status": "archived",
         "owner": "leiwenjun",
         "source": {"type": "generated", "source_id": "metadata-only-fixture-source", "from": "temporary regression fixture"},
         "tags": ["metadata-only-fixture", "knowledge-search", "governance"],
         "summary_zh": "只存在于 registry metadata 的搜索回归关键词，正文不包含该 marker。",
         "review_after": "2026-09-22",
-        "review_status": "metadata-search-fallback-applied",
+        "review_status": "archive-only-regression-fixture",
+        "validation_refs": ["tests:knowledge-search-metadata-only-hard-cut"],
+        "promotion": "none",
+        "searchable": True,
         "created_at": "2026-06-22",
         "updated_at": "2026-06-22",
     }
@@ -247,28 +252,16 @@ def test_knowledge_search_registry_metadata_fallback():
             "5",
         ],
     )
-    parsed = {}
-    parse_error = ""
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception as exc:
-        parse_error = str(exc)
-    results = parsed.get("results", []) if isinstance(parsed, dict) else []
-    first = results[0] if results else {}
     expect(
-        not parse_error
-        and result["exit_code"] == 0
-        and parsed.get("count") == 1
-        and first.get("item_id") == marker
-        and first.get("match") == "registry-metadata"
-        and first.get("source_id") == "metadata-only-fixture-source",
-        "knowledge-search-registry-metadata-fallback",
-        "knowledge search returns registry metadata-only matches with structured filters",
+        result["exit_code"] != 0
+        and not result["stdout"].strip()
+        and "registered search body is unavailable" in result["stderr"]
+        and "artifacts/manifests/metadata-only-search-fixture-20260622.md"
+        in result["stderr"],
+        "knowledge-search-metadata-only-hard-cut",
+        "knowledge search fails closed when searchable registry metadata has no canonical body",
         {
             "exit_code": result["exit_code"],
-            "parse_error": parse_error,
-            "count": parsed.get("count") if isinstance(parsed, dict) else None,
-            "first_result": first,
             "stdout_sample": result["stdout"][:1000],
             "stderr_sample": result["stderr"][:1000],
         },

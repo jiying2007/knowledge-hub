@@ -34,9 +34,7 @@ aliases:
 - mm32spin023c-validation
 related:
 - projects/mm32spin023c/README.md
-- projects/mm32spin023c/current/project-profile.md
-- projects/mm32spin023c/current/runbooks/maintenance-entry.md
-- projects/mm32spin023c/decisions/project-boundary-decision-candidate.md
+- indexes/project-readiness.md
 ---
 
 # MM32SPIN023C Firmware readiness validation
@@ -49,7 +47,7 @@ related:
 
 - [x] registry item 与正文 frontmatter 镜像一致。
 - [x] 30 项目 route matrix 能将 `mm32spin023c` 稳定解析为本项目。
-- [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
+- [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
 
@@ -76,7 +74,5 @@ related:
 
 ## Related
 
-- [项目画像候选](../current/project-profile.md)
-- [维护 runbook](../current/runbooks/maintenance-entry.md)
-- [边界决策候选](../decisions/project-boundary-decision-candidate.md)
+- [统一 readiness dashboard](../../../indexes/project-readiness.md)
 - [项目入口](../README.md)

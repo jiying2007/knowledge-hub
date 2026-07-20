@@ -3,24 +3,56 @@ id: pcr02-prog-pcr02-high-load-monitoring-20260702
 title: PCR02 prog_pcr02 高负载监控证据记录
 kind: debug-record
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
 owner: leiwenjun
-created_at: 2026-07-02
-updated_at: 2026-07-02
-review_after: 2026-10-02
+source:
+  type: manual
+  from: field-runtime-monitoring via ADB; device endpoint deliberately not retained
+review_after: '2026-10-02'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: verified
+promotion: none
+promotion_decision: none; reviewing debug evidence only, source-level or driver-counter follow-up still required, no active
+  promotion and no release gate
 tags:
-  - pcr02
-  - prog_pcr02
-  - runtime-monitoring
-  - cpu-load
-  - adb
+- pcr02
+- prog_pcr02
+- runtime-monitoring
+- cpu-load
+- adb
+- reviewing-followup
+- source-counter-required
+- no-active-promotion
+validation_refs:
+- 'manual_validation_pending: true'
+- 'reason: two runtime capture windows completed; source-level or driver-counter follow-up still required'
+- 'required_followup: inspect nav.poll, VI/AI/audio/sensor hot paths and DDR/MIU counters'
+evidence_strength: two-window-runtime-capture
+evidence_refs:
+- field-capture-sha256:ca15486ab2fb7db97dd30310f789ca4d7611b9cdc2100542af28259487553595; raw capture not retained
+- field-capture-sha256:7985d21b0f107c8049b55454de596b7da3ba3a6e05dabbdc8864031b8a62c90d; raw capture not retained
+created_at: '2026-07-02'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-02'
+summary_zh: 2026-07-02 对 PCR02 设备 prog_pcr02 高负载进行两轮只读监控归档。两轮证据均显示高负载主要由 prog_pcr02 内部 CPU/调度压力驱动，块设备 IO 和短窗口 RSS 增长不是主因；根因仍需源码级或驱动计数进一步确认。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 prog_pcr02 高负载监控证据记录
 
 ## Source
 
-- 设备：`172.16.16.27:5555`
+- 设备：授权环境提供的 `<ADB_ENDPOINT>`；具体内部地址不进入长期知识正文。
 - 连接方式：ADB
 - 目标进程：`/customer/bin/prog_pcr02`
 - PID：`916`
@@ -32,10 +64,10 @@ tags:
 
 | Evidence | Time Window | Size | SHA256 | Notes |
 | --- | --- | ---: | --- | --- |
-| `/tmp/pcr02_monitor_20260702_185041.log` | 2026-07-02 18:50:41-19:01:06 CST | 961241 bytes | `ca15486ab2fb7db97dd30310f789ca4d7611b9cdc2100542af28259487553595` | 第一轮完整采集，含 17 个样本，覆盖 load、CPU、meminfo、vmstat、diskstats、iostat、top、prog_pcr02 线程状态。 |
-| `/tmp/pcr02_monitor_lowoverhead_20260702_192908.log` | 2026-07-02 19:29:08-19:39:20 CST | 893876 bytes | `7985d21b0f107c8049b55454de596b7da3ba3a6e05dabbdc8864031b8a62c90d` | 第二轮低扰动采集，20 个样本，首末样本跨度 583 秒；主要采 `/proc/stat`、`loadavg`、`meminfo`、`diskstats`、`prog_pcr02` 进程和线程 stat/status；`top` 每分钟一次。 |
-| `/tmp/pcr02_monitor_new_20260702_203206.log` | 2026-07-02 20:32:06-20:45:09 CST | 8247 lines | `806c75829c9140bfdda99b3d7aea354dd0b176f7e137b0216d51dd294105d5fa` | 第三轮新采集，27 个完整样本，墙钟跨度 783 秒；设备高负载导致单轮 ADB 采样耗时约 30 秒，已满足至少 10 分钟证据窗口。 |
-| `/tmp/pcr02_source_hot_threads_20260702_205632.log` | 2026-07-02 20:56:33-21:02:51 CST | 1033 lines | `7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174` | 第四轮源码可追热点线程定向采集，33 个样本，墙钟跨度 378 秒；只采 `hdi_vi_out3`、`sensor_disp0`、`hdi_ai_*`、`sensor_tof0`、`sensor_imu0`、`app_uart_*`、`app_loop0`、`api_event0`、`pool_04`，并保留 `nav.poll`、`ai-vi-capture` 作为对照。 |
+| `field-capture:ca15486a…553595` | 2026-07-02 18:50:41-19:01:06 CST | 961241 bytes | `ca15486ab2fb7db97dd30310f789ca4d7611b9cdc2100542af28259487553595` | 第一轮完整采集，含 17 个样本；raw capture 未长期保留，只有哈希与本记录结论可恢复。 |
+| `field-capture:7985d21b…62c90d` | 2026-07-02 19:29:08-19:39:20 CST | 893876 bytes | `7985d21b0f107c8049b55454de596b7da3ba3a6e05dabbdc8864031b8a62c90d` | 第二轮低扰动采集，20 个样本；raw capture 未长期保留。 |
+| `field-capture:806c7582…05d5fa` | 2026-07-02 20:32:06-20:45:09 CST | 8247 lines | `806c75829c9140bfdda99b3d7aea354dd0b176f7e137b0216d51dd294105d5fa` | 第三轮新采集，27 个完整样本；raw capture 未长期保留。 |
+| `field-capture:7a3c8c6f…4bb174` | 2026-07-02 20:56:33-21:02:51 CST | 1033 lines | `7a3c8c6f166dfd2448fadaadeca87e92c424231a9198f7cc8867e7c42a4bb174` | 第四轮源码可追热点线程定向采集，33 个样本；raw capture 未长期保留。 |
 
 ## First Capture Summary
 

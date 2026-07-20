@@ -1,14 +1,30 @@
 ---
+maturity: candidate
+aliases:
+- PCR02 Video/Audio 共享内存使用说明
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: pcr02-video-audio-shm-usage-20260713
 title: PCR02 Video/Audio 共享内存使用说明
 kind: runbook
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
-maturity: candidate
 owner: leiwenjun
-created_at: 2026-07-13
-updated_at: 2026-07-13
+source:
+  type: manual-plus-repository-evidence
+  from: current repository implementation and user-provided legacy note
+  source_sha256: 006d3e96f640af1a8840e9033f3071e1f12d87d06e517258ffcea75408906213
 review_after: '2026-10-13'
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
+promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - video
@@ -21,10 +37,15 @@ tags:
 - pcm
 - manual-validation-pending
 - no-active-promotion
-scope: project-specific
-visibility: team-internal
-review_status: manual-entry-pending-review
-promotion: none
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-13'
+updated_at: '2026-07-19'
 generated_by_ai: false
 manual_validation_pending: true
 summary_zh: 记录 PCR02 当前 Video/Audio 共享内存通道、启停前置条件、虚拟流、订阅接口和 payload 契约；来源为当前仓库实现与用户提供旧笔记，保持 reviewing，待真实 owner 与实机验证。
@@ -32,14 +53,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
-path: projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md
-aliases:
-- PCR02 Video/Audio 共享内存使用说明
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 Video/Audio 共享内存使用说明

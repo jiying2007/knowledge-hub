@@ -1,15 +1,41 @@
 ---
-title: IR 补光与光敏控制优化计划
 doc_type: plan
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-08
 last_updated: 2026-05-12
-tags: [irlight, optimization]
 related: []
-validation_refs: []
+id: pcr02-irlight-optimization-plan-archive-20260508
+title: IR 补光与光敏控制优化计划
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-05-08-irlight-optimization-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: plans/2026-05-08-irlight-optimization-plan.md
+  source_sha256: 521b951ead6298fc8bd19b057988b66f4951795b1c3a3d0d9de2eb5dec1ecd18
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical IR/light-sensor plan only, no active promotion and not current calibration policy
+tags:
+- pcr02
+- archive-only
+- historical-plan
+- no-active-promotion
+- irlight
+- optimization
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-05-08-irlight-optimization-plan.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-11'
+summary_zh: 归档 2026-05-08 IR 补光与光敏控制优化计划；仅作历史优化计划 provenance，不代表当前标定策略、当前硬件事实或 active 控制规则。
 ---
 
 # IR 补光与光敏控制优化计划

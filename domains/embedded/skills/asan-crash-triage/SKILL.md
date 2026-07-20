@@ -28,7 +28,7 @@ last_updated: 2026-05-15
    - 第一现场函数
    - 首个可定位源码行
 4. 若符号化失败，必须显式标注“不匹配/无法符号化”的原因。
-5. 代码风格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
+5. 代码风格参考 `domains/embedded/standards/c-coding-standards.md` 的冻结历史基线；如与当前项目规范冲突，以项目规范为准。
 6. 结构与验证流程遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 
 ## 4. 最小验证

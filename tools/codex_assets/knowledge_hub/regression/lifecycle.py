@@ -1161,6 +1161,8 @@ def test_review_queue_json_contract():
         and filtered_summary.get("read_only") is True
         and filtered_summary.get("report_only") is True
         and filtered_summary.get("memory_write") is False
+        and "review_batch_packet" not in filtered_summary
+        and len(filtered_result["stdout"].encode("utf-8")) <= 64 * 1024
         and filtered_batch_packet.get("packet_type") == "review-queue-batch"
         and filtered_batch_packet.get("read_only") is True
         and filtered_batch_packet.get("report_only") is True
@@ -1498,7 +1500,8 @@ def test_review_queue_apply_tool_contract():
         and archive_only_item.get("human_review_content_sha256") == archive_only_form.get("content_sha256")
         and archive_only_item.get("review_status") == "human-reviewed-archive-only"
         and pending_count("after_archive") == pending_count("after_accept") - 1
-        and pending_count("archive_drift_status") == pending_count("before")
+        and pending_count("archive_drift_status")
+        == pending_count("after_archive") + 1
         and any(
             row.get("id") == archive_only_item_id
             and "unresolved-content-sha256-drift" in row.get("reasons", [])
@@ -2162,7 +2165,7 @@ def test_source_manual_entry_requires_check_or_reason():
         "--source-id",
         "example-source-required",
         "--source-path",
-        "/tmp/example-required",
+        str(temp_dir / "example-required"),
         "--role",
         "hub-canonical-source",
         "--authority",

@@ -5,9 +5,17 @@ from __future__ import annotations
 import datetime as dt
 import json
 import pathlib
-from typing import Any, Dict, List, Mapping, Set, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 
-from .common import load_json, registry_items, repository_root, run_rtk, source_id, utc_timestamp, working_tree_signature
+from .common import (
+    KnowledgeHubError,
+    load_json,
+    parse_json_output,
+    registry_items,
+    run_rtk,
+    utc_timestamp,
+    working_tree_signature,
+)
 from .product_gate import product_snapshot_path, run_product_gate
 from .store import incomplete_transactions
 
@@ -41,27 +49,45 @@ def _registry_summary(items: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def _review_queue(items: List[Dict[str, Any]]) -> Dict[str, int]:
-    ai_pending = 0
-    external_pending = 0
-    active_blockers = 0
-    for item in items:
-        status = str(item.get("status", ""))
-        decision = str(item.get("human_review_decision", ""))
-        review_status = str(item.get("review_status", ""))
-        pending = not decision or decision in {"needs-edits", "defer"}
-        queue_eligible = status in {"draft", "reviewing"}
-        if queue_eligible and item.get("generated_by_ai") and pending:
-            ai_pending += 1
-        if queue_eligible and item.get("kind") == "external-source-note" and pending and not item.get("generated_by_ai"):
-            external_pending += 1
-        if status == "active" and (pending or "pending" in review_status):
-            active_blockers += 1
+def _review_queue(root: pathlib.Path) -> Dict[str, Any]:
+    """Read the canonical review queue projection instead of reimplementing it."""
+    result = run_rtk(
+        root,
+        [
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--summary-json",
+        ],
+        timeout=15,
+        accepted_exit_codes=(0, 1),
+    )
+    try:
+        payload = parse_json_output(result)
+        summary = payload["indexes"]["by_review_queue"]["summary"]
+        if not isinstance(summary, Mapping):
+            raise TypeError("review queue summary must be an object")
+        pending_total = int(summary.get("row_count", -1))
+        ai_pending = int(summary.get("ai_generated_pending_count", -1))
+        external_pending = int(summary.get("external_source_pending_count", -1))
+        active_blockers = int(summary.get("active_or_promotion_blocker_count", -1))
+        if min(pending_total, ai_pending, external_pending, active_blockers) < 0:
+            raise ValueError("review queue summary contains invalid counts")
+        parse_error = ""
+    except (KeyError, KnowledgeHubError, TypeError, ValueError) as exc:
+        pending_total = ai_pending = external_pending = active_blockers = 0
+        parse_error = str(exc)
     return {
-        "pending_total": ai_pending + external_pending,
+        "status": "pass" if result["exit_code"] == 0 and not parse_error else "fail",
+        "command": result["command"],
+        "exit_code": result["exit_code"],
+        "pending_total": pending_total,
         "ai_generated_pending": ai_pending,
         "external_source_pending": external_pending,
         "active_or_promotion_blocker_count": active_blockers,
+        "parse_error": parse_error,
+        "source": "canonical-index-plan",
     }
 
 
@@ -93,24 +119,51 @@ def _review_after(items: List[Dict[str, Any]], root: pathlib.Path, as_of: dt.dat
 def _body_coverage(root: pathlib.Path, items: List[Dict[str, Any]]) -> Dict[str, Any]:
     status_result = run_rtk(
         root,
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        [
+            "git",
+            "-c",
+            "core.quotePath=false",
+            "status",
+            "--porcelain=v1",
+            "-z",
+            "--untracked-files=all",
+        ],
         timeout=10,
         accepted_exit_codes=(0, 128),
     )
-    tracked_result = run_rtk(root, ["git", "ls-files"], timeout=10, accepted_exit_codes=(0, 128))
+    tracked_result = run_rtk(
+        root,
+        ["git", "-c", "core.quotePath=false", "ls-files", "-z"],
+        timeout=10,
+        accepted_exit_codes=(0, 128),
+    )
     registered_paths = {str(item.get("path", "")) for item in items if item.get("path")}
-    tracked = {line.strip() for line in tracked_result.get("stdout", "").splitlines() if line.strip()}
+    tracked = {
+        path
+        for path in tracked_result.get("stdout", "").split("\0")
+        if path
+    }
     collections = list((load_json(root / "registry/body-coverage.json", {}) or {}).get("collections", []))
     prefixes = [str(row.get("path_prefix", "")).rstrip("/") + "/" for row in collections if row.get("path_prefix")]
     changed: List[str] = []
-    for line in status_result.get("stdout", "").splitlines():
-        if len(line) < 4:
+    deleted: List[str] = []
+    status_entries = status_result.get("stdout", "").split("\0")
+    entry_index = 0
+    while entry_index < len(status_entries):
+        entry = status_entries[entry_index]
+        entry_index += 1
+        if len(entry) < 4:
             continue
-        path = line[3:].strip()
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1]
-        if _is_body_markdown(path):
-            changed.append(path)
+        status_code = entry[:2]
+        path = entry[3:]
+        if "R" in status_code or "C" in status_code:
+            entry_index += 1
+        if not _is_body_markdown(path):
+            continue
+        if "D" in status_code or not (root / path).is_file():
+            deleted.append(path)
+            continue
+        changed.append(path)
     missing = []
     collection_covered = []
     for path in sorted(set(changed)):
@@ -125,9 +178,12 @@ def _body_coverage(root: pathlib.Path, items: List[Dict[str, Any]]) -> Dict[str,
         "exit_code": status_result["exit_code"],
         "status": "pass" if status_result["exit_code"] == 0 and not missing else "fail",
         "checked_count": len(set(changed)),
+        "deleted_body_count": len(set(deleted)),
+        "deleted_body_sample": sorted(set(deleted))[:20],
         "missing_registry_count": len(missing),
         "missing_registry": missing,
-        "collection_covered": collection_covered,
+        "collection_covered_count": len(collection_covered),
+        "collection_covered": collection_covered[:20],
         "parse_error": "",
         "mode": "changed-only-fast",
         "strict_followup": "rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json",
@@ -167,14 +223,31 @@ def _reviewing_triage(items: List[Dict[str, Any]], as_of: dt.date) -> Dict[str, 
     }
 
 
-def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    path = product_snapshot_path(root, "quick")
+def _load_snapshot_candidate(
+    root: pathlib.Path,
+    as_of: str,
+    max_age_hours: int,
+    regression_suite: str,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    path = product_snapshot_path(root, regression_suite)
     if not path.exists():
-        return {}, {"state": "missing", "path": str(path.relative_to(root)), "age_seconds": None, "fresh": False}
+        return {}, {
+            "state": "missing",
+            "path": str(path.relative_to(root)),
+            "age_seconds": None,
+            "fresh": False,
+            "suite": regression_suite,
+        }
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {}, {"state": "invalid", "path": str(path.relative_to(root)), "age_seconds": None, "fresh": False}
+        return {}, {
+            "state": "invalid",
+            "path": str(path.relative_to(root)),
+            "age_seconds": None,
+            "fresh": False,
+            "suite": regression_suite,
+        }
     age = max(0.0, dt.datetime.now().timestamp() - path.stat().st_mtime)
     current_signature = working_tree_signature(root)
     signature_matches = payload.get("working_tree_signature") == current_signature
@@ -195,7 +268,7 @@ def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[
     if not engineering_structure_valid:
         engineering_quality = {}
     production_evidence = (
-        payload.get("regression_suite") == "quick"
+        payload.get("regression_suite") == regression_suite
         and payload.get("local_cache_written") is True
         and operational_structure_valid
         and restore_structure_valid
@@ -219,7 +292,40 @@ def _load_snapshot(root: pathlib.Path, as_of: str, max_age_hours: int) -> Tuple[
         "signature_matches": signature_matches,
         "production_evidence": production_evidence,
         "generated_at": payload.get("generated_at", ""),
+        "suite": regression_suite,
     }
+
+
+def _load_snapshot(
+    root: pathlib.Path,
+    as_of: str,
+    max_age_hours: int,
+    regression_suite: str = "auto",
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    if regression_suite not in {"auto", "quick", "full"}:
+        raise ValueError("regression_suite must be auto, quick or full")
+    suites = ["full", "quick"] if regression_suite == "auto" else [regression_suite]
+    candidates = [
+        _load_snapshot_candidate(root, as_of, max_age_hours, suite)
+        for suite in suites
+    ]
+    selected = next(
+        (candidate for candidate in candidates if candidate[1].get("fresh")),
+        None,
+    )
+    if selected is None:
+        selected = next(
+            (candidate for candidate in candidates if candidate[1].get("state") != "missing"),
+            candidates[-1],
+        )
+    payload, metadata = selected
+    metadata = dict(metadata)
+    metadata["requested_suite"] = regression_suite
+    metadata["candidate_states"] = {
+        candidate[1]["suite"]: candidate[1]["state"]
+        for candidate in candidates
+    }
+    return payload, metadata
 
 
 def health_summary(
@@ -227,20 +333,33 @@ def health_summary(
     as_of: dt.date,
     refresh_gate: bool = False,
     snapshot_max_age_hours: int = 24,
+    gate_suite: str = "auto",
 ) -> Dict[str, Any]:
+    if gate_suite not in {"auto", "quick", "full"}:
+        raise ValueError("gate_suite must be auto, quick or full")
     items = registry_items(root)
     registry = _registry_summary(items)
-    review_queue = _review_queue(items)
+    review_queue = _review_queue(root)
     review_after = _review_after(items, root, as_of)
     body_coverage = _body_coverage(root, items)
     triage = _reviewing_triage(items, as_of)
     if refresh_gate:
-        run_product_gate(root, as_of.isoformat(), regression_suite="quick")
-    snapshot, snapshot_meta = _load_snapshot(root, as_of.isoformat(), snapshot_max_age_hours)
-    review_queue["source"] = "registry-direct-fast"
+        run_product_gate(
+            root,
+            as_of.isoformat(),
+            regression_suite="quick" if gate_suite == "auto" else gate_suite,
+        )
+    snapshot, snapshot_meta = _load_snapshot(
+        root,
+        as_of.isoformat(),
+        snapshot_max_age_hours,
+        regression_suite=gate_suite,
+    )
+    selected_suite = str(snapshot_meta.get("suite", "quick"))
     final_gate = {
-        "command": "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of {}".format(
-            as_of.isoformat()
+        "command": "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite {} --as-of {}".format(
+            selected_suite,
+            as_of.isoformat(),
         ),
         "exit_code": None if not snapshot else (0 if snapshot.get("gate_status") == "pass" else 1),
         "final_status": snapshot.get("overall_status", "snapshot-missing"),
@@ -252,7 +371,13 @@ def health_summary(
     owner = snapshot.get("owner_and_real_evidence", {}) if snapshot else {}
     incomplete = incomplete_transactions(root)
     health_status = "ok"
-    if registry["summary_gap_total"] or body_coverage["missing_registry_count"] or incomplete:
+    if (
+        registry["summary_gap_total"]
+        or body_coverage["missing_registry_count"]
+        or review_queue["status"] != "pass"
+        or review_queue["active_or_promotion_blocker_count"]
+        or incomplete
+    ):
         health_status = "needs-fix"
     elif not snapshot_meta["fresh"] or snapshot.get("gate_status") != "pass":
         health_status = "needs-fix"
@@ -283,7 +408,13 @@ def health_summary(
             "platform_status": (snapshot.get("platform_status") or {}).get("status", "snapshot-missing"),
             "overall_status": snapshot.get("overall_status", "snapshot-missing"),
             "platform_productization_complete": snapshot.get("platform_productization_complete", False),
-            "terminal_maturity": snapshot.get("terminal_maturity", False),
+            "local_delivery_complete": snapshot.get("local_delivery_complete", False),
+            "remote_published": snapshot.get("remote_published", False),
+            "offsite_restore_verified": snapshot.get("offsite_restore_verified", False),
+            "adoption_ready": snapshot.get("adoption_ready", False),
+            "terminal": snapshot.get("terminal", False),
+            "snapshot_suite": selected_suite,
+            "full_regression_evidence": selected_suite == "full" and snapshot_meta["fresh"],
         },
         "status_dashboard": {
             "command": "snapshot:{}".format(snapshot_meta["path"]),

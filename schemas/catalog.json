@@ -136,7 +136,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "final-gate-product-v2",
+      "id": "final-gate-product-v3",
       "schema": "schemas/final-gate-product.schema.json",
       "applies_to": "knowledge-final-gate.sh --final-profile product --json",
       "authority": "derived-terminal-gate",
@@ -157,7 +157,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "restore-drill-v1",
+      "id": "restore-drill-v2",
       "schema": "schemas/restore-drill.schema.json",
       "applies_to": "knowledge-restore-drill.sh --json",
       "authority": "derived-recovery-evidence",
@@ -195,15 +195,29 @@
       "visibility",
       "status",
       "owner",
+      "source",
       "review_after",
       "review_status",
+      "content_review_status",
+      "evidence_validation_status",
       "promotion",
+      "promotion_decision",
+      "validation_refs",
+      "artifact_refs",
+      "evidence_strength",
+      "evidence_refs",
+      "summary_zh",
+      "title",
+      "tags",
+      "primary_language",
+      "source_language",
+      "translation_status",
+      "terminology_status",
+      "created_at",
+      "updated_at",
       "agent_contract"
     ],
     "markdown": [
-      "title",
-      "summary_zh",
-      "tags",
       "aliases",
       "related",
       "body"

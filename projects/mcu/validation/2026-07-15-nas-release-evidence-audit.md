@@ -1,4 +1,15 @@
 ---
+related:
+- projects/mcu/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+target_version: null
+test_environment: null
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- MCU NAS 发布制品与契约验证 2026-07-15
 id: mcu-release-evidence-audit-20260715
 title: MCU NAS 发布制品与契约验证 2026-07-15
 kind: validation
@@ -8,10 +19,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: current-session read-only NAS release evidence audit under auth-20260715-knowledge-hub-terminal-maturity-full-closeout
+  source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -20,33 +35,26 @@ tags:
 - validation
 - artifact-sha256
 - manual-validation-pending
-related:
-- projects/mcu/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-validation_refs: []
-artifact_refs: []
-target_version: null
-test_environment: null
-summary_zh: 核验 GD32L235、HC32F072、MM32SPIN023C 最新 NAS 发布目录的 manifest、逐文件 SHA256 与当前 firmware-release-tools 兼容性；三包 checksum
-  通过，MM32 契约通过，GD32/HC32 旧 schema 待兼容，实机与回滚仍未验证。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+validation_refs:
+- projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- MCU NAS 发布制品与契约验证 2026-07-15
+summary_zh: 核验 GD32L235、HC32F072、MM32SPIN023C 最新 NAS 发布目录的 manifest、逐文件 SHA256 与当前 firmware-release-tools 兼容性；三包 checksum
+  通过，MM32 契约通过，GD32/HC32 旧 schema 待兼容，实机与回滚仍未验证。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # MCU NAS 发布制品与契约验证 2026-07-15

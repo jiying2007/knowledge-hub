@@ -3,7 +3,8 @@ title: 变更申请模板
 doc_type: spec
 knowledge_type: process
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-17
 last_updated: 2026-05-17

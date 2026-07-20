@@ -1,16 +1,57 @@
 ---
-title: DVR 录像回放 proto/sensor 解耦设计与实施计划
 doc_type: owner-approved-target
-status: archived
-owner: team-core
 source_id: pcr02-project-docs
 source_path: plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
 source_sha256: 9134247182e7578eec8c2bb4d702ffaed6c75359039d549b679f058bf8532cb3
 source_size: 4786
 owner_decision: archive-only
 worksheet_id: pcr02-owner-decision-worksheet-005
-review_after: 2026-09-17
 generated_at: 2026-06-24
+id: pcr02-dvr-plan-archive-only-20260624
+title: PCR02 DVR proto/sensor 解耦计划归档目标 2026-06-24
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: owner-approved-target-materialization
+  source_id: pcr02-project-docs
+  source_path: plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+  source_sha256: 9134247182e7578eec8c2bb4d702ffaed6c75359039d549b679f058bf8532cb3
+  source_manifest: artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl
+review_after: '2026-09-17'
+review_status: owner-approved-archive-only-target-materialized
+promotion: none
+promotion_decision: none
+tags:
+- pcr02
+- dvr
+- archive-only
+- owner-decision
+- source-control
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- sources/pcr02-project-docs/inventory.jsonl
+evidence_strength: owner-decision-landing-plus-source-sha-target-materialization
+evidence_refs:
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md
+- sources/pcr02-project-docs/inventory.jsonl
+created_at: '2026-06-24'
+updated_at: '2026-06-24'
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-06-24'
+summary_zh: 按 owner 决策将 DVR proto/sensor 解耦计划作为 archive-only 目标落地；缺 completed 证据，不声明完成。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # DVR 录像回放 proto/sensor 解耦设计与实施计划

@@ -14,6 +14,10 @@
       "general"
     ]
   },
+  "forbidden_default_patterns": [
+    "EMBEDDED_KNOWLEDGE_HOME",
+    "~/embedded/knowledge"
+  ],
   "route_cases": [
     {
       "id": "topic-st77912",
@@ -56,8 +60,9 @@
     },
     {
       "id": "pcr02-owner-validation",
-      "query": "PCR02 owner-ready 实机 发布 验证",
-      "expected_ids": ["pcr02-owner-ready-validation-paths-20260713"]
+      "query": "PCR02 NAS 发布真实性验证",
+      "expected_ids": ["pcr02-soc-v1-1-33-nas-release-audit-20260715"],
+      "forbidden_ids": ["pcr02-owner-ready-validation-paths-20260713"]
     },
     {
       "id": "obsidian-integration",
@@ -65,54 +70,62 @@
       "expected_ids": ["knowledge-hub-obsidian-integration-20260713"]
     },
     {
-      "id": "knowledge-hub-profile",
-      "query": "knowledge-hub 项目画像候选",
-      "expected_ids": ["knowledge-hub-readiness-profile-20260713"]
+      "id": "knowledge-hub-control-plane",
+      "query": "Knowledge Hub registry owner gate 统一控制面",
+      "expected_ids": ["knowledge-hub-root"],
+      "forbidden_ids": ["knowledge-hub-readiness-profile-20260713"]
     },
     {
-      "id": "sigmastar-flasher-profile",
-      "query": "sigmastar-flasher 项目画像",
-      "expected_ids": ["sigmastar-flasher-readiness-profile-20260713"]
+      "id": "llm-agent-quick-gate",
+      "query": "llm agent 源码 quick gate",
+      "expected_ids": ["llm-agent-exact-source-quick-gate-audit-20260715"]
     },
     {
-      "id": "ota-packager-runbook",
-      "query": "ota-packager 维护入口 runbook",
-      "expected_ids": ["ota-packager-readiness-runbook-20260713"]
+      "id": "gd32-release",
+      "query": "GD32L235 v1.1.38 NAS 正式发布",
+      "expected_ids": ["gd32l235-v1-1-38-nas-release-20260718"]
     },
     {
-      "id": "gd32-validation",
-      "query": "gd32l235 readiness validation",
-      "expected_ids": ["gd32l235-readiness-validation-20260713"]
+      "id": "gd32-charge-compatibility",
+      "query": "GD32L235 PA12 快慢充兼容性",
+      "expected_ids": ["gd32l235-pa12-fast-slow-charge-compatibility-20260713"],
+      "forbidden_ids": ["gd32l235-readiness-validation-20260713"]
     },
     {
-      "id": "codex-profile",
-      "query": "codex runtime assets 项目画像",
-      "expected_ids": ["codex-readiness-profile-20260713"]
+      "id": "agent-runtime-contract",
+      "query": "Knowledge Hub Agent runtime contract compliance shadow review",
+      "expected_ids": ["knowledge-hub-agent-runtime-contract-absorption-20260716"],
+      "forbidden_ids": ["codex-readiness-profile-20260713"]
     },
     {
-      "id": "firmware-toolchains-decision",
-      "query": "firmware-toolchains 权威维护边界",
-      "expected_ids": ["firmware-toolchains-readiness-decision-20260713"]
+      "id": "mcu-maintenance",
+      "query": "MCU GD32 HC32 Codex maintenance",
+      "expected_ids": ["mcu-gd32-hc32-codex-maintenance-session-20260517"],
+      "forbidden_ids": ["firmware-toolchains-readiness-decision-20260713"]
     },
     {
-      "id": "llm-agent-profile",
-      "query": "llm-agent 项目画像",
-      "expected_ids": ["llm-agent-readiness-profile-20260713"]
+      "id": "llm-agent-full-gate",
+      "query": "llm agent exact source full gate",
+      "expected_ids": ["llm-agent-exact-source-full-gate-audit-20260717"],
+      "forbidden_ids": ["llm-agent-readiness-profile-20260713"]
     },
     {
-      "id": "agent-dev-kit-validation",
-      "query": "agent-dev-kit readiness validation",
-      "expected_ids": ["agent-dev-kit-readiness-validation-20260713"]
+      "id": "agent-dev-kit-harness-decision",
+      "query": "agent-dev-kit harness readiness decision",
+      "expected_ids": ["agent-dev-kit-harness-readiness-decision-20260717"],
+      "forbidden_ids": ["agent-dev-kit-readiness-validation-20260713"]
     },
     {
       "id": "core-dump-capture",
-      "query": "嵌入式 core dump capture guide",
-      "expected_paths": ["domains/embedded/runbooks/core-dump-capture-guide.md"]
+      "query": "PCR02 core GDB selection",
+      "expected_ids": ["pcr02-prog-pcr02-core-gdb-selection-20260702"],
+      "forbidden_paths": ["domains/embedded/runbooks/core-dump-capture-guide.md"]
     },
     {
       "id": "linux-performance",
-      "query": "embedded linux performance triage",
-      "expected_paths": ["domains/embedded/runbooks/embedded-linux-performance-triage-guide.md"]
+      "query": "ST77912 dual display CPU ADB triage",
+      "expected_ids": ["xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713"],
+      "forbidden_paths": ["domains/embedded/runbooks/embedded-linux-performance-triage-guide.md"]
     },
     {
       "id": "chinese-readability",
@@ -138,6 +151,47 @@
       "id": "maintenance-plan",
       "query": "Knowledge Hub review_after 长期维护计划",
       "expected_ids": ["knowledge-hub-ultimate-maintenance-plan"]
+    },
+    {
+      "id": "broad-knowledge-hub",
+      "query": "Knowledge Hub",
+      "expected_ids": ["knowledge-hub-root"]
+    },
+    {
+      "id": "broad-performance",
+      "query": "性能",
+      "expected_ids": ["pcr02-thirdparty-build-optimization-baseline-20260710"],
+      "forbidden_ids": ["knowledge-hub-root"]
+    },
+    {
+      "id": "broad-archive-path",
+      "query": "归档路径",
+      "expected_ids": ["knowledge-hub-path-routing-rules"]
+    },
+    {
+      "id": "broad-debug-guide",
+      "query": "调试指南",
+      "expected_ids": ["pcr02-asan-debug-guide-project-local-20260624"]
+    },
+    {
+      "id": "broad-pcr02-ota-current-first",
+      "query": "PCR02 OTA",
+      "expected_ids": ["pcr02-soc-v1-1-33-nas-release-audit-20260715"]
+    },
+    {
+      "id": "zero-hit-nonce",
+      "query": "zzzxqv-never-present-20260719",
+      "expected_zero_hit": true
+    },
+    {
+      "id": "zero-hit-stale-environment-variable",
+      "query": "EMBEDDED_KNOWLEDGE_HOME",
+      "expected_zero_hit": true
+    },
+    {
+      "id": "zero-hit-stale-path",
+      "query": "~/embedded/knowledge",
+      "expected_zero_hit": true
     }
   ]
 }

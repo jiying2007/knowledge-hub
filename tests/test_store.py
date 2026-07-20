@@ -5,7 +5,12 @@ import multiprocessing
 import pytest
 
 import tools.codex_assets.knowledge_hub.store as store_module
+import tools.codex_assets.knowledge_hub.recovery_cli as recovery_cli
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.recovery_cli import (
+    project_recovery_payload,
+    serialized_recovery_payload,
+)
 from tools.codex_assets.knowledge_hub.store import RepositoryTransaction, audit_transactions, incomplete_transactions
 
 
@@ -102,6 +107,77 @@ def test_recovery_audit_reports_interrupted_transaction_without_writing(tmp_path
     assert result["attention_count"] == 1
     assert result["rows"][0]["recoverable"] is True
     assert backup.read_text() == "before\n"
+
+
+def test_recovery_audit_treats_invalid_journal_as_attention_required(tmp_path):
+    journal_dir = tmp_path / ".tmp/transactions/broken"
+    journal_dir.mkdir(parents=True)
+    (journal_dir / "journal.json").write_text("{not-json")
+
+    result = audit_transactions(tmp_path)
+
+    assert result["status"] == "needs-recovery-review"
+    assert result["attention_count"] == 1
+    assert result["rows"][0]["requires_attention"] is True
+    assert result["rows"][0]["recoverable"] is False
+
+
+def test_recovery_projection_is_bounded_and_has_summary_mode():
+    payload = {
+        "schema_version": 1,
+        "status": "pass",
+        "transaction_count": 3,
+        "attention_count": 0,
+        "rows": [{"transaction_id": str(index)} for index in range(3)],
+    }
+
+    page = project_recovery_payload(payload, limit=2, offset=0)
+    summary = project_recovery_payload(payload, limit=2, offset=0, include_rows=False)
+
+    assert [row["transaction_id"] for row in page["rows"]] == ["0", "1"]
+    assert page["pagination"]["has_next"] is True
+    assert page["pagination"]["next_offset"] == 2
+    assert summary["projection"] == "knowledge-recovery-audit-summary-v1"
+    assert "rows" not in summary
+
+
+def test_recovery_cli_summary_uses_full_status_and_omits_rows(monkeypatch, tmp_path, capsys):
+    registry = tmp_path / "registry"
+    registry.mkdir()
+    (registry / "items.jsonl").write_text("", encoding="utf-8")
+    monkeypatch.setattr(
+        recovery_cli,
+        "audit_transactions",
+        lambda _root, _transaction_id: {
+            "schema_version": 1,
+            "read_only": True,
+            "status": "pass",
+            "transaction_count": 2,
+            "attention_count": 0,
+            "rows": [
+                {"transaction_id": "a"},
+                {"transaction_id": "b"},
+            ],
+            "must_not": [],
+        },
+    )
+
+    assert recovery_cli.main(
+        ["--root", str(tmp_path), "--summary-json", "--limit", "1"]
+    ) == 0
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["projection"] == "knowledge-recovery-audit-summary-v1"
+    assert payload["pagination"]["total_count"] == 2
+    assert "rows" not in payload
+
+
+def test_recovery_serialization_fails_closed_when_projection_exceeds_budget():
+    with pytest.raises(ValueError, match="output budget exceeded"):
+        serialized_recovery_payload(
+            {"schema_version": 1, "status": "pass", "rows": ["x" * 256]},
+            maximum_bytes=64,
+        )
 
 
 def test_transaction_rejects_symlink_target_even_when_it_resolves_inside_root(tmp_path):

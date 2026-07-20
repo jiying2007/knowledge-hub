@@ -3,7 +3,8 @@ title: 知识库仓库结构规范
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-17
 last_updated: 2026-05-17

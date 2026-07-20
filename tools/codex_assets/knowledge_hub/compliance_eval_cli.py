@@ -16,6 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", default="")
     parser.add_argument("--cases", required=True)
     parser.add_argument("--minimum-cases", type=int, default=1)
+    parser.add_argument("--require-verdict-coverage", action="store_true")
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -28,6 +29,7 @@ def main(argv: Sequence[str] = ()) -> int:
             repository_root(args.root),
             pathlib.Path(args.cases),
             minimum_cases=args.minimum_cases,
+            require_verdict_coverage=args.require_verdict_coverage,
         )
     except (KnowledgeHubError, OSError, UnicodeError) as exc:
         parser.error(str(exc))

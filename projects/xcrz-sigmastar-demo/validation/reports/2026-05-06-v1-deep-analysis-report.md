@@ -1,13 +1,42 @@
 ---
-title: V1 与主分支深入分析报告
 doc_type: report
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-06
 last_updated: 2026-05-12
-tags: [v1, analysis, report]
+id: pcr02-v1-deep-analysis-validation-report-20260506
+title: V1 与主分支深入分析报告
+kind: validation
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/reports/2026-05-06-v1-deep-analysis-report.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-06-v1-deep-analysis-report.md
+  source_sha256: 7b892ed4d0732962519b11d24f3394c2b24418c013ca06207b3dcef4840d60aa
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical V1 analysis evidence only, no active promotion and no current validation claim
+tags:
+- pcr02
+- validation
+- archive-only
+- historical-evidence
+- no-active-promotion
+- v1
+- analysis
+- report
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/reports/2026-05-06-v1-deep-analysis-report.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-06 V1 与主分支深入分析报告；仅作历史分析 evidence，不代表当前验证结论、当前分支差异或 active 决策。
 ---
 
 # V1 与主分支深入分析报告

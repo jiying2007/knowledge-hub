@@ -1,15 +1,65 @@
 ---
-title: PCR02 IR light、播放器 start/wait 与 WiFi 行为归档 2026-07-08
 doc_type: debug-record
 knowledge_type: incident-learning
 maturity: archived
-status: archived
-owner: leiwenjun
 created: 2026-07-11
 last_updated: 2026-07-11
-tags: [pcr02, irlight, colortogray, player, wifi, wpa-supplicant, codex-archive-migration]
 related:
-  - 2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md
+- 2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md
+id: pcr02-irlight-player-wifi-debug-summary-20260708
+title: PCR02 IR light、播放器 start/wait 与 WiFi 行为归档 2026-07-08
+kind: debug-record
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: codex-archive-migration
+  source_id: codex-archive
+  source_path: domains/codex/archive/codex-archive/daily-summary/20260708-211900-engineering-archive-summary.md
+  source_sha256: 07d43e00e0dbfc5b1aeb676251c1919527dab7f2bb9e412243c6be5a2ddf3936
+  coverage_row: CAFC-20260711-005
+review_after: '2026-10-11'
+review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; split debug summary from old daily archive, no active promotion and no board-level validation claim
+tags:
+- pcr02
+- irlight
+- colortogray
+- player
+- start.wait_start_state
+- wifi
+- wifi_detach
+- wpa_supplicant
+- archive-only
+- codex-archive-migration
+- deleted-tombstoned
+- wpa-supplicant
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 IR light wifi_detach"
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+evidence_strength: codex-daily-summary-plus-subagent-read-only-audit-plus-final-coverage-and-tombstone
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md
+- artifacts/manifests/codex-archive-final-body-coverage-20260711.jsonl#CAFC-20260711-005
+- artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.jsonl#CARE-20260711-045
+- subagent:019f4cec-719d-70d2-a6d6-163a8edfedf2
+created_at: '2026-07-11'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-11'
+summary_zh: 从旧 2026-07-08 工程日报拆出 PCR02 设备侧结论：IR light ColorToGray 失败降级与 500ms 刷屏风险、播放器 start.wait_start_state semaphore 顺序风险、1T1R
+  WiFi scan_ssid/bgscan 判断、VSAPIWIFI_DeInit/wifi_detach 不断网但释放 wpa_ctrl 残留；archive-only，保留未上板复测边界。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 IR light、播放器 start/wait 与 WiFi 行为归档 2026-07-08

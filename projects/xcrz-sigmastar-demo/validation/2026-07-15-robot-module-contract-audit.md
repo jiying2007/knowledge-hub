@@ -1,4 +1,14 @@
 ---
+related:
+- projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md
+- governance/product/validation/project-readiness.md
+target_version: exact registered commits at 2026-07-15
+test_environment: isolated composite source under /tmp with exact SDK commit, derived config and external local cross-toolchain
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- PCR02 Robot 子模块精确源码契约审计
 id: pcr02-robot-module-contract-audit-20260715
 title: PCR02 Robot 子模块精确源码契约审计
 kind: validation
@@ -8,10 +18,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: manual-entry:knowledge-new.sh
+  source_sha256: 5fe1f97b2f8173e90b3e5728a5931199be1afaae83ab427f2198a9a4ea5a08a4
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -20,33 +34,26 @@ tags:
 - contract-audit
 - validation
 - manual-validation-pending
-related:
-- projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md
-- governance/product/validation/project-readiness.md
 validation_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-artifact_refs: []
-target_version: exact registered commits at 2026-07-15
-test_environment: isolated composite source under /tmp with exact SDK commit, derived config and external local cross-toolchain
-summary_zh: 以精确 commit、派生 SDK 配置和哈希绑定兼容 harness 复核 sensor、wifi、proto_c 及七个应用；仅 wifi 与四个应用的 object 层局部通过，其余暴露 schema、API、生成器、SDK
-  库或头文件契约缺口。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
-aliases:
-- PCR02 Robot 子模块精确源码契约审计
+summary_zh: 以精确 commit、派生 SDK 配置和哈希绑定兼容 harness 复核 sensor、wifi、proto_c 及七个应用；仅 wifi 与四个应用的 object 层局部通过，其余暴露 schema、API、生成器、SDK
+  库或头文件契约缺口。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 Robot 子模块精确源码契约审计

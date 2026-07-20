@@ -1,15 +1,46 @@
 ---
-title: prog_tool 终版发布说明
 doc_type: report
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-14
-tags: [diag, prog-tool, release]
-related: [../runbooks/prog-tool-usage-guide.md, ../runbooks/examples/prog-tool-ci-smoke.session]
-validation_refs: []
+related:
+- ../runbooks/prog-tool-usage-guide.md
+- ../runbooks/examples/prog-tool-ci-smoke.session
+id: pcr02-prog-tool-terminal-release-validation-report-20260514
+title: prog_tool 终版发布说明
+kind: validation
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/reports/2026-05-14-prog-tool-terminal-release-report.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-14-prog-tool-terminal-release-report.md
+  source_sha256: a4ac12a7e4962aedbadce5d1778c0c205fb9e4b8bdb441e03922c9ab9ede1492
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical prog_tool release evidence only, no active promotion and no current release
+  baseline claim
+tags:
+- pcr02
+- validation
+- archive-only
+- historical-evidence
+- no-active-promotion
+- prog-tool
+- release
+- diag
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/reports/2026-05-14-prog-tool-terminal-release-report.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-14 prog_tool 终版发布说明；仅作历史 release evidence，不代表当前 prog_tool 版本基线、当前发布许可或 active release decision。
 ---
 
 # prog_tool 终版发布说明

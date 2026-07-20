@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import datetime as dt
-import os
 import pathlib
 import posixpath
 from collections import Counter
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Set, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence, Set
 
 from .common import (
     KnowledgeHubError,
@@ -16,7 +15,6 @@ from .common import (
     load_json,
     load_jsonl,
     pretty_json,
-    project_rows,
     registry_items,
     render_markdown,
     repository_rows,
@@ -27,23 +25,20 @@ from .common import (
 from .evidence import merge_evidence_contract, new_evidence_contract, project_evidence_profile
 from .indexing import CORE_INDEXES, update_core_indexes, update_project_index, update_topic_index
 from .model import frontmatter_mirror, require_valid_item
+from .obsidian_view import stage_obsidian_views
 from .product_policy import load_product_policy, readiness_extensions_by_project
 from .store import RepositoryTransaction
 
 
 MANAGED_START = "<!-- knowledge-hub-project-readiness:start -->"
 MANAGED_END = "<!-- knowledge-hub-project-readiness:end -->"
-SLOT_NAMES = ("profile", "runbook", "decision", "validation")
+SLOT_NAMES = ("validation",)
+RETIRED_PROJECTION_SLOTS = frozenset({"profile", "runbook", "decision"})
 
 
 def _project_paths(project: Mapping[str, Any]) -> Dict[str, str]:
-    current = str(project["current"]).rstrip("/")
-    decisions = str(project["decisions"]).rstrip("/")
     validation = str(project["validation"]).rstrip("/")
     return {
-        "profile": current + "/project-profile.md",
-        "runbook": current + "/runbooks/maintenance-entry.md",
-        "decision": decisions + "/project-boundary-decision-candidate.md",
         "validation": validation + "/project-readiness.md",
     }
 
@@ -106,10 +101,15 @@ def _workspace_state(rows: Sequence[Mapping[str, Any]], local_workspaces: Mappin
     return "local-workspace-mapping-pending"
 
 
-def _item_inventory(project: Mapping[str, Any], items: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def _item_inventory(
+    project: Mapping[str, Any], items: Sequence[Mapping[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Return registered project knowledge used to derive stable route bindings."""
     domain = str(project["domain"])
     if project["id"] == "knowledge-hub":
-        selected = [row for row in items if row.get("domain") in {"root", "governance"}]
+        selected = [
+            row for row in items if row.get("domain") in {"root", "governance"}
+        ]
     else:
         selected = [row for row in items if row.get("domain") == domain]
     return [dict(row) for row in selected]
@@ -184,6 +184,10 @@ def _base_item(
         "scope": "project-specific" if str(project["domain"]).startswith("projects/") else "team-general",
         "visibility": "team-internal",
         "status": "reviewing",
+        # Per-project readiness bodies are machine-governed evidence contracts.
+        # The aggregate index is the human retrieval surface, so these repeated
+        # projections must not compete with canonical project knowledge.
+        "searchable": project_id == "knowledge-hub" and slot == "validation",
         "owner": "leiwenjun",
         "source": {
             "type": "generated-control-plane",
@@ -201,7 +205,19 @@ def _base_item(
             ),
         ],
         "summary_zh": summary,
+        "primary_language": "zh-CN",
+        "source_language": "zh-CN",
+        "translation_status": "not-required",
+        "terminology_status": "pending-review",
         "review_status": "ai-generated-project-readiness-pending-owner-and-real-validation",
+        "content_review_status": "pending",
+        "evidence_validation_status": "pending",
+        "evidence_strength": "generated-readiness-contract-pending-owner-validation",
+        "evidence_refs": [
+            path,
+            "registry/projects.json",
+            "registry/repositories.json",
+        ],
         "promotion_decision": "none; structural readiness asset only, no active promotion or owner decision",
         "generated_by_ai": True,
         "ai_role": "drafted",
@@ -218,7 +234,6 @@ def _base_item(
             "manual-validation-pending",
             "no-active-promotion",
         ],
-        "review_after": review_after,
         "promotion": "none",
         "created_at": today.isoformat(),
         "updated_at": today.isoformat(),
@@ -252,6 +267,21 @@ def _preserve_existing_readiness_item(
     item.setdefault("project_id", project_id)
     item.setdefault("readiness_slot", slot)
     item.setdefault("evidence_profile", evidence_profile)
+    item["searchable"] = project_id == "knowledge-hub" and slot == "validation"
+    item.setdefault("primary_language", "zh-CN")
+    item.setdefault("source_language", "zh-CN")
+    item.setdefault("translation_status", "not-required")
+    item.setdefault("terminology_status", "pending-review")
+    item.setdefault("content_review_status", "pending")
+    item.setdefault("evidence_validation_status", "pending")
+    item.setdefault(
+        "evidence_strength",
+        "generated-readiness-contract-pending-owner-validation",
+    )
+    item.setdefault(
+        "evidence_refs",
+        [path, "registry/projects.json", "registry/repositories.json"],
+    )
     if slot == "validation":
         item["evidence_contract"] = merge_evidence_contract(
             item.get("evidence_contract", {}),
@@ -273,211 +303,11 @@ def _frontmatter(
     metadata["aliases"] = ["{} {}".format(project_id, slot), "{}-{}".format(project_id, slot)]
     metadata["related"] = [
         str(project["entry"]),
-        *[paths[name] for name in SLOT_NAMES if name != slot],
+        "indexes/project-readiness.md",
     ]
     return metadata
 
 
-def _inventory_links(path: str, items: Sequence[Mapping[str, Any]], limit: int = 8) -> str:
-    rows = []
-    for item in sorted(items, key=lambda row: (str(row.get("status", "")), str(row.get("title", ""))))[:limit]:
-        item_path = str(item.get("path", ""))
-        if not item_path:
-            continue
-        rows.append(
-            "- {}：`{}` / `{}`".format(
-                _link(path, item_path, str(item.get("title", item.get("id", "")))),
-                item.get("status", ""),
-                item.get("kind", ""),
-            )
-        )
-    return "\n".join(rows) if rows else "- 当前没有可复用的已登记正文；只保留项目 registry 身份，不推断源码事实。"
-
-
-def _repo_table(rows: Sequence[Mapping[str, Any]]) -> str:
-    if not rows:
-        return "| 无直接仓库 | - | - | group/control-plane |\n"
-    output = []
-    for row in rows:
-        output.append(
-            "| `{}` | `{}` | `{}` | `{}` |".format(
-                row.get("repo_id", ""),
-                row.get("remote_key", "unregistered") or "unregistered",
-                row.get("workspace_ref", "unmapped") or "unmapped",
-                row.get("lifecycle", "unknown") or "unknown",
-            )
-        )
-    return "\n".join(output) + "\n"
-
-
-def _profile_body(
-    project: Mapping[str, Any], path: str, paths: Mapping[str, str], repos: Sequence[Mapping[str, Any]],
-    inventory: Sequence[Mapping[str, Any]],
-) -> str:
-    counts = Counter(str(row.get("status", "unknown")) for row in inventory)
-    status_text = ", ".join("{}={}".format(key, counts[key]) for key in sorted(counts)) or "none"
-    return """# {name} 项目画像候选
-
-> 本页是 AI 生成的 reviewing 控制资产，只复述 registry 身份和 Hub 已有证据。它不是当前源码、owner decision、设备状态或发布状态证明。
-
-## 项目标识
-
-| 字段 | 值 |
-|---|---|
-| project_id | `{project_id}` |
-| 类型 | `{project_type}` |
-| repo boundary | `{boundary}` |
-| 所属组 | `{groups}` |
-| registry 状态 | `{registry_status}` |
-| 本地源码映射 | `machine-local / not tracked` |
-| Hub 已登记条目 | `{item_count}`；{status_text} |
-
-## 仓库边界
-
-| repo_id | remote key | workspace ref | lifecycle |
-|---|---|---|---|
-{repo_table}
-`workspace://` 是跨机器逻辑引用，不代表本机源码存在。使用 `knowledge-workspace-discover.sh --plan` 按 exact remote 只读发现，结果只写入未跟踪的 `local/workspaces.json`；绝对路径和动态 HEAD 不进入本页。
-
-## 已有 Hub 证据
-
-{inventory_links}
-
-## 当前权威边界
-
-- 当前源码、分支、版本、构建和发布事实：源项目及其可复现验证证据。
-- 长期摘要、决策记录、验证索引和跨项目方法：Knowledge Hub canonical Markdown 与 registry。
-- `status`、`owner`、`review_after`、promotion 和 authorization：registry/gate，不由目录名、Obsidian Graph 或本页文字推断。
-- 当前 `decision_owner=unassigned`，`manual_validation_pending=true`；未完成 owner 和真实环境验证前保持 `reviewing`。
-
-## Related
-
-- {runbook_link}
-- {decision_link}
-- {validation_link}
-- {project_entry_link}
-""".format(
-        name=project["name"],
-        project_id=project["id"],
-        project_type=project.get("type", ""),
-        boundary=project.get("repo_boundary", ""),
-        groups=", ".join(str(value) for value in project.get("groups", [])),
-        registry_status=project.get("status", ""),
-        item_count=len(inventory),
-        status_text=status_text,
-        repo_table=_repo_table(repos),
-        inventory_links=_inventory_links(path, inventory),
-        runbook_link=_link(path, paths["runbook"], "维护 runbook"),
-        decision_link=_link(path, paths["decision"], "边界决策候选"),
-        validation_link=_link(path, paths["validation"], "readiness validation"),
-        project_entry_link=_link(path, str(project["entry"]), "项目入口"),
-    )
-
-
-def _runbook_body(project: Mapping[str, Any], path: str, paths: Mapping[str, str]) -> str:
-    query = str(project["id"])
-    return """# {name} 维护入口
-
-> 本 runbook 只定义 Knowledge Hub 维护流程，不提供未经源项目验证的构建、刷机、设备或发布命令。
-
-## 1. 预检
-
-```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "{query} 当前事实与验证" --task-type validation --json
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "{query}" --json --limit 10
-```
-
-确认 route 的 `selected_project_id={query}`，并区分 `current`、`recent` 与 archive-only provenance。若本机只有 `workspace://` 而没有 local mapping，先补只读映射或由 owner 提供源码证据，不猜测路径。
-
-## 2. 变更分类
-
-- 当前事实：先在源项目验证，再捕获为 `draft/reviewing` candidate。
-- 决策：补真实 decision owner、备选方案、影响范围、回滚和验证后进入 owner review。
-- 验证：保留版本/commit、环境、命令、返回码、关键日志、制品 hash 和结论边界。
-- 历史材料：只进入 archive/provenance，不自动提升 active。
-
-## 3. Hub 写入
-
-```bash
-rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --help
-rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict
-```
-
-capture 只允许创建 `draft/reviewing/personal`。promotion、retire、owner decision、memory write、source project write 和远端发布必须走独立授权门禁。
-
-## Related
-
-- {profile_link}
-- {decision_link}
-- {validation_link}
-- {project_entry_link}
-- route、检索、链接、registry 和正文镜像一致。
-- 项目特有构建/设备/发布证据由真实执行方补齐，当前文档不代签。
-""".format(
-        name=project["name"],
-        query=query,
-        profile_link=_link(path, paths["profile"], "项目画像候选"),
-        decision_link=_link(path, paths["decision"], "边界决策候选"),
-        validation_link=_link(path, paths["validation"], "readiness validation"),
-        project_entry_link=_link(path, str(project["entry"]), "项目入口"),
-    )
-
-
-def _decision_body(project: Mapping[str, Any], path: str, paths: Mapping[str, str]) -> str:
-    return """# {name} 权威与维护边界决策候选
-
-## 决策状态
-
-- decision owner：`unassigned`
-- 状态：`reviewing`
-- 当前决定：未作出
-- 禁止解释：本候选不等于 owner approval、active promotion、源码变更或发布授权。
-
-## 待决问题
-
-如何在源项目、Knowledge Hub、Obsidian 和本机运行态之间分配当前事实、长期知识、呈现和授权责任？
-
-## 已确认事实
-
-- 项目 ID、名称、类型、group、repo boundary 和 canonical 路径来自 `registry/projects.json`。
-- Git remote key、workspace logical ref 和 lifecycle 来自 `registry/repositories.json`。
-- Knowledge Hub 的 Markdown 是长期正文，registry 是生命周期与授权账本；Obsidian 只消费同一份 Markdown。
-- 源码、设备行为和发布状态必须由源项目与真实验证证明。
-
-## 方案
-
-| 方案 | 说明 | 风险 |
-|---|---|---|
-| A | 源项目保存当前事实；Hub 保存受治理摘要/决策/验证；Obsidian 只读呈现 | 需要维护 source-to-Hub 证据引用 |
-| B | 在 Hub 复制完整源码文档并作为当前事实 | 容易漂移、重复和误提升，不建议 |
-| C | 只依赖会话记忆或个人笔记 | 不可审计、不可稳定复现，不接受 |
-
-## 建议候选
-
-建议 owner 选择 A，并明确项目级 owner、验证责任、复核周期和失效条件。该建议在 owner 决策前不生效。
-
-## owner 必填
-
-- decision owner 与参与者
-- 接受/修改/拒绝及理由
-- source of truth、适用版本和失效条件
-- 验证命令/环境/制品/设备证据
-- 回滚路径和下一次 `review_after`
-
-## Related
-
-- {profile_link}
-- {runbook_link}
-- {validation_link}
-- {project_entry_link}
-""".format(
-        name=project["name"],
-        profile_link=_link(path, paths["profile"], "项目画像候选"),
-        runbook_link=_link(path, paths["runbook"], "维护 runbook"),
-        validation_link=_link(path, paths["validation"], "readiness validation"),
-        project_entry_link=_link(path, str(project["entry"]), "项目入口"),
-    )
 
 
 def _validation_body(
@@ -507,7 +337,7 @@ def _validation_body(
 
 - [x] registry item 与正文 frontmatter 镜像一致。
 - [x] {project_count} 项目 route matrix 能将 `{project_id}` 稳定解析为本项目。
-- [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
+- [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
 
@@ -529,18 +359,14 @@ def _validation_body(
 
 ## Related
 
-- {profile_link}
-- {runbook_link}
-- {decision_link}{related_extension}
+- {dashboard_link}{related_extension}
 - {project_entry_link}
 """.format(
         name=project["name"],
         project_id=project["id"],
         project_count=project_count,
         expectations=expectations,
-        profile_link=_link(path, paths["profile"], "项目画像候选"),
-        runbook_link=_link(path, paths["runbook"], "维护 runbook"),
-        decision_link=_link(path, paths["decision"], "边界决策候选"),
+        dashboard_link=_link(path, "indexes/project-readiness.md", "统一 readiness dashboard"),
         related_extension=related_extension,
         project_entry_link=_link(path, str(project["entry"]), "项目入口"),
     )
@@ -550,18 +376,14 @@ def _managed_readme(readme_path: str, text: str, project: Mapping[str, Any], pat
     block = """{start}
 ## 成熟度工作台
 
-以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+以下入口是单一 `reviewing` evidence contract 与统一 dashboard；不代表 owner 签收或发布就绪。
 
-- {profile}
-- {runbook}
-- {decision}
 - {validation}
+- {dashboard}
 {end}""".format(
         start=MANAGED_START,
-        profile=_link(readme_path, paths["profile"], "项目画像候选"),
-        runbook=_link(readme_path, paths["runbook"], "维护 runbook"),
-        decision=_link(readme_path, paths["decision"], "权威边界决策候选"),
-        validation=_link(readme_path, paths["validation"], "readiness validation"),
+        validation=_link(readme_path, paths["validation"], "项目 evidence contract"),
+        dashboard=_link(readme_path, "indexes/project-readiness.md", "统一 readiness dashboard"),
         end=MANAGED_END,
     )
     if MANAGED_START in text and MANAGED_END in text:
@@ -647,22 +469,19 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
     rows = [
         "# 项目成熟度工作台",
         "",
-        "本页由 `knowledge-project-readiness.sh` 确定性生成。4/4 仅表示结构入口完整，不代表 owner、源码、实机或发布证据完备。",
+        "本页由 `knowledge-project-readiness.sh` 确定性生成。每项目只保留一份 evidence contract；结构存在不代表 owner、源码、实机或发布证据完备。",
         "",
-        "| 项目 | profile | runbook | decision | validation | 源码定位 |",
-        "|---|---|---|---|---|---|",
+        "| 项目 | evidence contract | 源码定位 |",
+        "|---|---|---|",
     ]
     index_path = "indexes/project-readiness.md"
     for project in projects:
         project_id = str(project["id"])
         paths = project_paths[project_id]
         rows.append(
-            "| {} | {} | {} | {} | {} | `{}` |".format(
+            "| {} | {} | `{}` |".format(
                 _link(index_path, str(project["entry"]), str(project["name"])),
-                _link(index_path, paths["profile"], "profile"),
-                _link(index_path, paths["runbook"], "runbook"),
-                _link(index_path, paths["decision"], "decision"),
-                _link(index_path, paths["validation"], "validation"),
+                _link(index_path, paths["validation"], "evidence contract"),
                 "local-only",
             )
         )
@@ -671,7 +490,7 @@ def _readiness_index(projects: Sequence[Mapping[str, Any]], project_paths: Mappi
             "",
             "## 判定边界",
             "",
-            "- structural coverage：{} 项目均有四类 reviewing 入口；group 元数据不重复计入项目数。".format(len(projects)),
+            "- structural coverage：{} 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。".format(len(projects)),
             "- source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。",
             "- evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。",
             "- lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。",
@@ -706,7 +525,19 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
             )
         )
 
-    items = registry_items(root)
+    all_items = registry_items(root)
+    retired_projection_items = [
+        row
+        for row in all_items
+        if row.get("readiness_slot") in RETIRED_PROJECTION_SLOTS
+        and "project-readiness" in row.get("tags", [])
+    ]
+    retired_projection_ids = {
+        str(row.get("id", "")) for row in retired_projection_items
+    }
+    items = [
+        row for row in all_items if str(row.get("id", "")) not in retired_projection_ids
+    ]
     repositories = repository_rows(root)
     groups = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
     groups_by_id = {str(row.get("id", "")): row for row in groups if row.get("id")}
@@ -748,26 +579,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         repos = _repo_rows_for_project(project, repositories)
         workspace_state = _workspace_state(repos, local_workspaces)
         workspace_states[project_id] = workspace_state
-        inventory = _item_inventory(project, items)
         definitions = {
-            "profile": (
-                "{} 项目画像候选".format(project["name"]),
-                "project-current",
-                "记录 {} 的 registry 身份、仓库边界、已有 Hub 证据和权威边界；只作 reviewing 工作台，不声明源码或发布事实。".format(project["name"]),
-                _profile_body(project, paths["profile"], paths, repos, inventory),
-            ),
-            "runbook": (
-                "{} 维护入口".format(project["name"]),
-                "runbook",
-                "定义 {} 的 Knowledge Hub 预检、候选写入、验证与授权边界，不生成未经源项目确认的工程命令。".format(project["name"]),
-                _runbook_body(project, paths["runbook"], paths),
-            ),
-            "decision": (
-                "{} 权威与维护边界决策候选".format(project["name"]),
-                "decision",
-                "为 {} 提供 source/Hub/Obsidian 权威分工的 owner-review 候选；decision owner 尚未指定，当前没有生效决定。".format(project["name"]),
-                _decision_body(project, paths["decision"], paths),
-            ),
             "validation": (
                 "{} readiness validation".format(project["name"]),
                 "validation",
@@ -810,7 +622,11 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
                     member_project_ids,
                 )
                 item_id = str(item["id"])
-                require_valid_item(item, existing_ids=item_ids - {item_id})
+                require_valid_item(
+                    item,
+                    existing_ids=item_ids - {item_id},
+                    existing_paths=item_paths - {paths[slot]},
+                )
                 next_items[next_item_indexes[item_id]] = item
                 if item != existing_item:
                     metadata_updated_items.append(item_id)
@@ -818,7 +634,11 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
                 item = generated_item
                 if paths[slot] in item_paths or target_exists:
                     raise KnowledgeHubError("readiness path exists without matching generated item: {}".format(paths[slot]))
-                require_valid_item(item, existing_ids=item_ids)
+                require_valid_item(
+                    item,
+                    existing_ids=item_ids,
+                    existing_paths=item_paths,
+                )
                 item_ids.add(item["id"])
                 item_paths.add(paths[slot])
                 next_item_indexes[item["id"]] = len(next_items)
@@ -838,6 +658,21 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     core_contents = {path: (root / path).read_text(encoding="utf-8") for path in CORE_INDEXES}
     project_index = (root / "indexes/by-project.md").read_text(encoding="utf-8")
     topic_index = (root / "indexes/by-topic.md").read_text(encoding="utf-8")
+    retired_markers = {"`{}`".format(item_id) for item_id in retired_projection_ids}
+    if retired_markers:
+        def without_retired(text: str) -> str:
+            return "\n".join(
+                line
+                for line in text.splitlines()
+                if not any(marker in line for marker in retired_markers)
+            ).rstrip() + "\n"
+
+        core_contents = {
+            path: without_retired(content)
+            for path, content in core_contents.items()
+        }
+        project_index = without_retired(project_index)
+        topic_index = without_retired(topic_index)
     project_names = {str(row["id"]): str(row["name"]) for row in projects}
     for item in new_items:
         core_contents = update_core_indexes(core_contents, item)
@@ -890,6 +725,20 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     _add_text(transaction, root, "indexes/by-project.md", project_index)
     _add_text(transaction, root, "indexes/by-topic.md", topic_index)
     _add_text(transaction, root, "indexes/project-readiness.md", readiness_index)
+    obsidian_stage = stage_obsidian_views(
+        root,
+        transaction,
+        items=next_items,
+        document_overrides={**rendered_docs, **readme_updates},
+    )
+    if obsidian_stage["missing_files"] or obsidian_stage["content_drifts"]:
+        raise KnowledgeHubError(
+            "project readiness cannot atomically rebuild Obsidian views: "
+            "missing={} drifts={}".format(
+                obsidian_stage["missing_files"],
+                obsidian_stage["content_drifts"],
+            )
+        )
     plan = transaction.plan()
     result: Dict[str, Any] = {
         "schema_version": 1,
@@ -899,6 +748,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         "project_count": len(projects),
         "route_count": len(routes_doc["routes"]),
         "slot_count": len(projects) * len(SLOT_NAMES),
+        "evidence_contract_count": len(projects),
+        "retired_projection_item_count": len(retired_projection_items),
         "new_item_count": len(new_items),
         "new_document_count": len(new_items),
         "rendered_document_count": len(rendered_docs),
@@ -906,6 +757,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         "metadata_updated_item_count": len(metadata_updated_items),
         "metadata_updated_item_ids": sorted(metadata_updated_items),
         "readme_count": len(readme_updates),
+        "obsidian_managed_document_count": len(obsidian_stage["managed"]),
+        "derived_views_transactional": True,
         "reviewing_only": True,
         "active_promotion": False,
         "source_project_write": False,

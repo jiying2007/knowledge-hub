@@ -13,10 +13,9 @@ import json
 import os
 import pathlib
 import shutil
-import tempfile
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping
 
 from .common import (
     KnowledgeHubError,
@@ -289,6 +288,8 @@ def audit_transactions(root: pathlib.Path, transaction_id: str = "") -> Dict[str
                         "status": "invalid-journal",
                         "journal": str(journal_path.relative_to(root)),
                         "errors": [str(exc)],
+                        "recoverable": False,
+                        "requires_attention": True,
                         "recovery_action": "inspect journal and before/ directory manually; do not overwrite tracked files",
                     }
                 )

@@ -33,19 +33,18 @@
 ## 跨项目知识
 
 - [嵌入式 ASAN 调试方法论](../domains/embedded/runbooks/asan-debug-guide.md)
-- [嵌入式 Linux 性能排查](../domains/embedded/runbooks/embedded-linux-performance-triage-guide.md)
-- [知识贡献规范](../domains/embedded/standards/knowledge-contribution-guide.md)
+- [ST77912 双屏 CPU 实机排查](../projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md)
+- [Knowledge Hub 长期维护计划](../governance/ultimate-maintenance-plan.md)
 - [Codex archive 边界](../domains/codex/archive/codex-archive.ref.md)
 - [专利附件引用边界](../domains/patents/artifacts/patent-disclosure-artifacts.ref.md)
 
 ## 捕获与检查
 
 - [Inbox 笔记模板](../templates/inbox-note.md)
-- [Knowledge Hub 项目画像](../governance/product/current/project-profile.md)
-- [Knowledge Hub 维护入口](../governance/product/current/runbooks/maintenance-entry.md)
+- [统一 readiness dashboard](project-readiness.md)
 - [Knowledge Hub 当前产品状态与证据缺口](../governance/product/validation/project-readiness.md)
 - 链接检查：`rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict`
-- 产品检查：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13`
+- 产品检查：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --as-of 2026-07-19`
 
 ## 安全提醒
 
@@ -59,6 +58,7 @@
 
 - [项目 MOC](obsidian/projects.md)
 - [主题 MOC](obsidian/topics.md)
+- [受治理知识目录](obsidian/catalog.md)
 - [项目成熟度 Base](obsidian/project-readiness.base)
 - [Reviewing Base](obsidian/reviewing.base)
 - [Active 知识 Base](obsidian/active-knowledge.base)

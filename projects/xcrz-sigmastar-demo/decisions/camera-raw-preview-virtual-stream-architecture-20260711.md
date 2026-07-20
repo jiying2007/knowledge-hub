@@ -1,14 +1,48 @@
 ---
+maturity: candidate
+aliases:
+- PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+decision_status: accepted-boundary-evidence-pending
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
+owner_roles_required:
+- PCR02 product decision owner
+- camera/media owner
+- protocol/API owner
+- application/AI owner
+- release owner
+evidence_readiness:
+  owner: accepted-boundary-evidence-pending
+  source: pending-current-commit-and-artifact-identity
+  device: pending-real-device-or-lab-evidence
+  release: pending-release-and-rollback-evidence
+  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing
+decision_date: '2026-07-16'
 id: pcr02-camera-raw-preview-virtual-stream-architecture-20260711
 title: PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
 kind: decision
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
-maturity: candidate
 owner: leiwenjun
-created_at: 2026-07-11
-updated_at: '2026-07-16'
+source:
+  type: manual
+  from: current Codex engineering session and local repository diff
 review_after: '2026-10-11'
+review_status: delegated-review-closed-candidate-boundary
+content_review_status: accepted
+evidence_validation_status: pending
+promotion: none
+promotion_decision: none; owner accepted the single RAW_PREVIEW and three-virtual-stream boundary; device soak, packaging,
+  compatibility, release and rollback evidence remain pending
 tags:
 - pcr02
 - camera
@@ -23,46 +57,29 @@ tags:
 - decision-candidate
 - manual-validation-pending
 - no-active-promotion
-summary_zh: 归档 PCR02 camera RAW_PREVIEW 单物理采集流加虚拟流 fan-out 架构：底层统一 640x360 NV12 RAW_PREVIEW，上层按需生成 LCD_PREVIEW、QR_SCAN 和 VISION_RGB。该条目是
-  decision candidate 和 implementation archive，不是 release note、owner-signed active rule 或源项目事实签收。
-path: projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
-scope: project-specific
-visibility: team-internal
-review_status: delegated-review-closed-candidate-boundary
-promotion: none
-aliases:
-- PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
-decision_owner: leiwenjun
-decision_status: accepted-boundary-evidence-pending
-manual_validation_pending: true
-review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
-owner_roles_required:
-- PCR02 product decision owner
-- camera/media owner
-- protocol/API owner
-- application/AI owner
-- release owner
-evidence_readiness:
-  owner: accepted-boundary-evidence-pending
-  source: pending-current-commit-and-artifact-identity
-  device: pending-real-device-or-lab-evidence
-  release: pending-release-and-rollback-evidence
-  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 validation_refs:
 - projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
 - artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
-owner_decision: accept-single-raw-preview-three-virtual-stream-contract-remain-reviewing
-decision_date: '2026-07-16'
-promotion_decision: none; owner accepted the single RAW_PREVIEW and three-virtual-stream boundary; device soak, packaging,
-  compatibility, release and rollback evidence remain pending
+evidence_strength: current-codex-session-plus-local-repository-diff
+evidence_refs:
+- projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md
+- current Codex engineering session and local repository diff
+created_at: '2026-07-11'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-11'
+manual_validation_pending: true
+decision_owner: leiwenjun
+summary_zh: 归档 PCR02 camera RAW_PREVIEW 单物理采集流加虚拟流 fan-out 架构：底层统一 640x360 NV12 RAW_PREVIEW，上层按需生成 LCD_PREVIEW、QR_SCAN 和 VISION_RGB。该条目是
+  decision candidate 和 implementation archive，不是 release note、owner-signed active rule 或源项目事实签收。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档

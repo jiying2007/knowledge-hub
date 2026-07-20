@@ -1,13 +1,44 @@
 ---
-title: PCR02 诊断命令架构终版（唯一主文档）
 doc_type: architecture
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-13
-tags: [diag, architecture, pcr02]
+id: pcr02-diag-command-architecture-final
+title: PCR02 诊断命令架构终版（唯一主文档）
+kind: decision
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/decisions/diag-command-architecture-final.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: architecture/diag-command-architecture-final.md
+  source_sha256: 5934a96156bb748e6ceac07f2e8b56e80314ef7a4e7684ba31fac8940ac419a7
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- decisions
+- diag
+- architecture
+validation_refs:
+- projects/xcrz-sigmastar-demo/decisions/diag-command-architecture-final.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 本文件是诊断命令体系的唯一主文档，用于定义当前生效的终态架构、边界约束、生命周期语义、测试门禁与演进规则。 项目级架构与构建主文档统一维护在 docs/architecture/ 与 docs/runbooks/。该条目当前为
+  archived decision provenance，仅作历史决策材料检索入口，不代表新的 owner decision、active 规则或当前发布状态。
 ---
 
 # PCR02 诊断命令架构终版（唯一主文档）

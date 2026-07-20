@@ -1,15 +1,47 @@
 ---
-title: 会话归档报告（2026-05-17）
 doc_type: report
 knowledge_type: process
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-17
 last_updated: 2026-05-17
-tags: [session, docs, diag, prog-tool]
-related: [../runbooks/prog-tool-usage-guide.md, ../reports/2026-05-14-prog-tool-terminal-release-report.md]
-validation_refs: []
+related:
+- ../runbooks/prog-tool-usage-guide.md
+- ../reports/2026-05-14-prog-tool-terminal-release-report.md
+id: pcr02-session-archive-report-20260517
+title: 会话归档报告（2026-05-17）
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-05-17-session-archive-report.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-17-session-archive-report.md
+  source_sha256: 6f705712755cd5857c06a67d2a80fcbb938a663edfefd821bf3c4d35c364dbc0
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical session report only, no active promotion and no current runbook or validation
+  claim
+tags:
+- pcr02
+- archive-only
+- session-archive
+- historical-report
+- no-active-promotion
+- diag
+- prog-tool
+- session
+- docs
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-05-17-session-archive-report.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-17 PCR02 会话归档报告；仅作历史会话报告 provenance，不代表当前 runbook、当前验证结论或 active 决策。
 ---
 
 # 会话归档报告（2026-05-17）

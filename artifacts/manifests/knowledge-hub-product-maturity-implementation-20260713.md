@@ -3,13 +3,21 @@ id: knowledge-hub-product-maturity-implementation-20260713
 title: Knowledge Hub 产品成熟度全面实现审计 2026-07-13
 kind: audit
 domain: governance
+path: artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md
 scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: generated
+  from: current-session Knowledge Hub product maturity implementation
+  source_sha256: 4431af7ccf7ef0c5e5d27cda521b718582b2259d2b2587bde4b842489b249cc9
 review_after: '2026-10-13'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - knowledge-hub
 - product-maturity
@@ -19,17 +27,32 @@ tags:
 - restore
 - report-only
 - no-active-promotion
+validation_refs:
+- artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md
+- artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.jsonl
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --regression-suite full --as-of 2026-07-13
+  --json
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md
+- artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.jsonl
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --regression-suite full --as-of 2026-07-13
+  --json
+created_at: '2026-07-13'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-summary_zh: 记录 Knowledge Hub 产品化全面实现：Python 单内核、事务生命周期、31 项目结构与路由、可解释检索、Obsidian 只读视图、受控导出、恢复演练和唯一 product 门禁；平台通过但真实项目证据 0/31，保持 needs-owner-review。
+summary_zh: 记录 Knowledge Hub 产品化全面实现：Python 单内核、事务生命周期、31 项目结构与路由、可解释检索、Obsidian 只读视图、受控导出、恢复演练和唯一 product 门禁；平台通过但真实项目证据
+  0/31，保持 needs-owner-review。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # Knowledge Hub 产品成熟度全面实现审计 2026-07-13
@@ -38,7 +61,7 @@ promotion_decision: none; capture does not authorize active promotion or owner d
 
 本轮已把 Knowledge Hub 从“治理脚本集合”推进为可验证的本地知识产品平台：目标与权威边界、共享内核、事务化生命周期、项目结构、检索质量、上下文路由、Obsidian 呈现、团队导出、恢复演练和产品门禁均有稳定实现与测试。
 
-当前平台技术门禁通过，但不能声明全面终态成熟。31 个项目均达到 4/4 结构覆盖，本机 source mapping 已达到 31/31，但真实 owner、人工/实机和发布 evidence-ready 仍为 0/31；因此当前产品结论是 `gate_status=pass`、`overall_status=needs-owner-review`、`terminal_maturity=false`。这只能声明“平台产品化完成”，不能在观察期前声明“长期使用终态已被实证”。
+当前平台技术门禁通过，但不能声明全面终态成熟。31 个项目均达到 4/4 结构覆盖，本机 source mapping 已达到 31/31，但真实 owner、人工/实机和发布 evidence-ready 仍为 0/31；因此当前产品结论是 `gate_status=pass`、`overall_status=needs-owner-review`、`terminal=false`。这只能声明“平台产品化完成”，不能在观察期前声明“长期使用终态已被实证”。
 
 本候选由 Codex 生成，保持 `reviewing`、`manual_validation_pending=true`、`promotion=none`。它不是 owner decision，不提升 active，不关闭 owner gate，不写 memory，不修改源项目，也不授权 push、merge、tag 或发布远端状态。本轮只允许在全部门禁通过后形成一个 Hub 本地提交。
 
@@ -76,8 +99,8 @@ canonical Markdown
 | Obsidian | canonical Markdown 上的可选本地 workbench；总/项目/主题 MOC 与 3 个只读 `.base` | managed Properties 147/147、mirror drift=0、MOC orphan=0；文件层通过，真实 GUI 运行态保持 `not-validated` |
 | 团队导出 | 只选择 active + team-internal canonical Markdown，执行共享 secret scan、link closure、hash manifest 和 atomic publish | manifest v2；不含 reviewing/personal/pending owner decision，失败不会暴露半成品目标目录 |
 | 恢复演练 | `candidate` 验证 tracked + 当前工作树，`head` 只验证 `git archive HEAD`；均在 `/tmp` 逐文件 hash 后运行门禁 | 无 cache/workspace mapping；候选通过不再冒充 committed release，HEAD 演练是发布必要条件 |
-| 产品门禁 | 唯一入口 `knowledge-final-gate.sh --final-profile product` 聚合技术、内容、检索、运营和真实证据 | `gate_status=pass`；`overall_status=needs-owner-review`；`terminal_maturity=false` |
-| 交付真实性 | `delivery_readiness` 区分 dirty candidate 与 clean committed HEAD | 只有 tracked dependencies、full regression 和 HEAD restore 同时通过才允许 `platform_release_complete=true` |
+| 产品门禁 | 唯一入口 `knowledge-final-gate.sh --final-profile product` 聚合技术、内容、检索、运营和真实证据 | `gate_status=pass`；`overall_status=needs-owner-review`；`terminal=false` |
+| 交付真实性 | `delivery_readiness` 分开本地交付、远端发布和异地恢复 | tracked dependencies、full regression 和 HEAD restore 只决定 `local_delivery_complete`；远端 push 与独立环境恢复各自判定 |
 
 ## Obsidian 关系
 

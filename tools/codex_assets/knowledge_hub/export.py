@@ -7,6 +7,7 @@ import os
 import pathlib
 import posixpath
 import re
+import tempfile
 import urllib.parse
 import uuid
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
@@ -210,7 +211,10 @@ def plan_team_export(root: pathlib.Path) -> Dict[str, Any]:
 
 def _safe_output(root: pathlib.Path, output: pathlib.Path) -> pathlib.Path:
     resolved = output.expanduser().resolve(strict=False)
-    allowed = [root / ".cache" / "knowledge-hub" / "exports", pathlib.Path("/tmp")]
+    allowed = [
+        root / ".cache" / "knowledge-hub" / "exports",
+        pathlib.Path(tempfile.gettempdir()),
+    ]
     for base in allowed:
         try:
             resolved.relative_to(base.resolve(strict=False))

@@ -1,15 +1,48 @@
 ---
-title: prog_tool 使用说明
 doc_type: runbook
 knowledge_type: guideline
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-14
-tags: [diag, prog-tool, runbook]
-related: [../reports/2026-05-14-prog-tool-terminal-release-report.md, examples/prog-tool-ci-smoke.session]
-validation_refs: []
+related:
+- ../reports/2026-05-14-prog-tool-terminal-release-report.md
+- examples/prog-tool-ci-smoke.session
+id: pcr02-prog-tool-usage-guide
+title: prog_tool 使用说明
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/prog-tool-usage-guide.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: runbooks/prog-tool-usage-guide.md
+  source_sha256: 4f95bb497e045d2cc2018a3b1ad7090528d86528958aab8edbdf0afc31db895f
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- diag
+- prog-tool
+- runbook
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/prog-tool-usage-guide.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: prog_tool 是基于 diag 命令体系的本地/远端统一测试执行器，用于替代旧 app_tool 的手工交互测试方式。该条目当前为 archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active
+  决策或 owner 签收。
 ---
 
 # prog_tool 使用说明（终态）

@@ -8,7 +8,7 @@ import datetime as dt
 import json
 import pathlib
 import sys
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .common import KnowledgeHubError, load_json, resolve_today
 from .lifecycle import capture

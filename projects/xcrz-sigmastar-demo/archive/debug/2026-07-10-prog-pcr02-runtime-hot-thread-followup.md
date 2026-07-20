@@ -1,23 +1,61 @@
 ---
+maturity: candidate
 id: pcr02-prog-pcr02-runtime-hot-thread-followup-20260710
 title: PCR02 prog_pcr02 运行态热点线程跟进
 kind: debug-record
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
-maturity: candidate
 owner: leiwenjun
-created_at: 2026-07-10
-updated_at: 2026-07-10
-review_after: 2026-10-10
+source:
+  type: manual
+  from: codex-session-runtime-debug via adb on PCR02 device 172.16.16.133
+review_after: '2026-10-10'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: verified
+promotion: none
+promotion_decision: none; reviewing debug-record candidate, repeated same-condition sampling still required, no active promotion,
+  no release gate and no owner decision
 tags:
-  - pcr02
-  - prog_pcr02
-  - runtime-monitoring
-  - cpu-load
-  - adb
-  - hot-thread
-  - hdi_vi_out3
-  - hdi_vi_sw_light
+- pcr02
+- prog_pcr02
+- runtime-monitoring
+- cpu-load
+- adb
+- hot-thread
+- hdi_vi_out3
+- hdi_vi_sw_light
+- sensor_in0
+- sensor_tof0
+- reviewing-followup
+- repeat-sampling-required
+- no-active-promotion
+validation_refs:
+- rtk make modules/hdi_lib_all
+- rtk bash ~/codex/scripts/final-ready.sh
+- 'manual_validation_pending: true'
+- 'reason: runtime follow-up is a single-window sample; needs repeated same-condition sampling after deployment'
+evidence_strength: single-window-runtime-followup-plus-build-verification
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md
+- 'current Codex session: adb connect 172.16.16.133:5555; /proc status; task stat 1s delta'
+- modules/hdi/src/hdi_video/hdi_vi.c _VI_IspSwLightSensor optimization
+created_at: '2026-07-10'
+updated_at: '2026-07-19'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+summary_zh: 2026-07-10 对 PCR02 设备 172.16.16.133 进行只读运行态跟进采样：prog_cmd_server 和 prog_daemon 的 RSS 很小，高 VSZ 不是实际内存热点；主压力仍集中在
+  prog_pcr02 内部，线程热点包括 AgoraRTC、hdi_vi_out3、ai-wakeup-aud、sensor_disp0、hdi_ai_prc0、CUS3A、sensor_in0 和 sensor_tof0。hdi_vi_sw_light
+  去 1ms spin-wait 后已不再是前排热点。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 prog_pcr02 运行态热点线程跟进

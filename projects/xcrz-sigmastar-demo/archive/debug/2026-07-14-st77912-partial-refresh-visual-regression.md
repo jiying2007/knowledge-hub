@@ -1,4 +1,13 @@
 ---
+related:
+- xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+incident_id: xcrz-display-partial-refresh-20260714
+severity: visual-correctness-regression
+affected_version: latest test firmware, prog_pcr02 sha256 7b1d46d903f22d3488da2d4fd67fecfd1afab773b01e2cebfafca4d0acc67794
+implementation_status: source-implemented-static-verified-runtime-pending
 id: xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714
 title: PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录
 kind: debug-record
@@ -8,10 +17,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: 当前会话的只读 ADB 实机取证、本地源码核对及用户现场观察。
+  source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-08-14'
-created_at: '2026-07-14'
-updated_at: '2026-07-14'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -21,40 +34,36 @@ tags:
 - lvgl
 - partial-refresh
 - visual-regression
-related:
-- xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713
 validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - adb-read-only-runtime-capture-20260714
 - source-timing-review-20260714
 - userspace-refresh-cycle-implementation-build-20260714
 - release-kernel-source-static-sync-20260714
 artifact_refs:
 - device:/customer/bin/prog_pcr02#sha256=7b1d46d903f22d3488da2d4fd67fecfd1afab773b01e2cebfafca4d0acc67794
-summary_zh: 最新 partial-refresh 部署在降低静态窗口显示线程负载的同时出现图像割裂和局部残留；ADB 抓取 framebuffer 多数完整，源码时序表明 LVGL area flush 与 fbtft deferred
-  SPI 提交缺少逻辑帧边界及物理完成屏障。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
 evidence_strength: runtime-confirmed-with-source-mechanism-and-scoped-limitations
 evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - runtime display init configuration
 - framebuffer snapshot and hash sequence
 - LVGL 8.3.10 flush state machine
 - Linux 5.10 fb_defio and fbtft source
+created_at: '2026-07-14'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-14'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
-incident_id: xcrz-display-partial-refresh-20260714
-severity: visual-correctness-regression
-affected_version: latest test firmware, prog_pcr02 sha256 7b1d46d903f22d3488da2d4fd67fecfd1afab773b01e2cebfafca4d0acc67794
 manual_validation_pending: true
-implementation_status: source-implemented-static-verified-runtime-pending
+summary_zh: 最新 partial-refresh 部署在降低静态窗口显示线程负载的同时出现图像割裂和局部残留；ADB 抓取 framebuffer 多数完整，源码时序表明 LVGL area flush 与 fbtft deferred
+  SPI 提交缺少逻辑帧边界及物理完成屏障。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录

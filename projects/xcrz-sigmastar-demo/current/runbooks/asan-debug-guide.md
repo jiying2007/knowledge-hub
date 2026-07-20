@@ -1,16 +1,64 @@
 ---
-title: PCR02 ASAN 调试指导
 doc_type: owner-approved-target
-status: archived
-owner: team-core
 source_id: pcr02-project-docs
 source_path: runbooks/asan-debug-guide.md
 source_sha256: d65cf6796eac2c306b6bd0fa101450a1307d5c49ba7b7640e6a329d4263d8e88
 source_size: 4736
 owner_decision: split-approved
 worksheet_id: pcr02-owner-decision-worksheet-003
-review_after: 2026-09-17
 generated_at: 2026-06-24
+id: pcr02-asan-debug-guide-project-local-20260624
+title: PCR02 ASAN 调试指导项目内目标 2026-06-24
+kind: runbook
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: owner-approved-target-materialization
+  source_id: pcr02-project-docs
+  source_path: runbooks/asan-debug-guide.md
+  source_sha256: d65cf6796eac2c306b6bd0fa101450a1307d5c49ba7b7640e6a329d4263d8e88
+  source_manifest: artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl
+review_after: '2026-09-17'
+review_status: delegated-review-closed
+promotion: none
+promotion_decision: none; delegated Hub review closure
+tags:
+- pcr02
+- asan
+- project-local
+- owner-decision
+- split-approved
+- source-control
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- sources/pcr02-project-docs/inventory.jsonl
+- rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-06-24
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_strength: owner-decision-landing-plus-source-sha-target-materialization
+evidence_refs:
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md
+- sources/pcr02-project-docs/inventory.jsonl
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-24'
+updated_at: '2026-07-01'
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-06-24'
+summary_zh: 按 owner 决策将 PCR02 ASAN 调试指导落到项目内 current runbook；2026-06-24 落地时团队级 ASAN 方法论仍待去项目化重写和另行 review，后续已在 2026-06-29
+  通过 active promotion 独立闭环。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ASAN 调试指导

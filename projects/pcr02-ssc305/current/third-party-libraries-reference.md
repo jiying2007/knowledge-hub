@@ -1,15 +1,45 @@
 ---
-title: PCR02 第三方库引用基线
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [third-party, dependency, standard]
-related: [../runbooks/project-build-and-deploy-guide.md, ../architecture/module-catalog.md]
-validation_refs: [libs/3rdparty, build/app_3rdparty.mk, pcr02/pcr02.mk]
+related:
+- ../runbooks/project-build-and-deploy-guide.md
+- ../architecture/module-catalog.md
+id: pcr02-third-party-libraries-reference
+title: PCR02 第三方库引用基线
+kind: project-current
+domain: projects/pcr02-ssc305
+path: projects/pcr02-ssc305/current/third-party-libraries-reference.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: standards/third-party-libraries-reference.md
+  source_sha256: c36e131860c40e77690c88e69669e97b65d345d6e8f13d532260d0604e59d664
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+validation_refs:
+- projects/pcr02-ssc305/current/third-party-libraries-reference.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-11'
+summary_zh: '> 项目边界：本文是 PCR02 迁移副本中的项目本地基线，只适用于 projects/pcr02-ssc305/ 及对应 PCR02 source。它不是团队级 third-party 标准，不进入 domains/embedded/standards/；跨项目复用前必须另行
+  owner review，并拆出通用依赖治理证据。该条目当前为 archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。'
 ---
 
 # PCR02 第三方库引用基线

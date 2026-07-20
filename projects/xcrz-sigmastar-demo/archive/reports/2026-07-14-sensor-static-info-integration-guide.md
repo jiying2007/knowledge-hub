@@ -1,7 +1,30 @@
 ---
-title: PCR02 Sensor 静态数据上报 Task/App 联调指南
 date: 2026-07-14
 project: xcrz-sigmastar-demo
+captured_at: 2026-07-14
+last_verified: 2026-07-14
+required_followup: 使用包含同一版 Proto/HDI/Sensor 改动的制品重新生成 Task/App Protobuf 代码，执行本文 Schema 2.0 验收用例，并补充 Chip ID 与 Task/App/Bridge
+  消费日志。
+memory_candidate: false
+id: xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714
+title: PCR02 Sensor 静态数据上报 Task/App 联调指南
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md
+scope: project-specific
+visibility: team-internal
+status: reviewing
+owner: leiwenjun
+source:
+  type: session-research-summary
+  from: current-session-source-contract-review
+  source_sha256: b695c072258439bd04fa593f8fceda18f6bedd627d9da51e71678a2ea1205918
+review_after: '2026-08-14'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
+promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - sensor
@@ -14,33 +37,27 @@ tags:
 - integration-guide
 - source-reviewed
 - manual-validation-pending
-source: current-session-source-contract-review
-captured_at: 2026-07-14
-last_verified: 2026-07-14
-manual_validation_reason: Schema 2.0、Chip ID、HDI 初始化和静态发布源码/构建契约已核对；当前检出树缺少完整 modules/task 源码，且尚未完成板端 Task/App/Bridge 与 MI_SYS UUID 实机联调。
-required_followup: 使用包含同一版 Proto/HDI/Sensor 改动的制品重新生成 Task/App Protobuf 代码，执行本文 Schema 2.0 验收用例，并补充 Chip ID 与 Task/App/Bridge 消费日志。
-memory_candidate: false
-id: xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714
-kind: project-archive
-domain: projects/xcrz-sigmastar-demo
-scope: project-specific
-visibility: team-internal
-status: reviewing
-owner: leiwenjun
-review_after: '2026-08-14'
-review_status: manual-entry-pending-review
-promotion: none
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-14'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-14'
 manual_validation_pending: true
+manual_validation_reason: Schema 2.0、Chip ID、HDI 初始化和静态发布源码/构建契约已核对；当前检出树缺少完整 modules/task 源码，且尚未完成板端 Task/App/Bridge 与 MI_SYS
+  UUID 实机联调。
 summary_zh: 基于当前源码固化 DeviceStaticInfo Schema 2.0 的 Chip ID、MAC/SN、版本、标定状态、同进程订阅、缓存、旧协议兼容和 Task/App 联调要求；源码与定向构建契约已核对，板端联调待验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # PCR02 Sensor 静态数据上报 Task/App 联调指南

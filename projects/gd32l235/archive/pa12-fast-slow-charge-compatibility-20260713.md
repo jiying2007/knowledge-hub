@@ -3,19 +3,36 @@ id: gd32l235-pa12-fast-slow-charge-compatibility-20260713
 title: GD32L235 PA12 快慢充控制与硬件兼容性归档
 kind: project-archive
 domain: projects/gd32l235
+path: projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: codex-session-summary
+  from: local Codex session on 2026-07-13 for GD32L235 PA12 fast/slow charge requirement
+  source_sha256: 305a608c1911aebcee01ce4cabda50007d4abbc6a53873a57cd44bac2376b5aa
 review_after: '2026-08-13'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - gd32l235
 - charge
 - pa12
 - hardware-compatibility
 - test-readiness
+validation_refs:
+- projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-13'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -26,7 +43,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # GD32L235 PA12 快慢充控制与硬件兼容性归档

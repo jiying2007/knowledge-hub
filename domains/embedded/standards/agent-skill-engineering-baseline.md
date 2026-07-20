@@ -3,7 +3,8 @@ title: AGENT 与 SKILL 工程基线
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12

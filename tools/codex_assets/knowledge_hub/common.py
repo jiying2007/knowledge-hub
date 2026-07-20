@@ -400,7 +400,8 @@ def split_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
             "Markdown frontmatter exceeds {} bytes".format(MAX_FRONTMATTER_BYTES)
         )
     try:
-        metadata = yaml.load(raw, Loader=_BoundedSafeLoader) or {}
+        # _BoundedSafeLoader subclasses SafeLoader and adds alias/depth/node budgets.
+        metadata = yaml.load(raw, Loader=_BoundedSafeLoader) or {}  # nosec B506
     except yaml.YAMLError as exc:
         raise KnowledgeHubError("invalid YAML frontmatter: {}".format(exc)) from exc
     if not isinstance(metadata, dict):

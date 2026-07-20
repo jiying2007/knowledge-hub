@@ -5,19 +5,20 @@ from __future__ import annotations
 import pathlib
 import re
 import urllib.parse
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import yaml
 
 from .common import (
     DEFAULT_MARKDOWN_MAX_BYTES,
+    load_json,
     project_rows,
     read_repository_utf8_bounded,
     registry_items,
     split_frontmatter,
     utc_timestamp,
 )
-from .obsidian_view import CONTENT_FIELDS, LIFECYCLE_FIELDS, is_managed_markdown
+from .obsidian_view import CONTENT_FIELDS, is_managed_markdown
 
 
 MARKDOWN_LINK = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\n]+)\)")
@@ -250,6 +251,14 @@ def _base_audit(root: pathlib.Path) -> List[Dict[str, Any]]:
 
 def audit_links(root: pathlib.Path) -> Dict[str, Any]:
     items = registry_items(root)
+    body_coverage = load_json(root / "registry/body-coverage.json", {}) or {}
+    external_attachment_prefixes = tuple(
+        str(row.get("path_prefix", ""))
+        for row in body_coverage.get("collections", [])
+        if isinstance(row, Mapping)
+        and row.get("attachment_policy") == "external-not-retained"
+        and str(row.get("path_prefix", ""))
+    )
     item_by_path = {str(row.get("path", "")): row for row in items if row.get("path")}
     item_by_id = {str(row.get("id", "")): row for row in items if row.get("id")}
     markdown_paths = _markdown_paths(root)
@@ -269,6 +278,8 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
     broken_anchor_count = 0
     attachment_count = 0
     external_attachment_count = 0
+    declared_external_attachment_count = 0
+    declared_external_attachments: List[Dict[str, Any]] = []
     wiki_embed_count = 0
     for source in markdown_paths:
         relative_source = source.relative_to(root).as_posix()
@@ -333,6 +344,19 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
                 continue
             source_item = item_by_path.get(relative_source, {})
             source_status = str(source_item.get("status", ""))
+            if relative_source.startswith(external_attachment_prefixes):
+                declared_external_attachment_count += 1
+                if len(declared_external_attachments) < 20:
+                    declared_external_attachments.append(
+                        {
+                            "source": relative_source,
+                            "target": _target_text(raw),
+                            "reason": "attachment-external-not-retained",
+                            "source_status": source_status or "unregistered",
+                            "status": "declared-external",
+                        }
+                    )
+                continue
             blocking = _blocking_source(relative_source, source_status)
             row = {
                 "source": relative_source,
@@ -375,6 +399,19 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
                 continue
             source_item = item_by_path.get(relative_source, {})
             source_status = str(source_item.get("status", ""))
+            if relative_source.startswith(external_attachment_prefixes):
+                declared_external_attachment_count += 1
+                if len(declared_external_attachments) < 20:
+                    declared_external_attachments.append(
+                        {
+                            "source": relative_source,
+                            "target": raw,
+                            "reason": "attachment-external-not-retained",
+                            "source_status": source_status or "unregistered",
+                            "status": "declared-external",
+                        }
+                    )
+                continue
             blocking = _blocking_source(relative_source, source_status)
             row = {
                 "source": relative_source,
@@ -469,6 +506,7 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
         "indexes/obsidian-home.md",
         "indexes/obsidian/projects.md",
         "indexes/obsidian/topics.md",
+        "indexes/obsidian/catalog.md",
         "indexes/project-readiness.md",
         "indexes/by-topic.md",
     } if obsidian_contract_enabled else set()
@@ -509,6 +547,8 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
         "broken_anchor_count": broken_anchor_count,
         "attachment_reference_count": attachment_count,
         "external_attachment_count": external_attachment_count,
+        "declared_external_attachment_count": declared_external_attachment_count,
+        "declared_external_attachment_sample": declared_external_attachments,
         "wiki_embed_count": wiki_embed_count,
         "blocking_broken_count": len(broken),
         "blocking_broken": broken,
@@ -537,7 +577,7 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
         "community_plugin_required": False,
         "obsidian_bases": bases,
         "base_failure_count": len(base_failures),
-        "notes_zh": "标准链接、锚点、附件、Properties、related、MOC 和 Base 均受审计；archive 历史断链只报告。Backlinks 和 Graph 只用于发现关系，不决定生命周期。",
+        "notes_zh": "标准链接、锚点、附件、Properties、related、MOC 和 Base 均受审计；明确声明 external-not-retained 的冻结归档附件单独计数，不伪装成已恢复，也不制造历史告警。Backlinks 和 Graph 只用于发现关系，不决定生命周期。",
     }
 
 
@@ -553,6 +593,12 @@ def link_audit_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "blocking_broken_sample": list(payload.get("blocking_broken", []))[:20],
         "historical_warning_count": payload.get("historical_warning_count", 0),
         "historical_warning_sample": list(payload.get("historical_warnings", []))[:10],
+        "declared_external_attachment_count": payload.get(
+            "declared_external_attachment_count", 0
+        ),
+        "declared_external_attachment_sample": list(
+            payload.get("declared_external_attachment_sample", [])
+        )[:10],
         "readiness_without_inbound_count": payload.get(
             "readiness_without_inbound_count", 0
         ),

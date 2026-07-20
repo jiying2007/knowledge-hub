@@ -1,16 +1,58 @@
 ---
-title: 电机 MCU 调试详细记录
 doc_type: owner-approved-target
-status: archived
-owner: team-core
 source_id: pcr02-project-docs
 source_path: reports/2026-05-29-motor-mcu-debug-record.md
 source_sha256: 2ebdb26b56f3bd7a3561fd4f6a0aaf05389044e34530a10743d4032434fde734
 source_size: 13646
 owner_decision: archive-only
 worksheet_id: pcr02-owner-decision-worksheet-006
-review_after: 2026-09-17
 generated_at: 2026-06-24
+id: pcr02-motor-mcu-debug-record-archive-only-20260624
+title: PCR02 motor MCU 调试记录归档目标 2026-06-24
+kind: debug-record
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: owner-approved-target-materialization
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-29-motor-mcu-debug-record.md
+  source_sha256: 2ebdb26b56f3bd7a3561fd4f6a0aaf05389044e34530a10743d4032434fde734
+  source_manifest: artifacts/manifests/knowledge-hub-source-control-unification-20260624.jsonl
+review_after: '2026-09-17'
+review_status: owner-approved-archive-only-target-materialized
+promotion: none
+promotion_decision: none
+tags:
+- pcr02
+- motor-mcu
+- debug-record
+- archive-only
+- owner-decision
+- source-control
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- sources/pcr02-project-docs/inventory.jsonl
+evidence_strength: owner-decision-landing-plus-source-sha-target-materialization
+evidence_refs:
+- artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
+- projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md
+- sources/pcr02-project-docs/inventory.jsonl
+created_at: '2026-06-24'
+updated_at: '2026-06-24'
+generated_by_ai: true
+ai_role: classified
+ai_model_or_tool: Codex
+ai_generated_at: '2026-06-24'
+summary_zh: 按 owner 决策将 motor MCU 调试记录作为 archive-only 目标落地；事实、反馈、推断、建议和 open items 未拆分前不得提升为验证结论。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # 电机 MCU 调试详细记录

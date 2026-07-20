@@ -3,7 +3,7 @@
   "$id": "https://knowledge-hub.local/schemas/compliance-eval.schema.json",
   "title": "Knowledge Hub Agent compliance evaluation v2",
   "type": "object",
-  "required": ["schema_version", "read_only", "status", "total", "minimum_cases", "passed", "failed", "results", "safety", "content_echoed"],
+  "required": ["schema_version", "read_only", "status", "total", "minimum_cases", "passed", "failed", "results", "safety", "verdict_coverage", "content_echoed"],
   "properties": {
     "schema_version": {"const": "knowledge-hub.compliance-eval.v2"},
     "read_only": {"const": true},
@@ -31,6 +31,30 @@
         "high_risk_allowed_count": {"type": "integer", "minimum": 0},
         "high_risk_false_allow_count": {"type": "integer", "minimum": 0}
       }
+    },
+    "verdict_coverage": {
+      "type": "object",
+      "required": ["required", "required_verdicts", "observed_counts", "missing_verdicts", "status"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "required_verdicts": {
+          "type": "array",
+          "items": {"enum": ["ALLOW", "BLOCK", "NEEDS_REVIEW"]},
+          "uniqueItems": true
+        },
+        "observed_counts": {
+          "type": "object",
+          "required": ["ALLOW", "BLOCK", "NEEDS_REVIEW"],
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "missing_verdicts": {
+          "type": "array",
+          "items": {"enum": ["ALLOW", "BLOCK", "NEEDS_REVIEW"]},
+          "uniqueItems": true
+        },
+        "status": {"enum": ["pass", "fail"]}
+      },
+      "additionalProperties": false
     },
     "content_echoed": {"const": false}
   },

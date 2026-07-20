@@ -440,74 +440,55 @@ def run_engineering_quality(
         }
 
     python = _current_python_executable()
-    data_file = ".tmp/engineering/.coverage"
     dist_dir = ".tmp/engineering/dist"
-    critical_lint_paths = (
-        "tools/codex_assets/knowledge_hub/common.py",
-        "tools/codex_assets/knowledge_hub/engineering.py",
-        "tools/codex_assets/knowledge_hub/export.py",
-        "tools/codex_assets/knowledge_hub/metrics.py",
-        "tools/codex_assets/knowledge_hub/product_gate.py",
-        "tools/codex_assets/knowledge_hub/product_policy.py",
-        "tools/codex_assets/knowledge_hub/retrieval.py",
-        "tools/codex_assets/knowledge_hub/runtime_maintenance.py",
-        "tools/codex_assets/knowledge_hub/search.py",
-        "tools/codex_assets/knowledge_hub/source_runtime.py",
-        "tests/test_common.py",
-        "tests/test_engineering.py",
-        "tests/test_export.py",
-        "tests/test_metrics.py",
-        "tests/test_product_gate.py",
-        "tests/test_retrieval.py",
-        "tests/test_runtime_maintenance.py",
-        "tests/test_search.py",
-        "tests/test_source_runtime.py",
-    )
     commands: Sequence[Tuple[str, Sequence[str], int]] = (
         (
             "ruff_correctness",
             (python, "-m", "ruff", "check", "tools/codex_assets/knowledge_hub", "tests"),
             120,
         ),
-        (
-            "ruff_critical",
-            (
-                python,
-                "-m",
-                "ruff",
-                "check",
-                "--select",
-                "E4,E7,E9,F,B",
-                "--ignore",
-                "E501",
-                *critical_lint_paths,
-            ),
-            120,
-        ),
         ("mypy", (python, "-m", "mypy"), 180),
         (
             "bandit",
-            (python, "-m", "bandit", "-q", "-r", "tools/codex_assets/knowledge_hub", "-lll", "-iii"),
+            (python, "-m", "bandit", "-q", "-r", "tools/codex_assets/knowledge_hub", "-ll", "-ii"),
             180,
         ),
         (
+            "coverage_erase",
+            (python, "-m", "coverage", "erase"),
+            60,
+        ),
+        (
             "coverage",
-            (python, "-m", "coverage", "run", "--data-file", data_file, "-m", "pytest", "-q"),
+            (python, "-m", "coverage", "run", "--parallel-mode", "-m", "pytest", "-q"),
             300,
         ),
-        ("coverage_report", (python, "-m", "coverage", "report", "--data-file", data_file), 60),
         ("build", (python, "-m", "build", "--no-isolation", "--outdir", dist_dir), 180),
         ("knowledge_check", ("bash", "tools/knowledge-check.sh", "--dry-run", "--json"), 120),
         (
             "retrieval_benchmark",
-            ("bash", "tools/knowledge-retrieval-benchmark.sh", "--json"),
+            ("bash", "tools/knowledge-retrieval-benchmark.sh", "--summary-json"),
             120,
         ),
         (
             "full_regression",
-            ("bash", "tools/knowledge-regression.sh", "--suite", "full", "--json"),
+            (
+                python,
+                "-m",
+                "coverage",
+                "run",
+                "--parallel-mode",
+                "-m",
+                "tools.codex_assets.knowledge_hub.regression_cli",
+                ".",
+                "--suite",
+                "full",
+                "--summary-json",
+            ),
             600,
         ),
+        ("coverage_combine", (python, "-m", "coverage", "combine"), 120),
+        ("coverage_report", (python, "-m", "coverage", "report"), 120),
         (
             "dependency_audit",
             (

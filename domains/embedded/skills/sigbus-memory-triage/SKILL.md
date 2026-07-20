@@ -25,7 +25,7 @@ last_updated: 2026-05-15
 2. 必须判断是否存在未对齐访问风险。
 3. 必须判断是否存在映射越界/底层文件截断风险。
 4. 必须给出“边界校验/字节读取替代”修复建议。
-5. 代码风格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
+5. 代码风格参考 `domains/embedded/standards/c-coding-standards.md` 的冻结历史基线；如与当前项目规范冲突，以项目规范为准。
 6. 结构与验证流程遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 
 ## 4. 最小验证

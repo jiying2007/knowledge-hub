@@ -45,7 +45,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；正式收口仍以 `knowledge-final-gate.sh` 为 terminal gate。
-`knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查和 reviewing triage；新增或修改长期正文后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的冻结路径清单覆盖；集合覆盖不创建 active 条目。
+`knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查和 reviewing triage；review queue 直接消费 `knowledge-index-plan` 的 canonical projection，不再维护第二套 blocker 推断。changed-only 扫描区分新增、修改、重命名和删除，删除中的旧正文只计数并给出有界样本，不会被误报为 orphan。默认按 `full -> quick` 顺序选择 24 小时内、日期和工作树签名均匹配的产品门禁快照，避免已有 full 证据被较新的 quick 快照降级覆盖。可用 `--gate-suite auto|quick|full` 固定读取层级；`--refresh-gate` 在 `auto` 下刷新 quick，在显式层级下刷新所选 suite。新增或修改长期正文后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的冻结路径清单覆盖；集合覆盖不创建 active 条目。
 
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
@@ -72,7 +72,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-evidence-pack.sh "<任务或问题>" --
 rtk bash ~/knowledge-hub/tools/knowledge-action-check.sh --task "<任务>" --candidate "<候选动作>" --scope-ref repository:<repo-id> --json
 rtk bash ~/knowledge-hub/tools/knowledge-proposal-route.sh --proposal <candidate.json> --json
 rtk bash ~/knowledge-hub/tools/knowledge-proposal-shadow-stats.sh --json
-rtk bash ~/knowledge-hub/tools/knowledge-compliance-eval.sh --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --json
+rtk bash ~/knowledge-hub/tools/knowledge-compliance-eval.sh --root tests/fixtures/agent_compliance_root --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --require-verdict-coverage --json
 rtk bash ~/knowledge-hub/tools/knowledge-evidence-ledger.sh --ledger <rawmem-events.jsonl> --json
 rtk bash ~/knowledge-hub/tools/knowledge-artifact-restore-drill.sh --release-root <release-dir> --source-label <stable-ref> --json
 ```
@@ -82,7 +82,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-artifact-restore-drill.sh --release-roo
 - `knowledge-evidence-pack` 将 active 事实与 `reviewing/draft` 候选分别放入 CONTEXT/PROVISIONAL；只有显式、active、scope 命中的 `agent_contract` 才能进入 MUST/SHOULD。
 - `knowledge-action-check` 无显式适用规则时返回 `NEEDS_REVIEW`，候选 constraint 永不参与判定；task/candidate、scope、exception 均有硬预算，`deny_regex` 只允许无 backreference、lookaround、嵌套 group/量词、过大量词或超大 repeat bound 的受限子集；`ALLOW` 只表示全部适用的确定性 guard 已求值通过，不是通用安全证明。
 - `knowledge-proposal-route` 默认 policy disabled 且固定 report-only shadow；proposal、client ID、证据 quote、source 文件和策略枚举均有硬预算，策略字段无效时 fail-closed；它不会写 registry 或提升 active。可选 shadow audit 只接受固定枚举的脱敏元数据，以单调 sequence 和 hash chain 追加到 `0600` ignored cache；文件、单行和行数均有上限，拒绝 symlink、截断尾行和未知 metadata。`knowledge-proposal-shadow-stats` 对实际非人工路由、高风险非人工候选、链损坏和内容字段泄漏 fail，且不会把恶意 route/reason 值原样回显。
-- `knowledge-compliance-eval` v2 支持有界 JSONL 和 `--minimum-cases`，只输出 candidate SHA、适用 item 与 high-risk false-allow 汇总；仓库固定 50 条高风险矩阵当前全部返回 `NEEDS_REVIEW`，不能据此推导真实自动写入已安全。
+- `knowledge-compliance-eval` v2 支持有界 JSONL 和 `--minimum-cases`，只输出 candidate SHA、适用 item 与 high-risk false-allow 汇总；仓库固定 fixture root 提供显式 active constraints，矩阵必须同时覆盖 `ALLOW/BLOCK/NEEDS_REVIEW`，且每条关键案例的 `applicable_ids` 非空。真实 Hub 根没有适用规则时仍 fail-closed 为 `NEEDS_REVIEW`，不能据此推导自动写入已安全。
 - `knowledge-evidence-ledger` 只校验 `rawmem.event.v1` 的链和隐私元数据，不输出事件正文，并固定 `eligible_for_text_ingest=false`；默认限制 ledger 64 MiB、100000 events 和单行 1 MiB，可在受控调用中显式收紧或放宽到硬上限。
 - `knowledge-artifact-restore-drill` 只读 checksum-bound release source，在临时部署副本中验证复制、故意损坏检测与精确恢复；最多 1000 个文件、manifest 1 MiB、制品集 10 GiB，拒绝 symlink 和路径逃逸。它固定声明远端留存、设备和生产回滚未验证，不能单独提升 evidence-ready。
 
@@ -109,17 +109,18 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json
 
 `knowledge-final-gate.sh` 只有一个终态 profile：`product`。`--summary-json` 提供有界首屏，`--json` 保留完整取证；`--regression-suite quick` 适合日常收口，`--regression-suite full` 用于高风险工具改动和终态证明。
 
-工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对 Python 支持矩阵、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行 Ruff 双层门禁、mypy、Bandit、核心覆盖率、无隔离 build、Hub check、retrieval、full regression、依赖漏洞审计和 CycloneDX SBOM。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。
+工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对 Python 支持矩阵、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行全包 Ruff correctness、逐步扩大的直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage、无隔离 build、Hub check、retrieval、依赖漏洞审计和 CycloneDX SBOM。覆盖率统计覆盖 `tools.codex_assets.knowledge_hub` 全包并要求不低于 75%，不再以少量模块的高比例冒充整体覆盖；subprocess CLI 证据通过 coverage parallel data 合并。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。随后执行 product full gate 时可加 `--reuse-engineering-evidence`，只复用同一签名且仍新鲜的 coverage/pytest 与 full regression 结果；quick gate 自动复用同条件下的 coverage/pytest 证据，但仍不取得 full regression 或 terminal 资格。快照不匹配时一律执行真实测试，不降低门禁。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --regression-suite full --reuse-engineering-evidence --as-of 2026-07-13
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
 ```
 
-产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。工程 contract 始终是 hard check；full profile 还要求新鲜且 signature 匹配的工程质量快照。`platform_productization_complete` 只表示技术候选通过；`platform_release_complete` 还要求 clean committed HEAD、两份 hash lock 与 CI contract 文件均已跟踪、full engineering、full regression 和该 HEAD 的 `git archive` 恢复通过。`terminal_maturity` 只有在交付、长期采用观察和 `registry/projects.json` 当前登记的全部规范项目真实 owner、source、人工/实机及发布证据均闭环时才为 `true`。当前基线是 30 个项目；该数量不是代码常量，新增第 31 个项目后 readiness、route matrix、slot 和门禁分母会从 registry 动态扩展。`4/4 structural coverage` 或全量本机 source mapping 都不代表内容已签收或已验证；项目专项 readiness/owner 条件由 `registry/product-policy.json` 声明，`pcr02` group 元数据不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
+产品门禁分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness` 和 `overall_status`。工程 contract 始终是 hard check；full profile 还要求新鲜且 signature 匹配的工程质量快照。`platform_productization_complete` 只表示技术候选通过；交付与终态不得再压缩成一个含混字段，而是分别由 `local_delivery_complete`、`remote_published`、`offsite_restore_verified`、`adoption_ready` 和 `terminal` 表达。本地 clean committed HEAD、两份 hash lock、受控 CI contract、full engineering、full regression 与匹配 HEAD 的 `git archive` 恢复只能令 `local_delivery_complete=true`；远端 push 和独立环境恢复必须由对应环境的签名证据单独判真。`terminal` 只有在上述五个维度及 `registry/projects.json` 当前登记项目的真实 owner、source、人工/实机和发布证据全部闭环时才为 `true`。当前基线是 30 个项目；该数量不是代码常量，新增第 31 个项目后 readiness、route matrix、evidence contract 和门禁分母会从 registry 动态扩展。单一 contract 的 structural coverage 或全量本机 source mapping 都不代表内容已签收或已验证；项目专项 readiness/owner 条件由 `registry/product-policy.json` 声明，`pcr02` group 元数据不重复计入项目总数。默认命令在平台通过但仍待 owner 复核时退出 0；需要终态声明时使用 `--require-terminal`，未闭环返回 2。
 
 本机首次建立工程环境可使用以下受控流程；如果本机没有 `python3.14`，可换成支持范围内的 3.10–3.13：
 
@@ -148,9 +149,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --a
 rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode full --json
 ```
 
-检索基准 contract v2 会先单列一次索引准备，再测量 `warm-interactive` 查询：warm search P95 上限为 500 ms，冷建库、schema 升级或增量刷新等 index preparation 上限为 5000 ms。两项都会参与判定，避免把冷启动混入交互 P95，也避免通过预热掩盖冷启动债务。
+检索基准使用 retrieval-result v3：先单列一次 index preparation，再测量 28 个语义案例、274 个动态 route、4-worker 并发和 10 倍 corpus。除 warm search P95 ≤ 500 ms、index preparation ≤ 5000 ms、并发 P95 ≤ 1000 ms 外，还硬校验 Hit Rate、MRR、nDCG@10、authority Recall@3，以及未注册/控制文件/重复/兼容残留/内部端点污染均为 0；不能通过预热、放宽 corpus 或删除慢样本刷绿。
 
-其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，并通过 `tools/ci/python-runtime.sh` 绑定调用方已验证的绝对解释器路径，不复制虚拟环境、不联网安装依赖、不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布。
+其中 export 默认只计划或写入本机忽略目录，只选择 `active + team-internal` canonical Markdown，并执行 secret scan、链接闭包、hash manifest 和原子发布；restore drill v2 在 `/tmp` 分别验证当前候选或纯 `git archive HEAD`，并通过 `tools/ci/python-runtime.sh` 绑定调用方已验证的绝对解释器路径，不复制虚拟环境、不联网安装依赖、不修改当前仓库。candidate 通过不等于 committed release，二者都不执行远端发布；remote checkout、remote published ref 和 offsite environment 必须由匹配 revision 的真实 CI 环境分别判真。
 
 当前产品状态与证据缺口以 `governance/product/validation/project-readiness.md` 和实时 `knowledge-final-gate.sh` 输出为准。`governance/status/knowledge-hub-operational-maturity.md` 仅保留 2026-07-13 历史快照；2026-07 运营批次和交付记录分别见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 与 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`，均不替代当前 owner、设备、发布或回滚证据。
 本轮覆盖功能、性能、安全、扩展性、维护性、运行时支持和供应链的验证候选见 `governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md`；该候选保持 `reviewing / manual-validation-pending`，不会把本地自动化结果冒充 GUI、实机、发布、生产回滚、人工复核或长期采用证据。
@@ -370,10 +371,8 @@ Obsidian 是阅读和手工编辑客户端，不是治理权威。直接把 `~/k
 <!-- knowledge-hub-project-readiness:start -->
 ## 成熟度工作台
 
-以下入口是 `reviewing` 控制资产，用于补齐项目画像、维护、决策和验证结构；不代表 owner 签收或发布就绪。
+以下入口是单一 `reviewing` evidence contract 与统一 dashboard；不代表 owner 签收或发布就绪。
 
-- [项目画像候选](governance/product/current/project-profile.md)
-- [维护 runbook](governance/product/current/runbooks/maintenance-entry.md)
-- [权威边界决策候选](governance/product/decisions/project-boundary-decision-candidate.md)
-- [readiness validation](governance/product/validation/project-readiness.md)
+- [项目 evidence contract](governance/product/validation/project-readiness.md)
+- [统一 readiness dashboard](indexes/project-readiness.md)
 <!-- knowledge-hub-project-readiness:end -->

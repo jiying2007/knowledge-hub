@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 import posixpath
 from collections import Counter, defaultdict
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .common import (
     DEFAULT_MARKDOWN_MAX_BYTES,
@@ -242,7 +242,7 @@ def _projects_moc(projects: Sequence[Mapping[str, Any]]) -> str:
                 _relative_link(path, entry, str(project.get("name", project.get("id", "")))),
                 project.get("type", ""),
                 project.get("status", ""),
-                _relative_link(path, "indexes/project-readiness.md", "4 槽位工作台"),
+                _relative_link(path, "indexes/project-readiness.md", "evidence contract 工作台"),
             )
         )
     return "\n".join(rows) + "\n"
@@ -274,12 +274,52 @@ def _topics_moc(items: Sequence[Mapping[str, Any]]) -> str:
     return "\n".join(rows).rstrip() + "\n"
 
 
+def _catalog_moc(items: Sequence[Mapping[str, Any]]) -> str:
+    path = "indexes/obsidian/catalog.md"
+    serviceable = [
+        item
+        for item in items
+        if item.get("status") in {"active", "reviewing"}
+        and item.get("visibility") != "personal-local"
+        and str(item.get("path", "")).endswith(".md")
+    ]
+    grouped: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
+    for item in serviceable:
+        grouped[str(item.get("domain", "unknown"))].append(item)
+    rows = [
+        "# 受治理知识目录",
+        "",
+        "本页从 registry 单向生成，为每个 active/reviewing Markdown 提供永久入链。它只解决可发现性，不授予 active、owner decision 或 evidence-ready 状态。",
+        "",
+    ]
+    for domain in sorted(grouped):
+        rows.extend(["## {}".format(domain), ""])
+        for item in sorted(
+            grouped[domain],
+            key=lambda row: (
+                0 if row.get("status") == "active" else 1,
+                str(row.get("title", "")),
+                str(row.get("id", "")),
+            ),
+        ):
+            rows.append(
+                "- {} · `{}` · `{}`".format(
+                    _relative_link(path, str(item["path"]), str(item["title"])),
+                    item["status"],
+                    item["id"],
+                )
+            )
+        rows.append("")
+    return "\n".join(rows).rstrip() + "\n"
+
+
 def _home_with_views(text: str) -> str:
     block = """{start}
 ## Obsidian MOC 与只读视图
 
 - [项目 MOC](obsidian/projects.md)
 - [主题 MOC](obsidian/topics.md)
+- [受治理知识目录](obsidian/catalog.md)
 - [项目成熟度 Base](obsidian/project-readiness.base)
 - [Reviewing Base](obsidian/reviewing.base)
 - [Active 知识 Base](obsidian/active-knowledge.base)
@@ -296,12 +336,20 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
     transaction.add_text(path, content, expected_sha256=file_sha256(target) if target.exists() else "")
 
 
-def build_obsidian_views(
-    root: pathlib.Path, apply: bool = False, reconcile_content_mirrors: bool = False
+def stage_obsidian_views(
+    root: pathlib.Path,
+    transaction: RepositoryTransaction,
+    *,
+    items: Optional[Sequence[Mapping[str, Any]]] = None,
+    document_overrides: Optional[Mapping[str, str]] = None,
+    reconcile_content_mirrors: bool = False,
 ) -> Dict[str, Any]:
-    items = registry_items(root)
+    """Stage every Obsidian projection into an existing repository transaction."""
+
+    item_rows = [dict(item) for item in (items if items is not None else registry_items(root))]
+    overrides = dict(document_overrides or {})
     projects = list((load_json(root / "registry/projects.json", {}) or {}).get("projects", []))
-    managed = [item for item in items if is_managed_markdown(item)]
+    managed = [item for item in item_rows if is_managed_markdown(item)]
     missing_files: List[str] = []
     content_drifts: List[Dict[str, Any]] = []
     content_reconciliations: List[Dict[str, Any]] = []
@@ -311,11 +359,14 @@ def build_obsidian_views(
     for item in managed:
         path = str(item["path"])
         target = root / path
-        if not target.exists():
+        if path not in overrides and not target.exists():
             missing_files.append(path)
             continue
-        source_text = read_repository_utf8_bounded(
-            root, path, OBSIDIAN_MAX_FILE_BYTES, "Obsidian managed Markdown"
+        source_text = overrides.get(path) or read_repository_utf8_bounded(
+            root,
+            path,
+            OBSIDIAN_MAX_FILE_BYTES,
+            "Obsidian managed Markdown",
         )
         metadata, body = split_frontmatter(source_text)
         had_frontmatter = bool(metadata)
@@ -345,30 +396,33 @@ def build_obsidian_views(
                 property_counts[field] += 1
         rendered[path] = render_markdown(metadata, body if had_frontmatter else source_text)
 
-    transaction = RepositoryTransaction(root)
     for path, content in rendered.items():
         _add_text(transaction, root, path, content)
     if content_reconciliations:
-        _add_text(transaction, root, "registry/items.jsonl", encode_jsonl(items))
+        _add_text(transaction, root, "registry/items.jsonl", encode_jsonl(item_rows))
     _add_text(transaction, root, "indexes/obsidian/projects.md", _projects_moc(projects))
     _add_text(transaction, root, "indexes/obsidian/topics.md", _topics_moc(managed))
-    home_path = root / "indexes/obsidian-home.md"
+    _add_text(transaction, root, "indexes/obsidian/catalog.md", _catalog_moc(item_rows))
+    home_relative = "indexes/obsidian-home.md"
+    home_path = root / home_relative
+    home_text = (
+        read_repository_utf8_bounded(
+            root,
+            home_relative,
+            OBSIDIAN_MAX_FILE_BYTES,
+            "Obsidian home Markdown",
+        )
+        if home_path.exists()
+        else "# Knowledge Hub Obsidian Home\n"
+    )
     _add_text(
         transaction,
         root,
-        "indexes/obsidian-home.md",
-        _home_with_views(
-            read_repository_utf8_bounded(
-                root,
-                "indexes/obsidian-home.md",
-                OBSIDIAN_MAX_FILE_BYTES,
-                "Obsidian home Markdown",
-            )
-        ),
+        home_relative,
+        _home_with_views(home_text),
     )
     for path, content in BASE_FILES.items():
         _add_text(transaction, root, path, content)
-    plan = transaction.plan()
     required = (*CONTENT_FIELDS, *LIFECYCLE_FIELDS, "aliases", "related")
     coverage = {
         field: {
@@ -378,6 +432,28 @@ def build_obsidian_views(
         }
         for field in required
     }
+    return {
+        "managed": managed,
+        "missing_files": missing_files,
+        "content_drifts": content_drifts,
+        "content_reconciliations": content_reconciliations,
+        "coverage": coverage,
+    }
+
+
+def build_obsidian_views(
+    root: pathlib.Path, apply: bool = False, reconcile_content_mirrors: bool = False
+) -> Dict[str, Any]:
+    transaction = RepositoryTransaction(root)
+    staged = stage_obsidian_views(
+        root,
+        transaction,
+        reconcile_content_mirrors=reconcile_content_mirrors,
+    )
+    plan = transaction.plan()
+    missing_files = staged["missing_files"]
+    content_drifts = staged["content_drifts"]
+    content_reconciliations = staged["content_reconciliations"]
     blocked = bool(missing_files or content_drifts)
     runtime_acceptance = obsidian_runtime_acceptance(root)
     result: Dict[str, Any] = {
@@ -389,15 +465,15 @@ def build_obsidian_views(
         "obsidian_private_config_tracked": False,
         "obsidian_runtime_status": runtime_acceptance["status"],
         "runtime_acceptance": runtime_acceptance,
-        "managed_document_count": len(managed),
+        "managed_document_count": len(staged["managed"]),
         "missing_file_count": len(missing_files),
         "missing_files": missing_files,
         "content_mirror_drift_count": len(content_drifts),
         "content_mirror_drifts": content_drifts,
         "content_mirror_reconciliation_count": len(content_reconciliations),
         "content_mirror_reconciliations": content_reconciliations,
-        "property_coverage": coverage,
-        "moc_count": 3,
+        "property_coverage": staged["coverage"],
+        "moc_count": 4,
         "base_count": len(BASE_FILES),
         "transaction": {
             "transaction_id": plan["transaction_id"],

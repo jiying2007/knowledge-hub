@@ -1,5 +1,7 @@
 """Regression suite selection and execution."""
 
+import concurrent.futures
+
 from .model import *  # noqa: F401,F403
 from .lifecycle import *  # noqa: F401,F403
 from .retrieval import *  # noqa: F401,F403
@@ -130,7 +132,7 @@ full_tests = [
     test_knowledge_search_structured_filters,
     test_knowledge_search_structured_filters_exclude_unregistered_raw,
     test_knowledge_search_kind_alias_filters,
-    test_knowledge_search_registry_metadata_fallback,
+    test_knowledge_search_rejects_metadata_only_item,
     test_knowledge_search_invalid_filters,
     test_knowledge_context_budget_explainability,
     test_knowledge_context_self_route,
@@ -245,14 +247,36 @@ output = {
     "results": results,
 }
 
-if args.json:
+if args.summary_json:
+    failed_results = [
+        result for result in results if result.get("status") != "pass"
+    ]
+    summary_output = {
+        key: value for key, value in output.items() if key != "results"
+    }
+    summary_output.update(
+        {
+            "projection": "knowledge-regression-summary-v1",
+            "passed_result_count": sum(
+                1 for result in results if result.get("status") == "pass"
+            ),
+            "failed_result_count": len(failed_results),
+            "failure_ids": [
+                str(result.get("id", "")) for result in failed_results
+            ],
+            "failures": failed_results[:20],
+            "failures_truncated": len(failed_results) > 20,
+        }
+    )
+    print(json.dumps(summary_output, ensure_ascii=False, indent=2))
+elif args.json:
     print(json.dumps(output, ensure_ascii=False, indent=2))
 else:
     print("# Knowledge Regression")
     print()
     print(f"- status: {status}")
     print(f"- results: {len(results)}")
-    print(f"- writes real repo: false")
+    print("- writes real repo: false")
     for result in results:
         print(f"- {result['status']}: {result['id']} - {result['title']}")
         if result.get("fixture_repo"):

@@ -3,7 +3,8 @@ title: SPI NAND BusyBox 压测与内核 I/O 监控手册
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-21
 last_updated: 2026-05-21

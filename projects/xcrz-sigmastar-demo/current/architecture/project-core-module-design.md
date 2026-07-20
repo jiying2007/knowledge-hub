@@ -1,15 +1,49 @@
 ---
-title: PCR02 核心模块设计
 doc_type: architecture
 knowledge_type: model
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [pcr02, modules, core]
-related: [project-overview-design.md, project-detailed-design.md, module-catalog.md, hdi-api-app-functional-overview.md]
-validation_refs: [modules/app/src/app_diag/framework/app_diag_center.c, modules/app/src/app_diag/provider/api/app_diag_api_msg_provider.c, modules/app/src/app_diag/provider/hdi/app_diag_hdi_os_provider.c]
+related:
+- project-overview-design.md
+- project-detailed-design.md
+- module-catalog.md
+- hdi-api-app-functional-overview.md
+id: pcr02-core-module-design
+title: PCR02 核心模块设计
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/architecture/project-core-module-design.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: architecture/project-core-module-design.md
+  source_sha256: 46ab0cc328d076b216dd36cc7af7009b05c88d7744da008b64a4f1a28b21b207
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- modules
+- core
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/architecture/project-core-module-design.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 把“控制面”和“执行面”分离，保持命令系统可扩展。 - 通过 hdi/api/app 分层实现跨业务复用。 - 用模块化生命周期管理替代耦合式初始化逻辑。 - 明确仓库治理边界：仅纳管白名单模块，其余按外部依赖处理。该条目当前为
+  archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # PCR02 核心模块设计

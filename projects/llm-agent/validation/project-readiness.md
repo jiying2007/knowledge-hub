@@ -35,9 +35,7 @@ aliases:
 - llm-agent-validation
 related:
 - projects/llm-agent/README.md
-- projects/llm-agent/current/project-profile.md
-- projects/llm-agent/current/runbooks/maintenance-entry.md
-- projects/llm-agent/decisions/project-boundary-decision-candidate.md
+- indexes/project-readiness.md
 ---
 
 # LLM Agent readiness validation
@@ -50,7 +48,7 @@ related:
 
 - [x] registry item 与正文 frontmatter 镜像一致。
 - [x] 30 项目 route matrix 能将 `llm-agent` 稳定解析为本项目。
-- [x] profile、runbook、decision、validation 四个入口均存在且互相可达。
+- [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [x] 本机 source 定位：2026-07-17 动态发现 `workspace://llm-agent` 的 HEAD 为 `150fdee1509b899bbb0d8c0762b7a9313b63ba94`；绝对路径不写入 tracked Markdown。
 
@@ -77,7 +75,5 @@ related:
 
 ## Related
 
-- [项目画像候选](../current/project-profile.md)
-- [维护 runbook](../current/runbooks/maintenance-entry.md)
-- [边界决策候选](../decisions/project-boundary-decision-candidate.md)
+- [统一 readiness dashboard](../../../indexes/project-readiness.md)
 - [项目入口](../README.md)

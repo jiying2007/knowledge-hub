@@ -3,7 +3,7 @@
   "$id": "https://knowledge-hub.local/schemas/retrieval-result.schema.json",
   "title": "Knowledge retrieval response v3",
   "type": "object",
-  "required": ["schema_version", "status", "query", "index", "results", "search_trace", "zero_hit", "timing"],
+  "required": ["schema_version", "status", "query", "index", "results", "pagination", "search_trace", "zero_hit", "timing"],
   "properties": {
     "schema_version": {"const": 3},
     "status": {"enum": ["pass", "zero-hit", "error"]},
@@ -31,6 +31,20 @@
         },
         "additionalProperties": true
       }
+    },
+    "pagination": {
+      "type": "object",
+      "required": ["offset", "limit", "returned", "total", "has_more", "next_cursor", "signature_bound"],
+      "properties": {
+        "offset": {"type": "integer", "minimum": 0},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+        "returned": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 0},
+        "has_more": {"type": "boolean"},
+        "next_cursor": {"type": "string"},
+        "signature_bound": {"const": true}
+      },
+      "additionalProperties": false
     },
     "search_trace": {
       "type": "object",

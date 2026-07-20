@@ -8,84 +8,85 @@
       "coverage_mode": "archive-corpus",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 13,
-      "inventory_sha256": "c1dd417e9a648ed3f625c8c0aee6ede43472cc402707ff793dd5dc81c0a4d25c",
-      "reason_zh": "冻结 Codex archive 的 README、索引和历史 provenance 正文路径；新增正文必须先注册或显式复核本集合。"
+      "expected_markdown_count": 14,
+      "inventory_sha256": "6068d5daf67de3cd2cdd5a5a493a61ca54cb7b11a38d5459110f4bcc83ef027e",
+      "reason_zh": "2026-07-19 新增并精确登记 llm_agent 多源外部实践吸收终态架构 reviewing 候选后，显式复核并重新冻结 14 个 Codex archive 正文路径；本次只接受新增路径和集合完整性，不重新签收历史正文，不授权 active promotion、自动吸收、发布或 memory 写入。"
     },
     {
       "id": "embedded-architecture-baseline-20260713",
       "path_prefix": "domains/embedded/architecture/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 3,
       "inventory_sha256": "84138539064a775f08b3abecf1ac8977ed76bb3ec11b865b424c3869e12d0f8c",
-      "reason_zh": "冻结团队级嵌入式架构基线目录的既有正文路径。"
+      "reason_zh": "冻结未逐项签收的嵌入式架构历史正文；不参与默认检索，不声明 active，后续只有精确登记的重写正文可成为当前知识。"
     },
     {
       "id": "embedded-governance-baseline-20260713",
       "path_prefix": "domains/embedded/governance/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 8,
       "inventory_sha256": "812ebcafc0ed8ae9200de48340db5ca337ca8026d45f7fb8b72e324278d6b752",
-      "reason_zh": "冻结团队级嵌入式治理基线目录的既有正文路径。"
+      "reason_zh": "冻结未逐项签收的嵌入式治理历史正文；不参与默认检索，不声明当前治理权威。"
     },
     {
       "id": "embedded-runbooks-baseline-20260713",
       "path_prefix": "domains/embedded/runbooks/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 24,
-      "inventory_sha256": "7b9f11cd3eed879af33532c1f25f3afde30ed6729d12ff7fd299f2e6d5330cd1",
-      "reason_zh": "冻结团队级嵌入式 runbook 基线目录的既有正文路径。"
+      "expected_markdown_count": 21,
+      "inventory_sha256": "b5a608c84ad83c8aeb2eac0da6f2df3d468b714814ed08e76e3c3472182dae46",
+      "reason_zh": "冻结未逐项签收的嵌入式 runbook 历史正文；5 份旧仓库安装、贡献和个人环境流程已硬删除，其余正文不参与默认检索。"
     },
     {
       "id": "embedded-skills-baseline-20260713",
       "path_prefix": "domains/embedded/skills/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 14,
       "inventory_sha256": "fff610ac74ce705aa047e81cd76e1a931b5a45cae35bae8bd95e2a8de91c7390",
-      "reason_zh": "冻结嵌入式技能说明基线目录的既有正文路径。"
+      "reason_zh": "冻结不参与 Codex runtime 的嵌入式技能历史说明；只作语料证据，不作为可安装 skill 或当前路由。"
     },
     {
       "id": "embedded-standards-baseline-20260713",
       "path_prefix": "domains/embedded/standards/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 10,
-      "inventory_sha256": "99e0f70fd5a278170f4040d358d7fe77171ec395beba372df916983d50142ab1",
-      "reason_zh": "冻结团队级嵌入式标准基线目录的既有正文路径。"
+      "expected_markdown_count": 8,
+      "inventory_sha256": "c851a6fbd1caf177a98e9a8509d373d6027af29fcf7375881822bee32ad5ddbb",
+      "reason_zh": "冻结未逐项签收的嵌入式标准历史正文；旧知识库贡献规范和个人开发增强说明已硬删除，其余正文不参与默认检索。"
     },
     {
       "id": "embedded-templates-baseline-20260713",
       "path_prefix": "domains/embedded/templates/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 10,
       "inventory_sha256": "7411e05e7b669f283925a0d776831b07e5821b3668f3d0f435b73d6e2240292d",
-      "reason_zh": "冻结团队级嵌入式模板基线目录的既有正文路径。"
+      "reason_zh": "冻结未逐项签收的嵌入式模板历史正文；不参与默认检索，新增模板必须进入根 templates 并精确登记。"
     },
     {
       "id": "embedded-tools-baseline-20260713",
       "path_prefix": "domains/embedded/tools/",
-      "coverage_mode": "domain-baseline",
+      "coverage_mode": "archive-corpus",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 1,
       "inventory_sha256": "99adb2f819b934daf09e460f21bd4f68f93063475bc8ad0293ffc1f307e2819e",
-      "reason_zh": "冻结团队级嵌入式工具说明基线目录的既有正文路径。"
+      "reason_zh": "冻结不再作为运行入口的嵌入式工具历史说明；不参与默认检索，不提供兼容工具路由。"
     },
     {
       "id": "patent-archive-corpus-baseline-20260713",
       "path_prefix": "domains/patents/archive/",
       "coverage_mode": "archive-corpus",
+      "attachment_policy": "external-not-retained",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
       "expected_markdown_count": 10,
@@ -98,9 +99,9 @@
       "coverage_mode": "governance-baseline",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 27,
-      "inventory_sha256": "c0e3b6dfe730da6e7aad0e34eaecd3ad2c7e827255b6fd56904f0a019a2eea27",
-      "reason_zh": "2026-07-18 新增并精确登记 Knowledge Hub 全面终态闭环优化验证候选后，按路径 inventory 重新冻结 27 个 Hub 治理正文；本次只复核新增路径与集合完整性，不重新签收历史正文。Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
+      "expected_markdown_count": 24,
+      "inventory_sha256": "ab3b41441e9884359653cc2986e17687e45854f3aee75955aad8e555decf72e0",
+      "reason_zh": "2026-07-19 将每项目四份 readiness 投影硬切为单一 evidence contract 后，删除 governance 下 3 份重复 profile/runbook/decision 正文，并按路径 inventory 重新冻结 24 个 Hub 治理正文；本次只复核删除范围与集合完整性，不重新签收历史正文。Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",

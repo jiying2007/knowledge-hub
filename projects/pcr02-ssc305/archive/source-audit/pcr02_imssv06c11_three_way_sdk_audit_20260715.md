@@ -3,13 +3,21 @@ id: pcr02-imssv06c11-three-way-sdk-audit-20260715
 title: PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND、UBIFS 只读与时钟电气路径
 kind: project-archive
 domain: projects/pcr02-ssc305
+path: projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: manual
+  from: current-session-local-three-way-sdk-audit-2026-07-15
+  source_sha256: 9ce9bd782f01e477b1b2a04349e8f4016fedb023bfb64447a336897574c780c9
 review_after: '2026-10-13'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02-ssc305
 - source-audit
@@ -22,18 +30,26 @@ tags:
 - ubifs
 - ubi-read-only
 - manual-validation-pending
+validation_refs:
+- projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
 manual_validation_pending: true
-summary_zh: 三方静态审计确认新 SDK 含高相关 AE/ISP 修复，但没有 SC5336P 专用更新；SPI NAND 正常读写、UBIFS/UBI 只读保护路径无新增改善，且三方共同保留 NAND 状态错误传播缺口；当前项目 Flash 防护更完整；SPI0 pad drive 无改善，Sensor MCLK
-  仅有 DFS 占空比修复。
+summary_zh: 三方静态审计确认新 SDK 含高相关 AE/ISP 修复，但没有 SC5336P 专用更新；SPI NAND 正常读写、UBIFS/UBI 只读保护路径无新增改善，且三方共同保留 NAND 状态错误传播缺口；当前项目 Flash
+  防护更完整；SPI0 pad drive 无改善，Sensor MCLK 仅有 DFS 占空比修复。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND、UBIFS 只读与时钟电气路径

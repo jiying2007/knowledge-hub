@@ -1,4 +1,28 @@
 ---
+related:
+- pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711
+- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+decision_status: accepted-boundary-evidence-pending
+decision_date: '2026-07-16'
+aliases:
+- PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
+review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
+owner_roles_required:
+- PCR02 product decision owner
+- display/BSP owner
+- application owner
+- release owner
+evidence_readiness:
+  owner: accepted-boundary-evidence-pending
+  source: pending-current-commit-and-artifact-identity
+  device: pending-real-device-or-lab-evidence
+  release: pending-release-and-rollback-evidence
+  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
+owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
+owner_decision: accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing
 id: pcr02-st77912-fb-mi-fb-boundary-decision-20260711
 title: PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
 kind: decision
@@ -12,8 +36,9 @@ source:
   type: manual
   from: Codex analysis of PCR02 framebuffer mapping between fb_st77912 and SigmaStar mi_fb
 review_after: '2026-10-11'
-created_at: 2026-07-11
-updated_at: '2026-07-16'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; owner accepted the current fbtft/ST77912 versus SStar/MI_FB boundary; current-firmware, device,
   release and rollback evidence remain pending
@@ -29,21 +54,11 @@ tags:
 - decision-candidate
 - manual-validation-pending
 - no-active-promotion
-related:
-- pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711
-- artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 validation_refs:
 - projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md
 - artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-summary_zh: PCR02 当前双小屏使用 `/dev/fb0` 和 `/dev/fb1`，二者在设备侧识别为 `fb_st77912`，由 Linux fbtft/ST77912 驱动管理；`/config/config.json`
-  中的 `mi_fb` 配置属于 SigmaStar MI_FB/SStar FB 路径，不控制当前双小屏。当前运行态 `/proc/fb` 中 `/dev/fb2` 才是 `SStar FB0`。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
 evidence_strength: source-code-plus-device-observation-pending-owner-review
 evidence_refs:
 - device:/proc/fb
@@ -56,33 +71,20 @@ evidence_refs:
 - SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
 - SourceCode/sdk/linux/init/fb/fb_init.c
 - SourceCode/project/board/iford/SSC029A-S01A/config/config.json
+created_at: '2026-07-11'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
-ai_generated_at: 2026-07-11
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
-decision_owner: leiwenjun
-decision_status: accepted-boundary-evidence-pending
-decision_date: '2026-07-16'
-aliases:
-- PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
+ai_generated_at: '2026-07-11'
 manual_validation_pending: true
-review_scope: owner-attested-boundary-only-no-active-release-or-evidence-ready
-owner_roles_required:
-- PCR02 product decision owner
-- display/BSP owner
-- application owner
-- release owner
-evidence_readiness:
-  owner: accepted-boundary-evidence-pending
-  source: pending-current-commit-and-artifact-identity
-  device: pending-real-device-or-lab-evidence
-  release: pending-release-and-rollback-evidence
-  validation_path: artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md
-owner_attestation_ref: artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md
-owner_decision: accept-fbtft-st77912-vs-mi-fb-boundary-remain-reviewing
+decision_owner: leiwenjun
+summary_zh: PCR02 当前双小屏使用 `/dev/fb0` 和 `/dev/fb1`，二者在设备侧识别为 `fb_st77912`，由 Linux fbtft/ST77912 驱动管理；`/config/config.json`
+  中的 `mi_fb` 配置属于 SigmaStar MI_FB/SStar FB 路径，不控制当前双小屏。当前运行态 `/proc/fb` 中 `/dev/fb2` 才是 `SStar FB0`。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选

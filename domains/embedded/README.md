@@ -95,5 +95,5 @@ rtk bash scripts/release.sh --date 2026-05-17
 目标远程仓库：
 
 ```text
-ssh://git@192.168.1.4:10022/embedded/knowledge.git
+source://embedded-knowledge
 ```

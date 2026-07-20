@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import pathlib
 import shutil
@@ -11,9 +10,19 @@ import sys
 import tarfile
 import tempfile
 import time
-from typing import Any, Dict, List, Mapping, Sequence
+import uuid
+from typing import Any, Dict, List, Mapping
 
-from .common import KnowledgeHubError, parse_json_output, pretty_json, run_rtk, utc_timestamp, working_tree_signature
+from .common import (
+    KnowledgeHubError,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    parse_json_output,
+    pretty_json,
+    run_rtk,
+    utc_timestamp,
+    working_tree_signature,
+)
 
 
 def _candidate_paths(root: pathlib.Path) -> List[str]:
@@ -46,10 +55,12 @@ def _snapshot_path(root: pathlib.Path, source_mode: str) -> pathlib.Path:
 def _write_snapshot(root: pathlib.Path, payload: Mapping[str, Any]) -> str:
     source_mode = str(payload["source_mode"])
     path = _snapshot_path(root, source_mode)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(".tmp")
+    ensure_private_directory_tree(root, path.parent)
+    temporary = path.with_name("{}.tmp-{}".format(path.name, uuid.uuid4().hex))
     temporary.write_text(pretty_json(dict(payload)) + "\n", encoding="utf-8")
+    ensure_private_file(temporary)
     os.replace(str(temporary), str(path))
+    ensure_private_file(path)
     return str(path.relative_to(root))
 
 
@@ -66,6 +77,34 @@ def _restore_runtime() -> str:
     if not runtime.is_file():
         raise KnowledgeHubError("restore runtime interpreter is unavailable")
     return str(runtime)
+
+
+def _execution_environment(source_mode: str, source_revision: str) -> Dict[str, Any]:
+    github_actions = os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+    github_repository = os.environ.get("GITHUB_REPOSITORY", "")
+    github_sha = os.environ.get("GITHUB_SHA", "")
+    github_event = os.environ.get("GITHUB_EVENT_NAME", "")
+    runner_environment = os.environ.get("RUNNER_ENVIRONMENT", "")
+    remote_checkout_verified = bool(
+        source_mode == "head"
+        and github_actions
+        and github_repository
+        and github_sha == source_revision
+    )
+    return {
+        "provider": "github-actions" if github_actions else "local",
+        "repository": github_repository,
+        "revision": github_sha,
+        "event": github_event,
+        "runner_environment": runner_environment,
+        "remote_checkout_verified": remote_checkout_verified,
+        "remote_published_ref_verified": bool(
+            remote_checkout_verified and github_event == "push"
+        ),
+        "offsite_environment_verified": bool(
+            remote_checkout_verified and runner_environment == "github-hosted"
+        ),
+    }
 
 
 def _copy_candidate(root: pathlib.Path, restored: pathlib.Path) -> Dict[str, Any]:
@@ -136,6 +175,7 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
     started = time.monotonic()
     candidate_signature = working_tree_signature(root)
     source_revision = _head_revision(root)
+    execution_environment = _execution_environment(source_mode, source_revision)
     runtime_python = _restore_runtime()
     runtime_env = {"KNOWLEDGE_PYTHON_RUNTIME": runtime_python}
     checks: Dict[str, Any] = {}
@@ -261,7 +301,7 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
     failed = [name for name, row in checks.items() if row["status"] != "pass"]
     status = "pass" if not missing and not symlinks and not failed else "fail"
     payload: Dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": status,
         "source_mode": source_mode,
         "restore_semantics": (
@@ -270,6 +310,16 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
             else "committed-head-git-archive"
         ),
         "source_revision": source_revision,
+        "execution_environment": execution_environment,
+        "remote_checkout_verified": execution_environment[
+            "remote_checkout_verified"
+        ],
+        "remote_published_ref_verified": execution_environment[
+            "remote_published_ref_verified"
+        ],
+        "offsite_environment_verified": execution_environment[
+            "offsite_environment_verified"
+        ],
         "temporary_git_semantics": "scratch-metadata-for-offline-checks-not-a-clone",
         "network_used": False,
         "source_project_write": False,

@@ -22,7 +22,7 @@ last_updated: 2026-05-18
 1. 文档目标、范围、边界必须与当前代码与构建事实一致。
 2. 文档新增或迁移必须满足命名规则与 Frontmatter Schema。
 3. 文档链接、`related`、`validation_refs` 必须可解析，禁止悬挂引用。
-4. 代码风格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
+4. 代码风格参考 `domains/embedded/standards/c-coding-standards.md` 的冻结历史基线；如与当前项目规范冲突，以项目规范为准。
 5. 结构与验证流程遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 
 ## 4. 最小验证

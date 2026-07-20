@@ -1,4 +1,20 @@
 ---
+retrieved_at: 2026-07-13
+source_license: not-declared; link-and-summary-only
+external_refs:
+- https://obsidian.md/help/data-storage
+- https://obsidian.md/help/properties
+- https://obsidian.md/help/bases/syntax
+- https://obsidian.md/help/cli
+- https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
+human_reviewed_by: leiwenjun-via-codex-delegation
+human_reviewed_at: 2026-07-13
+human_review_decision: accept-as-review-record
+review_authorization: auth-20260713-knowledge-hub-obsidian-audit-review
+aliases:
+- Knowledge Hub Obsidian 集成边界
+related:
+- indexes/obsidian-home.md
 id: knowledge-hub-obsidian-integration-20260713
 title: Knowledge Hub Obsidian 集成边界
 kind: standard
@@ -8,10 +24,21 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: manual-plus-official-docs
+  from: Codex implementation of user-requested Obsidian integration boundary
+  source_urls:
+  - https://obsidian.md/help/data-storage
+  - https://obsidian.md/help/properties
+  - https://obsidian.md/help/bases/syntax
+  - https://obsidian.md/help/cli
+  - https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
 review_after: '2026-10-13'
-created_at: 2026-07-13
-updated_at: 2026-07-13
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: verified
 promotion: none
+promotion_decision: none; local presentation integration only, no active promotion, no owner decision and no external publish
 tags:
 - knowledge-hub
 - obsidian
@@ -23,16 +50,9 @@ tags:
 - cli
 - official-docs
 - no-active-promotion
-retrieved_at: 2026-07-13
-source_language: en
-source_license: not-declared; link-and-summary-only
-external_refs:
-- https://obsidian.md/help/data-storage
-- https://obsidian.md/help/properties
-- https://obsidian.md/help/bases/syntax
-- https://obsidian.md/help/cli
-- https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
 validation_refs:
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh Obsidian --json
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
 - indexes/obsidian/project-readiness.base
@@ -41,22 +61,29 @@ validation_refs:
 - templates/obsidian-runtime-acceptance.md
 - registry/items.jsonl
 - registry/body-coverage.json
-- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-summary_zh: 规定 Obsidian 只作为 Knowledge Hub 的本地阅读、手工编辑和链接导航客户端；Markdown 是唯一正文，registry 是 status、owner、review_after 和授权权威，所有高风险动作继续由
-  Hub gate 控制。
-review_status: human-reviewed-accepted
+evidence_strength: implemented-governance-contract-plus-navigation-entry-and-official-docs-review
+evidence_refs:
+- governance/obsidian-integration.md
+- indexes/obsidian-home.md
+- registry/body-coverage.json
+- https://obsidian.md/help/data-storage
+- https://obsidian.md/help/properties
+- https://obsidian.md/help/bases/syntax
+- https://obsidian.md/help/cli
+- https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
+- https://github.com/obsidianmd/obsidian-help
+created_at: '2026-07-13'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
-ai_generated_at: 2026-07-13
-human_reviewed_by: leiwenjun-via-codex-delegation
-human_reviewed_at: 2026-07-13
-human_review_decision: accept-as-review-record
-review_authorization: auth-20260713-knowledge-hub-obsidian-audit-review
-aliases:
-- Knowledge Hub Obsidian 集成边界
-related:
-- indexes/obsidian-home.md
+ai_generated_at: '2026-07-13'
+summary_zh: 规定 Obsidian 只作为 Knowledge Hub 的本地阅读、手工编辑和链接导航客户端；Markdown 是唯一正文，registry 是 status、owner、review_after 和授权权威，所有高风险动作继续由
+  Hub gate 控制。
+primary_language: zh-CN
+source_language: en
+translation_status: summarized-zh
+terminology_status: reviewed
 ---
 
 # Knowledge Hub Obsidian 集成边界
@@ -101,7 +128,7 @@ indexes/obsidian-home.md -> 人工首屏导航
 
 - 官方 Properties 使用 YAML，并明确不提供内建 bulk editing；这与 Hub 由 registry/脚本做批量治理、Obsidian 只做单文档编辑的边界一致。
 - Bases 是 core plugin，视图保存为 `.base`，数据仍来自本地 Markdown 和 properties。本仓提交三个可选只读视图：项目成熟度、reviewing 队列和 active 长期知识；它们不包含自动写入动作，也不依赖 community plugin。
-- 30 个规范项目的 120 份 readiness 文档已声明一致的 lifecycle properties，因此项目 Base 具备完整结构覆盖；`pcr02` group 元数据不重复计数。当前 120 份镜像已由 hash-bound owner attestation 绑定 `decision_owner=leiwenjun`，同时继续保持 `reviewing`、`manual_validation_pending=true` 和 `promotion=none`；这些状态仍由 registry/gate 解释，Base 不改变状态，也不推导 evidence-ready。
+- 30 个规范项目各保留 1 份 readiness evidence contract，并声明一致的 lifecycle properties；统一 dashboard 与项目 Base 提供聚合导航，`pcr02` group 元数据不重复计数。30 份保留 contract 已由 hash-bound owner attestation 绑定 `decision_owner=leiwenjun`，同时继续保持 `reviewing`、`manual_validation_pending=true` 和 `promotion=none`；这些状态仍由 registry/gate 解释，Base 不改变状态，也不推导 evidence-ready。旧 profile/runbook/decision 投影已删除，不保留第二正文或兼容入口。
 - `.base` 只消费经过 check 的 properties，不编辑 `status`、`owner`、`review_after`，不创建第二份正文。普通 Markdown 阅读器仍可通过 `indexes/project-readiness.md` 获得等价 MOC 导航。
 - 官方 CLI 已提供命令行能力，但要求较新的 installer 并由 Obsidian 注册 PATH。本机 2026-07-13 未发现 `obsidian` 命令，因此当前不接入；未来只允许 `open/search/read` allowlist，不得成为 Hub 验证、写入或发布的必需依赖。
 
@@ -114,7 +141,7 @@ indexes/obsidian-home.md -> 人工首屏导航
 
 ## 链接与视图验证
 
-`knowledge-link-audit.sh` 检查标准 Markdown links、120 份 readiness 文档的入链和 `.base` YAML 基本结构。active/reviewing 正文、README 和 MOC 的断链属于阻断；archive/冻结历史断链只作告警，避免修改历史证据来制造整洁 Graph。
+`knowledge-link-audit.sh` 检查标准 Markdown links、30 份 readiness contract 的入链和 `.base` YAML 基本结构。active/reviewing 正文、README 和 MOC 的断链属于阻断；archive/冻结历史断链只作告警，避免修改历史证据来制造整洁 Graph。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict

@@ -1,15 +1,49 @@
 ---
-title: PCR02 构建与部署手册
 doc_type: runbook
 knowledge_type: process
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [build, deploy, runbook]
-related: [../architecture/project-overview-design.md, ../architecture/module-catalog.md]
-validation_refs: [Makefile, build/build.mk, app_product_test/dep.mk, pcr02/pcr02.mk]
+related:
+- ../architecture/project-overview-design.md
+- ../architecture/module-catalog.md
+id: pcr02-build-and-deploy-guide
+title: PCR02 构建与部署手册
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: runbooks/project-build-and-deploy-guide.md
+  source_sha256: a347460c4570b3e9c00298591b901267468e4ab76e15eaa369ad9968ebe0b9ca
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- build
+- deploy
+- runbook
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+- Makefile
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 本手册适用于当前仓库标准构建链（Makefile + build/*.mk）。 - 目标产物包含：prog_cli、prog_cmd_server、prog_daemon、prog_product_test、prog_ota、prog_pcr02。该条目当前为
+  archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # PCR02 构建与部署手册

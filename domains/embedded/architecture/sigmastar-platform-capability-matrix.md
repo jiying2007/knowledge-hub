@@ -3,7 +3,8 @@ title: SigmaStar 平台能力矩阵与选型规则
 doc_type: architecture
 knowledge_type: decision
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-15
 last_updated: 2026-05-15

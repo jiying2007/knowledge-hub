@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
-import sys
 from typing import Any, Dict, Sequence
 
 from .common import KnowledgeHubError, repository_root, resolve_today

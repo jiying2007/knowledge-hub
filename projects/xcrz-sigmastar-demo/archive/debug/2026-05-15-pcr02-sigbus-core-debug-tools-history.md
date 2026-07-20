@@ -1,17 +1,72 @@
 ---
-title: PCR02 SIGBUS core 与 debug tools 历史归档 2026-05-15
 doc_type: debug-record
 knowledge_type: incident-learning
 maturity: archived
-status: archived
-owner: leiwenjun
 created: 2026-07-10
 last_updated: 2026-07-10
-tags: [pcr02, prog_pcr02, sigbus, core, wav, busybox, debug-tools, codex-archive-migration]
 related:
-  - ../../current/runbooks/project-debug-tools-guide.md
-  - ../../../../domains/embedded/tools/debug/README.md
-  - ../../../../domains/embedded/runbooks/spi-nand-busybox-io-stress-guide.md
+- ../../current/runbooks/project-debug-tools-guide.md
+- ../../../../domains/embedded/tools/debug/README.md
+- ../../../../domains/embedded/runbooks/spi-nand-busybox-io-stress-guide.md
+id: pcr02-sigbus-core-debug-tools-history-20260515
+title: PCR02 SIGBUS core 与 debug tools 历史归档 2026-05-15
+kind: debug-record
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: leiwenjun
+source:
+  type: codex-archive-migration
+  source_id: codex-archive
+  source_path:
+  - domains/codex/archive/codex-archive/session-wrap/20260515-142200-session-wrap-crash-debug-tools.md
+  - domains/codex/archive/codex-archive/session-wrap/20260515-154658-session-wrap-core-debug-and-busybox-tools.md
+  preflight_rows:
+  - CAEF-20260710-019
+  - CAEF-20260710-020
+review_after: '2026-10-15'
+review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; historical debug migration from old Codex archive, old bodies deleted by separate tombstone execution,
+  no active promotion and no current root-cause claim
+tags:
+- pcr02
+- prog_pcr02
+- sigbus
+- core
+- wav
+- busybox
+- busybox-kernel-io-watch
+- debug-tools
+- archive-only
+- historical-session
+- codex-archive-migration
+- deleted-tombstoned
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 SIGBUS core debug tools"
+- rtk bash ~/knowledge-hub/tools/knowledge-search.sh "busybox-kernel-io-watch"
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
+evidence_strength: codex-archive-source-plus-subagent-read-only-audit-plus-delete-tombstone
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md
+- artifacts/manifests/codex-archive-extract-first-preflight-20260710.jsonl#CAEF-20260710-019..020
+- artifacts/manifests/codex-archive-removal-execution-20260710-pcr02-session-wrap-027-031.jsonl#CARE-20260710-027..028
+- subagent:019f4c15-6bf6-78c2-b096-adbdf11c5df6
+created_at: '2026-07-10'
+updated_at: '2026-07-11'
+generated_by_ai: true
+ai_role: summarized
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-10'
+summary_zh: 从旧 Codex archive 迁移 PCR02 2026-05-15 SIGBUS/core/debug tools 历史排障：保留 WAV/audio 路径、api_audio_player 健壮性修复、WAV_GUARD、busybox-kernel-io-watch、BusyBox
+  I/O watch 和 core/bin 匹配风险；旧正文已按 CARE-20260710-027..028 删除并 tombstone，archive-only，不声明当前根因。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 SIGBUS core 与 debug tools 历史归档 2026-05-15

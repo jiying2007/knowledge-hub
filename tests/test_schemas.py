@@ -22,10 +22,12 @@ def test_schema_catalog_resolves_all_contracts():
         "agent-proposal-shadow-stats-v1",
         "raw-evidence-inspection-v1",
         "artifact-restore-drill-v1",
+        "restore-drill-v2",
         "agent-compliance-eval-v2",
         "product-policy-v1",
     }.issubset({row["id"] for row in result["contracts"]})
     assert "retrieval-result-v3" in {row["id"] for row in result["contracts"]}
+    assert "restore-drill-v1" not in {row["id"] for row in result["contracts"]}
 
 
 def test_schema_catalog_exposes_only_strict_current_contracts():
@@ -61,7 +63,7 @@ def test_project_readiness_schema_accepts_idempotent_apply():
             "schema_version": 1,
             "status": "no-change",
             "project_count": 31,
-            "slot_count": 124,
+            "slot_count": 31,
             "transaction": {"changed_count": 0},
         },
     )

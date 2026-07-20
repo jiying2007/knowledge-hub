@@ -5,7 +5,8 @@ from __future__ import annotations
 import datetime as dt
 import pathlib
 import re
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+import tempfile
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .authorization import authorization_rows, load_review_form, require_authorization
 from .common import (
@@ -23,7 +24,8 @@ from .common import (
     utc_timestamp,
 )
 from .indexing import CORE_INDEXES, update_core_indexes, update_project_index, update_topic_index
-from .model import assert_transition, frontmatter_mirror, require_valid_item
+from .model import assert_transition, merge_frontmatter_mirror, require_valid_item
+from .obsidian_view import stage_obsidian_views
 from .review_attestation import confirmation_token, suggested_output_path
 from .store import RepositoryTransaction
 
@@ -54,6 +56,19 @@ def _first_summary(body: str, fallback: str) -> str:
 
 def _source_payload(root: pathlib.Path, source: pathlib.Path) -> Dict[str, Any]:
     resolved = source.expanduser().resolve()
+    source_sha256 = file_sha256(resolved)
+    temporary_root = pathlib.Path(tempfile.gettempdir()).resolve()
+    try:
+        resolved.relative_to(temporary_root)
+    except ValueError:
+        pass
+    else:
+        return {
+            "type": "ephemeral-file-capture",
+            "from": "ephemeral-content-sha256:{}".format(source_sha256),
+            "source_sha256": source_sha256,
+            "temporary_source_retained": False,
+        }
     try:
         relative = resolved.relative_to(root)
         source_from = relative.as_posix()
@@ -61,7 +76,7 @@ def _source_payload(root: pathlib.Path, source: pathlib.Path) -> Dict[str, Any]:
     except ValueError:
         source_from = display_path(resolved)
         source_type = "local-file-capture"
-    return {"type": source_type, "from": source_from, "source_sha256": file_sha256(resolved)}
+    return {"type": source_type, "from": source_from, "source_sha256": source_sha256}
 
 
 def _load_index_contents(root: pathlib.Path) -> Dict[str, str]:
@@ -203,6 +218,10 @@ def capture(
         "translation_status": str(original_metadata.get("translation_status", "not-required")),
         "terminology_status": str(original_metadata.get("terminology_status", "pending-review")),
         "review_status": "manual-entry-pending-review" if status in {"draft", "reviewing"} else "personal-local",
+        "content_review_status": "pending" if status in {"draft", "reviewing"} else "not-required",
+        "evidence_validation_status": "pending",
+        "evidence_strength": "manual-entry-validation-pending",
+        "evidence_refs": list(validation_refs),
         "promotion_decision": "none; capture does not authorize active promotion or owner decision",
         "generated_by_ai": generated_by_ai,
         "tags": list(tags) or [kind, "capture", "manual-validation-pending"],
@@ -235,10 +254,13 @@ def capture(
         raise KnowledgeHubError("registry item id already exists: {}".format(inferred_id))
     if any(row.get("path") == target for row in current_items):
         raise KnowledgeHubError("registry path already exists: {}".format(target))
-    require_valid_item(item, existing_ids=[str(row.get("id")) for row in current_items])
+    require_valid_item(
+        item,
+        existing_ids=[str(row.get("id")) for row in current_items],
+        existing_paths=[str(row.get("path")) for row in current_items],
+    )
 
-    mirror = dict(original_metadata)
-    mirror.update(frontmatter_mirror(item))
+    mirror = merge_frontmatter_mirror(original_metadata, item)
     rendered = render_markdown(mirror, body)
     next_items = list(current_items) + [item]
     core_updates = update_core_indexes(_load_index_contents(root), item)
@@ -289,6 +311,19 @@ def capture(
     _add_transaction_text(transaction, root, "indexes/by-project.md", project_update)
     _add_transaction_text(transaction, root, "indexes/by-topic.md", topic_update)
     _add_transaction_text(transaction, root, LIFECYCLE_LEDGER, _append_event(root, event))
+    obsidian_stage = stage_obsidian_views(
+        root,
+        transaction,
+        items=next_items,
+        document_overrides={target: rendered},
+    )
+    if obsidian_stage["missing_files"] or obsidian_stage["content_drifts"]:
+        raise KnowledgeHubError(
+            "capture cannot atomically rebuild Obsidian views: missing={} drifts={}".format(
+                obsidian_stage["missing_files"],
+                obsidian_stage["content_drifts"],
+            )
+        )
     plan = transaction.plan()
     result: Dict[str, Any] = {
         "action": "capture",
@@ -299,6 +334,13 @@ def capture(
         "created_status": status,
         "active_promotion": False,
         "transaction": plan,
+        "derived_views": {
+            "obsidian_managed_document_count": len(obsidian_stage["managed"]),
+            "obsidian_missing_file_count": len(obsidian_stage["missing_files"]),
+            "obsidian_content_drift_count": len(obsidian_stage["content_drifts"]),
+            "search_cache_consistency": "signature-bound-lazy-refresh",
+            "health_snapshot_consistency": "signature-bound-stale-on-change",
+        },
     }
     if apply:
         result["transaction"] = transaction.apply().to_dict()
@@ -461,7 +503,10 @@ def transition(
             raise KnowledgeHubError("lifecycle gates are not satisfied: {}".format("; ".join(gate_errors)))
         return plan_result
 
-    assert auth is not None and review is not None
+    if auth is None or review is None:
+        raise KnowledgeHubError(
+            "lifecycle gate state is inconsistent: authorization and review are required"
+        )
     after = dict(before)
     after["status"] = target_status
     after["updated_at"] = today.isoformat()
@@ -475,6 +520,12 @@ def transition(
     after["human_review_decision"] = review["review_decision"]
     after["review_basis"] = review["review_basis"]
     after["validation_refs"] = list(review["validation_refs"])
+    after["content_review_status"] = "accepted"
+    after["evidence_validation_status"] = (
+        "verified" if target_status == "active" else "historical"
+    )
+    after["evidence_strength"] = "review-attestation-plus-validation-refs"
+    after["evidence_refs"] = list(review["validation_refs"])
     after["promotion_decision"] = reason or str(review["review_basis"])
     after["manual_validation_pending"] = False
     after["review_attestation_id"] = review["attestation_id"]
@@ -488,7 +539,7 @@ def transition(
     require_valid_item(after)
 
     metadata, body = load_markdown(item_path)
-    metadata.update(frontmatter_mirror(after))
+    metadata = merge_frontmatter_mirror(metadata, after)
     rendered = render_markdown(metadata, body)
     core_updates = update_core_indexes(_load_index_contents(root), after)
     event = {
@@ -509,7 +560,8 @@ def transition(
     }
     transaction = RepositoryTransaction(root)
     transaction.add_text(str(before["path"]), rendered, expected_sha256=actual_item_sha)
-    _add_transaction_text(transaction, root, "registry/items.jsonl", encode_jsonl(_replace_item(items, after)))
+    next_items = _replace_item(items, after)
+    _add_transaction_text(transaction, root, "registry/items.jsonl", encode_jsonl(next_items))
     for relative, content in core_updates.items():
         _add_transaction_text(transaction, root, relative, content)
     _add_transaction_text(transaction, root, LIFECYCLE_LEDGER, _append_event(root, event))
@@ -530,6 +582,26 @@ def transition(
             }
         )
         _add_transaction_text(transaction, root, "registry/promotions.jsonl", encode_jsonl(promotions))
+    obsidian_stage = stage_obsidian_views(
+        root,
+        transaction,
+        items=next_items,
+        document_overrides={str(before["path"]): rendered},
+    )
+    if obsidian_stage["missing_files"] or obsidian_stage["content_drifts"]:
+        raise KnowledgeHubError(
+            "lifecycle transition cannot atomically rebuild Obsidian views: missing={} drifts={}".format(
+                obsidian_stage["missing_files"],
+                obsidian_stage["content_drifts"],
+            )
+        )
+    plan_result["derived_views"] = {
+        "obsidian_managed_document_count": len(obsidian_stage["managed"]),
+        "obsidian_missing_file_count": len(obsidian_stage["missing_files"]),
+        "obsidian_content_drift_count": len(obsidian_stage["content_drifts"]),
+        "search_cache_consistency": "signature-bound-lazy-refresh",
+        "health_snapshot_consistency": "signature-bound-stale-on-change",
+    }
     plan_result["transaction"] = transaction.plan()
     if apply:
         plan_result["transaction"] = transaction.apply().to_dict()

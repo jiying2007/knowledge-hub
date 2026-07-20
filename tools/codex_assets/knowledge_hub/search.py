@@ -6,10 +6,12 @@ authoritative; the cache can always be deleted and rebuilt from tracked files.
 
 from __future__ import annotations
 
+import base64
 import contextlib
 import fcntl
 import hashlib
 import json
+import math
 import os
 import pathlib
 import re
@@ -24,14 +26,14 @@ import yaml
 
 from .common import (
     KnowledgeHubError,
+    TEXT_SUFFIXES,
     bytes_sha256,
     compact_json,
     ensure_private_directory,
     ensure_private_file,
-    iter_text_file_records,
-    iter_text_files,
     load_json,
     load_jsonl,
+    normalize_relpath,
     read_repository_bytes_bounded,
     registry_items,
     source_id,
@@ -45,9 +47,10 @@ from .metrics import (
     make_interaction_id,
 )
 from .model import ITEM_KINDS, ITEM_STATUSES
+from .schemas import validate_instance
 
 
-INDEX_SCHEMA_VERSION = 7
+INDEX_SCHEMA_VERSION = 8
 TOKEN_CACHE_SCHEMA_VERSION = 2
 TOKEN_CACHE_MAX_ENTRIES = 10000
 TOKEN_CACHE_MAX_VALUE_BYTES = 4 * 1024 * 1024
@@ -80,6 +83,7 @@ SYNONYMS: Dict[str, Tuple[str, ...]] = {
     "排障": ("debug", "triage"),
     "决策": ("decision",),
     "验证": ("validation",),
+    "性能": ("performance", "优化", "效率"),
 }
 GENERIC_QUERY_TERMS = {
     "knowledge",
@@ -98,13 +102,111 @@ SEARCH_MAX_LIMIT = 100
 SEARCH_MAX_QUERY_CHARS = 4096
 SEARCH_MAX_FILTER_VALUES = 32
 SEARCH_MAX_FILTER_VALUE_CHARS = 256
+SEARCH_MAX_CURSOR_CHARS = 2048
+SEARCH_AUTHORITY_CANDIDATE_LIMIT = 512
 CONTENT_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+PRIVATE_IPV4_PATTERN = re.compile(
+    r"(?<![0-9])(?:10(?:\.[0-9]{1,3}){3}|192\.168(?:\.[0-9]{1,3}){2}|"
+    r"172\.(?:1[6-9]|2[0-9]|3[01])(?:\.[0-9]{1,3}){2})(?::[0-9]{1,5})?(?![0-9])"
+)
+ARCHIVE_INTENT_TERMS = frozenset(
+    {"archive", "archived", "historical", "history", "legacy", "归档", "历史", "旧版"}
+)
+DEFAULT_SEARCH_EXCLUDED_ROOTS = frozenset(
+    {
+        ".github",
+        "artifacts",
+        "indexes",
+        "issues",
+        "registry",
+        "schemas",
+        "sources",
+        "templates",
+        "tools",
+    }
+)
+DEFAULT_SEARCH_EXCLUDED_PATHS = frozenset({"AGENTS.md"})
 
 FileState = Tuple[int, int, int, int, int, str]
 
 
 class SearchBoundaryError(KnowledgeHubError):
     """A security or resource boundary that must not degrade to repository scan."""
+
+
+def _item_is_default_searchable(item: Mapping[str, Any]) -> bool:
+    """Return whether a registry item belongs to the governed default corpus.
+
+    Registry membership is necessary but not sufficient: control-plane and derived
+    files remain out of the user-facing corpus unless the registry opts them in
+    explicitly.  ``searchable: false`` always wins.
+    """
+
+    searchable = item.get("searchable")
+    if searchable is False:
+        return False
+    if str(item.get("visibility", "")) == "personal-local":
+        return False
+    try:
+        relative = normalize_relpath(str(item.get("path", "")))
+    except KnowledgeHubError:
+        return False
+    if not relative:
+        return False
+    root_name = relative.split("/", 1)[0]
+    is_control = (
+        relative in DEFAULT_SEARCH_EXCLUDED_PATHS
+        or root_name in DEFAULT_SEARCH_EXCLUDED_ROOTS
+    )
+    return searchable is True or not is_control
+
+
+def _governed_items_by_path(
+    root: pathlib.Path,
+) -> Dict[str, List[Dict[str, Any]]]:
+    result: Dict[str, List[Dict[str, Any]]] = {}
+    for item in registry_items(root):
+        if not _item_is_default_searchable(item):
+            continue
+        try:
+            relative = normalize_relpath(str(item.get("path", "")))
+        except KnowledgeHubError as exc:
+            raise SearchBoundaryError(str(exc)) from exc
+        if pathlib.Path(relative).suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        result.setdefault(relative, []).append(item)
+    duplicates = sorted(path for path, rows in result.items() if len(rows) > 1)
+    if duplicates:
+        raise SearchBoundaryError(
+            "registry contains duplicate searchable path(s): {}".format(
+                ", ".join(duplicates[:10])
+            )
+        )
+    return result
+
+
+def _registered_text_file_records(
+    root: pathlib.Path,
+    items_by_path: Optional[Mapping[str, Sequence[Mapping[str, Any]]]] = None,
+) -> List[Tuple[pathlib.Path, str, os.stat_result]]:
+    governed = items_by_path or _governed_items_by_path(root)
+    records: List[Tuple[pathlib.Path, str, os.stat_result]] = []
+    for relative in sorted(governed):
+        path = root / relative
+        try:
+            file_stat = path.lstat()
+        except OSError as exc:
+            raise SearchBoundaryError(
+                "registered search body is unavailable: {}".format(relative)
+            ) from exc
+        if path.is_symlink() or not path.is_file():
+            raise SearchBoundaryError(
+                "registered search body must be a regular non-symlink file: {}".format(
+                    relative
+                )
+            )
+        records.append((path, relative, file_stat))
+    return records
 
 
 def _validate_filter_values(name: str, values: Sequence[str]) -> None:
@@ -491,8 +593,33 @@ def _signature(
     previous_states: Optional[Mapping[str, FileState]] = None,
     stats: Optional[Dict[str, int]] = None,
 ) -> Tuple[str, List[pathlib.Path], Dict[str, FileState]]:
-    records = sorted(iter_text_file_records(root), key=lambda value: value[1])
-    paths = [path for path, _, _ in records]
+    items_by_path = _governed_items_by_path(root)
+    document_records = _registered_text_file_records(root, items_by_path)
+    paths = [path for path, _, _ in document_records]
+    records_by_relative = {
+        relative: (path, relative, file_stat)
+        for path, relative, file_stat in document_records
+    }
+    for relative in sorted(FULL_REBUILD_DEPENDENCIES):
+        dependency = root / relative
+        try:
+            dependency_stat = dependency.lstat()
+        except OSError as exc:
+            raise SearchBoundaryError(
+                "search index dependency is unavailable: {}".format(relative)
+            ) from exc
+        if dependency.is_symlink() or not dependency.is_file():
+            raise SearchBoundaryError(
+                "search index dependency must be a regular non-symlink file: {}".format(
+                    relative
+                )
+            )
+        records_by_relative[relative] = (
+            dependency,
+            relative,
+            dependency_stat,
+        )
+    records = [records_by_relative[key] for key in sorted(records_by_relative)]
     digest = hashlib.sha256()
     digest.update(str(INDEX_SCHEMA_VERSION).encode("ascii"))
     file_states: Dict[str, FileState] = {}
@@ -580,13 +707,14 @@ def _signature(
             {
                 "hashed_files": hashed_files,
                 "reused_content_hashes": reused_content_hashes,
+                "signature_files": len(records),
             }
         )
     return digest.hexdigest(), paths, file_states
 
 
 class SearchIndex:
-    CANDIDATE_LIMIT = 256
+    CANDIDATE_LIMIT = 4096
     STRUCTURED_CANDIDATE_LIMIT = 4096
 
     def __init__(self, root: pathlib.Path) -> None:
@@ -615,29 +743,71 @@ class SearchIndex:
             return ""
 
     @contextlib.contextmanager
-    def _lock(self) -> Iterator[None]:
+    def _lock(self, exclusive: bool = True) -> Iterator[None]:
         ensure_private_directory(self.cache_root)
         if self.lock_path.is_symlink():
             raise KnowledgeHubError("search index lock must not be a symlink")
         with self.lock_path.open("a+") as handle:
             os.chmod(str(self.lock_path), 0o600)
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            fcntl.flock(
+                handle.fileno(),
+                fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH,
+            )
             try:
                 yield
             finally:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def ensure(self, force: bool = False) -> Dict[str, Any]:
+        if not force:
+            shared_lock_started = time.monotonic()
+            with self._lock(exclusive=False):
+                shared_lock_wait_duration_ms = round(
+                    (time.monotonic() - shared_lock_started) * 1000,
+                    2,
+                )
+                signature_started = time.monotonic()
+                indexed_states = self._indexed_file_states()
+                signature_stats: Dict[str, int] = {}
+                signature, paths, file_states = _signature(
+                    self.root,
+                    previous_states=indexed_states,
+                    stats=signature_stats,
+                )
+                signature_duration_ms = round(
+                    (time.monotonic() - signature_started) * 1000,
+                    2,
+                )
+                if (
+                    indexed_states is not None
+                    and indexed_states == file_states
+                    and self._current_signature() == signature
+                ):
+                    result = {
+                        "state": "warm",
+                        "mode": "local-index",
+                        "fresh": True,
+                        "rebuilt": False,
+                        "updated": False,
+                        "signature": signature,
+                        "document_files": len(paths),
+                        "lock_mode": "shared",
+                        "lock_wait_duration_ms": shared_lock_wait_duration_ms,
+                        "signature_duration_ms": signature_duration_ms,
+                        "metadata_refreshed_files": 0,
+                    }
+                    result.update(signature_stats)
+                    return result
         lock_started = time.monotonic()
-        with self._lock():
+        with self._lock(exclusive=True):
             lock_wait_duration_ms = round((time.monotonic() - lock_started) * 1000, 2)
             signature_started = time.monotonic()
             indexed_states = None if force else self._indexed_file_states()
-            signature_stats: Dict[str, int] = {}
+            exclusive_signature_stats: Dict[str, int] = {}
             signature, paths, file_states = _signature(
                 self.root,
                 previous_states=indexed_states,
-                stats=signature_stats,
+                stats=exclusive_signature_stats,
             )
             signature_duration_ms = round((time.monotonic() - signature_started) * 1000, 2)
             if not force and self._current_signature() == signature:
@@ -653,11 +823,12 @@ class SearchIndex:
                     "updated": False,
                     "signature": signature,
                     "document_files": len(paths),
+                    "lock_mode": "exclusive",
                     "lock_wait_duration_ms": lock_wait_duration_ms,
                     "signature_duration_ms": signature_duration_ms,
                     "metadata_refreshed_files": metadata_refreshed_files,
                 }
-                result.update(signature_stats)
+                result.update(exclusive_signature_stats)
                 return result
             started = time.monotonic()
             incremental = None
@@ -679,6 +850,7 @@ class SearchIndex:
                     "updated": True,
                     "signature": signature,
                     "document_files": len(paths),
+                    "lock_mode": "exclusive",
                     "document_rows": incremental["document_rows"],
                     "changed_files": incremental["changed_files"],
                     "deleted_files": incremental["deleted_files"],
@@ -687,7 +859,7 @@ class SearchIndex:
                     "transaction_duration_ms": incremental["transaction_duration_ms"],
                     "update_duration_ms": round((time.monotonic() - started) * 1000, 2),
                 }
-                result.update(signature_stats)
+                result.update(exclusive_signature_stats)
                 return result
             document_count = self._rebuild(signature, paths, file_states)
             result = {
@@ -698,12 +870,13 @@ class SearchIndex:
                 "updated": False,
                 "signature": signature,
                 "document_files": len(paths),
+                "lock_mode": "exclusive",
                 "document_rows": document_count,
                 "lock_wait_duration_ms": lock_wait_duration_ms,
                 "signature_duration_ms": signature_duration_ms,
                 "build_duration_ms": round((time.monotonic() - started) * 1000, 2),
             }
-            result.update(signature_stats)
+            result.update(exclusive_signature_stats)
             result.update(self._token_cache_stats)
             return result
 
@@ -767,13 +940,7 @@ class SearchIndex:
     def _index_inputs(
         self,
     ) -> Tuple[Dict[str, List[Dict[str, Any]]], List[Tuple[str, pathlib.Path]]]:
-        items = registry_items(self.root)
-        items_by_path: Dict[str, List[Dict[str, Any]]] = {}
-        for item in items:
-            path = str(item.get("path", ""))
-            if path:
-                items_by_path.setdefault(path, []).append(item)
-        return items_by_path, _source_roots(self.root)
+        return _governed_items_by_path(self.root), _source_roots(self.root)
 
     def _insert_path(
         self,
@@ -796,7 +963,9 @@ class SearchIndex:
             ).decode("utf-8", errors="ignore")
         except KnowledgeHubError as exc:
             raise SearchBoundaryError(str(exc)) from exc
-        linked_items = items_by_path.get(relative, []) or [{}]
+        linked_items = items_by_path.get(relative, [])
+        if not linked_items:
+            return 0
         physical = _physical_sources(path, source_roots)
         count = 0
         for item in linked_items:
@@ -1055,6 +1224,58 @@ class SearchIndex:
         finally:
             connection.close()
 
+    def authority_candidates(
+        self,
+        query: str,
+        candidate_limit: int = SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+    ) -> List[Dict[str, Any]]:
+        """Preserve exact/current/active matches before the generic FTS cutoff."""
+
+        expanded_query = " ".join(
+            variant
+            for term in query_terms(query)
+            for variant in _term_variants(term)
+        )
+        tokens = search_tokens(expanded_query, maximum=64)
+        if not tokens:
+            return []
+        expression = " OR ".join(
+            '"{}"'.format(value.replace('"', '""')) for value in tokens
+        )
+        normalized_query = query.strip().lower()
+        connection = sqlite3.connect(str(self.path))
+        connection.row_factory = sqlite3.Row
+        try:
+            rows = connection.execute(
+                """
+                select d.*, bm25(documents_fts, 1.2, 1.1, 0.9, 0.8, 0.5, 0.25, 0.35) as fts_rank
+                from documents_fts join documents d on d.id = documents_fts.rowid
+                where documents_fts match ?
+                  and (
+                    d.path = 'README.md'
+                    or d.path like 'projects/%/current/%'
+                    or d.item_json like '%\"status\":\"active\"%'
+                    or lower(documents_fts.title) = ?
+                    or lower(documents_fts.item_id) = ?
+                    or lower(d.path) = ?
+                  )
+                order by fts_rank
+                limit ?
+                """,
+                (
+                    expression,
+                    normalized_query,
+                    normalized_query,
+                    normalized_query,
+                    candidate_limit,
+                ),
+            ).fetchall()
+            return [dict(row) for row in rows]
+        except sqlite3.Error:
+            return []
+        finally:
+            connection.close()
+
 
 def _path_priority(relative: str) -> Tuple[int, str]:
     normalized = relative.replace("\\", "/")
@@ -1119,6 +1340,75 @@ def _matched_query_terms(
     return [term for term in terms if _term_matches(term, combined)]
 
 
+def _archive_intent(query: str) -> bool:
+    lowered = query.lower()
+    return any(_term_matches(term, lowered) for term in ARCHIVE_INTENT_TERMS)
+
+
+def _historical_result(item: Mapping[str, Any], relative: str) -> bool:
+    return str(item.get("status", "")) in {
+        "archived",
+        "superseded",
+        "rejected",
+    } or "/archive/" in relative
+
+
+def _redact_internal_endpoints(value: str) -> Tuple[str, bool]:
+    redacted = PRIVATE_IPV4_PATTERN.sub("[内部端点已脱敏]", value)
+    return redacted, redacted != value
+
+
+def _cursor_fingerprint(query: str, filters: SearchFilters) -> str:
+    payload = {
+        "query": query,
+        "filters": {
+            "source": list(filters.sources),
+            "owner": list(filters.owners),
+            "status": list(filters.statuses),
+            "kind": list(filters.kinds),
+            "domain": list(filters.domains),
+            "source_id": list(filters.source_ids),
+        },
+    }
+    return hashlib.sha256(compact_json(payload).encode("utf-8")).hexdigest()
+
+
+def _encode_cursor(signature: str, fingerprint: str, offset: int) -> str:
+    raw = compact_json(
+        {
+            "schema_version": 1,
+            "signature": signature,
+            "fingerprint": fingerprint,
+            "offset": offset,
+        }
+    ).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _decode_cursor(value: str, signature: str, fingerprint: str) -> int:
+    if len(value) > SEARCH_MAX_CURSOR_CHARS:
+        raise KnowledgeHubError(
+            "cursor exceeds {} characters".format(SEARCH_MAX_CURSOR_CHARS)
+        )
+    try:
+        padding = "=" * (-len(value) % 4)
+        payload = json.loads(
+            base64.b64decode(value + padding, altchars=b"-_", validate=True)
+        )
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError("cursor is invalid") from exc
+    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+        raise KnowledgeHubError("cursor is invalid")
+    if payload.get("signature") != signature:
+        raise KnowledgeHubError("cursor is stale for the current search corpus")
+    if payload.get("fingerprint") != fingerprint:
+        raise KnowledgeHubError("cursor does not match the query and filters")
+    offset = payload.get("offset")
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise KnowledgeHubError("cursor offset is invalid")
+    return offset
+
+
 def _filters_match(item: Mapping[str, Any], physical_sources: Sequence[str], filters: SearchFilters) -> bool:
     if filters.sources and not set(filters.sources).intersection(physical_sources):
         return False
@@ -1156,18 +1446,15 @@ def _filter_reason(item: Mapping[str, Any], physical_sources: Sequence[str], fil
 
 
 def _scan_candidates(root: pathlib.Path) -> List[Dict[str, Any]]:
-    items_by_path: Dict[str, List[Dict[str, Any]]] = {}
-    for item in registry_items(root):
-        relative = str(item.get("path", ""))
-        if relative:
-            items_by_path.setdefault(relative, []).append(item)
+    items_by_path = _governed_items_by_path(root)
     source_roots = _source_roots(root)
     rows: List[Dict[str, Any]] = []
     total_bytes = 0
-    for path in iter_text_files(root):
+    for path, relative, file_stat in _registered_text_file_records(
+        root, items_by_path
+    ):
         try:
-            relative = path.relative_to(root).as_posix()
-            file_size = path.lstat().st_size
+            file_size = file_stat.st_size
             if file_size > SEARCH_MAX_FILE_BYTES:
                 raise SearchBoundaryError(
                     "search text file exceeds {} bytes: {}".format(
@@ -1194,13 +1481,13 @@ def _scan_candidates(root: pathlib.Path) -> List[Dict[str, Any]]:
             raise SearchBoundaryError(str(exc)) from exc
         except (OSError, ValueError):
             continue
-        for item in items_by_path.get(relative, []) or [{}]:
+        for item in items_by_path.get(relative, []):
             rows.append(
                 {
                     "path": relative,
                     "suffix": path.suffix.lower(),
                     "physical_sources": compact_json(_physical_sources(path, source_roots)),
-                    "item_json": compact_json(item) if item else "{}",
+                    "item_json": compact_json(item),
                     "indexed_title": _indexed_title(relative, body, item),
                     "body": body,
                     "fts_rank": 0.0,
@@ -1209,7 +1496,73 @@ def _scan_candidates(root: pathlib.Path) -> List[Dict[str, Any]]:
     return rows
 
 
-def _preview(body: str, terms: Sequence[str], item: Mapping[str, Any]) -> Tuple[int, str, bool]:
+def _validate_retrieval_contract(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Validate the public search contract before a successful return."""
+
+    catalog_path = root / "schemas" / "catalog.json"
+    if catalog_path.is_file():
+        validation = validate_instance(root, "retrieval-result-v3", payload)
+        if validation.get("status") != "pass":
+            details = "; ".join(
+                "{path}: {message}".format(**row)
+                for row in validation.get("errors", [])[:5]
+            )
+            raise KnowledgeHubError(
+                "retrieval result violates retrieval-result-v3: {}".format(details)
+            )
+        return {
+            "status": "pass",
+            "contract_id": "retrieval-result-v3",
+            "error_count": 0,
+        }
+
+    required_payload = {
+        "schema_version",
+        "status",
+        "query",
+        "index",
+        "results",
+        "pagination",
+        "search_trace",
+        "zero_hit",
+        "timing",
+    }
+    missing_payload = sorted(required_payload - set(payload))
+    result_errors: List[str] = []
+    for index, result in enumerate(payload.get("results", [])):
+        required_result = {"id", "path", "status", "score", "why_selected"}
+        missing = sorted(required_result - set(result))
+        if missing:
+            result_errors.append(
+                "results[{}] missing {}".format(index, ", ".join(missing))
+            )
+    if missing_payload or result_errors:
+        fallback_details: List[str] = []
+        if missing_payload:
+            fallback_details.append(
+                "payload missing {}".format(", ".join(missing_payload))
+            )
+        fallback_details.extend(result_errors[:5])
+        raise KnowledgeHubError(
+            "retrieval result violates fallback contract: {}".format(
+                "; ".join(fallback_details)
+            )
+        )
+    return {
+        "status": "pass",
+        "contract_id": "retrieval-result-v3-essential-fields",
+        "error_count": 0,
+    }
+
+
+def _preview(
+    body: str,
+    terms: Sequence[str],
+    item: Mapping[str, Any],
+) -> Tuple[int, str, bool, bool]:
     lower = body.lower()
     positions = [(lower.find(term), term) for term in terms if lower.find(term) >= 0]
     if not positions:
@@ -1217,12 +1570,16 @@ def _preview(body: str, terms: Sequence[str], item: Mapping[str, Any]) -> Tuple[
         positions = [(lower.find(gram), gram) for gram in grams if lower.find(gram) >= 0]
     if not positions:
         summary = item.get("summary_zh") or item.get("title") or item.get("id", "")
-        return 1, "registry metadata: {}".format(summary)[:240], False
+        preview, redacted = _redact_internal_endpoints(
+            "registry metadata: {}".format(summary)[:240]
+        )
+        return 1, preview, False, redacted
     index, _ = min(positions, key=lambda value: value[0])
     line_no = lower[:index].count("\n") + 1
     lines = body.splitlines()
     line = lines[line_no - 1].strip()[:240] if lines and line_no <= len(lines) else ""
-    return line_no, line, True
+    preview, redacted = _redact_internal_endpoints(line)
+    return line_no, preview, True, redacted
 
 
 def _score(
@@ -1273,8 +1630,42 @@ def _score(
         if hits:
             score += hits * weight
             reasons.append(reason)
-    distinctive_terms = [term for term in terms if term not in GENERIC_QUERY_TERMS and len(term) >= 3]
+    distinctive_terms = [
+        term
+        for term in terms
+        if term not in GENERIC_QUERY_TERMS
+        and (
+            len(term) >= 3
+            or len("".join(CJK_PATTERN.findall(term))) >= 2
+        )
+    ]
     metadata_fields = "\n".join((title, item_id, tags, summary, path_text))
+    matched_distinctive_anywhere = [
+        term
+        for term in distinctive_terms
+        if _term_matches(term, metadata_fields) or _term_matches(term, body_haystack)
+    ]
+    matched_distinctive_metadata = [
+        term for term in distinctive_terms if _term_matches(term, metadata_fields)
+    ]
+    exact_query_match = bool(
+        normalized_query
+        and (
+            normalized_query in metadata_fields
+            or normalized_query in body_haystack
+        )
+    )
+    if len(distinctive_terms) >= 2 and not exact_query_match:
+        minimum_distinctive = (
+            2
+            if len(distinctive_terms) == 2
+            else max(2, int(math.ceil(len(distinctive_terms) * 0.5)))
+        )
+        if (
+            len(matched_distinctive_anywhere) < minimum_distinctive
+            or not matched_distinctive_metadata
+        ):
+            return None
     distinctive_hits = [term for term in distinctive_terms if _term_matches(term, metadata_fields)]
     if distinctive_hits:
         score += min(480, sum(min(180, 45 + (12 * len(term))) for term in distinctive_hits))
@@ -1287,6 +1678,12 @@ def _score(
     if body_only_hits:
         score -= min(120, len(body_only_hits) * 30)
         reasons.append("body-only-distinctive-penalty")
+    metadata_term_match = any(
+        _term_matches(term, metadata_fields) for term in terms
+    )
+    if relative == "README.md" and not metadata_term_match:
+        score -= 160
+        reasons.append("root-body-only-penalty")
     ascii_distinctive = [
         term
         for term in distinctive_terms
@@ -1314,6 +1711,11 @@ def _score(
     if source_type in {"retired-source-provenance", "artifact-ref"}:
         score -= 35
         reasons.append("provenance-penalty")
+    if "project-readiness" in tags or "template-projection" in tags:
+        score -= 180
+        reasons.append("template-projection-penalty")
+    if _historical_result(item, relative) and not _archive_intent(query):
+        reasons.append("historical-fallback-lane")
     return int(score), reasons, coverage
 
 
@@ -1324,6 +1726,7 @@ def search(
     filters: Optional[SearchFilters] = None,
     rebuild_index: bool = False,
     search_index: Optional[SearchIndex] = None,
+    cursor: str = "",
 ) -> Dict[str, Any]:
     started = time.monotonic()
     if not 1 <= limit <= SEARCH_MAX_LIMIT:
@@ -1357,6 +1760,25 @@ def search(
             query,
             candidate_limit=candidate_limit,
         )
+        authority_method = getattr(index, "authority_candidates", None)
+        authority_rows = (
+            authority_method(query, SEARCH_AUTHORITY_CANDIDATE_LIMIT)
+            if callable(authority_method)
+            else []
+        )
+        combined_rows: List[Mapping[str, Any]] = []
+        seen_document_keys: Set[str] = set()
+        for row in list(authority_rows) + list(indexed_rows):
+            document_key = str(row.get("doc_key", "")) or "{}#{}".format(
+                row.get("path", ""),
+                row.get("item_json", ""),
+            )
+            if document_key in seen_document_keys:
+                continue
+            seen_document_keys.add(document_key)
+            combined_rows.append(row)
+        indexed_rows = combined_rows
+        index_state["authority_candidate_count"] = len(authority_rows)
         candidate_ready = time.monotonic()
     except SearchBoundaryError:
         raise
@@ -1373,6 +1795,7 @@ def search(
             "reason": str(exc),
         }
         indexed_rows = _scan_candidates(root)
+        index_state["authority_candidate_count"] = 0
         candidate_ready = time.monotonic()
     ranking_started = candidate_ready
     index_state["candidate_count"] = len(indexed_rows)
@@ -1390,6 +1813,12 @@ def search(
             physical_sources = json.loads(row["physical_sources"])
         except (json.JSONDecodeError, TypeError):
             continue
+        if not item:
+            raise SearchBoundaryError(
+                "search index contains an unregistered document: {}".format(
+                    row.get("path", "")
+                )
+            )
         filter_reason = _filter_reason(item, physical_sources, filters)
         if filter_reason:
             filtered_reasons[filter_reason] += 1
@@ -1436,7 +1865,11 @@ def search(
         if scored is None:
             continue
         score, reasons, coverage = scored
-        line_no, preview, body_match = _preview(str(row["body"]), terms, item)
+        line_no, preview, body_match, preview_redacted = _preview(
+            str(row["body"]),
+            terms,
+            item,
+        )
         selected_source = "knowledge-hub"
         if filters.sources:
             selected_source = next((value for value in filters.sources if value in physical_sources), "knowledge-hub")
@@ -1445,34 +1878,83 @@ def search(
             "path": str(row["path"]),
             "line": line_no,
             "preview": preview,
+            "preview_redacted": preview_redacted,
             "score": score,
             "match": "body-and-metadata" if body_match and item else "body" if body_match else "registry-metadata",
             "match_kind": reasons[0],
             "why_selected": reasons,
             "query_coverage": round(coverage, 3),
-            "evidence_strength": item.get("evidence_strength", "") if item else "unregistered-body",
-            "manual_validation_pending": bool(item.get("manual_validation_pending", False)) if item else True,
+            "evidence_strength": item.get("evidence_strength", ""),
+            "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
+            "item_id": item.get("id", ""),
+            "id": item.get("id", ""),
+            "title": item.get("title", ""),
+            "kind": item.get("kind", ""),
+            "domain": item.get("domain", ""),
+            "status": item.get("status", ""),
+            "owner": item.get("owner", ""),
+            "source_id": source_id(item),
+            "review_after": item.get("review_after", ""),
+            "tags": item.get("tags", []),
         }
-        if item:
-            result.update(
-                {
-                    "item_id": item.get("id", ""),
-                    "id": item.get("id", ""),
-                    "title": item.get("title", ""),
-                    "kind": item.get("kind", ""),
-                    "domain": item.get("domain", ""),
-                    "status": item.get("status", ""),
-                    "owner": item.get("owner", ""),
-                    "source_id": source_id(item),
-                    "review_after": item.get("review_after", ""),
-                    "tags": item.get("tags", []),
-                }
-            )
-        elif row["indexed_title"]:
-            result["title"] = str(row["indexed_title"])
         candidates.append(result)
     candidates.sort(key=lambda value: (-int(value["score"]), str(value.get("path", "")), str(value.get("item_id", ""))))
-    results = candidates[:limit]
+    deduplicated: List[Dict[str, Any]] = []
+    seen_paths: Set[str] = set()
+    for candidate in candidates:
+        candidate_path = str(candidate.get("path", ""))
+        if candidate_path in seen_paths:
+            continue
+        seen_paths.add(candidate_path)
+        deduplicated.append(candidate)
+    candidates = deduplicated
+    if not _archive_intent(query):
+        current_candidates = [
+            row
+            for row in candidates
+            if not _historical_result(row, str(row.get("path", "")))
+        ]
+        historical_candidates = [
+            row
+            for row in candidates
+            if _historical_result(row, str(row.get("path", "")))
+        ]
+        current_ceiling = max(
+            (int(row.get("score", 0)) for row in current_candidates),
+            default=-10**9,
+        )
+        dominant_historical = [
+            row
+            for row in historical_candidates
+            if int(row.get("score", 0)) >= current_ceiling + 400
+        ]
+        fallback_historical = [
+            row for row in historical_candidates if row not in dominant_historical
+        ]
+        for row in dominant_historical:
+            row["why_selected"] = list(row.get("why_selected", [])) + [
+                "historical-dominant-match"
+            ]
+        candidates = dominant_historical + current_candidates + fallback_historical
+    cursor_fingerprint = _cursor_fingerprint(query, filters)
+    index_signature = str(index_state.get("signature", ""))
+    if cursor and index_state.get("mode") != "local-index":
+        raise KnowledgeHubError(
+            "cursor pagination requires the governed local index"
+        )
+    offset = (
+        _decode_cursor(cursor, index_signature, cursor_fingerprint)
+        if cursor
+        else 0
+    )
+    results = candidates[offset : offset + limit]
+    next_offset = offset + len(results)
+    has_more = next_offset < len(candidates)
+    next_cursor = (
+        _encode_cursor(index_signature, cursor_fingerprint, next_offset)
+        if has_more and index_signature
+        else ""
+    )
     excluded_registered.sort(
         key=lambda value: (
             -int(value["score"]),
@@ -1541,7 +2023,7 @@ def search(
         "ranking_ms": round((finished - ranking_started) * 1000, 2),
         "total_ms": elapsed_ms,
     }
-    payload = {
+    payload: Dict[str, Any] = {
         "schema_version": 3,
         "status": "pass" if results else "zero-hit",
         "query": query,
@@ -1558,9 +2040,23 @@ def search(
         "latency_ms": elapsed_ms,
         "timing": timing,
         "results": results,
+        "pagination": {
+            "offset": offset,
+            "limit": limit,
+            "returned": len(results),
+            "total": len(candidates),
+            "has_more": has_more,
+            "next_cursor": next_cursor,
+            "signature_bound": True,
+        },
         "search_trace": search_trace,
         "zero_hit": zero_hit,
     }
+    payload["schema_validation"] = _validate_retrieval_contract(root, payload)
+    contract_finished = time.monotonic()
+    contract_elapsed_ms = round((contract_finished - started) * 1000, 2)
+    payload["latency_ms"] = contract_elapsed_ms
+    timing["total_ms"] = contract_elapsed_ms
     return payload
 
 

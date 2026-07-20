@@ -12,16 +12,34 @@
     "operational_readiness",
     "overall_status",
     "delivery_readiness",
-    "platform_release_complete",
-    "terminal_maturity"
+    "local_delivery_complete",
+    "remote_published",
+    "offsite_restore_verified",
+    "adoption_ready",
+    "terminal"
   ],
   "properties": {
-    "schema_version": {"type": "integer", "minimum": 2},
+    "schema_version": {"const": 3},
     "final_profile": {"const": "product"},
     "overall_status": {"enum": ["needs-fix", "needs-owner-review", "partial", "mature"]},
-    "terminal_maturity": {"type": "boolean"},
-    "platform_release_complete": {"type": "boolean"},
-    "delivery_readiness": {"type": "object"},
+    "local_delivery_complete": {"type": "boolean"},
+    "remote_published": {"type": "boolean"},
+    "offsite_restore_verified": {"type": "boolean"},
+    "adoption_ready": {"type": "boolean"},
+    "terminal": {"type": "boolean"},
+    "delivery_readiness": {
+      "type": "object",
+      "required": [
+        "local_delivery_complete",
+        "remote_published",
+        "offsite_restore_verified"
+      ],
+      "properties": {
+        "local_delivery_complete": {"type": "boolean"},
+        "remote_published": {"type": "boolean"},
+        "offsite_restore_verified": {"type": "boolean"}
+      }
+    },
     "platform_status": {"type": "object"},
     "content_readiness": {"type": "object"},
     "retrieval_quality": {"type": "object"},

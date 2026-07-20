@@ -1,13 +1,41 @@
 ---
-title: V1 与主分支深入分析计划
 doc_type: plan
 knowledge_type: decision
 maturity: draft
-status: archived
-owner: team-core
 created: 2026-05-06
 last_updated: 2026-05-12
-tags: [v1, analysis, plan]
+id: pcr02-v1-deep-analysis-plan-archive-20260506
+title: V1 与主分支深入分析计划
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-05-06-v1-deep-analysis-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: plans/2026-05-06-v1-deep-analysis-plan.md
+  source_sha256: 3c5684892861fd93d9ab096f1a751546bfb1897428f82a420c434195ff659e0c
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical analysis plan only, no active promotion and not current project state
+tags:
+- pcr02
+- archive-only
+- historical-plan
+- no-active-promotion
+- v1
+- analysis
+- plan
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-05-06-v1-deep-analysis-plan.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-06 V1 与主分支深入分析计划；仅作 PCR02 历史分析计划 provenance，不代表当前分析任务、当前架构状态或 active 决策。
 ---
 
 # V1 与主分支深入分析计划

@@ -1,13 +1,43 @@
 ---
-title: V1 到主分支迁移完成报告
 doc_type: report
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-07
 last_updated: 2026-05-12
-tags: [v1, migration, report]
+id: pcr02-v1-migration-final-validation-report-20260507
+title: V1 到主分支迁移完成报告
+kind: validation
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/reports/2026-05-07-v1-migration-final-report.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: reports/2026-05-07-v1-migration-final-report.md
+  source_sha256: 98510d00d415799b7fda036a138c260658be93374356b587c53d313c309c918d
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical migration validation only, no active promotion and not current migration state
+tags:
+- pcr02
+- validation
+- archive-only
+- historical-evidence
+- historical-migration-provenance
+- no-active-promotion
+- v1
+- migration
+- report
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/reports/2026-05-07-v1-migration-final-report.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-07 V1 到主分支迁移完成报告；仅作 PCR02 历史验证 evidence，不代表当前迁移态、当前 release 状态或 active 决策。
 ---
 
 # V1 到主分支迁移完成报告

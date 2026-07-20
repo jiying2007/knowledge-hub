@@ -1,15 +1,44 @@
 ---
-title: Diag UT 硬切进展
 doc_type: plan
 knowledge_type: process
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-14
-tags: [diag, ut, hard-switch]
-related: [../runbooks/prog-tool-usage-guide.md, ../reports/2026-05-14-prog-tool-terminal-release-report.md]
-validation_refs: []
+related:
+- ../runbooks/prog-tool-usage-guide.md
+- ../reports/2026-05-14-prog-tool-terminal-release-report.md
+id: pcr02-diag-ut-hard-switch-progress-archive-20260513
+title: Diag UT 硬切进展
+kind: project-archive
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/plans/2026-05-13-diag-ut-hard-switch-progress-plan.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: plans/2026-05-13-diag-ut-hard-switch-progress-plan.md
+  source_sha256: 22f034bd44bea7fb9519bbd63ed39cba796e124c810fd4d89dcb744597e2dcaa
+review_after: '2026-10-16'
+review_status: archive-only-historical-provenance
+promotion: none
+promotion_decision: none; archived historical diag UT progress only, no active promotion and no current test-pass claim
+tags:
+- pcr02
+- archive-only
+- historical-progress
+- no-active-promotion
+- diag
+- ut
+- hard-switch
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/plans/2026-05-13-diag-ut-hard-switch-progress-plan.md
+- rtk bash tools/knowledge-check.sh --dry-run
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 归档 2026-05-13 Diag UT 硬切进展；仅作历史进展记录 provenance，不代表当前测试覆盖、当前通过状态或 active 发布门禁。
 ---
 
 # Diag UT 硬切进展（2026-05-13）

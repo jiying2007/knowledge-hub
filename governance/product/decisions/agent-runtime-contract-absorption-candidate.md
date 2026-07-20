@@ -1,4 +1,20 @@
 ---
+related:
+- README.md
+- governance/external-source-absorption.md
+- governance/evidence-rules.md
+- governance/product/validation/project-readiness.md
+human_reviewed_by: leiwenjun-via-codex-delegation
+human_reviewed_at: '2026-07-16'
+review_basis: 用户于 2026-07-16 当前会话明确回复“授权，按建议继续推进”。Codex 作为透明受托复核执行人，已完整读取候选正文，核对 memdsl@2d87af7 与 rawmem@9842be6 的固定来源、许可证和采用边界，并复核
+  Knowledge Hub 138 项 pytest、140/140 full regression、350/350 正文覆盖、1396 路径 candidate restore 与 product gate 技术通过证据。结论仅接受为普通内容
+  review record，保持 reviewing、promotion=none、manual_validation_pending 和 shadow/采用证据缺口；不生成 owner lifecycle decision、不关闭 owner
+  gate、不提升 active、不写 memory、不修改源项目。authorization_id=auth-20260716-agent-runtime-absorption-review-push。
+human_review_decision: accept-as-review-record
+decision_status: delegated-review-accepted-remain-reviewing
+decision_date: null
+aliases:
+- Knowledge Hub Agent 运行时契约吸收决策候选
 id: knowledge-hub-agent-runtime-contract-absorption-20260716
 title: Knowledge Hub Agent 运行时契约吸收决策候选
 kind: decision
@@ -11,9 +27,11 @@ owner: leiwenjun
 source:
   type: external-reference-synthesis
   from: memdsl@2d87af7 and rawmem@9842be6 public source audit
+  source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
 review_after: '2026-10-16'
-created_at: '2026-07-16'
-updated_at: '2026-07-16'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: adapt accepted; remain reviewing for shadow and adoption evidence; no active promotion
 tags:
@@ -25,43 +43,30 @@ tags:
 - ai-generated
 - delegated-review-accepted
 - no-active-promotion
-related:
-- README.md
-- governance/external-source-absorption.md
-- governance/evidence-rules.md
-- governance/product/validation/project-readiness.md
 validation_refs:
 - rtk python3 -m pytest -q
 - rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --suite full --json --as-of 2026-07-16
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-16
-summary_zh: 吸收 memdsl 的有界导航、可解释检索、EvidencePack、合规预检与 shadow review，以及 rawmem 的只追加证据链、metadata projection 和隐私边界；保持 Markdown/registry
-  唯一权威，不引入第二套记忆 SSOT。
-review_status: human-reviewed-accepted
-primary_language: zh-CN
-source_language: en
-translation_status: summarized-zh
-terminology_status: pending-review
 evidence_strength: external-reference-plus-direct-source-audit
 evidence_refs:
 - https://github.com/Liyuan1992/memdsl/tree/2d87af7838474a2b1546afd645caf5522bdc39a8
 - https://github.com/Liyuan1992/rawmem/tree/9842be6c90955100035b71d1af181ce8dde42cf9
 - governance/external-source-absorption.md
 - governance/evidence-rules.md
+created_at: '2026-07-16'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-16'
-human_reviewed_by: leiwenjun-via-codex-delegation
-human_reviewed_at: '2026-07-16'
-review_basis: 用户于 2026-07-16 当前会话明确回复“授权，按建议继续推进”。Codex 作为透明受托复核执行人，已完整读取候选正文，核对 memdsl@2d87af7 与 rawmem@9842be6 的固定来源、许可证和采用边界，并复核
-  Knowledge Hub 138 项 pytest、140/140 full regression、350/350 正文覆盖、1396 路径 candidate restore 与 product gate 技术通过证据。结论仅接受为普通内容
-  review record，保持 reviewing、promotion=none、manual_validation_pending 和 shadow/采用证据缺口；不生成 owner lifecycle decision、不关闭 owner
-  gate、不提升 active、不写 memory、不修改源项目。authorization_id=auth-20260716-agent-runtime-absorption-review-push。
-human_review_decision: accept-as-review-record
-decision_owner: leiwenjun
-decision_status: delegated-review-accepted-remain-reviewing
-decision_date: null
 manual_validation_pending: true
+decision_owner: leiwenjun
+summary_zh: 吸收 memdsl 的有界导航、可解释检索、EvidencePack、合规预检与 shadow review，以及 rawmem 的只追加证据链、metadata projection 和隐私边界；保持 Markdown/registry
+  唯一权威，不引入第二套记忆 SSOT。
+primary_language: zh-CN
+source_language: en
+translation_status: summarized-zh
+terminology_status: pending-review
 agent_contract:
   schema_version: 1
   role: guidance
@@ -72,8 +77,6 @@ agent_contract:
   capabilities:
   - searchable
   - requires_evidence
-aliases:
-- Knowledge Hub Agent 运行时契约吸收决策候选
 ---
 
 # Knowledge Hub Agent 运行时契约吸收决策候选

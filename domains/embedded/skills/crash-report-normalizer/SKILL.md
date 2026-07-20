@@ -25,7 +25,7 @@ last_updated: 2026-05-15
 2. 证据必须可回溯到命令或日志来源。
 3. 置信度必须分级（高/中/低）并说明依据。
 4. 必须包含最小验证命令。
-5. 代码风格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
+5. 代码风格参考 `domains/embedded/standards/c-coding-standards.md` 的冻结历史基线；如与当前项目规范冲突，以项目规范为准。
 6. 结构与验证流程遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 
 ## 4. 最小验证

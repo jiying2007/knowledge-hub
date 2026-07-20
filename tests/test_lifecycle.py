@@ -5,6 +5,8 @@ import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, file_sha256, load_jsonl
 from tools.codex_assets.knowledge_hub.lifecycle import capture, transition
+from tools.codex_assets.knowledge_hub.model import validate_item
+from tools.codex_assets.knowledge_hub.obsidian_view import build_obsidian_views
 from tools.codex_assets.knowledge_hub.review_attestation import (
     build_attestation_packet,
     generate_review_form,
@@ -51,6 +53,11 @@ def test_capture_apply_creates_reviewing_item_and_indexes(tmp_path):
     assert item["manual_validation_pending"] is True
     assert "captured-20260713" in (root / "indexes/by-status.md").read_text()
     assert load_jsonl(root / "registry/lifecycle-events.jsonl")[0]["event_type"] == "capture"
+    assert "indexes/obsidian/topics.md" in result["transaction"]["changed_paths"]
+    assert "indexes/obsidian/reviewing.base" in result["transaction"]["changed_paths"]
+    rebuilt = build_obsidian_views(root)
+    assert rebuilt["content_mirror_drift_count"] == 0
+    assert rebuilt["transaction"]["changed_count"] == 0
 
 
 def test_capture_records_explicit_ai_provenance(tmp_path):
@@ -87,6 +94,50 @@ def test_capture_records_explicit_ai_provenance(tmp_path):
     assert "ai_role: drafted" in body
     assert "primary_language: zh-CN" in body
     assert "terminology_status: pending-review" in body
+
+
+def test_capture_external_temporary_source_records_hash_without_temporary_path(tmp_path):
+    root = _root(tmp_path)
+    source = tmp_path.parent / "{}-ephemeral-source.md".format(tmp_path.name)
+    source.write_text("# 临时来源\n\n只保留内容哈希。\n")
+
+    capture(
+        root,
+        source,
+        "audit",
+        "governance/ephemeral-source.md",
+        dt.date(2026, 7, 19),
+        True,
+        item_id="ephemeral-source-20260719",
+    )
+
+    item = load_jsonl(root / "registry/items.jsonl")[0]
+    assert item["source"]["type"] == "ephemeral-file-capture"
+    assert item["source"]["from"].startswith("ephemeral-content-sha256:")
+    assert item["source"]["temporary_source_retained"] is False
+    assert "/tmp/" not in json.dumps(item["source"], ensure_ascii=False)
+
+
+def test_reviewing_item_rejects_temporary_durable_metadata(tmp_path):
+    root = _root(tmp_path)
+    source = tmp_path / "source.md"
+    source.write_text("# 临时证据门禁\n\n待复核。\n")
+    capture(
+        root,
+        source,
+        "audit",
+        "governance/temp-evidence.md",
+        dt.date(2026, 7, 19),
+        True,
+        item_id="temp-evidence-20260719",
+    )
+    item = load_jsonl(root / "registry/items.jsonl")[0]
+    item["evidence_refs"] = ["/tmp/transient.log sha256=abc"]
+
+    assert (
+        "active/reviewing durable metadata must not reference temporary path: evidence_refs[0]"
+        in validate_item(item)
+    )
 
 
 def test_capture_manifest_audit_creates_machine_companion(tmp_path):
@@ -202,6 +253,10 @@ def test_promote_consumes_scoped_authorization(tmp_path):
     assert load_jsonl(root / "registry/promotions.jsonl")[0]["target_item"] == "captured-20260713"
     events = load_jsonl(root / "registry/lifecycle-events.jsonl")
     assert [row["event_type"] for row in events] == ["capture", "promote"]
+    assert "indexes/obsidian/active-knowledge.base" in result["transaction"]["unchanged_paths"]
+    rebuilt = build_obsidian_views(root)
+    assert rebuilt["content_mirror_drift_count"] == 0
+    assert rebuilt["transaction"]["changed_count"] == 0
 
 
 def test_removed_coupled_review_form_is_rejected(tmp_path):

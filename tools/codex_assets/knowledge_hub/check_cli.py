@@ -8,6 +8,8 @@ import re
 import subprocess
 import sys
 
+from .common import KnowledgeHubError, load_markdown
+from .model import FRONTMATTER_MIRROR_FIELDS, validate_item
 from .security import scan_secret_text
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -93,6 +95,18 @@ def frontmatter_scalar(path, field):
         if match:
             return match.group(1).strip().strip("\"'")
     return ""
+
+def normalize_frontmatter_value(value):
+    if isinstance(value, (dt.date, dt.datetime)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {
+            str(key): normalize_frontmatter_value(row)
+            for key, row in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [normalize_frontmatter_value(row) for row in value]
+    return value
 
 def file_sha256(path):
     digest = hashlib.sha256()
@@ -1824,6 +1838,7 @@ if not args.sources_only:
                 errors.append(f"manual-entry:{relative} missing maintenance anchor: {term}")
 
     ids = set()
+    item_ids_by_path = {}
     items = load_jsonl(root / "registry" / "items.jsonl")
     registered_item_paths = {
         str(item.get("path", "")).strip()
@@ -1849,6 +1864,17 @@ if not args.sources_only:
         if item_id in ids:
             errors.append(f"items:{item_id} duplicate id")
         ids.add(item_id)
+        for model_error in validate_item(item):
+            errors.append(f"items:{item_id} model: {model_error}")
+        item_path = str(item.get("path", "")).strip()
+        if item_path:
+            previous_id = item_ids_by_path.get(item_path)
+            if previous_id:
+                errors.append(
+                    f"items:{item_id} duplicate path {item_path}; canonical item is {previous_id}"
+                )
+            else:
+                item_ids_by_path[item_path] = item_id
         for field in ["title", "kind", "domain", "path", "scope", "visibility", "status", "owner", "source", "review_after", "created_at", "updated_at", "promotion", "tags"]:
             if field not in item or item.get(field) in ("", None, []):
                 errors.append(f"items:{item_id} missing {field}")
@@ -1958,6 +1984,33 @@ if not args.sources_only:
             errors.append(f"items:{item_id} path missing: {rel_path}")
         elif rel_path.suffix.lower() == ".md":
             frontmatter_status_health["checked_item_count"] += 1
+            try:
+                frontmatter_metadata, _frontmatter_body = load_markdown(root / rel_path)
+            except KnowledgeHubError as exc:
+                errors.append(f"frontmatter-status:{item_id} invalid YAML: {exc}")
+                frontmatter_metadata = {}
+            for field in FRONTMATTER_MIRROR_FIELDS:
+                if field not in frontmatter_metadata:
+                    continue
+                registry_value = normalize_frontmatter_value(item.get(field))
+                frontmatter_value = normalize_frontmatter_value(
+                    frontmatter_metadata.get(field)
+                )
+                if registry_value == frontmatter_value:
+                    continue
+                frontmatter_status_health["mismatch_count"] += 1
+                frontmatter_status_health["rows"].append({
+                    "item_id": item_id,
+                    "path": rel_path.as_posix(),
+                    "field": field,
+                    "registry_value": registry_value,
+                    "frontmatter_value": frontmatter_value,
+                    "status": "mismatch",
+                })
+                errors.append(
+                    f"frontmatter-status:{item_id} field={field} registry={registry_value!r} "
+                    f"frontmatter={frontmatter_value!r}: {rel_path.as_posix()}"
+                )
             declared_status = frontmatter_scalar(root / rel_path, "status")
             if declared_status:
                 frontmatter_status_health["declared_status_count"] += 1
@@ -2487,6 +2540,9 @@ if not args.sources_only:
             errors.append(f"secret-pattern:{path.relative_to(root)}")
 
 PATH_ROUTING_TERMS = [
+    ("~/embedded/knowledge", "~/embedded/knowledge"),
+    ("~/embedded/knowledge", str(pathlib.Path.home() / "embedded" / "knowledge")),
+    ("EMBEDDED_KNOWLEDGE_HOME", "EMBEDDED_KNOWLEDGE_HOME"),
     ("~/embedded/engineering_archive", "~/embedded/engineering_archive"),
     ("~/embedded/engineering_archive", str(pathlib.Path.home() / "embedded" / "engineering_archive")),
     ("~/codex/docs/archive", "~/codex/docs/archive"),
@@ -2494,10 +2550,6 @@ PATH_ROUTING_TERMS = [
 ]
 
 PATH_ROUTING_CANONICAL_ROUTES = {
-    "~/embedded/engineering_archive": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive",
-    "~/embedded/engineering_archive/pcr02": "~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02",
-    "~/codex/docs/archive": "~/knowledge-hub/domains/codex/archive/codex-archive",
-    "~/codex/docs/archive/_registry": "~/knowledge-hub/domains/codex/archive/codex-archive-registry",
 }
 
 def classify_path_routing_hit(rel_path, line_text):
@@ -2515,7 +2567,7 @@ def classify_path_routing_hit(rel_path, line_text):
         return "canonical-policy"
     if normalized.startswith("domains/codex/archive/codex-archive/"):
         return "provenance"
-    if normalized.startswith("sources/") or normalized == "registry/sources.json":
+    if normalized.startswith("sources/") or normalized in {"registry/sources.json", "registry/retired-sources.jsonl"}:
         return "provenance"
     if normalized.startswith("artifacts/manifests/") or normalized.startswith("registry/authorizations") or normalized.startswith("registry/automation-runs"):
         return "provenance"
@@ -2533,7 +2585,7 @@ path_routing_health = {
     "provenance_count": 0,
     "runtime_route_candidate_count": 0,
     "runtime_route_candidates": [],
-    "notes_zh": "Hub 内旧路径只允许作为 canonical policy 或 provenance；runtime-route-candidate 会阻断 knowledge-check。",
+    "notes_zh": "旧路径和环境变量没有兼容路由；只允许出现在 detector config 或不可执行 provenance 中，runtime-route-candidate 会阻断 knowledge-check。",
 }
 
 if not args.sources_only:

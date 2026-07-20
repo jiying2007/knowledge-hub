@@ -3,7 +3,8 @@ title: SigmaStar 媒体与 AI 数据流模型
 doc_type: architecture
 knowledge_type: model
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-18
 last_updated: 2026-05-18

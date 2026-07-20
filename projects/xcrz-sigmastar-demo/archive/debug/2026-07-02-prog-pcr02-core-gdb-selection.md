@@ -1,17 +1,61 @@
 ---
-title: prog_pcr02 core 调试的 GDB 选择经验
 doc_type: debug-note
 knowledge_type: incident-learning
 maturity: candidate
-status: archived
-owner: team-core
 created: 2026-07-02
 last_updated: 2026-07-02
-tags: [pcr02, prog_pcr02, core, gdb, sigmastar, arm-linux-gnueabihf]
 related:
-  - ../../current/runbooks/project-debug-tools-guide.md
-  - ../../../../domains/embedded/runbooks/gdb-debug-guide.md
-  - ../../../../domains/embedded/skills/offline-gdb-core-debug/SKILL.md
+- ../../current/runbooks/project-debug-tools-guide.md
+- ../../../../domains/embedded/runbooks/gdb-debug-guide.md
+- ../../../../domains/embedded/skills/offline-gdb-core-debug/SKILL.md
+id: pcr02-prog-pcr02-core-gdb-selection-20260702
+title: prog_pcr02 core 调试的 GDB 选择经验
+kind: debug-record
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-core-gdb-selection.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: codex-session-summary
+  from: current-session prog_pcr02 core GDB path correction
+review_after: '2026-10-02'
+review_status: session-archived-debug-note
+promotion: none
+promotion_decision: none
+tags:
+- pcr02
+- prog_pcr02
+- core
+- gdb
+- sigmastar
+- arm-linux-gnueabihf
+- gcc-11.1.0-20210608
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-core-gdb-selection.md
+- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+- domains/embedded/skills/offline-gdb-core-debug/SKILL.md
+- rtk rg -n "gcc-11.1.0-20210608|arm-none-eabi|/usr/bin/gdb" AGENTS.md ~/codex/src/codex-home/vendor/skills/embedded-core-dump-triage/0.1.0/SKILL.md
+  ~/.codex/vendor/skills/embedded-core-dump-triage/0.1.0/SKILL.md ~/knowledge-hub/projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+  ~/knowledge-hub/domains/embedded/skills/offline-gdb-core-debug/SKILL.md ~/knowledge-hub/projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-core-gdb-selection.md
+evidence_strength: current-session-gdb-selection-verified
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-core-gdb-selection.md
+- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+- domains/embedded/skills/offline-gdb-core-debug/SKILL.md
+created_at: '2026-07-02'
+updated_at: '2026-07-02'
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-07-02'
+summary_zh: 固化 PCR02 prog_pcr02 core 调试中正确 GDB 路径选择：gcc-11.1.0-20210608 SigmaStar glibc arm-linux-gnueabihf-gdb；同时记录错误候选降级规则，避免默认使用
+  host gdb、arm-none-eabi 或旧 opt 工具链导致 backtrace/register 低置信。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: not-required
 ---
 
 # prog_pcr02 core 调试的 GDB 选择经验

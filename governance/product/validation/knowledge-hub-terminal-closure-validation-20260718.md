@@ -1,4 +1,16 @@
 ---
+related:
+- README.md
+- governance/product/validation/project-readiness.md
+- governance/command-tooling-rules.md
+target_version: current working-tree candidate; evidence snapshot is signature-bound and intentionally not copied into tracked
+  text
+test_environment: Linux; isolated CPython 3.10.20 and 3.14.6 virtual environments; hash-locked dependencies
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- Knowledge Hub terminal closure validation 2026-07-18
 id: knowledge-hub-terminal-closure-validation-20260718
 title: Knowledge Hub 全面终态闭环优化验证 2026-07-18
 kind: validation
@@ -13,8 +25,9 @@ source:
   from: current-session direct commands and official upstream metadata; no external body copied
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-18'
-created_at: '2026-07-18'
-updated_at: '2026-07-19'
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -24,42 +37,32 @@ tags:
 - engineering-quality
 - ai-generated
 - manual-validation-pending
-related:
-- README.md
-- governance/product/validation/project-readiness.md
-- governance/command-tooling-rules.md
 validation_refs:
 - governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-artifact_refs: []
-target_version: current working-tree candidate; evidence snapshot is signature-bound and intentionally not copied into tracked
-  text
-test_environment: Linux; isolated CPython 3.10.20 and 3.14.6 virtual environments; hash-locked dependencies
-summary_zh: 记录 Knowledge Hub 在功能、性能、安全、可扩展性、可维护性、运行时支持、供应链和产品门禁上的全面优化与直接命令证据；自动化技术闭环已通过，真实 GUI、项目实机、正式发布、回滚、人工复核和长期采用仍按证据状态保留。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: checked
 evidence_strength: direct-command-and-official
 evidence_refs:
+- governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - https://devguide.python.org/versions/
 - https://pypi.org/project/PyYAML/
 - https://pypi.org/project/jsonschema/
 - https://pypi.org/project/pytest/
 - https://pip.pypa.io/en/stable/topics/secure-installs/#hash-checking-mode
 - https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+created_at: '2026-07-18'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-18'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
 manual_validation_reason: 真实 Obsidian GUI、项目设备、正式发布与生产回滚、人工复核和长期采用证据不在本地自动化授权范围内
-aliases:
-- Knowledge Hub terminal closure validation 2026-07-18
+summary_zh: 记录 Knowledge Hub 在功能、性能、安全、可扩展性、可维护性、运行时支持、供应链和产品门禁上的全面优化与直接命令证据；自动化技术闭环已通过，真实 GUI、项目实机、正式发布、回滚、人工复核和长期采用仍按证据状态保留。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: checked
 ---
 
 # Knowledge Hub 全面终态闭环优化验证 2026-07-18
@@ -81,15 +84,15 @@ aliases:
 | 维度 | 初始缺口 | 已落地结果 | 当前边界 |
 | --- | --- | --- | --- |
 | 功能完整性 | Obsidian managed properties/MOC 有漂移；source runtime 与部分产品规则存在静态假设 | 受治理 view apply 收敛漂移；18/18 current/retired source 由 manifest 驱动执行；产品策略进入 schema 与 registry manifest | GUI 人工验收仍未执行 |
-| 检索性能 | 旧 benchmark 与本地 metrics 都曾把冷准备混入 warm 查询；每次查询重复哈希约千个文件，候选 restore benchmark 曾耗时 13.196 秒 | retrieval contract v2 与 metrics v4/performance-v2 都分离 `index_preparation`、`warm_interactive` 和端到端观测；search index v7 复用完整 OS identity 与 SHA-256；warm P95 门槛 500 ms、准备门槛 5000 ms | 旧 telemetry 不删除、不改写，继续计入 usage/provenance；新口径真实样本不足时保持 pending |
+| 检索性能与可信性 | 旧 benchmark 与本地 metrics 都曾把冷准备混入 warm 查询；默认搜索还能混入未注册正文、控制文件、重复路径和兼容残留，权威文档也可能在 FTS 截断前丢失 | retrieval-result v3、search index v8 与 metrics v4/performance-v2 分离准备、warm 和端到端观测；默认 corpus 硬切为 registry 权威正文，权威 lane 在 FTS 截断前注入，最终按 canonical path/content family 去重并执行 schema；warm P95 门槛 500 ms、准备门槛 5000 ms | 旧 telemetry 不删除、不改写，只保留 usage/provenance；历史/控制/未注册材料不进入默认检索 |
 | 数据完整性 | 仅依赖 size/mtime 可能漏掉同大小、同 mtime 的极快变更 | file state 增加 `ctime_ns/device/inode/content_sha256`；真实 rehash 路径执行第二次 nofollow 有界读取和读后身份复核 | 本地 cache 仍是可重建、非权威状态 |
 | 安全 | 多处读取、YAML、symlink、runtime permission 与缓存保留缺少统一硬边界 | bounded nofollow 读取、YAML alias/node/depth 上限、symlink 拒绝、私有目录/文件 `0700/0600`、descriptor-bound `fchmod`、fd-based symlink-safe 事务清理、私有 UUID 临时快照，以及旧 schema cache/终结事务显式保留策略 | 不宣称替代主机、供应链或外部系统安全审计 |
-| 可扩展性 | 项目数量和 PCR 专项逻辑曾存在代码内静态基线 | 项目分母、route matrix、readiness 与专项 owner 条件改为 manifest 驱动；第 31 项 fixture 验证无代码改动扩容 | shared schema、根配置与依赖仍需串行治理 |
-| 可维护性 | 无统一 Python 项目元数据、类型门禁、lint 分层、覆盖率或构建检查 | `pyproject.toml`、Ruff 双层检查、mypy 渐进范围、Bandit、核心模块 branch coverage、sdist/wheel 构建进入统一工程门禁 | 历史回归模块保留其生成式通配导入结构，不做低价值全库格式化 |
+| 可扩展性 | 项目数量和 PCR 专项逻辑曾存在代码内静态基线；每项目生成 4 份高度相似 readiness 正文 | 项目分母、route matrix、单一 evidence contract 与专项 owner 条件改为 manifest 驱动；第 31 项 fixture 验证无代码改动扩容；30 个项目只保留 30 份 contract + 1 个 dashboard | shared schema、根配置与依赖仍需串行治理 |
+| 可维护性 | 无统一 Python 项目元数据、类型门禁、lint 分层、整体覆盖率或构建检查 | `pyproject.toml`、全包 Ruff correctness、19 文件 mypy 渐进范围、Bandit、whole-package statement coverage、sdist/wheel 构建进入统一工程门禁 | subprocess coverage 已合并；类型与 lint 严格范围仍按风险渐进扩展 |
 | 运行时支持 | 公共 wrapper 缺少统一、可恢复的受支持解释器入口 | 正式支持矩阵固定为 Python 3.10–3.14；公共 wrapper 统一经 fail-closed selector 启动，低于 3.10 或缺少 lock 依赖时直接失败 | restore/regression 临时仓只接受调用方已验证的绝对解释器路径，不复制 venv、不联网安装 |
 | 供应链 | 依赖只有直接 pin，无全传递 hash lock、SBOM、漏洞审计或 Action commit pin | runtime/dev 通用 hash locks；GitHub Actions 固定 40 位 commit SHA；Dependabot；`pip-audit` 与 CycloneDX SBOM；无隔离构建后端也纳入 lock | 漏洞结论只代表审计时 advisory 数据，不是永久安全证明 |
 | CI 权限 | CI bootstrap 使用裸路径写入，CI `rtk` wrapper 接受宽泛 `tools/*.sh` | workflow `contents: read`、禁止 `pull_request_target`、checkout 不保留凭证；CI transport 使用精确 allowlist，bootstrap 校验 Runner 路径并拒绝穿越 | 尚未在远端 GitHub Runner 上观察本次 workflow 实际 run |
-| 交付证据 | final gate 不验证工程门禁是否实际运行 | full engineering 生成私有、24 小时有效、candidate-signature-bound 快照；product full gate 同时校验工程 contract 与新鲜快照 | quick gate 只供日常检查，不能作为 terminal maturity 证据 |
+| 交付证据 | final gate 不验证工程门禁是否实际运行，quick/full/health 曾可能读取不同强度快照 | full engineering 生成私有、24 小时有效、candidate-signature-bound 快照；product full gate 同时校验工程 contract 与新鲜快照；health 选择与当前签名匹配的最强快照 | quick gate 只供日常检查，不能作为 `terminal=true` 证据 |
 
 ### 2026-07-19 运行面硬切
 
@@ -99,6 +102,18 @@ aliases:
 - linking audit 改为从当前 project/source/topic/decision registry 动态推导，不再依赖历史 proof、Level2 或固定项目锚点。
 - Python selector 只接受 3.10–3.14 且依赖完整的解释器；restore 与 regression 通过绝对路径显式绑定已验证 runtime，未引入旧版本回退。
 - archived artifact、retired source ledger 和负向“拒绝旧参数”测试仅保留 provenance 或防回流职责，不被当作当前接口、profile、快照或成熟度证据。
+
+### 2026-07-19 权威语料、归档与检索闭环
+
+- 默认搜索只索引 registry 精确登记且 `searchable` 的正文；未注册 Markdown、registry/index/tool/manifest/cache 等控制文件只有诊断流程可以显式读取。最终 JSON 必须通过 retrieval-result v3，否则 fail closed。
+- registry canonical path 已强制唯一，搜索返回再按 canonical path 与内容族去重；未注册、控制文件、重复路径、旧兼容路径和内部端点默认暴露率均为 0。
+- active/reviewing 的证据、术语、来源和临时路径由 registry 单一事实源及强类型镜像门禁约束；frontmatter 漂移、YAML 类型错误和长期 `/tmp` 引用均为 0。
+- 77 KB 聚合全文已拆为中文总结与不可检索冻结原始证据；长期正文不再复制整批 raw corpus。
+- project-readiness 从 120 份模板投影硬切为 30 份项目 evidence contract 与 1 个 dashboard；90 份 profile/runbook/decision 正文及 registry item 已删除，迁移账本仅用于不可检索溯源，不提供 alias、shim 或 fallback。当前 registry 为 380 项，重复路径为 0。
+- capture/transition 在同一事务中重建 registry 派生索引、Obsidian MOC/Base/Properties 并使检索签名自然失效；复跑 project-readiness 与 Obsidian build 均为 `changed_count=0`。
+- 检索基准扩展为 302 个案例（28 个语义 + 274 个路由），同时验证 authority Recall@3、nDCG@10、宽泛查询、zero-hit、并发和 10 倍 corpus；当前各质量指标均为 1.0，完整性污染计数均为 0。
+- compliance fixture 包含真实 active constraints，52/52 通过并覆盖 ALLOW/BLOCK/NEEDS_REVIEW；不再用 `applicable_ids=[]` 的空约束结果冒充合规有效性。
+- restore drill 的 execution-environment producer 与 schema 已硬切到 v2；本地 candidate 和 `git archive HEAD` 均完成 10/10 内部检查，合法字段通过 schema，未知 provider 与额外兼容字段 fail closed。真实 remote checkout/published ref/offsite environment 在本地均保持 false，不以本机恢复冒充异地恢复。
 
 ## 环境与官方来源
 
@@ -116,11 +131,13 @@ aliases:
 | `rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode contract --json` | 0 | Python 3.10–3.14 matrix、直接 pin、两份 hash lock、Action SHA、least privilege、CI transport 与 Dependabot contract 全部通过。 | 本报告；实时 JSON | Tool / Supply Chain | `pyproject.toml`、两份 lock、`.github/workflows/quality.yml` |
 | `rtk <python-3.10-venv>/python -m pip install --require-hashes -r requirements-dev.lock` | 0 | Python 3.10.20 从 universal lock 完成 clean install。 | 临时 venv，不归档包体 | Tool / Runtime | `requirements-dev.lock` |
 | `rtk <python-3.14-venv>/python -m pip install --require-hashes -r requirements-dev.lock` | 0 | Python 3.14.6 从同一 universal lock 完成 clean install。 | 临时 venv，不归档包体 | Tool / Runtime | `requirements-dev.lock` |
-| `rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode full --json` | 0 | Ruff correctness/critical、mypy、Bandit、pytest、核心覆盖率、无隔离 build、Hub check、retrieval、动态 full regression、漏洞审计、SBOM 和 candidate integrity 全部通过。 | `.cache/knowledge-hub/engineering-quality.json`，私有且可过期 | Tool / Engineering | candidate-signature-bound snapshot |
-| `rtk bash ~/knowledge-hub/tools/knowledge-retrieval-benchmark.sh --json` | 0 | hit rate、MRR、route accuracy、index preparation 与 warm P95 均满足 contract v2。 | 实时 JSON | Tool / Performance | `tests/fixtures/retrieval_cases.json` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode full --json` | 0 | 全包 Ruff correctness、19 文件 mypy、Bandit、pytest、whole-package statement coverage、无隔离 build、Hub check、retrieval、动态 full regression、漏洞审计、SBOM 和 candidate integrity 全部通过。 | `.cache/knowledge-hub/engineering-quality.json`，私有且可过期 | Tool / Engineering | candidate-signature-bound snapshot |
+| `rtk bash ~/knowledge-hub/tools/knowledge-retrieval-benchmark.sh --summary-json` | 0 | 302 个案例的 hit rate、MRR、nDCG@10、authority Recall@3、route accuracy 均为 1.0；五类完整性污染为 0，并发与 10 倍 corpus probe 通过。 | 实时 JSON | Tool / Performance | `tests/fixtures/retrieval_cases.json`、retrieval-result v3 |
 | `rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --json --as-of 2026-07-19` | 0 | registry 中 current 与 retired source 全覆盖执行，18/18 通过。 | 实时 JSON | Knowledge Hub / Source | `registry/sources.json`、`registry/retired-sources.jsonl` |
 | `rtk bash ~/knowledge-hub/tools/knowledge-obsidian-view-build.sh --check --json` | 0 | managed Markdown、Properties、MOC 与 content mirror 无漂移。 | 实时 JSON | Knowledge Hub / Obsidian | GUI runtime acceptance 不在此命令范围 |
-| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --suite full --json --as-of 2026-07-19` | 0 | 动态 full suite 通过；runner 同时验证无重复测试函数、无重复结果 ID、无零断言记录。 | 实时 JSON | Tool / Regression | `regression/runner.py` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --suite full --summary-json --as-of 2026-07-19` | 0 | 动态 full suite 通过；runner 同时验证无重复测试函数、无重复结果 ID、无零断言记录。 | 实时 JSON | Tool / Regression | `regression/runner.py` |
+| `rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode candidate --as-of 2026-07-19 --json` | 0 | 1351 个候选文件 hash-bound 复制，10/10 内部检查与 restore-drill-v2 schema 通过；无 cache、本机映射、网络或源项目写入。 | `.cache/knowledge-hub/restore-drill-candidate.json` | Knowledge Hub / Recovery | 只证明当前工作树候选可本地恢复 |
+| `rtk bash ~/knowledge-hub/tools/knowledge-restore-drill.sh --source-mode head --as-of 2026-07-19 --json` | 0 | 纯 `git archive HEAD` 恢复的 10/10 内部检查与 restore-drill-v2 schema 通过；远端与异地三项均为 false。 | `.cache/knowledge-hub/restore-drill-head.json` | Knowledge Hub / Recovery | HEAD 仍是本轮修改前提交，不代表当前候选已提交 |
 | `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --regression-suite full --summary-json --as-of 2026-07-19` | 0 | platform hard checks 与动态 full regression 通过，`platform_productization_complete=true`；真实项目证据、人工 review、committed release 与采用期仍独立报告。 | `.cache/knowledge-hub/final-gate-product-full.json` | Knowledge Hub / Product | 不替代 `--require-terminal` 的严格退出码 |
 
 补充说明：
@@ -135,11 +152,15 @@ aliases:
 | case | 期望 | 实际 | 状态 | 证据 |
 | --- | --- | --- | --- | --- |
 | 现有功能回归 | unit/integration 与动态 full suite 零失败 | full engineering 与 full regression 返回 0 | 通过 | 工程快照、regression JSON |
-| 关键模块覆盖 | branch-aware coverage 不低于 75% | 78% | 通过 | coverage report |
-| 已知答案检索 | Top-3 hit rate ≥0.95、MRR ≥0.85 | hit rate 1.0、MRR 1.0 | 通过 | retrieval benchmark |
+| 整体语句覆盖 | whole-package statement coverage 不低于 75% | 17,803 statements，76% | 通过 | coverage report |
+| 权威检索质量 | Top-3 hit rate ≥0.95、MRR ≥0.85、nDCG@10 ≥0.9、authority Recall@3 =1.0 | 四项均为 1.0；unregistered/control/duplicate/compatibility/internal-endpoint 计数均为 0 | 通过 | 302-case retrieval benchmark |
 | 路由扩展 | 所有 registry route 正确；新增项目不需要改代码常量 | route accuracy 1.0；第 31 项 fixture 通过 | 通过 | retrieval/product policy tests |
-| warm 检索性能 | P95 ≤500 ms | 当前 benchmark 通过 | 通过 | retrieval benchmark |
-| index preparation | ≤5000 ms | 当前 benchmark 通过 | 通过 | retrieval benchmark |
+| warm 检索性能 | P95 ≤500 ms | 91.97 ms | 通过 | retrieval benchmark |
+| 并发检索性能 | 4 worker P95 ≤1000 ms | 707.04 ms | 通过 | retrieval benchmark concurrency probe |
+| 10 倍 corpus | 总耗时 ≤15000 ms，权威结果不丢失 | 1180 文档、1111.30 ms、authority rank=1 | 通过 | retrieval benchmark scale probe |
+| index preparation | ≤5000 ms | 18.31 ms | 通过 | retrieval benchmark |
+| readiness 去冗余 | 30 项目各 1 份 contract，旧投影和悬挂链接为 0 | 30 contract + 1 dashboard；90 投影删除；link audit 通过 | 通过 | project-readiness/check/link audit |
+| 本地恢复契约 | candidate/head 均可离线恢复且输出满足当前 schema | 两种模式均 10/10 内部检查通过；restore-drill-v2 schema 0 错误 | 通过 | 两份本地 restore snapshot |
 | source runtime | registry source 全覆盖、只读、无 shell 拼接 | 18/18 通过 | 通过 | source check JSON |
 | 依赖完整性 | 精确 pin、全传递 hash、3.10/3.14 可安装 | 两端点 clean install 通过 | 通过 | 两份 lock |
 | 漏洞审计 | 当前 runtime lock 无已知 advisory 命中 | `No known vulnerabilities found` | 通过（时点性） | pip-audit |
@@ -181,14 +202,14 @@ aliases:
 
 当前候选已经达到“本地自动化技术闭环候选”标准：主要功能、检索质量、warm 性能、source runtime、文件层 Obsidian、schema、扩展性、运行时安全、权限与保留策略、Python 运行时支持、依赖供应链、静态分析、覆盖率、构建、回归和候选恢复都有直接、可重跑的工程证据。
 
-当前仍不能声明 `terminal_maturity=true`。这不是技术门禁遗漏，而是产品模型刻意保留的真实证据边界：新的 validation candidate 尚待人工复核，Obsidian GUI 尚未验收，项目实机/发布/生产回滚未全部完成，当前工作树尚未形成 clean committed release，长期采用与真实反馈也未达标。工具必须继续输出 `needs-owner-review`、`partial` 或 release candidate，而不能自动代签、填充 placeholder 或把本地 commit 当成 owner approval。
+当前仍不能声明 `terminal=true`。这不是技术门禁遗漏，而是产品模型刻意保留的真实证据边界：新的 validation candidate 尚待人工复核，Obsidian GUI 尚未验收，项目实机/发布/生产回滚未全部完成，当前工作树尚未形成 clean committed HEAD，远端发布与异地恢复证据也未绑定，长期采用与真实反馈尚未达标。工具必须继续输出 `needs-owner-review`、`partial` 或 local candidate，而不能自动代签、填充 placeholder，或把本地 commit 当成 owner approval、远端发布或异地恢复。
 
 ## 剩余风险
 
 - GitHub Actions 配置和 contract 已本地验证，但本报告生成时尚无本次 commit 对应的远端 Runner 运行证据。
 - `pip-audit` 结论依赖 2026-07-18 可见的 advisory 数据；后续依赖或数据库变化必须重跑。
 - Python matrix 本地只直接执行 3.10 与 3.14 端点；3.11–3.13 由 CI matrix 声明，仍需远端 run 证据。
-- core coverage 78% 不表示全部 CLI、历史迁移脚本和独立 regression runner 都由 pytest coverage 计量；这些模块由动态 full regression 和独立命令覆盖。
+- whole-package statement coverage 已合并 pytest 与 subprocess CLI 数据，但不等于所有行为、分支和外部环境都被覆盖；核心模块继续维持更高定向覆盖，并由动态 full regression 与独立命令补充。
 - full engineering 和 product full gate 都较重；quick gate 适合日常反馈，但不能替代 release/terminal 证据。
 - 所有 owner、设备、发布、回滚、GUI 和长期采用缺口必须由真实主体或环境补证，不能由 Codex 自动清零。
 

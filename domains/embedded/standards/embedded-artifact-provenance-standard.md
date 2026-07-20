@@ -3,7 +3,8 @@ title: 嵌入式制品来源追溯规范
 doc_type: standard
 knowledge_type: guideline
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-18
 last_updated: 2026-05-18

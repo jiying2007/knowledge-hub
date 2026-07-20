@@ -1,4 +1,12 @@
 ---
+last_verified: '2026-07-14'
+related: []
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+incident_id: null
+severity: null
+affected_version: null
 id: pcr02-st77912-black-screen-esd-root-cause-20260714
 title: PCR02 ST77912 黑屏与 LCD ESD 根因记录
 kind: debug-record
@@ -8,11 +16,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: 2026-07-14 当前会话中的硬件 A/B 验证与源码只读核对
+source:
+  type: manual
+  from: field-debug
+  source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-10-14'
-created_at: '2026-07-14'
-updated_at: '2026-07-14'
-last_verified: '2026-07-14'
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -21,33 +32,30 @@ tags:
 - lcd
 - esd
 - black-screen
-related: []
 validation_refs:
+- projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - 0001-fix-display-ST77912.patch reverse apply check
 - modules/sensor/display/display.patch reverse apply check
-artifact_refs: []
-summary_zh: 实机移除 LCD ESD 器件后双屏恢复显示，黑屏根因收敛到硬件 ESD 支路；ST77912 fbtft patch 与 sensor/display 改动属于残影和 CPU 优化，不能作为黑屏临时改动回退。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
 evidence_strength: strong-field-a-b-with-hardware-eco-pending
 evidence_refs:
+- projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - 同一最新固件下移除 LCD ESD 器件后显示恢复
 - 当前显示优化工作区与两份 patch 的反向应用校验
+created_at: '2026-07-14'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-14'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
-incident_id: null
-severity: null
-affected_version: null
 manual_validation_pending: true
 manual_validation_reason: 硬件 ESD 设计修改后仍需补冷启动、重启、高温与 ESD/EMC 回归
+summary_zh: 实机移除 LCD ESD 器件后双屏恢复显示，黑屏根因收敛到硬件 ESD 支路；ST77912 fbtft patch 与 sensor/display 改动属于残影和 CPU 优化，不能作为黑屏临时改动回退。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 ST77912 黑屏与 LCD ESD 根因记录

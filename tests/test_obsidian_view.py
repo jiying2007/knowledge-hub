@@ -19,6 +19,7 @@ def test_repository_obsidian_views_are_idempotent():
     for field in ("title", "summary_zh", "tags", "id", "status", "owner", "aliases", "related"):
         assert payload["property_coverage"][field]["coverage_percent"] == 100.0
     assert payload["obsidian_runtime_status"] == "not-validated"
+    assert payload["moc_count"] == 4
 
     applied = build_obsidian_views(repository_root(), apply=True)
     assert applied["status"] == "no-change"

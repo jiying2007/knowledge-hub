@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List
 
 from .agent_runtime import check_action
 from .common import KnowledgeHubError, read_utf8_bounded
@@ -70,6 +70,7 @@ def evaluate_compliance_cases(
     root: pathlib.Path,
     cases_path: pathlib.Path,
     minimum_cases: int = 1,
+    require_verdict_coverage: bool = False,
 ) -> Dict[str, Any]:
     if not isinstance(minimum_cases, int) or not 1 <= minimum_cases <= COMPLIANCE_MAX_CASES:
         raise KnowledgeHubError(
@@ -87,6 +88,7 @@ def evaluate_compliance_cases(
     high_risk_total = 0
     high_risk_allowed = 0
     high_risk_false_allow = 0
+    verdict_distribution = {verdict: 0 for verdict in sorted(VERDICTS)}
     for case in cases:
         result = check_action(
             root,
@@ -97,6 +99,7 @@ def evaluate_compliance_cases(
         )
         expected = str(case["expected_verdict"])
         actual = str(result["verdict"])
+        verdict_distribution[actual] = verdict_distribution.get(actual, 0) + 1
         case_passed = expected == actual
         high_risk = case.get("risk_level") == "high"
         high_risk_total += int(high_risk)
@@ -118,10 +121,16 @@ def evaluate_compliance_cases(
                 "needs_review_ids": [row["id"] for row in result["needs_review"]],
             }
         )
+    missing_verdicts = [
+        verdict
+        for verdict in sorted(VERDICTS)
+        if verdict_distribution.get(verdict, 0) == 0
+    ]
+    coverage_ready = not require_verdict_coverage or not missing_verdicts
     return {
         "schema_version": COMPLIANCE_EVAL_SCHEMA,
         "read_only": True,
-        "status": "pass" if passed == len(cases) else "fail",
+        "status": "pass" if passed == len(cases) and coverage_ready else "fail",
         "total": len(cases),
         "minimum_cases": minimum_cases,
         "passed": passed,
@@ -131,6 +140,13 @@ def evaluate_compliance_cases(
             "high_risk_total": high_risk_total,
             "high_risk_allowed_count": high_risk_allowed,
             "high_risk_false_allow_count": high_risk_false_allow,
+        },
+        "verdict_coverage": {
+            "required": require_verdict_coverage,
+            "required_verdicts": sorted(VERDICTS),
+            "observed_counts": verdict_distribution,
+            "missing_verdicts": missing_verdicts,
+            "status": "pass" if coverage_ready else "fail",
         },
         "content_echoed": False,
     }

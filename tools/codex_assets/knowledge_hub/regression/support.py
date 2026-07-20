@@ -1,5 +1,4 @@
 import argparse
-import concurrent.futures
 import datetime as dt
 import hashlib
 import json
@@ -17,7 +16,13 @@ root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Run lightweight Knowledge Hub governance regression fixtures in /tmp.")
-parser.add_argument("--json", action="store_true")
+projection = parser.add_mutually_exclusive_group()
+projection.add_argument("--json", action="store_true")
+projection.add_argument(
+    "--summary-json",
+    action="store_true",
+    help="Emit bounded counts, slowest cases, and failures only.",
+)
 parser.add_argument("--keep-temp", action="store_true", help="Keep temporary fixture repositories for inspection.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for date-sensitive fixture commands.")
 parser.add_argument(
@@ -335,10 +340,18 @@ def seed_review_after_near_due_fixture(repo):
 
 def seed_pending_review_queue_items(repo, count=2):
     items_path = repo / "registry" / "items.jsonl"
-    fixture_path = "artifacts/manifests/knowledge-hub-review-queue-forms-jsonl-hardening-20260623.md"
     rows = []
     for index in range(count):
         suffix = index + 1
+        fixture_path = (
+            f"artifacts/manifests/regression-review-queue-pending-{suffix}.md"
+        )
+        (repo / fixture_path).write_text(
+            "# 回归待复核夹具 {}\n\n仅用于验证人工复核待办不会被误判为技术失败。\n".format(
+                suffix
+            ),
+            encoding="utf-8",
+        )
         rows.append({
             "id": f"regression-review-queue-pending-{suffix}",
             "title": f"Regression review queue pending fixture {suffix}",
@@ -362,6 +375,12 @@ def seed_pending_review_queue_items(repo, count=2):
             "source_language": "zh-CN",
             "translation_status": "not-required",
             "terminology_status": "pending-review",
+            "content_review_status": "pending",
+            "evidence_strength": "regression-fixture",
+            "evidence_refs": [
+                "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+            ],
+            "evidence_validation_status": "pending",
             "review_status": "ai-generated-pending-human-review",
             "created_at": today.isoformat(),
             "updated_at": today.isoformat(),
@@ -371,6 +390,9 @@ def seed_pending_review_queue_items(repo, count=2):
             "ai_role": "drafted",
             "ai_model_or_tool": "regression-fixture",
             "ai_generated_at": today.isoformat(),
+            "manual_validation_pending": True,
+            "manual_validation_reason": "回归夹具必须保持人工复核待办。",
+            "searchable": False,
         })
     with items_path.open("a", encoding="utf-8") as handle:
         for row in rows:
@@ -379,6 +401,23 @@ def seed_pending_review_queue_items(repo, count=2):
     sync_owner_index_entries(repo, item_ids, "leiwenjun")
     sync_review_date_index_entries(repo, item_ids, today.isoformat())
     sync_status_index_entries(repo, item_ids, "reviewing")
+    obsidian_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-obsidian-view-build.sh",
+            "--apply",
+            "--json",
+        ],
+    )
+    if obsidian_result["exit_code"] != 0:
+        raise RuntimeError(
+            "pending review queue fixture could not rebuild Obsidian views: {}".format(
+                obsidian_result["stderr"][:1000]
+                or obsidian_result["stdout"][:1000]
+            )
+        )
     return item_ids
 
 OWNER_DECISION_FIELD_NAMES = {
@@ -521,6 +560,17 @@ def reopen_owner_decision_worksheets(repo):
         item["status"] = "reviewing"
         item["review_status"] = "owner-ready-no-decision"
         item["tags"] = tags
+        # The fixture reopens an archived historical package as a current
+        # reviewing item.  Populate the current item-boundary contract instead
+        # of relying on the archived record's intentionally sparse metadata.
+        item.setdefault("primary_language", "zh-CN")
+        item.setdefault("source_language", "zh-CN")
+        item.setdefault("translation_status", "not-required")
+        item.setdefault("terminology_status", "checked")
+        item.setdefault("content_review_status", "accepted")
+        item["evidence_validation_status"] = "pending"
+        if not item.get("evidence_refs"):
+            item["evidence_refs"] = list(item.get("validation_refs", []))
         reopened_owner_ready_ids.append(str(item.get("id", "")))
     items_path.write_text(
         "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in item_rows) + "\n"

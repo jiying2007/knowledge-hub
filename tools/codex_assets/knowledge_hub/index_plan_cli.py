@@ -8,17 +8,21 @@ import pathlib
 import re
 import sys
 
+INDEX_PLAN_FULL_JSON_MAX_BYTES = 2 * 1024 * 1024
+INDEX_PLAN_SUMMARY_JSON_MAX_BYTES = 64 * 1024
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only plan for core Knowledge Hub indexes from registry files.")
 parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking", "review-queue"], default="all")
 parser.add_argument("--json", action="store_true")
+parser.add_argument("--summary-json", action="store_true", help="Print a compact count/health projection without index rows.")
 parser.add_argument("--queue-type", help="Filter review queue rows by queue_type when --section review-queue is used.")
 parser.add_argument("--queue-owner", help="Filter review queue rows by owner when --section review-queue is used.")
 parser.add_argument("--queue-review-after", help="Filter review queue rows by review_after when --section review-queue is used.")
 parser.add_argument("--queue-priority", help="Filter review queue rows by priority when --section review-queue is used.")
-parser.add_argument("--queue-limit", type=int, default=0, help="Limit review queue rows after filters; 0 means no JSON limit.")
+parser.add_argument("--queue-limit", type=int, default=50, help="Limit review queue rows after filters (default: 50); explicit 0 disables pagination.")
 parser.add_argument("--queue-offset", type=int, default=0, help="Offset review queue rows after filters.")
 parser.add_argument("--queue-forms-jsonl", action="store_true", help="Print read-only human review form skeleton rows for the filtered review queue.")
 parser.add_argument("--validate-queue-forms", metavar="JSONL", help="Validate filled review queue JSONL forms in report-only mode.")
@@ -27,8 +31,12 @@ if args.queue_limit < 0:
     parser.error("--queue-limit must be >= 0")
 if args.queue_offset < 0:
     parser.error("--queue-offset must be >= 0")
+if args.json and args.summary_json:
+    parser.error("--json and --summary-json are mutually exclusive")
 if args.queue_forms_jsonl and args.json:
     parser.error("--queue-forms-jsonl cannot be combined with --json")
+if args.queue_forms_jsonl and args.summary_json:
+    parser.error("--queue-forms-jsonl cannot be combined with --summary-json")
 if args.queue_forms_jsonl and args.section != "review-queue":
     parser.error("--queue-forms-jsonl requires --section review-queue")
 if args.validate_queue_forms and args.queue_forms_jsonl:
@@ -37,6 +45,28 @@ if args.validate_queue_forms and args.section != "review-queue":
     parser.error("--validate-queue-forms requires --section review-queue")
 if args.validate_queue_forms and not args.json:
     parser.error("--validate-queue-forms requires --json")
+
+
+def emit_json(payload, *, budget_bytes, sort_keys=False):
+    output = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=sort_keys)
+    output_bytes = len(output.encode("utf-8"))
+    if output_bytes > budget_bytes:
+        print(
+            json.dumps(
+                {
+                    "status": "fail",
+                    "error": "output-budget-exceeded",
+                    "projected_bytes": output_bytes,
+                    "budget_bytes": budget_bytes,
+                    "next_action": "use --summary-json, a narrower --section, or a smaller queue page",
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return False
+    print(output)
+    return True
 
 items_path = root / "registry" / "items.jsonl"
 sources_path = root / "registry" / "sources.json"
@@ -1077,42 +1107,49 @@ def apply_review_queue_filters(view):
         "has_next": has_next,
         "next_offset": next_offset if has_next else None,
         "next_command": next_page_command,
-        "review_batch_packet": {
-            "packet_type": "review-queue-batch",
-            "read_only": True,
-            "report_only": True,
-            "filter": filters,
-            "offset": offset,
-            "limit": limit,
-            "matched_count": matched_count,
-            "shown_count": len(shown_rows),
-            "row_ids": [str(row.get("queue_id", "")) for row in shown_rows],
-            "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
-            "next_commands": [
-                command
-                for row in shown_rows
-                for command in row.get("next_commands", [])
-            ],
-            "recommended_batch_json": current_batch_command,
-            "recommended_forms_jsonl": current_forms_command,
-            "validate_queue_forms_command_template": validate_forms_command,
-            "forms_jsonl_command": current_forms_command,
-            "next_page_command": next_page_command,
-            "must_not": [
-                "不生成 owner decision",
-                "不关闭 owner gate",
-                "不写 memory",
-                "不自动提升 active",
-                "不把 review queue 当 owner gate 签收结果",
-            ],
-            "notes_zh": "只读人工复核批次包；用于按当前过滤和分页领取一批 AI/外部资料待复核条目。它只给诊断命令和必填人工字段，不写 registry，不回填 human_reviewed_by，不提升 active。",
-        },
     })
+    review_batch_packet = {
+        "packet_type": "review-queue-batch",
+        "read_only": True,
+        "report_only": True,
+        "filter": filters,
+        "offset": offset,
+        "limit": limit,
+        "matched_count": matched_count,
+        "shown_count": len(shown_rows),
+        "row_ids": [str(row.get("queue_id", "")) for row in shown_rows],
+        "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
+        "next_commands": [
+            command
+            for row in shown_rows
+            for command in row.get("next_commands", [])
+        ],
+        "recommended_batch_json": current_batch_command,
+        "recommended_forms_jsonl": current_forms_command,
+        "validate_queue_forms_command_template": validate_forms_command,
+        "forms_jsonl_command": current_forms_command,
+        "next_page_command": next_page_command,
+        "must_not": [
+            "不生成 owner decision",
+            "不关闭 owner gate",
+            "不写 memory",
+            "不自动提升 active",
+            "不把 review queue 当 owner gate 签收结果",
+        ],
+        "notes_zh": "只读人工复核批次包；用于按当前过滤和分页领取一批 AI/外部资料待复核条目。它只给诊断命令和必填人工字段，不写 registry，不回填 human_reviewed_by，不提升 active。",
+    }
     filtered["summary"] = filtered_summary
     filtered["filter"] = filters
-    filtered["by_type"] = dict(sorted(by_type.items()))
-    filtered["by_owner"] = dict(sorted(by_owner.items()))
-    filtered["by_review_date"] = dict(sorted(by_review_date.items()))
+    filtered["by_type"] = {
+        key: {"count": len(values)} for key, values in sorted(by_type.items())
+    }
+    filtered["by_owner"] = {
+        key: {"count": len(values)} for key, values in sorted(by_owner.items())
+    }
+    filtered["by_review_date"] = {
+        key: {"count": len(values)}
+        for key, values in sorted(by_review_date.items())
+    }
     filtered["pagination"] = {
         "offset": offset,
         "limit": limit,
@@ -1125,7 +1162,7 @@ def apply_review_queue_filters(view):
         "validate_queue_forms_command_template": validate_forms_command,
         "notes_zh": "只过滤 registry 派生视图；不生成人工复核结论，不回填 human_reviewed_by，不改变 registry。",
     }
-    filtered["review_batch_packet"] = filtered_summary["review_batch_packet"]
+    filtered["review_batch_packet"] = review_batch_packet
     filtered["rows"] = shown_rows
     return filtered
 
@@ -1269,8 +1306,24 @@ all_review_queue_view = build_review_queue_view(items, sources)
 by_review_queue = apply_review_queue_filters(all_review_queue_view)
 
 if args.queue_forms_jsonl:
-    for row in by_review_queue.get("rows", []):
-        print(json.dumps(make_review_queue_form(row), ensure_ascii=False, sort_keys=True))
+    form_output = "\n".join(
+        json.dumps(make_review_queue_form(row), ensure_ascii=False, sort_keys=True)
+        for row in by_review_queue.get("rows", [])
+    )
+    if len(form_output.encode("utf-8")) > INDEX_PLAN_FULL_JSON_MAX_BYTES:
+        emit_json(
+            {
+                "status": "fail",
+                "error": "output-budget-exceeded",
+                "projected_bytes": len(form_output.encode("utf-8")),
+                "budget_bytes": INDEX_PLAN_FULL_JSON_MAX_BYTES,
+                "next_action": "use a smaller --queue-limit",
+            },
+            budget_bytes=INDEX_PLAN_SUMMARY_JSON_MAX_BYTES,
+        )
+        sys.exit(2)
+    if form_output:
+        print(form_output)
     sys.exit(1 if errors else 0)
 
 if args.validate_queue_forms:
@@ -1285,7 +1338,10 @@ if args.validate_queue_forms:
         "warnings": warnings,
         "form_validation": form_validation,
     }
-    print(json.dumps(validation_payload, ensure_ascii=False, indent=2))
+    if not emit_json(
+        validation_payload, budget_bytes=INDEX_PLAN_FULL_JSON_MAX_BYTES
+    ):
+        sys.exit(2)
     sys.exit(1 if errors or form_validation.get("status") != "pass" else 0)
 
 def read_relative_text(relative_path):
@@ -1299,7 +1355,6 @@ def read_relative_text(relative_path):
 def build_linking_audit():
     project_ids = sorted(by_project)
     source_ids = sorted(by_source)
-    topic_ids = sorted(by_topic)
     topic_index_anchors = sorted(
         {
             str(row.get("domain", ""))
@@ -1443,6 +1498,32 @@ linking_audit = build_linking_audit()
 
 status_order = ["active", "reviewing", "archived"]
 
+all_indexes = {
+    "by_owner": dict(sorted(by_owner.items())),
+    "by_review_date": dict(sorted(by_review_date.items())),
+    "by_status": {status: by_status.get(status, []) for status in status_order if status in by_status},
+    "by_project": by_project,
+    "by_source": by_source,
+    "by_topic": by_topic,
+    "by_decision": by_decision,
+    "by_manifest": by_manifest,
+    "by_review_queue": by_review_queue,
+    "linking_audit": linking_audit,
+}
+section_index_keys = {
+    "owner": ["by_owner"],
+    "review-date": ["by_review_date"],
+    "status": ["by_status"],
+    "project": ["by_project"],
+    "source": ["by_source"],
+    "topic": ["by_topic"],
+    "decision": ["by_decision"],
+    "manifest": ["by_manifest"],
+    "linking": ["linking_audit"],
+    "review-queue": ["by_review_queue"],
+}
+selected_index_keys = list(all_indexes) if args.section == "all" else section_index_keys[args.section]
+
 result = {
     "status": "planned" if not errors else "blocked",
     "root": display_path(root),
@@ -1454,24 +1535,68 @@ result = {
     "read_only": True,
     "errors": errors,
     "warnings": warnings,
-    "source_coverage_selection": source_coverage_selection,
-    "indexes": {
-        "by_owner": dict(sorted(by_owner.items())),
-        "by_review_date": dict(sorted(by_review_date.items())),
-        "by_status": {status: by_status.get(status, []) for status in status_order if status in by_status},
-        "by_project": by_project,
-        "by_source": by_source,
-        "by_topic": by_topic,
-        "by_decision": by_decision,
-        "by_manifest": by_manifest,
-        "by_review_queue": by_review_queue,
-        "linking_audit": linking_audit,
+    "indexes": {key: all_indexes[key] for key in selected_index_keys},
+}
+if args.section in {"all", "source", "manifest"}:
+    result["source_coverage_selection"] = source_coverage_selection
+if args.section in {"all", "linking"}:
+    result["linking_audit"] = linking_audit
+
+
+def compact_index_summary(key, value):
+    if key == "by_review_queue":
+        return {
+            "summary": value.get("summary", {}),
+            "pagination": value.get("pagination", {}),
+        }
+    if key == "by_manifest":
+        return {"summary": value.get("summary", {})}
+    if key == "linking_audit":
+        return {
+            "status": value.get("status", ""),
+            "cross_session": value.get("cross_session", {}).get("status", ""),
+            "cross_project": value.get("cross_project", {}).get("status", ""),
+            "markdown_index_recovery": value.get("markdown_index_recovery", {}).get("status", ""),
+        }
+    if isinstance(value, dict):
+        reference_count = sum(
+            len(row) if isinstance(row, list) else 1
+            for row in value.values()
+        )
+        return {"bucket_count": len(value), "reference_count": reference_count}
+    return {"entry_count": len(value) if isinstance(value, list) else 0}
+
+
+summary_result = {
+    "projection": "knowledge-index-plan-summary-v1",
+    "status": result["status"],
+    "root": result["root"],
+    "section": args.section,
+    "read_only": True,
+    "counts": {
+        "items": len(items),
+        "sources": len(sources),
+        "projects": len(projects),
+        "topics": len(topics),
     },
-    "linking_audit": linking_audit,
+    "errors": errors,
+    "warnings": warnings,
+    "indexes": {
+        key: compact_index_summary(key, all_indexes[key])
+        for key in selected_index_keys
+    },
 }
 
+if args.summary_json:
+    if not emit_json(
+        summary_result, budget_bytes=INDEX_PLAN_SUMMARY_JSON_MAX_BYTES
+    ):
+        sys.exit(2)
+    sys.exit(1 if errors else 0)
+
 if args.json:
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    if not emit_json(result, budget_bytes=INDEX_PLAN_FULL_JSON_MAX_BYTES):
+        sys.exit(2)
     sys.exit(1 if errors else 0)
 
 print("# Knowledge Index Plan")

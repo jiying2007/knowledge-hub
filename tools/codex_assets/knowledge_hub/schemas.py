@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, Iterable, List, Mapping, Set, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
@@ -84,12 +84,71 @@ def _validate_payload(schema: Mapping[str, Any], payload: Any) -> List[Dict[str,
     ]
 
 
+def _load_contract_schema(
+    root: pathlib.Path,
+    contract_id: str,
+) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+    """Resolve one runtime contract without revalidating every catalog schema.
+
+    Full catalog integrity remains the responsibility of
+    :func:`validate_schema_catalog`. Runtime producers only need the selected
+    public contract; loading and checking all contracts on every search added a
+    large fixed cost and amplified concurrent CLI latency.
+    """
+
+    catalog = load_json(root / "schemas/catalog.json", {}) or {}
+    rows = catalog.get("contracts", [])
+    if not isinstance(rows, list) or not rows:
+        return None, ["catalog contracts must be a non-empty array"]
+
+    errors: List[str] = []
+    seen: Set[str] = set()
+    selected: Optional[Mapping[str, Any]] = None
+    for index, row in enumerate(rows, 1):
+        if not isinstance(row, dict):
+            errors.append("contract {} must be an object".format(index))
+            continue
+        row_id = str(row.get("id", ""))
+        if not row_id:
+            errors.append("contract {} missing id".format(index))
+            continue
+        if row_id in seen:
+            errors.append("duplicate contract id {}".format(row_id))
+            continue
+        seen.add(row_id)
+        if row_id == contract_id:
+            selected = row
+
+    if errors:
+        return None, errors
+    if selected is None:
+        return None, ["unknown contract id"]
+
+    try:
+        relative = normalize_relpath(str(selected.get("schema", "")))
+    except KnowledgeHubError as exc:
+        return None, ["{}: {}".format(contract_id, exc)]
+    schema_file = root / relative
+    if not schema_file.is_file():
+        return None, ["{} schema missing: {}".format(contract_id, relative)]
+    schema = load_json(schema_file, {}) or {}
+    if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
+        errors.append("{} must declare JSON Schema 2020-12".format(contract_id))
+    if not schema.get("$id") or not schema.get("title"):
+        errors.append("{} schema must define $id and title".format(contract_id))
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as exc:
+        errors.append("{} invalid schema: {}".format(contract_id, exc.message))
+    return (schema if not errors else None), errors
+
+
 def validate_instance(
     root: pathlib.Path,
     contract_id: str,
     payload: Any,
 ) -> Dict[str, Any]:
-    _, schemas, _, catalog_errors = _load_catalog_schemas(root)
+    schema, catalog_errors = _load_contract_schema(root, contract_id)
     if catalog_errors:
         return {
             "status": "fail",
@@ -97,7 +156,6 @@ def validate_instance(
             "error_count": len(catalog_errors),
             "errors": [{"path": "$catalog", "message": row} for row in catalog_errors],
         }
-    schema = schemas.get(contract_id)
     if schema is None:
         return {
             "status": "fail",

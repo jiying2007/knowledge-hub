@@ -1,32 +1,30 @@
 ---
-evidence_strength: moderate-board-observation-and-source-review-root-cause-pending
-evidence_refs:
-- 用户提供的连续 Stage1/App 启动日志摘要
-- 硬件排查观察到电池供电电压跳变、MCU 掉电后电压恢复并重新启动
-- Stage1/main.c 复位源与清除后寄存器诊断
-- App/power.c 与 App/bsp.c 的 PA11/PA15、低电量和负载上电路径只读核对
-- v1.1.35 到 v1.1.37 的相关源码差异核对
-manual_validation_pending: true
-manual_validation_reason: 尚缺电芯、BMS/VCC_SYS、MCU 3V3、PA15、PA11、PC14 的同一时间基准波形，以及同板同电池 v1.1.35/current A/B 结果
 human_reviewed_by: null
 human_reviewed_at: null
 review_basis: null
 incident_id: null
 severity: intermittent-reboot
 affected_version: v1.1.37 诊断工作区；v1.1.35 对照待上板
-artifact_refs: []
 related: []
 id: gd32l235-battery-rail-drop-mcu-reboot-20260717
 title: GD32L235 电池供电跳变与 MCU 循环重启排障记录
 kind: debug-record
 domain: projects/gd32l235
+path: projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: session-derived-debug-summary
+  from: 2026-07-17 user-provided board observation and logs plus workspace://gd32l235 source review
+  source_sha256: dbf0d6f236f97b15b79d72f139702db9214e2d01f5081277311e99de38845e5d
 review_after: '2026-10-17'
 review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - gd32l235
 - battery
@@ -34,16 +32,31 @@ tags:
 - por-reset
 - pa15
 - intermittent-reboot
+validation_refs:
+- projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: moderate-board-observation-and-source-review-root-cause-pending
+evidence_refs:
+- projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+- 用户提供的连续 Stage1/App 启动日志摘要
+- 硬件排查观察到电池供电电压跳变、MCU 掉电后电压恢复并重新启动
+- Stage1/main.c 复位源与清除后寄存器诊断
+- App/power.c 与 App/bsp.c 的 PA11/PA15、低电量和负载上电路径只读核对
+- v1.1.35 到 v1.1.37 的相关源码差异核对
+created_at: '2026-07-17'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-17'
+manual_validation_pending: true
+manual_validation_reason: 尚缺电芯、BMS/VCC_SYS、MCU 3V3、PA15、PA11、PC14 的同一时间基准波形，以及同板同电池 v1.1.35/current A/B 结果
 summary_zh: 记录 GD32L235 电池供电跳变、POR/V12/EPR 复位与循环重启的当前证据；纯软件复位和低电量直接掉电已降级，最强假设为软件负载阶跃触发边缘供电，但根因仍待同步波形与同板 A/B 闭环。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # GD32L235 电池供电跳变与 MCU 循环重启排障记录

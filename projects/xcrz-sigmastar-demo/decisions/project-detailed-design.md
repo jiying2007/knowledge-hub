@@ -1,15 +1,49 @@
 ---
-title: PCR02 项目详细设计
 doc_type: architecture
 knowledge_type: decision
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [pcr02, architecture, detailed]
-related: [project-overview-design.md, project-core-module-design.md, diag-command-architecture-final.md, hdi-api-app-functional-overview.md]
-validation_refs: [cli/cli.c, cmd_server/cmd_router.c, daemon/daemon_main.c, pcr02/main.cpp]
+related:
+- project-overview-design.md
+- project-core-module-design.md
+- diag-command-architecture-final.md
+- hdi-api-app-functional-overview.md
+id: pcr02-project-detailed-design
+title: PCR02 项目详细设计
+kind: decision
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/decisions/project-detailed-design.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: architecture/project-detailed-design.md
+  source_sha256: 7ce3a10fa39f8d686c096de77bfa29a697d2cd181dcc536cbb0ef4370b273f81
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- decisions
+- architecture
+- detailed
+validation_refs:
+- projects/xcrz-sigmastar-demo/decisions/project-detailed-design.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 入口：cli/cli.c - 通道：ipc:///tmp/cmd_server.ipc、ipc:///tmp/cmd_event.ipc - 关键职责： - 组包并发送命令请求（VSIPC_MsgHeader_t + payload）。
+  - 对 JSON 回复做格式化展示（紧凑/pretty）。 - 提供命令发现与可读。该条目当前为 archived decision provenance，仅作历史决策材料检索入口，不代表新的 owner decision、active 规则或当前发布状态。
 ---
 
 # PCR02 项目详细设计

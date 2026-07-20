@@ -1,4 +1,8 @@
 ---
+human_reviewed_by: leiwenjun-via-codex-delegation
+human_reviewed_at: 2026-07-13
+human_review_decision: accept-as-review-record
+review_authorization: auth-20260713-knowledge-hub-obsidian-audit-review
 id: knowledge-hub-comprehensive-maturity-remediation-20260713
 title: Knowledge Hub 全面成熟度治理与 Obsidian 集成审计 2026-07-13
 kind: audit
@@ -8,21 +12,54 @@ scope: team-general
 visibility: team-internal
 status: archived
 owner: leiwenjun
-review_after: 2026-10-13
-created_at: 2026-07-13
-updated_at: 2026-07-13
-promotion: none
-tags: [knowledge-hub, maturity, body-coverage, frontmatter, artifact-vault, search-ranking, obsidian, regression, report-only]
+source:
+  type: manual
+  from: Codex implementation and audit of user-requested Knowledge Hub comprehensive optimization
+review_after: '2026-10-13'
 review_status: human-reviewed-accepted
+promotion: none
+promotion_decision: none; governance audit candidate only, no owner decision, no active promotion, no memory write, no source
+  project write and no remote publish
+tags:
+- knowledge-hub
+- maturity
+- body-coverage
+- frontmatter
+- artifact-vault
+- search-ranking
+- obsidian
+- regression
+- report-only
+- no-active-promotion
+- no-memory-write
+validation_refs:
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json
+- rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json --suite full --as-of 2026-07-13
+- rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-13
+evidence_strength: implemented-control-plane-plus-full-regression-and-official-docs-review
+evidence_refs:
+- artifacts/manifests/knowledge-hub-comprehensive-maturity-remediation-20260713.md
+- artifacts/manifests/knowledge-hub-comprehensive-maturity-remediation-20260713.jsonl
+- registry/body-coverage.json
+- governance/obsidian-integration.md
+- indexes/obsidian-home.md
+- tools/knowledge-check.sh
+- tools/knowledge-orphan-files.sh
+- tools/knowledge-search.sh
+- tools/knowledge-regression.sh
+created_at: '2026-07-13'
+updated_at: '2026-07-13'
 generated_by_ai: true
-ai_role: audited-and-implemented
+ai_role: drafted
 ai_model_or_tool: Codex
-ai_generated_at: 2026-07-13
-human_reviewed_by: leiwenjun-via-codex-delegation
-human_reviewed_at: 2026-07-13
-human_review_decision: accept-as-review-record
-review_authorization: auth-20260713-knowledge-hub-obsidian-audit-review
-summary_zh: 记录 Knowledge Hub 全面成熟度治理：补正文冻结覆盖、frontmatter 生命周期镜像、专利附件 vault 身份门禁、可解释搜索排序和 Obsidian 安全呈现层；full regression 140/140 通过，两个新增候选已按用户明确授权完成受托人工复核记录。
+ai_generated_at: '2026-07-13'
+summary_zh: 记录 Knowledge Hub 全面成熟度治理：补正文冻结覆盖、frontmatter 生命周期镜像、专利附件 vault 身份门禁、可解释搜索排序和 Obsidian 安全呈现层；full regression 140/140
+  通过，两个新增候选已按用户明确授权完成受托人工复核记录。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: reviewed
 ---
 
 # Knowledge Hub 全面成熟度治理与 Obsidian 集成审计

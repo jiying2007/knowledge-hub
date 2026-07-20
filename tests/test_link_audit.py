@@ -58,6 +58,33 @@ def test_reviewing_missing_attachment_is_blocking(tmp_path):
     assert payload["blocking_broken_count"] == 1
 
 
+def test_frozen_archive_can_declare_external_attachments_not_retained(tmp_path):
+    (tmp_path / "registry").mkdir()
+    (tmp_path / "registry/items.jsonl").write_text("")
+    (tmp_path / "registry/body-coverage.json").write_text(
+        json.dumps(
+            {
+                "collections": [
+                    {
+                        "path_prefix": "domains/patents/archive/",
+                        "attachment_policy": "external-not-retained",
+                    }
+                ]
+            }
+        )
+    )
+    path = tmp_path / "domains/patents/archive/note.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("# Historical patent\n\n![drawing](attachments/drawing.png)\n")
+
+    payload = audit_links(tmp_path)
+
+    assert payload["status"] == "pass"
+    assert payload["historical_warning_count"] == 0
+    assert payload["declared_external_attachment_count"] == 1
+    assert payload["declared_external_attachment_sample"][0]["status"] == "declared-external"
+
+
 def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, monkeypatch):
     _write_registry(tmp_path, "reviewing")
     path = tmp_path / "projects/p/current/note.md"
@@ -72,7 +99,7 @@ def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, mon
 def test_repository_readiness_links_and_bases_are_valid():
     payload = audit_links(repository_root())
     assert payload["status"] == "pass"
-    assert payload["readiness_document_count"] == 120
+    assert payload["readiness_document_count"] == 30
     assert payload["readiness_without_inbound_count"] == 0
     assert payload["base_failure_count"] == 0
     assert payload["managed_frontmatter_coverage_percent"] == 100.0

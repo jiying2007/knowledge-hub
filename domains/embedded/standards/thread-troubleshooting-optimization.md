@@ -3,7 +3,8 @@ title: 嵌入式 Linux 线程设计、排查、定位、优化技术文档
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12

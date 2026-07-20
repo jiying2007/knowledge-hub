@@ -8,7 +8,7 @@ import pathlib
 from collections import Counter
 from typing import Any, Dict, List, Mapping
 
-from .common import KnowledgeHubError, compact_json, display_path
+from .common import KnowledgeHubError, display_path
 from .security import scan_secret_text
 
 

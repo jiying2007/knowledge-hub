@@ -1,15 +1,49 @@
 ---
-title: PCR02 模块目录与职责清单
 doc_type: architecture
 knowledge_type: model
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [pcr02, module, catalog]
-related: [project-core-module-design.md, hdi-api-app-functional-overview.md, ../runbooks/project-build-and-deploy-guide.md]
-validation_refs: [modules, pcr02/dep.mk, libs/arm/libs/glibc/11.1.0/static]
+related:
+- project-core-module-design.md
+- hdi-api-app-functional-overview.md
+- ../runbooks/project-build-and-deploy-guide.md
+id: pcr02-module-catalog
+title: PCR02 模块目录与职责清单
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/architecture/module-catalog.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: architecture/module-catalog.md
+  source_sha256: 7aecb49224bbf05951372c980c218c1a8ed12e34a5452bb48e0cb02e8f828bb5
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- module
+- catalog
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/architecture/module-catalog.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+- modules
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 1. modules 下仅纳管 hdi/api/app/sensor/proto/proto_c 六个模块。 2. 白名单外模块不纳入本仓库研发治理范围。 3. 白名单外模块统一按“外部团队二进制依赖”处理。该条目当前为
+  archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # PCR02 模块目录与职责清单

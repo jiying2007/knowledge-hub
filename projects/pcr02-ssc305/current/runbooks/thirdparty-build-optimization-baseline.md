@@ -1,19 +1,32 @@
 ---
-title: PCR02 SSC305 第三方库编译优化基线
+doc_type: runbook
+knowledge_type: build
+maturity: verified
+created: 2026-07-10
+last_updated: 2026-07-13
+related:
+- projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md
+- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+aliases:
+- PCR02 SSC305 第三方库编译优化基线
 id: pcr02-thirdparty-build-optimization-baseline-20260710
+title: PCR02 SSC305 第三方库编译优化基线
 kind: runbook
 domain: projects/pcr02-ssc305
 path: projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md
 scope: project-specific
 visibility: team-internal
-doc_type: runbook
-knowledge_type: build
-maturity: verified
 status: reviewing
 owner: team-core
+source:
+  type: manual
+  from: SigmaStar documentation and PCR02 source build-rule analysis
 review_after: '2026-10-13'
-created: 2026-07-10
-last_updated: 2026-07-13
+review_status: manual-entry-pending-owner-and-source-project-validation
+content_review_status: pending
+evidence_validation_status: verified
+promotion: none
+promotion_decision: none; reviewing project runbook only, no active promotion, no owner decision and no release claim
 tags:
 - pcr02
 - ssc305
@@ -25,20 +38,24 @@ tags:
 - hard-float
 - libyuv
 - no-active-promotion
-related:
-- projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md
-- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
 validation_refs:
+- 'manual_validation_pending: project owner review and target build verification required'
+- rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: official-docs-plus-source-build-rule-analysis
+evidence_refs:
+- projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md
 - sigdoc/customer/DualOS/EnvironmentSetup/Environmentsetup_zh.html
 - sigdoc/customer/Common/Development/alkaid_defconfig_zh.html
 - workspace://xcrz-sigmastar-demo/3rdparty/build/build_sh/common/env.sh
 - workspace://xcrz-sigmastar-demo/build/compile.mk
-promotion: none
-review_status: manual-entry-pending-owner-and-source-project-validation
+created_at: '2026-07-10'
+updated_at: '2026-07-19'
 summary_zh: 记录 PCR02/SSC305 第三方库交叉编译、ARMv7-A/NEON/hard-float 优化和接入边界；当前仅作为 source-derived reviewing 基线，仍需项目 owner 复核并在目标构建环境验证，不表示
   active 标准或发布验收完成。
-aliases:
-- PCR02 SSC305 第三方库编译优化基线
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 SSC305 第三方库编译优化基线

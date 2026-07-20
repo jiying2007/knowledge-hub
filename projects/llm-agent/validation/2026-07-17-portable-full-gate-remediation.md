@@ -1,4 +1,17 @@
 ---
+related:
+- projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
+- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
+- projects/llm-agent/validation/project-readiness.md
+- governance/product/validation/project-readiness.md
+target_version: llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94 with unchanged seven gitlinks
+test_environment: isolated linked worktree; main workspace live corpus; fresh GitHub root clone with seven exact remote submodules
+  and a temporary SSH override for private agent-dev-kit; current host runtime dependencies
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- LLM Agent 可移植 Full 门禁修复验证 2026-07-17
 id: llm-agent-portable-full-gate-remediation-20260717
 title: LLM Agent 可移植 Full 门禁修复验证 2026-07-17
 kind: validation
@@ -13,8 +26,9 @@ source:
   from: llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94/reports/wechat-intake-portable-full-gate-repair-2026-07-17.md
   source_sha256: 884d5f86911c5e630e453baaf607e4128e69a12a44c020ed841b046e10f2eff4
 review_after: '2026-10-17'
-created_at: '2026-07-17'
-updated_at: '2026-07-17'
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; source remote publish and current-host remote-clone verification do not authorize release, evidence-ready
   status or active promotion
@@ -27,12 +41,9 @@ tags:
 - wechat
 - ai-generated
 - manual-validation-pending
-related:
-- projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
-- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
-- projects/llm-agent/validation/project-readiness.md
-- governance/product/validation/project-readiness.md
 validation_refs:
+- projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - rtk scripts/check-all.sh --full
 - rtk tests/test_wechat_intake_ledger.sh
 - rtk tests/test_file_modes_worktree.sh
@@ -41,32 +52,25 @@ validation_refs:
 - rtk git push origin main
 artifact_refs:
 - llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94/reports/wechat-article-intake.manifest.json#sha256=93c926be842eb4480cce754a74f10f8e9fe5977f60cbce09c31d4320e2222e19
-target_version: llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94 with unchanged seven gitlinks
-test_environment: isolated linked worktree; main workspace live corpus; fresh GitHub root clone with seven exact remote submodules
-  and a temporary SSH override for private agent-dev-kit; current host runtime dependencies
-summary_zh: 修复 WeChat intake 外部语料与纯 Git checkout 的输入契约，并补齐 linked worktree、submodule gitfile 与 ADK 临时精确克隆兼容性；源码已 fast-forward
-  发布到 origin/main，隔离与远端恢复 Full 均为 62/62，主工作区 313 篇 live-corpus 通过，正式制品、release 与 rollback 仍未闭环。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: checked
 evidence_strength: direct-command
 evidence_refs:
 - projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
 - llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94
+created_at: '2026-07-17'
+updated_at: '2026-07-19'
 generated_by_ai: true
-ai_role: drafted-and-verified
+ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-17'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
 manual_validation_reason: 源码已 fast-forward 发布并在当前主机完成远端纯 clone Full 复验；私有 submodule 零配置跨主机恢复、正式 artifact、release record 与生产
   rollback 仍未闭环。
-aliases:
-- LLM Agent 可移植 Full 门禁修复验证 2026-07-17
+summary_zh: 修复 WeChat intake 外部语料与纯 Git checkout 的输入契约，并补齐 linked worktree、submodule gitfile 与 ADK 临时精确克隆兼容性；源码已 fast-forward
+  发布到 origin/main，隔离与远端恢复 Full 均为 62/62，主工作区 313 篇 live-corpus 通过，正式制品、release 与 rollback 仍未闭环。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: checked
 ---
 
 # LLM Agent 可移植 Full 门禁修复验证 2026-07-17

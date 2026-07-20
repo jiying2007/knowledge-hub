@@ -3,7 +3,8 @@ title: Docs 治理入口
 doc_type: index
 knowledge_type: process
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-12
 last_updated: 2026-05-12

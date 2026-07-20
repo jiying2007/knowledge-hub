@@ -3,13 +3,21 @@ id: xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715
 title: PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置
 kind: debug-record
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: manual
+  from: 2026-07-15 用户方向、release/source 静态核对与 Codex 候选实现
+  source_sha256: b13e047b833071ce46f0a42914210ee51ce14d6dead3d1ae62f9ecaa6c804125
 review_after: '2026-08-15'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: accepted
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - display
@@ -19,17 +27,26 @@ tags:
 - fbtft
 - pwrite
 - pad-drive
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-15'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
 manual_validation_pending: true
-summary_zh: 最新固件确认 partial、同步 commit 与 SPI0_CK 2mA/MSPI_CK 12mA 均生效；同内容重发与动作时间轴把根因收敛为无 TE/VSYNC 的动态扫描撕裂。owner 确认硬件没有 TE 引脚后，release 与 sensor 源码已接入带能力协商和整行回退的二维矩形同步提交，待固件/HIL 验证。
+summary_zh: 最新固件确认 partial、同步 commit 与 SPI0_CK 2mA/MSPI_CK 12mA 均生效；同内容重发与动作时间轴把根因收敛为无 TE/VSYNC 的动态扫描撕裂。owner 确认硬件没有 TE 引脚后，release
+  与 sensor 源码已接入带能力协商和整行回退的二维矩形同步提交，待固件/HIL 验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置

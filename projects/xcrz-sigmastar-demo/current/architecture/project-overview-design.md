@@ -1,15 +1,48 @@
 ---
-title: PCR02 项目概要设计
 doc_type: architecture
 knowledge_type: model
 maturity: verified
-status: archived
-owner: team-core
 created: 2026-05-13
 last_updated: 2026-05-13
-tags: [pcr02, architecture, overview]
-related: [diag-command-architecture-final.md, project-detailed-design.md, project-core-module-design.md]
-validation_refs: [Makefile, build/build.mk, pcr02/main.cpp]
+related:
+- diag-command-architecture-final.md
+- project-detailed-design.md
+- project-core-module-design.md
+id: pcr02-project-overview-design
+title: PCR02 项目概要设计
+kind: project-current
+domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/current/architecture/project-overview-design.md
+scope: project-specific
+visibility: team-internal
+status: archived
+owner: team-core
+source:
+  type: retired-source-provenance
+  source_id: pcr02-project-docs
+  source_path: architecture/project-overview-design.md
+  source_sha256: 784ec0d2e2eb3eaee647ab0fdc7d4d9dadf8a43d54f1cbb7293de2c92f44bc34
+review_after: '2026-10-16'
+review_status: delegated-review-closed-reference-boundary
+promotion: none
+promotion_decision: none; archived reference boundary, no owner decision generated
+tags:
+- pcr02
+- current
+- architecture
+- overview
+validation_refs:
+- projects/xcrz-sigmastar-demo/current/architecture/project-overview-design.md
+- rtk bash tools/knowledge-check.sh --dry-run
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+- Makefile
+evidence_refs:
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
+- artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl
+created_at: '2026-06-16'
+updated_at: '2026-07-19'
+summary_zh: 本文档定义当前仓库的最终态总体结构，覆盖以下范围：。该条目当前为 archived retired-source provenance，仅作历史项目材料检索入口，不代表当前项目事实、active 决策或 owner 签收。
 ---
 
 # PCR02 项目概要设计

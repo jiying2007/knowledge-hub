@@ -7,7 +7,7 @@ import hashlib
 import json
 import pathlib
 from collections import Counter
-from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 from .common import KnowledgeHubError, compact_json, registry_items
 from .model import ITEM_KINDS, ITEM_STATUSES

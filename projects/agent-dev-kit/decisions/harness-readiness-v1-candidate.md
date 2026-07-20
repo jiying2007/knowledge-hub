@@ -1,4 +1,15 @@
 ---
+related:
+- projects/agent-dev-kit/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+decision_status: null
+decision_date: null
+aliases:
+- Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选
 id: agent-dev-kit-harness-readiness-decision-20260717
 title: Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选
 kind: decision
@@ -8,10 +19,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: 源证据保留在 agent-dev-kit change artifact 与官方 OpenAI URL；不复制二级文章正文或图片。
+  source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
 review_after: '2026-10-15'
-created_at: null
-updated_at: null
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -19,33 +34,26 @@ tags:
 - harness-readiness
 - ai-coding
 - decision
-related:
-- projects/agent-dev-kit/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-validation_refs: []
-summary_zh: 以无权重七维证据投影吸收团队 Harness Engineering，复用 ADK 现有 workflow、Skill 和 capability health；候选保持 reviewing，不启用外部 runtime、MCP
-  或 active promotion。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: None
-evidence_strength: null
-evidence_refs: []
+validation_refs:
+- projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-17'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-17'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
-decision_owner: null
-decision_status: null
-decision_date: null
 manual_validation_pending: true
-aliases:
-- Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选
+summary_zh: 以无权重七维证据投影吸收团队 Harness Engineering，复用 ADK 现有 workflow、Skill 和 capability health；候选保持 reviewing，不启用外部 runtime、MCP
+  或 active promotion。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选

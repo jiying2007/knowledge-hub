@@ -3,7 +3,8 @@ title: SigmaStar 平台主题索引目录
 doc_type: standard
 knowledge_type: guideline
 maturity: verified
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-15
 last_updated: 2026-05-15

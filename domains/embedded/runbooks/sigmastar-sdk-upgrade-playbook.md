@@ -3,7 +3,8 @@ title: SigmaStar SDK 升级 Playbook
 doc_type: runbook
 knowledge_type: process
 maturity: draft
-status: active
+status: archived
+searchable: false
 owner: team-core
 created: 2026-05-18
 last_updated: 2026-05-18

@@ -34,7 +34,7 @@ last_updated: 2026-07-02
    - `disassemble /m <function>`
    - `x/<N>wx $sp`
 5. 输出必须包含“下一步最小验证动作”，避免只给静态结论。
-6. 代码风格遵循 `$EMBEDDED_KNOWLEDGE_HOME/docs/standards/c-coding-standards.md`。
+6. 代码风格参考 `domains/embedded/standards/c-coding-standards.md` 的冻结历史基线；如与当前项目规范冲突，以项目规范为准。
 7. 结构与验证流程遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 
 ## 4. 最小验证

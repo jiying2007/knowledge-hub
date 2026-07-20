@@ -1,4 +1,15 @@
 ---
+related:
+- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
+- projects/llm-agent/validation/project-readiness.md
+- governance/product/validation/project-readiness.md
+target_version: llm_agent@1d7730af7afe0217fd387533cd490d64eca51e7e with seven exact gitlinks
+test_environment: isolated local clones under /tmp; current host runtime dependencies; no remote network
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
+aliases:
+- LLM Agent 精确源码 Full 门禁审计 2026-07-17
 id: llm-agent-exact-source-full-gate-audit-20260717
 title: LLM Agent 精确源码 Full 门禁审计 2026-07-17
 kind: validation
@@ -8,10 +19,14 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-source: null
+source:
+  type: manual
+  from: llm_agent 根仓与 7 个 gitlink 精确 commit 的隔离全量验证
+  source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-17'
-created_at: '2026-07-17'
-updated_at: '2026-07-17'
+review_status: manual-entry-pending-review
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
@@ -20,38 +35,30 @@ tags:
 - validation
 - full-gate
 - portability
-related:
-- projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
-- projects/llm-agent/validation/project-readiness.md
-- governance/product/validation/project-readiness.md
 validation_refs:
+- projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - rtk bash scripts/check-all.sh --full
 - rtk bash scripts/check-wechat-intake-ledger.sh .
-- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-artifact_refs: []
-target_version: llm_agent@1d7730af7afe0217fd387533cd490d64eca51e7e with seven exact gitlinks
-test_environment: isolated local clones under /tmp; current host runtime dependencies; no remote network
-summary_zh: 在根仓与 7 个 gitlink 精确 commit 的隔离克隆中执行 full 聚合门禁，61/62 通过；唯一失败源于 full 无条件依赖被 Git 忽略的 wechat-articles 外部语料目录，当前不能声明全量可移植恢复通过。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: checked
 evidence_strength: direct-command
 evidence_refs:
+- projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 - projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
 - projects/llm-agent/validation/project-readiness.md
+created_at: '2026-07-17'
+updated_at: '2026-07-19'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-17'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 manual_validation_pending: true
 manual_validation_reason: 唯一失败需在源项目修复可移植输入契约并复跑 full；正式 artifact、release、rollback 仍未闭环。
-aliases:
-- LLM Agent 精确源码 Full 门禁审计 2026-07-17
+summary_zh: 在根仓与 7 个 gitlink 精确 commit 的隔离克隆中执行 full 聚合门禁，61/62 通过；唯一失败源于 full 无条件依赖被 Git 忽略的 wechat-articles 外部语料目录，当前不能声明全量可移植恢复通过。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: checked
 ---
 
 # LLM Agent 精确源码 Full 门禁审计 2026-07-17

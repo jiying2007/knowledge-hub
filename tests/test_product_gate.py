@@ -23,6 +23,7 @@ from tools.codex_assets.knowledge_hub.product_gate import _git_delivery_state
 from tools.codex_assets.knowledge_hub.product_gate import _project_readiness
 from tools.codex_assets.knowledge_hub.product_gate import _restore_state
 from tools.codex_assets.knowledge_hub.product_gate import _source_runtime_ready
+from tools.codex_assets.knowledge_hub.product_gate import _unit_test_evidence_reuse_mode
 from tools.codex_assets.knowledge_hub.product_policy import (
     evaluate_specialized_owner_requirements,
     load_product_policy,
@@ -34,7 +35,7 @@ def test_product_readiness_separates_structure_from_real_evidence():
     expected_project_count = len(project_rows(root))
     payload = _project_readiness(root)
     assert payload["project_count"] == expected_project_count
-    assert payload["slot_count"] == expected_project_count * 4
+    assert payload["slot_count"] == expected_project_count
     assert payload["structural_ready_count"] == expected_project_count
     assert "source_mapping_ready_count" in payload
     assert payload["route_matrix_failure_count"] == 0
@@ -85,11 +86,17 @@ def test_engineering_quality_state_requires_matching_candidate_signature(tmp_pat
     cache.mkdir(parents=True)
     (cache / "engineering-quality.json").write_text(
         '{"status":"pass","mode":"full","candidate_integrity":'
-        '{"unchanged":true,"before_signature":"sig-a","after_signature":"sig-a"}}',
+        '{"unchanged":true,"before_signature":"sig-a","after_signature":"sig-a"},'
+        '"checks":{"coverage":{"status":"pass"},"full_regression":{"status":"pass"}}}',
         encoding="utf-8",
     )
 
-    assert _engineering_quality_state(tmp_path, "sig-a")["fresh"] is True
+    current = _engineering_quality_state(tmp_path, "sig-a")
+    assert current["fresh"] is True
+    assert current["check_statuses"] == {
+        "coverage": "pass",
+        "full_regression": "pass",
+    }
     assert _engineering_quality_state(tmp_path, "sig-b")["fresh"] is False
 
 
@@ -105,6 +112,31 @@ def test_engineering_quality_state_fails_closed_on_invalid_or_symlink_snapshot(t
     outside.write_text('{"status":"pass"}', encoding="utf-8")
     snapshot.symlink_to(outside)
     assert _engineering_quality_state(tmp_path, "sig")["status"] == "missing"
+
+
+def test_quick_gate_automatically_reuses_fresh_signature_bound_unit_evidence():
+    engineering_quality = {
+        "fresh": True,
+        "check_statuses": {"coverage": "pass", "coverage_report": "pass"},
+    }
+
+    assert (
+        _unit_test_evidence_reuse_mode("quick", False, engineering_quality)
+        == "automatic-quick"
+    )
+    assert _unit_test_evidence_reuse_mode("full", False, engineering_quality) == "disabled"
+    assert _unit_test_evidence_reuse_mode("full", True, engineering_quality) == "explicit"
+
+
+def test_quick_gate_does_not_reuse_stale_or_incomplete_unit_evidence():
+    stale = {
+        "fresh": False,
+        "check_statuses": {"coverage": "pass", "coverage_report": "pass"},
+    }
+    incomplete = {"fresh": True, "check_statuses": {"coverage": "pass"}}
+
+    assert _unit_test_evidence_reuse_mode("quick", False, stale) == "disabled"
+    assert _unit_test_evidence_reuse_mode("quick", False, incomplete) == "disabled"
 
 
 def test_product_snapshot_is_atomic_private_and_replaces_old_content(tmp_path):
@@ -162,6 +194,36 @@ def test_health_snapshot_rejects_malformed_production_evidence(tmp_path, monkeyp
     assert metadata["production_evidence"] is False
 
 
+def test_health_snapshot_auto_prefers_fresh_full_evidence(tmp_path, monkeypatch):
+    base = {
+        "as_of": "2026-07-19",
+        "final_profile": "product",
+        "local_cache_written": True,
+        "working_tree_signature": "sig",
+        "operational_readiness": {"restore_drill": {"status": "pass"}},
+        "platform_status": {"engineering_quality": {"status": "pass"}},
+    }
+    for suite in ("quick", "full"):
+        snapshot = product_snapshot_path(tmp_path, suite)
+        snapshot.parent.mkdir(parents=True, exist_ok=True)
+        snapshot.write_text(
+            json.dumps({**base, "regression_suite": suite}),
+            encoding="utf-8",
+        )
+    monkeypatch.setattr(health, "working_tree_signature", lambda _root: "sig")
+
+    payload, metadata = health._load_snapshot(
+        tmp_path,
+        as_of="2026-07-19",
+        max_age_hours=24,
+    )
+
+    assert payload["regression_suite"] == "full"
+    assert metadata["suite"] == "full"
+    assert metadata["fresh"] is True
+    assert metadata["candidate_states"] == {"full": "fresh", "quick": "fresh"}
+
+
 def test_product_gate_summary_is_bounded_and_excludes_heavy_evidence():
     payload = {
         "generated_at": "2026-07-19T00:00:00Z",
@@ -184,15 +246,29 @@ def test_product_gate_summary_is_bounded_and_excludes_heavy_evidence():
             "pending_project_ids": ["p1", "p2"],
             "specialized_owner_requirements": [{"large": "x" * 10000}],
         },
+        "operational_readiness": {
+            "local_metrics": {
+                "usage": {"invocation_count": 17, "observation_days": 4},
+                "retrieval": {"feedback_count": 9},
+            }
+        },
+        "adoption": {"ready": False, "evaluable": True},
         "blockers": [{"id": "owner-and-real-evidence-pending", "gap_type": "owner-review"}],
         "checks": {"large": "x" * 10000},
     }
 
     summary = product_gate_summary(payload)
 
-    assert summary["projection"] == "product-final-gate-summary-v1"
+    assert summary["projection"] == "product-final-gate-summary-v2"
     assert summary["content"]["project_count"] == 30
     assert summary["owner_and_real_evidence"]["pending_project_count"] == 2
+    assert summary["adoption"] == {
+        "ready": False,
+        "evaluable": True,
+        "invocation_count": 17,
+        "feedback_count": 9,
+        "observation_days": 4,
+    }
     assert "checks" not in summary
     assert "rows" not in summary["content"]
     assert len(json.dumps(summary, ensure_ascii=False)) < 10000
@@ -249,7 +325,7 @@ def test_specialized_owner_requirements_are_manifest_driven():
             "label_zh": "fixture",
             "item_requirements": [
                 {
-                    "item_id": "knowledge-hub-readiness-decision-20260713",
+                    "item_id": "knowledge-hub-readiness-validation-20260713",
                     "expected": {"decision_status": "fixture-not-satisfied"},
                 }
             ],
@@ -259,4 +335,4 @@ def test_specialized_owner_requirements_are_manifest_driven():
 
     assert result["status"] == "pass"
     assert result["item_count"] == 4
-    assert result["pending_ids"] == ["knowledge-hub-readiness-decision-20260713"]
+    assert result["pending_ids"] == ["knowledge-hub-readiness-validation-20260713"]
