@@ -1,0 +1,944 @@
+                  SOUTHCHIP SEMICONDUCTOR                                     SC8922 PRELIMINARY DATASHEET
+                                                                             INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+      High Efficiency, Synchronous Boost Charger for Two/Three-cell Li-ion
+        Battery with Cell Balance and Power Path Management Function
+
+1     DESCRIPTION                                                  2        FEATURES
+                                                                       Integrated Synchronous Boost Charger
+The SC8922 is a highly integrated switch-mode boost charger
+and system power path management device for 2/3 cells Li-              Integrated Power Path Management
+ion battery applications. It is able to step up 3.6V~5.5V input        Cell Balance Function
+voltage to up to 16V, and provide battery charge management
+                                                                       Charging Management (Trickle Charge / Constant
+functions including trickle charge, constant current charge,
+constant voltage charge, charge termination and charging                Current Charge / Constant Voltage Charge / Charge
+status indication. Besides that, the IC can also provide cell           Termination)
+balance function, so to reduce the cell voltage mismatch and           Programmable Constant Charge Current
+increase the battery life time.
+                                                                       Programmable Constant Voltage
+The SC8922 supports up to 3A charge current, and the user
+                                                                       Charge Status Indication
+can program the current freely through external resistor for
+different applications. With the power path management                 Charge Safety Timer
+function and supplement mode, the IC can be used to charge             NTC for Battery Protection
+2/3 cells Li-ion battery and meantime provide power for                2A / 3A Input Current Limit Option
+system operation.
+                                                                       Adaptive Input Current Limit
+The SC8922 supports input current limit, input under voltage
+                                                                       Input Under Voltage and Over Voltage Protection
+and over voltage protections, internal cycle by cycle current
+limit, battery short circuit protection, and output over voltage       Battery Short Circuit Protection
+protection. It also offers charging safety timer, battery cell         Thermal Shutdown
+temperature monitor and over temperature protection to
+ensure safety under different abnormal conditions.
+
+The SC8922 is available in 4x4 QFN-24 package.
+
+3     APPLICATIONS
+    Blue tooth speaker charger
+    E-cigarette charger
+    E-joy charger
+    LI-ion battery charger
+    POS machine
+
+4     DEVICE INFORMATION
+    Part Number        Package            Dimension
+    SC8922QDLR          QFN-24      4 mm x 4 mm x 0.75 mm
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.
+                                                                                        SC8922 PRELIMINARY DATASHEET
+                SOUTHCHIP SEMICONDUCTOR                                              INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+5      Typical Application Circuit
+
+
+
+
+6      Selection Guide
+                                     Integrated
+                  VIN      Max.                   Max. Charging            Power path                  Cell
+ Part Number                           Power                      VINREG                    NTC                      Pin #
+                 range     VBAT                      current               management                Balance
+                                       Switch
+
+
+    SC8922      3.6V~6V    13.2V        Yes            3A          4.5V        Yes          Yes        Yes      24 pin QFN 4x4
+
+
+    SC8922A     3.6V~6V    13.2V        Yes            3A          4.5V        No           Yes        Yes      24 pin QFN 4x4
+
+Note:
+SC8922: Support supplement mode with power path function. 1. Only battery exists: Q3 is fully on, which means more quiescent current when
+only battery exist; 2. System power can be obtained from VSYS pin. What’s more, battery will discharge by turning on Q3 fully to satisfy system
+need when input source capacity is limited (refer to supplement mode).
+SC8922A: No power path function. 1. Only battery exists: Q3 is always off, so IC works under low quiescent current condition; 2. System power
+can be only obtained from VBAT pin. VSYS pin can’t afford system load and it must be connected with 22uF ceramic capacitor. 3. When VIN
+plug in, Q3 is controlled by charger loop (linear mode in trickle charge; fully on in constant current charge or constant voltage charge), which is
+same with SC8922.
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                                      2
+                                                                                   SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                           INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+7        Terminal Configurations and Functions
+                                                       QFN Top View –SC8922
+
+
+
+
+             I/O                                                        DESCRIPTION
+SC8922        NAME
+                                Bootstrap pin. Connect a 100nF ceramic capacitor between BT pin and SW pin to provide bias
+    3          BT        IO
+                                voltage for internal driver circuit.
+  1, 2,
+               SW        IO     Switching node of the boost converter. Connect to external inductor.
+ 23,24
+    4          VIN        I     Input of the boost charger
+                                MODE selection pin
+    5         MODE        I     MODE = logic low: auto-termination, cell balance function is enabled.
+                                MODE = float: auto-termination, cell balance function is disabled.
+    6         CSEL        I     Connect a resistor to GND to select the battery termination voltage target
+                                Connect to the Negative Temperature Coefficient (NTC) thermistor inside the battery cells to
+    7          NTC        I     sense the battery cells temperature for protection. Short this pin to ground to disable this
+                                function.
+                                Charging status indication pin. Connect an LED from PG pin and GND pin. It is internally
+    8          PG         O     pulled high to indicate the charge in process. When the battery is fully charged, it outputs high
+                                impedance and the LED is off.
+                                Set the input current limit.
+                                IIN = logic high: no input current limit;
+    9          IIN        I
+                                IIN = float: input current limit is set to 2A;
+                                IIN = logic low: input current limit is set to 3A
+    11        ICHG        I     Connect a resistor to GND to program the battery constant charging current.
+    10        AGND       IO     Analog ground. Connect PGND and AGND together at the thermal pad under IC.
+    12         VS1        O     Cell voltage sense and cell balance path
+    13         VS2        O     Cell voltage sense and cell balance path
+    14         VS3        O     Cell voltage sense and cell balance path
+    15         NC
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                           3
+                                                                                         SC8922 PRELIMINARY DATASHEET
+                   SOUTHCHIP SEMICONDUCTOR                                             INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+ 16, 17,
+                   VBAT        O      Output of the boost charger to charge the battery cells.
+ 18, 19
+20, 21, 22         VSYS        O      Output of the boost converter. This pin can provide power for the system operation.
+      25           PGND       IO      Exposed thermal pad, Connect EP with power ground.
+
+
+
+7.1          Absolute Maximum Ratings
+Over operating free-air temperature range (unless otherwise noted)(1)
+
+                                                                                                                Min.           Max.          Unit
+
+                               VIN, SW, VSYS                                                                    -0.3               16            V
+
+                               VS3, VBAT                                                                        -0.3               14            V
+Voltage(2)
+                               MODE, CSEL, NTC, PG, IIN, ICHG                                                   -0.3               5.5           V
+
+                               VS2, VS1                                                                         -0.3               5             V
+
+TJ                             Operating junction temperature                                                   -40             150              °C
+
+Tstg                           Storage temperature                                                              -65             150              °C
+
+       (1)    Stresses beyond those listed under absolute maximum ratings may cause permanent damage to the device.
+       (2)    All voltages are with respect to network ground terminal.
+
+7.2          ESD Ratings
+                                                                                                                Min.          Max.          Unit
+
+                          Human-body Model (HBM) (2)              All pins                                       -2            2            kV
+VESD(1)
+                          Charged-device Model (CDM) (3)                                                        -750          750            V
+
+(1)        Electrostatic discharge (ESD) to measure device sensitivity and immunity to damage caused by assembly line electrostatic discharges
+           into the device.
+(2)        Level listed above is the passing level per ANSI, ESDA, and JEDEC JS-001. JEDEC document JEP155 states that 500-V HBM allows
+           safe manufacturing with a standard ESD control process.
+(3)        Level listed above is the passing level per EIA-JEDEC JESD22-C101. JEDEC document JEP157 states that 250-V CDM allows safe
+           manufacturing with a standard ESD control process.
+
+7.3          Recommended Operation Conditions
+                                                                                                        Min.           Typ.         Max.         Unit
+
+             VIN           VIN voltage range                                                             4.5            5            5.5             V
+
+              L            Inductor                                                                       1            2.2           3.3           µH
+
+             CIN           VIN capacitor                                                                               10                          µF
+
+           CVSYS           VSYS capacitor                                                                              10                          µF
+
+           CVBAT           VBAT capacitor                                                                4.7                                       μF
+
+             TA            Operating ambient temperature                                                 -40                           85          C
+
+             TJ            Operating junction temperature                                                -40                        125            C
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                                                4
+                                                                                SC8922 PRELIMINARY DATASHEET
+                 SOUTHCHIP SEMICONDUCTOR                                       INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+8    Electrical Characteristics
+       Parameter              Description                     Test condition             Min.      Typ.     Max.     Unit
+
+
+     Supply and power path
+
+          VIN         Operating input voltage                                             4.5       5        5.5      V
+
+                      Under voltage lockout
+         VUVLO                                                                                     3.6                V
+                      threshold
+
+                      Hysteresis                                                                   150               mV
+
+
+         VSYS         VSYS regulation voltage       VBUS = 5V, VBAT = 5V (2 cells)                 6.2                V
+
+                                                    VBUS = 5V, VBAT = 7.5V (3 cells)               9.2                V
+
+                      VSYS regulation voltage
+       VSYS_HYS       after termination
+                                                    VSYS_HYS = VSYS - VBAT_TRGT                    200               mV
+
+
+         VREF         Reference voltage                                                            1.2                V
+
+                      Q3 VDS regulation voltage
+         VSUP         in supplement mode
+                                                                                                    30               mV
+
+
+                      Quiescent current into VIN    Mode pin= float, VIN = 5V, VSYS =
+         IQ_VIN       pin                           VBAT = 8V, non-switching
+                                                                                                   1.8               mA
+
+
+                      Quiescent current into        Mode pin= float，VIN = open, VBAT
+        IQ_VBAT       VBAT pin                                                                      65               uA
+                                                    = 8V
+
+
+     Power stage
+
+        Rdson_Q1      Rdson resistance of Q1        VIN=5V, VSYS=VBAT=8V                            60               mΩ
+
+
+        Rdson_Q2      Rdson resistance of Q2        VIN=5V, VSYS=VBAT=8V                            35               mΩ
+
+
+        Rdson_Q3      Rdson resistance of Q3        VIN=5V, VSYS=VBAT=8V                            35               mΩ
+
+
+           fsw        Switching frequency                                                          800               KHz
+
+
+        Tmax_ON       Maximum on time                                                               5                us
+
+
+     Charger Function
+
+                      Constant charging current
+          ICHG        accuracy
+                                                    RICHG = 8 kΩ                                   1.5                A
+
+
+                      Trickle charging current
+          ITRK        accuracy
+                                                    RICHG = 8 kΩ, VBAT = 5V                        0.15               A
+
+
+                      Internal trickle charge
+        ITRK_INT      current
+                                                    RICHG = 0 Ω, VBAT = 5V                         0.2                A
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                   5
+                                                                             SC8922 PRELIMINARY DATASHEET
+                SOUTHCHIP SEMICONDUCTOR                                     INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+                      Internal termination charge
+       ITERM_INT      current
+                                                                                                0.15               A
+
+
+       VBAT_TRGT      VBAT target voltage           CSEL = open                                 8.4                V
+
+                                                    CSEL = 300 kΩ                               8.6                V
+
+                                                    CSEL = 150 kΩ                               8.7                V
+
+                                                    CSEL = 80 kΩ                                8.8                V
+
+                                                    CSEL = 40 kΩ                                13.2               V
+
+                                                    CSEL = 20 kΩ                               13.05               V
+
+                                                    CSEL = 10 kΩ                                12.9               V
+
+                                                    CSEL = 0 Ω                                  12.6               V
+
+                      Termination threshold over
+       VBAT_TERM      VBAT target
+                                                    Rising edge                                 98%
+
+                      Recharge threshold over
+       VBAT_RECH      VBAT_TRGT
+                                                    Falling edge                                96%
+
+                      Trickle charge threshold
+        VTRK_CH       over VBAT target for 2S
+                                                    Rising edge                                 5.8                V
+
+
+                                                    Hysteresis                                  400               mV
+
+                      Trickle charge threshold
+                                                    Rising edge                                 8.7                V
+                      over VBAT target for 3S
+
+
+                                                    Hysteresis                                  600               mV
+
+
+         VDPL         Battery depletion threshold   Rising edge                                  5                 V
+
+
+                                                    Hysteresis                                  200               mV
+
+
+        VINREG        VINREG voltage                                                            4.5                V
+
+
+
+          IPG         Source current at PG pin      VPG = 3V                                     4                mA
+
+
+
+
+        Tterm_dly     Termination delay time                                                     1                 s
+
+
+
+
+        Trech_dly     Recharge delay time                                                        10               ms
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                              6
+                                                                                   SC8922 PRELIMINARY DATASHEET
+                  SOUTHCHIP SEMICONDUCTOR                                     INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+
+       Tsafe_timer    safety timer                                                                 24                h
+
+
+
+
+     Cell balance
+
+        RDS_BLC       Rdson of balance path                                                       7.5               Ω
+
+                      Battery cell balance
+         VBLC         threshold
+                                                                                                  4.05               V
+
+
+      VCELL_UVLO      Battery cell UVLO             2S setting                                     5                 V
+
+                                                    3S setting                                    7.5                V
+
+
+                      Battery cell OVP protection   VCELL_OVP = VCELL -
+       VCELL_OVP      threshold for each cell       VCELL_TRGT
+                                                                                                   50               mV
+
+
+                                                    Hysteresis                                     30               mV
+
+
+         ILIM_IN      Input current limit           IIN pin float                                 1.85               A
+
+                                                    IIN pin = logic low                           2.8                A
+
+
+         ILIM_PK      Peak current limit                                                          6.5                A
+
+                      Input over voltage
+        VIN_OVP       protection
+                                                    Rising edge                                    6                 V
+
+                                                    Hysteresis                                    0.3                V
+
+                      VSYS over voltage
+       VSYS_OVP       protection
+                                                    Rising edge, over VSYS target                110%
+
+                                                    Hysteresis, over VSYS target                  6%
+
+                      VBAT short circuit
+       VBAT_SC        protection threshold
+                                                    Falling edge                                   2                 V
+
+                                                    Hysteresis                                    200               mV
+
+                      Q3 regulation current for
+         IQ3_SC       short circuit protection
+                                                                                                  200               mA
+
+
+     NTC
+
+          IBIAS       NTC bias current                                                   95       102       109     uA
+
+                      NTC cold temp (-5C)
+         VCOLD        threshold
+                                                    Rising                                       2.509               V
+
+                                                    Hysteresis (falling)                         0.175               V
+
+                      NTC hot temp (45C)
+         VHOT         threshold
+                                                    Falling                                      0.468               V
+
+                                                    Hysteresis (rising)                          0.033               V
+
+                      NTC function disable
+        VDISNTC       threshold
+                                                    Rising                                        0.1                V
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                7
+                                                                                SC8922 PRELIMINARY DATASHEET
+                SOUTHCHIP SEMICONDUCTOR                                       INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+                                                    Hysteresis (falling)                         0.030               V
+
+
+        tNTC_dgl      NTC status deglitch time                                                     8                ms
+
+
+     LOGIC
+                      MODE and IIN input low
+          VIL         voltage threshold
+                                                                                         0.4                0.7      V
+
+                      IIN input high voltage
+          VIH         threshold
+                                                                                         0.9                1.2      V
+
+     Start up
+
+           tD         Input delay time                                                                       5      us
+
+                                                    From VIN power up to starting
+       tDEBOUNCE      Input debounce time
+                                                    switching
+                                                                                                            500     ms
+
+
+          tSS         Softstart time                VREF ramp up rate                                        2      Ms
+
+     THERMAL
+                      Thermal shutdown
+          TSD         temperature
+                                                    Rising                                        165               °C
+
+                                                    Hysteresis                                    135               °C
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                8
+                                                                             SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+9    Function Block Diagram
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                            9
+                                                                                SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+10 Feature Description
+
+10.1 UVLO and Shutdown Mode
+The SC8922 is in shutdown when its input voltage is lower
+than VUVLO threshold. After VIN rises above the UVLO
+threshold, the IC exits shut down mode to provide power to
+the system connected at VSYS pin and also charge the
+battery cells.
+
+When in shutdown mode, if VBAT is higher than the
+depletion threshold VDPL (typical 5V), the Q3 is fully turned
+on, so VSYS voltage equals to battery voltage, and the
+battery can supply the system connected at VSYS pin                                 Figure 1 Startup with VBAT > VTRK
+directly. However, if VBAT is below VDPL, the Q3 will be
+turned off to disconnect the system from battery. In this
+case, there is still a path from battery to VSYS pin through
+the body diode of Q3, and VSYS equals to VBAT – 0.7V.
+
+10.2 Soft-Start
+After VIN rises above UVLO threshold, there is a 500ms
+debounce time before the IC starts operation. During the
+debounce time, there are two scenarios as below:
+
+1.   If VBAT is higher than the trickle charge threshold
+     VTRK, the IC keeps Q3 fully on, so the VSYS voltage
+     equals to VBAT.
+2.   If VBAT is lower than VTRK, the IC enables supplement                          Figure 2 Startup with VBAT < VTRK
+     mode, the VSYS voltage equals to VBAT – 30mV.
+
+After the 500ms debounce time expires, the IC starts
+                                                                       10.3 Charge management
+switching and charges the battery in CC mode or CV mode                The SC8922 provides charge management functions for
+If VBAT is higher than VTRK; if VBAT is lower than VTRK, the           2~3-cell Li-ion battery. The typical charge profile is shown
+IC ramps up the VSYS to 6V first, then it turns on Q3 in               in Figure 3.
+linear mode to work in trickle charging mode.
+
+The SC8922 integrates an internal soft start circuit which
+controls the ramp up of the VSYS output and the charge
+current to the battery cells, preventing inrush current
+during start-up.
+
+
+
+
+                                                                                       Figure 3 Typical charge profile
+
+
+                                                                       10.3.1   Trickle Charge
+
+                                                                       When VBAT is lower than VTRK, the SC8922 charges the
+                                                                       battery cells in trickle charge mode. In this mode, VSYS is
+                                                                       regulated at 6V, and Q3 is turned on and works in linear
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                      10
+                                                                                SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                       INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+mode. The charge current through Q3 is monitored and                   1) Termination voltage: the VBAT voltage is higher than
+regulated at 1/10 of the constant charge current                       98% of VBAT_TRGT
+programmed by ICHG pin.
+                                                                       2) Termination current: the Q3 Charge current is lower
+If the 1/10 of the CC current is higher than 200mA, the                than 1/10 of the CC value programmed by ICHG pin or
+trickle charge current will be clamped to 200mA.                       200mA (same as trickle charge current).
+
+                                                                       When above three conditions are met together, the
+10.3.2   Constant Current (CC) Charge
+                                                                       SC8922 outputs high impedance at PG pin, so the LED
+When VBAT voltage is charged above VTRK, the SC8922                    connected at PG pin is off, indicating the end of charge
+enters into constant charge (CC) mode. In this mode, the               (EOC).
+Q3 is fully turned on. The IC monitors Q3 current, and
+                                                                       The cell balance status or battery cell OV (over voltage)
+controls the switching duty cycle so to regulate the Q3
+                                                                       status is disabled after EOC.
+current at the CC value programmed by ICHG pin.
+                                                                       If auto-termination mode is selected, the IC turns off Q3,
+10.3.3   Constant Voltage (CV) Charge                                  so to terminate the battery charging. Meantime, it regulates
+                                                                       VSYS at VBAT_TRGT + 200mV, keeping supplying
+The SC8922 operates in constant voltage (CV) mode after
+                                                                       current for the system operation.
+VBAT exceeds 98% of the termination voltage target
+VBAT_TRGT. In CV mode, the Q3 is kept fully on, and the                The IC draws quiescent current from VSYS pin after EOC
+battery voltage is regulated at VBAT_TRGT. The charge                  no matter it is in no-termination mode or auto-termination
+current automatically drops until the battery is fully charged.        mode.
+The battery target voltage can be configured through an
+                                                                       10.3.5       Recharge
+external resistor at CSEL pin. Below table shows the
+relationship between the CSEL resistor value and the                   After EOC, the SC8922 still monitors VBAT voltage. Once
+VBAT target voltage.                                                   it detects the battery voltage falls below 96% of
+                                                                       VBAT_TRGT, it turns on Q3 and returns to CC mode again.
+          Table 1 CSEL pin to set VBAT target voltage
+                                                                       10.4 Charging Status Indication
+CSEL Resistor Value             VBAT target voltage
+                                                                       When the SC8922 charges the battery in trickle charge/CC
+Open                            8.4V                                   charge/CV charge mode, the PG pin outputs logic high, so
+                                                                       the LED connected at PG pin is turned on, indicating the
+300 kΩ                          8.6V                                   charging is in process.
+
+                                                                       After the EOC conditions are met, the PG pin outputs high
+150 kΩ                          8.7V
+                                                                       impedance, indicating the battery cells are fully charged.
+
+80 kΩ                           8.8V                                   If the battery voltage drops below the recharge threshold
+                                                                       VRECH, the LED will be turned on again.
+40 kΩ                           13.2V
+                                                                       PG status           IC working status
+20 kΩ                           13.05V                                 High logic          Normal charging, Cell Balancing
+                                                                       High impedance      End of charge, Not charging (VIN< VUVLO,
+10 kΩ                           12.9V
+                                                                                           NTC over/under temperature)
+0                               12.6V                                  Flashes at 1 Hz     VIN OVP, Battery reverse plug-in
+
+                                                                       10.5 Constant Charge Current Programming
+                                                                       The constant charge current can be programmed by ICHG
+10.3.4   Charge Termination / End of Charge
+                                                                       pin as below:
+When below three conditions are valid, the SC8922
+recognizes the battery cells are fully charged:
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                             11
+                                                                                SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                         INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+                                      VREF                             function) to prevent overloading the input adapter.
+                      ICC = K ∙
+                                      RICHG
+                                                                       If the external adapter has smaller current capability than
+Where,                                                                 the current the IC draws, IC’s VIN voltage will be pulled
+ICC is the programmed constant charge current                          down. Once the IC detects VIN is pulled below 4.5V, which
+                                                                       indicates the adapter can’t supply required current, the IC
+VREF is the internal reference voltage, 1.2V                           reduces the input current automatically. The input current
+RICHG is the resistor connected at ICHG pin                            is reduced to a value which can keep adapter output at
+                                                                       4.5V, so to prevent the adapter from overloading further.
+K = 10 000                                                             This is called adaptive input current limit function or
+If the ICHG pin is short to ground, the constant charge                VINREG function.
+current is infinite. In this case, the SC8922 relies on input          If the adapter current capability is very low, the IC may
+current limit and the internal peak current limit to protect           enter into burst mode during this operation.
+the chip. Accordingly, the IC will set the trickle charge and
+charge termination current to 200mA internally.                        10.9 Supplement Operation
+10.6 Charge Current Sense                                              The input power from adapter not only charges the battery
+                                                                       but also supplies current for the system operation at VSYS
+The ICHG pin’s voltage is proportional to the Q3 current,              pin.
+so the user can monitor the Q3 charge current through
+ICHG pin as below:                                                     If the system draws very heavy load, the input current
+                                                                       satisfies system first, and the extra current charges the
+                                      VICHG                            battery. In this case, the IC operates in the input current
+                      IQ3 = K ∙
+                                      RICHG                            limit or VINREG status.
+Where,
+                                                                       If the system needs more power than what input can
+IQ3 is the charge current through Q3                                   supply, the VSYS voltage will be pulled down by the load.
+                                                                       In this case, the Q3 keeps fully on, so the battery is
+VICHG is the voltage at ICHG pin
+                                                                       discharged through Q3 to supply the system, and VSYS is
+RICHG is the resistor connected at ICHG pin                            equal to VBAT;
+
+K = 10 000                                                             When in EOC status with Q3 off (auto-termination mode),
+                                                                       VSYS is regulated at VBAT_TRGT+200mV. The Q3 will be
+10.7 Input Current Limit                                               turned on when VSYS is pulled lower than VBAT, so to
+                                                                       supplement the current to system. In this case, the Q3
+The SC8922 supports input current limit function, and the
+                                                                       gate is regulated so that the minimum Q3 VDS stays at 30
+limit can be selected by IIN pin as below.
+                                                                       mV when the current is low. This prevents oscillation from
+                Table 2 Input current selection                        entering and exiting the mode. As the discharge current
+                                                                       increases, the Q3 gate is regulated with a higher voltage to
+IIN input       Input current limit                                    reduce its RDS(ON) until the Q3 is in full conduction. At this
+                                                                       point onwards, the Q3 VDS linearly increases with
+Logic low       3A
+                                                                       discharge current.
+Float           2A
+Logic high      Infinite                                               10.10 Cell Balance
+The IC monitors the input current during operation. Once it            When the MODE pin is pulled high or low, cell balance
+detects the input current exceeds the limit, the IC reduces            function is enabled.
+the switching cycle and regulates the input current at the
+setting value.                                                                            Table 3 Mode selection
+
+
+10.8 Adaptive Input Current Limit                                      MODE input      Cell balance             Termination
+
+                                                                       Float           Disabled                 Auto-termination
+Besides the input current limit function, the SC8922
+supports adaptive input current limit function (VINREG                 Logic low       Enabled                  Auto-termination
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                          12
+                                                                                SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+When the cell-balance function is enabled, the SC8922                  Cell balance is disabled after termination;
+keeps monitoring each cell voltage through VSx pins.
+                                                                       Cell balance is disabled after VIN drops below UVLO or
+Once it detects there is one or more cells voltages are
+                                                                       VBAT drops below POR (Three cells is 7.5V and two cells
+above 4.05V, but there is another or more cells voltage
+                                                                       is 5V).
+below 4.05V, it turns on the cell discharging paths for the
+cells above 4.05V. The cell balance will be deactivated                If MODE is left floating to disable the cell balance function,
+when                                                                   VS3/VS2/VS1 can be floating.
+
+1.   all cells’ voltages are above 4.05V, or                           If larger cell balance current is required to accelerate
+2.   all cells’ voltages are below 4.05V                               balance time, external mosfet can be used to enhance
+                                                                       balance effect.
+The balance discharge path will also be turned on when
+any cell’s voltage is detected higher than OVP threshold               PMOS can be used in 2 cells applications. Balance current
+(50mV higher than the termination target voltage). External            is mainly decided by external resistor Rbx. The Vth of
+resistors are necessary as below to control the discharging            PMOS should be lower than -2V, to ensure balance circuit
+current. 10~100Ω resistors (1206 footprint) are suggested              work normally. What’s more, larger balance current may
+for each cell as below:                                                cause thermal issues, so Rbx resistor must be carefully
+                                                                       chosen to satisfy requirement of system heat dissipation.
+                                                                       Balance current of each cell can be calculated as follow:
+                                                                                                       Vcell
+                                                                                               Ibx =
+                                                                                                       Rbx
+                                                                       Where,
+
+                                                                       Rbx is the external resistor of each balance path.1kΩ is
+                                                                       recommended value for Rx.
+
+
+
+
+                  Figure 4 Cell balance circuit
+
+Balance current of each cell can be calculated as follow:
+                                Vcell3
+                    Ib3 =
+                             Rb3 + Rdson
+                                Vcell2
+                  Ib2 =
+                           2 ∗ Rb2 + Rdson
+                                Vcell1
+                  Ib1 =                                                           Figure 5 PMOS for 2 Cells balance circuit
+                           2 ∗ Rb1 + Rdson
+Where,                                                                 Similarly, NMOS can be also used in 2 cells applications.
+                                                                       The Vth of NMOS should be lower than 2V.
+Vcellx is voltage of OV cell.
+
+Ibx is balance current.
+
+Rbx is balance resistor.
+
+Rdson is conducting resistance of internal FETs.
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                        13
+                                                                               SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                        INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+                                                                       below the threshold, it resumes the normal operation.
+
+                                                                       10.13 VSYS Over Voltage Protection
+                                                                       The SC8922 monitors VSYS voltage during the operation.
+                                                                       Once it detects the VSYS is higher 110% of the target
+                                                                       voltage, over voltage protection will be triggered, and the
+                                                                       IC stops switching at once. After the VSYS voltage drops
+                                                                       below 103% of the target, it resumes switching. Q3 status
+                                                                       will not be affected by VSYS OVP.
+
+                                                                       10.14 VBAT Short Circuit Protection
+                                                                       Once the IC detects the VBAT voltage drops below 2V, the
+                                                                       short circuit protection is triggered. The IC turns on Q3 in
+                                                                       linear mode and regulates the short current to 200mA.
+                                                                       Meantime, the IC regulates the VSYS at 6V.
+
+           Figure 6 NMOS for 2 Cells balance circuit                   After the short circuit fault is removed, the VBAT voltage is
+                                                                       charged up. When VBAT voltage is higher than the short
+                                                                       circuit threshold, the IC returns to normal operation.
+
+                                                                       10.15 Safety Timer
+                                                                       When the IC starts charging (VIN above VINREG
+                                                                       threshold), a 24-hours safety timer is initiated. Once it
+                                                                       detects EOC condition, the IC clears the timer, and it
+                                                                       doesn’t restart the timer unless recharge phase starts, or
+                                                                       VIN toggle happens.
+
+                                                                       If the charging cycle doesn’t end when the timer expires,
+                                                                       the IC will transition to shutdown mode. In this case, the IC
+                                                                       will only restart the timer after VIN toggles.
+
+                                                                       10.16 NTC
+                                                                       The SC8922 monitors the battery cells’ temperature
+                                                                       through NTC pin once VIN is above ULVO threshold. It
+           Figure 7 NMOS for 3 Cells balance circuit                   sources 102 μA current to NTC pin and monitor the NTC
+                                                                       voltage. Once it detects the temperature is below -5°C or
+10.11 VBAT Over Voltage Protection                                     higher than 45°C, the IC transitions to shutdown mode.
+With the cell balance enabled, the SPIDERMAN monitors                  Below shows the NTC operation summary. NTC function
+each cell’s voltage through VSx pins. Once it detects any              can be also disabled through shorting the pin to ground.
+cell’s voltage is 50mV higher than the termination target                                      Table 4 NTC operation
+voltage, it stops charging and turns on the discharging
+path for that cell. Only when the cell’s voltage drops below           VNTC                       Temperature          Operation
+the OVP threshold, the IC recharges the battery cells again.
+                                                                       VNTC > VCOLD               T < -5°C             Stop charging
+
+10.12 Input Over Voltage Protection                                    VHOT < VNTC < VCOLD        -5°C < T < 45°C      Normal charging
+
+Besides under voltage protection, the SC8922 also                      VDISNTC < VNTC < VHOT      T > 45°C             Stop charging
+supports input over voltage protection. Once the IC detects
+the input voltage is higher than 6V, it stops switching, turns         10.17 Thermal shutdown
+off Q3 and PG flashes at 1Hz. After the input voltage drops            Once the SC8922 detects the junction temperature rises
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                              14
+                                                                              SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+above 165°C, it shuts down the whole chip. When the                    temperature falls below 135°C, the chip is enabled again.
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                      15
+                                                                               SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                       INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+11 Application information (TBD)
+11.1 NTC Resistor Selection                                                            R0 °C + RT1 ∗ RT2
+                                                                                                             = 2Ͷ Ǥ
+SC8922 continuously monitors battery temperature by                                   R_0°C + RT1 + RT2
+measuring the NTC voltage. An internal 102uA current
+source provides the bias for NTC thermistors. The device                              R50 °C + RT1 ∗ RT2
+compares the NTC pin voltage VNTC with the internal VCOLD                                                    =ͶǤ
+and VHOT thresholds (refer to electrical characteristics) to                         R_50°C + RT1 + RT2
+determine whether charging is allowed.
+                          Vcold                                        For a 103AT-type thermistor, R_0 ° C=28.71k Ω , R_50 °
+                Rcold =         = 2Ͷ Ǥ
+                          102uA                                        C=2.99kΩ. so RT1 and RT2 is calculated:
+                            Vhot
+                 Rhot =          =ͶǤ                                                           RT1 = 1 h
+                           102uA
+With a 103AT-type thermistor, the default charger                                             RT2 =     Ǥh
+operating temperature range is 3°C to 45°C.                            Besides ， NTC pin can be used as enable pin function
+                                                                       alternatively. The reference circuit is as follow:
+
+
+
+
+                Figure 8 Default NTC thresholds
+The external resistor can be used to change charger
+operating temperature range. For example ， in order to                            Figure 10 NTC pin used as enable function
+change operating temperature to 0°C to 60°C.
+                                                                       11.2 Capacitor Selection
+                                                                       Since MLCC ceramic capacitor has good high frequency
+                                                                       filtering with low ESR, above 22μF X5R or X7R capacitors
+                                                                       with higher voltage rating then operating voltage with
+                                                                       margin is recommended. For example, if the highest
+                                                                       operating Vin voltage is 6V, select at least 10V capacitor
+                                                                       and to secure enough margin, 16V voltage rating capacitor
+                                                                       is recommended.
+
+                                                                       The high capacitance polymer capacitor or tantalum
+                                                                       capacitor can be used for input and output, but capacitor
+                                                                       voltage rating must be higher than the highest operating
+                                                                       voltage with enough margin. The recommended
+        Figure 9 Threshold changed by external resistor                capacitance polymer capacitor is at least 100uF to ensure
+                                                                       loop stability. The high frequency characteristics of these
+                                                                       capacitors are not as good as ceramic capacitor, so at
+                                                                       least 10μF ceramic capacitor should be placed in parallel
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                     16
+                                                                              SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+to reduce high frequency ripple.                                       b. Layout example: put the input and output capacitors
+                                                                       near IC but on the bottom layer. Connect the capacitors to
+11.3 Inductor Selection                                                each pin through vias and connect the capacitors to
+                                                                       ground pins by the ground pour.
+1 μH to 3.3 μH inductor is recommended for loop stability.
+Choose the inductance to provide the desired ripple
+current. The current ripple is calculated as:
+                                     ∗        th
+                 I   G   e   =
+                                     th    ∗㙀      t   ∗
+
+It is suggested to choose inductor ensure the ripple current
+to be about 40% of the average input current .
+
+When selecting inductor, the inductor saturation current
+must be higher than the peak inductor current with enough
+margin (20% margin is recommended).                                    2. It is suggested that PGND and AGND are connected at
+                                                                       the PGND pad under IC.
+                                                   th
+              Ipeak =            +
+                                     2∙㙀         ∙ ∙       th          a. component(s) on schematic:
+
+Where IIN is the input current, and can be calculated as:
+
+                                      th     ∙ ㌳䁖ܶ
+                                 =
+                                              ∙
+
+η is the efficiency of boost converter.
+
+The inductor DC resistance value (DCR) affects the
+conduction loss of switching regulator, so low DCR
+inductor is recommended especially for high power
+application. The conductor loss of inductor can be
+calculated roughly as：
+
+                                         2
+                                 =           ∗      h
+
+IIN is the average value of inductor current.
+                                                                       b. Layout example:
+11.4 Layout Guide
+1. The capacitors connected at VIN/VSYS/VBAT pins
+should be placed near the IC, and their ground connection
+to the ground pins should be as short as possible.
+Especially VSYS capacitor must be placed carefully to
+ensure better performance.
+
+a. component(s) on schematic:
+
+
+
+
+                                                                       3. The cell balance path wire should be at least 10mil to
+                                                                       endure cell balance current.
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                                          17
+                                                                             SC8922 PRELIMINARY DATASHEET
+               SOUTHCHIP SEMICONDUCTOR                                      INTERNAL USE CONFIDENTIAL, SUBJECT TO CHANGE
+
+
+
+12. MECHANICAL DATA
+                                                 QFN (4mmx4mmx0.75mm)
+
+
+
+
+Copyright © 2018, Southchip Semiconductor Technology (Shanghai) Co., Ltd.                                            18
+

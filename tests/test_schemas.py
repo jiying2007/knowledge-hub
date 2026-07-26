@@ -14,6 +14,7 @@ def test_schema_catalog_resolves_all_contracts():
     assert result["instance_validation"]["instance_count"] > 400
     assert {
         "agent-contract-v1",
+        "body-coverage-v2",
         "knowledge-map-v1",
         "agent-evidence-pack-v1",
         "agent-action-check-v1",
@@ -43,6 +44,22 @@ def test_schema_instance_validation_rejects_invalid_item():
     result = validate_instance(repository_root(), "registry-item-v1", {"id": "broken"})
     assert result["status"] == "fail"
     assert result["error_count"] > 0
+
+
+def test_body_coverage_v2_requires_unregistered_only_inventory():
+    payload = load_json(repository_root() / "registry/body-coverage.json", {})
+    result = validate_instance(repository_root(), "body-coverage-v2", payload)
+
+    assert result["status"] == "pass"
+
+    payload["collections"][0].pop("inventory_scope")
+    invalid = validate_instance(repository_root(), "body-coverage-v2", payload)
+
+    assert invalid["status"] == "fail"
+    assert any(
+        row["path"] == "$.collections[0]" and "inventory_scope" in row["message"]
+        for row in invalid["errors"]
+    )
 
 
 def test_local_metrics_v4_schema_accepts_current_contract_output():

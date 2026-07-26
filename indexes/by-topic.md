@@ -349,7 +349,7 @@
 - Knowledge Hub 当前产品状态与证据缺口: `governance/product/validation/project-readiness.md`; `knowledge-hub-readiness-validation-20260713`
 - Knowledge Hub 产品成熟度全面实现审计 2026-07-13: `artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md`; `knowledge-hub-product-maturity-implementation-20260713`
 - PCR02 Video/Audio 共享内存使用说明: `projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
-- GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
+- GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
 - PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
@@ -379,3 +379,29 @@
 - embedded/knowledge SSC305 方法与工具引用吸收验证: `projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md`; `pcr02-ssc305-embedded-knowledge-absorption-validation-20260718`
 - LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md`; `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - llm_agent 多源外部实践吸收终态架构候选: `domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md`; `llm-agent-external-practice-intake-terminal-20260719`
+- PCR02 /data UBIFS 单页节点整体偏移 4 字节导致只读排障记录: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ubifs-squashfs/pcr02_data_ubifs_single_page_shift_readonly_20260720.md`; `pcr02-data-ubifs-single-page-shift-readonly-20260720`
+- PCR02 IMU/TOF 高负载调度尾延迟现场分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md`; `pcr02-imu-tof-high-load-scheduling-triage-20260721`
+- PCR02 IMU/TOF 驱动规格与运行时设计参考: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md`; `pcr02-imu-tof-driver-runtime-reference-20260721`
+- PCR02 双核 A32 整机 CPU 优化规划: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md`; `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
+- GD32L235 与 PCR02 SoC 电源状态、TCPKA 和关机事务协同归档: `projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md`; `gd32l235-pcr02-power-transition-owner-tcpka-20260722`
+- PCR02 SoC TCPKA 协议 v1 与低功耗生命周期实现归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-22-pcr02-tcpka-low-power-protocol-v1.md`; `pcr02-tcpka-low-power-protocol-v1-20260722`
+- PCR02 视频虚拟流降频与 LCD libyuv NEON 优化记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-22-pcr02-video-virtual-stream-cpu-optimization.md`; `pcr02-video-virtual-stream-cpu-optimization-20260722`
+- GD32L235 与 PCR02 SOC SLEEP EBUSY 和提前 WiFi 唤醒初步排查: `projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md`; `gd32l235-soc-sleep-ebusy-early-wifi-wake-20260722`
+- GD32L235 低电量 SOC 休眠保护设计归档: `projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md`; `gd32l235-low-battery-soc-sleep-protection-design-20260722`
+- GD32L235 PA11 关机、充电与 SOC 上电门控设计归档: `projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md`; `gd32l235-pa11-charge-soc-power-gate-design-20260722`
+- GD32L235 与 SOC Shutdown 确认闭环设计归档: `projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md`; `gd32l235-soc-shutdown-confirmation-closure-design-20260722`
+- GD32L235 与 SOC 心跳状态同步终态方案归档: `projects/gd32l235/archive/design/2026-06-16-soc-heartbeat-terminal-state-plan.md`; `gd32l235-soc-heartbeat-terminal-state-plan-20260616`
+- GD32L235 与 SOC 心跳、重启和 OTA 闭环会话归档: `projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md`; `gd32l235-soc-heartbeat-reboot-ota-closure-session-20260617`
+- GD32L235 与 SOC 退出、休眠和掉电管理会话归档: `projects/gd32l235/archive/session/2026-06-04-soc-exit-poweroff-management-session.md`; `gd32l235-soc-exit-poweroff-management-session-20260604`
+- GD32L235 与 PCR02 SoC 低功耗协同当前契约候选: `projects/gd32l235/current/soc-low-power-contract.md`; `gd32l235-soc-low-power-contract`
+- llm_agent 与 agent-dev-kit 外部实践搜索及吸收候选: `projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-candidates.md`; `llm-agent-external-practice-absorption-candidates-20260723`
+- PCR02 SoC 与 GD32L235 传感器频率契约及 50 Hz 融合方案: `projects/gd32l235/archive/design/2026-07-23-sensor-rate-contract-and-50hz-fusion.md`; `gd32l235-pcr02-sensor-rate-contract-50hz-fusion-20260723`
+- llm_agent 外部实践吸收落地: `projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md`; `llm-agent-external-practice-absorption-20260723`
+- github/spec-kit 长期跟踪决策: `projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md`; `llm-agent-spec-kit-reference-tracking-20260723`
+- github/spec-kit正式登记验证: `projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md`; `llm-agent-spec-kit-reference-onboarding-validation-20260723`
+- PCR02 VENC main/sub 发布序号独立化记录: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-23-pcr02-venc-main-sub-sequence-isolation.md`; `pcr02-venc-main-sub-sequence-isolation-20260723`
+- PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选: `projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md`; `gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724`
+- PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md`; `pcr02-prog-pcr02-high-load-followup-20260724`
+- PCR02 SSC305 SDK裁剪与启动、资源、功耗优化规划: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md`; `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
+- PCR02 SSC305 SDK裁剪规划运行态基线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`; `pcr02-ssc305-runtime-resource-baseline-20260724`
+- PCR02 SSC305 SDK系统优化实施计划: `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-system-optimization-plan.md`; `pcr02-ssc305-sdk-system-optimization-plan-20260724`

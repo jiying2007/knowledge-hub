@@ -299,6 +299,33 @@
 - `pcr02-ssc305-embedded-knowledge-absorption-validation-20260718`
 - `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - `llm-agent-external-practice-intake-terminal-20260719`
+- `pcr02-data-ubifs-single-page-shift-readonly-20260720`
+- `gd32l235-charge-chain-pdf-text-index-20260720`
+- `gd32l235-dock-discharge-cw2217-zero-data-initial-analysis-20260720`
+- `pcr02-imu-tof-driver-runtime-reference-20260721`
+- `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
+- `gd32l235-pcr02-power-transition-owner-tcpka-20260722`
+- `pcr02-tcpka-low-power-protocol-v1-20260722`
+- `pcr02-video-virtual-stream-cpu-optimization-20260722`
+- `gd32l235-soc-sleep-ebusy-early-wifi-wake-20260722`
+- `gd32l235-low-battery-soc-sleep-protection-design-20260722`
+- `gd32l235-pa11-charge-soc-power-gate-design-20260722`
+- `gd32l235-soc-shutdown-confirmation-closure-design-20260722`
+- `gd32l235-soc-heartbeat-terminal-state-plan-20260616`
+- `gd32l235-soc-heartbeat-reboot-ota-closure-session-20260617`
+- `gd32l235-soc-exit-poweroff-management-session-20260604`
+- `gd32l235-soc-low-power-contract`
+- `llm-agent-external-practice-absorption-candidates-20260723`
+- `gd32l235-pcr02-sensor-rate-contract-50hz-fusion-20260723`
+- `llm-agent-external-practice-absorption-20260723`
+- `llm-agent-spec-kit-reference-tracking-20260723`
+- `llm-agent-spec-kit-reference-onboarding-validation-20260723`
+- `pcr02-venc-main-sub-sequence-isolation-20260723`
+- `gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724`
+- `pcr02-prog-pcr02-high-load-followup-20260724`
+- `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
+- `pcr02-ssc305-runtime-resource-baseline-20260724`
+- `pcr02-ssc305-sdk-system-optimization-plan-20260724`
 
 ## pcr02-registry-owner
 
@@ -388,3 +415,4 @@
 - `codex-archive-removal-execution-20260711-final-bodies`
 - `codex-archive-corpus-deletion-readiness-20260711`
 - `knowledge-hub-operational-tooling-hardening-20260711`
+- `pcr02-imu-tof-high-load-scheduling-triage-20260721`

@@ -173,6 +173,13 @@ def validate_instance(
 
 
 def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
+    body_coverage = root / "registry/body-coverage.json"
+    if body_coverage.is_file():
+        yield (
+            "body-coverage-v2",
+            "registry/body-coverage.json",
+            load_json(body_coverage, {}),
+        )
     for index, row in enumerate(load_jsonl(root / "registry/items.jsonl"), 1):
         yield "registry-item-v1", "registry/items.jsonl:{}".format(index), row
         if row.get("agent_contract"):

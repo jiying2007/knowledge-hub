@@ -45,7 +45,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 
 这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；正式收口仍以 `knowledge-final-gate.sh` 为 terminal gate。
-`knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查和 reviewing triage；review queue 直接消费 `knowledge-index-plan` 的 canonical projection，不再维护第二套 blocker 推断。changed-only 扫描区分新增、修改、重命名和删除，删除中的旧正文只计数并给出有界样本，不会被误报为 orphan。默认按 `full -> quick` 顺序选择 24 小时内、日期和工作树签名均匹配的产品门禁快照，避免已有 full 证据被较新的 quick 快照降级覆盖。可用 `--gate-suite auto|quick|full` 固定读取层级；`--refresh-gate` 在 `auto` 下刷新 quick，在显式层级下刷新所选 suite。新增或修改长期正文后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的冻结路径清单覆盖；集合覆盖不创建 active 条目。
+`knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查和 reviewing triage；review queue 直接消费 `knowledge-index-plan` 的 canonical projection，不再维护第二套 blocker 推断。changed-only 扫描区分新增、修改、重命名和删除，删除中的旧正文只计数并给出有界样本，不会被误报为 orphan。默认按 `full -> quick` 顺序选择 24 小时内、日期和工作树签名均匹配的产品门禁快照，避免已有 full 证据被较新的 quick 快照降级覆盖。可用 `--gate-suite auto|quick|full` 固定读取层级；`--refresh-gate` 在 `auto` 下刷新 quick，在显式层级下刷新所选 suite。新增长期正文应优先使用 `knowledge-new.sh` / `knowledge-capture.sh` 的事务入口，使正文、registry、lifecycle 和派生索引在同一变更中收敛；随后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的 `unregistered-only` 冻结路径清单覆盖。已精确登记的新增正文不改变集合 hash；未登记正文继续 fail closed。集合覆盖不创建 active 条目。
 
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 

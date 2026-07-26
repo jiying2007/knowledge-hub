@@ -1,0 +1,584 @@
+供应商：
+
+                          深圳市创星源电子科技有限公司
+                        Shenzhen Chuangxingyuan Electronic Technology Co. , Ltd
+
+           地址：深圳市宝安区西乡街道共和工业路 107 号华丰互联网创意园 A 座五楼 501 号
+
+                                             承 認 書
+                                  SPECIFICATION FOR APPROVAL
+         料号
+ SOREDE P/N：    01.05.18650-2500.204SZKJ-1
+     品名/规格
+ DESCRIPTION：   CXY18650-2S    7.4V2500mAh
+      送样日期
+SAMPLE DATE： 2026 年 6 月 22 日
+
+                        深圳市创星源电子科技有限公司 /制造商
+          CHECKED BY         Q.C.DEPT             CHECKED BY                 TESTED BY
+           核    准             品    管                核     准                       檢   測
+
+
+
+
+客户
+
+                            深圳市视壮科技有限公司
+         视壮料号
+  CUSTOMER P/N：
+         视壮名称
+       CUSTOMER：
+        品名/规格
+     DESCRIPTION：
+
+                              CUSTOMER APPROVAL/客户审核
+          CHECKED BY         Q.C.DEPT             CHECKED BY                 TESTED BY
+           核    准             品    管                核     准                       檢   測
+
+
+
+
+                                                    1
+                        客户名称
+                                                        视壮科技
+                    Customer name
+
+                        产品型号
+                                                       CXY18650-2S
+                       Product model
+
+                                                      7.4V 2500mAh
+                        产品规格
+                    Product specifications            2.0-4P 外露 60mm
+
+                        发行日期
+                                                        2026-06-22
+                          Issue date
+
+                        文件编号
+                                                   CXY-RD-20260622001
+                            File ID
+
+                        版             本
+                                                            A/0
+                           Version
+
+
+
+
+             制造厂商                                                 客户承认
+
+Establishment 编制：                 陈英豪                  confirm： 确认：
+
+         Audit 审核：                彭 超                         Audit 审核：
+
+      Approve 批准：                                          Approve 批准：
+
+             Date 日期： 2026.06.22                           Date 日期：
+
+
+
+
+  公司地址：深圳市宝安区西乡街道共和工业路 107 号华丰互联网创意园 A 座五楼 501 号
+  Address:   RM501 5th Floor, block A, Huafeng Internet Creative Park, No.107 Gonghe Industrial Road,
+             Xixiang,Bao’an District, Shenzhen,Guangdong
+   TEL：0755-33564871                   FAX：0755-23711652
+
+
+
+
+                                                  2
+目录 Table of Content
+
+
+     NO 版本            Change the content 更改内容            Date
+       A                   Debut 首次发行               2026.06.22
+
+
+
+
+  1. 使用范围 Terms of Use
+
+
+
+  2. 主要技术参数 Main technical parameters
+
+
+
+   3.电池尺寸图/物料 Battery Size Diagram/Material
+
+
+
+   4.电池性能检查及测试 Battery performance inspection and test
+
+
+
+   5. 电芯性能 Cell performance
+
+
+
+    6.保护电路 Protection Circuit
+
+
+
+   7.锂离子充电电池注意事项 Lithium-ion rechargeable battery instructions
+
+
+
+
+                                   3
+1.使用范围 Terms of Use
+  本产品规格书适用于深圳创星源电子有限公司生产的 18650-2S 锂离子电池。 需严格按照
+  本规格书指定的方法测试，如对测试项目或测试方法有异议，请与本公司协调解决。
+  This product specification applies Shenzhen CXY Electronic Co., Ltd. production
+  18650-2S Li-ion battery。Be in strict accordance with the method specified in
+  this specification test, such as test items or test methods have objections, please
+  contact the company coordinate and solve problems。
+
+ 2.主要技术参数 The main technical parameters
+ 序号 No             项目 Term                 标准值 Standard value 备注 Notes
+          标称容量 Nominal capacity            2500mAh           0.5C Discharge    (0.5C放电)
+     1
+          最低容量 Minimum Capacity            2450mAh           0.5C Discharge    (0.5C 放电)
+
+     2    标称电压 Nominal voltage             7.4V
+          成品内阻                                               标准充电后，     AC 1KHz 测
+     3    Finished product internal        电池：≤180 mΩ        试After standard
+                                                             charge, AC 1KHz test
+          resistance
+     4    过充保护电压                                             保护板过充保护电压
+          Over charge protection voltage   8.56V±0.05V       PCB Over charge
+                                                             protection voltage
+     5    充电方式            恒流/恒压 以 0.5C 电流恒流充电至 8.4V,然后 8.4V 恒压充电
+          Charging method CC/CV 至电流≤0.01C
+                            Charge at a constant current of 0.5C to 8.4V, then
+                            charge at a constant voltage of 8.4V
+                            To current ≤ 0.01C
+     6    标准充电电流 Standard charge 1250mA                 0.5C
+           current
+     7    最大充电电流 Maximum charge 2500mA
+          current
+     8    标准放电电流 Standard                  1250mA            0.5C
+          discharge current
+     9    最大放电电流 Maximum                   2500mA
+          discharge current
+          放电过流保护电流                         7～14A
+          Over current protection
+     10   current                                            时间：6～14ms
+          充电过流保护电流                         8～15A             Time：6～14ms
+          Charging Overcurrent
+          Protection Curren
+     11   放电保护电压                           5.8V±0.16V        PCB End-of-charge Voltage
+          Discharge protection voltage                       保护板截止电压
+     12   放电截止电压                           5.5V              电芯
+          Discharge Cut-off Voltagee                         cell
+          建议工作温度                           0～45℃             充电 Charge
+     13   Suggested working
+                                           -20～55℃           放电 Discharge
+          temperature
+                                           -10～45℃           小于一个月
+     14                                                      Less than a month
+                                           4
+        贮存温度Storage temperature 10～30℃            小于三个月 Less
+                                                  than three months
+   15   贮存湿度 Storage Humidity     65%±20%RH
+   16   重量 Weight                 Approx(约)：g
+   17   电池贮存 3 个月需要充放一个循环到 7.4V～7.8V。Battery storage for 3 months need to
+        charge and discharge a loop to 7.4V～7.8V.
+
+
+
+3.电池尺寸图/物料 Battery Size Diagram/Material
+
+
+
+
+序号 NO      名称 Name    规格 Specification               备注 Notes
+   1      电芯 Cell     18650/2500mAh                  2PCS
+
+   2      保护板 Pcm     XBL-7.4V-V1.0                  1PCS
+
+   3      端子线         2.0-4P 左红中 1 白中 2 黑右黄线长 60±5mm 1PCS
+          Plug lead   UL1007 22#
+                      黑线：负极；
+                      红线：正极；
+                      白线：NTC；
+                      黄线：串联
+   4      蓝色 PVC      50*77mm                        1PCS
+
+
+                                  5
+4. 电池性能检查及测试 Inspection and testing of battery performance
+
+   4.1 外观和结构Appearance and structure
+      电池的表面应无明显的划痕毛刺及其其它机械破损，外露的金属端子应无锈蚀污垢。外
+      露导线规格尺寸与电池组结构尺寸在电池的外形尺寸图范围内
+      The battery should be no obvious scratches the surface of burr and other mechanical
+  damage, exposure should be no corrosion of metal terminals dirt. OutsideExposed wire
+  size and battery size and size of the battery Dimensions range。
+
+ 4.2 测试设备要求 Test equipment requirements
+      4.2.1 尺寸测量设备 Size measurement equipment
+             测量尺寸的仪器的精度应不小于 0.01mm
+           Precision instrument measuring the size of not less than 0.01mm
+      4.2.2 电压表 Voltmeter
+             国家标准或更灵敏等级,内阻不小于 10 KΩ/V
+       National standard or more sensitive level, the internal resistance of not less than 10 KΩ / V
+      4.2.3 电流表 Ammeter
+             国家标准或更灵敏等级，外部总体内阻包括电流表和导线应小于 0.01Ω.
+             National standard or more sensitive level, the external current meter and the
+             total resistance, including wire should be less than 0.01Ω.
+      4.2.4 内阻测试仪 Resistance Tester
+             内阻测试仪测试方法为交流阻抗法(AC 1kHz LCR).
+             Resistance tester for the AC impedance test methods (AC 1kHz LCR)
+      4.3 标准的测试条件Standard test conditions
+   测试电池必须是本公司出厂时间不超过一个月的新电池，且电池未进行过五次以上充
+   放电循环。除非其它特殊要求，本产品规格书规定的测试的环境条件为：温度23±2℃
+   相对湿度       45%~80%。Test battery must be a period not exceeding one month the company shipped
+   a new battery and the battery does not charge for more than five timesDischarge cycle。
+   Unless other special requirements, the product specification testing requirements of
+   environmental conditions: temperature 23±2℃Relative humidity 45% ~ 80%.
+
+  5. 电芯性能 Cell performance
+ 5.1电芯参数Cell parameters
+       1    充电方式            恒流/恒压 以 0.5C 电流恒流充电至 4.2V,然后 4.2V 恒压充电
+            Charging method CC/CV 至电流≤0.01C
+                                    Charge at a constant current of 0.5C to 4.2V, then
+                                    charge at a constant voltage of 4.2V
+                                    To current ≤ 0.01C
+       2    电芯充电限制电压                       4.2V
+            Cell limited charging voltage
+
+                                              6
+       3     放电截止电压                            2.75V
+             Discharge Cut-off Voltage
+       4     标准充电电流                            1250mA                            0.5C
+             Standard charge current
+       5     最大充电电流                            2500mA                            1.0C
+             Maximumcharge current
+       6     标准放电电流                            1250mA                            0.5C
+             Standard discharge current
+       7     最大放电电流                            2500mA                            1.0C
+             Maximum discharge current
+       8     内阻                                ≤52mΩ
+             internal resistance
+
+
+5.2 产品常规性能 Conventional performance products
+ 序号项 项目 Item              标准                  测试方法Test Method
+ NO                       Requirements
+   1       常温放电性能         A）0.2C ≥100％        在 1 标准大气压，环境温度 25℃±5℃，相对湿
+           Discharge      B）0.5C ≥97％         度为45％～75％的条件下，电池标准充电后（以下
+           Characteristi C）1C ≥95％            若没有特别说明，均在此条件下放置，皆按此充电
+           cs                                 方式），搁置 30min，分别以 0.2C5A、0.5C5A、1C5A、
+                                              进行放电至终止电压，循环三次，当有一次达到标
+                                              准，即达到标准要求（下同）。
+                                              Standard charged under the condition of normal
+                                              atmospheric pressure and the environmental
+                                              temperature of 25℃±5℃and 45％～75％RH,
+                                              then rest for 30min and discharge at0.2C5A、
+                                              0.5C5A、1C5A to the discharge cut-off voltage
+                                              respectively. Charge/discharge cycle can be
+                                              conducted for 3 times before meeting the
+                                              Standards（the same below）
+   2       常温荷电保持         容量保持率≥90%           测量电池的初始状态和初始容量，电池标准充电后，开路放
+           能力             容量恢复率≥95%           置 30 天，测量电池最终状态；以 0.5C 放 电至 2.75V，测
+                                              量电池的剩余容量； 0.5C/0.5C 测 量电池的恢复容量。可循
+           Norm Storage   Capacity
+                                              环三次，当有一次达到 标准，即达到标准要求。
+                          Retention≥90%
+                                              Measure the initial state and capacity of the battery. After
+                          Capacity
+                                              standard charging, the battery is placed in an open circuit for 30
+                          Recovery≥95%        days to measure the final state of the battery.Discharge at 0.5C to
+                                              2.75V to measure the remaining capacity of the
+                                              battery;0.5C/0.5C measures the recovery capacity of the
+                                              battery.Can cycle three times, when there is a standard, that is to
+                                              meet the standard requirements.
+   3       循环寿命           循环次数≥500次           在 1 标准大气压，环境温度 25℃±2℃，相对湿
+           Cycle life     Cdischarge ≥        度为 45％～75％的条件下，电池按照 0.5C5A 充电
+                          500times.           后（搁置 10min，以 0.5C5A 进行放电至终止电压，
+                                              放电至标称容量 70%的循环次数。
+                                              Under the conditions of 1 standard atmospheric
+                                              pressure, ambient temperature of 25 ℃± 2 ℃,
+
+                                          7
+                                                and relative humidity of 45% to 75%, the
+                                                battery is charged at 0.5C5A (left for 10
+                                                minutes, discharged at 0.5C5A to the
+                                                termination voltage, and discharged to 70% of
+                                                the nominal capacity in cycles).
+5.3 环境适应性能 Adaptation to Environment Characteristic
+序号      项目Item       标准 Standard                 测试方法 Test Method
+NO
+ 1   热循环性能           电池不漏液、不冒 电池标准充电后，将电芯放置在试验箱内按照如下步骤进
+     Thermal Cycle   烟、不起火、不爆炸 行试验：
+                                                 1、将试验箱温度升高为 72℃±2℃并保持 6h；
+                     No smoking 、No
+                                        2、将试验箱温度降至-40℃±2 并保持 6h；
+                     fire No explosion、
+                                        3、重复步骤 1~2，共循环 10 次；
+                     No leakge
+                                                 4、在室温 20±5℃保存 6h 观察电池； （试验过程两个温
+                                                 度之间转换时间不大于 30min)
+                                                 After the battery is charged as standard, the battery cell is
+                                                 placed in the test chamber and tested according to the
+                                                 following steps:
+                                                 1. The temperature of the test chamber is raised to 72 °C±2 °C
+                                                 and kept for 6 hours;
+                                                 2. Reduce the temperature of the test chamber to -40°C±2 and
+                                                 keep it for 6h;
+                                                 3. Repeat steps 1~2 for a total of 10 cycles;
+                                                 4. Store at room temperature 20±5°C for 6h to observe the
+                                                 battery; (The transition time between the two temperatures in
+                                                 the test process is not more than 30min)
+ 2   跌落性能            电池不冒烟、不起火、                  电池标准充电后，将电池样品从高度为 1m 的位置 电池
+                     不爆炸。                        圆 柱面方向自由跌落到混凝土板上，上、下两个面各跌 落
+     Drop
+                     The battery does not        2 次，共 4 次。
+                     smoke, catch fire or        After the battery is charged as standard, the battery sample is
+                     explode.                    freely dropped from the position of 1m in the direction of the
+                                                 cylindrical surface of the battery to the concrete slab, and the
+                                                 upper and lower two surfaces are dropped twice each, a total
+                                                 of 4 times.
+ 3   不同温度下的          电池不爆炸、不起                    测量电池的初始容量和初始状态，电池标准充电后，在
+     放电性能            火。                          55±2℃ 条件下恒温搁置 3h、以 0.5C 放电至 2.75V， 然
+
+     High-low        No fire\explosion 后在室温条件下 标准充电，依此按照 0±2℃/-10±2℃ 的顺
+                                                 序在相应的恒温条件下 搁置 20h，以 0.5C 测量电池对应
+     Temperature     A)55 ℃≥95%
+                                                 的终止容量，最后在室温状态下 搁置 2h 测量电池的最终
+     Discharge       B)0 ℃≥90%；
+                                                 状态，观察电池外观变化。
+                     C)-10 ℃≥55%
+                                                 Measure the initial capacity and initial state of the battery.
+                                                 After standard charging, the battery is placed under constant
+                                                 temperature for 3h at 55±2℃, discharged at 0.5C to 2.75V, and
+                                                 then charged at room temperature, and then placed under
+                                                 corresponding constant temperature conditions for 20h in the
+                                                 order of 0±2℃/-10±2℃. The corresponding termination
+                                                 capacity of the battery was measured at 0.5C, and the final
+                                                 state of the battery was measured at room temperature for 2h,
+                                                 and the appearance of the battery was observed.
+ 4   振动环境            电池外观无明显损                    电池标准充电后，电池紧固在振动试验台上按下 面的振
+                                            8
+      适应性能            伤、不冒烟、不爆                     动频 率和对应的振幅调整好试验设备,X、 Y、Z 三个方向
+                      炸                            每个方 向上从 7Hz～200Hz 循环扫 频振动15min，振动
+      Vibration
+                      The appearance of            周期 12次。 振动频率：7Hz～200Hz； 位移幅值：0.8mm；
+                      the battery has no           结束后观察电池外观变化。
+                      obvious damage,              After the battery is charged as standard, the battery is fastened on the vibration
+                      no smoke, and no             test bench and the vibration frequency and the corresponding amplitude of the
+                      explosion                    press surface to adjust the test equipment, X, Y, Z three directions from 7Hz ~
+                                                   200Hz cycle frequency vibration 15min, vibration cycle 12 times. Vibration
+                                                   frequency: 7Hz~200Hz; Displacement amplitude: 0.8mm; After the end,
+                                                   observe the change in the appearance of the battery.
+
+5.4 安全性能 Safety Performance
+序号        项目Item      标准 Standard                  测试方法 Test Method
+NO
+  1   过充性能            不爆炸、不起火、最高                   电池 0.5C 放电至 2.75V 后再以 1C 恒流充电至 4.6V，
+                      温度<130℃                      然后再以 4.6V 恒压 充电，试验过程中监测电池温度变
+      Overcharge
+                                                   化，当出 现以下 两种情形之一时， 试验终止。
+                      No explosion, no fire, the
+                                                   1、电池持续充电时间达到 7h；
+                      highest temperature
+                                                   2、电池温度下降值达到温度最大值的 20%;
+                                                   After the battery is discharged to 2.75V at 0.5C and then
+                                                   charged to 4.6V with 1C constant current, and then charged at
+                                                   4.6V constant voltage, the battery temperature change is
+                                                   monitored during the test, and when one of the following two
+                                                   situations occurs, the test is terminated.
+                                                   1. The continuous charging time of the battery reaches 7h;
+                                                   2. The temperature drop value of the battery reaches 20% of
+                                                   the maximum temperature value;
+  2   常温短路性能          不爆炸、不起火                      电池标准充电后，测量电池的初始状态，置于防爆玻璃罩
+                                                   中直接短路其正 负极（线路总电阻 80mΩ±20mΩ），当电池
+      Short Circuit   最高温度<130℃
+                                                   温度下降到比峰值约低 10 ℃时试 验结束。观察电池的温
+      at Room         No fire、No
+                                                   度及外观变化。
+      Temperature     explosion
+                                                   After standard charging of the battery, measure the initial state
+                      Max. temperature< of the battery, and place it in the explosion-proof glass cover
+                      130℃              to short-circuit its positive and negative poles directly (The
+                                                   total line resistance is 80mΩ ± 20mΩ). When the battery
+                                                   temperature drops to about 10 ℃ lower than the peak value,
+                                                   the test ends.Observe the temperature and appearance of the
+                                                   battery.。
+  3   热冲击安全性          不起火、不爆炸                      电池标准充电后，放置于试验箱中， 试验箱以 5℃±2℃
+      能               No fire、No                   /min 的 温升速率 进行升温，当试验箱内温度达到 130℃
+                      explosion                    ±2℃后恒温并 持续 30min。观察 电池外观变化。
+      Hot Oven
+                                                   After the battery is charged as standard, it is placed in the test
+                                                   chamber, and the test chamber is heated at a temperature rise
+                                                   rate of 5 °C±2 °C/min, and the temperature in the test chamber
+                                                   reaches 130 °C±2 °C and then the constant temperature lasts
+                                                   for 30min. Observe the changes in the appearance of the
+                                                   battery.
+
+
+备注：以上安全性能实验应在有保护措施的条件下进行。
+Note: Above testing of safe characteristics must be with protective equipment
+
+                                              9
+6.保护电路 Protection Circuit
+  6.1 电路原理 Circuit
+
+
+
+
+ 6.2 PCM外型PCM appearance
+
+
+
+
+  6.3 PCM参数 PCM parameters(常温25℃/General temperature                 25℃)
+                                                 符号              检验标准 Test
+序号 NO                项目 Item                                                         单位
+                                                 Symbo    最小值      典型值      最大值
+                         过充电检测电压
+                     Overcharge detection        VDET1    4.255     4.28     4.305   V
+                             voltage
+        过充保护            过充电检测延迟时
+  1     Overcharge   Overcharge detection        tVDET1    900      1700     1700    mS
+        protection         delay time
+                         过充电恢复电压
+                       Overcharge release        VREL1    4.03      4.08     4.13    V
+                             voltage
+          过放保护        过放电检测电压 Over
+  2      Discharge    discharge detection        VDET2    2.82      2.90     2.98    V
+        protection           voltage
+
+
+
+                                            10
+                      过放电检测延迟时间 Over
+                       discharge detection          tVDET2     120          160     200      ms
+                           delay time
+                       过放电恢复电压 Over
+                        discharge release           VREL2     2.90       3.00       3.10     V
+                             voltage
+                        过电流保护电流 Over
+                                                     IDP        7           10          14   A
+                           current
+                      检测延迟时间 Detection
+                                                    tVDET3      6           10       14      ms
+                         delay time
+                          最大持续放电电流
+                      Max continuous discharge       IDP        /             /      3.0     A
+                               current
+                      保护解除条件 Protection                      断开外部负载或充电恢复
+                           of terminating                    Disconnect the external load or
+                             conditions                       charge recovery
+                         短路保护延迟时间
+                                                    TSHORT     100          200     400      us
+                          Short delay
+       短路保护
+ 3   Short-circuit 保护解除条件 Protection                         断开外部短路负载或充电恢复
+      protection                                             Disconnect the external
+                     of terminating
+                                                              short-circuit load or
+                       conditions
+                                                             recharge recovery
+                       主回路通态电阻 State
+          内阻
+ 4                     resistance of main            RDS        /           30       60      mΩ
+       Resistance
+                             circuit
+     静态电流                 正常状态下静态电流
+ 5                       Current consumption        IPWN        /           7        12      μA
+     Static current          (Operation)
+                 0V 电池充电功能
+ 6                                                  允许 Available/0V 启动充电器起始电压 1.2V
+           0V battery charge function
+
+
+  6.4 PCM BOM
+     元 件 编 号                                元件规格
+                         元件名称                                       封装形式           用量
+NO. Component                              Component                                         备注
+                      Component Name                                Package       Amount
+     Number                              specifications
+1         U1            锂电保护 IC                2120-CB              SOT-23-6        1
+
+2        Q1 Q2            MOSFET                8205A               TSSOP-8         2
+
+3         R4               NTC            10K 1% B=3435              0402           1
+                                                                XBL-7.4V-V1.
+4         PCB           印制电路板              0.6*7.4*26mm                             1
+                                                                0
+
+
+
+
+                                               11
+7. 锂离子充电电池注意事项 Lithium-ion rechargeable battery instructions
+   本档“锂离子充电电池操作指示及注意事项”仅适用于创星源电子有限公司生产的电池。
+   The file "Lithium-ion rechargeable battery operating instructions and precautions,"
+    only applies to Shenzhen Chuangxingyuan Electronic Technology Co.,Ltd..
+
+ 7.1 电池操作说明Battery operation instruction
+ 7.1.1 充电Charging
+     充电电流：不能超过规格书规定的最大的充电电流
+     Charging current：Cannot surpass the biggest charging current which in this specification book stipulated。
+     充电电压：不能超过规格书规定的最高的限制电压
+     Charging voltage：Does not have to surpass the highest amount which in this specification book stipulated to
+  decide the voltage。
+     充电温度：电池充电温度必须按照规格书的温度范围执行
+     Charge temperature：The battery must carry on the charge in the ambient temperature scope which this
+  specification book stipulated。
+     先恒流后恒压方式充电，禁止颠倒的方式充电。如果电池正负极颠倒充电会带来危险。
+     Uses the constant electric current and the constant voltage way charge, the prohibition reverse charges. If the
+   battery positive electrode and the cathode meet instead, can damage the battery。
+  7.1.2 放电电流Discharging current
+      电池放电电流不能超过规格书规定的最大放电电流，过大的电流放电会造成电池发热和容量衰减。
+      The discharging current does not have to surpass this specification book stipulation the biggest discharging current,
+  the oversized electric current electric discharge can cause the battery capacity play to reduce and to cause the battery
+  heat。
+  7.1.3 放电温度 discharge temperature
+     电池放电温度必须按照规格书的温度范围执行
+     The battery discharge must carry on in the ambient temperature scope which this specification book stipulated
+  7.1.4 过放电 Over-discharges
+       短时间的的过充过放不影响电池的使用，但是长时间的过放电会影响到电池的功能失效，电池永久性不能
+  适用，电池可能过放还有一个原因是自动能量的消失。预防电池过放的出现方法是电池应保持一定的电量。
+       After the short time excessively discharges charges immediately cannot affect the use, but the long time
+  excessively discharges can cause the battery the performance, battery function losing. The battery long-term has not
+  used, has the possibility to be able to be at because of its automatic flashover characteristic certain excessively
+  discharges the condition, for prevented excessively discharges the occurrence, the battery should maintain the certain
+  electric quantity。
+       电池贮存在规格书规定的温度范围内，如果电池贮存超过三个月，建议你开始给电池充电。
+       The battery should store in the product specification book stipulation temperature range. If has surpasses above
+  for six months the long time storage, suggested you should carry on additional charge to the battery。
+
+
+
+
+                                                        12
+                            警      告 Warning
+1.   勿将电池的正负极反接。Do not reverse the polarity of the batteries
+2.   勿将电池投入水中或将其弄湿。Do not put the battery in water or to wet
+3.   请使用专用充电器！Please use the charger
+4.   禁止在火源或极热条件下给电池充电！勿在热源（如火或加热器）附近使用或贮存电池！如果电池 泄
+     漏或发出异味，应立即将其从接近明火处移开；
+     Prohibited fire or very hot conditions to charge the battery! Do not the heat (like fire or
+     heater) used or stored near the battery! If the battery leaks or odor should be immediately
+     removed from the approaching fire Department
+5.   勿将电池直接连接到墙上插座或车载点烟式插座上！
+     Do not connect the battery directly to a wall outlet or car cigarette lighter socket on!
+6.   勿将电池投入火中或给电池加热！Do not use the battery in fire or heat the battery
+7.   禁止用导线或其它金属物体将电池正负极短路，禁止将电池与项链、发夹或其它金属物体一起运输或
+     贮存。Prohibit the use of wire or other metal objects will be positive and negative terminal,
+     the battery and necklaces, hairpins or other metal objects with the transport or storage
+8.   禁止用钉子或其它尖锐物体刺穿电池壳体，禁止锤击或脚踏电池！
+     Prohibit the use of nails or other sharp object piercing the battery case, battery against
+     hammering or foot
+9.   禁止撞击、投掷或者使电池受到机械震动。
+      Prohibition hit, throw or battery by mechanical vibrations
+10. 禁止以任何方式分解电池。Prohibited in any way to disassemble a battery
+
+
+
+
+                                          13

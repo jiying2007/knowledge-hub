@@ -51,7 +51,7 @@ evidence_refs:
 - https://pip.pypa.io/en/stable/topics/secure-installs/#hash-checking-mode
 - https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 created_at: '2026-07-18'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -114,6 +114,24 @@ terminology_status: checked
 - 检索基准扩展为 302 个案例（28 个语义 + 274 个路由），同时验证 authority Recall@3、nDCG@10、宽泛查询、zero-hit、并发和 10 倍 corpus；当前各质量指标均为 1.0，完整性污染计数均为 0。
 - compliance fixture 包含真实 active constraints，52/52 通过并覆盖 ALLOW/BLOCK/NEEDS_REVIEW；不再用 `applicable_ids=[]` 的空约束结果冒充合规有效性。
 - restore drill 的 execution-environment producer 与 schema 已硬切到 v2；本地 candidate 和 `git archive HEAD` 均完成 10/10 内部检查，合法字段通过 schema，未知 provider 与额外兼容字段 fail closed。真实 remote checkout/published ref/offsite environment 在本地均保持 false，不以本机恢复冒充异地恢复。
+
+### 2026-07-26 正文覆盖防漂移闭环
+
+- 反复出现的正文覆盖漂移不是 SHA-256 不稳定，而是 `body-coverage` 集合基线此前把前缀下所有 Markdown 都计入冻结清单，即使新正文已经完成 exact registry 登记，也仍要求人工同步集合 `expected_count` 与 `inventory_sha256`。这与“exact registry 优先”的治理契约冲突，形成正文、registry、生命周期、索引之外的第五份隐式维护面。
+- `body-coverage` 已升级到 schema v2，集合的 `inventory_scope` 固定为 `unregistered-only`。集合基线只冻结尚未逐项登记的历史正文；已经由 exact registry 覆盖的新增正文不再改变集合数量与哈希。
+- 严格检查仍然 fail closed：前缀内新增未登记 Markdown 会改变未登记清单并立即失败；缺少 `inventory_scope`、使用旧 schema 或集合配置出现未知字段也会被 schema/运行时门禁拒绝。
+- 回归用例同时覆盖两个方向：新增并精确登记的正文必须保持严格检查通过；随后新增未登记正文必须使严格检查失败。这样既消除合规新增导致的误漂移，也不削弱孤儿文件检测。
+- README、工具说明和 registry schema 已同步声明事务式新增入口与 v2 语义，避免后续维护者继续手工刷新本不该变化的集合哈希。
+
+| Command | Exit Code | Result Summary |
+| --- | ---: | --- |
+| `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json --limit 20` | 0 | 检查 299 份正文；172 份 exact、127 份 collection、0 missing；v2 coverage contract 通过。 |
+| `rtk ~/knowledge-hub/.tmp/engineering/venv/bin/python -m pytest -q ~/knowledge-hub/tests/test_schemas.py ~/knowledge-hub/tests/test_health.py` | 0 | `body-coverage-v2` schema、catalog 与健康检查通过。 |
+| `rtk ~/knowledge-hub/.tmp/engineering/venv/bin/python -m pytest -q ~/knowledge-hub/tests` | 0 | Python 测试全量通过。 |
+| `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --suite full --summary-json --as-of 2026-07-26` | 0 | 动态 full regression：129 个选中测试、132 条结果、0 失败。 |
+| `rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-26` | 0 | Hub 内容、registry、正文覆盖与诊断门禁 0 error、0 warning。 |
+
+上述结果是候选工作树的直接命令证据；最终工程快照、candidate/HEAD 恢复和严格 product gate 仍在提交边界上复跑，不用本节替代最终门禁。
 
 ## 环境与官方来源
 

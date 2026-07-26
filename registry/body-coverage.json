@@ -1,21 +1,23 @@
 {
-  "schema_version": 1,
-  "policy_zh": "仅对已冻结的历史语料或基线目录提供集合级正文覆盖。精确 items registry 始终优先；集合覆盖不创建 active 条目、不代表 owner 决策，也不豁免新增文件注册。目录内 Markdown 路径集合发生变化时必须复核并刷新 count/hash。",
+  "schema_version": 2,
+  "policy_zh": "仅对未精确登记且已冻结的历史语料提供集合级正文覆盖。精确 items registry 始终优先并从集合 inventory 排除；集合覆盖不创建 active 条目、不代表 owner 决策。新增且已精确登记的正文不再引发集合漂移，新增未登记历史正文仍会阻断门禁。",
   "collections": [
     {
       "id": "codex-archive-corpus-baseline-20260713",
       "path_prefix": "domains/codex/archive/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 14,
-      "inventory_sha256": "6068d5daf67de3cd2cdd5a5a493a61ca54cb7b11a38d5459110f4bcc83ef027e",
-      "reason_zh": "2026-07-19 新增并精确登记 llm_agent 多源外部实践吸收终态架构 reviewing 候选后，显式复核并重新冻结 14 个 Codex archive 正文路径；本次只接受新增路径和集合完整性，不重新签收历史正文，不授权 active promotion、自动吸收、发布或 memory 写入。"
+      "expected_markdown_count": 12,
+      "inventory_sha256": "6bec18e8e0736ce4b7058f846f284a70e57bc92a2f9ce315aa6685903d197dc5",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 12 个未精确登记的 Codex archive 历史正文；2 个已登记正文由 items registry 独立治理，后续合规新增不再要求刷新本集合。"
     },
     {
       "id": "embedded-architecture-baseline-20260713",
       "path_prefix": "domains/embedded/architecture/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 3,
@@ -26,6 +28,7 @@
       "id": "embedded-governance-baseline-20260713",
       "path_prefix": "domains/embedded/governance/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 8,
@@ -36,16 +39,18 @@
       "id": "embedded-runbooks-baseline-20260713",
       "path_prefix": "domains/embedded/runbooks/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 21,
-      "inventory_sha256": "b5a608c84ad83c8aeb2eac0da6f2df3d468b714814ed08e76e3c3472182dae46",
-      "reason_zh": "冻结未逐项签收的嵌入式 runbook 历史正文；5 份旧仓库安装、贡献和个人环境流程已硬删除，其余正文不参与默认检索。"
+      "expected_markdown_count": 20,
+      "inventory_sha256": "8cf0b77c612cd0796682387d19f6b1eb9fcb4b8db927ccac25dd223910a7c8b7",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 20 个未逐项签收的嵌入式 runbook 历史正文；已精确登记的 ASAN runbook 由 items registry 独立治理。"
     },
     {
       "id": "embedded-skills-baseline-20260713",
       "path_prefix": "domains/embedded/skills/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 14,
@@ -56,6 +61,7 @@
       "id": "embedded-standards-baseline-20260713",
       "path_prefix": "domains/embedded/standards/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 8,
@@ -66,6 +72,7 @@
       "id": "embedded-templates-baseline-20260713",
       "path_prefix": "domains/embedded/templates/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 10,
@@ -76,6 +83,7 @@
       "id": "embedded-tools-baseline-20260713",
       "path_prefix": "domains/embedded/tools/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "team-core",
       "review_after": "2026-10-13",
       "expected_markdown_count": 1,
@@ -86,6 +94,7 @@
       "id": "patent-archive-corpus-baseline-20260713",
       "path_prefix": "domains/patents/archive/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "attachment_policy": "external-not-retained",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
@@ -97,41 +106,45 @@
       "id": "knowledge-hub-governance-baseline-20260715",
       "path_prefix": "governance/",
       "coverage_mode": "governance-baseline",
+      "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 24,
-      "inventory_sha256": "ab3b41441e9884359653cc2986e17687e45854f3aee75955aad8e555decf72e0",
-      "reason_zh": "2026-07-19 将每项目四份 readiness 投影硬切为单一 evidence contract 后，删除 governance 下 3 份重复 profile/runbook/decision 正文，并按路径 inventory 重新冻结 24 个 Hub 治理正文；本次只复核删除范围与集合完整性，不重新签收历史正文。Source 生命周期策略仍是唯一当前 source 处置入口，集合覆盖不替代新治理资产逐条注册，也不赋予候选 active、owner approval、正式发布或生产回滚结论。"
+      "expected_markdown_count": 5,
+      "inventory_sha256": "2e707f2f07acc1729b157812e5147dfa959e8eeb6013c0320d39adbf6d79234f",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 5 个未逐项登记的历史治理正文；19 个已登记治理条目由 items registry 独立治理，新增 validation/decision/standard 不再触发集合漂移。"
     },
     {
       "id": "mcu-archive-corpus-baseline-20260713",
       "path_prefix": "projects/mcu/archive/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 5,
-      "inventory_sha256": "12cb0ca3b7e04bdb0018e1f532953bc0fee78e3f1ee16cb72b3e76177a08ba96",
-      "reason_zh": "冻结 MCU 项目历史归档正文路径，不表示当前项目事实。"
+      "expected_markdown_count": 1,
+      "inventory_sha256": "c5ac7e5f34ffd973364ca6c25f9f01d2bd457a30a2126d756c48cff5ede6b8b7",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 1 个未精确登记的 MCU 历史归档正文；4 个已登记正文由 items registry 独立治理，不表示当前项目事实。"
     },
     {
       "id": "pcr02-ssc305-archive-corpus-baseline-20260715",
       "path_prefix": "projects/pcr02-ssc305/archive/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 43,
-      "inventory_sha256": "ca231ce95dff70593234ae775522dea58876e4e20c53ed0d0430543bd245b81a",
-      "reason_zh": "2026-07-15 显式复核 43 个 pcr02-ssc305 归档正文路径，包含已登记的 camera MI ABI 回退记录；该集合只覆盖 SDK、kernel、OTA、存储、硬件和平台集成历史语料，不表示当前项目事实、owner 决策或 active 提升。"
+      "expected_markdown_count": 33,
+      "inventory_sha256": "2f6d5e95c26c91bf676eeffb4bf23f132a078dd8d4a751916fcd83baa9bb0dda",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 33 个未精确登记的 PCR02 SSC305 历史归档正文；12 个已登记正文由 items registry 独立治理，后续合规新增不再要求刷新集合。"
     },
     {
       "id": "xcrz-sigmastar-demo-archive-corpus-baseline-20260715",
       "path_prefix": "projects/xcrz-sigmastar-demo/archive/",
       "coverage_mode": "archive-corpus",
+      "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-15",
-      "expected_markdown_count": 26,
-      "inventory_sha256": "24c173a0d0dab8a82811740e43652807e93e2165d5d464f40b38f4127c1d4678",
-      "reason_zh": "2026-07-18 因新增并精确登记 PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 评估正文，按路径 inventory 重新冻结 26 个 xcrz-sigmastar-demo 应用归档正文；本次只复核新增路径与集合完整性，不重新签收历史正文。该集合只覆盖应用、诊断、媒体、模块联调和会话历史语料，不表示当前项目事实、owner 决策或 active 提升。"
+      "expected_markdown_count": 2,
+      "inventory_sha256": "8e3b6ae1a14e1d456c2588ebb37c0553c1dbe53e0396f47c2d350e27626e5c22",
+      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 2 个未精确登记的 xcrz-sigmastar-demo 历史正文；32 个已登记正文由 items registry 独立治理，新增 debug/report 不再触发集合漂移。"
     }
   ]
 }

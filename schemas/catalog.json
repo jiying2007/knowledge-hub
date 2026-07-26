@@ -10,6 +10,13 @@
       "change_policy": "strict-current-contract"
     },
     {
+      "id": "body-coverage-v2",
+      "schema": "schemas/body-coverage.schema.json",
+      "applies_to": "registry/body-coverage.json",
+      "authority": "registry-unregistered-historical-corpus",
+      "change_policy": "strict-current-contract"
+    },
+    {
       "id": "agent-contract-v1",
       "schema": "schemas/agent-contract.schema.json",
       "applies_to": "registry/items.jsonl#each-line.agent_contract",

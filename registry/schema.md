@@ -128,11 +128,12 @@ Markdown frontmatter mirror invariants:
 
 ## body-coverage.json
 
-`registry/body-coverage.json` 仅为冻结历史语料和领域/治理基线提供集合级正文路径覆盖，避免对低价值索引页机械创建 item。精确 `items.jsonl` path 始终优先。
+`registry/body-coverage.json` 仅为未精确登记的冻结历史语料和领域/治理基线提供集合级正文路径覆盖，避免对低价值索引页机械创建 item。当前契约是 `schema_version=2` / `body-coverage-v2`；精确 `items.jsonl` path 始终优先，并从集合 inventory 中排除。
 
-- 每个 collection 必须包含唯一 `id`、规范化 `path_prefix`、`coverage_mode`、已登记 `owner`、ISO `review_after`、正整数 `expected_markdown_count`、小写 64 位 `inventory_sha256` 和中文 `reason_zh`。
+- 每个 collection 必须包含唯一 `id`、规范化 `path_prefix`、`coverage_mode`、`inventory_scope=unregistered-only`、已登记 `owner`、ISO `review_after`、正整数 `expected_markdown_count`、小写 64 位 `inventory_sha256` 和中文 `reason_zh`。
 - `coverage_mode` 只允许 `archive-corpus`、`domain-baseline`、`governance-baseline`。
-- inventory hash 只对该前缀下纳入正文扫描范围的 repo-relative Markdown 路径排序后计算；正文内容变化不改变集合身份，路径新增、删除或改名会使门禁失败。
+- inventory hash 只对该前缀下“纳入正文扫描且没有精确 registry path”的 repo-relative Markdown 路径排序后计算；正文内容变化不改变集合身份。
+- 新增、移动或删除已经精确登记的正文不会改变集合 hash，由 registry、frontmatter、lifecycle 和派生索引门禁独立治理；新增未登记历史正文或改变未登记 corpus 路径仍会使门禁失败。
 - 集合覆盖不创建 registry item，不赋予 status，不生成 owner decision 或 promotion，也不替代新增当前事实、决策、验证和治理规范的逐条登记。
 - `knowledge-orphan-files.sh --all --strict --json` 是集合契约的直接验证入口；`knowledge-check` 会复用该结果。
 

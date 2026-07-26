@@ -3,7 +3,7 @@ id: gd32l235-pa12-fast-slow-charge-compatibility-20260713
 title: GD32L235 PA12 快慢充控制与硬件兼容性归档
 kind: project-archive
 domain: projects/gd32l235
-path: projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
+path: projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
@@ -25,11 +25,11 @@ tags:
 - hardware-compatibility
 - test-readiness
 validation_refs:
-- projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
+- projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 evidence_strength: reviewing-validation-pending
 evidence_refs:
-- projects/gd32l235/archive/pa12-fast-slow-charge-compatibility-20260713.md
+- projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-13'
 updated_at: '2026-07-19'

@@ -58,6 +58,7 @@ Use this topic for flash layout, UBI volume sizing, rootfs/customer/data respons
 - [PCR02 刷机后首次 UBIFS Fixup 验证规程](ubifs-squashfs/pcr02_factory_first_boot_fixup_protocol_20260529.md)
 - [PCR02 customer SquashFS、调试 overlay 与 Flash 读异常归档](ubifs-squashfs/pcr02_customer_squashfs_overlay_flash_read_20260606.md)
 - [PCR02 customer SquashFS libmsc errno=5 与 wakeup 触发链排障进度](ubifs-squashfs/pcr02_customer_squashfs_libmsc_errno5_20260617.md)
+- [PCR02 /data UBIFS 单页节点整体偏移 4 字节导致只读排障记录](ubifs-squashfs/pcr02_data_ubifs_single_page_shift_readonly_20260720.md)
 
 Use this topic for UBIFS recovery/fixup, SquashFS read-only migration, filesystem mount errors, and filesystem failure analysis.
 

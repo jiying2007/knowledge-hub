@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/body-coverage.schema.json",
+  "title": "Knowledge Hub unregistered historical body coverage",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_zh",
+    "collections"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "policy_zh": {
+      "type": "string",
+      "minLength": 1
+    },
+    "collections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path_prefix",
+          "coverage_mode",
+          "inventory_scope",
+          "owner",
+          "review_after",
+          "expected_markdown_count",
+          "inventory_sha256",
+          "reason_zh"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "path_prefix": {
+            "type": "string",
+            "pattern": "^[^/].+/$"
+          },
+          "coverage_mode": {
+            "enum": [
+              "archive-corpus",
+              "domain-baseline",
+              "governance-baseline"
+            ]
+          },
+          "inventory_scope": {
+            "const": "unregistered-only"
+          },
+          "attachment_policy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "review_after": {
+            "type": "string",
+            "format": "date"
+          },
+          "expected_markdown_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "inventory_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "reason_zh": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

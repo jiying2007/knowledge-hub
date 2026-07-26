@@ -1719,6 +1719,39 @@ def test_orphan_files_advisory_contract():
             "20",
         ],
     )
+    registered_rel = (
+        "projects/xcrz-sigmastar-demo/archive/debug/"
+        "registered-regression-fixture.md"
+    )
+    registered_path = repo / registered_rel
+    registered_path.parent.mkdir(parents=True, exist_ok=True)
+    registered_path.write_text(
+        "# Registered regression fixture\n\n"
+        "This file is intentionally covered by an exact registry path.\n"
+    )
+    with (repo / "registry" / "items.jsonl").open("a") as stream:
+        stream.write(
+            json.dumps(
+                {
+                    "id": "registered-regression-fixture",
+                    "path": registered_rel,
+                }
+            )
+            + "\n"
+        )
+    registered_candidate = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-orphan-files.sh",
+            "--all",
+            "--strict",
+            "--json",
+            "--limit",
+            "20",
+        ],
+    )
     orphan_rel = "projects/xcrz-sigmastar-demo/archive/debug/orphan-regression-fixture.md"
     orphan_path = repo / orphan_rel
     orphan_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1760,6 +1793,11 @@ def test_orphan_files_advisory_contract():
     except Exception as exc:
         baseline_payload = {}
         parse_errors.append(f"baseline: {exc}")
+    try:
+        registered_candidate_payload = json.loads(registered_candidate["stdout"])
+    except Exception as exc:
+        registered_candidate_payload = {}
+        parse_errors.append(f"registered-candidate: {exc}")
     try:
         advisory_payload = json.loads(advisory["stdout"])
     except Exception as exc:
@@ -1820,6 +1858,11 @@ def test_orphan_files_advisory_contract():
         and baseline_payload.get("missing_registry_count") == 0
         and baseline_payload.get("collection_covered_count", 0) > 0
         and baseline_payload.get("coverage_contract_status") == "pass"
+        and registered_candidate["exit_code"] == 0
+        and registered_candidate_payload.get("status") == "ok"
+        and registered_rel
+        not in registered_candidate_payload.get("missing_registry", [])
+        and registered_candidate_payload.get("coverage_contract_status") == "pass"
         and advisory["exit_code"] == 0
         and strict["exit_code"] == 1
         and advisory_payload.get("mode") == "all"
@@ -1845,6 +1888,14 @@ def test_orphan_files_advisory_contract():
             "baseline_exact_registered_count": baseline_payload.get("exact_registered_count"),
             "baseline_collection_covered_count": baseline_payload.get("collection_covered_count"),
             "baseline_coverage_contract_status": baseline_payload.get("coverage_contract_status"),
+            "registered_candidate_exit_code": registered_candidate["exit_code"],
+            "registered_candidate_status": registered_candidate_payload.get("status"),
+            "registered_candidate_missing_registry": registered_candidate_payload.get(
+                "missing_registry"
+            ),
+            "registered_candidate_coverage_contract_status": registered_candidate_payload.get(
+                "coverage_contract_status"
+            ),
             "advisory_exit_code": advisory["exit_code"],
             "strict_exit_code": strict["exit_code"],
             "advisory_missing_registry": advisory_payload.get("missing_registry"),
