@@ -408,3 +408,4 @@
 - 2026-10-24: `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
 - 2026-08-24: `pcr02-ssc305-runtime-resource-baseline-20260724`
 - 2026-10-24: `pcr02-ssc305-sdk-system-optimization-plan-20260724`
+- 2026-10-26: `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`

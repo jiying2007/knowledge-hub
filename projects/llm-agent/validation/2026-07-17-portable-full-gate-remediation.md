@@ -26,7 +26,7 @@ source:
   from: llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94/reports/wechat-intake-portable-full-gate-repair-2026-07-17.md
   source_sha256: 884d5f86911c5e630e453baaf607e4128e69a12a44c020ed841b046e10f2eff4
 review_after: '2026-10-17'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -57,7 +57,7 @@ evidence_refs:
 - projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md
 - llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94
 created_at: '2026-07-17'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

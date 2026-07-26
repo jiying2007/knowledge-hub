@@ -1,4 +1,8 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
+captured_at: '2026-07-22'
 id: gd32l235-soc-sleep-ebusy-early-wifi-wake-20260722
 title: GD32L235 与 PCR02 SOC SLEEP EBUSY 和提前 WiFi 唤醒初步排查
 kind: debug-record
@@ -13,7 +17,7 @@ source:
   from: workspace://gd32l235/Docs/SOC休眠异常初步排查记录-20260722.md
   source_sha256: 8cc7f2455c9b4328dfcafca6f28e8efddf4b741c3e974ded9a6fa360b7409c2f
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -24,9 +28,6 @@ tags:
 - sleep
 - wifi-wakeup
 - needs-fix
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
 validation_refs:
 - projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -35,8 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

@@ -1,4 +1,10 @@
 ---
+aliases:
+- PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选
+related:
+- projects/gd32l235/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724
 title: PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选
 kind: decision
@@ -14,7 +20,7 @@ source:
   source_sha256: 70236024be933ffb7696d0e3bd4b7e1fceafe8d9f44a628936d1971ca850ed0c
   temporary_source_retained: false
 review_after: '2026-08-24'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +42,7 @@ evidence_refs:
 - projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-24'
-updated_at: '2026-07-24'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -48,12 +54,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选
-related:
-- projects/gd32l235/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选

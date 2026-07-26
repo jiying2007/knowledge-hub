@@ -25,7 +25,7 @@ source:
   from: current-session direct commands and official upstream metadata; no external body copied
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-18'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none

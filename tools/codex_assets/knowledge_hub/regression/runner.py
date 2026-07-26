@@ -95,6 +95,7 @@ full_tests = [
     test_by_topic_first_screen_readability_contract,
     test_review_queue_json_contract,
     test_review_queue_apply_tool_contract,
+    test_external_review_queue_apply_persists_source_metadata,
     test_summary_backfill_archived_only_contract,
     test_orphan_files_advisory_contract,
     test_reviewing_triage_json_contract,

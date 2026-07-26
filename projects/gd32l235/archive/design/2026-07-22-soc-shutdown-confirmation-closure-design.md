@@ -1,4 +1,9 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
+- projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md
+captured_at: '2026-07-22'
 id: gd32l235-soc-shutdown-confirmation-closure-design-20260722
 title: GD32L235 与 SOC Shutdown 确认闭环设计归档
 kind: project-archive
@@ -13,7 +18,7 @@ source:
   from: workspace://gd32l235/Docs/SOC侧Shutdown确认闭环设计.md
   source_sha256: 5785c4142f653cee6d17ae3841ed8fce84373910e29ef42b3357ba1aa9930610
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -23,10 +28,6 @@ tags:
 - soc-shutdown
 - protocol
 - power-management
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
-- projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md
 validation_refs:
 - projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -35,8 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex

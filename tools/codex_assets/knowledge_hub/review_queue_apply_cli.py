@@ -6,6 +6,10 @@ import pathlib
 import re
 import sys
 
+from .common import bytes_sha256, file_sha256, load_markdown, render_markdown
+from .model import merge_frontmatter_mirror
+from .store import RepositoryTransaction
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
@@ -23,6 +27,7 @@ if not forms_path.is_absolute():
     forms_path = root / forms_path
 
 REQUIRED_HUMAN_FIELDS = ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+EXTERNAL_REVIEW_FIELDS = ["retrieved_at", "read_status", "source_license"]
 VALID_REVIEW_DECISIONS = {"accept-as-review-record", "needs-edits", "archive-only", "reject", "defer"}
 REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -96,6 +101,35 @@ def item_content_sha256(item):
 def is_nonempty_string(value):
     return isinstance(value, str) and bool(value.strip())
 
+def review_status_for_decision(review_decision):
+    return {
+        "needs-edits": "human-review-needs-edits",
+        "defer": "human-review-deferred",
+        "archive-only": "human-reviewed-archive-only",
+        "reject": "human-reviewed-rejected",
+        "accept-as-review-record": "human-reviewed-accepted",
+    }.get(review_decision, "")
+
+def matches_applied_review(item, form, queue_type, current_content_sha256, allowed_review_bases):
+    review_decision = str(form.get("review_decision", ""))
+    expected_fields = {
+        "human_reviewed_by": str(form.get("human_reviewed_by", "")).strip(),
+        "human_reviewed_at": str(form.get("human_reviewed_at", "")).strip(),
+        "human_review_decision": review_decision,
+        "human_review_content_sha256": current_content_sha256,
+        "updated_at": str(form.get("human_reviewed_at", "")).strip(),
+        "review_status": review_status_for_decision(review_decision),
+    }
+    if queue_type == "external-source-review":
+        expected_fields.update({
+            field: str(form.get(field, "")).strip()
+            for field in EXTERNAL_REVIEW_FIELDS
+        })
+    return (
+        str(item.get("review_basis", "")) in allowed_review_bases
+        and all(str(item.get(field, "")) == str(value) for field, value in expected_fields.items())
+    )
+
 def make_diag(code, message_zh, line_no=None, queue_id="", field="", actual=None, expected=None):
     row = {
         "code": code,
@@ -116,6 +150,17 @@ forms = load_forms()
 diagnostics = []
 planned_updates = []
 seen_queue_ids = {}
+review_signature_by_item = {}
+review_bases_by_item = {}
+for _line_no, candidate_form in forms:
+    if not isinstance(candidate_form, dict):
+        continue
+    candidate_parts = str(candidate_form.get("queue_id", "")).split(":")
+    if len(candidate_parts) != 3 or candidate_parts[0] != "item":
+        continue
+    candidate_basis = str(candidate_form.get("review_basis", "")).strip()
+    if candidate_basis:
+        review_bases_by_item.setdefault(candidate_parts[1], set()).add(candidate_basis)
 
 if not forms:
     diagnostics.append(make_diag("empty-forms-jsonl", "表单 JSONL 没有可应用的对象行。"))
@@ -207,7 +252,18 @@ for line_no, form in forms:
             field for field in ["retrieved_at", "read_status", "source_license", "review_basis"]
             if not is_nonempty_string(item.get(field, ""))
         ]
-    if not expected_missing_fields:
+    repair_replay = (
+        not expected_missing_fields
+        and submitted_content_sha256 == current_content_sha256
+        and matches_applied_review(
+            item,
+            form,
+            queue_type,
+            current_content_sha256,
+            review_bases_by_item.get(item_id, set()),
+        )
+    )
+    if not expected_missing_fields and not repair_replay:
         diagnostics.append(make_diag("queue-item-no-longer-pending", "当前条目已不在待复核队列中，表单已过期或已应用。", line_no=line_no, queue_id=queue_id))
 
     for field in ["form_type", "schema_version", "queue_type", "object_type", "id", "content_hash_required"]:
@@ -225,6 +281,16 @@ for line_no, form in forms:
     for field in REQUIRED_HUMAN_FIELDS:
         if not is_nonempty_string(form.get(field, "")):
             diagnostics.append(make_diag("missing-required-human-field", f"人工字段 {field} 不能为空。", line_no=line_no, queue_id=queue_id, field=field))
+    if queue_type == "external-source-review":
+        for field in EXTERNAL_REVIEW_FIELDS:
+            if not is_nonempty_string(form.get(field, "")):
+                diagnostics.append(make_diag(
+                    "missing-required-external-review-field",
+                    f"外部资料复核字段 {field} 不能为空。",
+                    line_no=line_no,
+                    queue_id=queue_id,
+                    field=field,
+                ))
 
     reviewed_at = str(form.get("human_reviewed_at", ""))
     if reviewed_at:
@@ -245,6 +311,23 @@ for line_no, form in forms:
     if review_decision not in VALID_REVIEW_DECISIONS:
         diagnostics.append(make_diag("invalid-review-decision", "review_decision 必须来自候选枚举。", line_no=line_no, queue_id=queue_id, field="review_decision", actual=review_decision, expected=sorted(VALID_REVIEW_DECISIONS)))
 
+    review_signature = tuple(
+        str(form.get(field, "")).strip()
+        for field in ["human_reviewed_by", "human_reviewed_at", "review_decision", "content_sha256"]
+    )
+    previous_signature = review_signature_by_item.get(item_id)
+    if previous_signature is not None and previous_signature != review_signature:
+        diagnostics.append(make_diag(
+            "conflicting-item-review-forms",
+            "同一 registry item 的多个复核队列表单必须使用相同 reviewer、日期、结论和正文 SHA256。",
+            line_no=line_no,
+            queue_id=queue_id,
+            field="id",
+            actual=item_id,
+            expected="同一 item 的复核字段完全一致",
+        ))
+    review_signature_by_item[item_id] = review_signature
+
     for field in FORBIDDEN_FIELDS:
         if field in form:
             diagnostics.append(make_diag("forbidden-owner-field", f"普通 review queue 表单不得包含 owner gate 字段 {field}。", line_no=line_no, queue_id=queue_id, field=field))
@@ -255,6 +338,13 @@ for line_no, form in forms:
 
     target_status = str(item.get("status", ""))
 
+    update_fields = REQUIRED_HUMAN_FIELDS + [
+        "human_review_decision",
+        "human_review_content_sha256",
+        "updated_at",
+    ]
+    if queue_type == "external-source-review":
+        update_fields += EXTERNAL_REVIEW_FIELDS
     planned_updates.append({
         "line_no": line_no,
         "queue_id": queue_id,
@@ -266,7 +356,8 @@ for line_no, form in forms:
         "lifecycle_mutation": False,
         "will_remain_blocking": review_decision in {"needs-edits", "defer"},
         "content_sha256": current_content_sha256,
-        "fields": REQUIRED_HUMAN_FIELDS + ["human_review_decision", "human_review_content_sha256", "updated_at"],
+        "repair_replay": repair_replay,
+        "fields": update_fields,
     })
 
 if diagnostics:
@@ -286,33 +377,54 @@ if diagnostics:
 updated_by_id = {}
 for update in planned_updates:
     form = next(form for line_no, form in forms if line_no == update["line_no"])
-    item = dict(items_by_id[update["id"]])
+    item = dict(updated_by_id.get(update["id"], items_by_id[update["id"]]))
     item["human_reviewed_by"] = str(form.get("human_reviewed_by", "")).strip()
     item["human_reviewed_at"] = str(form.get("human_reviewed_at", "")).strip()
     item["review_basis"] = str(form.get("review_basis", "")).strip()
+    if update["queue_type"] == "external-source-review":
+        for field in EXTERNAL_REVIEW_FIELDS:
+            item[field] = str(form.get(field, "")).strip()
     item["human_review_decision"] = update["review_decision"]
     item["human_review_content_sha256"] = update["content_sha256"]
     item["updated_at"] = str(form.get("human_reviewed_at", "")).strip()
     item["status"] = update["status_after"]
-    if update["review_decision"] == "needs-edits":
-        item["review_status"] = "human-review-needs-edits"
-    elif update["review_decision"] == "defer":
-        item["review_status"] = "human-review-deferred"
-    elif update["review_decision"] == "archive-only":
-        item["review_status"] = "human-reviewed-archive-only"
-    elif update["review_decision"] == "reject":
-        item["review_status"] = "human-reviewed-rejected"
-    elif update["review_decision"] == "accept-as-review-record":
-        item["review_status"] = "human-reviewed-accepted"
+    item["review_status"] = review_status_for_decision(update["review_decision"])
     updated_by_id[update["id"]] = item
 
-if args.apply:
-    rewritten = []
-    for item in items:
-        item_id = str(item.get("id", ""))
-        rewritten.append(updated_by_id.get(item_id, item))
-    encoded = "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in rewritten) + "\n"
-    items_path.write_text(encoded)
+rendered_by_path = {}
+for item_id, item in updated_by_id.items():
+    relative_path = str(item.get("path", ""))
+    target_path = root / relative_path
+    metadata, body = load_markdown(target_path)
+    rendered = render_markdown(merge_frontmatter_mirror(metadata, item), body)
+    final_content_sha256 = bytes_sha256(rendered.encode("utf-8"))
+    item["human_review_content_sha256"] = final_content_sha256
+    rendered_by_path[relative_path] = rendered
+    for update in planned_updates:
+        if update["id"] == item_id:
+            update["final_content_sha256"] = final_content_sha256
+
+rewritten = []
+for item in items:
+    item_id = str(item.get("id", ""))
+    rewritten.append(updated_by_id.get(item_id, item))
+encoded = "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in rewritten) + "\n"
+
+transaction = RepositoryTransaction(root)
+for relative_path, rendered in rendered_by_path.items():
+    target_path = root / relative_path
+    transaction.add_text(
+        relative_path,
+        rendered,
+        expected_sha256=file_sha256(target_path),
+    )
+transaction.add_text(
+    str(items_path.relative_to(root)),
+    encoded,
+    expected_sha256=file_sha256(items_path),
+)
+transaction_plan = transaction.plan()
+transaction_result = transaction.apply().to_dict() if args.apply else None
 
 result = {
     "status": "applied" if args.apply else "planned",
@@ -321,6 +433,8 @@ result = {
     "forms_path": str(forms_path),
     "planned_update_count": len(planned_updates),
     "planned_updates": planned_updates,
+    "transaction_plan": transaction_plan,
+    "transaction_result": transaction_result,
     "guardrails": {
         "owner_gate_mutation": False,
         "lifecycle_mutation": False,
@@ -328,6 +442,6 @@ result = {
         "source_project_write": False,
         "active_promotion": False,
     },
-    "notes_zh": "本工具只机械落地真实人工填写且与当前整文件 SHA256 一致的普通 review queue 表单；正文漂移会拒绝应用。archive-only/reject 也只记录普通复核结论，不改变 lifecycle status；生命周期变更必须另走 attestation、授权和 promote/retire 工具。",
+    "notes_zh": "本工具只机械落地真实人工填写且与当前整文件 SHA256 一致的普通 review queue 表单；正文漂移会拒绝应用。registry 与正文 frontmatter 在同一可恢复事务中更新，人工复核哈希绑定事务后的正文。archive-only/reject 也只记录普通复核结论，不改变 lifecycle status；生命周期变更必须另走 attestation、授权和 promote/retire 工具。",
 }
 print(json.dumps(result, ensure_ascii=False, indent=2) if args.json else f"{result['status']}: {len(planned_updates)} updates")

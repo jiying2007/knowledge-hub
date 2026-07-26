@@ -1,5 +1,8 @@
 ---
 maturity: candidate
+related:
+- pcr02-prog-pcr02-high-load-monitoring-20260702
+- pcr02-prog-pcr02-runtime-hot-thread-followup-20260710
 id: pcr02-imu-tof-high-load-scheduling-triage-20260721
 title: PCR02 IMU/TOF 高负载调度尾延迟现场分析
 kind: debug-record
@@ -13,7 +16,7 @@ source:
   type: session-derived-debug-summary
   from: 2026-07-20 user-provided sensor log excerpt and read-only ADB runtime capture; device endpoint deliberately not retained
 review_after: '2026-10-21'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,28 +40,28 @@ validation_refs:
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md
 - rtk bash ~/codex/scripts/final-ready.sh
 - 'manual_validation_pending: true'
-- 'reason: single runtime window and deployed/local BuildID mismatch; requires matching diagnostic build and repeated worst-case validation'
+- 'reason: single runtime window and deployed/local BuildID mismatch; requires matching diagnostic build and repeated worst-case
+  validation'
 evidence_strength: single-window-runtime-capture-plus-source-correlation-with-build-mismatch
 evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md
 - 2026-07-20 current Codex session read-only ADB /proc thread, IRQ, scheduler and memory capture; raw output not retained
 - user-provided sensor loop statistics excerpt; raw log not retained
-related:
-- pcr02-prog-pcr02-high-load-monitoring-20260702
-- pcr02-prog-pcr02-runtime-hot-thread-followup-20260710
 created_at: '2026-07-21'
-updated_at: '2026-07-21'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-21'
-summary_zh: 2026-07-20 对 PCR02 双核 A32 设备进行只读运行态分析。摄像头、编码、音频和 RTC 启动后，IMU 由接近 100Hz 降至约 76–82Hz，TOF 由约 15Hz 降至约 13.5–14.8Hz；传感器 I/O error 为 0。整机 CPU 忙碌约 98.1%，AgoraRTC/RTCCB 为 SCHED_RR 96、CUS3A 为 SCHED_RR 95，而 IMU、TOF、运控、显示和普通媒体线程均为 SCHED_OTHER；媒体及 I2C IRQ 实际集中 CPU0。结论指向 CPU 饱和、实时线程抢占、IRQ 集中以及采集/序列化/发布同线程的叠加尾延迟，而非定时器或单一 I2C 故障。
+manual_validation_pending: true
+manual_validation_reason: 需要部署与当前源码 BuildID 一致的诊断包，在 RTC、视频、显示、语音和运控同时运行的最重场景重复采样并验证优化收益
+summary_zh: 2026-07-20 对 PCR02 双核 A32 设备进行只读运行态分析。摄像头、编码、音频和 RTC 启动后，IMU 由接近 100Hz 降至约 76–82Hz，TOF 由约 15Hz 降至约 13.5–14.8Hz；传感器
+  I/O error 为 0。整机 CPU 忙碌约 98.1%，AgoraRTC/RTCCB 为 SCHED_RR 96、CUS3A 为 SCHED_RR 95，而 IMU、TOF、运控、显示和普通媒体线程均为 SCHED_OTHER；媒体及
+  I2C IRQ 实际集中 CPU0。结论指向 CPU 饱和、实时线程抢占、IRQ 集中以及采集/序列化/发布同线程的叠加尾延迟，而非定时器或单一 I2C 故障。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-manual_validation_pending: true
-manual_validation_reason: 需要部署与当前源码 BuildID 一致的诊断包，在 RTC、视频、显示、语音和运控同时运行的最重场景重复采样并验证优化收益
 ---
 
 # PCR02 IMU/TOF 高负载调度尾延迟现场分析

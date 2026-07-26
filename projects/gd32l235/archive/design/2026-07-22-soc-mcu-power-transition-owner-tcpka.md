@@ -14,7 +14,7 @@ source:
   source_sha256: 6a7ef05a71d8bbf8f92a44fc886db51d9a1782dbbacb0c7224c36d81eaeea0ce
   temporary_source_retained: false
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -35,7 +35,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

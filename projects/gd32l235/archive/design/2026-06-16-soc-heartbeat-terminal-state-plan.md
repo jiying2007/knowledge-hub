@@ -1,4 +1,8 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md
+captured_at: '2026-06-16'
 id: gd32l235-soc-heartbeat-terminal-state-plan-20260616
 title: GD32L235 与 SOC 心跳状态同步终态方案归档
 kind: project-archive
@@ -13,7 +17,7 @@ source:
   from: workspace://gd32l235/Docs/SOC心跳状态同步终态方案与落地计划.md
   source_sha256: 61b503b2293374f72e4ec9a2c18ed1572a86c824ef8cfddb47cfc3640bedaa22
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -23,9 +27,6 @@ tags:
 - heartbeat
 - state-sync
 - uart-protocol
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md
 validation_refs:
 - projects/gd32l235/archive/design/2026-06-16-soc-heartbeat-terminal-state-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -34,8 +35,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-06-16-soc-heartbeat-terminal-state-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-06-16'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex

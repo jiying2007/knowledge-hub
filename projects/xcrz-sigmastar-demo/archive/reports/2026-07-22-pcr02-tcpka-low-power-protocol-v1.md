@@ -15,7 +15,7 @@ source:
   source_sha256: de8226e718197b5b68e8122a33f8a2ed9ae4ebdaed46bc52c0807e1027e32a12
   temporary_source_retained: false
 review_after: '2026-10-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -38,7 +38,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/reports/2026-07-22-pcr02-tcpka-low-power-protocol-v1.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

@@ -24,7 +24,7 @@ source:
   from: 源证据保留在 agent-dev-kit change artifact 与官方 OpenAI URL；不复制二级文章正文或图片。
   source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
 review_after: '2026-10-15'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -42,7 +42,7 @@ evidence_refs:
 - projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-17'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

@@ -1,4 +1,13 @@
 ---
+as_of: '2026-07-22'
+aliases:
+- GD32L235 与 PCR02 SoC 低功耗协同当前契约候选
+related:
+- projects/gd32l235/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
+- projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
+- projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md
 id: gd32l235-soc-low-power-contract
 title: GD32L235 与 PCR02 SoC 低功耗协同当前契约候选
 kind: project-current
@@ -14,8 +23,7 @@ source:
   source_sha256: 73988fdebe08174c6a92f8bc6ec877f2fa73087bc72533eab451064e6b7f8b57
   temporary_source_retained: false
 review_after: '2026-08-22'
-as_of: '2026-07-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +42,7 @@ evidence_refs:
 - projects/gd32l235/current/soc-low-power-contract.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -45,14 +53,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- GD32L235 与 PCR02 SoC 低功耗协同当前契约候选
-related:
-- projects/gd32l235/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
-- projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
-- projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md
 ---
 
 # GD32L235 与 PCR02 SoC 低功耗协同当前契约候选

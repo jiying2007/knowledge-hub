@@ -1,4 +1,9 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
+- projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
+captured_at: '2026-06-04'
 id: gd32l235-soc-exit-poweroff-management-session-20260604
 title: GD32L235 与 SOC 退出、休眠和掉电管理会话归档
 kind: project-archive
@@ -13,7 +18,7 @@ source:
   from: workspace://gd32l235/Docs/会话归档-GD32L235-SOC退出掉电管理-20260604.md
   source_sha256: 656ae32b124ff3348279f6b820a3587ae39fa7c7cdb38aeac5673117d22079eb
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -24,10 +29,6 @@ tags:
 - sleep
 - poweroff
 - session
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
-- projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
 validation_refs:
 - projects/gd32l235/archive/session/2026-06-04-soc-exit-poweroff-management-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -36,8 +37,7 @@ evidence_refs:
 - projects/gd32l235/archive/session/2026-06-04-soc-exit-poweroff-management-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-06-04'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex

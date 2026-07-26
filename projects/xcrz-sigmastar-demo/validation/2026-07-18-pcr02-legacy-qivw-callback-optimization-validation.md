@@ -1,20 +1,43 @@
 ---
+aliases:
+- PCR02 遗留 QIVW 回调与 APP diag provider 优化验证
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718
 title: PCR02 遗留 QIVW 回调与 APP diag provider 优化验证
 kind: validation
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: local-source
+  from: PCR02 local source and ARM build evidence, 2026-07-18
+  source_sha256: 2226d166b85d66f79ac6a5241475f274f4db23eb564233a72e580fc8a7ce9966
 review_after: '2026-10-16'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - qivw
 - vad
 - app-diag
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: codex
@@ -25,14 +48,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
-path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md
-aliases:
-- PCR02 遗留 QIVW 回调与 APP diag provider 优化验证
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 遗留 QIVW 回调与 APP diag provider 优化验证

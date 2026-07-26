@@ -22,7 +22,7 @@
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## no-active-promotion (39)
+## no-active-promotion (40)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -58,14 +58,14 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## pcr02 (16)
+## pcr02 (17)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 - [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
 - [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
-- [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## governance (14)
 
@@ -147,11 +147,22 @@
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
 
+## ssc305 (3)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+- [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
 ## vad (3)
 
 - [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
+
+## adb (2)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## ai-provenance (2)
 
@@ -268,11 +279,6 @@
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing`
 - [github/spec-kit正式登记验证](../../projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md) · `reviewing`
 
-## ssc305 (2)
-
-- [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
-
 ## st77912 (2)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -286,10 +292,6 @@
 ## absorption (1)
 
 - [外部资料吸收规范](../../governance/external-source-absorption.md) · `active`
-
-## adb (1)
-
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
 ## address-sanitizer (1)
 
@@ -334,6 +336,10 @@
 ## archive (1)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+
+## artifact-identity (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## artifact-integrity (1)
 
@@ -419,6 +425,10 @@
 
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
 
+## deployment-gate (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+
 ## display (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
@@ -486,6 +496,10 @@
 ## high-temperature-aging (1)
 
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
+
+## hil (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## hil-pending (1)
 
@@ -667,6 +681,10 @@
 
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
+## recovery (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+
 ## release (1)
 
 - [MCU NAS 发布制品与契约验证 2026-07-15](../../projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md) · `reviewing`
@@ -675,9 +693,17 @@
 
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
+## remote-debug (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+
 ## report-only (1)
 
 - [命令与工具入口规范](../../governance/command-tooling-rules.md) · `active`
+
+## reviewing (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## reviewing-followup (1)
 
@@ -770,6 +796,10 @@
 ## uart-protocol (1)
 
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
+
+## unreachable (1)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## video (1)
 

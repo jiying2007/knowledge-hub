@@ -13,7 +13,7 @@ source:
   from: llm_agent-repository
   source_sha256: 24a09e8fdad50fac661a2e1c3d96e3daa84cf8a6bbb40a37483d0545b7697bd9
 review_after: '2026-10-23'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -30,7 +30,7 @@ evidence_refs:
 - projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-23'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

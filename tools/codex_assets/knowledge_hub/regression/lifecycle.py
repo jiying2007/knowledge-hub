@@ -1375,6 +1375,19 @@ def test_review_queue_apply_tool_contract():
     hash_mismatch_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(hash_mismatch_path), "--dry-run", "--json"])
     archive_only_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(archive_only_path), "--dry-run", "--json"])
     apply_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-review-queue-apply.sh", "--forms", str(accept_path), "--apply", "--json"])
+    after_accept_check_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--diagnostics",
+            "--as-of",
+            today.isoformat(),
+        ],
+    )
     after_accept_status_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()])
     review_body_path = repo / str(accept_form.get("path", ""))
     original_review_body = review_body_path.read_text()
@@ -1406,6 +1419,7 @@ def test_review_queue_apply_tool_contract():
         ("hash_mismatch", hash_mismatch_result),
         ("archive_only", archive_only_result),
         ("apply", apply_result),
+        ("after_accept_check", after_accept_check_result),
         ("after_accept", after_accept_status_result),
         ("drift_status", drift_status_result),
         ("drift_check", drift_check_result),
@@ -1452,6 +1466,12 @@ def test_review_queue_apply_tool_contract():
     accept_item = items_by_id.get(accept_item_id, {})
     needs_edits_item = items_by_id.get(needs_edits_item_id, {})
     archive_only_item = items_by_id.get(archive_only_item_id, {})
+    accept_current_hash = hashlib.sha256(
+        (repo / str(accept_form.get("path", ""))).read_bytes()
+    ).hexdigest()
+    archive_only_current_hash = hashlib.sha256(
+        (repo / str(archive_only_form.get("path", ""))).read_bytes()
+    ).hexdigest()
     archive_drift_rows = payloads.get("archive_drift_status", {}).get("review_queues", {}).get("ai_generated_pending", [])
 
     expect(
@@ -1477,10 +1497,17 @@ def test_review_queue_apply_tool_contract():
         and payloads.get("archive_only", {}).get("planned_updates", [{}])[0].get("lifecycle_mutation") is False
         and apply_result["exit_code"] == 0
         and payloads.get("apply", {}).get("status") == "applied"
+        and after_accept_check_result["exit_code"] == 0
+        and payloads.get("after_accept_check", {}).get("frontmatter_status_health", {}).get("status") == "pass"
+        and str(accept_form.get("path", ""))
+            in payloads.get("apply", {}).get("transaction_result", {}).get("changed_paths", [])
+        and "registry/items.jsonl"
+            in payloads.get("apply", {}).get("transaction_result", {}).get("changed_paths", [])
         and pending_count("after_accept") == pending_count("before") - 1
         and accept_item.get("human_reviewed_by") == "regression-fixture-human"
         and accept_item.get("human_review_decision") == "accept-as-review-record"
-        and accept_item.get("human_review_content_sha256") == accept_form.get("content_sha256")
+        and accept_item.get("human_review_content_sha256") == accept_current_hash
+        and accept_current_hash != accept_form.get("content_sha256")
         and accept_item.get("review_status") == "human-reviewed-accepted"
         and pending_count("drift_status") == pending_count("before")
         and drift_check_result["exit_code"] != 0
@@ -1497,7 +1524,7 @@ def test_review_queue_apply_tool_contract():
         and payloads.get("archive_only_apply", {}).get("status") == "applied"
         and archive_only_item.get("status") == archive_only_form.get("read_only_context", {}).get("registry_status")
         and archive_only_item.get("human_review_decision") == "archive-only"
-        and archive_only_item.get("human_review_content_sha256") == archive_only_form.get("content_sha256")
+        and archive_only_item.get("human_review_content_sha256") == archive_only_current_hash
         and archive_only_item.get("review_status") == "human-reviewed-archive-only"
         and pending_count("after_archive") == pending_count("after_accept") - 1
         and pending_count("archive_drift_status")
@@ -1526,6 +1553,8 @@ def test_review_queue_apply_tool_contract():
             "hash_mismatch_codes": hash_mismatch_codes,
             "archive_only_payload": payloads.get("archive_only", {}),
             "apply_exit_code": apply_result["exit_code"],
+            "after_accept_check_exit_code": after_accept_check_result["exit_code"],
+            "after_accept_frontmatter_status": payloads.get("after_accept_check", {}).get("frontmatter_status_health", {}).get("status"),
             "after_accept_pending": pending_count("after_accept"),
             "drift_pending": pending_count("drift_status"),
             "drift_check_exit_code": drift_check_result["exit_code"],
@@ -1538,6 +1567,207 @@ def test_review_queue_apply_tool_contract():
             "accept_item": accept_item,
             "needs_edits_item": needs_edits_item,
             "archive_only_item": archive_only_item,
+        },
+        repo,
+    )
+
+def test_external_review_queue_apply_persists_source_metadata():
+    repo = copy_repo("external-review-queue-apply")
+    item_id = seed_pending_external_review_queue_item(repo)
+    forms_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-index-plan.sh",
+            "--section",
+            "review-queue",
+            "--queue-forms-jsonl",
+            "--queue-type",
+            "external-source-review",
+            "--queue-limit",
+            "1",
+        ],
+    )
+    parse_errors = []
+    forms = []
+    for line in forms_result["stdout"].splitlines():
+        if not line.strip():
+            continue
+        try:
+            forms.append(json.loads(line))
+        except Exception as exc:
+            parse_errors.append(str(exc))
+    if len(forms) != 1:
+        expect(
+            False,
+            "external-review-queue-apply-source-metadata",
+            "external review apply persists source metadata and clears the queue",
+            {
+                "setup_error": "expected exactly one external review form",
+                "parse_errors": parse_errors,
+                "stdout": forms_result["stdout"][:1000],
+            },
+            repo,
+        )
+        return
+
+    completed_form = dict(forms[0])
+    completed_form.update({
+        "human_reviewed_by": "regression-fixture-human",
+        "human_reviewed_at": today.isoformat(),
+        "review_basis": "Regression fixture reviewed the external source metadata.",
+        "review_decision": "accept-as-review-record",
+        "retrieved_at": today.isoformat(),
+        "read_status": "reviewed-summary",
+        "source_license": "fixture-only",
+    })
+    missing_license_form = dict(completed_form)
+    missing_license_form["source_license"] = ""
+
+    temp_root = pathlib.Path(tempfile.mkdtemp(prefix="kh-regression-external-review-"))
+    temp_roots.append(temp_root)
+    completed_path = temp_root / "completed.jsonl"
+    missing_license_path = temp_root / "missing-license.jsonl"
+    completed_path.write_text(
+        json.dumps(completed_form, ensure_ascii=False, separators=(",", ":")) + "\n"
+    )
+    missing_license_path.write_text(
+        json.dumps(missing_license_form, ensure_ascii=False, separators=(",", ":")) + "\n"
+    )
+
+    before_result = run_cmd(
+        repo,
+        ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()],
+    )
+    missing_license_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-review-queue-apply.sh",
+            "--forms",
+            str(missing_license_path),
+            "--dry-run",
+            "--json",
+        ],
+    )
+    dry_run_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-review-queue-apply.sh",
+            "--forms",
+            str(completed_path),
+            "--dry-run",
+            "--json",
+        ],
+    )
+    apply_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-review-queue-apply.sh",
+            "--forms",
+            str(completed_path),
+            "--apply",
+            "--json",
+        ],
+    )
+    after_check_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--diagnostics",
+            "--as-of",
+            today.isoformat(),
+        ],
+    )
+    after_result = run_cmd(
+        repo,
+        ["rtk", "bash", "tools/knowledge-status.sh", "--strict", "--json", "--as-of", today.isoformat()],
+    )
+
+    payloads = {}
+    for name, result in [
+        ("before", before_result),
+        ("missing_license", missing_license_result),
+        ("dry_run", dry_run_result),
+        ("apply", apply_result),
+        ("after_check", after_check_result),
+        ("after", after_result),
+    ]:
+        try:
+            payloads[name] = json.loads(result["stdout"])
+        except Exception as exc:
+            payloads[name] = {}
+            parse_errors.append(f"{name}: {exc}")
+    item = {}
+    for line in (repo / "registry" / "items.jsonl").read_text().splitlines():
+        if not line.strip():
+            continue
+        candidate = json.loads(line)
+        if candidate.get("id") == item_id:
+            item = candidate
+            break
+
+    def pending_count(name):
+        return int(
+            payloads.get(name, {})
+            .get("review_queues", {})
+            .get("summary", {})
+            .get("total_pending_count", -1)
+        )
+
+    missing_license_codes = [
+        row.get("code")
+        for row in payloads.get("missing_license", {}).get("diagnostics", [])
+        if isinstance(row, dict)
+    ]
+    current_content_sha256 = hashlib.sha256(
+        (repo / str(completed_form.get("path", ""))).read_bytes()
+    ).hexdigest()
+    expect(
+        forms_result["exit_code"] == 0
+        and not parse_errors
+        and before_result["exit_code"] != 0
+        and missing_license_result["exit_code"] != 0
+        and "missing-required-external-review-field" in missing_license_codes
+        and dry_run_result["exit_code"] == 0
+        and payloads.get("dry_run", {}).get("status") == "planned"
+        and apply_result["exit_code"] == 0
+        and payloads.get("apply", {}).get("status") == "applied"
+        and after_check_result["exit_code"] == 0
+        and payloads.get("after_check", {}).get("frontmatter_status_health", {}).get("status") == "pass"
+        and str(completed_form.get("path", ""))
+            in payloads.get("apply", {}).get("transaction_result", {}).get("changed_paths", [])
+        and pending_count("after") == pending_count("before") - 2
+        and item.get("retrieved_at") == today.isoformat()
+        and item.get("read_status") == "reviewed-summary"
+        and item.get("source_license") == "fixture-only"
+        and item.get("human_review_decision") == "accept-as-review-record"
+        and item.get("human_review_content_sha256") == current_content_sha256
+        and current_content_sha256 != completed_form.get("content_sha256"),
+        "external-review-queue-apply-source-metadata",
+        "external review apply persists source metadata and clears the queue",
+        {
+            "forms_exit_code": forms_result["exit_code"],
+            "parse_errors": parse_errors,
+            "before_pending": pending_count("before"),
+            "missing_license_exit_code": missing_license_result["exit_code"],
+            "missing_license_codes": missing_license_codes,
+            "dry_run_exit_code": dry_run_result["exit_code"],
+            "apply_exit_code": apply_result["exit_code"],
+            "after_check_exit_code": after_check_result["exit_code"],
+            "after_frontmatter_status": payloads.get("after_check", {}).get("frontmatter_status_health", {}).get("status"),
+            "after_pending": pending_count("after"),
+            "item": item,
         },
         repo,
     )

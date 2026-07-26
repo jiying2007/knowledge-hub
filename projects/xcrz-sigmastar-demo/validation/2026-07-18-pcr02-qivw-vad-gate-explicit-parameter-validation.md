@@ -1,20 +1,43 @@
 ---
+aliases:
+- PCR02 QIVW VAD gate 显式参数化更正与验证
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718
 title: PCR02 QIVW VAD gate 显式参数化更正与验证
 kind: validation
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: local-source
+  from: PCR02 local source and ARM build evidence, 2026-07-18
+  source_sha256: 023a0abcbdb0f73ac51f83a14507344a8ddfac38a9dbfb5b0acd136165933792
 review_after: '2026-10-16'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - qivw
 - vad
 - explicit-config
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: codex
@@ -25,14 +48,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
-path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md
-aliases:
-- PCR02 QIVW VAD gate 显式参数化更正与验证
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 QIVW VAD gate 显式参数化更正与验证

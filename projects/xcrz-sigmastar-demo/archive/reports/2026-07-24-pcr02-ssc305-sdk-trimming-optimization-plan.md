@@ -15,7 +15,7 @@ source:
   source_sha256: cae65752545350df03f4c9aa30e8fded24f506cd0e5cd3d119819ca5066e7d63
   temporary_source_retained: false
 review_after: '2026-10-24'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -35,7 +35,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-24'
-updated_at: '2026-07-24'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

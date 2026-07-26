@@ -22,7 +22,7 @@ source:
   from: 2026-07-24 Codex 只读源码与设备运行态跟踪；设备端点和 raw 输出不进入正文
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-10-24'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: verified
 promotion: none
@@ -45,11 +45,11 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md
-- 'runtime-capture-summary:2026-07-24T20:10+08:00; three 10-second windows; raw capture not retained'
-- 'binary-identity:md5:6f5607824329854b65e0313cd53a8e35; release-build-id:862be98bb58fab31567245081ccfb76402e11c03'
-- 'source-state:hdi=dcfa9ba21d018a858e15dfba079970a8daf026ec; sensor=22092f2a7c396b260315e554b84eacd9261bb3a9-dirty'
+- runtime-capture-summary:2026-07-24T20:10+08:00; three 10-second windows; raw capture not retained
+- binary-identity:md5:6f5607824329854b65e0313cd53a8e35; release-build-id:862be98bb58fab31567245081ccfb76402e11c03
+- source-state:hdi=dcfa9ba21d018a858e15dfba079970a8daf026ec; sensor=22092f2a7c396b260315e554b84eacd9261bb3a9-dirty
 created_at: '2026-07-24'
-updated_at: '2026-07-24'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

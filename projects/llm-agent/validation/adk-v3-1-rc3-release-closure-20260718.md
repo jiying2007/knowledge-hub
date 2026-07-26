@@ -1,15 +1,32 @@
 ---
+aliases:
+- llm-agent adk 3.1 rc3 release closure
+- llm-agent-adk-v3-1-rc3-release-closure
+related:
+- projects/llm-agent/README.md
+- indexes/project-readiness.md
+- projects/llm-agent/validation/project-readiness.md
+- projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md
+- projects/agent-dev-kit/README.md
 id: llm-agent-adk-v3-1-rc3-release-closure-20260718
 title: LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证
 kind: validation
 domain: projects/llm-agent
+path: projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: repository-report
+  from: llm_agent committed RC3 closure evidence at root a1f6fa0 and ADK a1b5e2f
+  source_sha256: 6744d481fb17d865c490b470b48d02dd25826aa32fa1309aed80ba06eb16f933
 review_after: '2026-10-18'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - llm-agent
 - agent-dev-kit
@@ -17,6 +34,15 @@ tags:
 - rc3
 - validation
 - no-active-promotion
+validation_refs:
+- projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -27,17 +53,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
-path: projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md
-aliases:
-- llm-agent adk 3.1 rc3 release closure
-- llm-agent-adk-v3-1-rc3-release-closure
-related:
-- projects/llm-agent/README.md
-- indexes/project-readiness.md
-- projects/llm-agent/validation/project-readiness.md
-- projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md
-- projects/agent-dev-kit/README.md
 ---
 
 # LLM Agent 与 ADK 3.1.0-rc.3 本地发布候选闭环验证

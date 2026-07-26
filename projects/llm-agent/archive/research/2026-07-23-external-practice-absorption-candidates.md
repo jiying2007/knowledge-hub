@@ -18,7 +18,7 @@ source:
   source_sha256: 5b76d8d0e5296a71b4564756abbdb4ffd50289443019d7da748a7a8191defd2a
   temporary_source_retained: false
 review_after: '2026-10-23'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-candidates.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-23'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

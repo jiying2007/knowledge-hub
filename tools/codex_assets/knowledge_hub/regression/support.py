@@ -420,6 +420,81 @@ def seed_pending_review_queue_items(repo, count=2):
         )
     return item_ids
 
+def seed_pending_external_review_queue_item(repo):
+    item_id = "regression-external-review-pending"
+    fixture_path = "artifacts/manifests/regression-external-review-pending.md"
+    (repo / fixture_path).write_text(
+        "# 回归外部资料待复核夹具\n\n"
+        "仅用于验证来源读取状态、许可证和读取日期能被复核工具完整落地。\n",
+        encoding="utf-8",
+    )
+    row = {
+        "id": item_id,
+        "title": "Regression external review pending fixture",
+        "kind": "external-source-note",
+        "domain": "governance",
+        "path": fixture_path,
+        "scope": "team-general",
+        "visibility": "team-internal",
+        "status": "reviewing",
+        "owner": "leiwenjun",
+        "source": {
+            "type": "manual",
+            "from": "https://example.invalid/regression-external-review",
+        },
+        "review_after": today.isoformat(),
+        "validation_refs": [
+            "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+        ],
+        "summary_zh": "回归夹具：模拟等待外部资料来源元数据复核的治理条目。",
+        "primary_language": "zh-CN",
+        "source_language": "en",
+        "translation_status": "summarized",
+        "terminology_status": "pending-review",
+        "content_review_status": "pending",
+        "evidence_strength": "regression-fixture",
+        "evidence_refs": [
+            "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json"
+        ],
+        "evidence_validation_status": "pending",
+        "review_status": "external-source-pending-review",
+        "created_at": today.isoformat(),
+        "updated_at": today.isoformat(),
+        "promotion": "none",
+        "tags": ["regression", "review-queue", "external-source"],
+        "generated_by_ai": True,
+        "ai_role": "summarized",
+        "ai_model_or_tool": "regression-fixture",
+        "ai_generated_at": today.isoformat(),
+        "manual_validation_pending": True,
+        "manual_validation_reason": "回归夹具必须保持外部资料复核待办。",
+        "searchable": False,
+    }
+    items_path = repo / "registry" / "items.jsonl"
+    with items_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    sync_owner_index_entries(repo, [item_id], "leiwenjun")
+    sync_review_date_index_entries(repo, [item_id], today.isoformat())
+    sync_status_index_entries(repo, [item_id], "reviewing")
+    obsidian_result = run_cmd(
+        repo,
+        [
+            "rtk",
+            "bash",
+            "tools/knowledge-obsidian-view-build.sh",
+            "--apply",
+            "--json",
+        ],
+    )
+    if obsidian_result["exit_code"] != 0:
+        raise RuntimeError(
+            "external review queue fixture could not rebuild Obsidian views: {}".format(
+                obsidian_result["stderr"][:1000]
+                or obsidian_result["stdout"][:1000]
+            )
+        )
+    return item_id
+
 OWNER_DECISION_FIELD_NAMES = {
     "owner_decision",
     "target_decision",

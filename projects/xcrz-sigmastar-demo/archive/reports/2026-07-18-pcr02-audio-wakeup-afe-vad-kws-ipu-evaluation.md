@@ -1,28 +1,29 @@
 ---
-title: PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估
 captured_at: 2026-07-18
 last_verified: 2026-07-18
-manual_validation_pending: true
-manual_validation_reason: 当前结论来自源码、SDK、候选方案和既有串口日志审计；尚未完成同板、同语料、同阈值口径的 AFE/VAD/KWS A/B，也未完成视觉负载下的 IPU KWS 压力测试。
 required_followup: 先修复 QIVW FIRST/CONTINUE/LAST 状态机和 200 ms 聚包，再完成三通道原始 PCM 标定、AFE 模块消融、VAD shadow 评估与 KWS DET/FAH 测试。
 memory_candidate: false
 related:
 - projects/pcr02-ssc305/README.md
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
-evidence_strength: direct-command+direct-log+official+inference
 id: xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718
+title: PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估
 kind: project-archive
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: session-research-summary
+  from: current-session-source-audit-2026-07-18
+  source_sha256: 8bd4ae6f78cb0d1fba6550fb74e71b00499a03d5c3fb3ebb8996488a90c0fd9a
 review_after: '2026-08-18'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - audio
@@ -37,13 +38,27 @@ tags:
 - echo-reference
 - source-audit
 - manual-validation-pending
+validation_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: direct-command+direct-log+official+inference
+evidence_refs:
+- projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-18'
+manual_validation_pending: true
+manual_validation_reason: 当前结论来自源码、SDK、候选方案和既有串口日志审计；尚未完成同板、同语料、同阈值口径的 AFE/VAD/KWS A/B，也未完成视觉负载下的 IPU KWS 压力测试。
 summary_zh: 基于源码、设备日志、SigmaStar S02 SDK 和本地候选方案，归档 PCR02 2 MIC+1 REF、35 mm 条件下 AISpeech VAD、QIVW 喂流与 IPU KWS 的证据、风险、推荐架构和单变量
   A/B 验收方案；板端统一对比仍待验证。
-promotion_decision: none; capture does not authorize active promotion or owner decision
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估

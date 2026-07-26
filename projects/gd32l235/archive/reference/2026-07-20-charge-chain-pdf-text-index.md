@@ -1,4 +1,9 @@
 ---
+related:
+- projects/gd32l235/archive/debug/2026-07-20-dock-discharge-cw2217-zero-data-initial-analysis.md
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
 id: gd32l235-charge-chain-pdf-text-index-20260720
 title: GD32L235 充电链三份 PDF 派生全文索引
 kind: project-archive
@@ -12,7 +17,9 @@ source:
   type: user-provided-local-pdf-derived-text
   from: workspace://mcu
 review_after: '2026-10-20'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: archive-only
 tags:
@@ -23,25 +30,31 @@ tags:
 - battery-pack
 - datasheet
 - pdf-text
-related:
-- projects/gd32l235/archive/debug/2026-07-20-dock-discharge-cw2217-zero-data-initial-analysis.md
 validation_refs:
 - projects/gd32l235/archive/reference/2026-07-20-charge-chain-pdf-text-index.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+artifact_refs:
+- workspace://mcu/SC8922.pdf sha256:7a209bcff3307e1d89d964250f683d0a12b52bc311fd36dd8caba3efde8c4f65
+- workspace://mcu/CW2217BAAD.pdf sha256:efd2bc4b8702330c94a51e93ed017d5287a203f828a8473a651256ef068aa6a9
+- workspace://mcu/CXY18650-2S-7.4V-2500mAh-approval-20260622.pdf sha256:74d56c31efd7ca0613920d4c98aa00a2b34c896ef86afe128b9e12a123af0868
+evidence_strength: direct-local-document-extraction
+evidence_refs:
+- projects/gd32l235/archive/reference/sc8922-datasheet-text.txt
+- projects/gd32l235/archive/reference/cw2217baad-datasheet-text.txt
+- projects/gd32l235/archive/reference/cxy18650-2s-7v4-2500mah-approval-20260622-text.txt
+created_at: '2026-07-20'
+updated_at: '2026-07-26'
+generated_by_ai: true
+ai_role: extracted
+ai_model_or_tool: Codex and pdftotext
+ai_generated_at: '2026-07-20'
+manual_validation_pending: true
+manual_validation_reason: 需要人工抽查关键表格、阈值和公式与原 PDF 页面一致
 summary_zh: 保存 SC8922、CW2217BAAD 与 CXY18650-2S 电池承认书的 PDF 派生 UTF-8 全文，供后续直接检索；正文不替代原 PDF 的表格、曲线、原理图和版式证据。
 primary_language: zh-CN
 source_language: mixed
 translation_status: source-language-preserved
 terminology_status: pending-review
-evidence_strength: direct-local-document-extraction
-evidence_validation_status: pending
-generated_by_ai: true
-ai_role: extracted
-ai_model_or_tool: Codex and pdftotext
-ai_generated_at: '2026-07-20'
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 ---
 
 # GD32L235 充电链三份 PDF 派生全文索引

@@ -1,4 +1,9 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
+- projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
+captured_at: '2026-07-22'
 id: gd32l235-pa11-charge-soc-power-gate-design-20260722
 title: GD32L235 PA11 关机、充电与 SOC 上电门控设计归档
 kind: project-archive
@@ -13,7 +18,7 @@ source:
   from: workspace://gd32l235/Docs/PA11关机禁止充电与SOC上电禁止设计.md
   source_sha256: a55b6c43ee09f2f0eac5ea8ea9a563467aa4b94f59ad495869835f37addc2a5e
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -23,10 +28,6 @@ tags:
 - pa11
 - charge
 - soc-power
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md
-- projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
 validation_refs:
 - projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -35,8 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex

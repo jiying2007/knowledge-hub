@@ -14,7 +14,7 @@ source:
   source_sha256: 8cdca9d22a90f5e1ec6670dbc8f8af50792ac95cb470e2c3eceffb0b715652fd
   temporary_source_retained: false
 review_after: '2026-10-21'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-21'
-updated_at: '2026-07-21'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

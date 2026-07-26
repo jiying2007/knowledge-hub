@@ -3,18 +3,35 @@ id: llm-agent-wechat-account-research-assessment-20260716
 title: 微信公众号批量研究工作流与二十篇文章优化评估
 kind: project-archive
 domain: projects/llm-agent
+path: projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: repository-report
+  from: llm_agent/reports/wechat-account-research-2026-07-16/optimization-assessment.md
+  source_sha256: 49380f56ca89a04dcf89c64d33022474ff8c01c92ec8c08161bf2df6ddb49e03
 review_after: '2026-10-16'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - llm-agent
 - wechat
 - external-research
 - agent-governance
+validation_refs:
+- projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-16'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -25,7 +42,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
 ---
 
 # 微信公众号归档实践对 Codex、llm_agent 与 agent-dev-kit 的优化评估

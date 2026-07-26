@@ -1,20 +1,44 @@
 ---
+aliases:
+- PCR02 AISpeech VAD 与 QIVW 短期优化落地验证
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: xcrz-sigmastar-demo-pcr02-qivw-vad-short-term-implementation-validation-20260718
 title: PCR02 AISpeech VAD 与 QIVW 短期优化落地验证
 kind: validation
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
+source:
+  type: ephemeral-file-capture
+  from: ephemeral-content-sha256:3b0484b274dc051b023e40029ee422557b63105199e1a506fff3d095bedcbbca
+  source_sha256: 3b0484b274dc051b023e40029ee422557b63105199e1a506fff3d095bedcbbca
+  temporary_source_retained: false
 review_after: '2026-10-16'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
+promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
 - pcr02
 - aispeech
 - qivw
 - vad
+validation_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+evidence_strength: reviewing-validation-pending
+evidence_refs:
+- projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md
+- rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: codex
@@ -25,14 +49,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-promotion_decision: none; capture does not authorize active promotion or owner decision
-path: projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md
-aliases:
-- PCR02 AISpeech VAD 与 QIVW 短期优化落地验证
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 AISpeech VAD 与 QIVW 短期优化落地验证

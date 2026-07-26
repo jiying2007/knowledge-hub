@@ -24,7 +24,7 @@ source:
   from: llm_agent 根仓与 7 个 gitlink 精确 commit 的隔离全量验证
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-10-17'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,7 +47,7 @@ evidence_refs:
 - projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
 - projects/llm-agent/validation/project-readiness.md
 created_at: '2026-07-17'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

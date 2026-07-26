@@ -1,4 +1,13 @@
 ---
+related:
+- projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md
+- sources/pcr02-project-docs/coverage.md
+- sources/pcr02-project-knowledge/coverage.md
+- sources/pcr02-project-scratch/coverage.md
+target_version: ba398e5a
+test_environment: Knowledge Hub host; source read-only audit plus exact-path deletion
+aliases:
+- xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证
 id: xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718
 title: xcrz_sigmastar_demo_dev 三目录吸收与删除验证
 kind: validation
@@ -13,8 +22,9 @@ source:
   from: workspace://xcrz-sigmastar-demo-dev
   source_sha256: 9a1609ce2e07dfffdb540031912805b730662ba17df0773aada4cca1acf96f95
 review_after: '2026-10-18'
-created_at: '2026-07-18'
-updated_at: '2026-07-19'
+review_status: human-reviewed-accepted
+content_review_status: pending
+evidence_validation_status: pending
 promotion: none
 promotion_decision: none; source closeout evidence only
 tags:
@@ -22,11 +32,6 @@ tags:
 - source-absorption
 - deletion
 - provenance
-related:
-- projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md
-- sources/pcr02-project-docs/coverage.md
-- sources/pcr02-project-knowledge/coverage.md
-- sources/pcr02-project-scratch/coverage.md
 validation_refs:
 - projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md
 - artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl
@@ -34,27 +39,24 @@ validation_refs:
 artifact_refs:
 - artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl
 - artifacts/manifests/xcrz-demo-dev-three-dir-raw-evidence-20260718.md
-target_version: ba398e5a
-test_environment: Knowledge Hub host; source read-only audit plus exact-path deletion
-summary_zh: 对 workspace://xcrz-sigmastar-demo-dev 的三个已授权目录执行逐文件吸收、排除、删除和恢复演练；长期正文只保留结论与证据索引，17 份唯一源文本移入不可搜索的冻结原始证据，不把历史内容当作当前项目事实。
-review_status: manual-entry-pending-review
-primary_language: zh-CN
-source_language: zh-CN
-translation_status: not-required
-terminology_status: pending-review
 evidence_strength: file-level-sha256-manifest-plus-isolated-restore-drill
 evidence_refs:
 - artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl
 - artifacts/manifests/xcrz-demo-dev-three-dir-raw-evidence-20260718.md
 - 'source commit: ba398e5a'
+created_at: '2026-07-18'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: extracted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-18'
 manual_validation_pending: true
 manual_validation_reason: 媒体休眠板测、50 轮压力、功耗和 Sensor 构建漂移尚未闭环；本条目只证明来源处置，不证明功能完成。
-aliases:
-- xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证
+summary_zh: 对 workspace://xcrz-sigmastar-demo-dev 的三个已授权目录执行逐文件吸收、排除、删除和恢复演练；长期正文只保留结论与证据索引，17 份唯一源文本移入不可搜索的冻结原始证据，不把历史内容当作当前项目事实。
+primary_language: zh-CN
+source_language: zh-CN
+translation_status: not-required
+terminology_status: pending-review
 ---
 
 # xcrz_sigmastar_demo_dev 三目录吸收与删除验证

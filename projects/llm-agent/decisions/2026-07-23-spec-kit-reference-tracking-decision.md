@@ -1,4 +1,10 @@
 ---
+aliases:
+- github/spec-kit 长期跟踪决策
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: llm-agent-spec-kit-reference-tracking-20260723
 title: github/spec-kit 长期跟踪决策
 kind: decision
@@ -13,7 +19,7 @@ source:
   from: llm_agent-repository
   source_sha256: 2a14e7f304556f0037d805d5ffa7a2fb39cba20342239935fc10c79196315a46
 review_after: '2026-10-23'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -30,7 +36,7 @@ evidence_refs:
 - projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-23'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -41,12 +47,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- github/spec-kit 长期跟踪决策
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # github/spec-kit 长期跟踪落地记录

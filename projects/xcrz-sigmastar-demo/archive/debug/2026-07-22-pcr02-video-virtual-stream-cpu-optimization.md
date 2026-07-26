@@ -22,7 +22,7 @@ source:
   from: 当前源码差异、定向构建证据及用户提供的板端显示与 CPU 定性验证结论
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-10-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -46,7 +46,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/debug/2026-07-22-pcr02-video-virtual-stream-cpu-optimization.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

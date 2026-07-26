@@ -21,7 +21,7 @@ source:
   from: 2026-07-20 至 2026-07-22 板端命令、串口日志摘要、本地源码与 Git 历史审计、IMSSV06C11 SDK 对照
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-10-20'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,15 +47,15 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/engineering-archive/pcr02/ubifs-squashfs/pcr02_data_ubifs_single_page_shift_readonly_20260720.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-20'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-20'
 manual_validation_pending: true
 summary_zh: 板端完整 page、节点 CRC 与冷启动复读证据确认，ubi0:data 的 LEB 122 内单个 4 KiB UBIFS page image 整体后移 4 字节：页首插入 4 个 0xCC，5 个 inode node
-  与 1 个 PAD node 全部 CRC 正确，页尾 4 个 padding 字节被截断；该错位触发 inode 346 dead directory entry 并令 UBIFS ro_error=1。故障版本为 v1.1.34/c1c1d317f；该显示提交同时把 Linux
-  SPI NAND PAD_SPI0_CK 强制设为 2mA，且显示 MSPI 与 Flash FSP 共用 BDMA CH0。异常重启、2mA 信号裕量和共享 BDMA 负载均为高价值触发假设，但最终根因仍未确认。
+  与 1 个 PAD node 全部 CRC 正确，页尾 4 个 padding 字节被截断；该错位触发 inode 346 dead directory entry 并令 UBIFS ro_error=1。故障版本为 v1.1.34/c1c1d317f；该显示提交同时把
+  Linux SPI NAND PAD_SPI0_CK 强制设为 2mA，且显示 MSPI 与 Flash FSP 共用 BDMA CH0。异常重启、2mA 信号裕量和共享 BDMA 负载均为高价值触发假设，但最终根因仍未确认。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required

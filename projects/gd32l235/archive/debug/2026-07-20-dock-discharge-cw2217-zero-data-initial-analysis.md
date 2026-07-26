@@ -1,4 +1,10 @@
 ---
+related:
+- projects/gd32l235/archive/reference/2026-07-20-charge-chain-pdf-text-index.md
+- projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md
+human_reviewed_by: null
+human_reviewed_at: null
+review_basis: null
 id: gd32l235-dock-discharge-cw2217-zero-data-initial-analysis-20260720
 title: GD32L235 充电桩持续放电与 CW2217 全零数据初步分析
 kind: debug-record
@@ -10,9 +16,10 @@ status: reviewing
 owner: leiwenjun
 source:
   type: session-derived-debug-summary
-  from: user observations, Serial_mcu_2026-07-18_10_43_24.log, three local PDF sources, schematic and workspace://gd32l235 source review
+  from: user observations, Serial_mcu_2026-07-18_10_43_24.log, three local PDF sources, schematic and workspace://gd32l235
+    source review
 review_after: '2026-08-20'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -27,9 +34,6 @@ tags:
 - ntc
 - fuel-gauge
 - dock-discharge
-related:
-- projects/gd32l235/archive/reference/2026-07-20-charge-chain-pdf-text-index.md
-- projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md
 validation_refs:
 - projects/gd32l235/archive/debug/2026-07-20-dock-discharge-cw2217-zero-data-initial-analysis.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -43,21 +47,19 @@ evidence_refs:
 - workspace://gd32l235/App/bsp.c
 - workspace://gd32l235/App/charge.h
 created_at: '2026-07-20'
-updated_at: '2026-07-20'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-20'
 manual_validation_pending: true
 manual_validation_reason: 尚缺 SC8922 PG、VIN、VSYS、VBAT、CHARGE_NTC、PB10、VDD_GAUGE、两节单体电压和真实电池电流的同一时间基准板级证据
-summary_zh: 初步判断实际停充与电量计全零是两个可能串联的问题；CW2217 复位或处于 Shutdown 后返回零寄存器，而固件把 I2C 成功的零值当成有效测量并不再初始化，该软件缺口有直接代码证据；SC8922 停充首因仍需在 24 小时安全定时器、PB10/NTC 控制和输入功率不足之间实测证伪。
+summary_zh: 初步判断实际停充与电量计全零是两个可能串联的问题；CW2217 复位或处于 Shutdown 后返回零寄存器，而固件把 I2C 成功的零值当成有效测量并不再初始化，该软件缺口有直接代码证据；SC8922 停充首因仍需在
+  24 小时安全定时器、PB10/NTC 控制和输入功率不足之间实测证伪。
 primary_language: zh-CN
 source_language: mixed
 translation_status: summarized-in-chinese
 terminology_status: pending-review
-human_reviewed_by: null
-human_reviewed_at: null
-review_basis: null
 ---
 
 # GD32L235 充电桩持续放电与 CW2217 全零数据初步分析

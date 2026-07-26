@@ -13,7 +13,7 @@ source:
   from: llm_agent architecture and RC4 verification evidence at 2026-07-19
   source_sha256: e3dabf8e5808c9eb6bd6a30740bbd8080ec2246f9ed815c7058678dcbaaac360
 review_after: '2026-10-19'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -33,7 +33,7 @@ evidence_refs:
 - domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-19'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

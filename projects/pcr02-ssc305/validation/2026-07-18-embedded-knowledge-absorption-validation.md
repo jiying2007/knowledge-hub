@@ -21,7 +21,7 @@ source:
   from: source://embedded-knowledge
   source_sha256: e09afd5d842d6f41af37e1c6d57e621a308a32c412ec7f511765f018b06b0901
 review_after: '2026-10-18'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -45,7 +45,7 @@ evidence_refs:
 - artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl
 - artifacts/manifests/pcr02-ssc305-source-absorption-raw-evidence-20260718.md
 created_at: '2026-07-18'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: extracted
 ai_model_or_tool: Codex

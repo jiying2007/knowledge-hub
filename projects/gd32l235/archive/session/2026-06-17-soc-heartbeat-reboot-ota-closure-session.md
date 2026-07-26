@@ -1,4 +1,8 @@
 ---
+related:
+- projects/gd32l235/current/soc-low-power-contract.md
+- projects/gd32l235/archive/design/2026-06-16-soc-heartbeat-terminal-state-plan.md
+captured_at: '2026-06-17T15:06:46+08:00'
 id: gd32l235-soc-heartbeat-reboot-ota-closure-session-20260617
 title: GD32L235 与 SOC 心跳、重启和 OTA 闭环会话归档
 kind: project-archive
@@ -13,7 +17,7 @@ source:
   from: workspace://gd32l235/Docs/会话归档-GD32L235-SOC心跳重启OTA闭环-20260617.md
   source_sha256: 2eb82cf9cf8b933002a687bbcaf094a0e75efeb67593f7ba4b3ac5cabccf1ad2
 review_after: '2026-08-22'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -24,9 +28,6 @@ tags:
 - reboot
 - ota
 - session
-related:
-- projects/gd32l235/current/soc-low-power-contract.md
-- projects/gd32l235/archive/design/2026-06-16-soc-heartbeat-terminal-state-plan.md
 validation_refs:
 - projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -35,8 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-captured_at: '2026-06-17T15:06:46+08:00'
-updated_at: '2026-07-22'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex

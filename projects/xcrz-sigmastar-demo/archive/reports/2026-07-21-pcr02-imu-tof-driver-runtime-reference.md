@@ -15,7 +15,7 @@ source:
   source_sha256: c34cab086e765f6bd1cc807c8b1a860ab93d55d123f4353593c08f606eba22d6
   temporary_source_retained: false
 review_after: '2026-10-21'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -39,7 +39,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-21'
-updated_at: '2026-07-21'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

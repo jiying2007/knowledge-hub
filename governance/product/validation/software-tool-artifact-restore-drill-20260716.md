@@ -22,7 +22,7 @@ source:
   type: lab-test
   from: workspace://llm-tools/releases
 review_after: '2026-10-16'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,7 +47,7 @@ evidence_refs:
 - governance/product/validation/software-tool-evidence-audit-20260715.md
 - artifacts/manifests/llm-tools-release-evidence-20260715.jsonl
 created_at: '2026-07-16'
-updated_at: '2026-07-19'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

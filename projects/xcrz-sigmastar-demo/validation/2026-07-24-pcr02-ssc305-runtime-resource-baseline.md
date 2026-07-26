@@ -1,4 +1,10 @@
 ---
+aliases:
+- PCR02 SSC305 SDK裁剪规划运行态基线验证
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: pcr02-ssc305-runtime-resource-baseline-20260724
 title: PCR02 SSC305 SDK裁剪规划运行态基线验证
 kind: validation
@@ -14,7 +20,7 @@ source:
   source_sha256: fa5a43e7a4f804562526aa7aba2e5b957f1ab93464e431196179dd11c3529d5b
   temporary_source_retained: false
 review_after: '2026-08-24'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -35,7 +41,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-24'
-updated_at: '2026-07-24'
+updated_at: '2026-07-26'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -46,12 +52,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- PCR02 SSC305 SDK裁剪规划运行态基线验证
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 SSC305 SDK 裁剪规划运行态基线验证
