@@ -192,8 +192,10 @@ def capture(
         source_payload.update({"type": "registered", "source_id": registered_source_id})
         if registered_source_path:
             source_payload["source_path"] = registered_source_path
-    primary_language = str(original_metadata.get("primary_language", "zh-CN"))
-    source_language = str(original_metadata.get("source_language", primary_language))
+    primary_language = str(original_metadata.get("primary_language") or "zh-CN")
+    source_language = str(original_metadata.get("source_language") or primary_language)
+    translation_status = str(original_metadata.get("translation_status") or "not-required")
+    terminology_status = str(original_metadata.get("terminology_status") or "pending-review")
     validation_refs = [
         target,
         "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics",
@@ -215,8 +217,8 @@ def capture(
         "summary_zh": summary_zh or _first_summary(body, inferred_title),
         "primary_language": primary_language,
         "source_language": source_language,
-        "translation_status": str(original_metadata.get("translation_status", "not-required")),
-        "terminology_status": str(original_metadata.get("terminology_status", "pending-review")),
+        "translation_status": translation_status,
+        "terminology_status": terminology_status,
         "review_status": "manual-entry-pending-review" if status in {"draft", "reviewing"} else "personal-local",
         "content_review_status": "pending" if status in {"draft", "reviewing"} else "not-required",
         "evidence_validation_status": "pending",

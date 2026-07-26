@@ -405,3 +405,4 @@
 - PCR02 SSC305 SDK裁剪与启动、资源、功耗优化规划: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md`; `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
 - PCR02 SSC305 SDK裁剪规划运行态基线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`; `pcr02-ssc305-runtime-resource-baseline-20260724`
 - PCR02 SSC305 SDK系统优化实施计划: `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-system-optimization-plan.md`; `pcr02-ssc305-sdk-system-optimization-plan-20260724`
+- Knowledge Hub 真实项目证据与反馈波次 2026-07-26: `governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md`; `knowledge-hub-real-evidence-feedback-wave-20260726`

@@ -96,6 +96,42 @@ def test_capture_records_explicit_ai_provenance(tmp_path):
     assert "terminology_status: pending-review" in body
 
 
+def test_capture_blank_language_metadata_uses_contract_defaults(tmp_path):
+    root = _root(tmp_path)
+    source = tmp_path / "source.md"
+    source.write_text(
+        "---\n"
+        "title: 空语言元数据候选\n"
+        "primary_language:\n"
+        "source_language:\n"
+        "translation_status:\n"
+        "terminology_status:\n"
+        "---\n\n"
+        "这是待复核内容。\n"
+    )
+
+    capture(
+        root,
+        source,
+        "audit",
+        "governance/blank-language-metadata.md",
+        dt.date(2026, 7, 26),
+        True,
+        item_id="blank-language-metadata-20260726",
+    )
+
+    item = load_jsonl(root / "registry/items.jsonl")[0]
+    assert item["primary_language"] == "zh-CN"
+    assert item["source_language"] == "zh-CN"
+    assert item["translation_status"] == "not-required"
+    assert item["terminology_status"] == "pending-review"
+    body = (root / "governance/blank-language-metadata.md").read_text()
+    assert "primary_language: zh-CN" in body
+    assert "source_language: zh-CN" in body
+    assert "translation_status: not-required" in body
+    assert "terminology_status: pending-review" in body
+
+
 def test_capture_external_temporary_source_records_hash_without_temporary_path(tmp_path):
     root = _root(tmp_path)
     source = tmp_path.parent / "{}-ephemeral-source.md".format(tmp_path.name)

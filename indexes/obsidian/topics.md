@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## manual-validation-pending (42)
+## manual-validation-pending (43)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -13,7 +13,7 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## validation (42)
+## validation (43)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -85,14 +85,14 @@
 - [中文术语表规范](../../governance/glossary.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
 
-## knowledge-hub (7)
+## knowledge-hub (8)
 
 - [Knowledge Hub root](../../README.md) · `active`
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
-- [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing`
+- [Knowledge Hub 真实项目证据与反馈波次 2026-07-26](../../governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md) · `draft`
 
 ## llm-agent (7)
 
@@ -657,6 +657,10 @@
 
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
+## project-evidence (1)
+
+- [Knowledge Hub 真实项目证据与反馈波次 2026-07-26](../../governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md) · `draft`
+
 ## project-routing (1)
 
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
@@ -700,6 +704,10 @@
 ## report-only (1)
 
 - [命令与工具入口规范](../../governance/command-tooling-rules.md) · `active`
+
+## retrieval-feedback (1)
+
+- [Knowledge Hub 真实项目证据与反馈波次 2026-07-26](../../governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md) · `draft`
 
 ## reviewing (1)
 
