@@ -328,6 +328,7 @@
 - `pcr02-ssc305-sdk-system-optimization-plan-20260724`
 - `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
 - `knowledge-hub-real-evidence-feedback-wave-20260726`
+- `pcr02-motor-uart-timestamp-sync-plan-20260726`
 
 ## pcr02-registry-owner
 

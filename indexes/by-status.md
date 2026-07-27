@@ -596,3 +596,4 @@
 - reviewing: `pcr02-ssc305-sdk-system-optimization-plan-20260724`
 - reviewing: `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
 - draft: `knowledge-hub-real-evidence-feedback-wave-20260726`
+- reviewing: `pcr02-motor-uart-timestamp-sync-plan-20260726`

@@ -44,7 +44,7 @@ evidence_refs:
 - governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-26'
-updated_at: '2026-07-26'
+updated_at: '2026-07-27'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -249,6 +249,47 @@ feedback ledger。`selected_id` 均来自对应 interaction 的结果；两个 z
 实际使用者已确认 1–8 找到所需内容、9–10 未找到。写入后 metrics 为：
 `feedback_count=10`、`found_count=8`、`not_found_count=2`、`found_rate=0.8`，
 `adoption.ready=true`。两个 `not-found` 保持真实缺口语义，不为达标改写。
+
+## 2026-07-27 终态执行检查点
+
+### 目标与防卡死边界
+
+- `goal_statement`：在不合成 owner、设备、发布、回滚、CI 或异地证据的前提下，使当前终态条件逐项闭环。
+- `current_stage`：S1 授权、并发变更、review queue 与 30 项 evidence contract 审计。
+- `retry_budget`：每类外部动作最多 2 次；同类失败两次后回到计划审查，不盲目重试。
+- `staleness_threshold`：工程与恢复证据最长 24 小时，且 `as_of` 必须为 `2026-07-27`。
+- `heartbeat`：2026-07-27；远端基线、workspace mapping、review queue 和 evidence matrix 已重新读取。
+- `stop_condition`：本地可验证项继续；真实设备、生产回滚、内容复核确认、远端 CI 或独立环境不可访问时转为 `replan`，不得改写为 pass。
+
+### 当前基线
+
+| 项目 | 当前证据 |
+| --- | --- |
+| 本地 HEAD | `ab7815eb6c44c0e558eb33a290ca7b3dd21a148f` |
+| fresh fetch 的 `origin/master` | `6edda6ff1bf6c46f9fff3bcea0f2e135b1629754` |
+| 分叉与祖先关系 | `origin/master...HEAD = 0 1`；远端是本地 HEAD 祖先 |
+| workspace discovery | 34/34 登记 remote 已定位；30 个项目 workspace 均 present；17 个 remote 存在多副本 |
+| review queue | 2 项：本报告与 PCR02 MCU/SoC 电机 UART 时间戳同步方案；均要求整文件 hash-bound 人工复核 |
+| 采用度 | 10 条反馈，8 found、2 not-found，`found_rate=0.8`，`adoption.ready=true` |
+
+### 30 项 evidence contract 审计
+
+| 分组 | 数量 | 当前真实缺口 |
+| --- | ---: | --- |
+| `pcr02-ssc305`、GD32、HC32、MM32 | 4 | 已有 source/artifact/release 证据，但缺真实 device run 与 rollback |
+| xcrz 主仓、10 个 PCR02 模块、4 个 app | 15 | 缺 artifact、device、release、rollback；现有负向构建或设计材料不能改写为通过 |
+| firmware-release-tools、firmware-toolchains、Codex、LLM Agent、ADK、Knowledge Hub | 6 | 分别缺 artifact/release/rollback 或 release/rollback；当前 source HEAD 演进时必须重绑精确版本 |
+| llm-tools、SigmaStar Flasher、MM32SPIN Validator、OTA Packager | 4 | 合同字段完整但仍声明 `pending`；证据只证明本地制品与隔离恢复，明确不证明远端留存或生产回滚 |
+| MCU aggregate | 1 | 必须等待成员项目 ready，不能独立提前声明 |
+
+现有权威材料明确记录：
+
+- PCR02 v1.1.33 NAS 审计不证明目标设备已安装、启动、长稳运行或回滚成功。
+- GD32/HC32/MM32 发布链不证明真实板级烧录、flash 回读或 HIL 通过。
+- 三套软件工具 release manifest 的 `remote_retention` 与生产 `rollback_status` 为未验证；隔离本地恢复只能作为窄范围 rollback evidence。
+- workspace discovery 只证明当前源码可定位；17 个多副本 remote 继续要求 canonical workspace + exact SHA，不能把副本混拼为一个 source identity。
+
+因此本检查点不能把 `evidence_ready_count` 从 0 机械改成 30。后续只有取得同一 source/version/environment 的真实外部证据后才回填；否则完成声明固定为 `needs-fix`。
 
 ## 结论
 

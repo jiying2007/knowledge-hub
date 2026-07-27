@@ -190,6 +190,7 @@
 - [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing` · `pcr02-module-clean-source-build-audit-20260715`
 - [PCR02 IMU/TOF 驱动规格与运行时设计参考](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md) · `reviewing` · `pcr02-imu-tof-driver-runtime-reference-20260721`
 - [PCR02 IMU/TOF 高负载调度尾延迟现场分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md) · `reviewing` · `pcr02-imu-tof-high-load-scheduling-triage-20260721`
+- [PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-plan-20260726`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing` · `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
 - [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing` · `pcr02-robot-module-contract-audit-20260715`

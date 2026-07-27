@@ -131,6 +131,7 @@
 - PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md`; `pcr02-prog-pcr02-high-load-followup-20260724`
 - PCR02 SSC305 SDK裁剪与启动、资源、功耗优化规划: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md`; `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
 - PCR02 SSC305 SDK裁剪规划运行态基线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`; `pcr02-ssc305-runtime-resource-baseline-20260724`
+- PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md`; `pcr02-motor-uart-timestamp-sync-plan-20260726`
 
 ## PCR02 SSC305 SDK
 
