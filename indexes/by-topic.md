@@ -407,3 +407,4 @@
 - PCR02 SSC305 SDK系统优化实施计划: `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-system-optimization-plan.md`; `pcr02-ssc305-sdk-system-optimization-plan-20260724`
 - Knowledge Hub 真实项目证据与反馈波次 2026-07-26: `governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md`; `knowledge-hub-real-evidence-feedback-wave-20260726`
 - PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md`; `pcr02-motor-uart-timestamp-sync-plan-20260726`
+- PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md`; `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`

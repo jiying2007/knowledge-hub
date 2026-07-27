@@ -188,6 +188,7 @@
 
 - [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-qivw-vad-short-term-implementation-validation-20260718`
 - [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing` · `pcr02-module-clean-source-build-audit-20260715`
+- [PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md) · `reviewing` · `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
 - [PCR02 IMU/TOF 驱动规格与运行时设计参考](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md) · `reviewing` · `pcr02-imu-tof-driver-runtime-reference-20260721`
 - [PCR02 IMU/TOF 高负载调度尾延迟现场分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md) · `reviewing` · `pcr02-imu-tof-high-load-scheduling-triage-20260721`
 - [PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-plan-20260726`

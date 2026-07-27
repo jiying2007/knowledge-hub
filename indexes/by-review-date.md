@@ -411,3 +411,4 @@
 - 2026-10-26: `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
 - 2026-08-26: `knowledge-hub-real-evidence-feedback-wave-20260726`
 - 2026-10-26: `pcr02-motor-uart-timestamp-sync-plan-20260726`
+- 2026-08-31: `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`

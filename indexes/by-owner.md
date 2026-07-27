@@ -329,6 +329,7 @@
 - `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
 - `knowledge-hub-real-evidence-feedback-wave-20260726`
 - `pcr02-motor-uart-timestamp-sync-plan-20260726`
+- `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
 
 ## pcr02-registry-owner
 
