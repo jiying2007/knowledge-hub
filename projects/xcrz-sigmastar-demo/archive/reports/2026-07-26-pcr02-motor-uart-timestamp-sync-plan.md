@@ -14,7 +14,7 @@ source:
   source_sha256: 505377e30e902fe84959b472e28351d6369e3f7cf9b579f4d6e6f2d47784f761
   temporary_source_retained: false
 review_after: '2026-10-26'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-26'
-updated_at: '2026-07-26'
+updated_at: '2026-07-27'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

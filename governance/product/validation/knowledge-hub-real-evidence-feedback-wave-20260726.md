@@ -10,6 +10,8 @@ test_environment: Linux；精确 Git archive；锁定 toolchain gitlink；源仓
 human_reviewed_by: null
 human_reviewed_at: null
 review_basis: null
+aliases:
+- Knowledge Hub 真实项目证据与反馈波次 2026-07-26
 id: knowledge-hub-real-evidence-feedback-wave-20260726
 title: Knowledge Hub 真实项目证据与反馈波次 2026-07-26
 kind: validation
@@ -25,7 +27,7 @@ source:
     interactions
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
 review_after: '2026-08-26'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -55,8 +57,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 真实项目证据与反馈波次 2026-07-26
 ---
 
 # Knowledge Hub 真实项目证据与反馈波次 2026-07-26
