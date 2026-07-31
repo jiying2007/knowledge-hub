@@ -1,6 +1,6 @@
 -r requirements-runtime.txt
 bandit==1.9.4
-build==1.3.0
+build==1.5.0
 coverage==7.15.1
 mypy==2.3.0
 pip-audit==2.10.1
