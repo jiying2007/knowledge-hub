@@ -46,6 +46,41 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "PCR02 OTA"
 ```
 
+## 6. 项目会话工具资产候选归档
+
+项目会话开始时创建脱敏工具基线：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --tool-asset-session-start \
+  --repo-root "$PWD" \
+  --session-state-out "$PWD/.tmp/tool-asset-sessions/<session-id>/baseline.json" \
+  --json
+```
+
+会话结束时自动比较基线，记录新增、修改和显式使用但未改变的工具：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --tool-asset-session-close \
+  --repo-root "$PWD" \
+  --session-state "$PWD/.tmp/tool-asset-sessions/<session-id>/baseline.json" \
+  --hub-candidate-out "$PWD/tmp/tool-asset-candidates/<session-id>/hub-candidate.md" \
+  --used-tool-path <本会话调用但未修改的工具相对路径> \
+  --hub-dry-run \
+  --json
+```
+
+- 没有合格候选时输出“本次无可归档工具资产”，不得当作失败。
+- session baseline 只保存 HEAD、受治理工具路径、size 和 SHA256，不保存聊天、prompt、命令参数值或环境变量。
+- `--used-tool-path` 可重复传入，用于发现跨会话重复调用但本次未修改的工具；不得记录调用参数值。
+- observation 默认写入 Hub 忽略提交的 `.cache/knowledge-hub/tool-assets/observations.jsonl`，使用去重 ID 和 hash chain；不得写入 registry 或长期正文。
+- 同项目至少两个不同会话复用，或至少三个会话且覆盖两个项目时，才允许 `--hub-dry-run` 生成 reviewing Hub 计划；未达到阈值返回 `not-ready`。
+- candidate 只能写入项目 `tmp/`、`.tmp/` 或系统 `/tmp`，不得写入长期正文目录。
+- 自动化最多生成 `reviewing` candidate 和 Hub dry-run 计划；未经当前会话明确授权不得使用 `--apply`。
+- 不归档源码、完整会话、raw log、core、二进制、设备端点、ADB serial、客户信息或凭证。
+- dirty worktree 候选必须同时记录基线 HEAD、当前文件 SHA256 和 `source_worktree_dirty=true`，不得伪装为 commit 中已存在的内容。
+
 修改 Codex 自动化或 manifest 后，还必须在 `~/codex` 执行：
 
 ```bash

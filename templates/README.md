@@ -66,10 +66,15 @@ related:
 | `external-source-note` / `external-source` | `external-source-note` | `external-source-note.md` | 外部资料吸收记录 |
 | `project-archive` / `archive-note` | `project-archive` | `archive-note.md` | 归档说明 |
 | `artifact-ref` | `artifact-ref` | `artifact-ref.md` | 制品引用 |
+| 工具资产候选导入输入 | 最终登记为 `validation` | `tool-asset-candidate.md` | 源仓候选检测器的脱敏交换格式；不直接复制为 Hub 正文 |
 | `patent-disclosure` | `patent-disclosure` | `patent-disclosure.md` | 专利披露 |
 | `patent` | `patent` | `patent-disclosure.md` | 专利材料通用条目 |
 
 `knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
+
+`tool-asset-candidate.md` 是跨仓交换模板，不是待复制的长期正文。候选检测器可把它写到源仓 `tmp/tool-asset-candidates/<timestamp>/hub-candidate.md` 或系统 `/tmp`；Hub 侧必须通过 `knowledge-capture.sh --tool-asset-candidate <path>` 规范化导入。导入器忽略自由正文，只保留白名单字段，默认输出 dry-run 事务计划，显式 `--apply` 后仍保持 `reviewing`。
+
+项目会话扫描器生成 candidate 时必须填写 `source_identity_verified=true`。若源码尚未提交，使用 `source_worktree_dirty=true` 表达“commit 是基线、SHA256 是当前文件身份”；不得把 dirty 文件描述成已经存在于该 commit。单文件使用 `candidate_hash_scope=single-file` 和 `candidate_file_count=1`，未来扩展文件集合时必须提供稳定排序的集合 manifest hash。
 
 `promotion` 是 registry 当前允许的枚举值，目前只能为 `none`；`promotion_decision` 是人读决策说明，用于写清“不提升、候选、拒绝、待 owner review”等背景。`promotion_decision` 不能替代 owner decision，也不能绕过 active / team-level promotion 门禁。
 

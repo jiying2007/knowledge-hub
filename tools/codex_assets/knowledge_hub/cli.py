@@ -9,6 +9,9 @@ from typing import Any, Dict, Sequence
 
 from .common import KnowledgeHubError, repository_root, resolve_today
 from .lifecycle import capture, transition
+from .tool_asset_import_cli import import_candidate
+from .tool_asset_scan import scan_tool_assets
+from .tool_asset_session import close_tool_asset_session, start_tool_asset_session
 
 
 def _emit(payload: Dict[str, Any], json_output: bool) -> None:
@@ -33,8 +36,27 @@ def _common_parser(parser: argparse.ArgumentParser) -> None:
 def _capture_parser(subparsers: Any) -> None:
     parser = subparsers.add_parser("capture", help="Capture a file as a governed item")
     _common_parser(parser)
-    parser.add_argument("--source", required=True)
-    parser.add_argument("--kind", required=True)
+    parser.add_argument("--source", default="")
+    parser.add_argument("--kind", default="")
+    parser.add_argument("--tool-asset-candidate", default="")
+    parser.add_argument("--scan-tool-assets", action="store_true")
+    parser.add_argument("--tool-asset-session-start", action="store_true")
+    parser.add_argument("--tool-asset-session-close", action="store_true")
+    parser.add_argument("--repo-root", default="")
+    parser.add_argument("--hub-candidate-out", default="")
+    parser.add_argument("--session-state-out", default="")
+    parser.add_argument("--session-state", default="")
+    parser.add_argument("--session-id", default="")
+    parser.add_argument("--observation-ledger", default="")
+    parser.add_argument("--used-tool-path", action="append", default=[])
+    parser.add_argument("--source-repo", default="")
+    parser.add_argument("--session-path", action="append", default=[])
+    parser.add_argument("--minimum-score", type=int, default=50)
+    parser.add_argument("--unit-tests", choices=("pass", "fail", "not-run", "not-applicable"), default="not-run")
+    parser.add_argument("--cli-help", choices=("pass", "fail", "not-run", "not-applicable"), default="not-run")
+    parser.add_argument("--candidate-dry-run", choices=("pass", "fail", "not-run", "not-applicable"), default="not-run")
+    parser.add_argument("--non-repo-cwd", choices=("pass", "fail", "not-run", "not-applicable"), default="not-run")
+    parser.add_argument("--hub-dry-run", action="store_true")
     parser.add_argument("--target", default="inbox")
     parser.add_argument("--id", default="")
     parser.add_argument("--title", default="")
@@ -86,29 +108,133 @@ def main(argv: Sequence[str] = ()) -> int:
     today, date_source = resolve_today(args.as_of)
     try:
         if args.command == "capture":
-            payload = capture(
-                root,
-                pathlib.Path(args.source),
-                args.kind,
-                args.target,
-                today,
-                args.apply,
-                item_id=args.id,
-                title=args.title,
-                domain=args.domain,
-                owner=args.owner,
-                scope=args.scope,
-                visibility=args.visibility,
-                status=args.status,
-                review_after=args.review_after,
-                tags=args.tag,
-                summary_zh=args.summary_zh,
-                generated_by_ai=args.generated_by_ai,
-                ai_role=args.ai_role,
-                ai_model_or_tool=args.ai_model_or_tool,
-                source_type=args.source_type,
-                source_from=args.source_from,
+            session_mode_count = sum(
+                int(value)
+                for value in (
+                    args.scan_tool_assets,
+                    args.tool_asset_session_start,
+                    args.tool_asset_session_close,
+                    bool(args.tool_asset_candidate),
+                )
             )
+            if session_mode_count > 1:
+                raise KnowledgeHubError("tool asset scan/start/close/import modes are mutually exclusive")
+            validation = {
+                "unit_tests": args.unit_tests,
+                "cli_help": args.cli_help,
+                "dry_run": args.candidate_dry_run,
+                "non_repo_cwd": args.non_repo_cwd,
+            }
+            if args.tool_asset_session_start:
+                if args.apply or args.hub_dry_run:
+                    raise KnowledgeHubError("session start is local runtime state only and cannot apply or plan Hub import")
+                if not args.repo_root or not args.session_state_out:
+                    raise KnowledgeHubError("session start requires --repo-root and --session-state-out")
+                payload = start_tool_asset_session(
+                    root,
+                    pathlib.Path(args.repo_root),
+                    pathlib.Path(args.session_state_out),
+                    source_repo=args.source_repo,
+                    session_id=args.session_id,
+                )
+            elif args.tool_asset_session_close:
+                if args.apply:
+                    raise KnowledgeHubError("session close is report-only and cannot combine with --apply")
+                if not args.repo_root or not args.session_state or not args.hub_candidate_out:
+                    raise KnowledgeHubError(
+                        "session close requires --repo-root, --session-state and --hub-candidate-out"
+                    )
+                ledger = args.observation_ledger or str(
+                    root / ".cache/knowledge-hub/tool-assets/observations.jsonl"
+                )
+                payload = close_tool_asset_session(
+                    root,
+                    pathlib.Path(args.repo_root),
+                    pathlib.Path(args.session_state),
+                    pathlib.Path(args.hub_candidate_out),
+                    pathlib.Path(ledger),
+                    validation,
+                    used_paths=args.used_tool_path,
+                    minimum_score=args.minimum_score,
+                )
+                if args.hub_dry_run and payload.get("hub_candidate_ready") and payload.get("candidate_output"):
+                    payload["hub_plan"] = import_candidate(
+                        root,
+                        pathlib.Path(str(payload["candidate_output"])),
+                        today,
+                        False,
+                        owner=args.owner,
+                        review_after=args.review_after,
+                    )
+                elif args.hub_dry_run:
+                    payload["hub_plan"] = {
+                        "status": "not-ready",
+                        "reason": "cross-session/project aggregation threshold not reached",
+                    }
+            elif args.scan_tool_assets:
+                if args.apply:
+                    raise KnowledgeHubError("--scan-tool-assets is report-only and cannot combine with --apply")
+                if not args.repo_root or not args.hub_candidate_out:
+                    raise KnowledgeHubError("--scan-tool-assets requires --repo-root and --hub-candidate-out")
+                if args.source or args.kind or args.tool_asset_candidate:
+                    raise KnowledgeHubError("--scan-tool-assets cannot combine with capture/import inputs")
+                if args.hub_dry_run and not args.session_path:
+                    raise KnowledgeHubError("--hub-dry-run requires at least one explicit --session-path")
+                payload = scan_tool_assets(
+                    root,
+                    pathlib.Path(args.repo_root),
+                    pathlib.Path(args.hub_candidate_out),
+                    validation,
+                    source_repo=args.source_repo,
+                    minimum_score=args.minimum_score,
+                    session_paths=args.session_path,
+                )
+                if args.hub_dry_run and payload.get("hub_candidate_generated"):
+                    payload["hub_plan"] = import_candidate(
+                        root,
+                        pathlib.Path(str(payload["candidate_output"])),
+                        today,
+                        False,
+                        owner=args.owner,
+                        review_after=args.review_after,
+                    )
+            elif args.tool_asset_candidate:
+                if args.source or args.kind:
+                    raise KnowledgeHubError("--tool-asset-candidate cannot combine with --source or --kind")
+                payload = import_candidate(
+                    root,
+                    pathlib.Path(args.tool_asset_candidate),
+                    today,
+                    args.apply,
+                    owner=args.owner,
+                    review_after=args.review_after,
+                )
+            else:
+                if not args.source or not args.kind:
+                    raise KnowledgeHubError("capture requires --source and --kind unless --tool-asset-candidate is used")
+                payload = capture(
+                    root,
+                    pathlib.Path(args.source),
+                    args.kind,
+                    args.target,
+                    today,
+                    args.apply,
+                    item_id=args.id,
+                    title=args.title,
+                    domain=args.domain,
+                    owner=args.owner,
+                    scope=args.scope,
+                    visibility=args.visibility,
+                    status=args.status,
+                    review_after=args.review_after,
+                    tags=args.tag,
+                    summary_zh=args.summary_zh,
+                    generated_by_ai=args.generated_by_ai,
+                    ai_role=args.ai_role,
+                    ai_model_or_tool=args.ai_model_or_tool,
+                    source_type=args.source_type,
+                    source_from=args.source_from,
+                )
         else:
             payload = transition(
                 root,

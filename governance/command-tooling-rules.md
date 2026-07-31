@@ -58,6 +58,12 @@ Knowledge Hub 的命令和工具必须保守、可复查、可回滚。用户和
 
 写入计划工具默认 dry-run。`knowledge-review-attest.sh generate --apply` 只把已经明确的真人决定机械写入忽略提交的本地表单，不创建执行授权或改变生命周期；`promote` / `retire --apply` 仍必须分别满足 execution authorization、content review attestation、rollback policy、hash 校验和验证命令。
 
+工具资产候选采用双轨存储：源码、测试和 fixture 留在源仓 `codex_assets/`、`tools/` 或 `scripts/`；Hub 只保存项目路由、commit、相对路径、SHA256、候选评分、验证摘要、脱敏状态、风险和 promotion 建议。`knowledge-capture.sh --tool-asset-candidate <path>` 只接收 `knowledge-hub.tool-asset-candidate.v1`，默认生成事务计划；显式 `--apply` 也只能创建 `reviewing` validation，不能复制源码、raw log、core、二进制和现场信息，不能自动创建 decision 或提升 active。
+
+项目会话使用 `knowledge-capture.sh --scan-tool-assets` 做 report-only 发现。扫描器不得执行候选代码或猜测验证通过；`unit_tests`、`cli_help`、`dry_run`、`non_repo_cwd` 只有存在当前会话证据时才允许显式传入 `pass`。`--hub-dry-run` 可以在 candidate 生成后自动规划 Hub 导入，但不能与 `--apply` 组合，并且必须用一个或多个 `--session-path` 限定当前会话实际修改的工具，避免吸收既有用户 dirty 变更。dirty worktree 必须分别绑定基线 HEAD 和当前文件 SHA256。
+
+跨会话自动发现使用 `--tool-asset-session-start` / `--tool-asset-session-close`。baseline 和 observation 都是忽略提交的 runtime metadata：禁止保存会话全文、prompt、命令参数值、环境变量和工具输出正文。Observation ledger 必须有去重 ID、previous hash 和 content hash；同项目两个不同会话或跨两个项目的三个不同会话达到阈值后，才允许 session close 串联 Hub dry-run。`used-unchanged-in-session` 只能来自显式 `--used-tool-path`，不得从 shell history 或 raw session 猜测。
+
 ## 证据记录
 
 命令类文档必须记录：

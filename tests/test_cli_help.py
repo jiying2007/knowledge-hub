@@ -34,6 +34,7 @@ CLI_MODULES = (
     "runtime_maintenance_cli",
     "search_cli",
     "source_check_cli",
+    "tool_asset_import_cli",
     "workspace_discovery_cli",
 )
 ROOT_FIRST_MODULES = {"doctor_cli", "new_cli"}

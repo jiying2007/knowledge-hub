@@ -12,6 +12,79 @@ rtk bash ~/knowledge-hub/tools/<tool>.sh ...
 
 所有 `tools/*.sh` 都是稳定薄包装层：只解析自身目录、定位 `ROOT`、注入 `PYTHONPATH` 并转发到 `tools.codex_assets.knowledge_hub`。registry/frontmatter、日期、路径脱敏、schema、索引、授权、诊断和事务语义只在 Python 内核维护一份。
 
+## 工具资产候选归档
+
+`knowledge-capture.sh --tool-asset-candidate` 接收源仓候选检测器生成的脱敏 Markdown，只归档工具治理元数据与验证摘要。它会验证：
+
+- `source_repo` 能唯一路由到 `registry/repositories.json` 中的项目；
+- `source_commit`、源码相对路径和 `candidate_sha256` 合法；
+- unit test、CLI help、dry-run、非仓库 cwd 四类验证状态齐全；
+- endpoint、credential、raw log 三类脱敏声明满足安全门禁；
+- 输入中没有 secret-like 内容或私有端点。
+
+默认只生成事务计划：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --tool-asset-candidate /tmp/tool-asset-candidates/<timestamp>/hub-candidate.md \
+  --json
+```
+
+人工确认计划后才可显式执行 `--apply`。应用会原子创建 `projects/<project>/validation/tool-asset-candidate-*.md`，并同步 registry、核心索引、Obsidian 派生视图和 lifecycle ledger；新条目始终为 `reviewing`，不会生成 owner decision 或自动提升。该模式复用既有 capture wrapper，不增加公共命令面；无人值守自动化不得使用 `--apply`。
+
+项目会话可在收尾时自动扫描本次 Git 变更，并直接串联 Hub dry-run：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --scan-tool-assets \
+  --repo-root "$PWD" \
+  --hub-candidate-out "$PWD/tmp/tool-asset-candidates/<session-id>/hub-candidate.md" \
+  --source-repo <registry-repo-id> \
+  --session-path <本会话修改的工具相对路径> \
+  --hub-dry-run \
+  --json
+```
+
+存在可唯一匹配的 `origin` 时可省略 `--source-repo`。`--hub-dry-run` 要求至少一个显式 `--session-path`，多个文件重复传入，防止把会话开始前的用户 dirty 变更错误归因到当前会话。不串联 Hub 时可省略该参数做 all-dirty report-only 扫描。扫描范围固定为本次变更中的 `codex_assets/`、`tools/`、`scripts/` 文本工具；扫描器不执行工具代码，只识别 CLI/help、dry-run、测试引用、内联文档和显式传入的验证结果。实际完成验证后可传入：
+
+```bash
+--unit-tests pass \
+--cli-help pass \
+--candidate-dry-run pass \
+--non-repo-cwd pass
+```
+
+没有证据时保持默认 `not-run`。候选输出只允许位于项目 `tmp/`、`.tmp/` 或系统 `/tmp`；secret、私有端点、非 UTF-8、symlink、超大文件、raw/runtime 路径会被拒绝。当前实现每次选择最高分的单文件候选生成 `hub-candidate.md`，其他发现保留在命令 JSON 摘要中。
+
+### 跨会话与跨项目自动发现
+
+推荐在项目会话开始时记录基线：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --tool-asset-session-start \
+  --repo-root "$PWD" \
+  --session-state-out "$PWD/.tmp/tool-asset-sessions/<session-id>/baseline.json" \
+  --json
+```
+
+会话结束时关闭并聚合：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh \
+  --tool-asset-session-close \
+  --repo-root "$PWD" \
+  --session-state "$PWD/.tmp/tool-asset-sessions/<session-id>/baseline.json" \
+  --hub-candidate-out "$PWD/tmp/tool-asset-candidates/<session-id>/hub-candidate.md" \
+  --used-tool-path codex_assets/tools/<本次调用但未修改的工具> \
+  --hub-dry-run \
+  --json
+```
+
+baseline 只保存 HEAD、路径、size 和 SHA256。结束时自动分类为 `created-in-session`、`modified-in-session`、`deleted-in-session` 或 `used-unchanged-in-session`。Observation 默认进入忽略提交的 `~/knowledge-hub/.cache/knowledge-hub/tool-assets/observations.jsonl`，保存 repo/project、session hash、工具 hash、确定性 capability signature、验证枚举和时间，不保存原始会话或参数值。
+
+同项目至少两个不同会话出现同一 capability，生成 `keep-project-tool` 候选；至少三个不同会话且覆盖两个项目时，生成 `recommend-global-codex` 候选。未达到阈值时本地 observation 正常落账，但 `hub_plan.status=not-ready`。可用 `--observation-ledger /tmp/<file>.jsonl` 覆盖本机 ledger 位置进行隔离测试。
+
 ## 低复杂度入口速查
 
 日常维护 5 条短命令：
