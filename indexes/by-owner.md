@@ -372,6 +372,9 @@
 - `app-sensor-test-selection-performance-closure-20260731`
 - `app-sensor-test-evidence-ci-hardcut-20260731`
 - `app-sensor-test-board-safe-smoke-blocked-20260731`
+- `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
+- `gd32l235-dock-detected-without-net-charging-analysis-20260731`
+- `pcr02-sensor-audio-queue-ao-retry-20260731`
 
 ## pcr02-registry-owner
 

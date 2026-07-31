@@ -452,3 +452,6 @@
 - app_sensor_test 选择完整性、构建身份与性能门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md`; `app-sensor-test-selection-performance-closure-20260731`
 - app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md`; `app-sensor-test-evidence-ci-hardcut-20260731`
 - app_sensor_test staged safe 板测 transport 阻塞: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`
+- PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
+- GD32L235 在桩检测有效但未发生净充电的当前结论: `projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md`; `gd32l235-dock-detected-without-net-charging-analysis-20260731`
+- PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`

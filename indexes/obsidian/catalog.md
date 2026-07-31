@@ -88,6 +88,7 @@
 - [GD32L235 低电量 SOC 休眠保护设计归档](../../projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md) · `reviewing` · `gd32l235-low-battery-soc-sleep-protection-design-20260722`
 - [GD32L235 充电桩持续放电与 CW2217 全零数据初步分析](../../projects/gd32l235/archive/debug/2026-07-20-dock-discharge-cw2217-zero-data-initial-analysis.md) · `reviewing` · `gd32l235-dock-discharge-cw2217-zero-data-initial-analysis-20260720`
 - [GD32L235 充电链三份 PDF 派生全文索引](../../projects/gd32l235/archive/reference/2026-07-20-charge-chain-pdf-text-index.md) · `reviewing` · `gd32l235-charge-chain-pdf-text-index-20260720`
+- [GD32L235 在桩检测有效但未发生净充电的当前结论](../../projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md) · `reviewing` · `gd32l235-dock-detected-without-net-charging-analysis-20260731`
 - [GD32L235 智能留电充电唤醒与低电策略归档](../../projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md) · `reviewing` · `gd32l235-smart-reserve-charge-wakeup-20260730`
 - [GD32L235 电池供电跳变与 MCU 循环重启排障记录](../../projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md) · `reviewing` · `gd32l235-battery-rail-drop-mcu-reboot-20260717`
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing` · `gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724`
@@ -228,6 +229,7 @@
 - [PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md) · `reviewing` · `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
 - [PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md) · `reviewing` · `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
 - [PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md) · `reviewing` · `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
+- [PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md) · `reviewing` · `pcr02-sensor-audio-queue-ao-retry-20260731`
 - [PCR02 Sensor 全面测试框架落地验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md) · `reviewing` · `pcr02-app-sensor-test-comprehensive-closure-20260731`
 - [PCR02 Sensor 全面测试资产基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-foundation.md) · `reviewing` · `pcr02-app-sensor-test-foundation-20260730`
 - [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing` · `pcr02-app-sensor-test-framework-20260730`
@@ -242,6 +244,7 @@
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing` · `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - [PCR02 libmsc Lua RPC释放后使用core分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md) · `reviewing` · `pcr02-libmsc-lua-rpc-use-after-free-20260724`
 - [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing` · `pcr02-player-monotonic-sync-validation-20260729`
+- [PCR02 prog_pcr02 匿名堆持续增长监控记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - [PCR02 prog_pcr02 运行态热点线程跟进](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md) · `reviewing` · `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
 - [PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md) · `reviewing` · `pcr02-prog-pcr02-high-load-followup-20260724`
 - [PCR02 prog_pcr02 高负载监控证据记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-high-load-monitoring-20260702`

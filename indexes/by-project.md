@@ -166,6 +166,8 @@
 - app_sensor_test 选择完整性、构建身份与性能门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md`; `app-sensor-test-selection-performance-closure-20260731`
 - app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md`; `app-sensor-test-evidence-ci-hardcut-20260731`
 - app_sensor_test staged safe 板测 transport 阻塞: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`
+- PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
+- PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`
 
 ## PCR02 SSC305 SDK
 
@@ -263,6 +265,7 @@
 - GD32L235 WiFi wake shadow 诊断与验证: `projects/gd32l235/archive/debug/2026-07-28-wifi-wake-shadow-validation.md`; `gd32l235-wifi-wake-shadow-validation-20260728`
 - GD32L235 v1.1.40 NAS 发布记录: `projects/gd32l235/archive/release/2026-07-30-gd32l235-v1.1.40-nas-release.md`; `gd32l235-v1.1.40-nas-release-20260730`
 - GD32L235 智能留电充电唤醒与低电策略归档: `projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md`; `gd32l235-smart-reserve-charge-wakeup-20260730`
+- GD32L235 在桩检测有效但未发生净充电的当前结论: `projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md`; `gd32l235-dock-detected-without-net-charging-analysis-20260731`
 
 ## HC32F072 Firmware
 
