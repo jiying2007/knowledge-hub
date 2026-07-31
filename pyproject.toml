@@ -70,13 +70,13 @@ data_file = ".tmp/engineering/.coverage"
 parallel = true
 relative_files = true
 patch = ["subprocess"]
-omit = ["tools/codex_assets/knowledge_hub/regression_fixture_cli.py"]
+omit = ["*/tools/codex_assets/knowledge_hub/regression_fixture_cli.py"]
 
 [tool.coverage.report]
 fail_under = 75
 show_missing = true
 skip_covered = true
-omit = ["tools/codex_assets/knowledge_hub/regression_fixture_cli.py"]
+omit = ["*/tools/codex_assets/knowledge_hub/regression_fixture_cli.py"]
 exclude_also = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",

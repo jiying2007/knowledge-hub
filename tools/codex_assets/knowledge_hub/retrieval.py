@@ -27,11 +27,11 @@ from .context import _query_route_selection
 from .search import (
     DEFAULT_SEARCH_EXCLUDED_PATHS,
     DEFAULT_SEARCH_EXCLUDED_ROOTS,
-    PRIVATE_IPV4_PATTERN,
     SearchFilters,
     SearchIndex,
     search,
 )
+from .search_ranking import PRIVATE_IPV4_PATTERN
 
 
 DEFAULT_CASES = "tests/fixtures/retrieval_cases.json"

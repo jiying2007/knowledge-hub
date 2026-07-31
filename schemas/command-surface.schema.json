@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/command-surface.schema.json",
+  "title": "Knowledge Hub five-plane command surface",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "model",
+    "wrapper_baseline",
+    "daily_command_limit",
+    "planes",
+    "tiers",
+    "commands"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "model": {"const": "knowledge-hub-five-plane-command-surface-v1"},
+    "wrapper_baseline": {"type": "integer", "minimum": 1},
+    "daily_command_limit": {"const": 5},
+    "planes": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "tiers": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "wrapper",
+          "plane",
+          "tier",
+          "summary_json",
+          "read_only"
+        ],
+        "properties": {
+          "name": {"type": "string", "pattern": "^knowledge-[a-z0-9-]+$"},
+          "wrapper": {"type": "string", "pattern": "^tools/knowledge-[a-z0-9-]+\\.sh$"},
+          "plane": {
+            "enum": [
+              "experience",
+              "query",
+              "governance",
+              "content-artifact",
+              "evidence-operations"
+            ]
+          },
+          "tier": {
+            "enum": [
+              "daily",
+              "maintenance",
+              "governance",
+              "engineering",
+              "internal"
+            ]
+          },
+          "summary_json": {"type": "boolean"},
+          "read_only": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

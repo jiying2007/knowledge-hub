@@ -173,6 +173,24 @@ def validate_instance(
 
 
 def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
+    static_registry_contracts = (
+        (
+            "command-surface-v1",
+            "registry/command-surface.json",
+        ),
+        (
+            "engineering-budgets-v1",
+            "registry/engineering-budgets.json",
+        ),
+        (
+            "artifact-policy-v1",
+            "registry/artifact-policy.json",
+        ),
+    )
+    for contract_id, relative in static_registry_contracts:
+        path = root / relative
+        if path.is_file():
+            yield contract_id, relative, load_json(path, {})
     body_coverage = root / "registry/body-coverage.json"
     if body_coverage.is_file():
         yield (
@@ -198,6 +216,18 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
         yield "authorization-v1", "registry/authorizations.jsonl:{}".format(index), row
     for index, row in enumerate(load_jsonl(root / "registry/lifecycle-events.jsonl"), 1):
         yield "lifecycle-event-v1", "registry/lifecycle-events.jsonl:{}".format(index), row
+    manifests = root / "artifacts/manifests"
+    for path in sorted(manifests.rglob("*.jsonl")) if manifests.exists() else []:
+        for index, row in enumerate(load_jsonl(path), 1):
+            if (
+                row.get("schema_version")
+                == "knowledge-hub.immutable-artifact-ref.v1"
+            ):
+                yield (
+                    "immutable-artifact-ref-v1",
+                    "{}:{}".format(path.relative_to(root), index),
+                    row,
+                )
     workspace_path = root / "local/workspaces.json"
     if workspace_path.is_file():
         yield "local-workspaces-v1", "local/workspaces.json", load_json(workspace_path, {})

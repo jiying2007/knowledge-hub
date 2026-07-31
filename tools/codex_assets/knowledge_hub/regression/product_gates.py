@@ -72,11 +72,10 @@ def test_final_gate_owner_review_blocker():
         result["exit_code"] == 0
         and terminal_result["exit_code"] == 2
         and payload.get("final_profile") == "product"
-        and payload.get("gate_status") == "pass"
-        and payload.get("final_status") == "needs-owner-review"
-        and payload.get("platform_productization_complete") is True
+        and payload.get("status") == "needs-review"
+        and payload.get("platform_status", {}).get("status") == "pass"
         and payload.get("terminal") is False
-        and owner.get("status") == "needs-owner-review"
+        and owner.get("status") == "needs-review"
         and owner.get("project_boundary_owner_ready") is True
         and project_count > 0
         and owner.get("decision_owner_ready_count") == project_count
@@ -88,15 +87,15 @@ def test_final_gate_owner_review_blocker():
         and owner_gap.get("gap_type") == "owner-review"
         and owner_gap.get("codex_auto_can_complete") is False
         and owner_gap.get("requires_owner_decision") is True
-        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-owner-review"
+        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
         and "product_status" not in payload.get("platform_status", {}).get("blockers", [])
-        and terminal_payload.get("final_status") == "needs-owner-review",
+        and terminal_payload.get("status") == "needs-review",
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
             "terminal_exit_code": terminal_result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "owner_and_real_evidence": owner,
             "platform_status": payload.get("platform_status", {}),
             "gap_map": payload.get("gap_map", []),
@@ -118,14 +117,14 @@ def test_final_gate_quick_regression_evidence_boundary():
         and payload.get("regression_suite") == "quick"
         and regression.get("status") == "not-run"
         and regression.get("full_regression_executed") is False
-        and payload.get("summary", {}).get("full_regression_ready") is False
+        and payload.get("delivery_readiness", {}).get("full_regression_ready") is False
         and payload.get("terminal") is False,
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
             "regression": regression,
-            "summary": payload.get("summary", {}),
+            "delivery_readiness": payload.get("delivery_readiness", {}),
         },
     )
 
@@ -146,16 +145,16 @@ def test_final_gate_product_review_queue_owner_review_blocker():
     expect(
         result["exit_code"] == 0
         and payload.get("final_profile") == "product"
-        and payload.get("gate_status") == "pass"
-        and payload.get("final_status") == "needs-owner-review"
+        and payload.get("status") == "needs-review"
+        and payload.get("platform_status", {}).get("status") == "pass"
         and owner.get("review_queue_pending_count", 0) >= 2
-        and owner.get("status") == "needs-owner-review"
+        and owner.get("status") == "needs-review"
         and "product_status" not in payload.get("platform_status", {}).get("blockers", []),
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "owner_and_real_evidence": owner,
             "platform_status": payload.get("platform_status", {}),
         },
@@ -182,7 +181,7 @@ def test_final_gate_empty_child_json_blocker():
     )
     expect(
         result["exit_code"] == 1
-        and payload.get("final_status") == "needs-fix"
+        and payload.get("status") == "needs-fix"
         and knowledge_check.get("status") == "unparseable"
         and "empty JSON output" in knowledge_check.get("parse_error", "")
         and blocker.get("severity") == "blocker",
@@ -190,7 +189,7 @@ def test_final_gate_empty_child_json_blocker():
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "knowledge_check": knowledge_check,
             "blockers": payload.get("blockers", []),
         },
@@ -256,14 +255,14 @@ def test_final_gate_default_regression_path():
         and "--summary-json --suite full --as-of {}".format(today.isoformat())
         in regression.get("command", "")
         and payload.get("platform_status", {}).get("hard_checks", {}).get("full_regression") is True
-        and payload.get("summary", {}).get("full_regression_ready") is True,
+        and payload.get("delivery_readiness", {}).get("full_regression_ready") is True,
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "regression": regression,
-            "summary": payload.get("summary", {}),
+            "delivery_readiness": payload.get("delivery_readiness", {}),
             "hard_checks": payload.get("platform_status", {}).get(
                 "hard_checks", {}
             ),
@@ -302,7 +301,7 @@ def test_final_gate_source_final_state_field_gap():
     )
     expect(
         result["exit_code"] == 1
-        and payload.get("final_status") == "needs-fix"
+        and payload.get("status") == "needs-fix"
         and gap.get("gap_type") == "registry"
         and gap.get("source_id") == "pcr02-project-tools"
         and gap.get("field") == "final_disposition"
@@ -312,7 +311,7 @@ def test_final_gate_source_final_state_field_gap():
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "gap_map": payload.get("gap_map", []),
         },
         repo,
@@ -340,15 +339,15 @@ def test_final_gate_strict_status_nonowner_blocker():
     blocker_ids = {row.get("id") for row in payload.get("blockers", [])}
     expect(
         result["exit_code"] == 1
-        and payload.get("final_status") == "needs-fix"
+        and payload.get("status") == "needs-fix"
         and "product-status-failed" in blocker_ids
         and "owner-gates-command-failed" in blocker_ids
-        and payload.get("platform_status", {}).get("status") == "fail",
+        and payload.get("platform_status", {}).get("status") == "needs-fix",
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "blockers": payload.get("blockers", []),
         },
         repo,
@@ -387,7 +386,7 @@ def test_final_gate_source_check_runtime_failed_blocker():
     )
     expect(
         result["exit_code"] == 1
-        and payload.get("final_status") == "needs-fix"
+        and payload.get("status") == "needs-fix"
         and blocker.get("severity") == "blocker"
         and blocker.get("gap_type") == "source-coverage"
         and gap.get("gap_type") == "source-coverage"
@@ -403,7 +402,7 @@ def test_final_gate_source_check_runtime_failed_blocker():
         title,
         {
             "exit_code": result["exit_code"],
-            "final_status": payload.get("final_status"),
+            "status": payload.get("status"),
             "blocker": blocker,
             "gap": gap,
             "source_check_runtime": source_runtime,

@@ -143,7 +143,7 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "final-gate-product-v3",
+      "id": "final-gate-product-v5",
       "schema": "schemas/final-gate-product.schema.json",
       "applies_to": "knowledge-final-gate.sh --final-profile product --json",
       "authority": "derived-terminal-gate",
@@ -164,17 +164,52 @@
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "restore-drill-v2",
+      "id": "restore-drill-v4",
       "schema": "schemas/restore-drill.schema.json",
       "applies_to": "knowledge-restore-drill.sh --json",
       "authority": "derived-recovery-evidence",
       "change_policy": "strict-current-contract"
     },
     {
-      "id": "local-metrics-v4",
+      "id": "local-metrics-v5",
       "schema": "schemas/local-metrics.schema.json",
       "applies_to": "knowledge-metrics.sh --json",
       "authority": "derived-local-telemetry",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "command-surface-v1",
+      "schema": "schemas/command-surface.schema.json",
+      "applies_to": "registry/command-surface.json",
+      "authority": "registry",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "engineering-budgets-v1",
+      "schema": "schemas/engineering-budgets.schema.json",
+      "applies_to": "registry/engineering-budgets.json",
+      "authority": "registry",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "artifact-policy-v1",
+      "schema": "schemas/artifact-policy.schema.json",
+      "applies_to": "registry/artifact-policy.json",
+      "authority": "registry",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "immutable-artifact-ref-v1",
+      "schema": "schemas/immutable-artifact-ref.schema.json",
+      "applies_to": "artifacts/manifests/*.jsonl#schema_version=knowledge-hub.immutable-artifact-ref.v1",
+      "authority": "artifact-reference-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "status-contract-v2",
+      "schema": "schemas/status-contract.schema.json",
+      "applies_to": "public JSON CLI status_contract",
+      "authority": "derived-output-contract",
       "change_policy": "strict-current-contract"
     },
     {

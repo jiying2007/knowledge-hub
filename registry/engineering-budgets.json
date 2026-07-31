@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "policy": "report-legacy-fail-new-regression",
+  "python": {
+    "new_module_max_lines": 800,
+    "new_function_max_lines": 80,
+    "legacy_module_line_caps": {
+      "tools/codex_assets/knowledge_hub/check_cli.py": 2685,
+      "tools/codex_assets/knowledge_hub/status_cli.py": 1982,
+      "tools/codex_assets/knowledge_hub/owner_gates_cli.py": 2233,
+      "tools/codex_assets/knowledge_hub/search.py": 2104,
+      "tools/codex_assets/knowledge_hub/product_gate.py": 1401,
+      "tools/codex_assets/knowledge_hub/regression/governance.py": 2531,
+      "tools/codex_assets/knowledge_hub/regression/lifecycle.py": 2622
+    }
+  },
+  "commands": {
+    "wrapper_baseline": 48,
+    "daily_max": 5,
+    "readme_daily_max": 7
+  }
+}

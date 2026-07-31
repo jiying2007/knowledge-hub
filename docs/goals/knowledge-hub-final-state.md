@@ -29,10 +29,10 @@ Knowledge Hub = Obsidian-friendly Markdown Vault + 最小 registry 账本 + 高�
 
 - `knowledge-check` 能证明 registry、source control、owner target、raw dump safety 和边界健康。
 - `knowledge-regression` 覆盖当前工具、schema、source control、review queue、owner gate 和 final gate 契约。
-- `knowledge-final-gate --json --final-profile product` 是唯一终态入口，分别输出 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness`、`delivery_readiness`、`overall_status`、`local_delivery_complete`、`remote_published`、`offsite_restore_verified`、`adoption_ready` 和 `terminal`。
-- 平台技术候选完成要求 `gate_status=pass`、全部 technical hard checks 通过；本地交付完成还要求 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。远端发布和异地恢复分别由远端 push 与独立运行环境的签名证据判定，三者不能混为同一声明。
-- 真实 owner/evidence 未闭环时必须保持 `overall_status=needs-owner-review`，不能用候选文档、30/30 source mapping 或治理通过冒充成熟。
-- 全面产品终态声明要求 `--regression-suite full --require-terminal` 退出 0，且 `local_delivery_complete`、`remote_published`、`offsite_restore_verified`、`adoption_ready`、`terminal` 全部为 `true`、`overall_status=mature`；未达到时结论必须保守降级。
+- `knowledge-final-gate --json --final-profile product` 是唯一终态入口。Product v5 顶层只输出一个综合 `status` 与 `terminal`；五个独立成熟度轴位于 `maturity_axes`，详细证据位于 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness` 和 `delivery_readiness`。
+- 平台技术候选完成要求 `maturity_axes.platform.status=pass` 且全部 technical hard checks 通过；本地交付完成还要求 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。远端发布和异地恢复分别由 `maturity_axes.delivery.remote_published` 与 `offsite_restore_verified` 表达，三者不能混为同一声明。
+- 真实 owner/evidence 未闭环时顶层必须保持 `status=needs-review`，不能用候选文档、30/30 source mapping 或治理通过冒充成熟。
+- 全面产品终态声明要求 `--regression-suite full --require-terminal` 退出 0、顶层 `status=pass` 且 `terminal=true`；delivery、adoption 等细项必须从对应 `maturity_axes` 验证，未达到时结论必须保守降级。
 - 旧入口精确扫描不命中当前文档、registry、index、template、tool 或 source control。
 
 ## 验证命令

@@ -123,8 +123,17 @@ def test_health_summary_prefers_full_snapshot_and_refreshes_quick_in_auto_mode(
         "_load_snapshot",
         lambda *_args, **_kwargs: (
             {
-                "gate_status": "pass",
-                "overall_status": "needs-owner-review",
+                "schema_version": 5,
+                "status": "needs-review",
+                "terminal": False,
+                "maturity_axes": {
+                    "schema_version": 2,
+                    "status": "needs-review",
+                    "terminal": False,
+                    "content": {"status": "needs-review"},
+                    "delivery": {"status": "needs-review"},
+                    "adoption": {"status": "needs-review"},
+                },
                 "platform_status": {"status": "pass", "blockers": []},
                 "owner_and_real_evidence": {"pending_project_ids": ["p1"]},
                 "blockers": [],
@@ -147,7 +156,16 @@ def test_health_summary_prefers_full_snapshot_and_refreshes_quick_in_auto_mode(
     )
 
     assert refresh_suites == ["quick"]
-    assert payload["health_status"] == "needs-owner-review"
+    assert payload["schema_version"] == 3
+    assert payload["status"] == "needs-review"
+    assert "health_status" not in payload
+    assert payload["health_axes"] == {
+        "control_plane": "pass",
+        "evidence_freshness": "pass",
+        "content_governance": "needs-review",
+        "runtime_hygiene": "pass",
+    }
+    assert payload["runtime_maintenance"]["apply_requires_explicit_request"] is True
     assert payload["product_maturity"]["snapshot_suite"] == "full"
     assert payload["product_maturity"]["full_regression_evidence"] is True
     assert "--regression-suite full" in payload["final_gate"]["command"]

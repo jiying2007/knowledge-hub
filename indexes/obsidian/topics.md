@@ -4,16 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## manual-validation-pending (43)
-
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
-
-## validation (43)
+## validation (60)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -21,6 +12,15 @@
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
+
+## manual-validation-pending (44)
+
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
+- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
+- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
+- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
 ## no-active-promotion (40)
 
@@ -40,6 +40,15 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
+## pcr02 (33)
+
+- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-cold-switch-latency-optimization.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md) · `reviewing`
+
 ## owner-review-pending (30)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
@@ -57,15 +66,6 @@
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
-
-## pcr02 (17)
-
-- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
-- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
-- [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
-- [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
-- [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
-- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## governance (14)
 
@@ -85,14 +85,23 @@
 - [中文术语表规范](../../governance/glossary.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
 
-## knowledge-hub (8)
+## knowledge-hub (10)
 
 - [Knowledge Hub root](../../README.md) · `active`
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
-- [Knowledge Hub 真实项目证据与反馈波次 2026-07-26](../../governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md) · `draft`
+
+## ssc305 (8)
+
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 WARM切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing`
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## llm-agent (7)
 
@@ -103,6 +112,52 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing`
 
+## sensor (7)
+
+- [PCR02 Sensor 全面测试框架落地验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md) · `reviewing`
+- [PCR02 Sensor 全面测试资产基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-foundation.md) · `reviewing`
+- [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
+- [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
+- [app_sensor_test JSONL v4 与 HIL 证据闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md) · `reviewing`
+- [app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md) · `reviewing`
+
+## hil (5)
+
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+- [PCR02 Sensor 全面测试框架落地验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md) · `reviewing`
+- [PCR02 Sensor 全面测试资产基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-foundation.md) · `reviewing`
+- [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
+- [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
+
+## pcr02-ssc305 (5)
+
+- [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing`
+- [PCR02 SSC305 SDK readiness validation](../../projects/pcr02-ssc305/validation/project-readiness.md) · `reviewing`
+- [PCR02 SSC305 方法与工具来源吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
+- [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
+- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+
+## 1fps (4)
+
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+- [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
+- [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
+- [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
+
+## 30fps (4)
+
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+- [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
+- [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
+- [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
+
+## app_sensor_test (4)
+
+- [app_sensor_test JSONL v4 与 HIL 证据闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md) · `reviewing`
+- [app_sensor_test staged safe 板测 transport 阻塞](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md) · `reviewing`
+- [app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md) · `reviewing`
+- [app_sensor_test 选择完整性、构建身份与性能门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md) · `reviewing`
+
 ## exact-source (4)
 
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
@@ -110,12 +165,19 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
 - [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
 
-## pcr02-ssc305 (4)
+## hdi-vi (4)
 
-- [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing`
-- [PCR02 SSC305 SDK readiness validation](../../projects/pcr02-ssc305/validation/project-readiness.md) · `reviewing`
-- [PCR02 SSC305 方法与工具来源吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
-- [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-cold-switch-latency-optimization.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 WARM切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md) · `reviewing`
+
+## vi (4)
+
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+- [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
+- [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
+- [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
 
 ## agent-dev-kit (3)
 
@@ -141,17 +203,23 @@
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
 
+## long-term-assets (3)
+
+- [中文可读性规范](../../governance/chinese-readability.md) · `active`
+- [中文长期资产模板集](../../templates/README.md) · `active`
+- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
+
+## motor (3)
+
+- [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
+- [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing`
+
 ## qivw (3)
 
 - [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
-
-## ssc305 (3)
-
-- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
-- [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## vad (3)
 
@@ -168,6 +236,11 @@
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
 - [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
+
+## architecture (2)
+
+- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
+- [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing`
 
 ## artifact-sha256 (2)
 
@@ -204,6 +277,16 @@
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
 - [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
 
+## hard-cut (2)
+
+- [PCR02 Sensor 全面测试框架落地验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md) · `reviewing`
+- [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
+
+## implementation (2)
+
+- [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing`
+- [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+
 ## lcd-preview (2)
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
@@ -214,10 +297,10 @@
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
 
-## long-term-assets (2)
+## low-power (2)
 
-- [中文可读性规范](../../governance/chinese-readability.md) · `active`
-- [中文长期资产模板集](../../templates/README.md) · `active`
+- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing`
 
 ## mcu (2)
 
@@ -228,6 +311,16 @@
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
+
+## performance (2)
+
+- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-cold-switch-latency-optimization.md) · `reviewing`
+
+## player (2)
+
+- [PCR02 API消息队列并发创建导致Player/UART串消息验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md) · `reviewing`
+- [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing`
 
 ## portability (2)
 
@@ -248,6 +341,11 @@
 
 - [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
 - [中文可读性规范](../../governance/chinese-readability.md) · `active`
+
+## recovery (2)
+
+- [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing`
+- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## reference-repository (2)
 
@@ -284,6 +382,16 @@
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
+## stress (2)
+
+- [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
+- [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
+
+## uart (2)
+
+- [PCR02 API消息队列并发创建导致Player/UART串消息验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md) · `reviewing`
+- [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+
 ## vision-rgb (2)
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
@@ -312,6 +420,10 @@
 ## android-camera-hal (1)
 
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+
+## api-msg (1)
+
+- [PCR02 API消息队列并发创建导致Player/UART串消息验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md) · `reviewing`
 
 ## app-diag (1)
 
@@ -361,13 +473,29 @@
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 
+## board (1)
+
+- [app_sensor_test staged safe 板测 transport 阻塞](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md) · `reviewing`
+
 ## boot-time (1)
 
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
 
+## cache (1)
+
+- [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing`
+
+## calibration (1)
+
+- [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing`
+
 ## camera (1)
 
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing`
+
+## camera-pipeline (1)
+
+- [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing`
 
 ## candidate-runbook (1)
 
@@ -385,9 +513,17 @@
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 
+## code-review (1)
+
+- [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
+
 ## commit (1)
 
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
+
+## concurrency (1)
+
+- [PCR02 API消息队列并发创建导致Player/UART串消息验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md) · `reviewing`
 
 ## contract-audit (1)
 
@@ -400,6 +536,10 @@
 ## cpu (1)
 
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
+
+## cpu-optimization (1)
+
+- [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
 
 ## debug (1)
 
@@ -432,6 +572,10 @@
 ## display (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+
+## dvr (1)
+
+- [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing`
 
 ## embedded (1)
 
@@ -477,6 +621,10 @@
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
 
+## hall-calibration (1)
+
+- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
+
 ## hard-float (1)
 
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
@@ -497,13 +645,17 @@
 
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
-## hil (1)
-
-- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
-
 ## hil-pending (1)
 
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
+
+## hot-switch (1)
+
+- [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
+
+## hot-unplug (1)
+
+- [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing`
 
 ## human-review (1)
 
@@ -512,6 +664,10 @@
 ## kernel-freezer (1)
 
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
+
+## knowledge-new (1)
+
+- [Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30](../../governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md) · `reviewing`
 
 ## lcd (1)
 
@@ -525,9 +681,9 @@
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 
-## low-power (1)
+## maintainability (1)
 
-- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
+- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 
 ## maintenance (1)
 
@@ -561,6 +717,10 @@
 
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
 
+## monotonic-clock (1)
+
+- [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing`
+
 ## mspi (1)
 
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
@@ -588,6 +748,10 @@
 ## optimization (1)
 
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
+## osal (1)
+
+- [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
 
 ## ota-packager (1)
 
@@ -645,9 +809,21 @@
 
 - [PCR02 Wi-Fi Module readiness validation](../../projects/pcr02-wifi/validation/project-readiness.md) · `reviewing`
 
+## pipeline (1)
+
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+
 ## pr (1)
 
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
+
+## product-test (1)
+
+- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
+
+## profile-switch (1)
+
+- [PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md) · `reviewing`
 
 ## prog_pcr02 (1)
 
@@ -669,6 +845,10 @@
 
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
 
+## publish (1)
+
+- [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
+
 ## quick-gate (1)
 
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
@@ -684,10 +864,6 @@
 ## rc3 (1)
 
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
-
-## recovery (1)
-
-- [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 
 ## release (1)
 
@@ -741,6 +917,14 @@
 
 - [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
 
+## sd-card (1)
+
+- [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing`
+
+## semaphore (1)
+
+- [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing`
+
 ## sigmastar-flasher (1)
 
 - [SigmaStar Flasher readiness validation](../../projects/sigmastar-flasher/validation/project-readiness.md) · `reviewing`
@@ -768,6 +952,10 @@
 ## sstar-fb (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+
+## static-info (1)
+
+- [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing`
 
 ## tcpka (1)
 
@@ -797,9 +985,21 @@
 
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
+## time-sync (1)
+
+- [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+
+## timestamp (1)
+
+- [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+
 ## tools (1)
 
 - [命令与工具入口规范](../../governance/command-tooling-rules.md) · `active`
+
+## transaction (1)
+
+- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
 
 ## uart-protocol (1)
 
@@ -808,6 +1008,10 @@
 ## unreachable (1)
 
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
+
+## venc (1)
+
+- [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
 
 ## video (1)
 
@@ -824,6 +1028,10 @@
 ## wakeup-count (1)
 
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
+
+## warm-switch (1)
+
+- [PCR02 ACTIVE_LOW_1 WARM切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md) · `reviewing`
 
 ## wechat (1)
 

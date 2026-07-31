@@ -17,6 +17,7 @@ from .common import (
     working_tree_signature,
 )
 from .product_gate import product_snapshot_path, run_product_gate
+from .runtime_maintenance import plan_runtime_maintenance
 from .store import incomplete_transactions
 
 
@@ -79,7 +80,11 @@ def _review_queue(root: pathlib.Path) -> Dict[str, Any]:
         pending_total = ai_pending = external_pending = active_blockers = 0
         parse_error = str(exc)
     return {
-        "status": "pass" if result["exit_code"] == 0 and not parse_error else "fail",
+        "status": (
+            "pass"
+            if result["exit_code"] == 0 and not parse_error
+            else "needs-fix"
+        ),
         "command": result["command"],
         "exit_code": result["exit_code"],
         "pending_total": pending_total,
@@ -176,7 +181,11 @@ def _body_coverage(root: pathlib.Path, items: List[Dict[str, Any]]) -> Dict[str,
     return {
         "command": status_result["command"],
         "exit_code": status_result["exit_code"],
-        "status": "pass" if status_result["exit_code"] == 0 and not missing else "fail",
+        "status": (
+            "pass"
+            if status_result["exit_code"] == 0 and not missing
+            else "needs-fix"
+        ),
         "checked_count": len(set(changed)),
         "deleted_body_count": len(set(deleted)),
         "deleted_body_sample": sorted(set(deleted))[:20],
@@ -220,6 +229,52 @@ def _reviewing_triage(items: List[Dict[str, Any]], as_of: dt.date) -> Dict[str, 
         "by_recommended_action": dict(sorted(by_action.items())),
         "parse_error": "",
         "mode": "registry-direct-fast",
+    }
+
+
+def _runtime_maintenance_advisory(
+    root: pathlib.Path,
+    as_of: dt.date,
+) -> Dict[str, Any]:
+    """Return a bounded, report-only runtime hygiene projection."""
+
+    plan = plan_runtime_maintenance(root, as_of)
+    candidates = [
+        row for row in plan.get("candidates", []) if isinstance(row, Mapping)
+    ]
+    delete_candidates = [
+        row for row in candidates if row.get("action") == "delete"
+    ]
+    permission_candidates = [
+        row for row in candidates if row.get("action") == "chmod"
+    ]
+    policy = plan.get("policy", {})
+    return {
+        "status": "pass" if plan.get("status") == "ready" else "blocked",
+        "advisory": bool(candidates),
+        "candidate_count": len(candidates),
+        "delete_candidate_count": len(delete_candidates),
+        "permission_candidate_count": len(permission_candidates),
+        "candidate_bytes": int(plan.get("candidate_bytes", 0) or 0),
+        "protected_count": int(plan.get("protected_count", 0) or 0),
+        "transaction_retention_days": int(
+            policy.get("transaction_retention_days", 0) or 0
+        ),
+        "transaction_minimum_newest_keep": int(
+            policy.get("transaction_minimum_newest_keep", 0) or 0
+        ),
+        "error_count": int(plan.get("error_count", 0) or 0),
+        "errors": list(plan.get("errors", []))[:10],
+        "read_only": True,
+        "apply_requires_explicit_request": True,
+        "plan_command": (
+            "rtk bash ~/knowledge-hub/tools/knowledge-runtime-maintenance.sh "
+            "--summary-json"
+        ),
+        "apply_command": (
+            "rtk bash ~/knowledge-hub/tools/knowledge-runtime-maintenance.sh "
+            "--scope all --apply --json"
+        ),
     }
 
 
@@ -268,7 +323,10 @@ def _load_snapshot_candidate(
     if not engineering_structure_valid:
         engineering_quality = {}
     production_evidence = (
-        payload.get("regression_suite") == regression_suite
+        payload.get("schema_version") == 5
+        and payload.get("status")
+        in {"pass", "needs-review", "needs-fix", "blocked"}
+        and payload.get("regression_suite") == regression_suite
         and payload.get("local_cache_written") is True
         and operational_structure_valid
         and restore_structure_valid
@@ -356,13 +414,21 @@ def health_summary(
         regression_suite=gate_suite,
     )
     selected_suite = str(snapshot_meta.get("suite", "quick"))
+    platform = snapshot.get("platform_status", {}) if snapshot else {}
+    maturity = snapshot.get("maturity_axes", {}) if snapshot else {}
+    snapshot_status = str(snapshot.get("status", "blocked")) if snapshot else "blocked"
     final_gate = {
         "command": "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite {} --as-of {}".format(
             selected_suite,
             as_of.isoformat(),
         ),
-        "exit_code": None if not snapshot else (0 if snapshot.get("gate_status") == "pass" else 1),
-        "final_status": snapshot.get("overall_status", "snapshot-missing"),
+        "exit_code": (
+            None
+            if not snapshot
+            else (0 if platform.get("status") == "pass" else 1)
+        ),
+        "status": snapshot_status,
+        "platform_status": platform.get("status", "blocked"),
         "parse_error": "",
         "blocker_count": len(snapshot.get("blockers", [])) if snapshot else 0,
         "gap_count": len(snapshot.get("gap_map", [])) if snapshot else 0,
@@ -370,7 +436,8 @@ def health_summary(
     }
     owner = snapshot.get("owner_and_real_evidence", {}) if snapshot else {}
     incomplete = incomplete_transactions(root)
-    health_status = "ok"
+    runtime_maintenance = _runtime_maintenance_advisory(root, as_of)
+    control_plane_status = "pass"
     if (
         registry["summary_gap_total"]
         or body_coverage["missing_registry_count"]
@@ -378,20 +445,60 @@ def health_summary(
         or review_queue["active_or_promotion_blocker_count"]
         or incomplete
     ):
-        health_status = "needs-fix"
-    elif not snapshot_meta["fresh"] or snapshot.get("gate_status") != "pass":
-        health_status = "needs-fix"
-    elif snapshot.get("overall_status") in {"needs-owner-review", "partial"}:
-        health_status = str(snapshot["overall_status"])
+        control_plane_status = "needs-fix"
+    evidence_freshness_status = (
+        "pass"
+        if snapshot_meta["fresh"] and platform.get("status") == "pass"
+        else "needs-fix"
+    )
+    content_governance_status = str(
+        (maturity.get("content", {}) or {}).get("status", "blocked")
+    )
+    runtime_hygiene_status = (
+        "needs-fix"
+        if runtime_maintenance["status"] not in {"ready", "pass"}
+        else "needs-review"
+        if runtime_maintenance["advisory"]
+        else "pass"
+    )
+    if "needs-fix" in {
+        control_plane_status,
+        evidence_freshness_status,
+        content_governance_status,
+        runtime_hygiene_status,
+    }:
+        status = "needs-fix"
+    elif "blocked" in {
+        control_plane_status,
+        evidence_freshness_status,
+        content_governance_status,
+        runtime_hygiene_status,
+    }:
+        status = "blocked"
+    elif "needs-review" in {
+        control_plane_status,
+        evidence_freshness_status,
+        content_governance_status,
+        runtime_hygiene_status,
+    }:
+        status = "needs-review"
+    else:
+        status = "pass"
     output = {
-        "schema_version": 2,
+        "schema_version": 3,
+        "status": status,
         "read_only": True,
         "tracked_files_written": False,
         "root": "~/knowledge-hub",
         "generated_at": utc_timestamp(),
         "as_of": as_of.isoformat(),
         "final_profile": "product",
-        "health_status": health_status,
+        "health_axes": {
+            "control_plane": control_plane_status,
+            "evidence_freshness": evidence_freshness_status,
+            "content_governance": content_governance_status,
+            "runtime_hygiene": runtime_hygiene_status,
+        },
         "registry": registry,
         "review_queue": review_queue,
         "review_after": review_after,
@@ -405,25 +512,28 @@ def health_summary(
             "snapshot_available": bool(snapshot),
         },
         "product_maturity": {
-            "platform_status": (snapshot.get("platform_status") or {}).get("status", "snapshot-missing"),
-            "overall_status": snapshot.get("overall_status", "snapshot-missing"),
-            "platform_productization_complete": snapshot.get("platform_productization_complete", False),
-            "local_delivery_complete": snapshot.get("local_delivery_complete", False),
-            "remote_published": snapshot.get("remote_published", False),
-            "offsite_restore_verified": snapshot.get("offsite_restore_verified", False),
-            "adoption_ready": snapshot.get("adoption_ready", False),
+            "status": snapshot_status,
             "terminal": snapshot.get("terminal", False),
+            "maturity_axes": maturity,
             "snapshot_suite": selected_suite,
             "full_regression_evidence": selected_suite == "full" and snapshot_meta["fresh"],
         },
         "status_dashboard": {
             "command": "snapshot:{}".format(snapshot_meta["path"]),
-            "exit_code": None if not snapshot else (0 if snapshot.get("gate_status") == "pass" else 1),
-            "status": snapshot.get("gate_status", "snapshot-missing"),
-            "strict_blocker_count": len((snapshot.get("platform_status") or {}).get("blockers", [])),
+            "exit_code": (
+                None
+                if not snapshot
+                else (0 if platform.get("status") == "pass" else 1)
+            ),
+            "status": platform.get("status", "blocked"),
+            "strict_blocker_count": len(platform.get("blockers", [])),
             "parse_error": "",
         },
-        "transaction_recovery": {"status": "pass" if not incomplete else "fail", "incomplete": incomplete},
+        "transaction_recovery": {
+            "status": "pass" if not incomplete else "needs-fix",
+            "incomplete": incomplete,
+        },
+        "runtime_maintenance": runtime_maintenance,
         "final_gate": final_gate,
         "must_not": [
             "不生成 owner decision",

@@ -6,18 +6,23 @@ import argparse
 import json
 from typing import Iterable
 
-from .common import repository_root
-from .metrics import local_metrics
+from .common import repository_root, resolve_today
+from .metrics import local_metrics, local_metrics_summary
 
 
 def main(argv: Iterable[str] = ()) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default="")
-    parser.add_argument("--json", action="store_true")
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument("--json", action="store_true")
+    output.add_argument("--summary-json", action="store_true")
+    parser.add_argument("--as-of", default="")
     args = parser.parse_args(list(argv) if argv else None)
-    payload = local_metrics(repository_root(args.root))
-    if args.json:
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    today, _ = resolve_today(args.as_of)
+    payload = local_metrics(repository_root(args.root), today)
+    if args.json or args.summary_json:
+        projection = local_metrics_summary(payload) if args.summary_json else payload
+        print(json.dumps(projection, ensure_ascii=False, indent=2))
     else:
         print("# Knowledge Hub Local Metrics")
         print()

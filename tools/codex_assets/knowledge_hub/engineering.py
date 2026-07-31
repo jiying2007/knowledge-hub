@@ -24,6 +24,9 @@ from .common import (
     utc_timestamp,
     working_tree_signature,
 )
+from .artifact_governance import evaluate_artifact_governance
+from .command_surface import evaluate_command_surface
+from .complexity_budget import evaluate_complexity_budget
 
 
 CONTRACT_MAX_BYTES = 4 * 1024 * 1024
@@ -42,6 +45,7 @@ REQUIRED_FILES = (
     "requirements-runtime.lock",
     "requirements-dev.lock",
     ".github/workflows/quality.yml",
+    ".github/workflows/recovery-drill.yml",
     ".github/dependabot.yml",
     "tools/ci/rtk",
     "tools/ci/bootstrap-path.sh",
@@ -211,6 +215,44 @@ def _ci_contract(workflow_text: str) -> Dict[str, Any]:
     }
 
 
+def _recovery_workflow_contract(workflow_text: str) -> Dict[str, Any]:
+    actions = ACTION_PATTERN.findall(workflow_text)
+    pinned = bool(actions) and all(
+        "@" in value
+        and FULL_SHA_PATTERN.fullmatch(value.rsplit("@", 1)[1]) is not None
+        for value in actions
+        if not value.startswith("./")
+    )
+    run_steps = re.findall(r"(?m)^\s*run:\s*(.+?)\s*$", workflow_text)
+    return {
+        "quarterly_schedule": bool(
+            re.search(r'(?m)^\s*-\s*cron:\s*["\']23 3 1 \*/3 \*["\']\s*$', workflow_text)
+        ),
+        "manual_dispatch": bool(
+            re.search(r"(?m)^\s*workflow_dispatch\s*:\s*$", workflow_text)
+        ),
+        "github_hosted": "runs-on: ubuntu-latest" in workflow_text,
+        "least_privilege": (
+            "contents: read" in workflow_text
+            and re.search(r"(?m)^\s+[A-Za-z-]+:\s+write\s*$", workflow_text)
+            is None
+        ),
+        "all_actions_sha_pinned": pinned,
+        "checkout_credentials_disabled": "persist-credentials: false" in workflow_text,
+        "hash_locked_install": "--require-hashes" in workflow_text,
+        "head_restore": "knowledge-restore-drill.sh --source-mode head" in workflow_text,
+        "same_run_product_gate": (
+            "knowledge-final-gate.sh --final-profile product" in workflow_text
+        ),
+        "evidence_retention_days": 90 if "retention-days: 90" in workflow_text else 0,
+        "all_run_steps_governed": bool(run_steps)
+        and all(
+            value.startswith("rtk ") or value.startswith("tools/ci/rtk ")
+            for value in run_steps
+        ),
+    }
+
+
 def _ci_transport_contract(rtk_text: str, bootstrap_text: str) -> Dict[str, Any]:
     required_wrappers = (
         "tools/ci/bootstrap-path.sh",
@@ -279,6 +321,7 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
         errors.append("pyproject.toml is invalid TOML: {}".format(exc))
         pyproject = {}
     workflow_text = read_or_empty(".github/workflows/quality.yml")
+    recovery_workflow_text = read_or_empty(".github/workflows/recovery-drill.yml")
     python_support = _python_contract(pyproject, workflow_text)
     if python_support["minimum"] != "3.10":
         errors.append("pyproject.toml requires-python must declare >=3.10")
@@ -344,6 +387,9 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
         errors.append("CI must run the governed quality gate with explicit timeouts")
     if not ci["governed_transport_bootstrap"] or not ci["all_run_steps_governed"]:
         errors.append("every CI run step must use the governed RTK transport")
+    recovery_workflow = _recovery_workflow_contract(recovery_workflow_text)
+    if not all(recovery_workflow.values()):
+        errors.append("quarterly recovery workflow contract failed")
 
     transport = _ci_transport_contract(
         read_or_empty("tools/ci/rtk"),
@@ -360,6 +406,16 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
     if dependabot["monthly_schedule_count"] < 2:
         errors.append("Dependabot updates must use an explicit monthly schedule")
 
+    command_surface = evaluate_command_surface(root)
+    complexity_budget = evaluate_complexity_budget(root)
+    artifact_governance = evaluate_artifact_governance(root)
+    if command_surface["status"] != "pass":
+        errors.append("command surface contract failed")
+    if complexity_budget["status"] != "pass":
+        errors.append("complexity budget regression detected")
+    if artifact_governance["status"] != "pass":
+        errors.append("artifact governance contract failed")
+
     return {
         "schema_version": 1,
         "generated_at": utc_timestamp(),
@@ -374,8 +430,12 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
         },
         "locks": locks,
         "ci": ci,
+        "recovery_workflow": recovery_workflow,
         "ci_transport": transport,
         "dependabot": dependabot,
+        "command_surface": command_surface,
+        "complexity_budget": complexity_budget,
+        "artifact_governance": artifact_governance,
         "missing_files": missing,
         "errors": errors,
     }
@@ -383,6 +443,76 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
 
 def _tail(value: str, limit: int = 20) -> List[str]:
     return value.splitlines()[-limit:]
+
+
+def _run_quality_command(
+    root: pathlib.Path,
+    command: Sequence[str],
+    timeout: int,
+    *,
+    max_attempts: int = 1,
+    retry_exit_codes: Sequence[int] = (),
+) -> Dict[str, Any]:
+    """Run one quality command and retain bounded evidence for every attempt."""
+
+    attempts: List[Dict[str, Any]] = []
+    accepted_exit_codes = tuple(sorted({0, *retry_exit_codes}))
+    for attempt_number in range(1, max_attempts + 1):
+        try:
+            result = run_rtk(
+                root,
+                command,
+                timeout=timeout,
+                accepted_exit_codes=accepted_exit_codes,
+            )
+        except (KnowledgeHubError, OSError) as exc:
+            attempts.append(
+                {
+                    "attempt": attempt_number,
+                    "status": "fail",
+                    "error": str(exc),
+                }
+            )
+            if attempt_number < max_attempts:
+                continue
+            return {
+                "status": "fail",
+                "attempt_count": len(attempts),
+                "recovered_after_retry": False,
+                "attempts": attempts,
+                "error": str(exc),
+            }
+
+        attempt_status = "pass" if result["exit_code"] == 0 else "fail"
+        attempt = {
+            "attempt": attempt_number,
+            "status": attempt_status,
+            "exit_code": result["exit_code"],
+            "command": result["command"],
+            "duration_sec": result["duration_sec"],
+            "stdout_tail": _tail(result["stdout"]),
+            "stderr_tail": _tail(result["stderr"]),
+        }
+        attempts.append(attempt)
+        if attempt_status == "pass":
+            return {
+                "status": "pass",
+                "command": result["command"],
+                "duration_sec": result["duration_sec"],
+                "stdout_tail": attempt["stdout_tail"],
+                "stderr_tail": attempt["stderr_tail"],
+                "attempt_count": len(attempts),
+                "recovered_after_retry": len(attempts) > 1,
+                "attempts": attempts,
+            }
+
+    return {
+        "status": "fail",
+        "attempt_count": len(attempts),
+        "recovered_after_retry": False,
+        "attempts": attempts,
+        "error": "command failed after {} attempt(s)".format(len(attempts)),
+    }
 
 
 def _current_python_executable() -> str:
@@ -522,17 +652,17 @@ def run_engineering_quality(
     )
     quality_errors: List[str] = []
     for name, command, timeout in commands:
-        try:
-            result = run_rtk(root, command, timeout=timeout)
-            checks[name] = {
-                "status": "pass",
-                "command": result["command"],
-                "duration_sec": result["duration_sec"],
-                "stdout_tail": _tail(result["stdout"]),
-                "stderr_tail": _tail(result["stderr"]),
-            }
-        except (KnowledgeHubError, OSError) as exc:
-            checks[name] = {"status": "fail", "error": str(exc)}
+        if name == "full_regression":
+            checks[name] = _run_quality_command(
+                root,
+                command,
+                timeout,
+                max_attempts=2,
+                retry_exit_codes=(1,),
+            )
+        else:
+            checks[name] = _run_quality_command(root, command, timeout)
+        if checks[name]["status"] != "pass":
             quality_errors.append("{} failed".format(name))
     if sbom_path.exists():
         ensure_private_file(sbom_path)

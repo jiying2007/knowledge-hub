@@ -49,15 +49,17 @@ def main(argv: Sequence[str] = ()) -> int:
         print("# Knowledge Hub Product Final Gate")
         print()
         print("- platform_status: {}".format(payload["platform_status"]["status"]))
-        print("- local_delivery_complete: {}".format(payload["local_delivery_complete"]))
-        print("- remote_published: {}".format(payload["remote_published"]))
-        print("- offsite_restore_verified: {}".format(payload["offsite_restore_verified"]))
-        print("- adoption_ready: {}".format(payload["adoption_ready"]))
+        print("- status: {}".format(payload["status"]))
+        print(
+            "- delivery: {}".format(
+                payload["maturity_axes"]["delivery"]
+            )
+        )
+        print("- adoption: {}".format(payload["maturity_axes"]["adoption"]))
         print("- terminal: {}".format(payload["terminal"]))
-        print("- overall_status: {}".format(payload["overall_status"]))
         print("- final_profile: {}".format(payload["final_profile"]))
         print("- duration_ms: {}".format(payload["duration_ms"]))
-    if payload["platform_status"]["status"] != "pass":
+    if payload["status"] in {"needs-fix", "blocked"}:
         return 1
     if args.require_terminal and not payload["terminal"]:
         return 2

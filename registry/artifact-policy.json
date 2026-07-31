@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy": "bounded-vault-and-immutable-reference-v1",
+  "budget": {
+    "tracked_max_files": 800,
+    "tracked_max_bytes": 33554432,
+    "vault_max_bytes": 25165824,
+    "single_file_max_bytes": 5242880,
+    "annual_growth_max_bytes": 16777216
+  },
+  "baseline": {
+    "as_of": "2026-07-30",
+    "tracked_file_count": 641,
+    "tracked_total_bytes": 5081553,
+    "vault_total_bytes": 2551640
+  },
+  "manifest_text_suffixes": [
+    ".md",
+    ".json",
+    ".jsonl",
+    ".yaml",
+    ".yml",
+    ".txt",
+    ".csv"
+  ],
+  "immutable_reference": {
+    "schema_version": "knowledge-hub.immutable-artifact-ref.v1",
+    "required_fields": [
+      "uri",
+      "size",
+      "sha256",
+      "owner",
+      "immutability",
+      "restore"
+    ],
+    "allowed_uri_schemes": [
+      "source",
+      "artifact",
+      "https",
+      "s3"
+    ],
+    "automatic_external_write": false,
+    "automatic_delete": false
+  }
+}

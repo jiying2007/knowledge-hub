@@ -5,6 +5,7 @@ import json
 import pytest
 
 from tools.codex_assets.knowledge_hub import metrics
+from tools.codex_assets.knowledge_hub import retrieval_telemetry
 from tools.codex_assets.knowledge_hub.metrics import (
     append_optional_telemetry,
     local_metrics,
@@ -19,6 +20,7 @@ def _interaction(
     latency_ms=120,
     result_ids=("item-a",),
     performance_contract=metrics.PERFORMANCE_CONTRACT,
+    implementation_generation=metrics.IMPLEMENTATION_GENERATION,
     index_state="warm",
     index_ensure_ms=40,
 ):
@@ -40,6 +42,8 @@ def _interaction(
     }
     if performance_contract:
         row["performance_contract"] = performance_contract
+    if implementation_generation:
+        row["implementation_generation"] = implementation_generation
     return row
 
 
@@ -69,7 +73,7 @@ def test_metrics_do_not_store_raw_queries(tmp_path):
     assert recorded["raw_query_stored"] is False
     assert "sensitive query body" not in stored
     assert payload["privacy"]["raw_query_stored"] is False
-    assert payload["schema_version"] == 4
+    assert payload["schema_version"] == 5
     assert payload["usage"]["invocation_count"] == 1
     assert payload["usage"]["excluded_historical_or_noninteractive_count"] == 1
     assert payload["retrieval"]["feedback_count"] == 1
@@ -131,6 +135,37 @@ def test_metrics_keep_usage_but_exclude_stale_performance_contract(tmp_path):
     assert payload["performance"]["search_p95_ms"] == 120
     assert payload["performance"]["excluded_stale_contract_sample_count"] == 1
     assert payload["measurement_contract"]["performance_contract"] == metrics.PERFORMANCE_CONTRACT
+
+
+def test_metrics_keep_usage_but_exclude_stale_implementation_generation(
+    tmp_path,
+):
+    cache = tmp_path / ".cache/knowledge-hub"
+    cache.mkdir(parents=True)
+    rows = [
+        _interaction("current-generation"),
+        _interaction(
+            "historical-generation",
+            recorded_at="2026-07-13T00:00:01Z",
+            latency_ms=9999,
+            implementation_generation="knowledge-retrieval-implementation-legacy",
+        ),
+    ]
+    (cache / "search-telemetry.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows)
+    )
+
+    payload = local_metrics(tmp_path)
+
+    assert payload["usage"]["invocation_count"] == 2
+    assert payload["performance"]["search_sample_count"] == 1
+    assert payload["performance"]["search_p95_ms"] == 120
+    assert payload["performance"]["excluded_stale_contract_sample_count"] == 0
+    assert payload["performance"]["excluded_stale_generation_sample_count"] == 1
+    assert (
+        payload["measurement_contract"]["implementation_generation"]
+        == metrics.IMPLEMENTATION_GENERATION
+    )
 
 
 def test_metrics_separate_index_preparation_from_warm_interactive_sla(tmp_path):
@@ -292,7 +327,7 @@ def test_optional_telemetry_degrades_on_read_only_storage(monkeypatch, tmp_path)
         raise PermissionError(errno.EROFS, "read-only filesystem")
 
     monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
-    monkeypatch.setattr(metrics, "_append_locked", deny_write)
+    monkeypatch.setattr(retrieval_telemetry, "append_telemetry_row", deny_write)
 
     result = append_optional_telemetry(
         tmp_path / ".cache/knowledge-hub/search-telemetry.jsonl",
@@ -313,7 +348,7 @@ def test_optional_telemetry_does_not_hide_programming_errors(monkeypatch, tmp_pa
         raise RuntimeError("unexpected telemetry bug")
 
     monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
-    monkeypatch.setattr(metrics, "_append_locked", broken_writer)
+    monkeypatch.setattr(retrieval_telemetry, "append_telemetry_row", broken_writer)
 
     with pytest.raises(RuntimeError, match="unexpected telemetry bug"):
         append_optional_telemetry(

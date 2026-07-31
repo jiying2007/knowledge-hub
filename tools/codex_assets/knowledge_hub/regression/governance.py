@@ -1244,7 +1244,7 @@ def test_final_gap_readability_positive_contracts():
         check_result["exit_code"] == 0
         and check_parsed.get("status") == "pass"
         and final_result["exit_code"] == 0
-        and final_parsed.get("final_status") == "needs-owner-review"
+        and final_parsed.get("status") == "needs-review"
         and not missing_readability_fields
         and not missing_source_fields
         and len(expected_delivery_gaps) <= len(terminal_gap_contracts)
@@ -1257,7 +1257,7 @@ def test_final_gap_readability_positive_contracts():
             "knowledge_check_exit_code": check_result["exit_code"],
             "knowledge_check_status": check_parsed.get("status"),
             "final_gate_exit_code": final_result["exit_code"],
-            "final_status": final_parsed.get("final_status"),
+            "status": final_parsed.get("status"),
             "missing_readability_fields": missing_readability_fields,
             "missing_source_fields": missing_source_fields,
             "non_owner_gaps": non_owner_gaps,
@@ -2217,7 +2217,7 @@ def test_automation_report_only_safety_gate():
     expect(
         not setup_error
         and result["exit_code"] == 1
-        and parsed.get("status") == "fail"
+        and parsed.get("status") == "needs-fix"
         and "memory-auto-curation-20260618-definition" in health.get("unsafe_run_ids", [])
         and any("enabled must be false" in error for error in errors)
         and any("mode must be read-only/report-only/plan-only/local-commit/apply-with-review/forbidden" in error for error in errors)
@@ -2329,7 +2329,7 @@ def test_review_after_as_of_deterministic():
         and parsed.get("past_status", {}).get("final_gate_command") == "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --as-of 2026-06-01 --json --final-profile product"
         and not any(row.get("id") == item_id for row in past_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
         and any(row.get("id") == item_id for row in future_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
-        and parsed.get("final_gate", {}).get("today") == "2026-06-01"
+        and parsed.get("final_gate", {}).get("as_of") == "2026-06-01"
         and parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status") == "pass",
         "review-after-as-of-deterministic",
         "--as-of fixes review_after warning semantics for check/status/final-gate",
@@ -2344,7 +2344,7 @@ def test_review_after_as_of_deterministic():
             "past_status_today": parsed.get("past_status", {}).get("today"),
             "past_status_final_gate_command": parsed.get("past_status", {}).get("final_gate_command"),
             "past_actions_text": past_actions_text,
-            "final_gate_today": parsed.get("final_gate", {}).get("today"),
+            "final_gate_as_of": parsed.get("final_gate", {}).get("as_of"),
             "final_gate_check_status": parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status"),
             "future_warning_sample": parsed.get("future_check", {}).get("warnings", [])[:5],
             "past_stale_count": past_registry.get("stale_review_after_count"),

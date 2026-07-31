@@ -10,11 +10,17 @@ import shlex
 import subprocess
 import sys
 
+from .output_contract import status_contract
+from .source_coverage import select_source_coverage_closeout
+from .status_projection import status_summary
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a read-only Knowledge Hub status dashboard.")
-parser.add_argument("--json", action="store_true")
+output_mode = parser.add_mutually_exclusive_group()
+output_mode.add_argument("--json", action="store_true")
+output_mode.add_argument("--summary-json", action="store_true")
 parser.add_argument("--strict", action="store_true", help="Return non-zero unless the final status is ok.")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 parser.add_argument("--review-queue-limit", type=int, default=20, help="Maximum rows per review queue sample in JSON/text output.")
@@ -65,7 +71,6 @@ def resolve_today():
     return dt.date.today(), source
 
 today, today_source = resolve_today()
-SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
 
 def user_path_prefixes():
     prefixes = [str(pathlib.Path.home())]
@@ -120,38 +125,6 @@ def load_jsonl(path):
         except Exception as exc:
             errors.append(f"{path.relative_to(root)}:{line_no}: invalid jsonl: {exc}")
     return rows
-
-def select_source_coverage_closeout(root):
-    paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
-    dated = []
-    ignored = []
-    for path in paths:
-        relative = str(path.relative_to(root))
-        match = SOURCE_COVERAGE_RE.match(path.name)
-        if not match:
-            ignored.append(relative)
-            continue
-        date_text = match.group(1)
-        try:
-            dt.datetime.strptime(date_text, "%Y%m%d").date()
-        except Exception:
-            ignored.append(relative)
-            continue
-        dated.append((date_text, relative, path))
-    dated.sort(key=lambda row: (row[0], row[1]))
-    selection = {
-        "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
-        "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
-        "strategy": "filename-yyyymmdd-sort-last",
-        "candidate_count": len(paths),
-        "candidates": [str(path.relative_to(root)) for path in paths],
-        "dated_candidate_count": len(dated),
-        "dated_candidates": [row[1] for row in dated],
-        "ignored_non_date_candidates": ignored,
-        "selected": dated[-1][1] if dated else "",
-        "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略，避免 future/latest 等文件名被静默选中。",
-    }
-    return selection, dated[-1][2] if dated else None
 
 def run_json(command):
     completed = subprocess.run(
@@ -1378,11 +1351,16 @@ if errors:
 elif fix_blocking:
     status = "needs-fix"
 elif owner_review_blocking:
-    status = "needs-owner-review"
+    status = "needs-review"
 else:
-    status = "ok"
+    status = "pass"
 
-exit_code = 1 if status in {"blocked", "needs-fix"} or (args.strict and status != "ok") else 0
+public_status_contract = status_contract(status)
+exit_code = (
+    public_status_contract["strict_exit_code"]
+    if args.strict
+    else public_status_contract["default_exit_code"]
+)
 if today_source == "system-date":
     final_gate_command = "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product"
 else:
@@ -1716,6 +1694,7 @@ result = {
     "final_profile": args.final_profile,
     "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     "status": status,
+    "status_contract": public_status_contract,
     "technical_readiness": {
         "status": "not-evaluated-by-status",
         "product_ready_claimed": False,
@@ -1818,8 +1797,9 @@ result = {
     "next_actions_zh": next_actions,
 }
 
-if args.json:
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+if args.json or args.summary_json:
+    projection = status_summary(result) if args.summary_json else result
+    print(json.dumps(projection, ensure_ascii=False, indent=2))
     sys.exit(exit_code)
 
 print("# Knowledge Hub Status")

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/artifact-policy.schema.json",
+  "title": "Knowledge Hub bounded artifact policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy",
+    "budget",
+    "baseline",
+    "manifest_text_suffixes",
+    "immutable_reference"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy": {"const": "bounded-vault-and-immutable-reference-v1"},
+    "budget": {
+      "type": "object",
+      "required": [
+        "tracked_max_files",
+        "tracked_max_bytes",
+        "vault_max_bytes",
+        "single_file_max_bytes",
+        "annual_growth_max_bytes"
+      ],
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "as_of",
+        "tracked_file_count",
+        "tracked_total_bytes",
+        "vault_total_bytes"
+      ],
+      "properties": {
+        "as_of": {"type": "string", "format": "date"},
+        "tracked_file_count": {"type": "integer", "minimum": 0},
+        "tracked_total_bytes": {"type": "integer", "minimum": 0},
+        "vault_total_bytes": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "manifest_text_suffixes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^\\.[a-z0-9]+$"}
+    },
+    "immutable_reference": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "required_fields",
+        "allowed_uri_schemes",
+        "automatic_external_write",
+        "automatic_delete"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "knowledge-hub.immutable-artifact-ref.v1"
+        },
+        "required_fields": {"type": "array", "uniqueItems": true},
+        "allowed_uri_schemes": {"type": "array", "uniqueItems": true},
+        "automatic_external_write": {"const": false},
+        "automatic_delete": {"const": false}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

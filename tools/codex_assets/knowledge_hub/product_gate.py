@@ -35,15 +35,21 @@ from .evidence import evaluate_evidence_contract
 from .export import plan_team_export
 from .link_audit import audit_links
 from .metrics import local_metrics
+from .maturity import evaluate_maturity_axes
 from .obsidian_view import build_obsidian_views
 from .project_readiness import SLOT_NAMES, _project_paths, _repo_rows_for_project, _workspace_state
 from .product_policy import (
     evaluate_specialized_owner_requirements,
     load_product_policy,
 )
+from .product_summary import product_gate_summary as product_gate_summary
 from .retrieval import (
     retrieval_benchmark_summary,
     run_retrieval_benchmark_serialized,
+)
+from .recovery_evidence import (
+    evidence_matches_current_execution,
+    expected_repository_from_registry,
 )
 from .schemas import validate_instance, validate_schema_catalog
 from .store import incomplete_transactions
@@ -88,108 +94,6 @@ def _unit_test_evidence_reuse_mode(
     if regression_suite == "quick":
         return "automatic-quick"
     return "disabled"
-
-
-def product_gate_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    blocker_rows = [
-        {
-            key: row.get(key)
-            for key in (
-                "id",
-                "check",
-                "severity",
-                "gap_type",
-                "codex_auto_can_complete",
-                "requires_owner_decision",
-                "source_id",
-                "field",
-            )
-            if key in row
-        }
-        for row in payload.get("blockers", [])
-        if isinstance(row, Mapping)
-    ]
-    content = payload.get("content_readiness", {}) or {}
-    project = content.get("project_readiness", {}) or {}
-    owner = payload.get("owner_and_real_evidence", {}) or {}
-    delivery = payload.get("delivery_readiness", {}) or {}
-    adoption = payload.get("adoption", {}) or {}
-    local_metrics = (
-        (payload.get("operational_readiness", {}) or {}).get("local_metrics", {})
-        or {}
-    )
-    usage = local_metrics.get("usage", {}) or {}
-    retrieval = local_metrics.get("retrieval", {}) or {}
-    return {
-        "schema_version": 2,
-        "projection": "product-final-gate-summary-v2",
-        "generated_at": payload.get("generated_at", ""),
-        "as_of": payload.get("as_of", ""),
-        "final_profile": payload.get("final_profile", ""),
-        "regression_suite": payload.get("regression_suite", ""),
-        "gate_status": payload.get("gate_status", ""),
-        "overall_status": payload.get("overall_status", ""),
-        "platform_productization_complete": payload.get(
-            "platform_productization_complete", False
-        ),
-        "local_delivery_complete": payload.get("local_delivery_complete", False),
-        "remote_published": payload.get("remote_published", False),
-        "offsite_restore_verified": payload.get(
-            "offsite_restore_verified", False
-        ),
-        "adoption_ready": payload.get("adoption_ready", False),
-        "terminal": payload.get("terminal", False),
-        "hard_checks": (payload.get("platform_status", {}) or {}).get(
-            "hard_checks", {}
-        ),
-        "blocker_count": len(blocker_rows),
-        "blockers": blocker_rows,
-        "content": {
-            "status": content.get("status", ""),
-            "project_count": project.get("project_count", 0),
-            "structural_ready_count": project.get("structural_ready_count", 0),
-            "evidence_ready_count": project.get("evidence_ready_count", 0),
-            "evidence_field_complete_count": project.get(
-                "evidence_field_complete_count", 0
-            ),
-        },
-        "owner_and_real_evidence": {
-            "status": owner.get("status", ""),
-            "owner_gate_open_count": owner.get("owner_gate_open_count", 0),
-            "review_queue_pending_count": owner.get(
-                "review_queue_pending_count", 0
-            ),
-            "pending_project_count": len(owner.get("pending_project_ids", [])),
-            "pending_specialized_owner_candidate_count": owner.get(
-                "pending_specialized_owner_candidate_count", 0
-            ),
-        },
-        "delivery": {
-            "status": delivery.get("status", ""),
-            "local_delivery_complete": delivery.get(
-                "local_delivery_complete", False
-            ),
-            "remote_published": delivery.get("remote_published", False),
-            "offsite_restore_verified": delivery.get(
-                "offsite_restore_verified", False
-            ),
-            "engineering_quality_ready": delivery.get(
-                "engineering_quality_ready", False
-            ),
-            "full_regression_ready": delivery.get("full_regression_ready", False),
-        },
-        "adoption": {
-            "ready": adoption.get("ready", False),
-            "evaluable": adoption.get("evaluable", False),
-            "invocation_count": usage.get("invocation_count", 0),
-            "feedback_count": retrieval.get("feedback_count", 0),
-            "observation_days": usage.get("observation_days", 0),
-        },
-        "snapshot": payload.get("snapshot", ""),
-        "conclusion_zh": payload.get("conclusion_zh", ""),
-        "next_actions_zh": list(payload.get("next_actions_zh", []))[:10],
-        "duration_ms": payload.get("duration_ms", 0),
-    }
 
 
 def product_snapshot_path(root: pathlib.Path, regression_suite: str) -> pathlib.Path:
@@ -369,8 +273,20 @@ def _restore_state(
         if source_mode == "candidate"
         else payload.get("source_revision") == head_revision
     )
+    schema_validation = validate_instance(root, "restore-drill-v4", payload)
+    expected_repository = expected_repository_from_registry(root)
+    execution_bound = bool(
+        source_mode == "head"
+        and schema_validation["status"] == "pass"
+        and evidence_matches_current_execution(
+            payload.get("execution_environment", {}),
+            head_revision,
+            expected_repository=expected_repository,
+        )
+    )
     fresh = (
         payload.get("status") == "pass"
+        and schema_validation["status"] == "pass"
         and payload.get("source_mode") == source_mode
         and payload.get("as_of") == as_of
         and age <= max_age_hours * 3600
@@ -390,14 +306,22 @@ def _restore_state(
         "failed_checks": payload.get("failed_checks", []),
         "generated_at": payload.get("generated_at", ""),
         "execution_environment": payload.get("execution_environment", {}),
+        "schema_validation": schema_validation,
+        "evidence_matches_current_execution": execution_bound,
         "remote_checkout_verified": bool(
-            fresh and payload.get("remote_checkout_verified", False)
+            fresh
+            and execution_bound
+            and payload.get("remote_checkout_verified", False)
         ),
         "remote_published_ref_verified": bool(
-            fresh and payload.get("remote_published_ref_verified", False)
+            fresh
+            and execution_bound
+            and payload.get("remote_published_ref_verified", False)
         ),
         "offsite_environment_verified": bool(
-            fresh and payload.get("offsite_environment_verified", False)
+            fresh
+            and execution_bound
+            and payload.get("offsite_environment_verified", False)
         ),
     }
 
@@ -800,7 +724,7 @@ def run_product_gate(
         and not str(row.get("path", "")).startswith("artifacts/manifests/")
     ]
     status_value = str(status_payload.get("status", "unparseable"))
-    status_control_plane_ready = status_value in {"ok", "needs-owner-review", "partial"}
+    status_control_plane_ready = status_value in {"pass", "needs-review"}
     hard_checks = {
         "knowledge_check": check_result["exit_code"] == 0 and check_payload.get("status") == "pass",
         "product_status": status_result["exit_code"] in {0, 1} and status_control_plane_ready,
@@ -832,7 +756,7 @@ def run_product_gate(
         "schema_catalog": schema_catalog["status"] == "pass",
     }
     blockers = [name for name, passed in hard_checks.items() if not passed]
-    gate_status = "pass" if not blockers else "fail"
+    gate_status = "pass" if not blockers else "needs-fix"
     owner_gate_open_count = int(status_payload.get("owner_gates", {}).get("open_count", 0) or 0)
     review_queue_pending_count = int(
         status_payload.get("review_queues", {}).get("summary", {}).get("total_pending_count", 0) or 0
@@ -875,19 +799,24 @@ def run_product_gate(
     content_status = (
         "needs-fix"
         if readiness["structural_ready_count"] != readiness["project_count"]
-        else "ready"
+        else "pass"
         if evidence_ready
-        else "needs-owner-review"
+        else "needs-review"
     )
-    overall_status = (
-        "needs-fix"
-        if gate_status != "pass"
-        else "needs-owner-review"
-        if not evidence_ready
-        else "mature"
-        if terminal
-        else "partial"
+    maturity_axes = evaluate_maturity_axes(
+        platform_status=gate_status,
+        content_status=content_status,
+        project_count=readiness["project_count"],
+        project_evidence_ready_count=readiness["evidence_ready_count"],
+        owner_gate_open_count=owner_gate_open_count,
+        review_queue_pending_count=review_queue_pending_count,
+        adoption_ready=adoption_ready,
+        local_delivery_complete=local_delivery_complete,
+        remote_published=remote_published,
+        offsite_restore_verified=offsite_restore_verified,
     )
+    terminal = bool(maturity_axes["terminal"])
+    product_status = str(maturity_axes["status"])
     if not owner_decision_pending:
         owner_evidence_clause = (
             "{} 项 authority-boundary owner 与 {} 项声明式专项 owner 要求均已绑定；"
@@ -1167,24 +1096,20 @@ def run_product_gate(
     next_actions_zh.append(
         "后续 full regression 性能仅跟踪 slowest 10；日常 search/health/final SLA 单独维护。"
     )
+    retrieval_quality = dict(retrieval)
+    retrieval_quality["status"] = (
+        "pass" if retrieval.get("status") == "pass" else "needs-fix"
+    )
 
     payload: Dict[str, Any] = {
-        "schema_version": 3,
+        "schema_version": 5,
+        "status": product_status,
+        "terminal": terminal,
         "root": "~/knowledge-hub",
         "generated_at": utc_timestamp(),
         "as_of": as_of,
-        "today": as_of,
         "as_of_source": "arg:--as-of",
-        "gate_status": gate_status,
-        "final_status": overall_status,
-        "maturity_status": overall_status,
-        "overall_status": overall_status,
-        "platform_productization_complete": gate_status == "pass",
-        "local_delivery_complete": local_delivery_complete,
-        "remote_published": remote_published,
-        "offsite_restore_verified": offsite_restore_verified,
-        "adoption_ready": adoption_ready,
-        "terminal": terminal,
+        "maturity_axes": maturity_axes,
         "final_profile": "product",
         "regression_suite": regression_suite,
         "engineering_evidence_reuse": {
@@ -1226,9 +1151,11 @@ def run_product_gate(
         "content_readiness": {
             "status": content_status,
             "structural_status": (
-                "pass" if readiness["structural_ready_count"] == readiness["project_count"] else "fail"
+                "pass"
+                if readiness["structural_ready_count"] == readiness["project_count"]
+                else "needs-fix"
             ),
-            "evidence_status": "ready" if evidence_ready else "pending",
+            "evidence_status": "pass" if evidence_ready else "needs-review",
             "registry_item_count": len(items),
             "status_counts": dict(sorted(status_counts.items())),
             "active_domain_knowledge_count": len(active_domain),
@@ -1236,10 +1163,11 @@ def run_product_gate(
             "project_readiness": readiness,
             "interpretation_zh": "单一 evidence contract structural coverage 表示入口和路由完整；不表示项目事实、owner、源码、实机或发布证据完成。",
         },
-        "retrieval_quality": retrieval,
-        "retrieval": retrieval,
+        "retrieval_quality": retrieval_quality,
         "obsidian": {
-            "status": "pass" if hard_checks["obsidian_views"] else "fail",
+            "status": (
+                "pass" if hard_checks["obsidian_views"] else "needs-fix"
+            ),
             "relationship": "optional-local-workbench-over-canonical-markdown",
             "base_count": len(links["obsidian_bases"]),
             "bases": links["obsidian_bases"],
@@ -1258,7 +1186,11 @@ def run_product_gate(
         },
         "schema_catalog": schema_catalog,
         "operational_readiness": {
-            "status": "pass" if hard_checks["team_export_plan"] and hard_checks["restore_drill"] else "fail",
+            "status": (
+                "pass"
+                if hard_checks["team_export_plan"] and hard_checks["restore_drill"]
+                else "needs-fix"
+            ),
             "team_export": {
                 "status": export_plan["status"],
                 "selected_count": export_plan["selected_count"],
@@ -1276,9 +1208,7 @@ def run_product_gate(
                 if local_delivery_complete
                 and remote_published
                 and offsite_restore_verified
-                else "local-complete"
-                if local_delivery_complete
-                else "candidate"
+                else "needs-review"
             ),
             "local_delivery_complete": local_delivery_complete,
             "remote_published": remote_published,
@@ -1302,7 +1232,11 @@ def run_product_gate(
         "gap_map": gap_map,
         "source_check_runtime": checks["source_check_runtime"],
         "final_state_audit": {
-            "status": "pass" if hard_checks["knowledge_check"] and hard_checks["product_status"] else "fail",
+            "status": (
+                "pass"
+                if hard_checks["knowledge_check"] and hard_checks["product_status"]
+                else "needs-fix"
+            ),
             "level3_registered_sources": {
                 "source_coverage_selection": check_payload.get("source_coverage_selection", {}),
                 "source_coverage_health": check_payload.get("source_coverage_health", {}),
@@ -1317,7 +1251,7 @@ def run_product_gate(
             "recovery_zh": "docs/goals 中列出的 8 类长期维护入口和 1 个离线维护包均可恢复；只证明入口存在，不代表人工动作已完成。",
         },
         "owner_and_real_evidence": {
-            "status": "ready" if evidence_ready else "needs-owner-review",
+            "status": "pass" if evidence_ready else "needs-review",
             "ready_project_count": readiness["evidence_ready_count"],
             "project_count": readiness["project_count"],
             "project_evidence_ready": project_evidence_ready,
@@ -1339,41 +1273,19 @@ def run_product_gate(
             "specialized_owner_requirements": specialized_owner["items"],
             "specialized_required_evidence": specialized_owner["required_evidence_zh"],
         },
-        "summary": {
-            "final_profile": "product",
-            "final_status": overall_status,
-            "platform_status": gate_status,
-            "content_status": content_status,
-            "retrieval_status": retrieval.get("status", "fail"),
-            "operational_status": "pass" if hard_checks["team_export_plan"] and hard_checks["restore_drill"] else "fail",
-            "owner_evidence_status": "ready" if evidence_ready else "needs-owner-review",
-            "project_boundary_owner_ready": project_boundary_owner_ready,
-            "full_regression_ready": full_regression_ready,
-            "adoption_ready": adoption_ready,
-            "local_delivery_complete": local_delivery_complete,
-            "remote_published": remote_published,
-            "offsite_restore_verified": offsite_restore_verified,
-            "terminal": terminal,
-        },
         "conclusion_zh": conclusion_zh,
         "next_actions_zh": next_actions_zh,
         "duration_ms": round((time.monotonic() - started) * 1000, 2),
     }
-    payload["operations"] = payload["operational_readiness"]
-    schema_instance = validate_instance(root, "final-gate-product-v3", payload)
+    schema_instance = validate_instance(root, "final-gate-product-v5", payload)
     payload["schema_instance_validation"] = schema_instance
     if schema_instance["status"] != "pass":
-        payload["gate_status"] = "fail"
-        payload["final_status"] = "needs-fix"
-        payload["maturity_status"] = "needs-fix"
-        payload["overall_status"] = "needs-fix"
-        payload["platform_productization_complete"] = False
-        payload["local_delivery_complete"] = False
-        payload["remote_published"] = False
-        payload["offsite_restore_verified"] = False
-        payload["adoption_ready"] = False
+        payload["status"] = "needs-fix"
         payload["terminal"] = False
-        payload["platform_status"]["status"] = "fail"
+        payload["maturity_axes"]["platform"]["status"] = "needs-fix"
+        payload["maturity_axes"]["status"] = "needs-fix"
+        payload["maturity_axes"]["terminal"] = False
+        payload["platform_status"]["status"] = "needs-fix"
         payload["platform_status"]["hard_checks"]["final_gate_schema_instance"] = False
         payload["platform_status"]["blockers"].append("final_gate_schema_instance")
         payload["blockers"].append(
@@ -1385,13 +1297,6 @@ def run_product_gate(
                 "codex_auto_can_complete": True,
             }
         )
-        payload["summary"]["final_status"] = "needs-fix"
-        payload["summary"]["platform_status"] = "fail"
-        payload["summary"]["local_delivery_complete"] = False
-        payload["summary"]["remote_published"] = False
-        payload["summary"]["offsite_restore_verified"] = False
-        payload["summary"]["adoption_ready"] = False
-        payload["summary"]["terminal"] = False
         payload["conclusion_zh"] = "产品门禁输出未通过机器可读 schema 实例校验。"
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") == "1":
         payload["local_cache_written"] = False

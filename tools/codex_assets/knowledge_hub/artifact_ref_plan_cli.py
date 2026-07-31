@@ -4,6 +4,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.parse
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -13,12 +14,39 @@ parser.add_argument("--source-id", required=True)
 parser.add_argument("--id-prefix", default="")
 parser.add_argument("--output", required=True)
 parser.add_argument("--exclude-ext", action="append", default=[".md", ".txt"])
+parser.add_argument(
+    "--external-base-uri",
+    default="",
+    help="Reference an already-published immutable external collection; no upload is performed.",
+)
 parser.add_argument("--force", action="store_true")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
 
 errors = []
 warnings = []
+external_base_uri = args.external_base_uri.rstrip("/")
+if external_base_uri:
+    try:
+        parsed_external = urllib.parse.urlsplit(external_base_uri)
+    except ValueError:
+        parsed_external = urllib.parse.SplitResult("", "", "", "", "")
+        errors.append("--external-base-uri is invalid")
+    if parsed_external.scheme not in {"https", "s3", "artifact"}:
+        errors.append(
+            "--external-base-uri must use https://, s3:// or artifact://"
+        )
+    if any(ord(character) < 32 for character in external_base_uri):
+        errors.append("--external-base-uri must not contain control characters")
+    if (
+        parsed_external.username
+        or parsed_external.password
+        or parsed_external.query
+        or parsed_external.fragment
+    ):
+        errors.append(
+            "--external-base-uri must not contain credentials, query or fragment"
+        )
 
 def sha256(path):
     digest = hashlib.sha256()
@@ -52,6 +80,9 @@ for candidate in sources_doc.get("sources", []):
         break
 if not source:
     errors.append(f"source not registered: {args.source_id}")
+source_owner = str(source.get("owner", "")) if source else ""
+if source and not source_owner:
+    errors.append(f"registered source is missing owner: {args.source_id}")
 
 output = root / safe_rel(args.output)
 if output.exists() and not args.force:
@@ -78,15 +109,39 @@ if source and not errors:
             files.append(path)
         for index, path in enumerate(files, 1):
             rel = path.relative_to(source_root).as_posix()
+            digest = sha256(path)
+            artifact_uri = (
+                external_base_uri
+                + "/"
+                + urllib.parse.quote(rel, safe="/._-")
+                if external_base_uri
+                else f"source://{args.source_id}/{rel}"
+            )
             rows.append(
                 {
+                    "schema_version": "knowledge-hub.immutable-artifact-ref.v1",
                     "id": f"{id_prefix}-{index:03d}",
                     "source_id": args.source_id,
-                    "source_root": str(source_root),
+                    "source_root": str(source.get("path", "")),
                     "source_path": rel,
-                    "uri": f"source://{args.source_id}/{rel}",
+                    "uri": artifact_uri,
                     "size": path.stat().st_size,
-                    "sha256": sha256(path),
+                    "sha256": digest,
+                    "owner": source_owner,
+                    "immutability": {
+                        "content_addressed": True,
+                        "identity": f"sha256:{digest}",
+                    },
+                    "restore": {
+                        "mode": (
+                            "external-uri-hash-verified"
+                            if external_base_uri
+                            else "source-registry-hash-verified"
+                        ),
+                        "source_id": args.source_id,
+                        "source_path": rel,
+                        "network_required": bool(external_base_uri),
+                    },
                     "artifact_type": path.suffix.lower().lstrip(".") or "binary",
                     "mode": "artifact-ref-register",
                     "status": "registered-reference-only",
@@ -104,6 +159,7 @@ result = {
     "row_count": len(rows),
     "errors": errors,
     "warnings": warnings,
+    "external_write_performed": False,
 }
 if args.json:
     print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -118,4 +174,3 @@ else:
         print(f"WARN {item}")
 
 sys.exit(1 if errors else 0)
-

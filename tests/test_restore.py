@@ -27,37 +27,67 @@ def test_execution_environment_only_marks_remote_push_on_matching_github_head(
     monkeypatch.setenv("GITHUB_REPOSITORY", "team/knowledge-hub")
     monkeypatch.setenv("GITHUB_SHA", revision)
     monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
+    monkeypatch.setenv("GITHUB_REF", "refs/heads/main")
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "1")
+    monkeypatch.setenv(
+        "GITHUB_WORKFLOW_REF",
+        "team/knowledge-hub/.github/workflows/recovery-drill.yml@refs/heads/main",
+    )
+    monkeypatch.setenv("GITHUB_WORKFLOW_SHA", revision)
     monkeypatch.setenv("RUNNER_ENVIRONMENT", "github-hosted")
 
-    payload = restore._execution_environment("head", revision)
+    payload = restore._execution_environment(
+        "head",
+        revision,
+        "team/knowledge-hub",
+    )
 
     assert payload["remote_checkout_verified"] is True
     assert payload["remote_published_ref_verified"] is True
     assert payload["offsite_environment_verified"] is True
-    assert restore._execution_environment("candidate", revision)[
+    assert restore._execution_environment(
+        "candidate",
+        revision,
+        "team/knowledge-hub",
+    )[
         "remote_checkout_verified"
     ] is False
 
 
-def test_restore_v2_schema_strictly_validates_execution_environment():
+def test_restore_v4_schema_strictly_validates_execution_environment():
     revision = "a" * 40
     environment = {
         "provider": "local",
         "repository": "",
+        "expected_repository": "team/knowledge-hub",
         "revision": "",
         "event": "",
+        "ref": "",
         "runner_environment": "",
+        "run_id": "",
+        "run_attempt": "",
+        "workflow_ref": "",
+        "workflow_sha": "",
         "remote_checkout_verified": False,
         "remote_published_ref_verified": False,
         "offsite_environment_verified": False,
+        "trust_contract": "github-hosted-matching-revision-current-run-v1",
     }
+    environment["evidence_sha256"] = restore.execution_environment_evidence(
+        "candidate",
+        revision,
+        expected_repository="team/knowledge-hub",
+        environment={},
+    )["evidence_sha256"]
     payload = {
-        "schema_version": 2,
+        "schema_version": 4,
         "status": "pass",
         "source_mode": "candidate",
         "source_revision": revision,
         "candidate_signature": "b" * 64,
         "execution_environment": environment,
+        "evidence_matches_current_execution": False,
         "remote_checkout_verified": False,
         "remote_published_ref_verified": False,
         "offsite_environment_verified": False,
@@ -67,7 +97,7 @@ def test_restore_v2_schema_strictly_validates_execution_environment():
     }
 
     assert validate_instance(
-        repository_root(), "restore-drill-v2", payload
+        repository_root(), "restore-drill-v4", payload
     )["status"] == "pass"
 
     invalid_provider = dict(payload)
@@ -75,7 +105,7 @@ def test_restore_v2_schema_strictly_validates_execution_environment():
         environment, provider="untrusted-runner"
     )
     assert validate_instance(
-        repository_root(), "restore-drill-v2", invalid_provider
+        repository_root(), "restore-drill-v4", invalid_provider
     )["status"] == "fail"
 
     unexpected_field = dict(payload)
@@ -83,7 +113,7 @@ def test_restore_v2_schema_strictly_validates_execution_environment():
         environment, compatibility_fallback=True
     )
     assert validate_instance(
-        repository_root(), "restore-drill-v2", unexpected_field
+        repository_root(), "restore-drill-v4", unexpected_field
     )["status"] == "fail"
 
 
@@ -141,3 +171,72 @@ def test_restore_runtime_preserves_virtualenv_symlink_path(tmp_path, monkeypatch
     monkeypatch.setattr(restore.sys, "executable", str(runtime))
 
     assert restore._restore_runtime() == str(runtime)
+
+
+def test_restore_check_retries_retrieval_and_preserves_attempts(
+    tmp_path, monkeypatch
+):
+    results = iter(
+        [
+            {
+                "command": "rtk retrieval",
+                "exit_code": 1,
+                "stdout": '{"status":"fail","failures":["p95"]}\n',
+                "stderr": "",
+                "duration_sec": 1.0,
+            },
+            {
+                "command": "rtk retrieval",
+                "exit_code": 0,
+                "stdout": '{"status":"pass","failures":[]}\n',
+                "stderr": "",
+                "duration_sec": 0.8,
+            },
+        ]
+    )
+    monkeypatch.setattr(restore, "run_rtk", lambda *args, **kwargs: next(results))
+
+    payload = restore._run_restore_check(
+        tmp_path,
+        ["bash", "tools/knowledge-retrieval-benchmark.sh", "--json"],
+        {},
+        max_attempts=2,
+    )
+
+    assert payload["status"] == "pass"
+    assert payload["attempt_count"] == 2
+    assert payload["recovered_after_retry"] is True
+    assert payload["attempts"][0]["status"] == "fail"
+    assert payload["attempts"][0]["stdout_tail"] == [
+        '{"status":"fail","failures":["p95"]}'
+    ]
+    assert payload["attempts"][1]["status"] == "pass"
+
+
+def test_restore_check_fails_when_retry_budget_is_exhausted(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        restore,
+        "run_rtk",
+        lambda *args, **kwargs: {
+            "command": "rtk retrieval",
+            "exit_code": 1,
+            "stdout": '{"status":"fail"}\n',
+            "stderr": "",
+            "duration_sec": 1.0,
+        },
+    )
+
+    payload = restore._run_restore_check(
+        tmp_path,
+        ["bash", "tools/knowledge-retrieval-benchmark.sh", "--json"],
+        {},
+        max_attempts=2,
+    )
+
+    assert payload["status"] == "fail"
+    assert payload["attempt_count"] == 2
+    assert payload["recovered_after_retry"] is False
+    assert [attempt["status"] for attempt in payload["attempts"]] == [
+        "fail",
+        "fail",
+    ]

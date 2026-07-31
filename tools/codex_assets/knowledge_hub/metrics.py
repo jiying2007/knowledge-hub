@@ -3,47 +3,44 @@
 from __future__ import annotations
 
 import datetime as dt
-import errno
-import fcntl
 import hashlib
-import os
 import pathlib
-import secrets
 from typing import Any, Dict, List, Mapping, Sequence
 
 from .common import (
-    compact_json,
-    ensure_private_directory,
     load_jsonl,
     utc_timestamp,
 )
+from .artifact_governance import evaluate_artifact_governance
+from .lifecycle_metrics import lifecycle_operating_metrics
+from .output_contract import status_contract
+from .retrieval_telemetry import (
+    IMPLEMENTATION_GENERATION,
+    INTERACTION_CONTRACT,
+    INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
+    PERFORMANCE_CONTRACT,
+    append_optional_telemetry,
+    append_telemetry_row,
+    make_interaction_id,
+)
 
 
-INTERACTIVE_TELEMETRY_SCHEMA_VERSION = 3
-INTERACTION_CONTRACT = "knowledge-retrieval-interaction-v1"
-PERFORMANCE_CONTRACT = "knowledge-retrieval-performance-v2"
+__all__ = [
+    "IMPLEMENTATION_GENERATION",
+    "INTERACTION_CONTRACT",
+    "INTERACTIVE_TELEMETRY_SCHEMA_VERSION",
+    "PERFORMANCE_CONTRACT",
+    "append_optional_telemetry",
+    "make_interaction_id",
+]
+
+
 FEEDBACK_SCHEMA_VERSION = 2
-LOCAL_METRICS_SCHEMA_VERSION = 4
+LOCAL_METRICS_SCHEMA_VERSION = 5
 MINIMUM_PERFORMANCE_SAMPLE_COUNT = 10
 SEARCH_WARM_TARGET_MS = 500.0
 CONTEXT_WARM_TARGET_MS = 1000.0
 INDEX_PREPARATION_TARGET_MS = 5000.0
-
-
-def make_interaction_id(
-    kind: str,
-    query_sha256: str,
-    recorded_at: str,
-    nonce: str = "",
-) -> str:
-    payload = "{}\0{}\0{}\0{}\0{}".format(
-        INTERACTION_CONTRACT,
-        kind,
-        query_sha256,
-        recorded_at,
-        nonce or secrets.token_hex(16),
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _is_sha256(value: Any) -> bool:
@@ -75,6 +72,7 @@ def _current_performance_rows(
         row
         for row in rows
         if row.get("performance_contract") == PERFORMANCE_CONTRACT
+        and row.get("implementation_generation") == IMPLEMENTATION_GENERATION
     ]
 
 
@@ -135,72 +133,6 @@ def _date(value: Any) -> dt.date:
         return dt.date.min
 
 
-def _append_locked(path: pathlib.Path, row: Mapping[str, Any]) -> None:
-    ensure_private_directory(path.parent)
-    flags = (
-        os.O_APPEND
-        | os.O_CREAT
-        | os.O_WRONLY
-        | getattr(os, "O_CLOEXEC", 0)
-        | getattr(os, "O_NOFOLLOW", 0)
-    )
-    descriptor = os.open(str(path), flags, 0o600)
-    os.fchmod(descriptor, 0o600)
-    with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-        handle.write(compact_json(row) + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
-        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-
-
-def append_optional_telemetry(
-    path: pathlib.Path,
-    row: Mapping[str, Any],
-    enabled: bool = True,
-) -> Dict[str, Any]:
-    """Append local telemetry without making observation a command dependency."""
-    if not enabled:
-        return {
-            "status": "disabled",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": "cli-disabled",
-            "error_code": "",
-        }
-    if os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {"0", "false", "off", "no"}:
-        return {
-            "status": "disabled",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": "environment-disabled",
-            "error_code": "",
-        }
-    try:
-        _append_locked(path, row)
-    except OSError as exc:
-        error_code = errno.errorcode.get(exc.errno or 0, "OSERROR")
-        permission_errors = {errno.EACCES, errno.EPERM, errno.EROFS}
-        return {
-            "status": "degraded",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": (
-                "read-only-or-permission-denied"
-                if exc.errno in permission_errors
-                else "local-storage-unavailable"
-            ),
-            "error_code": error_code,
-        }
-    return {
-        "status": "recorded",
-        "recorded": True,
-        "non_blocking": True,
-        "reason": "",
-        "error_code": "",
-    }
-
-
 def record_feedback(
     root: pathlib.Path,
     query: str,
@@ -256,11 +188,103 @@ def record_feedback(
         "task_type": task_type,
         "raw_query_stored": False,
     }
-    _append_locked(root / ".cache/knowledge-hub/retrieval-feedback.jsonl", row)
+    append_telemetry_row(root / ".cache/knowledge-hub/retrieval-feedback.jsonl", row)
     return {"status": "recorded", "raw_query_stored": False, "record": row}
 
 
-def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
+def _retrieval_improvement_queue(
+    search_rows: Sequence[Mapping[str, Any]],
+    feedback_rows: Sequence[Mapping[str, Any]],
+    *,
+    sample_limit: int = 20,
+) -> Dict[str, Any]:
+    signals: Dict[str, Dict[str, Any]] = {}
+    for row in search_rows:
+        if int(row.get("result_count", 0) or 0) != 0:
+            continue
+        query_sha256 = str(row.get("query_sha256", ""))
+        if not _is_sha256(query_sha256):
+            continue
+        signal = signals.setdefault(
+            query_sha256,
+            {
+                "query_sha256": query_sha256,
+                "zero_hit_count": 0,
+                "not_found_count": 0,
+                "interaction_ids": set(),
+                "task_types": set(),
+                "last_seen_at": "",
+            },
+        )
+        signal["zero_hit_count"] += 1
+        signal["interaction_ids"].add(str(row.get("interaction_id", "")))
+        signal["last_seen_at"] = max(
+            signal["last_seen_at"], str(row.get("recorded_at", ""))
+        )
+    for row in feedback_rows:
+        if row.get("outcome") != "not-found":
+            continue
+        query_sha256 = str(row.get("query_sha256", ""))
+        if not _is_sha256(query_sha256):
+            continue
+        signal = signals.setdefault(
+            query_sha256,
+            {
+                "query_sha256": query_sha256,
+                "zero_hit_count": 0,
+                "not_found_count": 0,
+                "interaction_ids": set(),
+                "task_types": set(),
+                "last_seen_at": "",
+            },
+        )
+        signal["not_found_count"] += 1
+        signal["interaction_ids"].add(str(row.get("interaction_id", "")))
+        signal["task_types"].add(str(row.get("task_type", "general")))
+        signal["last_seen_at"] = max(
+            signal["last_seen_at"], str(row.get("recorded_at", ""))
+        )
+    rows = []
+    for signal in signals.values():
+        rows.append(
+            {
+                "query_sha256": signal["query_sha256"],
+                "signal_count": signal["zero_hit_count"]
+                + signal["not_found_count"],
+                "zero_hit_count": signal["zero_hit_count"],
+                "not_found_count": signal["not_found_count"],
+                "interaction_count": len(
+                    {value for value in signal["interaction_ids"] if value}
+                ),
+                "task_types": sorted(
+                    value for value in signal["task_types"] if value
+                ),
+                "last_seen_at": signal["last_seen_at"],
+                "recommended_action": "review-routing-or-knowledge-gap",
+            }
+        )
+    rows.sort(
+        key=lambda row: (
+            -int(row["signal_count"]),
+            str(row["query_sha256"]),
+        )
+    )
+    return {
+        "status": "action-needed" if rows else "clear",
+        "report_only": True,
+        "raw_query_stored": False,
+        "query_hash_only": True,
+        "candidate_count": len(rows),
+        "sample": rows[:sample_limit],
+        "automatic_content_write": False,
+        "automatic_route_change": False,
+    }
+
+
+def local_metrics(
+    root: pathlib.Path,
+    as_of: dt.date | None = None,
+) -> Dict[str, Any]:
     all_search_rows = load_jsonl(root / ".cache/knowledge-hub/search-telemetry.jsonl")
     all_context_rows = load_jsonl(root / ".cache/knowledge-hub/context-telemetry.jsonl")
     candidate_search_rows = _current_interaction_rows(all_search_rows, "search")
@@ -327,6 +351,16 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     found_rate = round(found_count / float(feedback_count), 4) if feedback_count else 0.0
     performance_search_rows = _current_performance_rows(search_rows)
     performance_context_rows = _current_performance_rows(context_rows)
+    current_contract_search_rows = [
+        row
+        for row in search_rows
+        if row.get("performance_contract") == PERFORMANCE_CONTRACT
+    ]
+    current_contract_context_rows = [
+        row
+        for row in context_rows
+        if row.get("performance_contract") == PERFORMANCE_CONTRACT
+    ]
     search_samples = _performance_samples(performance_search_rows)
     context_samples = _performance_samples(performance_context_rows)
     search_latencies = search_samples["warm"]
@@ -355,12 +389,17 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
     )
     evaluable = usage_evaluable and performance_evaluable
     adoption_ready = evaluable and feedback_count >= 10 and found_rate >= 0.8 and performance_ready
-    return {
+    lifecycle = lifecycle_operating_metrics(root, as_of or dt.date.today())
+    artifact_capacity = evaluate_artifact_governance(root)
+    improvement = _retrieval_improvement_queue(search_rows, feedback_rows)
+    payload = {
         "schema_version": LOCAL_METRICS_SCHEMA_VERSION,
         "status": "pass",
+        "status_contract": status_contract("pass"),
         "measurement_contract": {
             "interaction_contract": INTERACTION_CONTRACT,
             "performance_contract": PERFORMANCE_CONTRACT,
+            "implementation_generation": IMPLEMENTATION_GENERATION,
             "interactive_telemetry_schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
             "feedback_schema_version": FEEDBACK_SCHEMA_VERSION,
         },
@@ -385,6 +424,9 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             "found_rate": found_rate,
             "excluded_unbound_or_historical_feedback_count": len(all_feedback_rows) - len(feedback_rows),
         },
+        "retrieval_improvement": improvement,
+        "knowledge_lifecycle": lifecycle,
+        "artifact_capacity": artifact_capacity,
         "performance": {
             "search_p95_ms": search_p95,
             "context_p95_ms": context_p95,
@@ -431,6 +473,12 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             "excluded_stale_contract_sample_count": (
                 len(search_rows)
                 + len(context_rows)
+                - len(current_contract_search_rows)
+                - len(current_contract_context_rows)
+            ),
+            "excluded_stale_generation_sample_count": (
+                len(current_contract_search_rows)
+                + len(current_contract_context_rows)
                 - len(performance_search_rows)
                 - len(performance_context_rows)
             ),
@@ -448,8 +496,9 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
             "criteria": {
                 "observation_days_or_invocations": "observation_days >= 30 or invocation_count >= 50",
                 "sample_kind": (
-                    "current performance-contract warm interactions; index preparation "
-                    "is measured separately and end-to-end latency remains report-only"
+                    "current performance-contract and implementation-generation warm "
+                    "interactions; index preparation is measured separately and "
+                    "end-to-end latency remains report-only"
                 ),
                 "minimum_performance_samples_each": MINIMUM_PERFORMANCE_SAMPLE_COUNT,
                 "minimum_feedback_count": 10,
@@ -462,4 +511,71 @@ def local_metrics(root: pathlib.Path) -> Dict[str, Any]:
                 else "long-term adoption is not yet evidenced"
             ),
         },
+    }
+    return payload
+
+
+def local_metrics_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    usage = payload.get("usage", {}) or {}
+    retrieval = payload.get("retrieval", {}) or {}
+    performance = payload.get("performance", {}) or {}
+    lifecycle = payload.get("knowledge_lifecycle", {}) or {}
+    improvement = payload.get("retrieval_improvement", {}) or {}
+    artifact = payload.get("artifact_capacity", {}) or {}
+    return {
+        "schema_version": 2,
+        "projection": "knowledge-local-metrics-summary-v2",
+        "status": payload.get("status", ""),
+        "status_contract": payload.get("status_contract", {}),
+        "privacy": payload.get("privacy", {}),
+        "usage": {
+            key: usage.get(key)
+            for key in (
+                "invocation_count",
+                "search_count",
+                "context_count",
+                "observation_days",
+            )
+        },
+        "retrieval": {
+            key: retrieval.get(key)
+            for key in (
+                "zero_hit_count",
+                "zero_hit_rate",
+                "feedback_count",
+                "found_rate",
+            )
+        },
+        "performance": {
+            "status": performance.get("status", ""),
+            "warm_interactive": performance.get("warm_interactive", {}),
+            "index_preparation": performance.get("index_preparation", {}),
+        },
+        "lifecycle": {
+            "reviewing_count": lifecycle.get("reviewing_count", 0),
+            "reviewing_age_buckets": lifecycle.get(
+                "reviewing_age_buckets", {}
+            ),
+            "flow": lifecycle.get("flow", {}),
+            "decision_lead_time_days": lifecycle.get(
+                "decision_lead_time_days", {}
+            ),
+            "cold_candidate_count": (
+                lifecycle.get("cold_candidates", {}) or {}
+            ).get("count", 0),
+        },
+        "retrieval_improvement": {
+            "status": improvement.get("status", ""),
+            "candidate_count": improvement.get("candidate_count", 0),
+            "sample": list(improvement.get("sample", []))[:10],
+            "automatic_content_write": False,
+        },
+        "artifact_capacity": {
+            "status": artifact.get("status", ""),
+            "tracked": artifact.get("tracked", {}),
+            "growth": artifact.get("growth", {}),
+            "violation_count": artifact.get("violation_count", 0),
+            "automatic_delete": False,
+        },
+        "adoption": payload.get("adoption", {}),
     }

@@ -8,6 +8,8 @@ from typing import Iterable
 
 from .common import KnowledgeHubError, repository_root, resolve_today
 from .runtime_maintenance import (
+    DEFAULT_TRANSACTION_MIN_KEEP,
+    DEFAULT_TRANSACTION_RETENTION_DAYS,
     apply_runtime_maintenance,
     plan_runtime_maintenance,
     runtime_maintenance_summary,
@@ -27,8 +29,16 @@ def main(argv: Iterable[str] = ()) -> int:
         ),
         default="all",
     )
-    parser.add_argument("--transaction-retention-days", type=int, default=30)
-    parser.add_argument("--transaction-min-keep", type=int, default=20)
+    parser.add_argument(
+        "--transaction-retention-days",
+        type=int,
+        default=DEFAULT_TRANSACTION_RETENTION_DAYS,
+    )
+    parser.add_argument(
+        "--transaction-min-keep",
+        type=int,
+        default=DEFAULT_TRANSACTION_MIN_KEEP,
+    )
     parser.add_argument("--as-of", default="")
     parser.add_argument("--apply", action="store_true")
     output = parser.add_mutually_exclusive_group()

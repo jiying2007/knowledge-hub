@@ -1,20 +1,38 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowledge-hub.local/schemas/local-metrics.schema.json",
-  "title": "Knowledge Hub privacy-preserving current-contract local metrics result v4",
+  "title": "Knowledge Hub privacy-preserving generation-aware local metrics result v5",
   "type": "object",
-  "required": ["schema_version", "status", "measurement_contract", "privacy", "usage", "retrieval", "performance", "adoption"],
+  "required": ["schema_version", "status", "status_contract", "measurement_contract", "privacy", "usage", "retrieval", "retrieval_improvement", "knowledge_lifecycle", "artifact_capacity", "performance", "adoption"],
   "properties": {
-    "schema_version": {"const": 4},
+    "schema_version": {"const": 5},
     "status": {"type": "string"},
+    "status_contract": {
+      "type": "object",
+      "required": ["contract_version", "status", "default_exit_code", "strict_exit_code"],
+      "properties": {
+        "contract_version": {"const": 2},
+        "status": {"enum": ["pass", "needs-review", "needs-fix", "blocked"]},
+        "default_exit_code": {"type": "integer", "minimum": 0, "maximum": 2},
+        "strict_exit_code": {"type": "integer", "minimum": 0, "maximum": 1}
+      }
+    },
     "measurement_contract": {
       "type": "object",
-      "required": ["interaction_contract", "performance_contract", "interactive_telemetry_schema_version", "feedback_schema_version"]
+      "required": ["interaction_contract", "performance_contract", "implementation_generation", "interactive_telemetry_schema_version", "feedback_schema_version"],
+      "properties": {
+        "implementation_generation": {
+          "const": "knowledge-retrieval-implementation-20260731-v1"
+        }
+      }
     },
     "privacy": {"type": "object", "required": ["raw_query_stored"]},
     "usage": {"type": "object", "required": ["invocation_count", "excluded_historical_or_noninteractive_count"]},
     "retrieval": {"type": "object", "required": ["feedback_count", "found_rate", "excluded_unbound_or_historical_feedback_count"]},
-    "performance": {"type": "object", "required": ["evaluable", "status", "search_sample_count", "context_sample_count", "warm_interactive", "index_preparation", "end_to_end_observed", "excluded_non_warm_sample_count", "excluded_stale_contract_sample_count"]},
+    "retrieval_improvement": {"type": "object", "required": ["status", "candidate_count", "automatic_content_write"]},
+    "knowledge_lifecycle": {"type": "object", "required": ["status", "reviewing_count", "reviewing_age_buckets", "flow", "decision_lead_time_days", "cold_candidates"]},
+    "artifact_capacity": {"type": "object", "required": ["status", "tracked", "growth", "violation_count", "automatic_delete"]},
+    "performance": {"type": "object", "required": ["evaluable", "status", "search_sample_count", "context_sample_count", "warm_interactive", "index_preparation", "end_to_end_observed", "excluded_non_warm_sample_count", "excluded_stale_contract_sample_count", "excluded_stale_generation_sample_count"]},
     "adoption": {"type": "object", "required": ["ready"]}
   },
   "additionalProperties": true

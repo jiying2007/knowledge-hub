@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/immutable-artifact-ref.schema.json",
+  "title": "Knowledge Hub immutable artifact reference",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "uri",
+    "size",
+    "sha256",
+    "owner",
+    "immutability",
+    "restore"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.immutable-artifact-ref.v1"
+    },
+    "id": {"type": "string", "minLength": 1},
+    "uri": {
+      "type": "string",
+      "pattern": "^(?:source|artifact|https|s3)://"
+    },
+    "size": {"type": "integer", "minimum": 0},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "owner": {"type": "string", "minLength": 1},
+    "immutability": {
+      "type": "object",
+      "required": ["content_addressed", "identity"],
+      "properties": {
+        "content_addressed": {"const": true},
+        "identity": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "restore": {
+      "type": "object",
+      "required": ["mode", "network_required"],
+      "properties": {
+        "mode": {
+          "enum": [
+            "source-registry-hash-verified",
+            "external-uri-hash-verified"
+          ]
+        },
+        "source_id": {"type": "string"},
+        "source_path": {"type": "string"},
+        "network_required": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

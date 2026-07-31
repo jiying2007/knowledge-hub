@@ -1,5 +1,7 @@
 import os
 import pathlib
+import shlex
+import shutil
 import subprocess
 import sys
 
@@ -76,3 +78,80 @@ def test_runtime_selector_rejects_relative_injected_interpreter():
 
     assert result.returncode == 69
     assert "must be an absolute interpreter path" in result.stderr
+
+
+def test_runtime_selector_uses_lightweight_dependency_discovery():
+    selector = (ROOT / "tools/ci/python-runtime.sh").read_text(encoding="utf-8")
+
+    assert "importlib.util.find_spec" in selector
+    assert "import sys, yaml, jsonschema" not in selector
+
+
+def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
+    fixture_root = tmp_path / "repo"
+    fixture_selector = fixture_root / "tools/ci/python-runtime.sh"
+    fixture_selector.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / "tools/ci/python-runtime.sh", fixture_selector)
+    (fixture_root / "requirements-runtime.lock").write_text(
+        "fixture lock\n",
+        encoding="utf-8",
+    )
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    trace = tmp_path / "rtk-trace"
+    real_rtk = shutil.which("rtk")
+    assert real_rtk
+    fake_rtk = fake_bin / "rtk"
+    fake_rtk.write_text(
+        "#!/usr/bin/env bash\n"
+        'printf "call\\n" >> "$RTK_TRACE_FILE"\n'
+        f"exec {shlex.quote(real_rtk)} \"$@\"\n",
+        encoding="utf-8",
+    )
+    fake_rtk.chmod(0o755)
+    env = dict(os.environ)
+    env["KNOWLEDGE_PYTHON_RUNTIME"] = sys.executable
+    env["PYTHONPATH"] = str(ROOT)
+    env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
+    env["RTK_TRACE_FILE"] = str(trace)
+    command = [
+        "bash",
+        str(fixture_selector),
+        "-m",
+        "tools.codex_assets.knowledge_hub.search_cli",
+        "--help",
+    ]
+
+    first = subprocess.run(
+        command,
+        cwd=str(fixture_root),
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+
+    assert first.returncode == 0, first.stderr
+    cache = fixture_root / ".cache/knowledge-hub/python-runtime-selection-v1"
+    assert cache.is_file()
+    assert cache.read_text(encoding="utf-8").splitlines() == [
+        sys.executable,
+        "{}.{}".format(sys.version_info.major, sys.version_info.minor),
+    ]
+
+    trace.write_text("", encoding="utf-8")
+    second = subprocess.run(
+        command,
+        cwd=str(fixture_root),
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+
+    assert second.returncode == 0, second.stderr
+    assert trace.read_text(encoding="utf-8").splitlines() == ["call"]

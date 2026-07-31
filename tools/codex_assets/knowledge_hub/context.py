@@ -11,7 +11,8 @@ import urllib.parse
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .common import load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
-from .metrics import (
+from .retrieval_telemetry import (
+    IMPLEMENTATION_GENERATION,
     INTERACTION_CONTRACT,
     INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
     PERFORMANCE_CONTRACT,
@@ -1092,6 +1093,7 @@ def record_context_telemetry(
         "sample_kind": "interactive",
         "interaction_contract": INTERACTION_CONTRACT,
         "performance_contract": PERFORMANCE_CONTRACT,
+        "implementation_generation": IMPLEMENTATION_GENERATION,
         "interaction_id": make_interaction_id("context", query_hash, recorded_at),
         "retrieval_kind": "context",
         "recorded_at": recorded_at,

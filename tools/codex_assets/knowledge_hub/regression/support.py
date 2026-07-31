@@ -60,7 +60,9 @@ def resolve_today():
             return dt.date.fromisoformat(raw_value), source
         except Exception:
             parser.error(f"invalid date for {source}: {raw_value}")
-    return dt.datetime.utcnow().date(), source
+    # Match public Hub CLIs, which use the host-local calendar date by default.
+    # Explicit --as-of / KNOWLEDGE_TODAY still take precedence for reproducibility.
+    return dt.date.today(), source
 
 today, today_source = resolve_today()
 child_env = os.environ.copy()

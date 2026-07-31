@@ -6,6 +6,7 @@ import sqlite3
 import pytest
 
 from tools.codex_assets.knowledge_hub import metrics
+from tools.codex_assets.knowledge_hub import retrieval_telemetry
 from tools.codex_assets.knowledge_hub import search as search_module
 from tools.codex_assets.knowledge_hub import search_cli
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
@@ -757,7 +758,7 @@ def test_search_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path)
         raise PermissionError(errno.EACCES, "permission denied")
 
     monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
-    monkeypatch.setattr(metrics, "_append_locked", deny_write)
+    monkeypatch.setattr(retrieval_telemetry, "append_telemetry_row", deny_write)
     result = record_search_telemetry(
         tmp_path,
         {
@@ -783,7 +784,7 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
         captured.update(row)
 
     monkeypatch.setenv("KNOWLEDGE_TELEMETRY", "1")
-    monkeypatch.setattr(metrics, "_append_locked", capture)
+    monkeypatch.setattr(retrieval_telemetry, "append_telemetry_row", capture)
     result = record_search_telemetry(
         tmp_path,
         {
@@ -808,6 +809,10 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
     assert captured["schema_version"] == metrics.INTERACTIVE_TELEMETRY_SCHEMA_VERSION
     assert captured["interaction_contract"] == metrics.INTERACTION_CONTRACT
     assert captured["performance_contract"] == metrics.PERFORMANCE_CONTRACT
+    assert (
+        captured["implementation_generation"]
+        == metrics.IMPLEMENTATION_GENERATION
+    )
     assert captured["result_ids"] == ["item-a"]
     assert captured["index_rebuilt"] is False
     assert captured["index_updated"] is True

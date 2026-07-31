@@ -1,6 +1,5 @@
 import argparse
 import datetime as dt
-import hashlib
 import json
 import os
 import pathlib
@@ -8,16 +7,26 @@ import re
 import subprocess
 import sys
 
-from .common import KnowledgeHubError, load_markdown
+from .common import (
+    KnowledgeHubError,
+    display_path,
+    file_sha256,
+    load_markdown,
+    user_path_prefixes,
+)
 from .model import FRONTMATTER_MIRROR_FIELDS, validate_item
+from .output_contract import status_contract
 from .security import scan_secret_text
+from .source_coverage import select_source_coverage_closeout
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Validate Knowledge Hub registry and safety boundaries.")
 parser.add_argument("--dry-run", action="store_true")
-parser.add_argument("--json", action="store_true")
+output_mode = parser.add_mutually_exclusive_group()
+output_mode.add_argument("--json", action="store_true")
+output_mode.add_argument("--summary-json", action="store_true")
 parser.add_argument("--sources-only", action="store_true")
 parser.add_argument("--explain", default="", metavar="ITEM_ID")
 parser.add_argument("--diagnostics", action="store_true")
@@ -45,26 +54,7 @@ def resolve_today():
 
 today, today_source = resolve_today()
 
-SOURCE_COVERAGE_RE = re.compile(r"^knowledge-hub-source-coverage-closeout-(\d{8})\.jsonl$")
 TEXT_FILE_SUFFIXES = {".md", ".json", ".jsonl", ".sh", ".txt"}
-
-def user_path_prefixes():
-    prefixes = [str(pathlib.Path.home())]
-    user_name = os.environ.get("USER", "")
-    if user_name:
-        prefixes.append("/" + "vsdata" + "/" + user_name)
-    return [prefix for prefix in prefixes if prefix and prefix != "/"]
-
-def display_path(value):
-    text = str(value)
-    for prefix in user_path_prefixes():
-        if text == prefix:
-            text = "~"
-        elif text.startswith(prefix + "/"):
-            text = "~" + text[len(prefix):]
-        else:
-            text = text.replace(prefix, "~")
-    return text
 
 def iter_text_files(scan_roots, suffixes=TEXT_FILE_SUFFIXES):
     seen_paths = set()
@@ -107,45 +97,6 @@ def normalize_frontmatter_value(value):
     if isinstance(value, (list, tuple)):
         return [normalize_frontmatter_value(row) for row in value]
     return value
-
-def file_sha256(path):
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-def select_source_coverage_closeout(root):
-    paths = sorted((root / "artifacts" / "manifests").glob("knowledge-hub-source-coverage-closeout-*.jsonl"))
-    dated = []
-    ignored = []
-    for path in paths:
-        relative = str(path.relative_to(root))
-        match = SOURCE_COVERAGE_RE.match(path.name)
-        if not match:
-            ignored.append(relative)
-            continue
-        date_text = match.group(1)
-        try:
-            dt.datetime.strptime(date_text, "%Y%m%d").date()
-        except Exception:
-            ignored.append(relative)
-            continue
-        dated.append((date_text, relative, path))
-    dated.sort(key=lambda row: (row[0], row[1]))
-    selection = {
-        "pattern": "artifacts/manifests/knowledge-hub-source-coverage-closeout-*.jsonl",
-        "required_filename": "knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl",
-        "strategy": "filename-yyyymmdd-sort-last",
-        "candidate_count": len(paths),
-        "candidates": [str(path.relative_to(root)) for path in paths],
-        "dated_candidate_count": len(dated),
-        "dated_candidates": [row[1] for row in dated],
-        "ignored_non_date_candidates": ignored,
-        "selected": dated[-1][1] if dated else "",
-        "reason_zh": "只按 knowledge-hub-source-coverage-closeout-YYYYMMDD.jsonl 的日期字段选择最新 closeout；非日期候选会被忽略并作为 warning 暴露，避免 future/latest 等文件名被静默选中。",
-    }
-    return selection, dated[-1][2] if dated else None
 
 if args.sources_only and args.explain:
     warnings.append(f"knowledge-check: --explain is ignored with --sources-only: {args.explain}")
@@ -2618,7 +2569,7 @@ if not args.sources_only:
         path_routing_health["status"] = "fail"
 
 result = {
-    "status": "pass" if not errors else "fail",
+    "status": "pass" if not errors else "needs-fix",
     "root": display_path(root),
     "today": today.isoformat(),
     "as_of_source": today_source,
@@ -2638,12 +2589,51 @@ result = {
     "warnings": warnings,
     "dry_run": bool(args.dry_run),
 }
+result["status_contract"] = status_contract(result["status"])
 if explain is not None:
     result["explain"] = explain
 if args.diagnostics:
     result["diagnostics"] = build_diagnostics(errors, warnings)
-if args.json:
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+if args.json or args.summary_json:
+    projection = result
+    if args.summary_json:
+        diagnostics = result.get("diagnostics", {})
+        projection = {
+            "schema_version": 1,
+            "projection": "knowledge-check-summary-v1",
+            "status": result["status"],
+            "status_contract": result["status_contract"],
+            "root": result["root"],
+            "today": result["today"],
+            "dry_run": result["dry_run"],
+            "error_count": len(errors),
+            "warning_count": len(warnings),
+            "error_sample": errors[:20],
+            "warning_sample": warnings[:10],
+            "diagnostic_categories": [
+                {
+                    "id": row.get("id", ""),
+                    "count": row.get("count", 0),
+                    "action_zh": row.get("action_zh", ""),
+                }
+                for row in diagnostics.get("categories", [])[:20]
+            ],
+            "health": {
+                "source_coverage": source_coverage_health.get("status", ""),
+                "source_control": source_control_health.get("status", ""),
+                "owner_target": owner_target_health.get("status", ""),
+                "authorization": authorization_health.get("status", ""),
+                "automation_safety": automation_safety_health.get(
+                    "status", ""
+                ),
+                "route_registry": route_registry_health.get("status", ""),
+                "path_routing": path_routing_health.get("status", ""),
+                "frontmatter": frontmatter_status_health.get("status", ""),
+                "body_coverage": body_coverage_health.get("status", ""),
+                "artifact_vault": artifact_vault_health.get("status", ""),
+            },
+        }
+    print(json.dumps(projection, ensure_ascii=False, indent=2))
 else:
     print(f"status: {result['status']}")
     print(f"errors: {len(errors)}")

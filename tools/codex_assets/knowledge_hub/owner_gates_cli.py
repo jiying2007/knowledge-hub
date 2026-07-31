@@ -6,6 +6,8 @@ import os
 import pathlib
 import sys
 
+from .owner_form_rules import owner_decision_target_mismatch
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
@@ -1103,48 +1105,6 @@ def shlex_quote(value):
 
 def is_filled(value):
     return _is_filled(value)
-
-def owner_decision_target_mismatch(owner_decision, target_decision):
-    owner_decision = str(owner_decision or "")
-    target_decision = str(target_decision or "")
-    if target_decision.startswith("domains/projects/") or target_decision.startswith("domains/personal/"):
-        return {
-            "expected": "projects/<project>/...、notes/personal/... 或终止类字面目标",
-            "reason_zh": "owner target 当前契约不接受 domains/projects 或 domains/personal 非规范入口。",
-        }
-    if owner_decision == "archive-only":
-        if target_decision == "archive-only" or "/archive/" in target_decision:
-            return None
-        return {
-            "expected": ["archive-only", "target path containing /archive/"],
-            "reason_zh": "archive-only 只能搭配 archive-only 字面目标或明确的 archive 路径，不能指向 current、validation 或 decisions 目标。",
-        }
-    terminal_targets = {
-        "reference-only": {"reference-only"},
-        "no-migration": {"no-migration"},
-        "rejected": {"no-migration"},
-    }
-    if owner_decision in terminal_targets and target_decision not in terminal_targets[owner_decision]:
-        return {
-            "expected": sorted(terminal_targets[owner_decision]),
-            "reason_zh": "终止类 owner_decision 只能搭配同语义的 target_decision，不能指向项目落地路径。",
-        }
-    if owner_decision not in terminal_targets and target_decision in {"reference-only", "no-migration"}:
-        return {
-            "expected": "与 owner_decision 构成有效配对的落地目标",
-            "reason_zh": "落地类 owner_decision 不能搭配 reference-only 或 no-migration 目标。",
-        }
-    return None
-
-def validate_date(value, label, errors_out):
-    try:
-        parts = str(value).split("-")
-        if len(parts) != 3 or any(not part.isdigit() for part in parts):
-            raise ValueError("not YYYY-MM-DD")
-        year, month, day = (int(part) for part in parts)
-        dt.date(year, month, day)
-    except Exception:
-        errors_out.append(f"{label} invalid date: {value}")
 
 def validate_forms_file(path, rows):
     form_errors = []

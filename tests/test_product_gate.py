@@ -196,6 +196,8 @@ def test_health_snapshot_rejects_malformed_production_evidence(tmp_path, monkeyp
 
 def test_health_snapshot_auto_prefers_fresh_full_evidence(tmp_path, monkeypatch):
     base = {
+        "schema_version": 5,
+        "status": "needs-review",
         "as_of": "2026-07-19",
         "final_profile": "product",
         "local_cache_written": True,
@@ -230,11 +232,19 @@ def test_product_gate_summary_is_bounded_and_excludes_heavy_evidence():
         "as_of": "2026-07-19",
         "final_profile": "product",
         "regression_suite": "full",
-        "gate_status": "pass",
-        "overall_status": "needs-owner-review",
-        "platform_status": {"hard_checks": {"knowledge_check": True}},
+        "status": "needs-review",
+        "terminal": False,
+        "maturity_axes": {
+            "schema_version": 2,
+            "status": "needs-review",
+            "terminal": False,
+        },
+        "platform_status": {
+            "status": "pass",
+            "hard_checks": {"knowledge_check": True},
+        },
         "content_readiness": {
-            "status": "needs-owner-review",
+            "status": "needs-review",
             "project_readiness": {
                 "project_count": 30,
                 "structural_ready_count": 30,
@@ -259,7 +269,9 @@ def test_product_gate_summary_is_bounded_and_excludes_heavy_evidence():
 
     summary = product_gate_summary(payload)
 
-    assert summary["projection"] == "product-final-gate-summary-v2"
+    assert summary["schema_version"] == 4
+    assert summary["projection"] == "product-final-gate-summary-v4"
+    assert summary["status"] == "needs-review"
     assert summary["content"]["project_count"] == 30
     assert summary["owner_and_real_evidence"]["pending_project_count"] == 2
     assert summary["adoption"] == {
@@ -269,6 +281,18 @@ def test_product_gate_summary_is_bounded_and_excludes_heavy_evidence():
         "feedback_count": 9,
         "observation_days": 4,
     }
+    for removed in (
+        "gate_status",
+        "final_status",
+        "maturity_status",
+        "overall_status",
+        "platform_productization_complete",
+        "local_delivery_complete",
+        "remote_published",
+        "offsite_restore_verified",
+        "adoption_ready",
+    ):
+        assert removed not in summary
     assert "checks" not in summary
     assert "rows" not in summary["content"]
     assert len(json.dumps(summary, ensure_ascii=False)) < 10000

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/status-contract.schema.json",
+  "title": "Knowledge Hub canonical status and exit contract",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "status",
+    "default_exit_code",
+    "strict_exit_code",
+    "terminal_required",
+    "terminal",
+    "semantics"
+  ],
+  "properties": {
+    "contract_version": {"const": 2},
+    "status": {
+      "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+    },
+    "default_exit_code": {"type": "integer", "minimum": 0, "maximum": 2},
+    "strict_exit_code": {"type": "integer", "minimum": 0, "maximum": 1},
+    "terminal_required": {"type": "boolean"},
+    "terminal": {"type": "boolean"},
+    "semantics": {"type": "object"}
+  },
+  "additionalProperties": false
+}

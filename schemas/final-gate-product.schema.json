@@ -1,49 +1,198 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://knowledge-hub.local/schemas/final-gate-product.schema.json",
-  "title": "Knowledge Hub product final gate",
+  "title": "Knowledge Hub product final gate v5",
   "type": "object",
   "required": [
     "schema_version",
+    "status",
+    "terminal",
     "final_profile",
     "platform_status",
     "content_readiness",
     "retrieval_quality",
     "operational_readiness",
-    "overall_status",
     "delivery_readiness",
-    "local_delivery_complete",
-    "remote_published",
-    "offsite_restore_verified",
-    "adoption_ready",
-    "terminal"
+    "maturity_axes"
   ],
   "properties": {
-    "schema_version": {"const": 3},
-    "final_profile": {"const": "product"},
-    "overall_status": {"enum": ["needs-fix", "needs-owner-review", "partial", "mature"]},
-    "local_delivery_complete": {"type": "boolean"},
-    "remote_published": {"type": "boolean"},
-    "offsite_restore_verified": {"type": "boolean"},
-    "adoption_ready": {"type": "boolean"},
+    "schema_version": {"const": 5},
+    "status": {
+      "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+    },
     "terminal": {"type": "boolean"},
+    "root": {"type": "string"},
+    "generated_at": {"type": "string"},
+    "as_of": {"type": "string", "format": "date"},
+    "as_of_source": {"const": "arg:--as-of"},
+    "final_profile": {"const": "product"},
+    "regression_suite": {"enum": ["quick", "full"]},
+    "engineering_evidence_reuse": {"type": "object"},
+    "tracked_files_written": {"type": "boolean"},
+    "local_cache_written": {"type": "boolean"},
+    "working_tree_signature": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "candidate_integrity": {"type": "object"},
+    "maturity_axes": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "platform",
+        "content",
+        "project_evidence",
+        "delivery",
+        "adoption",
+        "status",
+        "terminal"
+      ],
+      "properties": {
+        "schema_version": {"const": 2},
+        "platform": {
+          "type": "object",
+          "required": ["status", "independent_from_project_evidence"],
+          "properties": {
+            "status": {
+              "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+            },
+            "independent_from_project_evidence": {"const": true}
+          },
+          "additionalProperties": true
+        },
+        "content": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+            }
+          },
+          "additionalProperties": true
+        },
+        "project_evidence": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+            }
+          },
+          "additionalProperties": true
+        },
+        "delivery": {
+          "type": "object",
+          "required": [
+            "status",
+            "local_delivery_complete",
+            "remote_published",
+            "offsite_restore_verified"
+          ],
+          "properties": {
+            "status": {
+              "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+            },
+            "local_delivery_complete": {"type": "boolean"},
+            "remote_published": {"type": "boolean"},
+            "offsite_restore_verified": {"type": "boolean"}
+          },
+          "additionalProperties": true
+        },
+        "adoption": {
+          "type": "object",
+          "required": ["status", "ready"],
+          "properties": {
+            "status": {
+              "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+            },
+            "ready": {"type": "boolean"}
+          },
+          "additionalProperties": true
+        },
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        },
+        "terminal": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "platform_status": {
+      "type": "object",
+      "required": ["status", "hard_checks"],
+      "properties": {
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        },
+        "hard_checks": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "content_readiness": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "retrieval_quality": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "operational_readiness": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        }
+      },
+      "additionalProperties": true
+    },
     "delivery_readiness": {
       "type": "object",
       "required": [
+        "status",
         "local_delivery_complete",
         "remote_published",
         "offsite_restore_verified"
       ],
       "properties": {
+        "status": {
+          "enum": ["pass", "needs-review", "needs-fix", "blocked"]
+        },
         "local_delivery_complete": {"type": "boolean"},
         "remote_published": {"type": "boolean"},
         "offsite_restore_verified": {"type": "boolean"}
-      }
+      },
+      "additionalProperties": true
     },
-    "platform_status": {"type": "object"},
-    "content_readiness": {"type": "object"},
-    "retrieval_quality": {"type": "object"},
-    "operational_readiness": {"type": "object"}
+    "obsidian": {"type": "object"},
+    "schema_catalog": {"type": "object"},
+    "adoption": {"type": "object"},
+    "checks": {"type": "object"},
+    "blockers": {"type": "array"},
+    "gap_map": {"type": "array"},
+    "source_check_runtime": {"type": "object"},
+    "final_state_audit": {"type": "object"},
+    "maintenance_entry_audit": {"type": "object"},
+    "owner_and_real_evidence": {"type": "object"},
+    "conclusion_zh": {"type": "string"},
+    "next_actions_zh": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "duration_ms": {"type": "number", "minimum": 0},
+    "schema_instance_validation": {"type": "object"},
+    "snapshot": {"type": "string"}
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

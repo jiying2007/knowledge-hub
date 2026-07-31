@@ -408,3 +408,47 @@
 - Knowledge Hub 真实项目证据与反馈波次 2026-07-26: `governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md`; `knowledge-hub-real-evidence-feedback-wave-20260726`
 - PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md`; `pcr02-motor-uart-timestamp-sync-plan-20260726`
 - PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md`; `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
+- GD32L235 与 PCR02 SoC DISARM 和传感器恢复事务归档: `projects/gd32l235/archive/design/2026-07-27-disarm-sensor-restore-transaction.md`; `gd32l235-pcr02-disarm-sensor-restore-validation-20260727`
+- PCR02 电机 UART 时间戳同步实施与离线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md`; `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
+- PCR02 SSC305 ACTIVE_LOW_1组件化Pipeline与日夜策略: `projects/pcr02-ssc305/archive/design/2026-07-27-active-low-1-pipeline-architecture.md`; `pcr02-active-low-1-pipeline-architecture-20260727`
+- PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策: `projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md`; `pcr02-active-low-1-no-h26x-light-meter-power-gate-20260727`
+- PCR02 app_uart 时间同步与低功耗 ACK 槽竞争: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-app-uart-time-sync-low-power-busy.md`; `pcr02-app-uart-time-sync-low-power-busy-20260728`
+- PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-cold-switch-latency-optimization.md`; `pcr02-active-low-1-cold-switch-latency-optimization-20260728`
+- PCR02 ACTIVE_LOW_1 WARM切换实验决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md`; `pcr02-active-low-1-warm-switch-experiment-20260728`
+- PCR02 ACTIVE_LOW_1 HOT切换实验决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md`; `pcr02-active-low-1-hot-switch-experiment-20260728`
+- PCR02 1/30fps 代码规范收敛与板级复验: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md`; `pcr02-vi-fps-code-quality-closeout-20260728`
+- PCR02 VI 1/30fps 同步抽象规范收敛验证: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md`; `pcr02-vi-fps-sync-abstraction-closeout-20260728`
+- PCR02 2026-07-28 电机时间戳与低功耗联调收口: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-28-pcr02-motor-uart-low-power-session-closeout.md`; `pcr02-motor-uart-low-power-session-closeout-20260728`
+- PCR02 BCMDHD suspend 竞态与可启动 SD 边界: `projects/pcr02-ssc305/archive/debug/2026-07-28-bcmdhd-suspend-and-sd-boot-boundary.md`; `pcr02-bcmdhd-suspend-sd-boot-boundary-20260728`
+- GD32L235 WiFi wake shadow 诊断与验证: `projects/gd32l235/archive/debug/2026-07-28-wifi-wake-shadow-validation.md`; `gd32l235-wifi-wake-shadow-validation-20260728`
+- PCR02 1/30fps Pipeline全量整改与板级验证: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md`; `pcr02-vi-fps-full-optimization-closeout-20260728`
+- PCR02 libmsc Lua RPC释放后使用core分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md`; `pcr02-libmsc-lua-rpc-use-after-free-20260724`
+- PCR02 Agora下行音频STARVE与丢尾音分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md`; `pcr02-agora-downlink-audio-starve-tail-loss-20260713`
+- PCR02扫码配网显示状态机缺口分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-wifi-provision-display-state-gap.md`; `pcr02-wifi-provision-display-state-gap-20260702`
+- PCR02 ZMQ context与mailbox生命周期崩溃分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-zmq-context-mailbox-lifecycle-crash.md`; `pcr02-zmq-context-mailbox-lifecycle-crash-20260702`
+- PCR02 DVR回放SD热拔插闭环验证: `projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md`; `pcr02-dvr-replay-sd-hot-unplug-closure-20260715`
+- PCR02电机标定静态信息缓存语义验证: `projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md`; `pcr02-motor-calibration-static-info-cache-20260715`
+- PCR02电机Hall校准前置事务验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md`; `pcr02-motor-hall-calibration-prestart-transaction-20260724`
+- PCR02 QR_CODE_SN字符校验失败分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-qr-code-sn-character-validation.md`; `pcr02-qr-code-sn-character-validation-20260728`
+- PCR02老化健康上报与超时契约归档: `projects/xcrz-sigmastar-demo/archive/design/2026-07-17-aging-health-report-timeout-contract.md`; `pcr02-aging-health-report-timeout-contract-20260717`
+- PCR02 AI音频流顺序与EOF语义契约归档: `projects/xcrz-sigmastar-demo/archive/design/2026-07-13-ai-audio-stream-order-eof-contract.md`; `pcr02-ai-audio-stream-order-eof-contract-20260713`
+- PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md`; `pcr02-active-low-1-profile-switch-mode-20260729`
+- PCR02 player 单调时钟与请求确认优化验证: `projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md`; `pcr02-player-monotonic-sync-validation-20260729`
+- PCR02 API消息队列并发创建导致Player/UART串消息验证: `projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md`; `pcr02-api-msg-player-uart-crosstalk-validation-20260730`
+- PCR02 DEEP_SLEEP ARMED ACK 物理发送完成与 PA15 切电诊断: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-30-deep-sleep-ack-completion.md`; `pcr02-deep-sleep-ack-completion-20260730`
+- GD32L235 v1.1.40 NAS 发布记录: `projects/gd32l235/archive/release/2026-07-30-gd32l235-v1.1.40-nas-release.md`; `gd32l235-v1.1.40-nas-release-20260730`
+- GD32L235 智能留电充电唤醒与低电策略归档: `projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md`; `gd32l235-smart-reserve-charge-wakeup-20260730`
+- Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30: `governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md`; `knowledge-hub-comprehensive-optimization-assessment-20260730`
+- Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30: `governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md`; `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
+- PCR02 Sensor 全面测试资产基线: `projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-foundation.md`; `pcr02-app-sensor-test-foundation-20260730`
+- Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30: `governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md`; `knowledge-hub-target-architecture-p1-p3-validation-20260730`
+- PCR02 Sensor 分层全面测试框架基线: `projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md`; `pcr02-app-sensor-test-framework-20260730`
+- PCR02 Sensor 测试框架 v3 硬切换验证记录: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md`; `pcr02-app-sensor-test-v3-hard-cut-20260731`
+- PCR02 active 媒体 CPU 与 VENC 等待优化验证: `projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md`; `pcr02-ssc305-active-media-cpu-venc-timeout-20260731`
+- PCR02 SSC305 物理1fps/30fps VIF Sleep切换优化归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md`; `pcr02-vi-fps-vif-sleep-optimization-20260731`
+- PCR02 Sensor 全面测试框架落地验证记录: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md`; `pcr02-app-sensor-test-comprehensive-closure-20260731`
+- app_sensor_test JSONL v4 与 HIL 证据闭环验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md`; `app-sensor-test-v4-evidence-closure-20260731`
+- PCR02 1/30fps 优化提交推送与最终验收: `projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md`; `pcr02-vi-fps-publish-validation-20260731`
+- app_sensor_test 选择完整性、构建身份与性能门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md`; `app-sensor-test-selection-performance-closure-20260731`
+- app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md`; `app-sensor-test-evidence-ci-hardcut-20260731`
+- app_sensor_test staged safe 板测 transport 阻塞: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`

@@ -89,7 +89,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--as-of", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--apply", action="store_true")
-    parser.add_argument("--json", action="store_true")
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument("--json", action="store_true")
+    output.add_argument("--summary-json", action="store_true")
     return parser
 
 
@@ -566,6 +568,28 @@ def _transaction(root: pathlib.Path, args: argparse.Namespace, today: dt.date) -
     )
 
 
+def _transaction_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    transaction = payload.get("transaction", {})
+    if not isinstance(transaction, Mapping):
+        transaction = {}
+    return {
+        "schema_version": 1,
+        "projection": "knowledge-new-summary-v1",
+        "status": payload.get("status", ""),
+        "action": payload.get("action", ""),
+        "id": payload.get("id", ""),
+        "target": payload.get("target", ""),
+        "created_status": payload.get("created_status", ""),
+        "active_promotion": payload.get("active_promotion", False),
+        "transaction_id": transaction.get("transaction_id", ""),
+        "changed_path_count": len(transaction.get("changed_paths", []) or []),
+        "rolled_back": transaction.get("rolled_back", False),
+        "diagnostic_count": len(transaction.get("diagnostics", []) or []),
+        "as_of": payload.get("as_of", ""),
+        "dry_run": payload.get("dry_run", False),
+    }
+
+
 def main(argv: Sequence[str] = ()) -> int:
     values = list(argv) if argv else sys.argv[1:]
     if not values:
@@ -583,17 +607,44 @@ def main(argv: Sequence[str] = ()) -> int:
         elif args.apply or args.dry_run:
             payload = _transaction(root, args, today)
             payload.update({"as_of": today.isoformat(), "date_source": date_source, "dry_run": not args.apply})
-            print(json.dumps(payload, ensure_ascii=False, indent=2) if args.json else "\n".join("{}: {}".format(k, v) for k, v in payload.items()))
+            if args.json or args.summary_json:
+                projection = (
+                    _transaction_summary(payload)
+                    if args.summary_json
+                    else payload
+                )
+                print(json.dumps(projection, ensure_ascii=False, indent=2))
+            else:
+                print("\n".join("{}: {}".format(k, v) for k, v in payload.items()))
             return 0
         else:
             guide = _item_guide(root, args, today, parser)
-        if args.json:
-            print(json.dumps({"status": "guide", "read_only": True, "guide": guide, "as_of": today.isoformat()}, ensure_ascii=False, indent=2))
+        if args.json or args.summary_json:
+            guide_payload = {
+                "status": "guide",
+                "read_only": True,
+                "guide": guide,
+                "as_of": today.isoformat(),
+            }
+            if args.summary_json:
+                guide_payload = {
+                    "schema_version": 1,
+                    "projection": "knowledge-new-summary-v1",
+                    "status": "guide",
+                    "read_only": True,
+                    "source_mode": bool(args.source_mode),
+                    "kind": args.kind,
+                    "id": args.id,
+                    "path": args.path,
+                    "as_of": today.isoformat(),
+                    "next_action": "rerun without --summary-json for the full guide",
+                }
+            print(json.dumps(guide_payload, ensure_ascii=False, indent=2))
         else:
             print(guide, end="" if guide.endswith("\n") else "\n")
         return 0
     except KnowledgeHubError as exc:
-        if args.json:
+        if args.json or args.summary_json:
             print(json.dumps({"status": "error", "error": str(exc)}, ensure_ascii=False, indent=2))
         else:
             print("ERROR {}".format(exc), file=sys.stderr)

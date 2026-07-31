@@ -9,7 +9,9 @@ root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
 parser = argparse.ArgumentParser(description="Print a report-only review_after stale and near-due report.")
-parser.add_argument("--json", action="store_true")
+output_mode = parser.add_mutually_exclusive_group()
+output_mode.add_argument("--json", action="store_true")
+output_mode.add_argument("--summary-json", action="store_true")
 parser.add_argument("--as-of", default="", metavar="YYYY-MM-DD", help="Use a fixed date for review_after checks.")
 parser.add_argument("--window-days", type=int, default=30, help="Near-due window for registry items.")
 parser.add_argument("--source-window-days", type=int, default=30, help="Near-due window for registered sources.")
@@ -284,8 +286,36 @@ output = {
     ],
 }
 
-if args.json:
-    print(json.dumps(output, ensure_ascii=False, indent=2))
+if args.json or args.summary_json:
+    projection = output
+    if args.summary_json:
+        projection = {
+            "schema_version": 1,
+            "projection": "knowledge-review-after-summary-v1",
+            "status": output["status"],
+            "read_only": True,
+            "report_only": True,
+            "today": output["today"],
+            "counts": output["counts"],
+            "groups": {
+                key: {
+                    name: {
+                        "count": group.get("count", 0),
+                        "first_review_after": group.get(
+                            "first_review_after", ""
+                        ),
+                        "latest_review_after": group.get(
+                            "latest_review_after", ""
+                        ),
+                    }
+                    for name, group in value.items()
+                }
+                for key, value in output["groups"].items()
+                if key.startswith("by_") and isinstance(value, dict)
+            },
+            "error_count": len(errors),
+        }
+    print(json.dumps(projection, ensure_ascii=False, indent=2))
 else:
     print("# Knowledge review_after Report")
     print()
@@ -325,4 +355,3 @@ else:
             print(f"ERROR {error}")
 
 sys.exit(1 if errors else 0)
-

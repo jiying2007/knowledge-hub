@@ -29,9 +29,23 @@ def test_repository_engineering_contract_is_complete():
     assert payload["ci"]["least_privilege_permissions"] is True
     assert payload["ci"]["dangerous_pull_request_target"] is False
     assert payload["ci"]["all_run_steps_governed"] is True
+    assert payload["recovery_workflow"]["quarterly_schedule"] is True
+    assert payload["recovery_workflow"]["evidence_retention_days"] == 90
     assert payload["ci_transport"]["exact_wrapper_allowlist"] is True
     assert payload["ci_transport"]["runner_path_boundary"] is True
     assert payload["dependabot"]["ecosystems"] == ["github-actions", "pip"]
+
+
+def test_coverage_omits_ephemeral_regression_fixture_from_any_restore_root():
+    pyproject = engineering.tomllib.loads(
+        (repository_root() / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    expected = [
+        "*/tools/codex_assets/knowledge_hub/regression_fixture_cli.py"
+    ]
+
+    assert pyproject["tool"]["coverage"]["run"]["omit"] == expected
+    assert pyproject["tool"]["coverage"]["report"]["omit"] == expected
 
 
 def test_engineering_contract_rejects_mutable_action_ref(tmp_path):
@@ -93,6 +107,73 @@ def test_engineering_snapshot_is_private_and_atomic(tmp_path):
     assert path.stat().st_mode & 0o777 == 0o600
 
 
+def test_quality_command_retries_and_preserves_attempt_evidence(tmp_path, monkeypatch):
+    results = iter(
+        [
+            {
+                "command": "rtk regression",
+                "exit_code": 1,
+                "stdout": '{"status":"fail","failure_ids":["flaky-fixture"]}\n',
+                "stderr": "",
+                "duration_sec": 1.2,
+            },
+            {
+                "command": "rtk regression",
+                "exit_code": 0,
+                "stdout": '{"status":"pass","failure_ids":[]}\n',
+                "stderr": "",
+                "duration_sec": 1.0,
+            },
+        ]
+    )
+
+    monkeypatch.setattr(engineering, "run_rtk", lambda *args, **kwargs: next(results))
+
+    payload = engineering._run_quality_command(
+        tmp_path,
+        ("python", "-m", "regression"),
+        10,
+        max_attempts=2,
+        retry_exit_codes=(1,),
+    )
+
+    assert payload["status"] == "pass"
+    assert payload["attempt_count"] == 2
+    assert payload["recovered_after_retry"] is True
+    assert payload["attempts"][0]["status"] == "fail"
+    assert payload["attempts"][0]["stdout_tail"] == [
+        '{"status":"fail","failure_ids":["flaky-fixture"]}'
+    ]
+    assert payload["attempts"][1]["status"] == "pass"
+
+
+def test_quality_command_fails_after_retry_budget(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        engineering,
+        "run_rtk",
+        lambda *args, **kwargs: {
+            "command": "rtk regression",
+            "exit_code": 1,
+            "stdout": '{"status":"fail"}\n',
+            "stderr": "",
+            "duration_sec": 1.0,
+        },
+    )
+
+    payload = engineering._run_quality_command(
+        tmp_path,
+        ("python", "-m", "regression"),
+        10,
+        max_attempts=2,
+        retry_exit_codes=(1,),
+    )
+
+    assert payload["status"] == "fail"
+    assert payload["attempt_count"] == 2
+    assert payload["recovered_after_retry"] is False
+    assert [attempt["status"] for attempt in payload["attempts"]] == ["fail", "fail"]
+
+
 def _write_minimal_contract(root: pathlib.Path) -> None:
     (root / ".github/workflows").mkdir(parents=True)
     (root / "pyproject.toml").write_text(
@@ -143,6 +224,31 @@ jobs:
       - run: rtk bash tools/knowledge-retrieval-benchmark.sh --json
       - run: rtk bash tools/knowledge-regression.sh --suite full --json
       - run: python -m pip_audit --require-hashes -r requirements-runtime.lock
+""",
+        encoding="utf-8",
+    )
+    (root / ".github/workflows/recovery-drill.yml").write_text(
+        """name: quarterly-recovery-drill
+on:
+  schedule:
+    - cron: "23 3 1 */3 *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - run: rtk python -m pip install --require-hashes -r requirements-dev.lock
+      - run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --summary-json
+      - run: rtk bash tools/knowledge-final-gate.sh --final-profile product --summary-json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with: {retention-days: 90}
 """,
         encoding="utf-8",
     )

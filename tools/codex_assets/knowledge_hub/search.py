@@ -39,7 +39,8 @@ from .common import (
     source_id,
     utc_timestamp,
 )
-from .metrics import (
+from .retrieval_telemetry import (
+    IMPLEMENTATION_GENERATION,
     INTERACTION_CONTRACT,
     INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
     PERFORMANCE_CONTRACT,
@@ -47,7 +48,13 @@ from .metrics import (
     make_interaction_id,
 )
 from .model import ITEM_KINDS, ITEM_STATUSES
-from .schemas import validate_instance
+from .schema_subset import validate_contract_subset
+from .search_ranking import (
+    is_historical_result as _historical_result,
+    path_priority as _path_priority,
+    redact_internal_endpoints as _redact_internal_endpoints,
+    status_priority as _status_priority,
+)
 
 
 INDEX_SCHEMA_VERSION = 8
@@ -105,10 +112,6 @@ SEARCH_MAX_FILTER_VALUE_CHARS = 256
 SEARCH_MAX_CURSOR_CHARS = 2048
 SEARCH_AUTHORITY_CANDIDATE_LIMIT = 512
 CONTENT_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-PRIVATE_IPV4_PATTERN = re.compile(
-    r"(?<![0-9])(?:10(?:\.[0-9]{1,3}){3}|192\.168(?:\.[0-9]{1,3}){2}|"
-    r"172\.(?:1[6-9]|2[0-9]|3[01])(?:\.[0-9]{1,3}){2})(?::[0-9]{1,5})?(?![0-9])"
-)
 ARCHIVE_INTENT_TERMS = frozenset(
     {"archive", "archived", "historical", "history", "legacy", "归档", "历史", "旧版"}
 )
@@ -1277,43 +1280,6 @@ class SearchIndex:
             connection.close()
 
 
-def _path_priority(relative: str) -> Tuple[int, str]:
-    normalized = relative.replace("\\", "/")
-    if normalized == "README.md":
-        return 100, "root-entry"
-    if normalized.startswith("projects/") and any(part in normalized for part in ("/current/", "/decisions/", "/validation/")):
-        return 120, "project-canonical"
-    if normalized.startswith("domains/embedded/") and any(part in normalized for part in ("/runbooks/", "/standards/", "/architecture/")):
-        return 115, "domain-canonical"
-    if normalized.startswith("projects/") and "/archive/" in normalized:
-        return 55, "project-archive"
-    if normalized.startswith("governance/status/"):
-        return 80, "governance-status"
-    if normalized.startswith("governance/"):
-        return 65, "governance"
-    if normalized.startswith("indexes/"):
-        return 35, "derived-index"
-    if normalized.startswith("tools/"):
-        return 20, "tooling"
-    if normalized.startswith("artifacts/manifests/"):
-        return 0, "historical-manifest"
-    if normalized.startswith("registry/"):
-        return -20, "registry-ledger"
-    return 40, "body"
-
-
-def _status_priority(status: str) -> int:
-    return {
-        "active": 100,
-        "reviewing": 55,
-        "draft": 20,
-        "personal": 0,
-        "archived": -15,
-        "superseded": -80,
-        "rejected": -100,
-    }.get(status, 0)
-
-
 def _term_matches(term: str, haystack: str) -> bool:
     variants = _term_variants(term)
     if any(variant in haystack for variant in variants):
@@ -1343,19 +1309,6 @@ def _matched_query_terms(
 def _archive_intent(query: str) -> bool:
     lowered = query.lower()
     return any(_term_matches(term, lowered) for term in ARCHIVE_INTENT_TERMS)
-
-
-def _historical_result(item: Mapping[str, Any], relative: str) -> bool:
-    return str(item.get("status", "")) in {
-        "archived",
-        "superseded",
-        "rejected",
-    } or "/archive/" in relative
-
-
-def _redact_internal_endpoints(value: str) -> Tuple[str, bool]:
-    redacted = PRIVATE_IPV4_PATTERN.sub("[内部端点已脱敏]", value)
-    return redacted, redacted != value
 
 
 def _cursor_fingerprint(query: str, filters: SearchFilters) -> str:
@@ -1504,7 +1457,7 @@ def _validate_retrieval_contract(
 
     catalog_path = root / "schemas" / "catalog.json"
     if catalog_path.is_file():
-        validation = validate_instance(root, "retrieval-result-v3", payload)
+        validation = validate_contract_subset(root, "retrieval-result-v3", payload)
         if validation.get("status") != "pass":
             details = "; ".join(
                 "{path}: {message}".format(**row)
@@ -2078,6 +2031,7 @@ def record_search_telemetry(
         "sample_kind": "interactive",
         "interaction_contract": INTERACTION_CONTRACT,
         "performance_contract": PERFORMANCE_CONTRACT,
+        "implementation_generation": IMPLEMENTATION_GENERATION,
         "interaction_id": make_interaction_id("search", query_hash, recorded_at),
         "retrieval_kind": "search",
         "recorded_at": recorded_at,

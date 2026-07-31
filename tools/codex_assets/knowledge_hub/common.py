@@ -340,20 +340,21 @@ def resolve_inside(root: pathlib.Path, relative: str) -> pathlib.Path:
     return target
 
 
-def display_path(value: Any) -> str:
-    text = str(value)
-    home = str(pathlib.Path.home())
-    if text == home:
-        return "~"
-    if text.startswith(home + os.sep):
-        return "~" + text[len(home) :]
+def user_path_prefixes() -> List[str]:
+    prefixes = [str(pathlib.Path.home())]
     user_name = os.environ.get("USER", "")
     if user_name:
-        alternate = "/vsdata/{}".format(user_name)
-        if text == alternate:
+        prefixes.append("/vsdata/{}".format(user_name))
+    return [prefix for prefix in prefixes if prefix and prefix != "/"]
+
+
+def display_path(value: Any) -> str:
+    text = str(value)
+    for prefix in user_path_prefixes():
+        if text == prefix:
             return "~"
-        if text.startswith(alternate + "/"):
-            return "~" + text[len(alternate) :]
+        if text.startswith(prefix + os.sep):
+            return "~" + text[len(prefix) :]
     return text
 
 

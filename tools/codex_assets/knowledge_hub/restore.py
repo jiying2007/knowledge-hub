@@ -23,6 +23,11 @@ from .common import (
     utc_timestamp,
     working_tree_signature,
 )
+from .recovery_evidence import (
+    evidence_matches_current_execution,
+    execution_environment_evidence,
+    expected_repository_from_registry,
+)
 
 
 def _candidate_paths(root: pathlib.Path) -> List[str]:
@@ -79,32 +84,16 @@ def _restore_runtime() -> str:
     return str(runtime)
 
 
-def _execution_environment(source_mode: str, source_revision: str) -> Dict[str, Any]:
-    github_actions = os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
-    github_repository = os.environ.get("GITHUB_REPOSITORY", "")
-    github_sha = os.environ.get("GITHUB_SHA", "")
-    github_event = os.environ.get("GITHUB_EVENT_NAME", "")
-    runner_environment = os.environ.get("RUNNER_ENVIRONMENT", "")
-    remote_checkout_verified = bool(
-        source_mode == "head"
-        and github_actions
-        and github_repository
-        and github_sha == source_revision
+def _execution_environment(
+    source_mode: str,
+    source_revision: str,
+    expected_repository: str,
+) -> Dict[str, Any]:
+    return execution_environment_evidence(
+        source_mode,
+        source_revision,
+        expected_repository=expected_repository,
     )
-    return {
-        "provider": "github-actions" if github_actions else "local",
-        "repository": github_repository,
-        "revision": github_sha,
-        "event": github_event,
-        "runner_environment": runner_environment,
-        "remote_checkout_verified": remote_checkout_verified,
-        "remote_published_ref_verified": bool(
-            remote_checkout_verified and github_event == "push"
-        ),
-        "offsite_environment_verified": bool(
-            remote_checkout_verified and runner_environment == "github-hosted"
-        ),
-    }
 
 
 def _copy_candidate(root: pathlib.Path, restored: pathlib.Path) -> Dict[str, Any]:
@@ -169,13 +158,83 @@ def _copy_head_archive(root: pathlib.Path, restored: pathlib.Path, directory: pa
     return {"paths": sorted(paths), "missing": [], "symlinks": symlinks, "copied": copied}
 
 
+def _run_restore_check(
+    restored: pathlib.Path,
+    command: List[str],
+    command_env: Dict[str, str],
+    *,
+    parse_status: bool = True,
+    max_attempts: int = 1,
+) -> Dict[str, Any]:
+    attempts: List[Dict[str, Any]] = []
+    for attempt_number in range(1, max_attempts + 1):
+        try:
+            result = run_rtk(
+                restored,
+                command,
+                timeout=180,
+                accepted_exit_codes=(0, 1, 2, 4, 5),
+                extra_env=command_env,
+            )
+            parsed_status = ""
+            reported_errors: List[Any] = []
+            if parse_status:
+                try:
+                    parsed = parse_json_output(result)
+                    parsed_status = str(parsed.get("status", ""))
+                    reported_errors = list(parsed.get("errors", []))[:20]
+                except KnowledgeHubError:
+                    parsed_status = "unparseable"
+            row: Dict[str, Any] = {
+                "attempt": attempt_number,
+                "command": result["command"].replace(
+                    str(restored), "<restored-root>"
+                ),
+                "exit_code": result["exit_code"],
+                "status": "pass" if result["exit_code"] == 0 else "fail",
+                "reported_status": parsed_status,
+                "reported_errors": reported_errors,
+                "stdout_tail": result["stdout"].strip().splitlines()[-20:],
+                "stderr_tail": result["stderr"].strip().splitlines()[-10:],
+                "duration_sec": result["duration_sec"],
+            }
+        except (KnowledgeHubError, OSError) as exc:
+            row = {
+                "attempt": attempt_number,
+                "status": "fail",
+                "error": str(exc),
+            }
+        attempts.append(row)
+        if row["status"] == "pass":
+            break
+
+    check = dict(attempts[-1])
+    check["attempt_count"] = len(attempts)
+    check["recovered_after_retry"] = (
+        len(attempts) > 1 and check["status"] == "pass"
+    )
+    if max_attempts > 1:
+        check["attempts"] = attempts
+    return check
+
+
 def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candidate") -> Dict[str, Any]:
     if source_mode not in {"candidate", "head"}:
         raise KnowledgeHubError("source_mode must be candidate or head")
     started = time.monotonic()
     candidate_signature = working_tree_signature(root)
     source_revision = _head_revision(root)
-    execution_environment = _execution_environment(source_mode, source_revision)
+    expected_repository = expected_repository_from_registry(root)
+    execution_environment = _execution_environment(
+        source_mode,
+        source_revision,
+        expected_repository,
+    )
+    current_execution_bound = evidence_matches_current_execution(
+        execution_environment,
+        source_revision,
+        expected_repository=expected_repository,
+    )
     runtime_python = _restore_runtime()
     runtime_env = {"KNOWLEDGE_PYTHON_RUNTIME": runtime_python}
     checks: Dict[str, Any] = {}
@@ -271,37 +330,19 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
             command_env = dict(runtime_env)
             if name == "product_gate_smoke":
                 command_env["KNOWLEDGE_FINAL_GATE_INNER_REGRESSION"] = "1"
-            result = run_rtk(
+            checks[name] = _run_restore_check(
                 restored,
                 command,
-                timeout=180,
-                accepted_exit_codes=(0, 1, 2, 4, 5),
-                extra_env=command_env,
+                command_env,
+                parse_status=name not in {"unit_tests", "dependency_imports"},
+                max_attempts=2 if name == "retrieval_benchmark" else 1,
             )
-            parsed_status = ""
-            reported_errors: List[Any] = []
-            if name not in {"unit_tests", "dependency_imports"}:
-                try:
-                    parsed = parse_json_output(result)
-                    parsed_status = str(
-                        parsed.get("status", parsed.get("gate_status", parsed.get("overall_status", "")))
-                    )
-                    reported_errors = list(parsed.get("errors", []))[:20]
-                except KnowledgeHubError:
-                    parsed_status = "unparseable"
-            checks[name] = {
-                "command": result["command"].replace(str(restored), "<restored-root>"),
-                "exit_code": result["exit_code"],
-                "status": "pass" if result["exit_code"] == 0 else "fail",
-                "reported_status": parsed_status,
-                "reported_errors": reported_errors,
-                "stderr_tail": result["stderr"].strip().splitlines()[-10:],
-                "duration_sec": result["duration_sec"],
-            }
     failed = [name for name, row in checks.items() if row["status"] != "pass"]
-    status = "pass" if not missing and not symlinks and not failed else "fail"
+    status = (
+        "pass" if not missing and not symlinks and not failed else "needs-fix"
+    )
     payload: Dict[str, Any] = {
-        "schema_version": 2,
+        "schema_version": 4,
         "status": status,
         "source_mode": source_mode,
         "restore_semantics": (
@@ -311,6 +352,7 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
         ),
         "source_revision": source_revision,
         "execution_environment": execution_environment,
+        "evidence_matches_current_execution": current_execution_bound,
         "remote_checkout_verified": execution_environment[
             "remote_checkout_verified"
         ],

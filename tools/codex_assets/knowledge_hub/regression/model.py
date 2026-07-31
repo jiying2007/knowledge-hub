@@ -184,7 +184,7 @@ def test_governance_audit_readability_gate():
     errors = parsed.get("errors", [])
     expect(
         result["exit_code"] == 1
-        and parsed.get("status") == "fail"
+        and parsed.get("status") == "needs-fix"
         and any("missing summary_zh for post-2026-06-21 governance audit readability gate" in error for error in errors),
         "governance-audit-readability-gate",
         "knowledge-check requires Chinese readability fields for new governance audits",
@@ -227,7 +227,7 @@ def test_ai_generated_item_provenance_gate():
     errors = parsed.get("errors", [])
     expect(
         result["exit_code"] == 1
-        and parsed.get("status") == "fail"
+        and parsed.get("status") == "needs-fix"
         and any("ai-generated item missing provenance fields" in error for error in errors),
         "ai-generated-item-provenance-gate",
         "knowledge-check requires AI provenance fields for new AI generated items",

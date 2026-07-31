@@ -37,8 +37,8 @@ Goal: 按 `~/knowledge-hub/docs/goals/knowledge-hub-simplified-final-version.md`
   - `rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json`
   - `rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full`
   - `rtk git diff --check`
-- 技术候选与发布完成分开：前者看 `gate_status`，后者还必须有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。
-- 30/30 规范项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-owner-review`。
+- 技术候选与发布完成分开：前者看 `maturity_axes.platform.status`，后者还必须有 clean committed HEAD、tracked dependency manifests、full regression 和 HEAD `git archive` restore。
+- 30/30 规范项目结构或本机 source mapping 不等于 evidence-ready；owner、人工/实机、制品、发布和回滚证据不足时保持 `needs-review`。
 
 非目标：
 - 不兼容旧目录作为长期主入口。
@@ -397,7 +397,7 @@ Manifest 只用于 L3 高风险动作。
 - tools README 中重复人工教程的长流程。
 - templates README 中重复工具行为的说明。
 - 新旧路径双轨说明或兼容旧入口说明。
-- 兼容字段作为新模板默认字段。
+- 已删除字段或旧 schema 重新进入当前模板、文档或 runtime consumer。
 - 历史 proof 字段作为新消费方字段。
 - 无 registry、无 owner、无 evidence 的长期条目。
 

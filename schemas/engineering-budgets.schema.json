@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/engineering-budgets.schema.json",
+  "title": "Knowledge Hub engineering complexity budgets",
+  "type": "object",
+  "required": ["schema_version", "policy", "python", "commands"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "policy": {"const": "report-legacy-fail-new-regression"},
+    "python": {
+      "type": "object",
+      "required": [
+        "new_module_max_lines",
+        "new_function_max_lines",
+        "legacy_module_line_caps"
+      ],
+      "properties": {
+        "new_module_max_lines": {"type": "integer", "minimum": 100},
+        "new_function_max_lines": {"type": "integer", "minimum": 20},
+        "legacy_module_line_caps": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 1}
+        }
+      },
+      "additionalProperties": false
+    },
+    "commands": {
+      "type": "object",
+      "required": ["wrapper_baseline", "daily_max", "readme_daily_max"],
+      "properties": {
+        "wrapper_baseline": {"type": "integer", "minimum": 1},
+        "daily_max": {"const": 5},
+        "readme_daily_max": {"type": "integer", "minimum": 5, "maximum": 7}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

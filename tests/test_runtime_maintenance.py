@@ -4,6 +4,7 @@ import json
 import pytest
 
 from tools.codex_assets.knowledge_hub.runtime_maintenance import (
+    DEFAULT_TRANSACTION_RETENTION_DAYS,
     _delete_tree,
     _fchmod_identity_safe,
     _identity,
@@ -112,6 +113,26 @@ def test_terminal_transaction_retention_keeps_newest_and_incomplete(tmp_path):
     assert not oldest.exists()
     assert newer.exists()
     assert incomplete.exists()
+
+
+def test_default_transaction_retention_is_bounded_to_two_weeks(tmp_path):
+    transactions = tmp_path / ".tmp/transactions"
+    old = transactions / "old"
+    newest = transactions / "newest"
+    _journal(old, "applied", "2026-06-30T00:00:00Z")
+    _journal(newest, "applied", "2026-07-17T00:00:00Z")
+
+    plan = plan_runtime_maintenance(
+        tmp_path,
+        dt.date(2026, 7, 18),
+        scope="terminal-transactions",
+        transaction_min_keep=1,
+    )
+
+    assert DEFAULT_TRANSACTION_RETENTION_DAYS == 14
+    assert [row["path"] for row in plan["candidates"]] == [
+        ".tmp/transactions/old"
+    ]
 
 
 def test_transaction_tree_with_symlink_is_never_candidate(tmp_path):

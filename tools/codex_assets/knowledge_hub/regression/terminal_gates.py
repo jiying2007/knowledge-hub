@@ -100,9 +100,9 @@ def test_status_next_owner_gate():
     expect(
         result["exit_code"] == 0
         and strict_result["exit_code"] == 1
-        and parsed.get("status") == "needs-owner-review"
+        and parsed.get("status") == "needs-review"
         and strict_parsed.get("strict") is True
-        and strict_parsed.get("status") == "needs-owner-review"
+        and strict_parsed.get("status") == "needs-review"
         and owner_blocker_source.get("status_source") == "knowledge-status --strict"
         and "owner-gates-open" in owner_blocker_source.get("strict_blocker_ids", [])
         and owner_blocker_source.get("owner_gate_open_count_field") == "owner_gates.open_count"
@@ -577,7 +577,7 @@ def test_health_summary_operational_fields():
     expect(
         result["exit_code"] in {0, 1}
         and payload.get("read_only") is True
-        and payload.get("health_status") in {"ok", "needs-owner-review", "partial", "needs-fix"}
+        and payload.get("status") in {"pass", "needs-review", "needs-fix", "blocked"}
         and orphan.get("parse_error", "") == ""
         and "missing_registry_count" in orphan
         and triage.get("parse_error", "") == ""
@@ -587,7 +587,7 @@ def test_health_summary_operational_fields():
         "health summary exposes changed-only body coverage and reviewing triage fields for both green and review-pending states",
         {
             "exit_code": result["exit_code"],
-            "health_status": payload.get("health_status"),
+            "status": payload.get("status"),
             "changed_orphan_files": orphan,
             "reviewing_triage": triage,
             "parse_error": parse_error,
