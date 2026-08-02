@@ -1,6 +1,8 @@
 import errno
 import json
 
+import pytest
+
 from tools.codex_assets.knowledge_hub import context as context_module
 from tools.codex_assets.knowledge_hub import metrics
 from tools.codex_assets.knowledge_hub import retrieval_telemetry
@@ -197,8 +199,28 @@ def test_small_budget_caps_search_limit(monkeypatch, tmp_path):
     monkeypatch.setattr(context_module, "search", fake_search)
     payload = assemble_context(root, str(root), "P1 发布", "release", 8, "small")
 
-    assert payload["context"]["effective_limit"] == 4
-    assert observed_limits == [4]
+    assert payload["context"]["effective_limit"] == 3
+    assert observed_limits == [3]
+
+
+def test_explicit_project_hint_overrides_ambiguous_query(tmp_path):
+    root = _context_root(tmp_path)
+    payload = assemble_context(
+        root,
+        str(root),
+        "ambiguous unrelated query",
+        "decision",
+        project_hint="p1",
+    )
+    assert payload["route"]["project_id"] == "p1"
+    assert payload["route_selection"]["status"] == "selected"
+    assert payload["route_selection"]["selection_source"] == "explicit-project"
+
+
+def test_invalid_explicit_project_hint_fails_closed(tmp_path):
+    root = _context_root(tmp_path)
+    with pytest.raises(ValueError, match="unknown or ambiguous project hint"):
+        assemble_context(root, str(root), "P1 发布", project_hint="missing")
 
 
 def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
@@ -218,7 +240,6 @@ def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
             "--limit",
             "3",
             "--summary-json",
-            "--no-telemetry",
         ]
     )
     output = capsys.readouterr().out.strip()
@@ -226,13 +247,14 @@ def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
 
     assert exit_code == 0
     assert "\n" not in output
-    assert len(output.encode("utf-8")) <= 4096
+    assert len(output.encode("utf-8")) <= 2048
     assert parsed["projection"] == "agent-summary-v1"
     assert "ranked_items" not in parsed
     assert "search" not in parsed
     assert parsed["search_summary"]["count"] <= 3
     assert parsed["context_contract"]["read_tier"] == "L1"
     assert parsed["context_contract"]["raw_evidence"]
+    assert parsed["telemetry"]["status"] == "disabled"
     assert parsed["context"]["authority_lanes"]["provisional_ids"] == ["p1-runbook"]
     assert parsed["search_summary"]["search_trace"]["schema_version"] == (
         "knowledge-hub.search-trace.v1"
@@ -244,6 +266,66 @@ def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
         if row.get("id")
     ]
     assert len(item_ids) == len(set(item_ids))
+
+
+def test_context_receipt_reuses_and_invalidates_on_selected_evidence_change(tmp_path, capsys):
+    root = _context_root(tmp_path)
+    arguments = [
+        "--root",
+        str(root),
+        "--cwd",
+        str(root),
+        "--query",
+        "private P1 release query",
+        "--project",
+        "p1",
+        "--task-type",
+        "release",
+        "--context-budget",
+        "small",
+        "--summary-json",
+        "--receipt-key",
+        "p1-release",
+    ]
+    assert context_main(arguments) == 0
+    first = json.loads(capsys.readouterr().out)
+    assert first["context_receipt"]["reused"] is False
+    assert context_main(arguments) == 0
+    second = json.loads(capsys.readouterr().out)
+    assert second["context_receipt"]["reused"] is True
+
+    receipt_path = root / ".cache/knowledge-hub/context-receipts/p1-release.json"
+    receipt_text = receipt_path.read_text()
+    assert "private P1 release query" not in receipt_text
+    assert json.loads(receipt_text)["raw_query_stored"] is False
+
+    selected_path = first["context_contract"]["raw_evidence"][0]
+    (root / selected_path).write_text("# evidence changed\n")
+    assert context_main(arguments) == 0
+    third = json.loads(capsys.readouterr().out)
+    assert third["context_receipt"]["reused"] is False
+    assert third["context_receipt"]["reason"] == "selected-evidence-changed"
+
+
+def test_context_cli_invalid_project_reports_clean_error(tmp_path, capsys):
+    root = _context_root(tmp_path)
+    with pytest.raises(SystemExit) as caught:
+        context_main(
+            [
+                "--root",
+                str(root),
+                "--cwd",
+                str(root),
+                "--query",
+                "P1 发布",
+                "--project",
+                "missing",
+            ]
+        )
+    assert caught.value.code == 2
+    stderr = capsys.readouterr().err
+    assert "unknown or ambiguous project hint" in stderr
+    assert "Traceback" not in stderr
 
 
 def test_summary_json_enforces_byte_budget_with_dynamic_risks():

@@ -4,13 +4,25 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import re
 import time
 import urllib.parse
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
-from .common import load_json, project_rows, registry_items, repository_rows, route_rows, source_id, utc_timestamp
+from .common import (
+    ensure_private_directory,
+    ensure_private_file,
+    file_sha256,
+    load_json,
+    project_rows,
+    registry_items,
+    repository_rows,
+    route_rows,
+    source_id,
+    utc_timestamp,
+)
 from .retrieval_telemetry import (
     IMPLEMENTATION_GENERATION,
     INTERACTION_CONTRACT,
@@ -23,9 +35,20 @@ from .search import SearchFilters, query_terms, search
 
 
 TASK_TYPES = {"debug", "archive", "release", "decision", "runbook", "source", "validation", "session", "general"}
-BUDGET_LIMITS = {"small": 4, "normal": 8, "deep": 16}
-SUMMARY_JSON_MAX_BYTES = 4096
+BUDGET_LIMITS = {"small": 3, "normal": 8, "deep": 16}
+SUMMARY_JSON_MAX_BYTES = 2048
 SUMMARY_JSON_MAX_ITEMS = 3
+CONTEXT_RECEIPT_SCHEMA_VERSION = 1
+CONTEXT_RECEIPT_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+CONTEXT_RECEIPT_REGISTRY_PATHS = (
+    "registry/items.jsonl",
+    "registry/sources.json",
+    "registry/projects.json",
+    "registry/repositories.json",
+    "registry/project-groups.json",
+    "registry/project-routes.json",
+    "local/workspaces.json",
+)
 TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
     "debug": {"debug-record": 10, "runbook": 5, "validation": 3, "project-archive": 2},
     "archive": {"project-archive": 10, "codex-session": 7, "audit": 4, "debug-record": 3},
@@ -496,6 +519,118 @@ def _summary_json_size(summary: Mapping[str, Any]) -> int:
     )
 
 
+def _path_signature(path: pathlib.Path) -> str:
+    return file_sha256(path) if path.is_file() else "absent"
+
+
+def context_receipt_path(root: pathlib.Path, key: str) -> pathlib.Path:
+    if not CONTEXT_RECEIPT_KEY_PATTERN.fullmatch(key):
+        raise ValueError("receipt key must match [A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+    return root / ".cache/knowledge-hub/context-receipts" / "{}.json".format(key)
+
+
+def context_receipt_request(
+    root: pathlib.Path,
+    cwd: str,
+    query: str,
+    task_type: str,
+    limit: int,
+    context_budget: str,
+    project_hint: str,
+) -> Dict[str, Any]:
+    git_config, _ = find_git_config(cwd)
+    return {
+        "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
+        "cwd": str(_safe_resolve(cwd)),
+        "task_type": task_type,
+        "limit": limit,
+        "context_budget": context_budget,
+        "project_hint": project_hint,
+        "workspace_git_head": _git_head_from_config(git_config),
+        "registry_signatures": {
+            relative: _path_signature(root / relative)
+            for relative in CONTEXT_RECEIPT_REGISTRY_PATHS
+        },
+    }
+
+
+def load_context_receipt(
+    root: pathlib.Path, key: str, request: Mapping[str, Any]
+) -> Tuple[Optional[Dict[str, Any]], str]:
+    path = context_receipt_path(root, key)
+    if not path.is_file():
+        return None, "missing"
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, "invalid"
+    if receipt.get("schema_version") != CONTEXT_RECEIPT_SCHEMA_VERSION:
+        return None, "schema-mismatch"
+    if receipt.get("request") != dict(request):
+        return None, "request-signature-changed"
+    evidence = receipt.get("evidence_signatures")
+    if not isinstance(evidence, dict):
+        return None, "evidence-signatures-missing"
+    for relative, expected in evidence.items():
+        target = (root / str(relative)).resolve()
+        try:
+            target.relative_to(root.resolve())
+        except ValueError:
+            return None, "unsafe-evidence-path"
+        if _path_signature(target) != expected:
+            return None, "selected-evidence-changed"
+    summary = receipt.get("summary")
+    if not isinstance(summary, dict):
+        return None, "summary-missing"
+    return dict(summary), "hit"
+
+
+def write_context_receipt(
+    root: pathlib.Path,
+    key: str,
+    request: Mapping[str, Any],
+    summary: Mapping[str, Any],
+) -> pathlib.Path:
+    path = context_receipt_path(root, key)
+    raw_paths = ((summary.get("context_contract") or {}).get("raw_evidence") or [])
+    evidence_signatures: Dict[str, str] = {}
+    for value in raw_paths:
+        relative = str(value)
+        target = (root / relative).resolve()
+        try:
+            target.relative_to(root.resolve())
+        except ValueError:
+            continue
+        evidence_signatures[relative] = _path_signature(target)
+    payload = {
+        "schema_version": CONTEXT_RECEIPT_SCHEMA_VERSION,
+        "key": key,
+        "request": dict(request),
+        "evidence_signatures": evidence_signatures,
+        "summary": dict(summary),
+        "raw_query_stored": False,
+    }
+    ensure_private_directory(path.parent)
+    temporary = path.with_name(".{}.{}.tmp".format(path.name, os.getpid()))
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    ensure_private_file(temporary)
+    os.replace(str(temporary), str(path))
+    ensure_private_file(path)
+    return path
+
+
+def attach_context_receipt(
+    summary: Dict[str, Any], key: str, reused: bool, reason: str
+) -> Dict[str, Any]:
+    summary["context_receipt"] = {
+        "key": key,
+        "reused": reused,
+        "reason": reason,
+        "raw_query_stored": False,
+    }
+    return _fit_summary_budget(summary)
+
+
 def _sync_summary_raw_evidence(summary: Dict[str, Any]) -> None:
     context = summary.get("context", {})
     contract = summary.get("context_contract", {})
@@ -600,6 +735,7 @@ def assemble_context(
     task_type: str = "general",
     limit: int = 8,
     context_budget: str = "normal",
+    project_hint: str = "",
 ) -> Dict[str, Any]:
     started = time.monotonic()
     if task_type not in TASK_TYPES:
@@ -610,6 +746,16 @@ def assemble_context(
         raise ValueError("limit must be >= 1")
     effective_limit = min(limit, BUDGET_LIMITS[context_budget])
     routes = route_rows(root)
+    explicit_route: Optional[Mapping[str, Any]] = None
+    if project_hint:
+        explicit_matches = [
+            route
+            for route in routes
+            if str(route.get("project_id", "")) == project_hint
+        ]
+        if len(explicit_matches) != 1:
+            raise ValueError("unknown or ambiguous project hint: {}".format(project_hint))
+        explicit_route = explicit_matches[0]
     repositories = repository_rows(root)
     projects_list = project_rows(root)
     projects = {str(row.get("id")): row for row in projects_list if row.get("id")}
@@ -711,6 +857,10 @@ def assemble_context(
     elif not cwd_route and query_route:
         best_route, best_matches = query_route, query_matches
         selection_source = "query"
+    if explicit_route is not None:
+        best_route = explicit_route
+        best_matches = [{"type": "explicit-project", "project_id": project_hint}]
+        selection_source = "explicit-project"
 
     project_ids = _route_project_ids(best_route, group_by_id, repo_by_id)
     domain_refs = _route_domains(best_route, project_ids, projects)
@@ -823,7 +973,7 @@ def assemble_context(
             "git_root_detected": str(git_root) if git_root else "",
             "git_config_detected": str(git_config) if git_config else "",
         }
-    candidate_required = task_type in {"debug", "release", "decision", "validation", "session"}
+    candidate_required = task_type in {"debug", "release", "decision"}
     authority_lanes = {
         "active_ids": [str(row.get("id", "")) for row in current if row.get("status") == "active" and row.get("id")],
         "provisional_ids": [
@@ -863,7 +1013,9 @@ def assemble_context(
         "route": route_summary,
         "route_selection": {
             "status": (
-                "ambiguous"
+                "selected"
+                if explicit_route is not None
+                else "ambiguous"
                 if query_selection["status"] == "ambiguous"
                 else "selected"
                 if best_route
@@ -874,7 +1026,7 @@ def assemble_context(
             "query_route_project_id": (query_route or {}).get("project_id"),
             "query_score": query_score,
             "selected_project_id": (best_route or {}).get("project_id"),
-            "candidates": query_selection["candidates"],
+            "candidates": [] if explicit_route is not None else query_selection["candidates"],
         },
         "canonical_paths": canonical_paths,
         "workspace_ref": workspace_ref or None,
@@ -899,10 +1051,11 @@ def assemble_context(
         "search": search_payload,
         "candidate_recommendation": {
             "required": candidate_required,
-            "reason_zh": "该任务类型可能产生长期项目事实、证据或会话结论；完成或中断时应写 Hub candidate，或明确无可归档结论。"
+            "reason_zh": "debug/release/decision 可能形成长期结论；只有结论可复用、证据充分且改变稳定事实时才写 candidate。"
             if candidate_required
-            else "普通查询不强制生成 Hub candidate。",
+            else "普通查询、validation 和 session 不强制生成 Hub candidate；仅在形成耐久结论时提升。",
             "allowed_kinds": ["debug-record", "validation", "decision", "runbook", "codex-session"] if candidate_required else [],
+            "threshold": "durable-reusable-evidence-backed",
         },
         "guardrails_zh": [
             "Hub 当前路由优先于 memory、raw session 和 historical archive provenance。",
@@ -1008,17 +1161,15 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "read_only": bool(payload.get("read_only", True)),
         "task_type": payload.get("task_type", "general"),
         "context_budget": payload.get("context_budget", "normal"),
-        "knowledge_preflight": dict(preflight),
+        "knowledge_preflight": _compact_mapping(preflight, ("required",)) or {},
         "repo_route": _compact_mapping(
             payload.get("repo_route"),
-            ("repo_id", "project_id", "remote_key", "workspace_ref", "groups", "lifecycle"),
+            ("repo_id", "project_id", "workspace_ref"),
         ),
         "route": _compact_mapping(
             payload.get("route"),
             (
                 "project_id",
-                "group_id",
-                "name",
                 "hub_entry",
                 "current_path",
                 "archive_path",
@@ -1027,14 +1178,16 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
             ),
         ),
         "route_selection": compact_route_selection,
-        "canonical_paths": payload.get("canonical_paths", {}),
         "context": {
             "budget": context.get("budget", payload.get("context_budget", "normal")),
             "effective_limit": context.get("effective_limit", 0),
-            "selection_order": context.get("selection_order", []),
             **compact_sections,
-            "authority_lanes": context.get("authority_lanes", {}),
-            "risks": context.get("risks", []),
+            "authority_lanes": _compact_mapping(
+                context.get("authority_lanes"),
+                ("active_ids", "provisional_ids", "historical_ids"),
+            )
+            or {},
+            "risks": list(context.get("risks", []))[:2],
         },
         "search_summary": {
             "status": search_payload.get("status", ""),
@@ -1049,25 +1202,30 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
                 (
                     "schema_version",
                     "excluded_by_filters_total",
-                    "excluded_by_filters",
                     "excluded_truncated",
-                    "retry_queries",
                 ),
             )
             or {},
         },
-        "candidate_recommendation": dict(candidate_recommendation),
+        "candidate_recommendation": _compact_mapping(
+            candidate_recommendation,
+            ("required", "allowed_kinds", "threshold"),
+        )
+        or {},
         "context_contract": {
             "read_tier": "L1",
             "budget_profile": payload.get("context_budget", "normal"),
             "confidence": confidence,
             "raw_evidence": raw_evidence,
             "raw_required_for_conclusion": bool(preflight.get("required", False)),
-            "fallback_condition": "路由歧义、需要完整排序解释或形成高风险结论时，回退完整 JSON 并读取候选原文。",
-            "full_detail_mode": "rerun without --summary-json",
+            "fallback_condition": "歧义、低置信度或高风险时读取 --json 与 raw_evidence。",
         },
         "latency_ms": payload.get("latency_ms", 0),
-        "telemetry": dict(telemetry),
+        "telemetry": _compact_mapping(
+            telemetry,
+            ("status", "recorded", "reason", "error_code"),
+        )
+        or {},
     }
     return _fit_summary_budget(summary)
 

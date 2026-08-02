@@ -14,7 +14,57 @@ from .tool_asset_scan import scan_tool_assets
 from .tool_asset_session import close_tool_asset_session, start_tool_asset_session
 
 
-def _emit(payload: Dict[str, Any], json_output: bool) -> None:
+SUMMARY_JSON_MAX_BYTES = 2048
+
+
+def _capture_summary(payload: Dict[str, Any]) -> Dict[str, Any]:
+    transaction = payload.get("transaction") if isinstance(payload.get("transaction"), dict) else {}
+    writes = transaction.get("writes") if isinstance(transaction.get("writes"), list) else []
+    changed_paths = transaction.get("changed_paths")
+    if not isinstance(changed_paths, list):
+        changed_paths = [str(row.get("path", "")) for row in writes if row.get("changed")]
+    unchanged_paths = transaction.get("unchanged_paths")
+    if not isinstance(unchanged_paths, list):
+        unchanged_paths = []
+    summary = {
+        "schema_version": 1,
+        "projection": "knowledge-capture-summary-v1",
+        "status": payload.get("status", ""),
+        "error": payload.get("error", ""),
+        "command": payload.get("command", ""),
+        "action": payload.get("action", ""),
+        "id": payload.get("id", ""),
+        "target": payload.get("target", ""),
+        "created_status": payload.get("created_status", ""),
+        "active_promotion": bool(payload.get("active_promotion", False)),
+        "transaction": {
+            "transaction_id": transaction.get("transaction_id", ""),
+            "read_only": bool(transaction.get("read_only", False)),
+            "write_count": transaction.get(
+                "write_count", len(writes) or len(changed_paths) + len(unchanged_paths)
+            ),
+            "changed_count": transaction.get("changed_count", len(changed_paths)),
+            "changed_path_count": len(changed_paths),
+            "changed_paths_sample": changed_paths[:5],
+            "rolled_back": bool(transaction.get("rolled_back", False)),
+            "journal": transaction.get("journal", ""),
+        },
+        "derived_views": payload.get("derived_views", {}),
+        "as_of": payload.get("as_of", ""),
+        "dry_run": bool(payload.get("dry_run", False)),
+    }
+    encoded = json.dumps(summary, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(encoded) > SUMMARY_JSON_MAX_BYTES:
+        summary["transaction"]["changed_paths_sample"] = []
+        summary["derived_views"] = {}
+    return summary
+
+
+def _emit(payload: Dict[str, Any], json_output: bool, summary_json: bool = False) -> None:
+    if summary_json:
+        summary = _capture_summary(payload)
+        print(json.dumps(summary, ensure_ascii=False, separators=(",", ":")))
+        return
     if json_output:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return
@@ -30,7 +80,9 @@ def _common_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--as-of", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--apply", action="store_true")
-    parser.add_argument("--json", action="store_true")
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument("--json", action="store_true")
+    output.add_argument("--summary-json", action="store_true")
 
 
 def _capture_parser(subparsers: Any) -> None:
@@ -251,11 +303,18 @@ def main(argv: Sequence[str] = ()) -> int:
         payload["as_of"] = today.isoformat()
         payload["date_source"] = date_source
         payload["dry_run"] = not args.apply
-        _emit(payload, args.json)
+        _emit(payload, args.json, args.summary_json)
         return 0 if payload.get("status") != "blocked" else 3
     except KnowledgeHubError as exc:
-        payload = {"status": "error", "error": str(exc), "command": args.command}
-        _emit(payload, args.json)
+        payload = {
+            "status": "error",
+            "error": str(exc),
+            "command": args.command,
+            "as_of": today.isoformat(),
+            "date_source": date_source,
+            "dry_run": not args.apply,
+        }
+        _emit(payload, args.json, args.summary_json)
         return 3
 
 

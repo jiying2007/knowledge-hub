@@ -55,7 +55,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任�
 ```
 
 预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
-预检和检索不会修改受 Git 管理的知识资产；默认只向 `.cache/knowledge-hub/` 写入可重建索引和脱敏 telemetry。只读文件系统、权限受限沙箱或本地 cache 不可用时，业务结果继续返回，JSON 的 `telemetry.status=degraded` 会说明降级原因；要求完全不尝试本地观测写入时使用 `--no-telemetry`。运行时保留由 `tools/knowledge-runtime-maintenance.sh` 管理：默认只规划，终结事务默认保留 14 天且至少保留最新 20 个；显式 `--apply` 也只删除旧 schema 索引和已终结且过期的事务，不删除 telemetry 或未完成事务。
+预检和检索不会修改受 Git 管理的知识资产；context 预检默认不写 telemetry，需要运营样本时显式加 `--telemetry`。检索 telemetry 仍是可重建的本地 cache，存储不可用时业务结果继续返回并标记 `degraded`。运行时保留由 `tools/knowledge-runtime-maintenance.sh` 管理：默认只规划；显式 `--apply` 也不删除 telemetry 或未完成事务。
 Agent 默认使用 `--summary-json --context-budget small --limit 3`，只装配 route、候选索引、风险和原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并使用 `--json` 回退完整证据。`--context-budget small|normal|deep` 和 `--limit` 会共同约束候选与全文搜索结果。任何输出都不代表条目已提升 active 或 owner 已签收。
 在 `~/knowledge-hub` 内自举维护时，`repo_route` 表示当前 cwd 属于 Knowledge Hub 仓库，`route` 表示 query 目标；如果 query 明确命中 PCR02、agent-dev-kit 等项目别名，预检仍应路由到目标项目。检查 Hub 自身治理上下文可用：
 

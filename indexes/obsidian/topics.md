@@ -4,14 +4,14 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (60)
+## validation (61)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
+- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
 ## manual-validation-pending (44)
 
@@ -151,6 +151,13 @@
 - [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
 - [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
 
+## agent-dev-kit (4)
+
+- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
+
 ## app_sensor_test (4)
 
 - [app_sensor_test JSONL v4 与 HIL 证据闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md) · `reviewing`
@@ -178,12 +185,6 @@
 - [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
 - [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
 - [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
-
-## agent-dev-kit (3)
-
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
-- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
 ## decision-candidate (3)
 
@@ -404,6 +405,10 @@
 ## address-sanitizer (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
+
+## adk (1)
+
+- [ADK Token 与上下文工作流优化验证](../../projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md) · `reviewing`
 
 ## agent-runtime (1)
 
@@ -992,6 +997,14 @@
 ## timestamp (1)
 
 - [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing`
+
+## token-context (1)
+
+- [ADK Token 与上下文工作流优化验证](../../projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md) · `reviewing`
+
+## token-governance (1)
+
+- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
 
 ## tools (1)
 

@@ -455,3 +455,5 @@
 - PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - GD32L235 在桩检测有效但未发生净充电的当前结论: `projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md`; `gd32l235-dock-detected-without-net-charging-analysis-20260731`
 - PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`
+- ADK Token 与上下文工作流优化验证: `projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md`; `agent-dev-kit-token-context-workflow-optimization-20260801`
+- ADK/Codex/Hub Token 与门禁优化 v2: `projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md`; `agent-dev-kit-token-context-governance-v2-20260801`

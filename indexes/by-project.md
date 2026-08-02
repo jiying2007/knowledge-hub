@@ -296,6 +296,8 @@
 
 - Agent Dev Kit readiness validation: `projects/agent-dev-kit/validation/project-readiness.md`; `agent-dev-kit-readiness-validation-20260713`
 - Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选: `projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md`; `agent-dev-kit-harness-readiness-decision-20260717`
+- ADK Token 与上下文工作流优化验证: `projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md`; `agent-dev-kit-token-context-workflow-optimization-20260801`
+- ADK/Codex/Hub Token 与门禁优化 v2: `projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md`; `agent-dev-kit-token-context-governance-v2-20260801`
 
 ## SigmaStar Flasher
 

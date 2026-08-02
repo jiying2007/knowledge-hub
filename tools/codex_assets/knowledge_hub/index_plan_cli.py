@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description="Print a read-only plan for core Kn
 parser.add_argument("--section", choices=["all", "owner", "review-date", "status", "project", "source", "topic", "decision", "manifest", "linking", "review-queue"], default="all")
 parser.add_argument("--json", action="store_true")
 parser.add_argument("--summary-json", action="store_true", help="Print a compact count/health projection without index rows.")
+parser.add_argument("--as-of", default=os.environ.get("KNOWLEDGE_TODAY", ""), help="Review SLA date in YYYY-MM-DD.")
 parser.add_argument("--queue-type", help="Filter review queue rows by queue_type when --section review-queue is used.")
 parser.add_argument("--queue-owner", help="Filter review queue rows by owner when --section review-queue is used.")
 parser.add_argument("--queue-review-after", help="Filter review queue rows by review_after when --section review-queue is used.")
@@ -27,6 +28,10 @@ parser.add_argument("--queue-offset", type=int, default=0, help="Offset review q
 parser.add_argument("--queue-forms-jsonl", action="store_true", help="Print read-only human review form skeleton rows for the filtered review queue.")
 parser.add_argument("--validate-queue-forms", metavar="JSONL", help="Validate filled review queue JSONL forms in report-only mode.")
 args = parser.parse_args(argv)
+try:
+    review_sla_date = dt.date.fromisoformat(args.as_of) if args.as_of else dt.date.today()
+except ValueError:
+    parser.error("--as-of must use YYYY-MM-DD")
 if args.queue_limit < 0:
     parser.error("--queue-limit must be >= 0")
 if args.queue_offset < 0:
@@ -1066,7 +1071,7 @@ def validate_review_queue_forms(view, all_view):
     }
 
 def apply_review_queue_filters(view):
-    rows = list(view.get("rows", []))
+    rows = [dict(row) for row in view.get("rows", [])]
     total_row_count = len(rows)
     filters = {
         "queue_type": args.queue_type or "",
@@ -1077,6 +1082,32 @@ def apply_review_queue_filters(view):
     for field, expected in filters.items():
         if expected:
             rows = [row for row in rows if str(row.get(field, "")) == expected]
+    sla_counts = collections.Counter()
+    by_domain = collections.Counter()
+    for row in rows:
+        review_after = str(row.get("review_after", ""))
+        by_domain[str(row.get("domain", "") or "<missing-domain>")] += 1
+        if not review_after:
+            sla_status = "missing-date"
+            days_until_review = None
+        else:
+            try:
+                days_until_review = (dt.date.fromisoformat(review_after) - review_sla_date).days
+            except ValueError:
+                days_until_review = None
+                sla_status = "invalid-date"
+            else:
+                if days_until_review < 0:
+                    sla_status = "overdue"
+                elif days_until_review <= 7:
+                    sla_status = "due-within-7-days"
+                elif days_until_review <= 30:
+                    sla_status = "due-within-30-days"
+                else:
+                    sla_status = "future"
+        row["sla_status"] = sla_status
+        row["days_until_review"] = days_until_review
+        sla_counts[sla_status] += 1
     matched_count = len(rows)
     offset = args.queue_offset
     limit = args.queue_limit
@@ -1087,6 +1118,23 @@ def apply_review_queue_filters(view):
     next_page_command = build_review_queue_command(include_json=True, next_offset=next_offset) if has_next else ""
     current_forms_command = build_review_queue_command(include_forms_jsonl=True)
     validate_forms_command = build_review_queue_command(include_json=True, validate_queue_forms_path="'<review-queue-forms.jsonl>'")
+    sla_priority = {
+        "overdue": 0,
+        "missing-date": 1,
+        "invalid-date": 2,
+        "due-within-7-days": 3,
+        "due-within-30-days": 4,
+        "future": 5,
+    }
+    recommended_rows = sorted(
+        rows,
+        key=lambda row: (
+            sla_priority.get(str(row.get("sla_status", "")), 9),
+            str(row.get("priority", "P9")),
+            str(row.get("review_after", "") or "9999-12-31"),
+            str(row.get("queue_id", "")),
+        ),
+    )[:10]
 
     filtered = dict(view)
     by_type = collections.defaultdict(list)
@@ -1107,6 +1155,14 @@ def apply_review_queue_filters(view):
         "has_next": has_next,
         "next_offset": next_offset if has_next else None,
         "next_command": next_page_command,
+        "review_sla": {
+            "as_of": review_sla_date.isoformat(),
+            "overdue_count": sla_counts["overdue"],
+            "due_within_7_days_count": sla_counts["due-within-7-days"],
+            "due_within_30_days_count": sla_counts["due-within-30-days"],
+            "missing_date_count": sla_counts["missing-date"],
+            "invalid_date_count": sla_counts["invalid-date"],
+        },
     })
     review_batch_packet = {
         "packet_type": "review-queue-batch",
@@ -1118,6 +1174,16 @@ def apply_review_queue_filters(view):
         "matched_count": matched_count,
         "shown_count": len(shown_rows),
         "row_ids": [str(row.get("queue_id", "")) for row in shown_rows],
+        "recommended_batch": [
+            {
+                "queue_id": str(row.get("queue_id", "")),
+                "owner": str(row.get("owner", "") or "<missing-owner>"),
+                "domain": str(row.get("domain", "") or "<missing-domain>"),
+                "review_after": str(row.get("review_after", "")),
+                "sla_status": str(row.get("sla_status", "")),
+            }
+            for row in recommended_rows
+        ],
         "required_human_fields": ["human_reviewed_by", "human_reviewed_at", "review_basis"],
         "next_commands": [
             command
@@ -1145,6 +1211,9 @@ def apply_review_queue_filters(view):
     }
     filtered["by_owner"] = {
         key: {"count": len(values)} for key, values in sorted(by_owner.items())
+    }
+    filtered["by_domain"] = {
+        key: {"count": value} for key, value in sorted(by_domain.items())
     }
     filtered["by_review_date"] = {
         key: {"count": len(values)}

@@ -461,3 +461,5 @@
 - 2026-10-31: `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - 2026-08-31: `gd32l235-dock-detected-without-net-charging-analysis-20260731`
 - 2026-10-31: `pcr02-sensor-audio-queue-ao-retry-20260731`
+- 2026-10-30: `agent-dev-kit-token-context-workflow-optimization-20260801`
+- 2026-08-15: `agent-dev-kit-token-context-governance-v2-20260801`

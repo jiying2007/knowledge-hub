@@ -5,6 +5,7 @@ import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, file_sha256, load_jsonl
 from tools.codex_assets.knowledge_hub.lifecycle import capture, transition
+from tools.codex_assets.knowledge_hub.cli import _capture_summary, main as lifecycle_main
 from tools.codex_assets.knowledge_hub.model import validate_item
 from tools.codex_assets.knowledge_hub.obsidian_view import build_obsidian_views
 from tools.codex_assets.knowledge_hub.review_attestation import (
@@ -58,6 +59,50 @@ def test_capture_apply_creates_reviewing_item_and_indexes(tmp_path):
     rebuilt = build_obsidian_views(root)
     assert rebuilt["content_mirror_drift_count"] == 0
     assert rebuilt["transaction"]["changed_count"] == 0
+
+
+def test_capture_summary_json_is_bounded_and_omits_write_rows(tmp_path, capsys):
+    root = _root(tmp_path)
+    source = tmp_path / "source.md"
+    source.write_text("# 捕获摘要\n")
+    result = lifecycle_main(
+        [
+            "capture",
+            "--root",
+            str(root),
+            "--source",
+            str(source),
+            "--kind",
+            "audit",
+            "--target",
+            "governance/summary.md",
+            "--id",
+            "summary-20260801",
+            "--summary-json",
+        ]
+    )
+    output = capsys.readouterr().out.strip()
+    payload = json.loads(output)
+    assert result == 0
+    assert len(output.encode("utf-8")) <= 2048
+    assert payload["projection"] == "knowledge-capture-summary-v1"
+    assert payload["transaction"]["changed_count"] > 0
+    assert "writes" not in payload["transaction"]
+
+
+def test_capture_summary_preserves_error_and_applied_write_count():
+    error = _capture_summary(
+        {"status": "error", "error": "invalid scope", "command": "capture", "dry_run": True}
+    )
+    applied = _capture_summary(
+        {
+            "status": "applied",
+            "transaction": {"changed_paths": ["a"], "unchanged_paths": ["b", "c"]},
+        }
+    )
+    assert error["error"] == "invalid scope"
+    assert error["dry_run"] is True
+    assert applied["transaction"]["write_count"] == 3
 
 
 def test_capture_records_explicit_ai_provenance(tmp_path):
