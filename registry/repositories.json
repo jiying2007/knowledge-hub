@@ -528,6 +528,54 @@
       "status": "registered"
     },
     {
+      "repo_id": "x5-integration",
+      "project_id": "x5-rdk",
+      "remote_key": "robot/d_rdk_x5_repo/integration",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://x5-integration",
+      "groups": [
+        "x5-rdk"
+      ],
+      "aliases": [
+        "x5-integration",
+        "d_rdk_x5_repo/integration"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "x5-manifest",
+      "project_id": "x5-rdk",
+      "remote_key": "robot/d_rdk_x5_repo/manifest",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://x5-manifest",
+      "groups": [
+        "x5-rdk"
+      ],
+      "aliases": [
+        "x5-manifest",
+        "d_rdk_x5_repo/manifest"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
+      "repo_id": "x5-vendor-docs",
+      "project_id": "x5-rdk",
+      "remote_key": "robot/d_rdk_x5_repo/vendor-docs",
+      "remote_kind": "internal-git",
+      "workspace_ref": "workspace://x5-vendor-docs",
+      "groups": [
+        "x5-rdk"
+      ],
+      "aliases": [
+        "x5-vendor-docs",
+        "d_rdk_x5_repo/vendor-docs"
+      ],
+      "lifecycle": "first-party",
+      "status": "registered"
+    },
+    {
       "repo_id": "knowledge-hub",
       "project_id": "knowledge-hub",
       "remote_key": "jiying2007/knowledge-hub",

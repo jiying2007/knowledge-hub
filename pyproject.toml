@@ -34,6 +34,7 @@ ignore = ["E501"]
 [tool.mypy]
 python_version = "3.8"
 files = [
+    "tools/codex_assets/knowledge_hub/activity_report.py",
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",
     "tools/codex_assets/knowledge_hub/engineering.py",
@@ -42,6 +43,7 @@ files = [
     "tools/codex_assets/knowledge_hub/lifecycle.py",
     "tools/codex_assets/knowledge_hub/link_audit.py",
     "tools/codex_assets/knowledge_hub/metrics.py",
+    "tools/codex_assets/knowledge_hub/metrics_cli.py",
     "tools/codex_assets/knowledge_hub/model.py",
     "tools/codex_assets/knowledge_hub/obsidian_view.py",
     "tools/codex_assets/knowledge_hub/product_gate.py",

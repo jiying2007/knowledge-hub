@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "archive_id": "20260819-144708-pcr02-soc-privacy-wifi-recovery-archive",
+  "archived_at": "2026-08-19T14:47:08+08:00",
+  "source": "/tmp/pcr02-soc-privacy-wifi-recovery-archive.md",
+  "source_repo": "",
+  "destination": "~/knowledge-hub/domains/codex/archive/codex-archive/pcr02-soc-privacy-wifi-recovery/20260819-144708-pcr02-soc-privacy-wifi-recovery-archive.md",
+  "metadata": "~/knowledge-hub/domains/codex/archive/codex-archive/pcr02-soc-privacy-wifi-recovery/20260819-144708-pcr02-soc-privacy-wifi-recovery-archive.md.meta.json",
+  "topic": "pcr02-soc-privacy-wifi-recovery",
+  "kind": "debug-note",
+  "scope": "session-summary",
+  "project_id": "",
+  "workstream_id": "",
+  "session_id": "",
+  "title": "PCR02 隐私休眠 Wi-Fi 恢复与 TCPKA 回退",
+  "summary": "隐私休眠下异常 Wi-Fi 唤醒、TCPKA 重臂和 RTC 回退的调试结论",
+  "description": "隐私休眠下异常 Wi-Fi 唤醒、TCPKA 重臂和 RTC 回退的调试结论",
+  "status": "open",
+  "governance_status": "active",
+  "memory_action": "candidate",
+  "owner": "leiwenjun",
+  "next_action": "设备侧执行连续 AP 断开与恢复回归，确认失败保持背光关闭并通过 RTC 重试",
+  "mode": "copy",
+  "tags": [
+    "low-power",
+    "pcr02",
+    "tcpka",
+    "wifi"
+  ],
+  "content_sha256": "0438cf89c4a0beeaad57aa1684e6282d17ce193dd1c4e6d4897d8c33588f30b1",
+  "sensitivity": "sanitized-no-secret-pattern-detected"
+}

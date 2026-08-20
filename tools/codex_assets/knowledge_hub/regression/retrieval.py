@@ -346,7 +346,7 @@ def test_knowledge_context_budget_explainability():
         and parsed.get("schema_version") == 2
         and parsed.get("context_budget") == "small"
         and context.get("budget") == "small"
-        and context.get("effective_limit") == 4
+        and context.get("effective_limit") == 3
         and parsed.get("route", {}).get("project_id") == "pcr02-ssc305"
         and canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"
         and context_canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"

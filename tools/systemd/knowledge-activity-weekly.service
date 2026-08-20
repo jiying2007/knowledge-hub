@@ -1,0 +1,17 @@
+[Unit]
+Description=Knowledge Hub report-only weekly activity report
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/knowledge-hub
+Environment=TZ=Asia/Hong_Kong
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+ExecStart=%h/.local/bin/rtk bash %h/knowledge-hub/tools/knowledge-metrics.sh --activity-report weekly --output-dir %h/knowledge-hub/.tmp/reports --codex-root %h/codex --memory-root %h/.codex/memories --summary-json
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/knowledge-hub/.tmp/reports
+RestrictAddressFamilies=AF_UNIX
+TimeoutStartSec=10min

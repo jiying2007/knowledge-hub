@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate the Knowledge Hub daily report at 20:30 Asia/Hong_Kong
+
+[Timer]
+OnCalendar=*-*-* 20:30:00 Asia/Hong_Kong
+Persistent=true
+AccuracySec=1min
+Unit=knowledge-activity-daily.service
+
+[Install]
+WantedBy=timers.target
+

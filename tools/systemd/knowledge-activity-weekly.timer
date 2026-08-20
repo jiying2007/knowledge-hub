@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate the Knowledge Hub weekly report on Friday at 20:45 Asia/Hong_Kong
+
+[Timer]
+OnCalendar=Fri *-*-* 20:45:00 Asia/Hong_Kong
+Persistent=true
+AccuracySec=1min
+Unit=knowledge-activity-weekly.service
+
+[Install]
+WantedBy=timers.target
+

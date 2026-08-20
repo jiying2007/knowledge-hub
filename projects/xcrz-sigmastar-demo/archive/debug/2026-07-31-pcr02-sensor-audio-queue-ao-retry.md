@@ -166,6 +166,59 @@ rtk bash ~/codex/scripts/final-ready.sh PASS
 
 该 smoke 发生在瞬时 WARNING 降噪修复前；最新候选仍需重新部署，确认短时满环不输出 WARNING，并核对 `wait_ms >= 1000` 才产生真实阻塞告警。
 
+## 2026-08-05 旧库触发 SOC_REBOOT 卡死复现
+
+### 现场现象与时间线
+
+设备使用 2026-07-30 生成的 API 库运行时，收到 SOC_REBOOT 请求后进入应用关闭流程，但未执行到 SoC 软件复位。现场只保留脱敏摘要，不归档完整 raw log、进程号或设备身份。
+
+| 时间 | 观察 | 结果 |
+| --- | --- | --- |
+| 14:26:34 | Sensor 接受并预留 SOC_REBOOT | 请求进入协调关闭流程 |
+| 14:26:35 | App 开始 `sensor_module.deinit_before_soc_reboot` | 外层关闭步骤不再完成 |
+| 14:26:37 | `sensor_prep0` 异步释放视频源并打印 `VideoCapture deinitialized` | 仅证明异步视频准备线程完成，不证明主线程已越过音频 worker 退出门禁 |
+| 14:38 后 | IrLight 仍持续输出状态，应用进程仍存在 | 主线程尚未执行到 `IrLight::deinit()`，SoC 未复位 |
+
+### 线程证据摘要
+
+只读 `/proc/<pid>/task/*/{comm,wchan}` 和 `top` 采样显示：
+
+- 主线程 `prog_pcr02` 位于 futex wait，符合等待子线程退出的状态。
+- `sensor_audio0` 仍存在并位于 futex wait；正常收到 `stopAudioWorker()` 的停止标志和条件变量通知后，该线程应退出并被 join。
+- 两个 `api_player0` 实例中，一个正常阻塞在 poll，另一个处于用户态 runnable，单核 CPU 占用约 46%。
+- `sensor_in0`、`sensor_devctrl` 和 `sensor_out0` 已消失，说明关闭流程已越过前三个 Sensor 工作线程的 join。
+- 内核未导出可用的 `/proc/<tid>/stack` 内容，因此没有现场用户态调用栈；结论依赖线程状态、CPU 行为、源码关闭顺序和版本时间线联合收敛。
+
+### 与源码和版本时间线的映射
+
+`SensorEntry::deinitBeforeShutdownConfirm()` 先停止 SHM 音频输入，再调用 `stopAudioWorker()`。后者清除任务、设置停止标志、广播条件变量，随后无超时 `join()` `sensor_audio0`。现场仍存在 `sensor_audio0`，说明它没有停留在正常任务队列等待路径，而是阻塞在任务执行的下层调用中。
+
+设备使用的 2026-07-30 API 库早于提交 `38895125f80190c01147461a2c48058add07cc14`（2026-07-31 20:15 +0800），因此不包含以下保护：
+
+1. PCM parser packet 初始化和 parser 状态严格校验；
+2. PCM frame alignment 校验与 render 错误传播；
+3. memory stream 写满后的 5000 ms 最大等待；
+4. 按 scene 区分的播放器线程名。
+
+旧版 memory stream 在 ring 满时使用 `VS_TIMEOUT_INFINITY`。结合一个 `api_player0` 用户态忙循环、另一个播放器实例正常 poll，可形成高置信因果链：异常播放器实例不能稳定消费 memory stream，`sensor_audio0` 写满后无限等待，主线程再阻塞于 `stopAudioWorker().join()`，后续 Sensor deinit 和 `VSHDIOS_Reboot()` 均无法执行。
+
+2026-07-30 15:31 的提交 `33b422a2aaf1c40fb0e18ac9e2ec74b0667796c9` 已增加请求同步和 5000 ms 有界播放器线程销毁，但现场仅能确认“使用 2026-07-30 库”，不能确认该库生成于当天提交前还是提交后。本次卡点位于 Sensor audio worker 退出阶段，不依赖是否已包含该有界销毁修复。
+
+### 结论与证据边界
+
+- 根因状态：`high-confidence / repair-validation-pending`。
+- 已支持：旧 API player 异常消费与无限 memory-stream 写等待能够阻断 `sensor_audio0` 退出，并进一步阻断 SOC_REBOOT。
+- 已排除：`VideoCapture deinitialized` 不是主线程已完成 Sensor safe deinit 的证据；它来自并行的 `sensor_prep0`。
+- 未完成：现场 `libapi.so` 的 MD5/BuildID 尚未绑定，未取得用户态 backtrace，也未用包含 `3889512` 的制品执行同条件修复后复验。
+
+### 修复后复验门禁
+
+1. 部署并核对包含 `33b422a`、`3889512` 及对应 HDI/Sensor 修复的 app 和动态库身份；运行中进程必须重启后才会加载新库。
+2. 在流式音频活跃和播放器背压条件下触发 SOC_REBOOT，确认 `api_p_voice`/`api_p_rtsa` 无持续高 CPU。
+3. 确认 `sensor_audio0` 能有界退出，`sensor_module.deinit_before_soc_reboot` 完成，并实际观察 boot identity 变化。
+4. 先执行单次 smoke，再执行 5～10 次短循环；出现 core、致命 dmesg、状态泄漏或制品身份漂移时停止扩大。
+5. 修复后证据闭环前，本记录保持 `reviewing / latest-device-validation-pending`，不得提升为发布就绪结论。
+
 ## 负结果与边界
 
 - 无法使用 GDB 获取现场用户态 backtrace，根因通过 `/proc` 线程状态、CPU/system time、syscall 采样、MI AO 日志和源码循环共同收敛。

@@ -80,6 +80,16 @@
       "status": "registered"
     },
     {
+      "id": "x5-rdk",
+      "name": "RDK X5 SDK Group",
+      "type": "product-group",
+      "entry": "projects/x5-rdk/README.md",
+      "member_project_ids": [
+        "x5-rdk"
+      ],
+      "status": "registered"
+    },
+    {
       "id": "knowledge-hub",
       "name": "Knowledge Hub Control Plane",
       "type": "knowledge-control-plane",

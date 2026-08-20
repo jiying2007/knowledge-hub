@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "archive_id": "20260802-225924-feishu-codex-pcr02-archive",
+  "archived_at": "2026-08-02T22:59:24+08:00",
+  "source": "/tmp/feishu-codex-pcr02-archive.md",
+  "source_repo": "~/codex",
+  "destination": "~/knowledge-hub/domains/codex/archive/codex-archive/feishu-codex-integration/20260802-225924-feishu-codex-pcr02-archive.md",
+  "metadata": "~/knowledge-hub/domains/codex/archive/codex-archive/feishu-codex-integration/20260802-225924-feishu-codex-pcr02-archive.md.meta.json",
+  "topic": "feishu-codex-integration",
+  "kind": "implementation-runbook",
+  "scope": "codex-knowledge",
+  "project_id": "",
+  "workstream_id": "feishu-codex-bot",
+  "session_id": "",
+  "title": "飞书 Codex 与 pcr02-demo 本地开发闭环",
+  "summary": "默认仓库、隔离 worktree、本地提交、禁推送与飞书对象关联的脱敏实施归档",
+  "description": "默认仓库、隔离 worktree、本地提交、禁推送与飞书对象关联的脱敏实施归档",
+  "status": "closed",
+  "governance_status": "active",
+  "memory_action": "archive-only",
+  "owner": "leiwenjun",
+  "next_action": "轮换飞书密钥并配置飞书项目只读连接器",
+  "mode": "copy",
+  "tags": [
+    "codex",
+    "feishu",
+    "pcr02-demo",
+    "worktree"
+  ],
+  "content_sha256": "2a4ed8c061f3f82b3be89686360da33140073d21576dd184282f8c3b70b1b030",
+  "sensitivity": "sanitized-no-secret-pattern-detected"
+}

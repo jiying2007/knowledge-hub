@@ -200,6 +200,17 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
   查询生产者只依赖轻量 `retrieval_telemetry`，运营聚合 `metrics` 反向消费它，查询平面不再导入 artifact/lifecycle 平面。retrieval-result-v3 热路径校验仅接受当前 schema 已使用的受支持关键词；出现未知关键词立即 fail-closed，完整 Draft 2020-12 一致性由 schema 与 full engineering 门禁复核。公共 wrapper 的解释器缓存只减少 warm CLI 的第二次 Python 启动，不跳过首次版本/依赖验证，也不会进入 tracked 资产或恢复权威链。
 - `knowledge-retrieval-benchmark.sh`: retrieval-result v3 先执行一次 index preparation，再测量 28 个语义 search cases、274 个动态 route、4-worker 并发和 10 倍 corpus；默认 warm P95 ≤ 500 ms、index preparation ≤ 5000 ms、并发 P95 ≤ 1000 ms。Hit Rate、MRR、nDCG@10、authority Recall@3 以及 unregistered/control/duplicate/compatibility/internal-endpoint 五类污染同时受硬门禁约束。known-answer case 的 `forbidden_ids` / `forbidden_paths` 证明旧 readiness 投影、冻结 archive 或控制面 provenance 不会重新泄漏到默认检索；JSON 保留准备状态、查询耗时和 scale/concurrency 结果，既不混淆 cold/warm，也不隐藏 schema-upgrade 成本。
 - `knowledge-metrics.sh` / `knowledge-feedback.sh`: metrics v5 仍以 `knowledge-retrieval-interaction-v1` 聚合真实 usage/feedback，同时用 `knowledge-retrieval-performance-v2 + implementation_generation` 把 `warm_interactive`、`index_preparation` 和 report-only `end_to_end_observed` 分开统计；cold rebuild 不再污染 warm SLA，端到端等待仍完整披露。它还报告 reviewing 年龄、30 天 lifecycle flow、首次决定 lead time、90 天冷候选，以及 artifact 容量/增长。zero-hit 与显式 not-found 只按 query SHA 和绑定 interaction 汇总成有界改进队列，不保存 raw query、不自动改路由或正文。冷候选和 artifact 超预算也只报告，不自动删除。旧 performance contract 或旧实现代际的交互继续保留并计入 usage/provenance，但分别列入 `excluded_stale_contract_sample_count`、`excluded_stale_generation_sample_count`，不被静默按当前实现口径重解释。warm search/context 各不足 10 个当前代际样本时为 `pending`，不是无样本 `pass`；准备样本一旦出现必须满足 5000 ms 上限。feedback 必须绑定已发生的当前检索，同一 interaction 只能反馈一次。
+
+  同一入口提供 report-only 活动日报/周报，不增加公共 wrapper。它聚合 Hub registry、Hub/Codex/`local/workspaces.json` 中可读 Git 仓库，以及受控 Codex memory 摘要；权威顺序固定为 Hub 当前事实、Git、Codex archive provenance、memory 辅助召回。memory 只读取 `MEMORY.md`、`memory_summary.md`、`projects/*.md` 和 `rollout_summaries/*.md` 的标题/hash，排除 `raw_memories.md`、sessions、logs、cache、auth 和隐藏候选目录。默认输出到忽略提交的 `.tmp/reports/`，不自动归档、提交、推送、提升 active、写 memory 或外发：
+
+  可选的结构化 Codex 会话回执放在 `.tmp/session-receipts/**/*.json`；仅接受 `codex-session-receipt` v1、周期内、`raw_content_stored=false` 且完成状态合法的记录。无效或跨周期回执会被跳过并形成 coverage warning，绝对工件路径不会进入报告。`session-wrap` 3.2+ 可按该契约生成回执，但未经明确请求不自动写入。
+
+  ```bash
+  rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --activity-report daily --as-of 2026-08-02 --summary-json
+  rtk bash ~/knowledge-hub/tools/knowledge-metrics.sh --activity-report weekly --as-of 2026-08-07 --summary-json
+  ```
+
+  `tools/systemd/knowledge-activity-daily.*` 与 `knowledge-activity-weekly.*` 是本地 user timer 源文件：日报每天 20:30，周报每周五 20:45，时区为 `Asia/Hong_Kong`。timer 仅获准写 `.tmp/reports/`，无网络能力；安装、启用和任何外部发送均需用户明确授权。
 - `knowledge-status.sh`: 只读控制面 dashboard。
   - 用途：汇总 `knowledge-check`、registry/source policy、owner gate、人工复核队列、项目证据缺口、product source inventory、迁移残留和 `strict_blockers`。
   - 主要输出：`final_profile` 固定为 `product`；`owner_dispatch[]`、`next_open_queue[]` 和 recovery commands 只提供真人 owner 交接路径；普通 owner/evidence backlog 归类为 `needs-owner-review`，active/promotion 缺授权、不安全 source inventory、当前迁移残留、schema 或技术错误归类为 `needs-fix`。已归档且带 archive-only/tombstone/no-active-promotion 边界的历史材料只计入 sealed provenance，不进入 current。

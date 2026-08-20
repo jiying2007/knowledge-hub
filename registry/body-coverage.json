@@ -9,9 +9,20 @@
       "inventory_scope": "unregistered-only",
       "owner": "leiwenjun",
       "review_after": "2026-10-13",
-      "expected_markdown_count": 12,
-      "inventory_sha256": "6bec18e8e0736ce4b7058f846f284a70e57bc92a2f9ce315aa6685903d197dc5",
-      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 12 个未精确登记的 Codex archive 历史正文；2 个已登记正文由 items registry 独立治理，后续合规新增不再要求刷新本集合。"
+      "expected_markdown_count": 16,
+      "inventory_sha256": "76ec3125f74cc0d3126645df9b8f36ad62ae8e98ca58c0e7e9bd5493885bdaba",
+      "reason_zh": "2026-08-20 按 unregistered-only inventory 刷新，冻结 16 个未精确登记的 Codex archive 历史正文；已精确登记正文由 items registry 独立治理。"
+    },
+    {
+      "id": "codex-feishu-decision-candidates-baseline-20260820",
+      "path_prefix": "domains/codex/decisions/",
+      "coverage_mode": "governance-baseline",
+      "inventory_scope": "unregistered-only",
+      "owner": "leiwenjun",
+      "review_after": "2026-09-20",
+      "expected_markdown_count": 3,
+      "inventory_sha256": "4832da3ed7757e7e29bf42248c84a905e94c6cacb8c0ab3c19b0e131016baee4",
+      "reason_zh": "冻结三个待人工复核的飞书 Codex 决策候选；该集合只提供正文覆盖，不构成 active 提升、owner 签收或运行时授权。"
     },
     {
       "id": "embedded-architecture-baseline-20260713",

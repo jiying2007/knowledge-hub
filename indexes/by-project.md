@@ -168,6 +168,33 @@
 - app_sensor_test staged safe 板测 transport 阻塞: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`
 - PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`
+- PCR02 Sensor/WiFi 多 WiFi 存储与切换方案评审: `projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md`; `pcr02-sensor-wifi-multi-network-design-20260803`
+- daemon 与 prog_ota UART 独占租约验证: `projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md`; `daemon-ota-uart-lease-validation-2026-08-04`
+- PCR02 AI视频输出帧率联调归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-04-ai-video-output-fps-integration.md`; `pcr02-ai-video-output-fps-integration-20260804`
+- prog_pcr02 Common/Proto预编译库不一致排障: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-prog-pcr02-common-proto-link-failure.md`; `xcrz-prog-pcr02-common-proto-link-debug-20260805`
+- PCR02 TCPKA payload 与服务端路由校验优化: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-pcr02-tcpka-payload-server-alignment.md`; `pcr02-tcpka-payload-server-alignment-20260805`
+- PCR02新增QIVW诊断调用后的libmsc链接契约排障: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-06-pcr02-libmsc-link-contract.md`; `xcrz-pcr02-libmsc-link-contract-debug-20260806`
+- PCR02 Valgrind OpenSSL ARMv7 计数器与 MI 设备门禁排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-valgrind-openssl-armv7-tick-mi-device-gate.md`; `pcr02-valgrind-openssl-armv7-tick-mi-device-gate-20260812`
+- PCR02 ASan protobuf 容器注解失配与独立回调崩溃排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-protobuf-container-annotation-and-callback-segv.md`; `pcr02-asan-protobuf-container-annotation-callback-segv-20260812`
+- PCR02 显示动作自切换导致 nextAction_ 悬空引用: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md`; `pcr02-asan-display-action-nextaction-uaf-20260812`
+- PCR02 显示动作 UAF 源码修复验证: `projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md`; `pcr02-asan-display-action-uaf-fix-validation-20260812`
+- PCR02 持续视频预览离线与内存池耗尽排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-13-pcr02-video-soak-memory-deadlock.md`; `pcr02-video-soak-memory-deadlock-20260813`
+- HDI/HAL 跨平台与 Host 开发测试架构决策候选: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813`
+- HDI/HAL 跨平台与 Host 开发测试方案审查记录: `projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813`
+- HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v2`
+- HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2: `projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813-v2`
+- Diag、Observability 与 Maintenance 跨平台平面决策候选: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813`
+- Diag、Observability 与 Maintenance 平面架构审查记录: `projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md`; `pcr02-diag-observability-maintenance-plane-review-20260813`
+- HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v3`
+- Diag、Observability 与 Maintenance 硬切换平面决策候选 v2: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v2`
+- HDI/HAL/Diag 硬切换与零残留架构审查记录: `projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md`; `pcr02-hdi-hal-diag-hard-cut-review-20260813`
+- HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v4`
+- Diag Observability Maintenance 跨平台最终平面规范 v3: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v3`
+- HDI/HAL/Diag 跨平台重构最终方案审查与定案: `projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md`; `pcr02-hdi-hal-diag-final-architecture-determination-20260813`
+- HDI HAL Diag AI MP4 跨平台硬切最终复审: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-14-hdi-hal-diag-ai-mp4-hard-cut-final-review.md`; `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
+- PCR02 WARM低帧率VIF sleep引发CMDQ异常: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md`; `xcrz-pcr02-warm-vif-sleep-cmdq-debug-20260814`
+- PCR02 WARM当前业务负载CMDQ异常V2: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md`; `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
+- OSAL Platform HDI 终版边界与硬切验证: `projects/xcrz-sigmastar-demo/decisions/osal-platform-hdi-final-boundary-20260817.md`; `xcrz-osal-platform-hdi-final-boundary-20260817`
 
 ## PCR02 SSC305 SDK
 
@@ -183,6 +210,15 @@
 - PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策: `projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md`; `pcr02-active-low-1-no-h26x-light-meter-power-gate-20260727`
 - PCR02 BCMDHD suspend 竞态与可启动 SD 边界: `projects/pcr02-ssc305/archive/debug/2026-07-28-bcmdhd-suspend-and-sd-boot-boundary.md`; `pcr02-bcmdhd-suspend-sd-boot-boundary-20260728`
 - PCR02 active 媒体 CPU 与 VENC 等待优化验证: `projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md`; `pcr02-ssc305-active-media-cpu-venc-timeout-20260731`
+- PCR02 原理图第二批静态优化决策: `projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md`; `pcr02-schematic-second-batch-static-optimization-20260802`
+- PCR02 debug/release rootfs 与 OTA 边界决策: `projects/pcr02-ssc305/decisions/pcr02-debug-release-rootfs-policy-20260803.md`; `pcr02-debug-release-rootfs-policy-20260803`
+- PCR02 release 网络恢复与启动时序分析: `projects/pcr02-ssc305/archive/debug/2026-08-03-release-network-and-boot-analysis.md`; `pcr02-release-network-boot-analysis-20260803`
+- PCR02 Release 生产化、安全与性能优化范围: `projects/pcr02-ssc305/decisions/pcr02-release-production-hardening-scope-20260803.md`; `pcr02-release-production-hardening-scope-20260803`
+- PCR02 customer 静态 UBI 卷启动扫描优化候选: `projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-20260803.md`; `pcr02-customer-ubi-startup-optimization-20260803`
+- PCR02 customer UBI 启动优化复核决策候选: `projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-review-20260804.md`; `pcr02-customer-ubi-startup-optimization-review-20260804`
+- PCR02 release 暂时保留 NFS 客户端: `projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md`; `pcr02-release-nfs-client-retention-20260804`
+- PCR02 no-clean 编译与 debug 镜像体积排障: `projects/pcr02-ssc305/archive/debug/2026-08-04-no-clean-and-debug-image-build.md`; `pcr02-no-clean-debug-image-build-20260804`
+- PCR02 diag 大文件直链下载实现与构建边界验证: `projects/pcr02-ssc305/validation/2026-08-06-diag-curl-large-download.md`; `pcr02-diag-curl-large-download-validation-20260806`
 
 ## PCR02 API Module
 
@@ -266,6 +302,17 @@
 - GD32L235 v1.1.40 NAS 发布记录: `projects/gd32l235/archive/release/2026-07-30-gd32l235-v1.1.40-nas-release.md`; `gd32l235-v1.1.40-nas-release-20260730`
 - GD32L235 智能留电充电唤醒与低电策略归档: `projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md`; `gd32l235-smart-reserve-charge-wakeup-20260730`
 - GD32L235 在桩检测有效但未发生净充电的当前结论: `projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md`; `gd32l235-dock-detected-without-net-charging-analysis-20260731`
+- GD32L235 POWER_KEY 退出中拨回 ON 的重启收敛: `projects/gd32l235/archive/debug/2026-08-03-power-key-exit-restart-convergence.md`; `gd32l235-power-key-exit-restart-convergence-20260803`
+- GD32L235 与 PCR02 拨动开关 UART 快速交接实现归档: `projects/gd32l235/archive/session/2026-08-04-power-switch-uart-handoff-implementation.md`; `gd32l235-power-switch-uart-handoff-implementation-20260804`
+- GD32L235 调试唤醒诊断 Flash 溢出与 OTA 回归记录: `projects/gd32l235/archive/debug/2026-08-04-debug-wakeup-flash-overflow-and-ota-regression.md`; `gd32l235-debug-wakeup-flash-overflow-ota-regression-20260804`
+- GD32L235 Power Diag 独立构建开关决策: `projects/gd32l235/decisions/power-diag-independent-build-switch.md`; `gd32l235-power-diag-independent-build-switch-20260804`
+- GD32L235 APP_EXITED(OFF) 后拨回 ON 的硬恢复缺口: `projects/gd32l235/archive/debug/2026-08-04-power-off-hold-late-on-restart-gap.md`; `gd32l235-power-off-hold-late-on-restart-gap-20260804`
+- GD32L235 v1.1.41 NAS 发布记录: `projects/gd32l235/archive/release/2026-08-05-gd32l235-v1.1.41-nas-release.md`; `gd32l235-v1.1.41-nas-release-20260805`
+- GD32L235 PB12 WL_GPIO4 WoWLAN 引脚契约候选: `projects/gd32l235/current/pb12-wl-gpio4-contract.md`; `gd32l235-pb12-wl-gpio4-contract-20260812`
+- GD32L235 充电温度软硬保护策略决策候选: `projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md`; `gd32l235-charge-temperature-soft-hard-protection-20260812`
+- GD32L235 可配置充电温度软硬保护策略决策候选: `projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md`; `gd32l235-charge-temperature-configurable-soft-hard-protection-20260812`
+- GD32L235 高温回桩热态充电治理策略决策候选: `projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md`; `gd32l235-charge-temperature-thermal-governor-20260818`
+- GD32L235 充电温度保护会话化与 PB10 计时归档: `projects/gd32l235/archive/design/2026-08-20-charge-temperature-session-protection.md`; `gd32l235-charge-temperature-session-protection-20260820`
 
 ## HC32F072 Firmware
 
@@ -278,6 +325,13 @@
 ## Firmware Toolchains
 
 - Firmware Toolchains readiness validation: `projects/firmware-toolchains/validation/project-readiness.md`; `firmware-toolchains-readiness-validation-20260713`
+- X5 AI Toolchain V1.2.8 下载与完整性验证: `projects/firmware-toolchains/validation/2026-08-05-x5-ai-toolchain-download.md`; `firmware-toolchains-x5-ai-toolchain-download-validation-20260805`
+- X5 SDK V1.1.2 GitLab 层级镜像验证: `projects/firmware-toolchains/validation/2026-08-05-x5-v1.1.2-gitlab-mirror.md`; `firmware-toolchains-x5-v1-1-2-gitlab-mirror-validation-20260805`
+- X5 SDK V1.1.2 固件构建验证: `projects/firmware-toolchains/validation/2026-08-05-x5-v1.1.2-firmware-build.md`; `firmware-toolchains-x5-v1-1-2-firmware-build-20260805`
+- X5 SDK V1.1.2 DDR、eMMC、Camera 与 Wi-Fi 适配清单: `projects/firmware-toolchains/validation/2026-08-06-x5-v1.1.2-approved-vendor-list.md`; `firmware-toolchains-x5-v1-1-2-approved-vendor-list-20260806`
+- X5 Integration P1 长期维护优化验证: `projects/firmware-toolchains/validation/2026-08-06-x5-integration-p1-maintainability.md`; `firmware-toolchains-x5-integration-p1-maintainability-20260806`
+- X5 SDK版本化工作区迁移验证: `projects/firmware-toolchains/validation/2026-08-06-x5-versioned-workspace-migration.md`; `firmware-toolchains-x5-versioned-workspace-migration-20260806`
+- X5 V1.1.2实机前交付闭环: `projects/firmware-toolchains/validation/2026-08-06-x5-pre-board-readiness.md`; `firmware-toolchains-x5-pre-board-readiness-20260806`
 
 ## LLM Agent
 
@@ -311,3 +365,9 @@
 
 - OTA Packager readiness validation: `projects/ota-packager/validation/project-readiness.md`; `ota-packager-readiness-validation-20260713`
 - PCR02 IMU/TOF 高负载调度尾延迟现场分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md`; `pcr02-imu-tof-high-load-scheduling-triage-20260721`
+
+## RDK X5 SDK
+
+- X5 GitLab CE 多仓分支保护降级方案: `projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md`; `x5-rdk-gitlab-ce-branch-protection-fallback-20260815`
+- X5 Android repo 引用治理与安全清理: `projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md`; `x5-rdk-android-repo-ref-governance-20260815`
+- X5 供应商资料不可变清单与修订协议: `projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md`; `x5-rdk-immutable-vendor-manifest-amendment-20260815`

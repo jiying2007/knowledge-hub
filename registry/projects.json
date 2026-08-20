@@ -499,6 +499,23 @@
       "evidence_profile": "software-tool"
     },
     {
+      "id": "x5-rdk",
+      "name": "RDK X5 SDK",
+      "type": "product-group",
+      "domain": "projects/x5-rdk",
+      "entry": "projects/x5-rdk/README.md",
+      "current": "projects/x5-rdk/current",
+      "archive": "projects/x5-rdk/archive",
+      "decisions": "projects/x5-rdk/decisions",
+      "validation": "projects/x5-rdk/validation",
+      "groups": [
+        "x5-rdk"
+      ],
+      "repo_boundary": "group",
+      "status": "registered",
+      "evidence_profile": "aggregate-group"
+    },
+    {
       "id": "knowledge-hub",
       "name": "Knowledge Hub",
       "type": "knowledge-control-plane",

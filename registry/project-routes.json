@@ -886,6 +886,46 @@
       "route_key_policy": "git-remote-first"
     },
     {
+      "project_id": "x5-rdk",
+      "name": "RDK X5 SDK",
+      "type": "project-group",
+      "route_scope": "group",
+      "group_id": "x5-rdk",
+      "aliases": [
+        "x5-rdk",
+        "RDK X5 SDK",
+        "RDK X5",
+        "X5 SDK",
+        "X5",
+        "d-robotics x5"
+      ],
+      "topic_aliases": [
+        "V1.1.2",
+        "dev-x5",
+        "vs/dev-x5/v1.1.2"
+      ],
+      "repo_refs": [
+        "x5-integration",
+        "x5-manifest",
+        "x5-vendor-docs"
+      ],
+      "workspace_refs": [
+        "workspace://x5-integration",
+        "workspace://x5-manifest",
+        "workspace://x5-vendor-docs"
+      ],
+      "hub_entry": "projects/x5-rdk/README.md",
+      "current_path": "projects/x5-rdk/current",
+      "archive_path": "projects/x5-rdk/archive",
+      "decisions_path": "projects/x5-rdk/decisions",
+      "validation_path": "projects/x5-rdk/validation",
+      "domain_refs": [
+        "projects/x5-rdk"
+      ],
+      "default_source_ids": [],
+      "route_key_policy": "git-remote-first"
+    },
+    {
       "project_id": "knowledge-hub",
       "name": "Knowledge Hub",
       "type": "knowledge-control-plane",

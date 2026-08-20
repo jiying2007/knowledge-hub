@@ -4,6 +4,7 @@
 tmp/
 local/workspaces.json
 local/obsidian-runtime-acceptance.json
+local/activity-report.json
 __pycache__/
 *.py[cod]
 

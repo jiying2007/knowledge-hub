@@ -33,4 +33,5 @@
 | [PCR02 SSC305 SDK](../../projects/pcr02-ssc305/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [PCR02 Wi-Fi Module](../../projects/pcr02-wifi/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [SigmaStar Flasher](../../projects/sigmastar-flasher/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
+| [RDK X5 SDK](../../projects/x5-rdk/README.md) | `product-group` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [XCRZ SigmaStar Demo](../../projects/xcrz-sigmastar-demo/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
