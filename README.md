@@ -110,7 +110,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json
 
 `knowledge-final-gate.sh` 只有一个终态 profile：`product`。`--summary-json` 提供有界首屏，`--json` 保留完整取证；`--regression-suite quick` 适合日常收口，`--regression-suite full` 用于高风险工具改动和终态证明。
 
-工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对 Python 支持矩阵、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行全包 Ruff correctness、逐步扩大的直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage、无隔离 build、Hub check、retrieval、依赖漏洞审计和 CycloneDX SBOM。覆盖率统计覆盖 `tools.codex_assets.knowledge_hub` 全包并要求不低于 75%，不再以少量模块的高比例冒充整体覆盖；subprocess CLI 证据通过 coverage parallel data 合并。Level 2 的 full regression 对单次非零退出最多重试 1 次，并在快照中保留每次有界输出与 `recovered_after_retry`；其余子门禁不自动重试，第二次失败仍会阻断。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。随后执行 product full gate 时可加 `--reuse-engineering-evidence`，只复用同一签名且仍新鲜的 coverage/pytest 与 full regression 结果；quick gate 自动复用同条件下的 coverage/pytest 证据，但仍不取得 full regression 或 terminal 资格。快照不匹配时一律执行真实测试，不降低门禁。
+工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对公共运行时的能力探测策略、Python 3.8–3.14 CI 覆盖、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 仍必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行全包 Ruff correctness、逐步扩大的直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage、无隔离 build、Hub check、retrieval、依赖漏洞审计和 CycloneDX SBOM。公共 CLI 与工程工具分层：前者优先适配系统 Python，后者保留可复现的受控工具链。覆盖率统计覆盖 `tools.codex_assets.knowledge_hub` 全包并要求不低于 75%，不再以少量模块的高比例冒充整体覆盖；subprocess CLI 证据通过 coverage parallel data 合并。Level 2 的 full regression 对单次非零退出最多重试 1 次，并在快照中保留每次有界输出与 `recovered_after_retry`；其余子门禁不自动重试，第二次失败仍会阻断。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。随后执行 product full gate 时可加 `--reuse-engineering-evidence`，只复用同一签名且仍新鲜的 coverage/pytest 与 full regression 结果；quick gate 自动复用同条件下的 coverage/pytest 证据，但仍不取得 full regression 或 terminal 资格。快照不匹配时一律执行真实测试，不降低门禁。
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
@@ -125,7 +125,14 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 
 JSON consumer 必须按当前单版本契约校验：Product full v5、Product summary v4、Health full v3、Health summary v2、Restore v4、Status contract v2。旧字段、旧状态别名和旧 schema 不提供 shim、双写或降级解析；旧 consumer 必须同步升级。Restore v4 不接受仅凭 `GITHUB_ACTIONS/GITHUB_SHA` 的弱证明，必须绑定 registry 中的 repository、commit SHA、workflow SHA、run id/attempt、ref 和同一次 GitHub-hosted 执行。未知版本和缺字段必须 fail closed，不得解释成 remote/offsite 已验证。
 
-本机首次建立工程环境可使用以下受控流程；如果本机没有 `python3.14`，可换成支持范围内的 3.10–3.13：
+公共 wrapper 不再按 Python minor 版本硬拒绝。它先尝试系统 `python3`，确认可发现 `yaml`、`jsonschema`，以及 Python 3.11 以下所需的 `tomli` 后直接运行；能力不足时再回退 `.tmp/engineering/venv` 和版本化解释器。当前兼容基线包含 Ubuntu 20.04 自带 Python 3.8.10。若系统缺少运行依赖，建议保留系统解释器不变，建立隔离运行环境：
+
+```bash
+rtk python3 -m venv .tmp/engineering/venv
+rtk .tmp/engineering/venv/bin/python -m pip install --require-hashes -r requirements-runtime.lock
+```
+
+完整工程环境仍使用受控流程；如果本机没有 `python3.14`，可换成工程支持范围内的 3.10–3.13：
 
 ```bash
 rtk python3.14 -m venv .tmp/engineering/venv
@@ -133,9 +140,9 @@ rtk .tmp/engineering/venv/bin/python -m pip install --require-hashes -r requirem
 rtk env PATH="$PWD/.tmp/engineering/venv/bin:$PATH" bash tools/knowledge-engineering-check.sh --mode full --json
 ```
 
-`pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 覆盖 Python 3.10–3.14，权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。
+`pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；runtime lock 以 Python 3.8 为兼容解析下界，dev lock 以 Python 3.10 工程环境解析。full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 以 Python 3.8 验证系统运行时路径，并以 Python 3.10–3.14 验证工程矩阵；权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。
 
-公共 Python wrapper 首次仍完整验证解释器版本和 runtime 依赖；验证成功后，只为 `tools.codex_assets.knowledge_hub.*` 公共模块写入 `.cache/knowledge-hub/python-runtime-selection-v1` 私有缓存。缓存只有在解释器仍属于允许候选、归当前用户所有，且新于解释器、selector 和 `requirements-runtime.lock` 时才复用；任一条件漂移即重新验证。缓存不是事实权威，删除后只会回到首次验证路径。检索热路径使用 fail-closed 的 JSON Schema 关键词子集校验器，未知关键词直接失败；完整 Draft 2020-12 校验仍由 schema catalog、pytest 和 full engineering 执行。
+公共 Python wrapper 首次验证 Python 3 身份和 runtime 模块能力，不设置 minor 版本白名单；系统 `python3` 是默认首选，显式绝对路径 `KNOWLEDGE_PYTHON_RUNTIME` 仍拥有最高优先级。验证成功后，只为 `tools.codex_assets.knowledge_hub.*` 公共模块写入 `.cache/knowledge-hub/python-runtime-selection-v1` 私有缓存。缓存只有在解释器仍属于候选、归当前用户所有，且新于解释器、selector 和 `requirements-runtime.lock` 时才复用；任一条件漂移即重新验证。缓存不是事实权威，删除后只会回到首次验证路径。检索热路径使用 fail-closed 的 JSON Schema 关键词子集校验器，未知关键词直接失败；完整 Draft 2020-12 校验仍由 schema catalog、pytest 和 full engineering 执行。
 
 长期采用的调用量继续统计当前 interaction contract 的真实交互；metrics v5 使用 `knowledge-retrieval-performance-v2` 与显式 `implementation_generation` 分别报告 `warm_interactive`、`index_preparation` 和 report-only 的 `end_to_end_observed`，不再把 cold rebuild 混入 warm SLA，也不隐藏真实端到端等待。旧 performance contract 或旧实现代际的真实样本继续保留为 usage/provenance，并分别计入 `excluded_stale_contract_sample_count`、`excluded_stale_generation_sample_count`，但不被静默按当前实现口径重解释。warm 性能至少需要 10 个 search 与 10 个 context 当前代际样本；准备阶段观测到时还必须满足 5000 ms 上限。显式反馈必须绑定一次真实检索 interaction，重复反馈或结果集中不存在的 `selected_id` 不计入成熟度。不得通过清 cache、复制反馈或构造未发生的 interaction 刷绿。
 

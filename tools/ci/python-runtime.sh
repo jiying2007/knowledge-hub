@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Public wrappers use one fail-closed interpreter selector. An unversioned
-# python3 is accepted only when it is inside the repository's supported range;
-# otherwise locally installed versioned interpreters are tried explicitly.
+# Public wrappers use one fail-closed, capability-based interpreter selector.
+# Prefer the host's unversioned python3 when it can load the runtime stack,
+# then fall back to the repository environment and versioned interpreters.
 # Dependency discovery deliberately uses find_spec instead of importing the
 # runtime stack: the selected command performs the real imports, while the
 # selector avoids paying the PyYAML/jsonschema startup cost twice per CLI call.
@@ -24,13 +24,15 @@ if [[ -n "${KNOWLEDGE_PYTHON_RUNTIME:-}" ]]; then
   esac
 else
   knowledge_python_candidates=(
-    "$knowledge_repo_root/.tmp/engineering/venv/bin/python"
     python3
+    "$knowledge_repo_root/.tmp/engineering/venv/bin/python"
     python3.14
     python3.13
     python3.12
     python3.11
     python3.10
+    python3.9
+    python3.8
   )
 fi
 
@@ -61,18 +63,15 @@ if [[ "$knowledge_cache_eligible" == true
         break
       fi
     done
-    case "$knowledge_cached_version" in
-      3.10|3.11|3.12|3.13|3.14)
-        if [[ "$knowledge_cached_allowed" == true
-              && "$knowledge_cached_python" == /*
-              && -x "$knowledge_cached_python"
-              && "$knowledge_runtime_cache" -nt "$knowledge_cached_python"
-              && "$knowledge_runtime_cache" -nt "$knowledge_runtime_lock"
-              && "$knowledge_runtime_cache" -nt "${BASH_SOURCE[0]}" ]]; then
-          exec rtk "$knowledge_cached_python" "$@"
-        fi
-        ;;
-    esac
+    if [[ "$knowledge_cached_version" =~ ^3\.[0-9]+$
+          && "$knowledge_cached_allowed" == true
+          && "$knowledge_cached_python" == /*
+          && -x "$knowledge_cached_python"
+          && "$knowledge_runtime_cache" -nt "$knowledge_cached_python"
+          && "$knowledge_runtime_cache" -nt "$knowledge_runtime_lock"
+          && "$knowledge_runtime_cache" -nt "${BASH_SOURCE[0]}" ]]; then
+      exec rtk "$knowledge_cached_python" "$@"
+    fi
   fi
 fi
 
@@ -86,23 +85,21 @@ for knowledge_python_candidate in "${knowledge_python_candidates[@]}"; do
       'import importlib.util, sys; required = ("yaml", "jsonschema") + (("tomli",) if sys.version_info < (3, 11) else ()); missing = [name for name in required if importlib.util.find_spec(name) is None]; sys.exit(1) if missing else print("{}.{}".format(sys.version_info[0], sys.version_info[1]))' \
       2>/dev/null || true
   )"
-  case "$knowledge_python_version" in
-    3.10|3.11|3.12|3.13|3.14)
-      if [[ "$knowledge_cache_eligible" == true ]] \
-        && rtk mkdir -p "$knowledge_runtime_cache_dir" 2>/dev/null; then
-        umask 077
-        knowledge_runtime_cache_tmp="$knowledge_runtime_cache.${BASHPID}.tmp"
-        if printf '%s\n%s\n' \
-          "$knowledge_python_resolved" \
-          "$knowledge_python_version" > "$knowledge_runtime_cache_tmp"; then
-          rtk mv -f "$knowledge_runtime_cache_tmp" "$knowledge_runtime_cache" \
-            2>/dev/null || true
-        fi
+  if [[ "$knowledge_python_version" =~ ^3\.[0-9]+$ ]]; then
+    if [[ "$knowledge_cache_eligible" == true ]] \
+      && rtk mkdir -p "$knowledge_runtime_cache_dir" 2>/dev/null; then
+      umask 077
+      knowledge_runtime_cache_tmp="$knowledge_runtime_cache.${BASHPID}.tmp"
+      if printf '%s\n%s\n' \
+        "$knowledge_python_resolved" \
+        "$knowledge_python_version" > "$knowledge_runtime_cache_tmp"; then
+        rtk mv -f "$knowledge_runtime_cache_tmp" "$knowledge_runtime_cache" \
+          2>/dev/null || true
       fi
-      exec rtk "$knowledge_python_resolved" "$@"
-      ;;
-  esac
+    fi
+    exec rtk "$knowledge_python_resolved" "$@"
+  fi
 done
 
-printf '%s\n' 'Knowledge Hub requires Python 3.10 through 3.14 with locked runtime dependencies; no usable interpreter was found' >&2
+printf '%s\n' 'Knowledge Hub requires a usable Python 3 interpreter with yaml, jsonschema and (before Python 3.11) tomli; no capable interpreter was found' >&2
 exit 69

@@ -9,8 +9,12 @@ def test_repository_engineering_contract_is_complete():
     payload = evaluate_engineering_contract(repository_root())
 
     assert payload["status"] == "pass"
-    assert payload["python_support"]["minimum"] == "3.10"
+    assert payload["python_support"]["minimum"] == ""
+    assert payload["python_support"]["requires_python"] == ""
+    assert payload["python_support"]["selection_policy"] == "capability-based"
     assert payload["python_support"]["ci_versions"] == [
+        "3.8",
+        "3.9",
         "3.10",
         "3.11",
         "3.12",
@@ -18,7 +22,7 @@ def test_repository_engineering_contract_is_complete():
         "3.14",
     ]
     assert payload["dependencies"]["runtime_direct"] == {
-        "jsonschema": "4.26.0",
+        "jsonschema": "4.23.0",
         "pyyaml": "6.0.3",
         "tomli": "2.4.1",
     }
@@ -182,17 +186,16 @@ requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-requires-python = ">=3.10"
 dependencies = [
   "PyYAML==6.0.3",
-  "jsonschema==4.26.0",
+  "jsonschema==4.23.0",
   "tomli==2.4.1; python_version < '3.11'",
 ]
 """,
         encoding="utf-8",
     )
     (root / "requirements-runtime.txt").write_text(
-        "PyYAML==6.0.3\njsonschema==4.26.0\ntomli==2.4.1; python_version < '3.11'\n",
+        "PyYAML==6.0.3\njsonschema==4.23.0\ntomli==2.4.1; python_version < '3.11'\n",
         encoding="utf-8",
     )
     (root / "requirements-dev.txt").write_text(
@@ -208,6 +211,10 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  runtime:
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9"]
   test:
     timeout-minutes: 30
     strategy:

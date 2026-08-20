@@ -6,10 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "knowledge-hub-tools"
 version = "2.0.0"
 description = "Local-first Knowledge Hub tooling"
-requires-python = ">=3.10"
 dependencies = [
     "PyYAML==6.0.3",
-    "jsonschema==4.26.0",
+    "jsonschema==4.23.0",
     "tomli==2.4.1; python_version < '3.11'",
 ]
 
@@ -21,7 +20,7 @@ testpaths = ["tests"]
 addopts = "-q --strict-config --strict-markers"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py38"
 line-length = 120
 extend-exclude = [".cache", ".tmp", "build", "dist"]
 
@@ -33,7 +32,7 @@ ignore = ["E501"]
 "tools/codex_assets/knowledge_hub/regression/*.py" = ["F403", "F405"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.8"
 files = [
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",

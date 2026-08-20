@@ -113,8 +113,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-runtime-maintenance.sh --scope runtime-
 
 | 模式 | 命令 | 语义 |
 |---|---|---|
-| contract | `knowledge-engineering-check.sh --mode contract --json` | 只读验证 Python 3.10–3.14、直接 pin、hash locks、CI least privilege、Action SHA、精确 CI transport allowlist 和 Dependabot |
-| full | `knowledge-engineering-check.sh --mode full --json` | 在 hash-locked Python 3.10–3.14 环境执行全包 Ruff correctness、直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage（总计 ≥75%）、build、Hub check、retrieval、pip-audit 和 SBOM；成功快照绑定 candidate signature |
+| contract | `knowledge-engineering-check.sh --mode contract --json` | 只读验证能力型系统 Python 选择、Python 3.8–3.14 CI 覆盖、直接 pin、hash locks、CI least privilege、Action SHA、精确 CI transport allowlist 和 Dependabot |
+| full | `knowledge-engineering-check.sh --mode full --json` | 在 hash-locked Python 3.10–3.14 工程环境执行全包 Ruff correctness、直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage（总计 ≥75%）、build、Hub check、retrieval、pip-audit 和 SBOM；成功快照绑定 candidate signature |
 
 full regression 属于 Level 2 长门禁，单次非零退出最多重试 1 次；每次 attempt 的退出码和有界 stdout/stderr 都写入工程快照，第二次仍失败才判定门禁失败，成功恢复则显式标记 `recovered_after_retry=true`。其他子门禁不自动重试。full 模式写入的 coverage、build、SBOM 和工程快照都位于 `.tmp/` 或 `.cache/`，不是长期知识或 release artifact。product full gate 要求 24 小时内且 signature 匹配的工程快照；紧接 full engineering 运行时可加 `--reuse-engineering-evidence`，只复用同一签名快照中的 coverage/pytest 与 full regression 通过证据。quick gate 自动复用同一签名的新鲜 coverage/pytest 证据以满足日常反馈时延，但不会取得 full regression 或 `terminal=true` 资格；快照陈旧、签名变化或证据项不完整时一律自动重跑真实测试。
 

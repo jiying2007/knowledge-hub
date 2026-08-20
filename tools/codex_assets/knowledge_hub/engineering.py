@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 if sys.version_info >= (3, 11):
     import tomllib
-else:  # pragma: no cover - exercised by the supported Python 3.10 lane
+else:  # pragma: no cover - exercised by the system Python compatibility lane
     import tomli as tomllib
 
 from .common import (
@@ -31,9 +31,18 @@ from .complexity_budget import evaluate_complexity_budget
 
 CONTRACT_MAX_BYTES = 4 * 1024 * 1024
 ENGINEERING_SNAPSHOT_RELATIVE = ".cache/knowledge-hub/engineering-quality.json"
-SUPPORTED_PYTHON_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
+RUNTIME_COMPATIBILITY_VERSIONS = (
+    "3.8",
+    "3.9",
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+)
+ENGINEERING_PYTHON_VERSIONS = ("3.10", "3.11", "3.12", "3.13", "3.14")
 EXPECTED_RUNTIME_DIRECT = {
-    "jsonschema": "4.26.0",
+    "jsonschema": "4.23.0",
     "pyyaml": "6.0.3",
     "tomli": "2.4.1",
 }
@@ -146,7 +155,7 @@ def _python_contract(pyproject: Mapping[str, Any], workflow_text: str) -> Dict[s
     minimum = minimum_match.group(1) if minimum_match else ""
     ci_versions = [
         version
-        for version in SUPPORTED_PYTHON_VERSIONS
+        for version in RUNTIME_COMPATIBILITY_VERSIONS
         if '"{}"'.format(version) in workflow_text
         or "'{}'".format(version) in workflow_text
     ]
@@ -154,9 +163,10 @@ def _python_contract(pyproject: Mapping[str, Any], workflow_text: str) -> Dict[s
     return {
         "minimum": minimum,
         "requires_python": requires_python,
+        "selection_policy": "capability-based",
         "ci_versions": ci_versions,
         "current": current,
-        "current_supported": (sys.version_info.major, sys.version_info.minor) >= (3, 10),
+        "current_supported": current in ENGINEERING_PYTHON_VERSIONS,
     }
 
 
@@ -323,10 +333,10 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
     workflow_text = read_or_empty(".github/workflows/quality.yml")
     recovery_workflow_text = read_or_empty(".github/workflows/recovery-drill.yml")
     python_support = _python_contract(pyproject, workflow_text)
-    if python_support["minimum"] != "3.10":
-        errors.append("pyproject.toml requires-python must declare >=3.10")
-    if python_support["ci_versions"] != list(SUPPORTED_PYTHON_VERSIONS):
-        errors.append("CI matrix must cover Python 3.10 through 3.14")
+    if python_support["requires_python"]:
+        errors.append("pyproject.toml must leave runtime selection capability-based")
+    if python_support["ci_versions"] != list(RUNTIME_COMPATIBILITY_VERSIONS):
+        errors.append("CI must cover capability-based runtime compatibility from Python 3.8 through 3.14")
 
     runtime_text = read_or_empty("requirements-runtime.txt")
     runtime_direct, runtime_errors = _direct_pins(runtime_text)

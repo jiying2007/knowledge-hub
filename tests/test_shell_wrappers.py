@@ -87,6 +87,18 @@ def test_runtime_selector_uses_lightweight_dependency_discovery():
     assert "import sys, yaml, jsonschema" not in selector
 
 
+def test_runtime_selector_prefers_system_python_and_uses_capability_probe():
+    selector = (ROOT / "tools/ci/python-runtime.sh").read_text(encoding="utf-8")
+
+    system_position = selector.index("    python3\n")
+    repository_venv_position = selector.index(
+        '    "$knowledge_repo_root/.tmp/engineering/venv/bin/python"\n'
+    )
+    assert system_position < repository_venv_position
+    assert '[[ "$knowledge_python_version" =~ ^3\\.[0-9]+$ ]]' in selector
+    assert "3.10|3.11|3.12|3.13|3.14" not in selector
+
+
 def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
     fixture_root = tmp_path / "repo"
     fixture_selector = fixture_root / "tools/ci/python-runtime.sh"
