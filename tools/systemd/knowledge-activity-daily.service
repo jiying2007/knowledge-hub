@@ -7,11 +7,11 @@ WorkingDirectory=%h/knowledge-hub
 Environment=TZ=Asia/Hong_Kong
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 UMask=0077
-ExecStart=%h/.local/bin/rtk bash %h/knowledge-hub/tools/knowledge-metrics.sh --activity-report daily --output-dir %h/knowledge-hub/.tmp/reports --codex-root %h/codex --memory-root %h/.codex/memories --summary-json
+ExecStart=%h/.local/bin/rtk bash %h/knowledge-hub/tools/knowledge-activity.sh report --period daily --scope personal --codex-root %h/codex --summary-json
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=%h/knowledge-hub/.tmp/reports
+ReadWritePaths=%h/knowledge-hub/.tmp/activity
 RestrictAddressFamilies=AF_UNIX
 TimeoutStartSec=10min

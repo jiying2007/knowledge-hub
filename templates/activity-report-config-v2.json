@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "enabled": true,
+  "subject_id": "replace-with-explicit-subject",
+  "display_name": "个人",
+  "default_scope": "personal",
+  "timezone": "Asia/Hong_Kong",
+  "receipt_persistence": true,
+  "retention_days": 45,
+  "repositories": []
+}
