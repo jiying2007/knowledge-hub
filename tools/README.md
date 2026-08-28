@@ -207,11 +207,12 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
   rtk bash ~/knowledge-hub/tools/knowledge-activity.sh report --period daily --scope personal --summary-json
   rtk bash ~/knowledge-hub/tools/knowledge-activity.sh report --period weekly --scope project --project-id codex --summary-json
   rtk bash ~/knowledge-hub/tools/knowledge-activity.sh coverage --period weekly --scope personal
+  rtk bash ~/knowledge-hub/tools/knowledge-activity.sh record --title "完成某项工作" --project-id <project_id> --apply
   rtk bash ~/knowledge-hub/tools/knowledge-activity.sh capture --input /tmp/work-item-v2.json
   rtk bash ~/knowledge-hub/tools/knowledge-activity.sh capture --input /tmp/work-item-v2.json --apply
   ```
 
-  本地 SSOT 是忽略提交的 `local/activity-report.json` v2，模板见 `templates/activity-report-config-v2.json`。未显式传 `--scope` 时读取 `default_scope`；两者都缺失则返回 `needs-input`，不猜测个人或项目范围。`done + verified` 必须绑定 `evidence_refs[]`，`done + reported/missing` 单独显示为“已完成待验证”。旧输入不会自动转换，也不会进入运行时事实包。
+  本地 SSOT 是忽略提交的 `local/activity-report.json` v2，模板见 `templates/activity-report-config-v2.json`。未显式传 `--scope` 时读取 `default_scope`；两者都缺失则返回 `needs-input`，不猜测个人或项目范围。日常优先在会话收尾时由 `session-wrap` 写入回执；未在 Codex 会话内完成的工作可用 `record --title "…" --project-id <id> --apply` 一行记录，无需手写 JSON。`record` 默认写入 `done + reported`，即“已完成待验证”；只有显式传 `--verification verified --evidence-ref <ref>` 才可记为已验证完成。`capture --input` 保留给已有 v2 JSON 的批量或集成场景。旧输入不会自动转换，也不会进入运行时事实包；报告会仅按文件数提示旧目录回执，且不会读取其内容。
 
   `tools/systemd/knowledge-activity-daily.*` 与 `knowledge-activity-weekly.*` 是本地 user timer 源文件：日报每天 20:30，周报每周五 20:45，时区为 `Asia/Hong_Kong`。timer 仅获准写 `.tmp/activity/`，无网络能力；安装、启用和任何外部发送均需用户明确授权。
 - `knowledge-status.sh`: 只读控制面 dashboard。

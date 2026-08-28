@@ -194,6 +194,9 @@ def collect_work_items(
         "invalid_count": invalid_count,
         "explicit_count": explicit_count,
         "receipt_count": receipt_count,
+        # Legacy receipts stay outside the v2 trust boundary.  Count filenames
+        # for diagnostics only; do not open or convert their content.
+        "legacy_receipt_file_count": sum(1 for _ in _json_files(root / ".tmp/session-receipts")),
         "truncated": len(rows) > MAX_ITEMS,
     }
 
@@ -328,7 +331,16 @@ def build_facts(
         git_rows: List[Dict[str, Any]] = []
         git_coverage = {"registered_count": 0, "readable_count": 0, "not_collected": True}
         if not item_coverage["available"]:
-            warnings.append("未发现 v2 事项或 session receipt；请先 capture 或启用 session-wrap v2 回执持久化。")
+            warnings.append(
+                "当前周期没有 v2 事项或会话回执。receipt_persistence 仅在 session-wrap 收尾时写入；"
+                "非会话工作可用 `knowledge-activity.sh record --title \"…\" --apply` 记录。"
+            )
+        legacy_count = item_coverage["legacy_receipt_file_count"]
+        if legacy_count:
+            warnings.append(
+                "发现 {} 个旧目录回执（.tmp/session-receipts）；它们不符合 v2 输入契约，"
+                "不会读取或自动迁移。".format(legacy_count)
+            )
     else:
         registry_rows = collect_registry(root, range_start, range_end, project_id if scope == "project" else "")
         git_rows, git_coverage = collect_git(root, codex_root, range_start, range_end, project_id if scope == "project" else "")
@@ -531,6 +543,64 @@ def capture_item(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -
     if not isinstance(payload, dict):
         raise KnowledgeHubError("work item input must be an object")
     item = normalize_item(payload, source_kind="explicit-item", source_ref=input_path.stem)
+    target = root / ".tmp/activity/items" / item["activity_date"] / "{}.json".format(item["item_id"])
+    encoded = pretty_json(item) + "\n"
+    if apply:
+        _atomic_write(target, encoded)
+    return {
+        "schema_version": 2,
+        "status": "pass",
+        "applied": apply,
+        "item_id": item["item_id"],
+        "target": str(target) if apply else "",
+        "sha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
+        "privacy": {"raw_content_stored": False, "external_write": False},
+    }
+
+
+def record_item(
+    root: pathlib.Path,
+    *,
+    title: str,
+    activity_date: dt.date,
+    subject_id: str,
+    project_id: str,
+    item_id: str,
+    status: str,
+    verification: str,
+    outcomes: Sequence[str],
+    evidence_refs: Sequence[str],
+    blockers: Sequence[str],
+    next_actions: Sequence[str],
+    apply: bool,
+) -> Dict[str, Any]:
+    """Create a v2 item from concise CLI fields instead of a hand-authored JSON file."""
+    config = load_activity_config(root)
+    effective_subject = subject_id or str(config.get("subject_id", ""))
+    if not effective_subject:
+        raise KnowledgeHubError("record requires --subject-id or local/activity-report.json v2 subject_id")
+    stable_id = item_id or "record-{}".format(
+        hashlib.sha256(
+            "\0".join((effective_subject, activity_date.isoformat(), project_id, title)).encode("utf-8")
+        ).hexdigest()[:16]
+    )
+    payload = {
+        "schema_version": 2,
+        "kind": "work-activity-item",
+        "item_id": stable_id,
+        "subject_id": effective_subject,
+        "project_id": project_id,
+        "activity_date": activity_date.isoformat(),
+        "title": title,
+        "status": status,
+        "verification": verification,
+        "outcomes": list(outcomes),
+        "evidence_refs": list(evidence_refs),
+        "blockers": list(blockers),
+        "next_actions": list(next_actions),
+        "raw_content_stored": False,
+    }
+    item = normalize_item(payload, source_kind="quick-record", source_ref="record")
     target = root / ".tmp/activity/items" / item["activity_date"] / "{}.json".format(item["item_id"])
     encoded = pretty_json(item) + "\n"
     if apply:

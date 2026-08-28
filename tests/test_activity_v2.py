@@ -11,6 +11,7 @@ from tools.codex_assets.knowledge_hub.activity import (
     collect_work_items,
     generate_report,
     normalize_item,
+    record_item,
     report_period,
 )
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
@@ -114,7 +115,7 @@ def test_personal_scope_never_collects_git_or_infers_identity(tmp_path):
     assert facts["git_activity"] == []
     assert facts["registry_activity"] == []
     assert facts["privacy"]["identity_inferred_from_git"] is False
-    assert any("capture" in warning for warning in facts["warnings"])
+    assert any("record" in warning for warning in facts["warnings"])
 
 
 def test_personal_scope_without_subject_fails_closed(tmp_path):
@@ -149,6 +150,45 @@ def test_capture_dry_run_then_apply_and_generate_hash_bound_report(tmp_path):
     assert json.loads(facts_path.read_text(encoding="utf-8"))["schema_version"] == 2
 
 
+def test_record_avoids_hand_authored_json_and_preserves_v2_gates(tmp_path):
+    root = _hub(tmp_path / "hub")
+    dry = record_item(
+        root, title="整理周报流程", activity_date=dt.date(2026, 8, 21), subject_id="", project_id="knowledge-hub",
+        item_id="", status="done", verification="reported", outcomes=["提供一行记录入口"], evidence_refs=[],
+        blockers=[], next_actions=[], apply=False,
+    )
+    assert dry["applied"] is False
+    applied = record_item(
+        root, title="整理周报流程", activity_date=dt.date(2026, 8, 21), subject_id="", project_id="knowledge-hub",
+        item_id="", status="done", verification="reported", outcomes=["提供一行记录入口"], evidence_refs=[],
+        blockers=[], next_actions=[], apply=True,
+    )
+    target = pathlib.Path(applied["target"])
+    assert target.is_file()
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    assert payload["subject_id"] == "developer-a"
+    assert payload["raw_content_stored"] is False
+    facts = build_facts(
+        root, period="weekly", scope="personal", as_of=dt.date(2026, 8, 21), start=None, end=None,
+        subject_id="", project_id="", codex_root=tmp_path / "codex", detail="normal",
+    )
+    assert facts["summary"]["done_pending_verification"] == 1
+
+
+def test_legacy_receipts_are_diagnosed_but_never_collected(tmp_path):
+    root = _hub(tmp_path / "hub")
+    legacy = root / ".tmp/session-receipts/2026-08-21"
+    legacy.mkdir(parents=True)
+    legacy.joinpath("legacy.json").write_text('{"schema_version": 1}', encoding="utf-8")
+    facts = build_facts(
+        root, period="weekly", scope="personal", as_of=dt.date(2026, 8, 21), start=None, end=None,
+        subject_id="", project_id="", codex_root=tmp_path / "codex", detail="normal",
+    )
+    assert facts["summary"]["item_count"] == 0
+    assert facts["source_coverage"]["work_items"]["legacy_receipt_file_count"] == 1
+    assert any("旧目录回执" in warning for warning in facts["warnings"])
+
+
 def test_cli_has_dedicated_subcommands_and_old_flags_are_rejected():
     root = pathlib.Path(__file__).resolve().parents[1]
     help_result = subprocess.run(
@@ -156,7 +196,7 @@ def test_cli_has_dedicated_subcommands_and_old_flags_are_rejected():
         cwd="/tmp", capture_output=True, text=True, check=False,
     )
     assert help_result.returncode == 0
-    assert "{report,capture,validate,coverage}" in help_result.stdout
+    assert "{report,capture,record,validate,coverage}" in help_result.stdout
     old = subprocess.run(
         ["bash", str(root / "tools/knowledge-metrics.sh"), "--activity-report", "daily"],
         cwd="/tmp", capture_output=True, text=True, check=False,
