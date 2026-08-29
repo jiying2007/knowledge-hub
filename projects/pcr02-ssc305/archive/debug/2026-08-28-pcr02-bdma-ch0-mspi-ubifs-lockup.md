@@ -6,41 +6,49 @@ review_basis: null
 incident_id: null
 severity: null
 affected_version: null
-id: pcr02-camera-whiteout-ae-exposure-analysis-20260703
-title: PCR02 摄像头老化后白屏的 AE/ISP 初步分析
+id: pcr02-bdma-ch0-mspi-ubifs-lockup-20260828
+title: PCR02 MSPI0 泄漏 BDMA CH0 导致 NAND/UBIFS 全局阻塞
 kind: debug-record
-domain: projects/xcrz-sigmastar-demo
-path: projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md
+domain: projects/pcr02-ssc305
+path: projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md
 scope: project-specific
 visibility: team-internal
 status: reviewing
-owner: team-core
+owner: leiwenjun
 source:
   type: manual
-  from: manual-entry:knowledge-new.sh
+  from: 2026-08-28 现场只读 ADB/SysRq/MMIO 证据与本地 SDK 源码、Git 历史交叉分析；原始日志和设备端点不归档
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
-review_after: '2026-10-03'
+review_after: '2026-09-28'
 review_status: manual-entry-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
 tags:
-- debug-record
-- knowledge-new
-- manual-validation-pending
+- pcr02
+- bdma
+- mspi
+- spi-nand
+- ubifs
+- deadlock
 validation_refs:
-- projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md
+- projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 evidence_strength: manual-entry-validation-pending
 evidence_refs:
-- projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md
+- projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-28'
 updated_at: '2026-08-28'
-generated_by_ai: false
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: Codex
+ai_generated_at: '2026-08-28'
 manual_validation_pending: true
-summary_zh: 记录摄像头老化白屏的 AE/ISP 初步排障分析与后续采集边界。
+summary_zh: 实机 SysRq w、MMIO 与源码交叉证实：最后占用 BDMA CH0 的路径为 MIU 到 MSPI0；硬件 busy/done/IRQ pending 均为 0，但 CH0 信号量未归还，LCD 后续请求与 SPI-NAND/UBIFS
+  回写共同阻塞于 CamOsTsemDown。MSPI DMA 超时路径缺少 owner-aware stop、IRQ 同步与信号量释放；两个 25fps ST77912 的高频小包和 4KiB 像素块放大触发概率。Flash cancel
+  的迟到 IRQ 竞态保留为未证实触发候选。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required

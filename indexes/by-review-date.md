@@ -1,5 +1,10 @@
 # By Review Date
 
+- 2026-11-26: `codex-ai-agent-incentive-evidence-summary-20260828`
+- 2026-11-23: `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
+- 2026-11-25: `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- 2026-10-10: `pcr02-ds2-ai-shm-session-archive-20260710`
+
 - 2026-10-11: `pcr02-evt2-hardware-pdf-reference-index-20260711`
 - 2026-10-11: `pcr02-evt2-mcu-soc-contract-index-20260711`
 - 2026-10-11: `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
@@ -526,3 +531,15 @@
 - 2026-09-17: `xcrz-osal-platform-hdi-final-boundary-20260817`
 - 2026-09-18: `gd32l235-charge-temperature-thermal-governor-20260818`
 - 2026-09-20: `gd32l235-charge-temperature-session-protection-20260820`
+- 2026-11-20: `gd32l235-v1.2.0-nas-release-20260820`
+- 2026-11-18: `pcr02-factory-reset-wifi-control-blocking-20260820`
+- 2026-09-20: `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- 2026-11-21: `embedded-team-knowledge-promotion-20260821`
+- 2026-10-13: `x5-rdk-readiness-validation-20260713`
+- 2026-11-21: `agent-dev-kit-codex-team-runtime-distribution-v1`
+- 2026-09-22: `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
+- 2026-11-26: `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- 2026-11-26: `pcr02-bdma-ch0-ubifs-deadlock-20260828`
+- 2026-09-28: `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
+- 2026-10-03: `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
+- 2026-11-29: `pcr02-display-resume-redraw-20260829`

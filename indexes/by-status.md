@@ -2,10 +2,15 @@
 
 核心 status bucket 由人工维护，并由 `knowledge-check` 做一致性门禁。
 
+- reviewing: `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
+- reviewing: `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- reviewing: `pcr02-ds2-ai-shm-session-archive-20260710`
+
 编辑前先运行 `rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section status` 查看只读 registry 派生视图。
 
 规范 bucket 可以使用多行相同的 `- active:`、`- reviewing:` 或 `- archived:` 前缀；优先为每个条目保留一条短行，避免继续扩展历史长行。
 
+- personal: `codex-ai-agent-incentive-evidence-summary-20260828`
 - active: `knowledge-hub-root`
 - active: `knowledge-hub-ultimate-maintenance-plan`
 - reviewing: `pcr02-evt2-hardware-pdf-reference-index-20260711`
@@ -712,3 +717,15 @@
 - reviewing: `xcrz-osal-platform-hdi-final-boundary-20260817`
 - reviewing: `gd32l235-charge-temperature-thermal-governor-20260818`
 - reviewing: `gd32l235-charge-temperature-session-protection-20260820`
+- reviewing: `gd32l235-v1.2.0-nas-release-20260820`
+- reviewing: `pcr02-factory-reset-wifi-control-blocking-20260820`
+- reviewing: `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- reviewing: `embedded-team-knowledge-promotion-20260821`
+- reviewing: `x5-rdk-readiness-validation-20260713`
+- reviewing: `agent-dev-kit-codex-team-runtime-distribution-v1`
+- reviewing: `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
+- reviewing: `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- reviewing: `pcr02-bdma-ch0-ubifs-deadlock-20260828`
+- reviewing: `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
+- reviewing: `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
+- reviewing: `pcr02-display-resume-redraw-20260829`

@@ -1,26 +1,24 @@
 # Embedded Domain
 
-本目录是 Knowledge Hub 的嵌入式团队级知识域，沉淀跨项目可复用技术文档、排障 runbook、平台知识、调试工具与 Codex skill。
+本目录是 Knowledge Hub 的嵌入式候选与 provenance 域，保存跨项目知识的提炼稿、复核证据和历史 Hub canonical 内容。团队已发布规范、runbook、公共工具与 Codex skill 的消费权威位于 `workspace://embedded-knowledge`。
 
 ## 首次使用
 
-团队成员统一使用 Knowledge Hub 终态入口：
+团队成员使用团队发布仓入口：
 
 ```text
-~/knowledge-hub/domains/embedded
+workspace://embedded-knowledge
 ```
 
 验证：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "embedded" --json --limit 10
+rtk bash scripts/check-all.sh
 ```
 
-常用入口：
+Hub 侧常用入口：
 
-- 团队规范：`standards/`
-- 排障 runbook：`runbooks/`
+- 团队化候选：`standards/`、`runbooks/`
 - 平台和架构知识：`platform/`、`architecture/`
 - 技能和工具说明：`skills/`、`tools/`
 - 模板和治理规则：`templates/`、`governance/`
@@ -33,67 +31,20 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "embedded" --json --limit 10
 - `skills/`、`tools/`：可复用技能和工具说明。
 - `templates/`、`governance/`：模板、命名、证据和治理规则。
 
-结构边界见 `standards/repository-structure-guide.md`。
+这些目录中的 `reviewing`、draft、旧 active body 或历史 mirror 不自动等于团队已发布事实。提升时必须记录 source SHA256、目标路径、成熟度、Owner、验证状态和回滚，并通过目标仓 `docs/governance/promotion-contract.md`。
 
-## 本地门禁
+## Hub 候选门禁
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product
 ```
 
-如果需要恢复历史来源、迁移证据或 owner 边界，优先查看 `sources/embedded-knowledge/`、`registry/source-tombstones.jsonl` 和 `indexes/by-source.md`。
+如果需要恢复历史来源、迁移证据或 owner 边界，优先查看 `registry/retired-sources.jsonl`、`registry/source-tombstones.jsonl`、`indexes/by-source.md` 和团队仓迁移映射。
 
-## Codex Skills
+## 发布边界
 
-```bash
-rtk bash scripts/install-codex-skills.sh --dry-run
-rtk bash scripts/install-codex-skills.sh
-```
-
-## 个人开发工具
-
-```bash
-rtk bash scripts/check-tools.sh
-rtk bash scripts/bootstrap-dev-tools.sh
-```
-
-安装缺失工具：
-
-```bash
-rtk bash scripts/bootstrap-dev-tools.sh --install
-```
-
-新增文档：
-
-```bash
-rtk bash scripts/new-doc.sh --type runbook --title "示例 Runbook" --out docs/runbooks/example-runbook.md
-```
-
-新增技能：
-
-```bash
-rtk bash scripts/new-skill.sh --name example-triage --description "示例分诊技能" --scope tools
-```
-
-## 发布
-
-```bash
-rtk bash scripts/generate-release-manifest.sh --root out/arm/app --out out/arm/app/release-manifest.csv
-rtk bash scripts/check-release-manifest.sh --manifest out/arm/app/release-manifest.csv --root out/arm/app
-rtk bash scripts/release.sh --date 2026-05-17
-```
-
-## 迁移记录
-
-- 首版来源项目 commit：`899da6b5`
-- 迁移映射：`docs/governance/knowledge-repo-migration-map.csv`
-- 项目强绑定文档保留在来源项目仓，仅通用知识、平台知识与公共工具进入本仓。
-
-## 远程
-
-目标远程仓库：
-
-```text
-source://embedded-knowledge
-```
+- Hub 不直接写团队仓 remote，不自动 commit/push/merge/tag。
+- 团队仓不接收 Hub registry、authorization、raw evidence、个人笔记或项目 lifecycle 正文。
+- 发布正文在团队仓通过 `scripts/check-all.sh` 后，Hub 回写 validation/provenance；没有目标 commit 时只能声明本地待提交状态。
+- X5 实机、外部下载入口等未验证项继续保留明确 draft/pending 边界，不因文件进入团队仓自动升级成熟度。

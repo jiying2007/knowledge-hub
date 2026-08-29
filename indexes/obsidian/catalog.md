@@ -14,6 +14,7 @@
 - [X5 EVB V2P0 首次启动与固件恢复 Runbook](../../domains/embedded/runbooks/x5-evb-v2p0-first-boot.md) · `reviewing` · `embedded-x5-evb-v2p0-first-boot-20260805`
 - [X5 SDK V1.1.2 源码构建与交接 Runbook](../../domains/embedded/runbooks/x5-sdk-v1.1.2-source-build.md) · `reviewing` · `embedded-x5-sdk-v1-1-2-source-build-20260806`
 - [X5 SDK 下载说明（脱敏版）](../../domains/embedded/runbooks/x5-sdk-download.md) · `reviewing` · `embedded-x5-sdk-download-20260805`
+- [嵌入式团队知识提升闭环验证](../../artifacts/manifests/embedded-team-knowledge-promotion-20260821.md) · `reviewing` · `embedded-team-knowledge-promotion-20260821`
 
 ## governance
 
@@ -48,6 +49,7 @@
 - [ADK Token 与上下文工作流优化验证](../../projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md) · `reviewing` · `agent-dev-kit-token-context-workflow-optimization-20260801`
 - [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing` · `agent-dev-kit-token-context-governance-v2-20260801`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing` · `agent-dev-kit-readiness-validation-20260713`
+- [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing` · `agent-dev-kit-codex-team-runtime-distribution-v1`
 - [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing` · `agent-dev-kit-harness-readiness-decision-20260717`
 
 ## projects/app-main
@@ -93,6 +95,7 @@
 - [GD32L235 v1.1.38 NAS 正式发布归档](../../projects/gd32l235/archive/release/2026-07-18-gd32l235-v1.1.38-nas-release.md) · `reviewing` · `gd32l235-v1-1-38-nas-release-20260718`
 - [GD32L235 v1.1.40 NAS 发布记录](../../projects/gd32l235/archive/release/2026-07-30-gd32l235-v1.1.40-nas-release.md) · `reviewing` · `gd32l235-v1.1.40-nas-release-20260730`
 - [GD32L235 v1.1.41 NAS 发布记录](../../projects/gd32l235/archive/release/2026-08-05-gd32l235-v1.1.41-nas-release.md) · `reviewing` · `gd32l235-v1.1.41-nas-release-20260805`
+- [GD32L235 v1.2.0 NAS 发布记录](../../projects/gd32l235/archive/release/2026-08-20-gd32l235-v1.2.0-nas-release.md) · `reviewing` · `gd32l235-v1.2.0-nas-release-20260820`
 - [GD32L235 与 PCR02 SOC SLEEP EBUSY 和提前 WiFi 唤醒初步排查](../../projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md) · `reviewing` · `gd32l235-soc-sleep-ebusy-early-wifi-wake-20260722`
 - [GD32L235 与 PCR02 SoC DISARM 和传感器恢复事务归档](../../projects/gd32l235/archive/design/2026-07-27-disarm-sensor-restore-transaction.md) · `reviewing` · `gd32l235-pcr02-disarm-sensor-restore-validation-20260727`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing` · `gd32l235-soc-low-power-contract`
@@ -115,6 +118,7 @@
 - [GD32L235 高温回桩热态充电治理策略决策候选](../../projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md) · `reviewing` · `gd32l235-charge-temperature-thermal-governor-20260818`
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing` · `gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724`
 - [PCR02 SoC 与 GD32L235 传感器频率契约及 50 Hz 融合方案](../../projects/gd32l235/archive/design/2026-07-23-sensor-rate-contract-and-50hz-fusion.md) · `reviewing` · `gd32l235-pcr02-sensor-rate-contract-50hz-fusion-20260723`
+- [PCR02 温度、充电接触、电机供电及维护模式 v1.16 设计归档](../../projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md) · `reviewing` · `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
 
 ## projects/hc32f072
 
@@ -194,9 +198,11 @@
 
 - [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing` · `pcr02-active-low-1-no-h26x-light-meter-power-gate-20260727`
 - [PCR02 BCMDHD suspend 竞态与可启动 SD 边界](../../projects/pcr02-ssc305/archive/debug/2026-07-28-bcmdhd-suspend-and-sd-boot-boundary.md) · `reviewing` · `pcr02-bcmdhd-suspend-sd-boot-boundary-20260728`
+- [PCR02 BDMA CH0 未释放导致 UBIFS 与 /data 阻塞排障记录](../../projects/pcr02-ssc305/archive/debug/2026-08-28-bdma-ch0-ubifs-deadlock.md) · `reviewing` · `pcr02-bdma-ch0-ubifs-deadlock-20260828`
 - [PCR02 EVT2 MCU/SoC 协同契约索引 2026-07-11](../../projects/pcr02-ssc305/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_mcu_soc_contract_index_20260711.md) · `reviewing` · `pcr02-evt2-mcu-soc-contract-index-20260711`
 - [PCR02 EVT2 硬件 PDF 可检索索引 2026-07-11](../../projects/pcr02-ssc305/archive/engineering-archive/pcr02/source-audit/pcr02_evt2_hardware_pdf_reference_index_20260711.md) · `reviewing` · `pcr02-evt2-hardware-pdf-reference-index-20260711`
 - [PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND、UBIFS 只读与时钟电气路径](../../projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md) · `reviewing` · `pcr02-imssv06c11-three-way-sdk-audit-20260715`
+- [PCR02 MSPI0 泄漏 BDMA CH0 导致 NAND/UBIFS 全局阻塞](../../projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md) · `reviewing` · `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
 - [PCR02 Release 生产化、安全与性能优化范围](../../projects/pcr02-ssc305/decisions/pcr02-release-production-hardening-scope-20260803.md) · `reviewing` · `pcr02-release-production-hardening-scope-20260803`
 - [PCR02 SOC v1.1.33 NAS 发布证据审计](../../projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md) · `reviewing` · `pcr02-soc-v1-1-33-nas-release-audit-20260715`
 - [PCR02 SSC305 ACTIVE_LOW_1组件化Pipeline与日夜策略](../../projects/pcr02-ssc305/archive/design/2026-07-27-active-low-1-pipeline-architecture.md) · `reviewing` · `pcr02-active-low-1-pipeline-architecture-20260727`
@@ -232,6 +238,7 @@
 
 ## projects/x5-rdk
 
+- [RDK X5 SDK readiness validation](../../projects/x5-rdk/validation/project-readiness.md) · `reviewing` · `x5-rdk-readiness-validation-20260713`
 - [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing` · `x5-rdk-android-repo-ref-governance-20260815`
 - [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing` · `x5-rdk-gitlab-ce-branch-protection-fallback-20260815`
 - [X5 供应商资料不可变清单与修订协议](../../projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md) · `reviewing` · `x5-rdk-immutable-vendor-manifest-amendment-20260815`
@@ -269,11 +276,14 @@
 - [PCR02 Agora下行音频STARVE与丢尾音分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md) · `reviewing` · `pcr02-agora-downlink-audio-starve-tail-loss-20260713`
 - [PCR02 DEEP_SLEEP ARMED ACK 物理发送完成与 PA15 切电诊断](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-30-deep-sleep-ack-completion.md) · `reviewing` · `pcr02-deep-sleep-ack-completion-20260730`
 - [PCR02 DEEP_SLEEP PA8 长脉冲硬件休眠机制实现归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-30-pcr02-deep-sleep-pa8-long-pulse.md) · `reviewing` · `pcr02-deep-sleep-pa8-long-pulse-20260730`
+- [PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md) · `reviewing` · `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- [PCR02 DS2 与 AI 共享内存链路优化会话归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-10-pcr02-ds2-ai-shm-session-archive.md) · `reviewing` · `pcr02-ds2-ai-shm-session-archive-20260710`
 - [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing` · `pcr02-dvr-replay-sd-hot-unplug-closure-20260715`
 - [PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md) · `reviewing` · `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
 - [PCR02 IMU/TOF 驱动规格与运行时设计参考](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md) · `reviewing` · `pcr02-imu-tof-driver-runtime-reference-20260721`
 - [PCR02 IMU/TOF 高负载调度尾延迟现场分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md) · `reviewing` · `pcr02-imu-tof-high-load-scheduling-triage-20260721`
 - [PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-plan-20260726`
+- [PCR02 NTP shutdown drain 与 HDI 生命周期修复](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-ntp-shutdown-drain-hdi-lifecycle.md) · `reviewing` · `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
 - [PCR02 QR_CODE_SN字符校验失败分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-qr-code-sn-character-validation.md) · `reviewing` · `pcr02-qr-code-sn-character-validation-20260728`
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing` · `pcr02-remote-adb-hil-deployment-recovery-runbook-20260726`
@@ -302,20 +312,25 @@
 - [PCR02 app_uart 时间同步与低功耗 ACK 槽竞争](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-app-uart-time-sync-low-power-busy.md) · `reviewing` · `pcr02-app-uart-time-sync-low-power-busy-20260728`
 - [PCR02 camera RAW_PREVIEW 虚拟流架构设计与实现归档](../../projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md) · `reviewing` · `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`
 - [PCR02 libmsc Lua RPC释放后使用core分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md) · `reviewing` · `pcr02-libmsc-lua-rpc-use-after-free-20260724`
+- [PCR02 modules/aispeech 算法级源码分析](../../projects/xcrz-sigmastar-demo/archive/reports/2026-08-23-pcr02-aispeech-algorithm-source-analysis.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
 - [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing` · `pcr02-player-monotonic-sync-validation-20260729`
 - [PCR02 prog_pcr02 匿名堆持续增长监控记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - [PCR02 prog_pcr02 运行态热点线程跟进](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md) · `reviewing` · `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
 - [PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md) · `reviewing` · `pcr02-prog-pcr02-high-load-followup-20260724`
 - [PCR02 prog_pcr02 高负载监控证据记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing` · `pcr02-prog-pcr02-high-load-debug-runbook-20260702`
+- [PCR02 prog_test AO与AI并发启动触发任务节点UAF](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-25-pcr02-prog-test-ao-ai-task-node-uaf.md) · `reviewing` · `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- [PCR02 充电待机亮屏后的显示恢复与全量重绘候选](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md) · `reviewing` · `pcr02-display-resume-redraw-20260829`
 - [PCR02 双核 A32 整机 CPU 优化规划](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md) · `reviewing` · `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
 - [PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md) · `reviewing` · `xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
 - [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing` · `pcr02-sensor-wifi-multi-network-design-20260803`
 - [PCR02 持续视频预览离线与内存池耗尽排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-13-pcr02-video-soak-memory-deadlock.md) · `reviewing` · `pcr02-video-soak-memory-deadlock-20260813`
+- [PCR02 摄像头老化后白屏的 AE/ISP 初步分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md) · `reviewing` · `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - [PCR02 显示动作 UAF 源码修复验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md) · `reviewing` · `pcr02-asan-display-action-uaf-fix-validation-20260812`
 - [PCR02 显示动作自切换导致 nextAction_ 悬空引用](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md) · `reviewing` · `pcr02-asan-display-action-nextaction-uaf-20260812`
 - [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
+- [PCR02恢复出厂WiFi控制阻塞优化](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-factory-reset-wifi-control-blocking.md) · `reviewing` · `pcr02-factory-reset-wifi-control-blocking-20260820`
 - [PCR02扫码配网显示状态机缺口分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-wifi-provision-display-state-gap.md) · `reviewing` · `pcr02-wifi-provision-display-state-gap-20260702`
 - [PCR02新增QIVW诊断调用后的libmsc链接契约排障](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-06-pcr02-libmsc-link-contract.md) · `reviewing` · `xcrz-pcr02-libmsc-link-contract-debug-20260806`
 - [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing` · `pcr02-motor-hall-calibration-prestart-transaction-20260724`

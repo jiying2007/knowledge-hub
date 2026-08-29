@@ -1,6 +1,6 @@
 ---
 title: Knowledge Hub 全局路径路由规则
-summary_zh: 统一归档路径、会话总结、Codex archive、memory 和历史 session 的终态路由，要求新增内容写入 Knowledge Hub canonical 路径，旧外部路径仅作 provenance。
+summary_zh: 统一归档路径、会话总结、Codex archive、memory 和历史 session 的终态路由；一般新增内容写入 Hub，嵌入式团队发布正文经提升契约进入 workspace://embedded-knowledge。
 tags:
 - governance
 - path-routing
@@ -32,6 +32,7 @@ related:
 ## 总原则
 
 - 新增知识、归档、会话总结、排障记录和 Codex 工作流材料默认写入 `~/knowledge-hub`。
+- 嵌入式跨项目知识先在 Hub 形成候选；经 owner review、source hash、去敏和目标仓全量门禁后，团队发布正文写入 `workspace://embedded-knowledge`。这条发布例外不扩大到项目事实、Codex archive、专利或个人笔记。
 - 涉及项目事实、归档路径、历史决策、runbook、source 状态、发布验证或排障结论的问题，回答前先做 Hub 上下文预检。
 - 旧外部路径只能作为 `origin_path`、历史 manifest、Git 历史或只读 provenance 出现。
 - 回答路径类问题时，先给 Hub canonical path，再说明旧路径状态；不得把旧路径作为默认落盘目录。
@@ -83,6 +84,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 | PCR02 当前事实 | 源项目 `docs/`、`knowledge/` | `~/knowledge-hub/projects/pcr02-ssc305/current/` |
 | PCR02 当前决策 | 源项目 `docs/decisions` 或历史归档 | `~/knowledge-hub/projects/xcrz-sigmastar-demo/decisions/` |
 | PCR02 验证记录 | 源项目散落日志或旧 validation 归档 | `~/knowledge-hub/projects/pcr02-ssc305/validation/` |
+| 嵌入式团队规范/runbook | Hub `domains/embedded/` 或项目文档 | 候选/provenance 留在 Hub；已发布正文进入 `workspace://embedded-knowledge` |
 | Codex archive | `~/codex/docs/archive/` | `~/knowledge-hub/domains/codex/archive/codex-archive/` |
 | Codex archive registry | `~/codex/docs/archive/_registry/` | `~/knowledge-hub/domains/codex/archive/codex-archive-registry/` |
 | Codex 会话总结和工作流治理 | `~/codex/docs/archive/session-*` | `~/knowledge-hub/domains/codex/` 或 `~/knowledge-hub/domains/codex/archive/codex-archive/` |
@@ -113,7 +115,7 @@ Codex 工作流和会话归档：
 1. Hub 控制面：本文件、`README.md`、`governance/source-boundaries.md`、`registry/sources.json` 和 `indexes/by-source.md` 是路径口径源。
 2. Codex runtime：`~/codex` 的 AGENTS、skill、workflow、docs 和 tests 需要引用本文件或同等终态口径；修改后必须走 `~/codex` build、doctor、plan、apply、routing 和 check 链路。
 3. 记忆层：`~/.codex/memories` 和历史 session 只能通过 report-only 审计识别旧路径召回风险；写 memory 或清理 memory 必须走授权账本。
-4. 源项目：项目仓 `AGENTS.md` 可保留本地 Codex 运行规则，但不得把旧 `docs/`、`knowledge/`、`tools/` 恢复成知识入口。
+4. 源项目：项目仓 `AGENTS.md` 可保留本地 Codex 运行规则，但不得把旧 `docs/`、`knowledge/`、`tools/` 恢复成知识入口；`workspace://embedded-knowledge` 是经治理的团队知识发布仓，不属于业务源项目例外滥用。
 
 ## 旧路径审计
 

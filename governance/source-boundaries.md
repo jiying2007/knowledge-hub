@@ -8,7 +8,7 @@
 
 | 分组 | source_id | 边界摘要 |
 |---|---|---|
-| legacy team knowledge | `embedded-knowledge` | 已终态归位到 `domains/embedded/*`；旧团队知识目录 retired，后续提升仍需 owner review |
+| team published knowledge | `embedded-knowledge` | 历史 source 记录仍保留为 retired provenance；2026-08-21 起团队发布面由 `workspace://embedded-knowledge` 承担，Hub 只保留候选、提炼稿和提升证据 |
 | legacy project archive | `engineering-archive` | 已终态归位到终态目录 `projects/pcr02-ssc305/archive/engineering-archive`；历史证据不等于当前 active fact |
 | patent materials | `patent-disclosure` | Markdown 正文进入 `domains/patents/archive/patent-disclosure`，附件进入 `artifacts/vault/patent-disclosure`；法律状态和披露边界仍需 owner/legal review |
 | Codex archive | `codex-archive` | 已终态归位到 `domains/codex/archive/codex-archive`；旧 Codex archive 目录 retired，不再作为新增归档入口 |
@@ -36,10 +36,11 @@ PCR02 project-specific 内容默认留在 `projects/pcr02-ssc305/` 或 source/ar
 - team knowledge 不接收项目 lifecycle 目录正文。
 - engineering archive 不保存当前项目活文档正文。
 - project current 不保存跨项目标准。
+- 嵌入式团队已发布正文只在 `workspace://embedded-knowledge` 维护；Hub `domains/embedded/` 不作为团队发布状态的替代品。
 - patent domain 不保存通用工程 runbook。
 - codex domain 不保存工程事实正文。
 - memories 不作为唯一 source。
-- source 正文只维护一份；Hub canonical 文本位于 `projects/`、`domains/`、`notes/` 或对应终态归档目录，非文本附件位于 `artifacts/vault/`。
+- Hub 内同一候选正文只维护一份，位于 `projects/`、`domains/`、`notes/` 或对应终态归档目录；嵌入式团队发布稿允许在目标仓形成经 source hash 绑定的适配正文，发布后以目标仓为团队消费权威，Hub 只保留候选与 provenance。
 - source check 的默认门禁是 Hub-local registry 静态契约审计；不得把旧外部路径或旧归档工具作为 active check。
 
 ## 禁止事项（Must Not）

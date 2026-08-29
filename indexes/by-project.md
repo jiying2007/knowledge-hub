@@ -195,6 +195,11 @@
 - PCR02 WARM低帧率VIF sleep引发CMDQ异常: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md`; `xcrz-pcr02-warm-vif-sleep-cmdq-debug-20260814`
 - PCR02 WARM当前业务负载CMDQ异常V2: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md`; `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
 - OSAL Platform HDI 终版边界与硬切验证: `projects/xcrz-sigmastar-demo/decisions/osal-platform-hdi-final-boundary-20260817.md`; `xcrz-osal-platform-hdi-final-boundary-20260817`
+- PCR02恢复出厂WiFi控制阻塞优化: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-factory-reset-wifi-control-blocking.md`; `pcr02-factory-reset-wifi-control-blocking-20260820`
+- PCR02 NTP shutdown drain 与 HDI 生命周期修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-ntp-shutdown-drain-hdi-lifecycle.md`; `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md`; `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- PCR02 摄像头老化后白屏的 AE/ISP 初步分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`; `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
+- PCR02 充电待机亮屏后的显示恢复与全量重绘候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md`; `pcr02-display-resume-redraw-20260829`
 
 ## PCR02 SSC305 SDK
 
@@ -219,6 +224,8 @@
 - PCR02 release 暂时保留 NFS 客户端: `projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md`; `pcr02-release-nfs-client-retention-20260804`
 - PCR02 no-clean 编译与 debug 镜像体积排障: `projects/pcr02-ssc305/archive/debug/2026-08-04-no-clean-and-debug-image-build.md`; `pcr02-no-clean-debug-image-build-20260804`
 - PCR02 diag 大文件直链下载实现与构建边界验证: `projects/pcr02-ssc305/validation/2026-08-06-diag-curl-large-download.md`; `pcr02-diag-curl-large-download-validation-20260806`
+- PCR02 BDMA CH0 未释放导致 UBIFS 与 /data 阻塞排障记录: `projects/pcr02-ssc305/archive/debug/2026-08-28-bdma-ch0-ubifs-deadlock.md`; `pcr02-bdma-ch0-ubifs-deadlock-20260828`
+- PCR02 MSPI0 泄漏 BDMA CH0 导致 NAND/UBIFS 全局阻塞: `projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md`; `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
 
 ## PCR02 API Module
 
@@ -313,6 +320,8 @@
 - GD32L235 可配置充电温度软硬保护策略决策候选: `projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md`; `gd32l235-charge-temperature-configurable-soft-hard-protection-20260812`
 - GD32L235 高温回桩热态充电治理策略决策候选: `projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md`; `gd32l235-charge-temperature-thermal-governor-20260818`
 - GD32L235 充电温度保护会话化与 PB10 计时归档: `projects/gd32l235/archive/design/2026-08-20-charge-temperature-session-protection.md`; `gd32l235-charge-temperature-session-protection-20260820`
+- GD32L235 v1.2.0 NAS 发布记录: `projects/gd32l235/archive/release/2026-08-20-gd32l235-v1.2.0-nas-release.md`; `gd32l235-v1.2.0-nas-release-20260820`
+- PCR02 温度、充电接触、电机供电及维护模式 v1.16 设计归档: `projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md`; `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
 
 ## HC32F072 Firmware
 
@@ -352,6 +361,7 @@
 - Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选: `projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md`; `agent-dev-kit-harness-readiness-decision-20260717`
 - ADK Token 与上下文工作流优化验证: `projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md`; `agent-dev-kit-token-context-workflow-optimization-20260801`
 - ADK/Codex/Hub Token 与门禁优化 v2: `projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md`; `agent-dev-kit-token-context-governance-v2-20260801`
+- Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选: `projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md`; `agent-dev-kit-codex-team-runtime-distribution-v1`
 
 ## SigmaStar Flasher
 
@@ -371,3 +381,4 @@
 - X5 GitLab CE 多仓分支保护降级方案: `projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md`; `x5-rdk-gitlab-ce-branch-protection-fallback-20260815`
 - X5 Android repo 引用治理与安全清理: `projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md`; `x5-rdk-android-repo-ref-governance-20260815`
 - X5 供应商资料不可变清单与修订协议: `projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md`; `x5-rdk-immutable-vendor-manifest-amendment-20260815`
+- RDK X5 SDK readiness validation: `projects/x5-rdk/validation/project-readiness.md`; `x5-rdk-readiness-validation-20260713`

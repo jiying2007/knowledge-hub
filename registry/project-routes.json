@@ -897,7 +897,8 @@
         "RDK X5",
         "X5 SDK",
         "X5",
-        "d-robotics x5"
+        "d-robotics x5",
+        "x5_rdk"
       ],
       "topic_aliases": [
         "V1.1.2",

@@ -18,3 +18,12 @@
 - `archive/`：经授权生命周期迁移后的历史归档；不得直接写入 `reviewing` 候选。
 
 Knowledge Hub 候选不替代仓库内的版本化文档、CI 结果、构建日志或发布收据，也不代表人工验收已经完成。
+
+<!-- knowledge-hub-project-readiness:start -->
+## 成熟度工作台
+
+以下入口是单一 `reviewing` evidence contract 与统一 dashboard；不代表 owner 签收或发布就绪。
+
+- [项目 evidence contract](validation/project-readiness.md)
+- [统一 readiness dashboard](../../indexes/project-readiness.md)
+<!-- knowledge-hub-project-readiness:end -->

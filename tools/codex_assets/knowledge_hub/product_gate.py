@@ -43,6 +43,12 @@ from .product_policy import (
     load_product_policy,
 )
 from .product_summary import product_gate_summary as product_gate_summary
+
+
+# Product gate workers compete for CPU and I/O with the full pytest subprocess.
+# Keep the timeout bounded, but leave enough headroom over the isolated runtime
+# so a healthy suite is not misclassified as a deterministic failure under load.
+UNIT_TEST_TIMEOUT_SECONDS = 180
 from .retrieval import (
     retrieval_benchmark_summary,
     run_retrieval_benchmark_serialized,
@@ -560,7 +566,7 @@ def run_product_gate(
             else run_rtk(
                 root,
                 [sys.executable, "-m", "pytest", "-q"],
-                timeout=90,
+                timeout=UNIT_TEST_TIMEOUT_SECONDS,
                 accepted_exit_codes=(0, 1, 4, 5),
             )
         ),

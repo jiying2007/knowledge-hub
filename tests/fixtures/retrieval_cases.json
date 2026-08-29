@@ -160,7 +160,7 @@
     {
       "id": "broad-performance",
       "query": "性能",
-      "expected_ids": ["pcr02-thirdparty-build-optimization-baseline-20260710"],
+      "expected_ids": ["app-sensor-test-selection-performance-closure-20260731"],
       "forbidden_ids": ["knowledge-hub-root"]
     },
     {

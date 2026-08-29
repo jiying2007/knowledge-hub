@@ -15,7 +15,7 @@
     }
   },
   "commands": {
-    "wrapper_baseline": 48,
+    "wrapper_baseline": 49,
     "daily_max": 5,
     "readme_daily_max": 7
   }

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "model": "knowledge-hub-five-plane-command-surface-v1",
-  "wrapper_baseline": 48,
+  "wrapper_baseline": 49,
   "daily_command_limit": 5,
   "planes": [
     "experience",
@@ -67,6 +67,7 @@
     {"name":"knowledge-path-audit","wrapper":"tools/knowledge-path-audit.sh","plane":"governance","tier":"internal","summary_json":false,"read_only":true},
     {"name":"knowledge-proposal-shadow-stats","wrapper":"tools/knowledge-proposal-shadow-stats.sh","plane":"governance","tier":"internal","summary_json":false,"read_only":true},
     {"name":"knowledge-recovery-audit","wrapper":"tools/knowledge-recovery-audit.sh","plane":"evidence-operations","tier":"internal","summary_json":true,"read_only":true},
+    {"name":"knowledge-activity","wrapper":"tools/knowledge-activity.sh","plane":"evidence-operations","tier":"internal","summary_json":true,"read_only":false},
     {"name":"knowledge-source-control","wrapper":"tools/knowledge-source-control.sh","plane":"governance","tier":"internal","summary_json":false,"read_only":false},
     {"name":"knowledge-summary-backfill","wrapper":"tools/knowledge-summary-backfill.sh","plane":"content-artifact","tier":"internal","summary_json":false,"read_only":false},
     {"name":"knowledge-workspace-discover","wrapper":"tools/knowledge-workspace-discover.sh","plane":"query","tier":"internal","summary_json":false,"read_only":true}

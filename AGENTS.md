@@ -6,7 +6,8 @@ Knowledge Hub（`~/knowledge-hub`）是团队、项目、Codex 与个人知识�
 
 - 先分类、后落盘；先 registry、后提升。正文只维护一份，其他位置使用索引、引用或迁移记录。
 - 权威位置：
-  - 团队规范/runbook：`domains/embedded/`
+  - 团队已发布规范/runbook：`workspace://embedded-knowledge`
+  - 嵌入式候选、提炼稿与历史 provenance：`domains/embedded/`
   - 项目当前事实、决策、历史：`projects/<project>/current|decisions|archive/`
   - 专利：`domains/patents/`；Codex 治理：`domains/codex/`
   - 个人草稿：`notes/personal/`，不得进入团队 active index
@@ -22,7 +23,7 @@ Knowledge Hub（`~/knowledge-hub`）是团队、项目、Codex 与个人知识�
 
 ## 3. 内容硬边界
 
-- project-specific 内容不得提升到 `domains/embedded/standards/`；`notes/personal/` 不进团队索引。
+- project-specific 内容不得直接进入团队发布库；跨项目提炼稿先进入 `domains/embedded/` reviewing，再经团队库提升契约、owner review 和全量门禁发布。`notes/personal/` 不进团队索引。
 - 禁止写入 raw log、core、SDK 包、binary、token、private key、password、cookie、运行时 secret、客户/设备标识。
 - 不复制完整会话或 owner-gated source 正文；候选必须脱敏、可复用、有 provenance 和 raw fallback。
 - `~/.codex/memories` 仅辅助召回，不能是规则/事实唯一来源；无授权账本不得写入。

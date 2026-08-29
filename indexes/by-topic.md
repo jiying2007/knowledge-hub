@@ -518,3 +518,15 @@
 - OSAL Platform HDI 终版边界与硬切验证: `projects/xcrz-sigmastar-demo/decisions/osal-platform-hdi-final-boundary-20260817.md`; `xcrz-osal-platform-hdi-final-boundary-20260817`
 - GD32L235 高温回桩热态充电治理策略决策候选: `projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md`; `gd32l235-charge-temperature-thermal-governor-20260818`
 - GD32L235 充电温度保护会话化与 PB10 计时归档: `projects/gd32l235/archive/design/2026-08-20-charge-temperature-session-protection.md`; `gd32l235-charge-temperature-session-protection-20260820`
+- GD32L235 v1.2.0 NAS 发布记录: `projects/gd32l235/archive/release/2026-08-20-gd32l235-v1.2.0-nas-release.md`; `gd32l235-v1.2.0-nas-release-20260820`
+- PCR02恢复出厂WiFi控制阻塞优化: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-factory-reset-wifi-control-blocking.md`; `pcr02-factory-reset-wifi-control-blocking-20260820`
+- PCR02 NTP shutdown drain 与 HDI 生命周期修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-ntp-shutdown-drain-hdi-lifecycle.md`; `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- 嵌入式团队知识提升闭环验证: `artifacts/manifests/embedded-team-knowledge-promotion-20260821.md`; `embedded-team-knowledge-promotion-20260821`
+- RDK X5 SDK readiness validation: `projects/x5-rdk/validation/project-readiness.md`; `x5-rdk-readiness-validation-20260713`
+- Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选: `projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md`; `agent-dev-kit-codex-team-runtime-distribution-v1`
+- PCR02 温度、充电接触、电机供电及维护模式 v1.16 设计归档: `projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md`; `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
+- PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md`; `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- PCR02 BDMA CH0 未释放导致 UBIFS 与 /data 阻塞排障记录: `projects/pcr02-ssc305/archive/debug/2026-08-28-bdma-ch0-ubifs-deadlock.md`; `pcr02-bdma-ch0-ubifs-deadlock-20260828`
+- PCR02 MSPI0 泄漏 BDMA CH0 导致 NAND/UBIFS 全局阻塞: `projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md`; `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
+- PCR02 摄像头老化后白屏的 AE/ISP 初步分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`; `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
+- PCR02 充电待机亮屏后的显示恢复与全量重绘候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md`; `pcr02-display-resume-redraw-20260829`

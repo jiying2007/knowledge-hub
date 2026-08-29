@@ -145,17 +145,6 @@
       "expected_markdown_count": 33,
       "inventory_sha256": "2f6d5e95c26c91bf676eeffb4bf23f132a078dd8d4a751916fcd83baa9bb0dda",
       "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 33 个未精确登记的 PCR02 SSC305 历史归档正文；12 个已登记正文由 items registry 独立治理，后续合规新增不再要求刷新集合。"
-    },
-    {
-      "id": "xcrz-sigmastar-demo-archive-corpus-baseline-20260715",
-      "path_prefix": "projects/xcrz-sigmastar-demo/archive/",
-      "coverage_mode": "archive-corpus",
-      "inventory_scope": "unregistered-only",
-      "owner": "leiwenjun",
-      "review_after": "2026-10-15",
-      "expected_markdown_count": 2,
-      "inventory_sha256": "8e3b6ae1a14e1d456c2588ebb37c0553c1dbe53e0396f47c2d350e27626e5c22",
-      "reason_zh": "2026-07-26 迁移到 unregistered-only inventory，只冻结 2 个未精确登记的 xcrz-sigmastar-demo 历史正文；32 个已登记正文由 items registry 独立治理，新增 debug/report 不再触发集合漂移。"
     }
   ]
 }

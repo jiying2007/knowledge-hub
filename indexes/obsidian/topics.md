@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (67)
+## validation (68)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (45)
+## manual-validation-pending (46)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -31,7 +31,7 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## no-active-promotion (40)
+## no-active-promotion (41)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -40,7 +40,7 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## ai-generated (34)
+## ai-generated (35)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -49,7 +49,7 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## owner-review-pending (30)
+## owner-review-pending (31)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -58,7 +58,7 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## project-readiness (30)
+## project-readiness (31)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -220,6 +220,14 @@
 - [PCR02 release 暂时保留 NFS 客户端](../../projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md) · `reviewing`
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
 
+## agent-dev-kit (5)
+
+- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
+
 ## architecture-review (5)
 
 - [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing`
@@ -265,13 +273,6 @@
 - [PCR02 1/30fps 代码规范收敛与板级复验](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md) · `reviewing`
 - [PCR02 1/30fps 优化提交推送与最终验收](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md) · `reviewing`
 - [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing`
-
-## agent-dev-kit (4)
-
-- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
-- [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
 ## app_sensor_test (4)
 
@@ -374,6 +375,12 @@
 - [GD32L235 充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md) · `reviewing`
 - [GD32L235 可配置充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md) · `reviewing`
 - [GD32L235 高温回桩热态充电治理策略决策候选](../../projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md) · `reviewing`
+
+## codex (3)
+
+- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
+- [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
+- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 
 ## evidence (3)
 
@@ -484,11 +491,6 @@
 
 - [PCR02 API/App/HDI/MP4 精确源码构建审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md) · `reviewing`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing`
-
-## codex (2)
-
-- [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
-- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 
 ## debug-release (2)
 
@@ -1399,6 +1401,10 @@
 
 - [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
 
+## team-distribution (1)
+
+- [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
+
 ## team-runbook (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
@@ -1502,6 +1508,10 @@
 ## wowlan (1)
 
 - [GD32L235 PB12 WL_GPIO4 WoWLAN 引脚契约候选](../../projects/gd32l235/current/pb12-wl-gpio4-contract.md) · `reviewing`
+
+## x5-rdk (1)
+
+- [RDK X5 SDK readiness validation](../../projects/x5-rdk/validation/project-readiness.md) · `reviewing`
 
 ## xcrz-sigmastar-demo (1)
 

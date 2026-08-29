@@ -223,7 +223,8 @@ domains/personal/**
 
 目录位置和生命周期是两个维度。`current/`、`decisions/` 可保留 owner 已选定的 canonical 落点，但条目是否 active、reviewing 或 archived 始终以 registry 为准；路径名称不得被解释为隐式 active promotion。
 - 普通和个人笔记：`notes/`
-- 跨项目嵌入式知识：`domains/embedded/`
+- 跨项目嵌入式候选与 provenance：`domains/embedded/`
+- 嵌入式团队发布面：`workspace://embedded-knowledge`（具体本地挂载由 workspace registry 解析）
 - 专利材料：`domains/patents/`
 - Codex 会话、工作流和记忆治理：`domains/codex/`
 - Source 边界说明和迁移控制面：`sources/`

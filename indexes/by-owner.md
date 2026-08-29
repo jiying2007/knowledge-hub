@@ -2,6 +2,11 @@
 
 ## leiwenjun
 
+- `codex-ai-agent-incentive-evidence-summary-20260828`
+- `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
+- `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- `pcr02-ds2-ai-shm-session-archive-20260710`
+
 - `knowledge-hub-p1-p2-maintenance-hardening-20260711`
 - `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`
 - `knowledge-hub-operational-audit-20260713`
@@ -422,6 +427,16 @@
 - `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
 - `gd32l235-charge-temperature-thermal-governor-20260818`
 - `gd32l235-charge-temperature-session-protection-20260820`
+- `gd32l235-v1.2.0-nas-release-20260820`
+- `pcr02-factory-reset-wifi-control-blocking-20260820`
+- `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- `x5-rdk-readiness-validation-20260713`
+- `agent-dev-kit-codex-team-runtime-distribution-v1`
+- `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
+- `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- `pcr02-bdma-ch0-ubifs-deadlock-20260828`
+- `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
+- `pcr02-display-resume-redraw-20260829`
 
 ## pcr02-registry-owner
 
@@ -534,3 +549,5 @@
 - `pcr02-hdi-hal-diag-final-architecture-determination-20260813`
 - `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
 - `xcrz-osal-platform-hdi-final-boundary-20260817`
+- `embedded-team-knowledge-promotion-20260821`
+- `pcr02-camera-whiteout-ae-exposure-analysis-20260703`

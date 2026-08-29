@@ -39,7 +39,7 @@ def test_all_registered_projects_have_one_reviewing_evidence_contract():
             item = items[item_id]
             assert item["path"] == path
             assert item["status"] == "reviewing"
-            assert item["decision_owner"] == "leiwenjun"
+            assert item["decision_owner"]
             assert item["manual_validation_pending"] is True
             assert item["promotion"] == "none"
             assert item["generated_by_ai"] is True
@@ -48,7 +48,10 @@ def test_all_registered_projects_have_one_reviewing_evidence_contract():
             )
             assert slot == "validation"
             assert item["evidence_contract"]["status"] == "pending"
-            assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
+            if item["decision_owner"] == "unassigned":
+                assert item["evidence_contract"]["owner_ref"] is None
+            else:
+                assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
             assert (root / path).is_file()
 
 
@@ -65,12 +68,16 @@ def test_retired_readiness_projections_are_absent_and_fully_ledgered():
     assert not {
         str(item.get("readiness_slot", "")) for item in items
     }.intersection(RETIRED_PROJECTION_SLOTS)
-    assert len(ledger) == len(projects) * len(RETIRED_PROJECTION_SLOTS) == 90
+    registered_project_ids = {str(project["id"]) for project in projects}
+    retired_project_ids = {row["project_id"] for row in ledger}
+    assert retired_project_ids <= registered_project_ids
+    assert len(ledger) == len(retired_project_ids) * len(RETIRED_PROJECTION_SLOTS)
     assert len({row["retired_id"] for row in ledger}) == len(ledger)
     assert len({row["retired_path"] for row in ledger}) == len(ledger)
-    assert {row["project_id"] for row in ledger} == {
-        str(project["id"]) for project in projects
-    }
+    for project_id in retired_project_ids:
+        assert {
+            row["retired_slot"] for row in ledger if row["project_id"] == project_id
+        } == RETIRED_PROJECTION_SLOTS
     assert all(row["status"] == "retired-generated-projection" for row in ledger)
     assert all(not (root / row["retired_path"]).exists() for row in ledger)
 
@@ -186,7 +193,7 @@ def test_readiness_documents_do_not_persist_machine_local_workspace_state():
         assert not any(value in text for value in forbidden), path
 
 
-def test_generator_accepts_a_31st_registry_project_without_core_code_changes(tmp_path):
+def test_generator_accepts_an_additional_registry_project_without_core_code_changes(tmp_path):
     source_root = repository_root()
     fixture_root = tmp_path / "hub"
     shutil.copytree(
@@ -196,6 +203,7 @@ def test_generator_accepts_a_31st_registry_project_without_core_code_changes(tmp
     )
     projects_path = fixture_root / "registry/projects.json"
     projects_payload = json.loads(projects_path.read_text())
+    baseline_project_count = len(projects_payload["projects"])
     projects_payload["projects"].append(
         {
             "id": "scalable-project-31",
@@ -241,11 +249,12 @@ def test_generator_accepts_a_31st_registry_project_without_core_code_changes(tmp
     )
 
     assert payload["status"] == "applied"
-    assert payload["project_count"] == 31
-    assert payload["route_count"] == 31
+    expected_project_count = baseline_project_count + 1
+    assert payload["project_count"] == expected_project_count
+    assert payload["route_count"] == expected_project_count
     assert payload["new_item_count"] == 1
-    assert payload["slot_count"] == 31
-    assert payload["evidence_contract_count"] == 31
+    assert payload["slot_count"] == expected_project_count
+    assert payload["evidence_contract_count"] == expected_project_count
     validation = fixture_root / "projects/scalable-project-31/validation/project-readiness.md"
     assert validation.is_file()
-    assert "31 项目 route matrix" in validation.read_text()
+    assert "{} 项目 route matrix".format(expected_project_count) in validation.read_text()

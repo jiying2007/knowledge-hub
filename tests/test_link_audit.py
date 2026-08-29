@@ -3,7 +3,11 @@ import json
 import pytest
 
 from tools.codex_assets.knowledge_hub import link_audit
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.common import (
+    KnowledgeHubError,
+    project_rows,
+    repository_root,
+)
 from tools.codex_assets.knowledge_hub.link_audit import audit_links, link_audit_summary
 
 
@@ -99,7 +103,7 @@ def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, mon
 def test_repository_readiness_links_and_bases_are_valid():
     payload = audit_links(repository_root())
     assert payload["status"] == "pass"
-    assert payload["readiness_document_count"] == 30
+    assert payload["readiness_document_count"] == len(project_rows(repository_root()))
     assert payload["readiness_without_inbound_count"] == 0
     assert payload["base_failure_count"] == 0
     assert payload["managed_frontmatter_coverage_percent"] == 100.0
