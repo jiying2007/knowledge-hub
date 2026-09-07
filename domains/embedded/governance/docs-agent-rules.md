@@ -47,4 +47,4 @@
 
 ## 7. 推荐技能
 
-- `docs/.codex/skills/docs-knowledge-governance/SKILL.md`
+- `.agents/skills/docs-knowledge-governance/SKILL.md`

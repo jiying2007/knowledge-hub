@@ -50,10 +50,10 @@
 
 ## 7. 推荐技能
 
-- `docs/.codex/skills/docs-knowledge-governance/SKILL.md`
-- `tools/.codex/skills/offline-gdb-core-debug/SKILL.md`
-- `tools/.codex/skills/embedded-performance-triage/SKILL.md`
-- `tools/.codex/skills/yolo-ai-vision-triage/SKILL.md`
-- `tools/.codex/skills/sigmastar-media-pipeline-triage/SKILL.md`
-- `tools/.codex/skills/embedded-build-release-check/SKILL.md`
-- `tools/.codex/skills/artifact-provenance-audit/SKILL.md`
+- `.agents/skills/docs-knowledge-governance/SKILL.md`
+- `.agents/skills/offline-gdb-core-debug/SKILL.md`
+- `.agents/skills/embedded-performance-triage/SKILL.md`
+- `.agents/skills/yolo-ai-vision-triage/SKILL.md`
+- `.agents/skills/sigmastar-media-pipeline-triage/SKILL.md`
+- `.agents/skills/embedded-build-release-check/SKILL.md`
+- `.agents/skills/artifact-provenance-audit/SKILL.md`

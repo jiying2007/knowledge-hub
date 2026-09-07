@@ -46,7 +46,7 @@ validation_refs: [../../scripts/check-repository-shape.sh]
 | `docs/runbooks/` | 可执行操作手册、排障流程 |
 | `docs/standards/` | 长期稳定规范 |
 | `docs/templates/` | 文档、AGENT、SKILL 模板 |
-| `docs/.codex/skills/` | 文档治理相关 Codex skill |
+| `.agents/skills/` | 团队 Codex skill 单一来源 |
 
 ## 4. 禁止目录
 

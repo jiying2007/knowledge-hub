@@ -5,7 +5,7 @@
 1. `tools/debug/`
 - 崩溃排查、离线调试、媒体链路、AI Vision、资源泄漏和二进制依赖审计脚本。
 
-2. `tools/.codex/skills/`
+2. `.agents/skills/`
 - 跨模块复用的调试、发布、制品审计与问题归一化技能定义。
 - Crash：`offline-gdb-core-debug`、`asan-crash-triage`、`sigbus-memory-triage`、`crash-report-normalizer`。
 - Runtime：`embedded-performance-triage`、`resource-leak-triage`、`sigmastar-media-pipeline-triage`。

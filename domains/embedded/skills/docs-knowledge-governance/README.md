@@ -4,7 +4,7 @@
 
 - 修改 `docs/` 结构、模板、标准、runbook 或治理脚本
 - 新增知识库文档、迁移项目文档、修复文档链接
-- 调整 `docs/AGENTS.md` 或 `docs/.codex/skills/*`
+- 调整 `docs/AGENTS.md` 或 `.agents/skills/docs-knowledge-governance/*`
 
 ## 工作流
 

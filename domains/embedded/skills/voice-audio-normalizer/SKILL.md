@@ -25,7 +25,7 @@ last_updated: 2026-05-15
    - 检查 `ffmpeg`、`ffprobe` 是否可用。
    - 扫描待处理目录内音频文件。
 2. 执行标准化脚本：
-   - 命令：`rtk bash tools/.codex/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh resource/voices`
+   - 命令：`rtk bash .agents/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh resource/voices`
 3. 完成后复核：
    - 使用 `ffprobe` 检查格式与声道，确认全部为 `mp3|1`。
 4. 输出结果时必须给出：
@@ -39,6 +39,6 @@ last_updated: 2026-05-15
 
 ## 5. 最小验证
 
-- 干跑：`rtk bash tools/.codex/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh --dry-run resource/voices`
-- 实跑：`rtk bash tools/.codex/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh resource/voices`
+- 干跑：`rtk bash .agents/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh --dry-run resource/voices`
+- 实跑：`rtk bash .agents/skills/voice-audio-normalizer/scripts/normalize_voice_audio.sh resource/voices`
 - 复核：`rtk bash -lc 'for f in resource/voices/*; do ... ffprobe ...; done'`

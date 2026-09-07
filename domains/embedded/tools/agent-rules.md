@@ -34,7 +34,7 @@
 - 工程基线：遵循 `docs/standards/agent-skill-engineering-baseline.md`。
 - 代码规范：遵循 `docs/standards/c-coding-standards.md`。
 - Shell 规范：遵循 `docs/standards/shell-script-style-guide.md`。
-- 路径规范：跨模块通用技能统一放在 `tools/.codex/skills/`。
+- 路径规范：团队技能统一放在仓库根 `.agents/skills/`。
 - 命令规范：命令必须使用 `rtk` 前缀。
 - 脚本契约：公共脚本必须支持 `--help`，失败时非零退出，输出低噪音摘要，长日志写入文件。
 - 脚本契约：有写入行为的脚本应支持 `--out`、`--out-dir` 或 `--dry-run` 中至少一种显式控制。
@@ -48,16 +48,16 @@
 
 ## 7. 推荐技能
 
-- `tools/.codex/skills/offline-gdb-core-debug/SKILL.md`
-- `tools/.codex/skills/asan-crash-triage/SKILL.md`
-- `tools/.codex/skills/sigbus-memory-triage/SKILL.md`
-- `tools/.codex/skills/crash-report-normalizer/SKILL.md`
-- `tools/.codex/skills/embedded-performance-triage/SKILL.md`
-- `tools/.codex/skills/yolo-ai-vision-triage/SKILL.md`
-- `tools/.codex/skills/voice-audio-normalizer/SKILL.md`
-- `tools/.codex/skills/sigmastar-media-pipeline-triage/SKILL.md`
-- `tools/.codex/skills/embedded-build-release-check/SKILL.md`
-- `tools/.codex/skills/sdk-upgrade-risk-review/SKILL.md`
-- `tools/.codex/skills/resource-leak-triage/SKILL.md`
-- `tools/.codex/skills/artifact-provenance-audit/SKILL.md`
-- `tools/.codex/skills/field-issue-intake-normalizer/SKILL.md`
+- `.agents/skills/offline-gdb-core-debug/SKILL.md`
+- `.agents/skills/asan-crash-triage/SKILL.md`
+- `.agents/skills/sigbus-memory-triage/SKILL.md`
+- `.agents/skills/crash-report-normalizer/SKILL.md`
+- `.agents/skills/embedded-performance-triage/SKILL.md`
+- `.agents/skills/yolo-ai-vision-triage/SKILL.md`
+- `.agents/skills/voice-audio-normalizer/SKILL.md`
+- `.agents/skills/sigmastar-media-pipeline-triage/SKILL.md`
+- `.agents/skills/embedded-build-release-check/SKILL.md`
+- `.agents/skills/sdk-upgrade-risk-review/SKILL.md`
+- `.agents/skills/resource-leak-triage/SKILL.md`
+- `.agents/skills/artifact-provenance-audit/SKILL.md`
+- `.agents/skills/field-issue-intake-normalizer/SKILL.md`
