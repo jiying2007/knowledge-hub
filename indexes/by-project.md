@@ -200,6 +200,9 @@
 - PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md`; `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
 - PCR02 摄像头老化后白屏的 AE/ISP 初步分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`; `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - PCR02 充电待机亮屏后的显示恢复与全量重绘候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md`; `pcr02-display-resume-redraw-20260829`
+- GROS 单轨跨平台构建硬切换最终方案候选 v1: `projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md`; `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
+- 四仓 AI 开发资产与团队知识协作候选: `projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md`; `pcr02-four-repo-ai-coding-team-knowledge-20260905`
+- 四仓 AI 资产跨平台边界修正候选: `projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md`; `module-ai-platform-boundary-20260906`
 
 ## PCR02 SSC305 SDK
 

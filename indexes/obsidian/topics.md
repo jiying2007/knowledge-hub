@@ -13,7 +13,7 @@
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
-## pcr02 (55)
+## pcr02 (56)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
 - [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (46)
+## manual-validation-pending (48)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
@@ -67,6 +67,15 @@
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
+## ssc305 (16)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
+- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
+
 ## governance (15)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -76,15 +85,6 @@
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
 
-## ssc305 (15)
-
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
-- [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
-- [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
-
 ## x5 (12)
 
 - [X5 AI Toolchain V1.2.8 下载与完整性验证](../../projects/firmware-toolchains/validation/2026-08-05-x5-ai-toolchain-download.md) · `reviewing`
@@ -93,6 +93,15 @@
 - [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing`
 - [X5 Integration P1 长期维护优化验证](../../projects/firmware-toolchains/validation/2026-08-06-x5-integration-p1-maintainability.md) · `reviewing`
 - [X5 SDK V1.1.2 DDR、eMMC、Camera 与 Wi-Fi 适配清单](../../projects/firmware-toolchains/validation/2026-08-06-x5-v1.1.2-approved-vendor-list.md) · `reviewing`
+
+## host-test (11)
+
+- [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing`
+- [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
+- [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing`
 
 ## zh-cn (11)
 
@@ -112,15 +121,6 @@
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
 
-## host-test (10)
-
-- [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing`
-- [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
-- [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
-
 ## knowledge-hub (10)
 
 - [Knowledge Hub root](../../README.md) · `active`
@@ -129,6 +129,15 @@
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
+
+## hard-cut (9)
+
+- [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
+- [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
 
 ## rtos (9)
 
@@ -147,15 +156,6 @@
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 - [GD32L235 充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md) · `reviewing`
 - [GD32L235 可配置充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md) · `reviewing`
-
-## hard-cut (8)
-
-- [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
-- [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
-- [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
 ## hdi (8)
 
@@ -236,6 +236,14 @@
 - [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
+## gros (5)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
+
 ## hil (5)
 
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
@@ -260,6 +268,14 @@
 - [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 
+## rdk-x5 (5)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
+
 ## 1fps (4)
 
 - [PCR02 1/30fps Pipeline全量整改与板级验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md) · `reviewing`
@@ -281,19 +297,19 @@
 - [app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md) · `reviewing`
 - [app_sensor_test 选择完整性、构建身份与性能门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md) · `reviewing`
 
+## artifact-lifecycle (4)
+
+- [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
+
 ## exact-source (4)
 
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
 - [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing`
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
 - [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
-
-## gros (4)
-
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
 
 ## hdi-vi (4)
 
@@ -315,13 +331,6 @@
 - [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing`
 - [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
-
-## rdk-x5 (4)
-
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
 
 ## runbook (4)
 
@@ -358,17 +367,17 @@
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
-## artifact-lifecycle (3)
-
-- [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
-
 ## boot-time (3)
 
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
 - [PCR02 原理图首批系统优化落地](../../projects/pcr02-ssc305/decisions/pcr02-schematic-first-batch-optimization-20260802.md) · `reviewing`
 - [PCR02 无接口驱动裁剪与 BLE-only 内核策略](../../projects/pcr02-ssc305/decisions/pcr02-unused-io-ble-kernel-policy-20260802.md) · `reviewing`
+
+## capture (3)
+
+- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
+- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
+- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
 
 ## charge (3)
 
@@ -381,6 +390,12 @@
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
 - [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+
+## decision (3)
+
+- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
+- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
+- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
 
 ## evidence (3)
 
@@ -657,6 +672,11 @@
 - [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
 - [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
 
+## thirdparty (2)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
+
 ## transaction (2)
 
 - [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
@@ -801,6 +821,10 @@
 
 - [GD32L235 Power Diag 独立构建开关决策](../../projects/gd32l235/decisions/power-diag-independent-build-switch.md) · `reviewing`
 
+## build-system (1)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+
 ## cache (1)
 
 - [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing`
@@ -824,10 +848,6 @@
 ## canonical-path (1)
 
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
-
-## capture (1)
-
-- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
 
 ## changelog (1)
 
@@ -892,10 +912,6 @@
 ## debug-uart (1)
 
 - [GD32L235 Power Diag 独立构建开关决策](../../projects/gd32l235/decisions/power-diag-independent-build-switch.md) · `reviewing`
-
-## decision (1)
-
-- [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
 
 ## decision-gate (1)
 
@@ -1136,6 +1152,10 @@
 ## nfs-client (1)
 
 - [PCR02 release 暂时保留 NFS 客户端](../../projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md) · `reviewing`
+
+## ninja (1)
+
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
 
 ## obsidian (1)
 
@@ -1424,10 +1444,6 @@
 ## thermal-governor (1)
 
 - [GD32L235 高温回桩热态充电治理策略决策候选](../../projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md) · `reviewing`
-
-## thirdparty (1)
-
-- [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
 
 ## thread-analysis (1)
 

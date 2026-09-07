@@ -16,11 +16,11 @@ status: reviewing
 owner: leiwenjun
 source:
   type: current-session-engineering-contract
-  from: PCR02 pipeline HIL、ADB 失联与制品身份调试经验；端点、raw log、core 和二进制已排除
+  from: PCR02 pipeline HIL、ADB 失联与制品身份调试经验及已退役私人 AI 资产的脱敏提炼；端点、raw log、core 和二进制已排除
   source_sha256: 787802965365ac0fccda2c855a27560352367b89cce8f9f44d69b5506b4c7dee
   temporary_source_retained: false
 review_after: '2026-10-26'
-review_status: human-reviewed-accepted
+review_status: manual-entry-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -42,12 +42,12 @@ validation_refs:
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 evidence_strength: current-debugging-contract-device-revalidation-pending
 evidence_refs:
-- project-local:codex_assets/skills/pcr02-adb-runtime-debug/SKILL.md
-- project-local:codex_assets/workflows/pcr02-adb-runtime-debug.md
-- project-local:docs/changes/hdi-vi-pipeline-r3/STATE.md
-- project-local:docs/changes/hdi-vi-pipeline-r3/PLAN.md
+- team-knowledge:tools/codex_assets/pcr02_adb_runtime_debug.py
+- team-knowledge:docs/governance/knowledge-repo-migration-map.csv
+- projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md
+- projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md
 created_at: '2026-07-26'
-updated_at: '2026-07-26'
+updated_at: '2026-09-07'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -103,10 +103,10 @@ DISCOVER
 
 ## 1. Discover 与只读 preflight
 
-设置本次 endpoint 后运行项目工具：
+以下命令从 PCR02 源码根运行；若从其他目录调用，必须通过 `PCR02_SOURCE_ROOT` 显式指定源码根。设置本次 endpoint 后运行团队工具：
 
 ```bash
-rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtime_debug.py \
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
   preflight --serial "${PCR02_ADB_SERIAL}"
 ```
 
@@ -148,14 +148,14 @@ rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtim
 本地离线核对：
 
 ```bash
-rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtime_debug.py \
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
   artifact-gate --bin <frozen-candidate>
 ```
 
 设备部署前核对：
 
 ```bash
-rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtime_debug.py \
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
   artifact-gate --bin <frozen-candidate> --include-device \
   --serial "${PCR02_ADB_SERIAL}"
 ```
@@ -164,12 +164,41 @@ rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtim
 
 `release/bin` 与候选不一致时不得误部署。后编译 app 不会自动更新既有 image/OTA。
 
-## 4. 授权部署
+## 4. 场景抓证与分析
+
+运行态抓证统一使用 `capture`，随后对同一 evidence bundle 执行 `analyze`：
+
+```bash
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
+  capture --profile <base|detection-overlay|video-route|rgn-osd> \
+  --serial "${PCR02_ADB_SERIAL}"
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
+  analyze --capture tmp/pcr02-adb-runtime-debug/<timestamp>
+```
+
+| Profile | 主要证据 | 判断边界 |
+|---|---|---|
+| `base` | boot、进程、mutator、core hint、dmesg、staged/installed identity | 只提供通用运行态基线 |
+| `detection-overlay` | sensor/AI tail、RGN、SCL0/SCL1 | 无检测消息先查发布/订阅；有 active box 但无画面再查坐标、格式、alpha、layer 和编码通道 |
+| `video-route` | raw source callback、SCL0/SCL1、会话日志 | DS1/DS2 同时活跃时查生命周期、引用计数和 SCL2 仲裁；480x480 优先核对扫码路径是否释放 |
+| `rgn-osd` | RGN handle、layer、`bShow`、`UpdateCanvasCnt` | `bShow=0` 表示不可见，计数不增长表示 canvas 更新停滞；不同 OSD 必须有独立 owner |
+
+固定场景 CPU 使用：
+
+```bash
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
+  cpu-baseline --scenario <idle|vision|lcd-vision|full> --confirm-scene \
+  --serial "${PCR02_ADB_SERIAL}" --note "记录实际启用项与环境"
+```
+
+四个场景必须使用同一设备、同一 installed MD5、相同日志/网络/输入条件；切换后稳定至少 10 秒，采集 60 秒。进程重启、制品变化或场景未确认时该 run 不进入对比基线。
+
+## 5. 授权部署
 
 先只输出计划：
 
 ```bash
-rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtime_debug.py \
+rtk python3 ~/knowledge/tools/codex_assets/pcr02_adb_runtime_debug.py \
   deploy --dry-run
 ```
 
@@ -188,7 +217,7 @@ rtk python3 codex_assets/skills/pcr02-adb-runtime-debug/scripts/pcr02_adb_runtim
 
 默认不 `adb push`；只有 staged 缺失/确认过期且用户批准时才使用。工具不静默 rollback；失败时保留 backup anchor，恢复目标需单独确认。
 
-## 5. HIL 逐级扩大
+## 6. HIL 逐级扩大
 
 HIL 前隔离或记录 60 秒 auto standby、watchdog、supervisor 和其他 FPS/profile mutator。
 
@@ -204,7 +233,7 @@ HIL 前隔离或记录 60 秒 auto standby、watchdog、supervisor 和其他 FPS
 
 出现失联、core、fatal dmesg、callback 停滞、unexpected ISP deinit、状态泄漏、身份漂移或健康恢复失败时立即停止。
 
-## 6. 最终健康恢复
+## 7. 最终健康恢复
 
 完成或中断前：
 

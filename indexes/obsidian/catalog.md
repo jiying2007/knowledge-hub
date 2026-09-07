@@ -249,6 +249,7 @@
 - [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing` · `pcr02-diag-observability-maintenance-plane-review-20260813`
 - [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing` · `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v2`
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing` · `pcr02-diag-observability-maintenance-cross-platform-plane-20260813`
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing` · `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
 - [HDI HAL Diag AI MP4 跨平台硬切最终复审](../../projects/xcrz-sigmastar-demo/archive/reports/2026-08-14-hdi-hal-diag-ai-mp4-hard-cut-final-review.md) · `reviewing` · `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing` · `pcr02-hdi-hal-cross-platform-host-development-review-20260813`
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing` · `pcr02-hdi-hal-cross-platform-host-development-review-20260813-v2`
@@ -320,6 +321,7 @@
 - [PCR02 prog_pcr02 高负载监控证据记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing` · `pcr02-prog-pcr02-high-load-debug-runbook-20260702`
 - [PCR02 prog_test AO与AI并发启动触发任务节点UAF](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-25-pcr02-prog-test-ao-ai-task-node-uaf.md) · `reviewing` · `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- [PCR02 产品出海就绪度与合规缺口归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-09-03-pcr02-export-readiness-compliance-gap.md) · `reviewing` · `pcr02-export-readiness-compliance-gap-20260903`
 - [PCR02 充电待机亮屏后的显示恢复与全量重绘候选](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md) · `reviewing` · `pcr02-display-resume-redraw-20260829`
 - [PCR02 双核 A32 整机 CPU 优化规划](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md) · `reviewing` · `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
 - [PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md) · `reviewing` · `xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
@@ -328,6 +330,7 @@
 - [PCR02 摄像头老化后白屏的 AE/ISP 初步分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md) · `reviewing` · `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - [PCR02 显示动作 UAF 源码修复验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md) · `reviewing` · `pcr02-asan-display-action-uaf-fix-validation-20260812`
 - [PCR02 显示动作自切换导致 nextAction_ 悬空引用](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md) · `reviewing` · `pcr02-asan-display-action-nextaction-uaf-20260812`
+- [PCR02 用户主动休眠下 Wi-Fi 异常恢复与状态机互斥候选](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-user-sleep-wifi-recovery-state-gap.md) · `reviewing` · `pcr02-user-sleep-wifi-recovery-state-gap-20260829`
 - [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
 - [PCR02恢复出厂WiFi控制阻塞优化](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-factory-reset-wifi-control-blocking.md) · `reviewing` · `pcr02-factory-reset-wifi-control-blocking-20260820`
@@ -344,6 +347,8 @@
 - [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing` · `daemon-ota-uart-lease-validation-2026-08-04`
 - [prog_pcr02 Common/Proto预编译库不一致排障](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-prog-pcr02-common-proto-link-failure.md) · `reviewing` · `xcrz-prog-pcr02-common-proto-link-debug-20260805`
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing` · `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
+- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing` · `pcr02-four-repo-ai-coding-team-knowledge-20260905`
+- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing` · `module-ai-platform-boundary-20260906`
 
 ## root
 

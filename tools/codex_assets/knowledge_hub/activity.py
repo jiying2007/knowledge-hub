@@ -128,6 +128,34 @@ def normalize_item(payload: Mapping[str, Any], *, source_kind: str, source_ref: 
     }
 
 
+def normalize_receipt(payload: Mapping[str, Any], *, source_ref: str) -> Dict[str, Any]:
+    """Validate and canonicalize one session-wrap activity receipt."""
+    if payload.get("schema_version") != 2 or payload.get("kind") != "activity-session-receipt":
+        raise KnowledgeHubError("receipt must be activity-session-receipt schema v2")
+    session_date = _date(payload.get("session_date"))
+    raw_items = payload.get("work_items")
+    if not session_date or not isinstance(raw_items, list) or not raw_items:
+        raise KnowledgeHubError("receipt requires session_date and non-empty work_items")
+    if len(raw_items) > 30:
+        raise KnowledgeHubError("receipt supports at most 30 work_items")
+    if payload.get("raw_content_stored") is not False:
+        raise KnowledgeHubError("receipt must declare raw_content_stored=false")
+    items: List[Dict[str, Any]] = []
+    for raw in raw_items:
+        if not isinstance(raw, Mapping):
+            raise KnowledgeHubError("receipt work_items must contain objects")
+        item = normalize_item(raw, source_kind="session-wrap", source_ref=source_ref)
+        item.pop("source", None)
+        items.append(item)
+    return {
+        "schema_version": 2,
+        "kind": "activity-session-receipt",
+        "session_date": session_date.isoformat(),
+        "work_items": items,
+        "raw_content_stored": False,
+    }
+
+
 def _json_files(root: pathlib.Path) -> Iterable[pathlib.Path]:
     if not root.is_dir():
         return []
@@ -556,6 +584,54 @@ def capture_item(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -
         "sha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
         "privacy": {"raw_content_stored": False, "external_write": False},
     }
+
+
+def _receipt_id(input_path: pathlib.Path, encoded: str) -> str:
+    stem = input_path.stem
+    prefix = "activity-session-receipt-"
+    if stem.startswith(prefix):
+        stem = stem[len(prefix):]
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,159}", stem):
+        return stem
+    return "receipt-{}".format(hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16])
+
+
+def capture_receipt(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -> Dict[str, Any]:
+    payload = json.loads(read_utf8_bounded(input_path, 256 * 1024, "activity receipt input"))
+    if not isinstance(payload, dict):
+        raise KnowledgeHubError("activity receipt input must be an object")
+    receipt = normalize_receipt(payload, source_ref=input_path.stem)
+    config = load_activity_config(root)
+    subject_id = str(config.get("subject_id", ""))
+    if not config.get("valid") or not config.get("receipt_persistence") or not subject_id:
+        raise KnowledgeHubError("receipt persistence requires enabled v2 config, receipt_persistence=true and subject_id")
+    if any(item["subject_id"] != subject_id for item in receipt["work_items"]):
+        raise KnowledgeHubError("receipt subject_id must match local activity configuration")
+    encoded = pretty_json(receipt) + "\n"
+    receipt_id = _receipt_id(input_path, encoded)
+    target = root / ".tmp/activity/receipts" / receipt["session_date"] / "{}.json".format(receipt_id)
+    if apply:
+        _atomic_write(target, encoded)
+    return {
+        "schema_version": 2,
+        "status": "pass",
+        "kind": "activity-session-receipt",
+        "applied": apply,
+        "receipt_id": receipt_id,
+        "item_count": len(receipt["work_items"]),
+        "target": str(target) if apply else "",
+        "sha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
+        "privacy": {"raw_content_stored": False, "external_write": False},
+    }
+
+
+def capture_activity(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -> Dict[str, Any]:
+    payload = json.loads(read_utf8_bounded(input_path, 256 * 1024, "activity input"))
+    if not isinstance(payload, dict):
+        raise KnowledgeHubError("activity input must be an object")
+    if payload.get("kind") == "activity-session-receipt":
+        return capture_receipt(root, input_path, apply=apply)
+    return capture_item(root, input_path, apply=apply)
 
 
 def record_item(

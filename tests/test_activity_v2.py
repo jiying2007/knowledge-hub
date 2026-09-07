@@ -7,6 +7,7 @@ import pytest
 
 from tools.codex_assets.knowledge_hub.activity import (
     build_facts,
+    capture_activity,
     capture_item,
     collect_work_items,
     generate_report,
@@ -148,6 +149,48 @@ def test_capture_dry_run_then_apply_and_generate_hash_bound_report(tmp_path):
     assert report_path.is_file() and facts_path.is_file()
     assert "已完成" in report_path.read_text(encoding="utf-8")
     assert json.loads(facts_path.read_text(encoding="utf-8"))["schema_version"] == 2
+
+
+def test_capture_session_receipt_persists_under_hub_and_is_collectable(tmp_path):
+    root = _hub(tmp_path / "hub")
+    source = tmp_path / "activity-session-receipt-session-123.json"
+    source.write_text(json.dumps({
+        "schema_version": 2,
+        "kind": "activity-session-receipt",
+        "session_date": "2026-08-21",
+        "work_items": [_item()],
+        "raw_content_stored": False,
+    }), encoding="utf-8")
+    dry = capture_activity(root, source, apply=False)
+    assert dry["applied"] is False
+    assert dry["target"] == ""
+    applied = capture_activity(root, source, apply=True)
+    target = pathlib.Path(applied["target"])
+    assert target == root / ".tmp/activity/receipts/2026-08-21/session-123.json"
+    assert target.is_file()
+    rows, coverage = collect_work_items(
+        root, dt.date(2026, 8, 21), dt.date(2026, 8, 21), subject_id="developer-a"
+    )
+    assert len(rows) == 1
+    assert coverage["receipt_count"] == 1
+
+
+def test_capture_session_receipt_fails_closed_without_persistence_authorization(tmp_path):
+    root = _hub(tmp_path / "hub")
+    config_path = root / "local/activity-report.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["receipt_persistence"] = False
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    source = tmp_path / "receipt.json"
+    source.write_text(json.dumps({
+        "schema_version": 2,
+        "kind": "activity-session-receipt",
+        "session_date": "2026-08-21",
+        "work_items": [_item()],
+        "raw_content_stored": False,
+    }), encoding="utf-8")
+    with pytest.raises(KnowledgeHubError, match="receipt persistence requires"):
+        capture_activity(root, source, apply=True)
 
 
 def test_record_avoids_hand_authored_json_and_preserves_v2_gates(tmp_path):

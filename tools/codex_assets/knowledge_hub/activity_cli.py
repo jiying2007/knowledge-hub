@@ -9,7 +9,15 @@ import pathlib
 import tempfile
 from typing import Iterable
 
-from .activity import build_facts, capture_item, generate_report, load_activity_config, normalize_item, record_item
+from .activity import (
+    build_facts,
+    capture_activity,
+    generate_report,
+    load_activity_config,
+    normalize_item,
+    normalize_receipt,
+    record_item,
+)
 from .common import KnowledgeHubError, repository_root, resolve_today, read_utf8_bounded
 
 
@@ -151,15 +159,27 @@ def main(argv: Iterable[str] = ()) -> int:
     if args.command == "report":
         return _report(args, root)
     if args.command == "capture":
-        payload = capture_item(root, pathlib.Path(args.input).expanduser(), apply=args.apply)
+        payload = capture_activity(root, pathlib.Path(args.input).expanduser(), apply=args.apply)
         print(json.dumps(payload, ensure_ascii=False, indent=2 if args.json else None))
         return 0
     if args.command == "record":
         return _record(args, root)
     if args.command == "validate":
         raw = json.loads(read_utf8_bounded(pathlib.Path(args.input).expanduser(), 128 * 1024, "activity input"))
-        item = normalize_item(raw, source_kind="validation", source_ref="input")
-        print(json.dumps({"schema_version": 2, "status": "pass", "item_id": item["item_id"]}, ensure_ascii=False))
+        if not isinstance(raw, dict):
+            raise KnowledgeHubError("activity input must be an object")
+        if raw.get("kind") == "activity-session-receipt":
+            receipt = normalize_receipt(raw, source_ref="input")
+            result = {
+                "schema_version": 2,
+                "status": "pass",
+                "kind": receipt["kind"],
+                "item_count": len(receipt["work_items"]),
+            }
+        else:
+            item = normalize_item(raw, source_kind="validation", source_ref="input")
+            result = {"schema_version": 2, "status": "pass", "kind": item["kind"], "item_id": item["item_id"]}
+        print(json.dumps(result, ensure_ascii=False))
         return 0
     today, _ = resolve_today(args.as_of)
     facts = build_facts(

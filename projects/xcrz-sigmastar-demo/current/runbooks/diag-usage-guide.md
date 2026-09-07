@@ -31,7 +31,7 @@ tags:
 validation_refs:
 - projects/xcrz-sigmastar-demo/current/runbooks/diag-usage-guide.md
 - projects/pcr02-ssc305/validation/2026-08-06-diag-curl-large-download.md
-- rtk python3 -m unittest codex_assets.tests.test_diag_curl_large_download_contracts -v
+- rtk python3 -m unittest tests.contracts.test_diag_curl_large_download_contracts -v
 - rtk bash tools/knowledge-check.sh --dry-run
 - artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md
 - artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.jsonl

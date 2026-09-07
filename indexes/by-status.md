@@ -729,3 +729,9 @@
 - reviewing: `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
 - reviewing: `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - reviewing: `pcr02-display-resume-redraw-20260829`
+- reviewing: `pcr02-user-sleep-wifi-recovery-state-gap-20260829`
+- reviewing: `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
+- reviewing: `pcr02-four-repo-ai-coding-team-knowledge-20260905`
+- reviewing: `module-ai-platform-boundary-20260906`
+- reviewing: `pcr02-export-readiness-compliance-gap-20260903`
+- reviewing: `pcr02-overseas-product-alignment-brief-20260903`

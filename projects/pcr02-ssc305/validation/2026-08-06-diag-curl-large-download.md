@@ -137,7 +137,7 @@ dmesg | tail -n 100
 | `rtk make modules/api_lib_all modules/app_lib_all -j20` | 0 | 静态/动态模块库刷新通过。 |
 | `rtk make app_product_test_app_all -j20` | 0 | diag-enabled 应用链接通过。 |
 | `rtk make pcr02_app_all -j20` | 0 | normal PCR02 应用回归链接通过，但不含 command node 新命令。 |
-| `rtk python3 -m unittest codex_assets.tests.test_diag_curl_large_download_contracts -v` | 0 | 13 项源码契约测试通过，包含压测删除开关、resume 互斥、双目标预检和 `/data/` realpath 边界。 |
+| `rtk python3 -m unittest tests.contracts.test_diag_curl_large_download_contracts -v` | 0 | 当前 15 项源码契约测试通过，包含压测删除开关、resume 互斥、双目标预检、生命周期回收和 `/data/` realpath 边界。 |
 | `rtk strings out/arm/app/prog_product_test \| rtk rg 'diag\\.api\\.curl\\.download\\.(start\|status\|cancel)'` | 0 | 三个异步命令均进入 ELF。 |
 | 板端 `diag.api.curl.download.start.run` | 0/`accepted` | `MainAppDiag` 路由与命令 owner 已生效；后续分别观察到 curl error 60 和 error 23，尚无成功终态证据。 |
 
