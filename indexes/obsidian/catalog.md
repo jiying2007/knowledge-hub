@@ -279,6 +279,7 @@
 - [PCR02 DEEP_SLEEP PA8 长脉冲硬件休眠机制实现归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-30-pcr02-deep-sleep-pa8-long-pulse.md) · `reviewing` · `pcr02-deep-sleep-pa8-long-pulse-20260730`
 - [PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md) · `reviewing` · `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
 - [PCR02 DS2 与 AI 共享内存链路优化会话归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-10-pcr02-ds2-ai-shm-session-archive.md) · `reviewing` · `pcr02-ds2-ai-shm-session-archive-20260710`
+- [PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md) · `reviewing` · `pcr02-dvr-ringframe-lease-closure-20260908`
 - [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing` · `pcr02-dvr-replay-sd-hot-unplug-closure-20260715`
 - [PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md) · `reviewing` · `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
 - [PCR02 IMU/TOF 驱动规格与运行时设计参考](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md) · `reviewing` · `pcr02-imu-tof-driver-runtime-reference-20260721`
@@ -330,6 +331,7 @@
 - [PCR02 摄像头老化后白屏的 AE/ISP 初步分析](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md) · `reviewing` · `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - [PCR02 显示动作 UAF 源码修复验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md) · `reviewing` · `pcr02-asan-display-action-uaf-fix-validation-20260812`
 - [PCR02 显示动作自切换导致 nextAction_ 悬空引用](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md) · `reviewing` · `pcr02-asan-display-action-nextaction-uaf-20260812`
+- [PCR02 海外产品化协作对齐说明](../../projects/xcrz-sigmastar-demo/archive/reports/2026-09-03-pcr02-overseas-product-alignment-brief.md) · `reviewing` · `pcr02-overseas-product-alignment-brief-20260903`
 - [PCR02 用户主动休眠下 Wi-Fi 异常恢复与状态机互斥候选](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-user-sleep-wifi-recovery-state-gap.md) · `reviewing` · `pcr02-user-sleep-wifi-recovery-state-gap-20260829`
 - [PCR02 电机 UART 时间戳同步实施与离线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md) · `reviewing` · `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing` · `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
@@ -339,6 +341,7 @@
 - [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing` · `pcr02-motor-hall-calibration-prestart-transaction-20260724`
 - [PCR02电机标定静态信息缓存语义验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md) · `reviewing` · `pcr02-motor-calibration-static-info-cache-20260715`
 - [PCR02老化健康上报与超时契约归档](../../projects/xcrz-sigmastar-demo/archive/design/2026-07-17-aging-health-report-timeout-contract.md) · `reviewing` · `pcr02-aging-health-report-timeout-contract-20260717`
+- [Sensor C++17规范与LLVM Tooling门禁归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-09-07-sensor-cpp17-standard-tooling-closure.md) · `reviewing` · `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
 - [XCRZ SigmaStar Demo readiness validation](../../projects/xcrz-sigmastar-demo/validation/project-readiness.md) · `reviewing` · `xcrz-sigmastar-demo-readiness-validation-20260713`
 - [app_sensor_test JSONL v4 与 HIL 证据闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md) · `reviewing` · `app-sensor-test-v4-evidence-closure-20260731`
 - [app_sensor_test staged safe 板测 transport 阻塞](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md) · `reviewing` · `app-sensor-test-board-safe-smoke-blocked-20260731`

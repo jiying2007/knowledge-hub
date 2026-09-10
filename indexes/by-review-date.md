@@ -549,3 +549,5 @@
 - 2026-12-05: `module-ai-platform-boundary-20260906`
 - 2026-12-03: `pcr02-export-readiness-compliance-gap-20260903`
 - 2026-12-03: `pcr02-overseas-product-alignment-brief-20260903`
+- 2026-12-07: `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
+- 2026-12-08: `pcr02-dvr-ringframe-lease-closure-20260908`

@@ -439,6 +439,7 @@
 - `pcr02-display-resume-redraw-20260829`
 - `pcr02-user-sleep-wifi-recovery-state-gap-20260829`
 - `pcr02-export-readiness-compliance-gap-20260903`
+- `pcr02-dvr-ringframe-lease-closure-20260908`
 
 ## pcr02-registry-owner
 
@@ -557,3 +558,4 @@
 - `pcr02-four-repo-ai-coding-team-knowledge-20260905`
 - `module-ai-platform-boundary-20260906`
 - `pcr02-overseas-product-alignment-brief-20260903`
+- `pcr02-sensor-cpp17-standard-tooling-closure-20260907`

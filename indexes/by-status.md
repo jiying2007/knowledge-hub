@@ -735,3 +735,5 @@
 - reviewing: `module-ai-platform-boundary-20260906`
 - reviewing: `pcr02-export-readiness-compliance-gap-20260903`
 - reviewing: `pcr02-overseas-product-alignment-brief-20260903`
+- reviewing: `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
+- reviewing: `pcr02-dvr-ringframe-lease-closure-20260908`
