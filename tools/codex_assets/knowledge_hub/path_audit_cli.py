@@ -1,7 +1,8 @@
 import argparse
 import json
+import os
 import pathlib
-import subprocess
+import stat
 import sys
 from collections import Counter
 
@@ -43,10 +44,44 @@ DETECTOR_CONFIG_PATHS = {
     "tools/codex_assets/knowledge_hub/retrieval.py",
 }
 
+TEXT_SUFFIXES = {
+    "",
+    ".cfg",
+    ".conf",
+    ".csv",
+    ".ini",
+    ".json",
+    ".jsonl",
+    ".md",
+    ".py",
+    ".rst",
+    ".sh",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
+SCAN_EXCLUDED_DIRS = {
+    ".cache",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tmp",
+    "__pycache__",
+    "build",
+    "dist",
+    "tmp",
+}
+MAX_SCAN_FILE_BYTES = 8 * 1024 * 1024
+MAX_SCAN_TOTAL_BYTES = 256 * 1024 * 1024
+MAX_SCAN_FILES = 50000
+
 memory_note_dir = home / ".codex" / "memories" / "extensions" / "ad_hoc" / "notes"
 memory_supersession_notes = sorted(memory_note_dir.glob("*knowledge-hub-hardcut-path-routing*.md"))
 memory_supersession_note = memory_supersession_notes[-1] if memory_supersession_notes else None
 memory_supersession_active = memory_supersession_note is not None
+
 
 def existing_scopes():
     values = {
@@ -81,6 +116,7 @@ def existing_scopes():
     path = values[args.scope]
     return {args.scope: path} if path.exists() else {}
 
+
 def rel(path):
     try:
         if root == path or root in path.parents:
@@ -93,6 +129,7 @@ def rel(path):
     except Exception:
         pass
     return str(path)
+
 
 def classify(scope, rel_path, line_text):
     normalized = rel_path.replace("\\", "/")
@@ -107,68 +144,129 @@ def classify(scope, rel_path, line_text):
         return "runtime-route-candidate"
     if normalized in DETECTOR_CONFIG_PATHS:
         return "detector-config"
-    if normalized in {"README.md", "governance/path-routing.md", "governance/source-boundaries.md", "governance/source-lifecycle-policy.md", "registry/schema.md", "tools/knowledge-path-audit.sh", "tools/knowledge-check.sh"}:
+    if normalized in {
+        "README.md",
+        "governance/path-routing.md",
+        "governance/source-boundaries.md",
+        "governance/source-lifecycle-policy.md",
+        "registry/schema.md",
+        "tools/knowledge-path-audit.sh",
+        "tools/knowledge-check.sh",
+    }:
         return "canonical-policy"
     if normalized.startswith("domains/codex/archive/codex-archive/"):
         return "provenance"
-    if normalized.startswith("sources/") or normalized in {"registry/sources.json", "registry/retired-sources.jsonl"}:
+    if normalized.startswith("sources/") or normalized in {
+        "registry/sources.json",
+        "registry/retired-sources.jsonl",
+    }:
         return "provenance"
-    if normalized.startswith("artifacts/manifests/") or normalized.startswith("registry/authorizations") or normalized.startswith("registry/automation-runs"):
+    if (
+        normalized.startswith("artifacts/manifests/")
+        or normalized.startswith("registry/authorizations")
+        or normalized.startswith("registry/automation-runs")
+    ):
         return "provenance"
     if "旧" in line_text or "retired" in text or "provenance" in text or "不再作为" in line_text:
         return "canonical-policy"
     return "runtime-route-candidate"
 
-def scan_scope(scope, path):
-    cmd = [
-        "rtk",
-        "rg",
-        "-n",
-        "--fixed-strings",
-        "--no-heading",
-        "--max-count",
-        str(args.max_per_file),
-    ]
-    for _display, term in TERMS:
-        cmd.extend(["-e", term])
-    cmd.append(str(path))
-    completed = subprocess.run(
-        cmd,
-        cwd=str(root),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    rows = []
-    if completed.returncode not in (0, 1):
-        return rows, completed.stderr.strip()
-    for raw in completed.stdout.splitlines():
-        if len(rows) >= args.max_matches:
-            break
-        parts = raw.split(":", 2)
-        if len(parts) != 3:
-            continue
-        file_path = pathlib.Path(parts[0])
-        line_no = parts[1]
-        line_text = parts[2]
-        display = rel(file_path)
-        rows.append(
-            {
-                "scope": scope,
-                "path": display,
-                "line": int(line_no) if line_no.isdigit() else line_no,
-                "classification": classify(scope, display, line_text),
-                "text": line_text.strip()[:240],
-            }
+
+def _candidate_files(path):
+    if path.is_file():
+        yield path
+        return
+    for directory, dirnames, filenames in os.walk(str(path), topdown=True, followlinks=False):
+        dirnames[:] = sorted(
+            name
+            for name in dirnames
+            if name not in SCAN_EXCLUDED_DIRS
+            and not pathlib.Path(directory, name).is_symlink()
         )
-    return rows, ""
+        for name in sorted(filenames):
+            candidate = pathlib.Path(directory) / name
+            if candidate.suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            try:
+                info = candidate.lstat()
+            except OSError:
+                continue
+            if stat.S_ISREG(info.st_mode) and not stat.S_ISLNK(info.st_mode):
+                yield candidate
+
+
+def _read_text_bounded(path):
+    info = path.lstat()
+    if info.st_size > MAX_SCAN_FILE_BYTES:
+        raise ValueError("file exceeds scan byte budget")
+    with path.open("rb") as handle:
+        raw = handle.read(MAX_SCAN_FILE_BYTES + 1)
+    if len(raw) > MAX_SCAN_FILE_BYTES:
+        raise ValueError("file exceeds scan byte budget")
+    if b"\x00" in raw:
+        return ""
+    return raw.decode("utf-8", errors="replace")
+
+
+def scan_scope(scope, path):
+    rows = []
+    errors = []
+    total_bytes = 0
+    file_count = 0
+    terms = tuple(term for _display, term in TERMS)
+    try:
+        candidates = _candidate_files(path)
+        for file_path in candidates:
+            if len(rows) >= args.max_matches:
+                break
+            file_count += 1
+            if file_count > MAX_SCAN_FILES:
+                errors.append("scan file budget exceeded")
+                break
+            try:
+                file_size = file_path.lstat().st_size
+            except OSError as exc:
+                errors.append("{}: {}".format(rel(file_path), exc))
+                continue
+            total_bytes += file_size
+            if total_bytes > MAX_SCAN_TOTAL_BYTES:
+                errors.append("scan total byte budget exceeded")
+                break
+            try:
+                text = _read_text_bounded(file_path)
+            except (OSError, ValueError) as exc:
+                errors.append("{}: {}".format(rel(file_path), exc))
+                continue
+            if not text:
+                continue
+            per_file = 0
+            for line_no, line_text in enumerate(text.splitlines(), 1):
+                if not any(term in line_text for term in terms):
+                    continue
+                display = rel(file_path)
+                rows.append(
+                    {
+                        "scope": scope,
+                        "path": display,
+                        "line": line_no,
+                        "classification": classify(scope, display, line_text),
+                        "text": line_text.strip()[:240],
+                    }
+                )
+                per_file += 1
+                if per_file >= args.max_per_file or len(rows) >= args.max_matches:
+                    break
+    except OSError as exc:
+        errors.append(str(exc))
+    return rows, errors
+
 
 all_rows = []
 errors = []
 for scope, path in existing_scopes().items():
-    rows, error = scan_scope(scope, path)
+    rows, scope_errors = scan_scope(scope, path)
     all_rows.extend(rows)
-    if error:
+    for error in scope_errors:
         errors.append({"scope": scope, "error": error})
 
 counts = Counter(row["classification"] for row in all_rows)
@@ -204,13 +302,13 @@ payload = {
 if args.json:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 else:
-    print(f"scope: {args.scope}")
-    print(f"matches: {len(all_rows)}")
-    print(f"runtime-route-candidates: {runtime_count}")
+    print("scope: {}".format(args.scope))
+    print("matches: {}".format(len(all_rows)))
+    print("runtime-route-candidates: {}".format(runtime_count))
     for key, value in sorted(counts.items()):
-        print(f"- {key}: {value}")
+        print("- {}: {}".format(key, value))
     for row in all_rows[: min(len(all_rows), 20)]:
-        print(f"{row['classification']}: {row['path']}:{row['line']}")
+        print("{}: {}:{}".format(row["classification"], row["path"], row["line"]))
 
 if errors:
     sys.exit(2)
