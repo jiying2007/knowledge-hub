@@ -5,6 +5,7 @@ import pytest
 
 from tools.codex_assets.knowledge_hub import runtime_v3 as rv3
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.runtime_v3_cli import main as runtime_cli_main
 
 
 def _root(tmp_path):
@@ -81,7 +82,10 @@ def _root(tmp_path):
     for row in rows:
         path = tmp_path / row["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("# {}\n\n{}\n".format(row["title"], row["summary_zh"]), encoding="utf-8")
+        path.write_text(
+            "# {}\n\n{}\n".format(row["title"], row["summary_zh"]),
+            encoding="utf-8",
+        )
     (tmp_path / "registry/items.jsonl").write_text(
         "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
         encoding="utf-8",
@@ -97,8 +101,18 @@ def test_hybrid_search_respects_temporal_visibility_and_authority(tmp_path, monk
         "search",
         lambda *args, **kwargs: {
             "results": [
-                {"id": "active-fact", "item_id": "active-fact", "score": 10, "why_selected": ["title"]},
-                {"id": "expired-fact", "item_id": "expired-fact", "score": 9, "why_selected": ["title"]},
+                {
+                    "id": "active-fact",
+                    "item_id": "active-fact",
+                    "score": 10,
+                    "why_selected": ["title"],
+                },
+                {
+                    "id": "expired-fact",
+                    "item_id": "expired-fact",
+                    "score": 9,
+                    "why_selected": ["title"],
+                },
             ]
         },
     )
@@ -117,11 +131,43 @@ def test_hybrid_search_respects_temporal_visibility_and_authority(tmp_path, monk
     assert row["score_components"]["authority"] == 1.0
 
 
+def test_semantic_lane_does_not_silently_truncate_after_512_items(tmp_path, monkeypatch):
+    root = _root(tmp_path)
+    rows = []
+    for index in range(600):
+        rows.append(
+            {
+                "id": "scale-{:03d}".format(index),
+                "title": "semantic beacon" if index == 599 else "noise {:03d}".format(index),
+                "kind": "project-current",
+                "domain": "projects/demo",
+                "path": "projects/demo/current/{:03d}.md".format(index),
+                "visibility": "team-internal",
+                "status": "active",
+                "summary_zh": "target semantic beacon" if index == 599 else "ordinary noise",
+                "tags": ["beacon"] if index == 599 else ["noise"],
+                "updated_at": "2026-09-01",
+            }
+        )
+    monkeypatch.setattr(rv3, "registry_items", lambda _root: rows)
+    monkeypatch.setattr(rv3, "SearchIndex", lambda _root: object())
+    monkeypatch.setattr(rv3, "search", lambda *args, **kwargs: {"results": []})
+
+    result = rv3.hybrid_search(root, "semantic beacon", limit=5, as_of="2026-09-11")
+
+    assert result["semantic_corpus_count"] == 600
+    assert "scale-599" in [row["id"] for row in result["results"]]
+
+
 def test_context_graph_is_derived(tmp_path):
     graph = rv3.context_graph(_root(tmp_path), ["active-fact"], hops=1)
     assert graph["authoritative"] is False
     assert graph["edges"] == [
-        {"source_id": "active-fact", "relation": "related_to", "target_id": "reviewing-note"}
+        {
+            "source_id": "active-fact",
+            "relation": "related_to",
+            "target_id": "reviewing-note",
+        }
     ]
 
 
@@ -135,7 +181,10 @@ def test_context_compiler_keeps_evidence_authority(tmp_path, monkeypatch):
     monkeypatch.setattr(
         rv3,
         "build_evidence_pack",
-        lambda *args, **kwargs: {"must": [], "context": [{"id": "active-fact"}]},
+        lambda *args, **kwargs: {
+            "must": [],
+            "context": [{"id": "active-fact"}],
+        },
     )
     result = rv3.compile_context(root, "UART", agent_id="embedded-expert")
     assert result["agent"]["id"] == "embedded-expert"
@@ -171,23 +220,100 @@ def test_feedback_and_adaptive_retrieval_are_local_and_shadow(tmp_path):
     proposal = rv3.adaptive_retrieval_proposal(root)
     assert proposal["status"] == "proposal"
     assert proposal["auto_apply"] is False
-    assert proposal["proposed_weights"]["semantic"] > proposal["current_weights"]["semantic"]
+    assert (
+        proposal["proposed_weights"]["semantic"]
+        > proposal["current_weights"]["semantic"]
+    )
+
+
+def test_execution_receipts_form_private_hash_chain(tmp_path):
+    root = _root(tmp_path)
+    first = rv3.record_execution_receipt(
+        root,
+        "knowledge-steward",
+        "audit knowledge",
+        "report-only",
+        ["active-fact"],
+    )
+    second = rv3.record_execution_receipt(
+        root,
+        "knowledge-steward",
+        "propose review",
+        "needs-review",
+        ["reviewing-note"],
+    )
+    assert first["record"]["previous_receipt_sha256"] == ""
+    assert (
+        second["record"]["previous_receipt_sha256"]
+        == first["record"]["receipt_sha256"]
+    )
+    ledger = root / ".cache/knowledge-hub/runtime-v3/execution-receipts.jsonl"
+    assert ledger.is_file()
+    assert ledger.stat().st_mode & 0o777 == 0o600
+
+
+def test_connector_spi_returns_non_authoritative_envelope(tmp_path):
+    envelope = rv3.connector_envelope(
+        _root(tmp_path),
+        "github",
+        "issue:123",
+        version="abc123",
+        source_uri="https://github.com/example/repo/issues/123",
+        acl=["team:embedded"],
+        content_sha256="a" * 64,
+    )
+    assert envelope["hub_disposition"] == "reference-only"
+    assert envelope["sync_performed"] is False
+    assert envelope["canonical_write_performed"] is False
 
 
 def test_api_local_write_disabled_by_default(tmp_path):
+    root = _root(tmp_path)
     with pytest.raises(KnowledgeHubError, match="local write API is disabled"):
         rv3.api_dispatch(
-            _root(tmp_path),
+            root,
             "feedback",
             {"query": "q", "outcome": "accepted"},
             agent_id="knowledge-steward",
         )
+    with pytest.raises(KnowledgeHubError, match="local write API is disabled"):
+        rv3.api_dispatch(
+            root,
+            "execution-receipt",
+            {"action": "audit", "verdict": "report-only"},
+            agent_id="knowledge-steward",
+        )
+
+
+def test_api_sequence_fields_fail_closed_instead_of_splitting_strings(tmp_path):
+    with pytest.raises(KnowledgeHubError, match="scope_refs must be a sequence"):
+        rv3.api_dispatch(
+            _root(tmp_path),
+            "context",
+            {"query": "UART", "scope_refs": "repository:demo"},
+            agent_id="knowledge-reader",
+        )
+
+
+def test_context_api_rejects_non_loopback_bind():
+    with pytest.raises(SystemExit) as exc:
+        runtime_cli_main(
+            [
+                "--root",
+                str(repository_root()),
+                "serve",
+                "--host",
+                "0.0.0.0",
+            ]
+        )
+    assert exc.value.code == 2
 
 
 def test_mcp_is_read_only_and_reports_current_protocol(tmp_path):
     root = _root(tmp_path)
     tools = rv3.handle_mcp_request(
-        root, {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}
+        root,
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
     )
     assert {tool["name"] for tool in tools["result"]["tools"]} == {
         "knowledge_search",
@@ -196,7 +322,8 @@ def test_mcp_is_read_only_and_reports_current_protocol(tmp_path):
         "knowledge_action_check",
     }
     init = rv3.handle_mcp_request(
-        root, {"jsonrpc": "2.0", "id": 2, "method": "initialize"}
+        root,
+        {"jsonrpc": "2.0", "id": 2, "method": "initialize"},
     )
     assert init["result"]["protocolVersion"] == "2026-07-28"
     assert init["result"]["stateless"] is True
@@ -233,10 +360,18 @@ def test_steward_and_p3_improvement_never_auto_apply(tmp_path):
 def test_receipt_and_observability_are_non_authoritative(tmp_path):
     root = _root(tmp_path)
     receipt = rv3.execution_receipt(
-        "knowledge-steward", "audit", "report-only", ["active-fact"]
+        "knowledge-steward",
+        "audit",
+        "report-only",
+        ["active-fact"],
     )
     assert receipt["canonical_state_changed"] is False
-    projection = rv3.trace_projection(root, "embedded-expert", "knowledge.context", "secret")
+    projection = rv3.trace_projection(
+        root,
+        "embedded-expert",
+        "knowledge.context",
+        "secret",
+    )
     assert projection["event"]["raw_query_stored"] is False
     assert "secret" not in json.dumps(projection)
     assert projection["network_export_performed"] is False
