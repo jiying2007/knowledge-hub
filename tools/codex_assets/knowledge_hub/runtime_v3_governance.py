@@ -163,7 +163,8 @@ def a2a_preflight(
         )
     )
     target_caps = {str(value) for value in target.get("capabilities", [])}
-    unsupported = sorted(requested - target_caps)
+    unknown = sorted(requested - set(catalog))
+    unsupported = sorted((requested - target_caps) | set(unknown))
     high_risk = sorted(
         capability
         for capability in requested
@@ -178,6 +179,7 @@ def a2a_preflight(
         "status": "pass" if not unsupported and not high_risk else "needs-review",
         "from_agent": from_agent,
         "to_agent": to_agent,
+        "unknown_capabilities": unknown,
         "unsupported_capabilities": unsupported,
         "high_risk_capabilities": high_risk,
         "delegation_executes_task": False,
@@ -272,7 +274,7 @@ def adaptive_retrieval_proposal(
         if outcome in counts:
             counts[outcome] += 1
     proposed = dict(weights)
-    reasons = []
+    reasons: List[str] = []
     total_count = len(feedback)
     if total_count >= 10:
         if counts["missing"] / total_count >= 0.2:
@@ -302,6 +304,40 @@ def adaptive_retrieval_proposal(
     }
 
 
+def _receipt_sha256(row: Mapping[str, Any]) -> str:
+    payload = dict(row)
+    payload.pop("receipt_sha256", None)
+    return hashlib.sha256(
+        json.dumps(
+            payload,
+            sort_keys=True,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _validate_receipt_chain(rows: Sequence[Mapping[str, Any]]) -> str:
+    previous = ""
+    for index, row in enumerate(rows, start=1):
+        observed = str(row.get("receipt_sha256", ""))
+        linked = str(row.get("previous_receipt_sha256", ""))
+        if not re.fullmatch(r"[0-9a-f]{64}", observed):
+            raise KnowledgeHubError(
+                "execution receipt ledger row {} has invalid digest".format(index)
+            )
+        if linked != previous:
+            raise KnowledgeHubError(
+                "execution receipt ledger row {} has invalid previous link".format(index)
+            )
+        if observed != _receipt_sha256(row):
+            raise KnowledgeHubError(
+                "execution receipt ledger row {} failed integrity check".format(index)
+            )
+        previous = observed
+    return previous
+
+
 def execution_receipt(
     agent_id: str,
     action: str,
@@ -323,14 +359,7 @@ def execution_receipt(
         "previous_receipt_sha256": previous_receipt_sha256,
         "canonical_state_changed": False,
     }
-    row["receipt_sha256"] = hashlib.sha256(
-        json.dumps(
-            row,
-            sort_keys=True,
-            ensure_ascii=False,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
+    row["receipt_sha256"] = _receipt_sha256(row)
     return row
 
 
@@ -346,10 +375,7 @@ def record_execution_receipt(
     previous = ""
     if path.exists():
         existing = load_jsonl(path, maximum_bytes=16 * 1024 * 1024)
-        if existing:
-            previous = str(existing[-1].get("receipt_sha256", ""))
-            if previous and not re.fullmatch(r"[0-9a-f]{64}", previous):
-                raise KnowledgeHubError("execution receipt ledger tail is invalid")
+        previous = _validate_receipt_chain(existing)
     row = execution_receipt(
         agent_id,
         action,
@@ -440,7 +466,9 @@ def improvement_plan(
 ) -> Dict[str, Any]:
     adaptive = adaptive_retrieval_proposal(root, profile_id)
     steward = steward_audit(root, as_of=as_of)
-    proposals = list(steward["proposals"])
+    proposals: List[Dict[str, Any]] = [
+        dict(row) for row in steward["proposals"] if isinstance(row, Mapping)
+    ]
     if adaptive["status"] == "proposal":
         proposals.insert(
             0,
