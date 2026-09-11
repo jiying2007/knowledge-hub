@@ -113,7 +113,7 @@ case "$command_name" in
         suffix="${inner#"$final_gate_prefix"}"
         if [[ "$suffix" =~ ^[[:space:]A-Za-z0-9._~:/=-]*$ ]]; then
           read -r -a final_gate_args <<< "$suffix"
-          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
+          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 KNOWLEDGE_CI_UNIT_TEST_EVIDENCE=pass exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
         fi
         printf '%s\n' 'ci rtk transport denied unsafe final-gate regression arguments' >&2
         exit 64
