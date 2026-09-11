@@ -229,7 +229,7 @@ def hybrid_search(
             semantic_scores.items(), key=lambda pair: (-pair[1], pair[0])
         )[: max(40, limit * 4)]
     )
-    ranked = []
+    ranked: List[Dict[str, Any]] = []
     for item_id in candidates:
         item = by_id[item_id]
         parts = {
@@ -297,7 +297,7 @@ def context_graph(
     }
     frontier = set(seeds) & set(by_id)
     visited = set(frontier)
-    edges = []
+    edges: List[Dict[str, str]] = []
     for _ in range(hops):
         next_frontier: Set[str] = set()
         for item_id in sorted(frontier):
@@ -350,22 +350,24 @@ def compile_context(
     require_capability(root, agent_id, "knowledge.context")
     profile = agent_profile(root, agent_id)
     scopes = _sequence(scope_refs, "scope_refs", maximum=32)
+    agent_scopes = _sequence(
+        profile.get("knowledge_scopes", []),
+        "agent knowledge_scopes",
+        maximum=64,
+    )
     result = hybrid_search(
         root,
         query,
         limit=limit,
         profile_id=str(profile.get("retrieval_profile", DEFAULT_PROFILE)),
-        knowledge_scopes=_sequence(
-            profile.get("knowledge_scopes", []),
-            "agent knowledge_scopes",
-            maximum=64,
-        ),
+        knowledge_scopes=agent_scopes,
         as_of=as_of,
     )
     evidence = build_evidence_pack(
         root,
         query,
         limit=max(limit, 8),
+        filters=SearchFilters(domains=agent_scopes),
         scope_refs=scopes,
     )
     seeds = [str(row.get("id", "")) for row in result["results"][:5]]
@@ -454,10 +456,17 @@ def api_dispatch(
         )
     if op == "evidence-pack":
         require_capability(root, agent_id, "knowledge.evidence-pack")
+        profile = agent_profile(root, agent_id)
+        agent_scopes = _sequence(
+            profile.get("knowledge_scopes", []),
+            "agent knowledge_scopes",
+            maximum=64,
+        )
         return build_evidence_pack(
             root,
             str(payload.get("query", "")),
             limit=int(payload.get("limit", 20)),
+            filters=SearchFilters(domains=agent_scopes),
             scope_refs=_sequence(payload.get("scope_refs", []), "scope_refs", maximum=32),
         )
     if op == "action-check":
