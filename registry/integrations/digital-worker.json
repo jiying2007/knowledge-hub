@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "contract_version": "1.0",
+  "status": "candidate",
+  "consumer": "digital-worker",
+  "provider": "knowledge-hub",
+  "role": "knowledge-control-plane",
+  "ssot": {
+    "digital_worker": ["work_item", "expert_routing", "gate", "technical_decision", "engineering_handoff", "verification", "review"],
+    "knowledge_hub": ["knowledge_registry", "knowledge_lifecycle", "knowledge_context", "knowledge_proposal_review"],
+    "source_systems": ["source_code", "build_artifact", "device", "ci_hil_evidence"]
+  },
+  "read_surfaces": {
+    "context": "tools/knowledge-context.sh",
+    "evidence_pack": "tools/knowledge-evidence-pack.sh",
+    "action_check": "tools/knowledge-action-check.sh"
+  },
+  "write_surfaces": {
+    "proposal_route": "tools/knowledge-proposal-route.sh"
+  },
+  "identity": {
+    "required_inputs": ["work_item_id", "run_id", "scope_ref"],
+    "returned_fields": ["source_fingerprint", "knowledge_ids", "status", "provenance", "acl_state"]
+  },
+  "failure_semantics": {
+    "missing_required_source": "BLOCKED",
+    "conflicting_authority": "NEEDS_REVIEW",
+    "provisional_only": "NEEDS_REVIEW",
+    "provider_unavailable": "BLOCKED"
+  },
+  "write_policy": {
+    "direct_active_mutation": false,
+    "knowledge_harvest_must_route_as_proposal": true,
+    "owner_promotion_required": true
+  },
+  "compatibility_intelligence": {
+    "owner": "knowledge-hub",
+    "registry": "registry/compatibility-embedded-v0.json",
+    "digital_worker_access": "reference-only"
+  },
+  "provider_lock_policy": "integration may be selected without freezing the architecture provider choice",
+  "source_of_truth_policy": "stays-at-source"
+}
