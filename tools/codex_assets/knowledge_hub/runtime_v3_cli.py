@@ -1,4 +1,4 @@
-"""CLI and loopback HTTP surface for Knowledge Runtime v3."""
+"""CLI and loopback-only HTTP surface for Knowledge Runtime v3."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from .common import KnowledgeHubError, repository_root
 from .runtime_v3 import DEFAULT_AGENT, api_dispatch
 
 MAX_REQUEST_BYTES = 256 * 1024
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
 
 def _payload(raw: str) -> Dict[str, Any]:
@@ -94,7 +95,6 @@ def main(argv: Sequence[str] = ()) -> int:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--enable-local-write", action="store_true")
-    serve.add_argument("--allow-nonloopback", action="store_true")
     args = parser.parse_args(list(argv) if argv else None)
     try:
         root = repository_root(args.root)
@@ -109,9 +109,9 @@ def main(argv: Sequence[str] = ()) -> int:
             )
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
-        if args.host not in {"127.0.0.1", "::1", "localhost"} and not args.allow_nonloopback:
+        if args.host not in LOOPBACK_HOSTS:
             raise KnowledgeHubError(
-                "non-loopback bind requires --allow-nonloopback and external auth/TLS"
+                "Context API is loopback-only; remote serving is not implemented"
             )
         if not 1 <= args.port <= 65535:
             raise KnowledgeHubError("port must be between 1 and 65535")
@@ -128,6 +128,7 @@ def main(argv: Sequence[str] = ()) -> int:
                     "port": args.port,
                     "agent_id": args.agent_id,
                     "local_write_enabled": args.enable_local_write,
+                    "network_scope": "loopback-only",
                 },
                 ensure_ascii=False,
             ),
