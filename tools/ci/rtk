@@ -29,6 +29,14 @@ run_with_failure_stdout_mirror() {
   exit "$status"
 }
 
+skip_nested_final_gate_pytest() {
+  if [[ "${KNOWLEDGE_FINAL_GATE_INNER_REGRESSION:-}" == "1"
+        && $# -eq 3 && "$1" == "-m" && "$2" == "pytest" && "$3" == "-q" ]]; then
+    printf '%s\n' 'nested final-gate pytest skipped; outer regression/engineering test evidence owns this layer'
+    exit 0
+  fi
+}
+
 command_name="$1"
 shift
 
@@ -50,6 +58,7 @@ case "$command_name" in
           printf 'ci rtk transport denied absolute python: %s\n' "$command_name" >&2
           exit 64
         fi
+        skip_nested_final_gate_pytest "$@"
         if [[ $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
           run_with_failure_stdout_mirror "$command_name" "$@"
         fi
@@ -62,8 +71,11 @@ case "$command_name" in
     esac
     ;;
   python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14|git|test)
-    if [[ "$command_name" == python* && $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
-      run_with_failure_stdout_mirror "$command_name" "$@"
+    if [[ "$command_name" == python* ]]; then
+      skip_nested_final_gate_pytest "$@"
+      if [[ $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
+        run_with_failure_stdout_mirror "$command_name" "$@"
+      fi
     fi
     exec "$command_name" "$@"
     ;;
@@ -113,7 +125,7 @@ case "$command_name" in
         suffix="${inner#"$final_gate_prefix"}"
         if [[ "$suffix" =~ ^[[:space:]A-Za-z0-9._~:/=-]*$ ]]; then
           read -r -a final_gate_args <<< "$suffix"
-          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 KNOWLEDGE_CI_UNIT_TEST_EVIDENCE=pass exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
+          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
         fi
         printf '%s\n' 'ci rtk transport denied unsafe final-gate regression arguments' >&2
         exit 64
