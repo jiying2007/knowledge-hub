@@ -3,11 +3,31 @@ set -euo pipefail
 
 # GitHub-hosted runners do not provide Codex RTK. This least-capability transport
 # preserves the repository's governed command invocation contract in CI; it does
-# not implement RTK filtering, telemetry, trust, network or shell-eval features.
+# not implement RTK filtering, telemetry, trust, network or generic shell-eval.
 if [[ $# -lt 1 ]]; then
   printf '%s\n' 'ci rtk transport requires a command' >&2
   exit 64
 fi
+
+# Some quality tools emit diagnostics on stdout. The engineering runner raises on
+# non-zero exit and historically retained only stderr, which erased the useful
+# failure evidence. Mirror only bounded stdout for the explicitly named diagnostic
+# tools; successful behavior and exit codes remain unchanged.
+run_with_failure_stdout_mirror() {
+  local output status
+  set +e
+  output="$("$@")"
+  status=$?
+  set -e
+  if [[ -n "$output" ]]; then
+    if [[ $status -eq 0 ]]; then
+      printf '%s\n' "$output"
+    else
+      printf '%s\n' "$output" | tail -n 80 >&2
+    fi
+  fi
+  exit "$status"
+}
 
 command_name="$1"
 shift
@@ -30,6 +50,9 @@ case "$command_name" in
           printf 'ci rtk transport denied absolute python: %s\n' "$command_name" >&2
           exit 64
         fi
+        if [[ $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
+          run_with_failure_stdout_mirror "$command_name" "$@"
+        fi
         exec "$command_name" "$@"
         ;;
       *)
@@ -39,6 +62,9 @@ case "$command_name" in
     esac
     ;;
   python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14|git|test)
+    if [[ "$command_name" == python* && $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
+      run_with_failure_stdout_mirror "$command_name" "$@"
+    fi
     exec "$command_name" "$@"
     ;;
   mkdir)
@@ -71,6 +97,34 @@ case "$command_name" in
     fi
     script="$1"
     shift
+
+    # Legacy regression fixtures used `rtk bash -lc` only to inject a fixed
+    # recursion guard before invoking the already-allowlisted final gate, and to
+    # express a read-only `test -d`. Do not execute a shell command string. Parse
+    # these two exact grammars and dispatch them directly instead.
+    if [[ "$script" == "-lc" ]]; then
+      if [[ $# -ne 1 ]]; then
+        printf '%s\n' 'ci rtk transport denied non-canonical bash -lc arguments' >&2
+        exit 64
+      fi
+      inner="$1"
+      final_gate_prefix='KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json'
+      if [[ "$inner" == "$final_gate_prefix"* ]]; then
+        suffix="${inner#"$final_gate_prefix"}"
+        if [[ "$suffix" =~ ^[[:space:]A-Za-z0-9._~:/=-]*$ ]]; then
+          read -r -a final_gate_args <<< "$suffix"
+          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
+        fi
+        printf '%s\n' 'ci rtk transport denied unsafe final-gate regression arguments' >&2
+        exit 64
+      fi
+      if [[ "$inner" =~ ^test[[:space:]]+-d[[:space:]]+([A-Za-z0-9._/-]+)$ ]]; then
+        exec test -d "${BASH_REMATCH[1]}"
+      fi
+      printf '%s\n' 'ci rtk transport denied bash -lc command' >&2
+      exit 64
+    fi
+
     case "$script" in
       tools/ci/bootstrap-path.sh|\
       tools/knowledge-health-summary.sh|\
@@ -122,6 +176,9 @@ case "$command_name" in
       tools/knowledge-source-control.sh|\
       tools/knowledge-summary-backfill.sh|\
       tools/knowledge-workspace-discover.sh)
+        if [[ "$script" == "tools/knowledge-retrieval-benchmark.sh" ]]; then
+          run_with_failure_stdout_mirror bash "$script" "$@"
+        fi
         exec bash "$script" "$@"
         ;;
       *)
