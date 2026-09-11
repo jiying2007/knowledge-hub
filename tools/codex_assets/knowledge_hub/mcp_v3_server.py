@@ -42,7 +42,6 @@ def main(argv: Sequence[str] = ()) -> int:
         root = repository_root(args.root)
     except KnowledgeHubError as exc:
         parser.error(str(exc))
-        return 2
     if args.one_shot:
         response = _process(root, args.one_shot, args.agent_id)
         if response is not None:
