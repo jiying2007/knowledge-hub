@@ -138,7 +138,6 @@ def main(argv: Sequence[str] = ()) -> int:
         return 0
     except KnowledgeHubError as exc:
         parser.error(str(exc))
-        return 2
 
 
 if __name__ == "__main__":
