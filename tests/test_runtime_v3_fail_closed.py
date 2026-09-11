@@ -1,8 +1,20 @@
+import shutil
+
 import pytest
 
 from tools.codex_assets.knowledge_hub import runtime_v3 as rv3
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
-from tests.test_runtime_v3 import _root
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+
+
+def _root(tmp_path):
+    source = repository_root() / rv3.CONFIG_PATH
+    target = tmp_path / rv3.CONFIG_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, target)
+    items = tmp_path / "registry/items.jsonl"
+    items.parent.mkdir(parents=True, exist_ok=True)
+    items.write_text("", encoding="utf-8")
+    return tmp_path
 
 
 def test_local_write_flag_does_not_bypass_agent_capability(tmp_path):
