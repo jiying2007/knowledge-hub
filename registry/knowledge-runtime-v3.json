@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-runtime-v3-program-v1",
+  "status": "implemented-candidate",
+  "authority_contract": {
+    "canonical": "Markdown + registry",
+    "derived_planes_authoritative": false,
+    "auto_promotion": false
+  },
+  "protocols": {
+    "mcp": "2026-07-28",
+    "a2a": "1.0.0"
+  },
+  "phases": {
+    "P0": [
+      "Context API v1",
+      "MCP read-only adapter",
+      "hybrid lexical+semantic retrieval",
+      "deterministic reranker profiles",
+      "feedback v2",
+      "agent identity/capability registry",
+      "CODEOWNERS delivery path"
+    ],
+    "P1": [
+      "temporal validity",
+      "derived context graph",
+      "connector SPI",
+      "multi-level memory candidates",
+      "execution receipts",
+      "OpenTelemetry/Langfuse projection"
+    ],
+    "P2": [
+      "A2A agent cards/preflight",
+      "adaptive retrieval proposals",
+      "Knowledge Steward audit"
+    ],
+    "P3": [
+      "self-improvement proposal loop; no auto-apply or auto-promotion"
+    ]
+  },
+  "capabilities": [
+    {"id": "knowledge.search", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.context", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.evidence-pack", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.action-check", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.steward.audit", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.improvement.plan", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.retrieval.propose", "mode": "read", "requires_human_approval": false},
+    {"id": "memory.candidate", "mode": "report-only", "requires_human_approval": false},
+    {"id": "a2a.preflight", "mode": "read", "requires_human_approval": false},
+    {"id": "knowledge.feedback.write", "mode": "local-cache-write", "requires_human_approval": false},
+    {"id": "execution.receipt.write", "mode": "local-cache-write", "requires_human_approval": false},
+    {"id": "knowledge.canonical.write", "mode": "write", "requires_human_approval": true},
+    {"id": "knowledge.promote.active", "mode": "write", "requires_human_approval": true},
+    {"id": "git.merge", "mode": "write", "requires_human_approval": true},
+    {"id": "release.publish", "mode": "write", "requires_human_approval": true}
+  ],
+  "retrieval_profiles": [
+    {
+      "id": "hybrid-engineering-v1",
+      "weights": {"lexical": 0.45, "semantic": 0.3, "authority": 0.17, "freshness": 0.08},
+      "auto_apply": false
+    },
+    {
+      "id": "exact-authority-v1",
+      "weights": {"lexical": 0.58, "semantic": 0.15, "authority": 0.22, "freshness": 0.05},
+      "auto_apply": false
+    },
+    {
+      "id": "semantic-discovery-v1",
+      "weights": {"lexical": 0.3, "semantic": 0.45, "authority": 0.15, "freshness": 0.1},
+      "auto_apply": false
+    }
+  ],
+  "agents": [
+    {
+      "id": "knowledge-reader",
+      "name": "Knowledge Reader",
+      "role": "read-only-context-consumer",
+      "description": "默认只读知识消费者。",
+      "knowledge_scopes": [],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check"],
+      "skills": ["search", "context", "evidence", "preflight"]
+    },
+    {
+      "id": "embedded-expert",
+      "name": "Embedded Expert",
+      "role": "embedded-system-expert",
+      "description": "嵌入式 Linux/RTOS/MCU/驱动专家。",
+      "knowledge_scopes": ["embedded", "projects"],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "memory.candidate", "a2a.preflight", "execution.receipt.write"],
+      "skills": ["embedded-linux", "rtos", "mcu", "drivers", "debug"]
+    },
+    {
+      "id": "debug-investigator",
+      "name": "Debug Investigator",
+      "role": "debug-investigator",
+      "description": "日志、dump、提交和故障链诊断专家。",
+      "knowledge_scopes": ["embedded", "projects"],
+      "retrieval_profile": "semantic-discovery-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "memory.candidate", "a2a.preflight", "execution.receipt.write"],
+      "skills": ["debug", "triage", "root-cause"]
+    },
+    {
+      "id": "architecture-expert",
+      "name": "Architecture Expert",
+      "role": "architecture-reviewer",
+      "description": "架构审查、ADR 与跨项目复用专家。",
+      "knowledge_scopes": ["embedded", "projects", "governance"],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "memory.candidate", "a2a.preflight"],
+      "skills": ["architecture", "adr", "reuse"]
+    },
+    {
+      "id": "code-review-expert",
+      "name": "Code Review Expert",
+      "role": "code-reviewer",
+      "description": "代码和 PR 审查知识消费者。",
+      "knowledge_scopes": ["projects", "embedded"],
+      "retrieval_profile": "exact-authority-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "a2a.preflight"],
+      "skills": ["code-review", "risk-analysis"]
+    },
+    {
+      "id": "test-expert",
+      "name": "Test Expert",
+      "role": "test-engineer",
+      "description": "测试设计、覆盖与验证专家。",
+      "knowledge_scopes": ["projects", "embedded"],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "memory.candidate", "a2a.preflight"],
+      "skills": ["test-design", "validation", "coverage"]
+    },
+    {
+      "id": "release-expert",
+      "name": "Release Expert",
+      "role": "release-preflight",
+      "description": "发布证据和版本一致性专家；无发布权限。",
+      "knowledge_scopes": ["projects", "governance"],
+      "retrieval_profile": "exact-authority-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "a2a.preflight", "execution.receipt.write"],
+      "skills": ["release", "provenance", "rollback"]
+    },
+    {
+      "id": "project-expert",
+      "name": "Project Expert",
+      "role": "project-analyst",
+      "description": "项目状态、风险和决策分析专家。",
+      "knowledge_scopes": ["projects"],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "a2a.preflight"],
+      "skills": ["project-status", "risk", "decision"]
+    },
+    {
+      "id": "manager-agent",
+      "name": "Manager Agent",
+      "role": "orchestrator",
+      "description": "路由、协调和汇总；不直接拥有高风险执行能力。",
+      "knowledge_scopes": [],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "a2a.preflight", "execution.receipt.write"],
+      "skills": ["orchestration", "routing", "summary"]
+    },
+    {
+      "id": "knowledge-steward",
+      "name": "Knowledge Steward",
+      "role": "knowledge-governance-steward",
+      "description": "发现过期、缺证据和重复知识并生成 reviewing proposal。",
+      "knowledge_scopes": [],
+      "retrieval_profile": "hybrid-engineering-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "knowledge.steward.audit", "knowledge.improvement.plan", "knowledge.retrieval.propose", "knowledge.feedback.write", "memory.candidate", "a2a.preflight", "execution.receipt.write"],
+      "skills": ["stewardship", "curation", "retrieval-eval", "proposal"]
+    },
+    {
+      "id": "knowledge-auditor",
+      "name": "Knowledge Auditor",
+      "role": "knowledge-auditor",
+      "description": "只读审计 stale/conflict/evidence gap。",
+      "knowledge_scopes": [],
+      "retrieval_profile": "exact-authority-v1",
+      "capabilities": ["knowledge.search", "knowledge.context", "knowledge.evidence-pack", "knowledge.action-check", "knowledge.steward.audit", "knowledge.improvement.plan", "knowledge.retrieval.propose"],
+      "skills": ["audit", "staleness", "conflict", "evidence-gap"]
+    }
+  ],
+  "connectors": [
+    {"id": "github", "status": "available", "default_disposition": "reference-only", "incremental_key": "commit-sha", "acl_passthrough": true},
+    {"id": "feishu", "status": "adapter-contract-only", "default_disposition": "summary-only", "incremental_key": "etag-or-version", "acl_passthrough": true},
+    {"id": "tapd", "status": "adapter-contract-only", "default_disposition": "reference-only", "incremental_key": "updated-at", "acl_passthrough": true},
+    {"id": "ci", "status": "adapter-contract-only", "default_disposition": "artifact-ref", "incremental_key": "run-id", "acl_passthrough": true},
+    {"id": "google-drive", "status": "adapter-contract-only", "default_disposition": "summary-only", "incremental_key": "etag-or-version", "acl_passthrough": true}
+  ],
+  "memory_policy": {
+    "durable_levels": ["semantic", "procedural", "policy"],
+    "canonical_write": false,
+    "promotion_requires": ["provenance", "dedup", "evidence", "human-or-owner-gate"]
+  },
+  "observability": {
+    "store_raw_query": false,
+    "opentelemetry_enabled": false,
+    "langfuse_enabled": false,
+    "network_export_requires_explicit_configuration": true
+  },
+  "guards": {
+    "fresh_eval_required_for_ranking_change": true,
+    "high_risk_actions_fail_closed": true,
+    "P3_report_only": true
+  }
+}
