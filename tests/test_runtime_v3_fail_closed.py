@@ -139,3 +139,47 @@ def test_a2a_safe_delegation_is_preflight_only(tmp_path):
     assert result["high_risk_capabilities"] == []
     assert result["delegation_executes_task"] is False
     assert result["human_review_required"] is False
+
+
+def test_context_compiler_applies_same_agent_scopes_to_all_retrieval_lanes(
+    tmp_path, monkeypatch
+):
+    root = _root(tmp_path)
+    observed = {}
+
+    def fake_hybrid(*args, **kwargs):
+        observed["hybrid_scopes"] = tuple(kwargs["knowledge_scopes"])
+        return {"results": []}
+
+    def fake_evidence(*args, **kwargs):
+        observed["evidence_domains"] = tuple(kwargs["filters"].domains)
+        return {"must": [], "context": []}
+
+    monkeypatch.setattr(rv3, "hybrid_search", fake_hybrid)
+    monkeypatch.setattr(rv3, "build_evidence_pack", fake_evidence)
+
+    rv3.compile_context(root, "UART", agent_id="embedded-expert")
+
+    assert observed["hybrid_scopes"] == ("embedded", "projects")
+    assert observed["evidence_domains"] == observed["hybrid_scopes"]
+
+
+def test_direct_evidence_pack_api_inherits_agent_scopes(tmp_path, monkeypatch):
+    root = _root(tmp_path)
+    observed = {}
+
+    def fake_evidence(*args, **kwargs):
+        observed["domains"] = tuple(kwargs["filters"].domains)
+        return {"status": "pass"}
+
+    monkeypatch.setattr(rv3, "build_evidence_pack", fake_evidence)
+
+    result = rv3.api_dispatch(
+        root,
+        "evidence-pack",
+        {"query": "UART"},
+        agent_id="embedded-expert",
+    )
+
+    assert result["status"] == "pass"
+    assert observed["domains"] == ("embedded", "projects")
