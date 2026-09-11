@@ -283,17 +283,24 @@ def hybrid_search(
 
 
 def context_graph(
-    root: pathlib.Path, seed_ids: Sequence[str], *, hops: int = 1
+    root: pathlib.Path,
+    seed_ids: Sequence[str],
+    *,
+    hops: int = 1,
+    knowledge_scopes: Sequence[str] = (),
+    as_of: str = "",
 ) -> Dict[str, Any]:
     if not 0 <= hops <= MAX_GRAPH_HOPS:
         raise KnowledgeHubError(
             "graph hops must be between 0 and {}".format(MAX_GRAPH_HOPS)
         )
     seeds = _sequence(seed_ids, "seed_ids", maximum=100)
+    scopes = _sequence(knowledge_scopes, "knowledge_scopes", maximum=64)
+    today, _ = resolve_today(as_of)
     by_id = {
         str(row.get("id", "")): row
         for row in registry_items(root)
-        if row.get("id")
+        if row.get("id") and _eligible(row, today, scopes)
     }
     frontier = set(seeds) & set(by_id)
     visited = set(frontier)
@@ -384,7 +391,13 @@ def compile_context(
         },
         "retrieval": result,
         "evidence_pack": evidence,
-        "context_graph": context_graph(root, seeds, hops=1),
+        "context_graph": context_graph(
+            root,
+            seeds,
+            hops=1,
+            knowledge_scopes=agent_scopes,
+            as_of=as_of,
+        ),
         "authority_contract": {
             "evidence_pack_controls_constraints": True,
             "hybrid_ranking_can_promote_lifecycle": False,
