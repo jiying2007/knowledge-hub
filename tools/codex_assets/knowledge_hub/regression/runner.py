@@ -8,6 +8,9 @@ from .retrieval import *  # noqa: F401,F403
 from .obsidian import *  # noqa: F401,F403
 from .governance import *  # noqa: F401,F403
 from .terminal_gates import *  # noqa: F401,F403
+# Override the legacy generated status-source-governance case with the extracted
+# time-safe contract. The result id and full-suite position remain unchanged.
+from .source_governance import test_status_source_governance_summary
 from .product_gates import *  # noqa: F401,F403
 
 full_tests = [
