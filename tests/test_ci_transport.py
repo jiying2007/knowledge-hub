@@ -9,7 +9,10 @@ ROOT = repository_root()
 RTK = ROOT / "tools/ci/rtk"
 
 
-def _run(*args):
+def _run(*args, extra_env=None):
+    environment = os.environ.copy()
+    if extra_env:
+        environment.update(extra_env)
     return subprocess.run(
         [str(RTK), *args],
         cwd=str(ROOT),
@@ -18,6 +21,7 @@ def _run(*args):
         text=True,
         timeout=20,
         check=False,
+        env=environment,
     )
 
 
@@ -70,3 +74,16 @@ def test_ci_transport_rejects_final_gate_shell_injection():
     assert result.returncode == 64
     assert "denied unsafe final-gate regression arguments" in result.stderr
     assert "injected" not in result.stdout
+
+
+def test_ci_transport_skips_only_recursive_final_gate_pytest():
+    result = _run(
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        extra_env={"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION": "1"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "nested final-gate pytest skipped" in result.stdout
