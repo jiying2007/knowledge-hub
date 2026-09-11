@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "registry_id": "embedded-compatibility-v0",
+  "status": "needs-real-evidence",
+  "owner_plane": "knowledge-hub",
+  "source_of_truth_policy": "references-only",
+  "categories": ["flash", "wifi", "power"],
+  "record_contract": {
+    "required_fields": ["platform", "component_category", "vendor", "part_number", "status", "evidence_refs"],
+    "optional_fields": ["driver", "firmware", "hardware_revision", "sdk", "known_issue_refs", "workaround", "qualified_release_refs"]
+  },
+  "allowed_status": ["candidate", "under-test", "qualified", "limited", "rejected", "unknown"],
+  "records": [],
+  "notes": [
+    "Empty by design: no component is considered qualified without real evidence.",
+    "Git/CI/HIL/release facts remain authoritative at their source; this registry stores references and engineering conclusions only."
+  ]
+}
