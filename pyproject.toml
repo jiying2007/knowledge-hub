@@ -35,9 +35,12 @@ ignore = ["E501"]
 "tools/codex_assets/knowledge_hub/runtime_v3.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.8"
+# mypy 2.3 no longer accepts a Python 3.8 parser target. Runtime support for
+# 3.8/3.9 remains independently enforced by the system-Python CI jobs; this
+# value is only the static-analysis language floor accepted by the pinned mypy.
+python_version = "3.10"
 files = [
-    "tools/codex_assets/knowledge_hub/activity_report.py",
+    "tools/codex_assets/knowledge_hub/activity.py",
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",
     "tools/codex_assets/knowledge_hub/engineering.py",
