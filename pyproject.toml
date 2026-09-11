@@ -30,6 +30,9 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tools/codex_assets/knowledge_hub/regression/*.py" = ["F403", "F405"]
+# runtime_v3 is the stable compatibility facade that intentionally re-exports
+# selected contract/governance helpers from the split implementation modules.
+"tools/codex_assets/knowledge_hub/runtime_v3.py" = ["F401"]
 
 [tool.mypy]
 python_version = "3.8"
@@ -52,6 +55,11 @@ files = [
     "tools/codex_assets/knowledge_hub/retrieval.py",
     "tools/codex_assets/knowledge_hub/restore.py",
     "tools/codex_assets/knowledge_hub/runtime_maintenance.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_contracts.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_governance.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_cli.py",
+    "tools/codex_assets/knowledge_hub/mcp_v3_server.py",
     "tools/codex_assets/knowledge_hub/search.py",
     "tools/codex_assets/knowledge_hub/search_cli.py",
     "tools/codex_assets/knowledge_hub/source_runtime.py",
