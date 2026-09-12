@@ -16,6 +16,7 @@
       "connector-provider-pilot",
       "attestation-signing-identity"
     ],
+    "require_evidence_refs_on_close": true,
     "synthetic_evidence_may_close": false
   },
   "bounded_legacy": {
