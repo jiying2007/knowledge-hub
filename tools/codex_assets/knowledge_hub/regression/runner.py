@@ -12,6 +12,7 @@ if _support.today_source == "system-date":
     _support.today_source = "captured-system-date"
 
 from .model import *  # noqa: F401,F403,E402
+from .model_index import *  # noqa: F401,F403,E402
 from .lifecycle import *  # noqa: F401,F403,E402
 from .retrieval import *  # noqa: F401,F403,E402
 from .obsidian import *  # noqa: F401,F403,E402
