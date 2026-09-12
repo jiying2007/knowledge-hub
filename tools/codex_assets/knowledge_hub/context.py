@@ -6,6 +6,7 @@ import pathlib
 from typing import Any, Dict, Mapping
 
 from . import context_support as _support
+from .search import search
 
 # Preserve the established context module surface while implementation is split
 # into bounded support and assembly modules.
@@ -67,6 +68,7 @@ def assemble_context(
         limit=limit,
         context_budget=context_budget,
         project_hint=project_hint,
+        _search_fn=search,
     )
 
 
