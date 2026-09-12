@@ -29,6 +29,7 @@
 | [Codex Local Runtime Assets](../domains/codex/README.md) | [evidence contract](../domains/codex/validation/project-readiness.md) | `local-only` |
 | [LLM Agent](../projects/llm-agent/README.md) | [evidence contract](../projects/llm-agent/validation/project-readiness.md) | `local-only` |
 | [Agent Dev Kit](../projects/agent-dev-kit/README.md) | [evidence contract](../projects/agent-dev-kit/validation/project-readiness.md) | `local-only` |
+| [Digital Worker](../projects/digital-worker/README.md) | [evidence contract](../projects/digital-worker/validation/project-readiness.md) | `local-only` |
 | [LLM Tools](../projects/llm-tools/README.md) | [evidence contract](../projects/llm-tools/validation/project-readiness.md) | `local-only` |
 | [SigmaStar Flasher](../projects/sigmastar-flasher/README.md) | [evidence contract](../projects/sigmastar-flasher/validation/project-readiness.md) | `local-only` |
 | [MM32SPIN Validator](../projects/mm32spin-validator/README.md) | [evidence contract](../projects/mm32spin-validator/validation/project-readiness.md) | `local-only` |
@@ -38,7 +39,7 @@
 
 ## 判定边界
 
-- structural coverage：31 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
+- structural coverage：32 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
 - source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。
 - evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。
 - lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。

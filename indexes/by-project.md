@@ -387,3 +387,7 @@
 - X5 Android repo 引用治理与安全清理: `projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md`; `x5-rdk-android-repo-ref-governance-20260815`
 - X5 供应商资料不可变清单与修订协议: `projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md`; `x5-rdk-immutable-vendor-manifest-amendment-20260815`
 - RDK X5 SDK readiness validation: `projects/x5-rdk/validation/project-readiness.md`; `x5-rdk-readiness-validation-20260713`
+
+## Digital Worker
+
+- Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`

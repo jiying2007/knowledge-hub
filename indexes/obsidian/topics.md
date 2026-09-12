@@ -4,14 +4,14 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (68)
+## validation (69)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
 ## pcr02 (56)
 
@@ -22,50 +22,50 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (48)
+## manual-validation-pending (49)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## no-active-promotion (41)
+## no-active-promotion (42)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## ai-generated (35)
+## ai-generated (36)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## owner-review-pending (31)
+## owner-review-pending (32)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
-## project-readiness (31)
+## project-readiness (32)
 
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
-- [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing`
 
 ## ssc305 (16)
 
@@ -936,6 +936,10 @@
 ## device-tree (1)
 
 - [PCR02 原理图第二批静态优化决策](../../projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md) · `reviewing`
+
+## digital-worker (1)
+
+- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 
 ## dvr (1)
 
