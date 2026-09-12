@@ -105,3 +105,14 @@ def test_regression_governance_split_reduces_repository_oversized_module_debt():
     assert report["status"] == "pass"
     assert report["oversized_module_count"] <= 6
     assert not governance_paths & oversized_paths
+
+
+def test_product_gate_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 5
+    assert "tools/codex_assets/knowledge_hub/product_gate.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/product_gate_support.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/product_gate_parallel.py" not in oversized_paths

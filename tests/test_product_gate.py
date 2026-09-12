@@ -360,3 +360,17 @@ def test_specialized_owner_requirements_are_manifest_driven():
     assert result["status"] == "pass"
     assert result["item_count"] == 4
     assert result["pending_ids"] == ["knowledge-hub-readiness-validation-20260713"]
+
+
+def test_product_gate_split_keeps_helper_facade_and_module_budget():
+    from tools.codex_assets.knowledge_hub import product_gate, product_gate_support
+
+    assert product_gate._project_readiness is product_gate_support._project_readiness
+    assert product_gate._restore_state is product_gate_support._restore_state
+    root = repository_root()
+    for relative in (
+        "tools/codex_assets/knowledge_hub/product_gate.py",
+        "tools/codex_assets/knowledge_hub/product_gate_support.py",
+        "tools/codex_assets/knowledge_hub/product_gate_parallel.py",
+    ):
+        assert len((root / relative).read_text(encoding="utf-8").splitlines()) <= 800
