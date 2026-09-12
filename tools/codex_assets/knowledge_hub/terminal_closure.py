@@ -127,7 +127,10 @@ def _bounded_legacy_state(
     if not isinstance(bounded, Mapping):
         raise KnowledgeHubError("bounded_legacy policy must be an object")
     limits = _legacy_limits(root, bounded)
-    module_count = int(complexity.get("legacy_attention_count", 0) or 0)
+    if "oversized_module_count" not in complexity:
+        raise KnowledgeHubError("complexity report missing oversized_module_count")
+    module_count = int(complexity.get("oversized_module_count", 0) or 0)
+    attention_count = int(complexity.get("legacy_attention_count", 0) or 0)
     immutable_refs = artifacts.get("immutable_refs", {})
     if not isinstance(immutable_refs, Mapping):
         immutable_refs = {}
@@ -138,6 +141,7 @@ def _bounded_legacy_state(
         else "needs-fix",
         "legacy_module_count": module_count,
         "legacy_module_max": limits["modules"],
+        "uncapped_legacy_attention_count": attention_count,
         "legacy_artifact_reference_count": ref_count,
         "legacy_artifact_reference_max": limits["refs"],
         "growth_allowed": bool(bounded.get("growth_allowed", False)),
