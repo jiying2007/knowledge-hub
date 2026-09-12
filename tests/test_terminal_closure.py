@@ -20,6 +20,7 @@ def _policy():
         "external_closure": {
             "source": "registry/knowledge-platform-p5-p10.json",
             "required_gap_ids": ["repository-private-boundary"],
+            "require_evidence_refs_on_close": True,
         },
         "bounded_legacy": {
             "max_oversized_legacy_modules": 11,
@@ -76,19 +77,22 @@ def _write_branch_gc(tmp_path, remaining=None, revision=None):
     )
 
 
-def _write_common_ready_state(tmp_path, external_status="closed"):
+def _write_common_ready_state(
+    tmp_path,
+    external_status="closed",
+    include_external_evidence=True,
+):
     _write_json(tmp_path / "registry/terminal-closure.json", _policy())
     _write_branch_gc(tmp_path)
+    row = {
+        "id": "repository-private-boundary",
+        "status": external_status,
+    }
+    if include_external_evidence:
+        row["evidence_refs"] = ["artifact://repository-posture/example.json"]
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
-        {
-            "external_closure_gaps": [
-                {
-                    "id": "repository-private-boundary",
-                    "status": external_status,
-                }
-            ]
-        },
+        {"external_closure_gaps": [row]},
     )
     _write_json(
         tmp_path / ".cache/knowledge-hub/final-gate-product-full.json",
@@ -115,6 +119,17 @@ def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, t
 
     assert report["status"] == "needs-review"
     assert report["terminal"] is False
+    assert "external_closure" in report["blockers"]
+
+
+def test_terminal_closure_rejects_evidence_free_external_close(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, include_external_evidence=False)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["external_closure"]["open_gaps"][0]["status"] == "closed-without-evidence"
     assert "external_closure" in report["blockers"]
 
 
