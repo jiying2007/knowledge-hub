@@ -86,6 +86,7 @@ def _write_common_ready_state(
     _write_branch_gc(tmp_path)
     row = {
         "id": "repository-private-boundary",
+        "required": True,
         "status": external_status,
     }
     if include_external_evidence:
@@ -130,6 +131,36 @@ def test_terminal_closure_rejects_evidence_free_external_close(monkeypatch, tmp_
 
     assert report["terminal"] is False
     assert report["external_closure"]["open_gaps"][0]["status"] == "closed-without-evidence"
+    assert "external_closure" in report["blockers"]
+
+
+def test_terminal_closure_rejects_required_gap_policy_drift(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    _write_json(
+        tmp_path / "registry/knowledge-platform-p5-p10.json",
+        {
+            "external_closure_gaps": [
+                {
+                    "id": "repository-private-boundary",
+                    "required": True,
+                    "status": "closed",
+                    "evidence_refs": ["artifact://repository-posture/example.json"],
+                },
+                {
+                    "id": "new-required-gap",
+                    "required": True,
+                    "status": "closed",
+                    "evidence_refs": ["artifact://new-gap/evidence.json"],
+                },
+            ]
+        },
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["external_closure"]["open_gaps"][0]["id"] == "terminal-policy-required-gap-drift"
     assert "external_closure" in report["blockers"]
 
 
