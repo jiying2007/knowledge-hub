@@ -1,7 +1,16 @@
 {
-  "schema_version": 1,
-  "model": "knowledge-hub-runtime-v3-program-v1",
-  "status": "implemented-candidate",
+  "schema_version": 2,
+  "model": "knowledge-hub-runtime-v3-program-v2",
+  "status": "qualified-compatibility-runtime",
+  "implementation_status": "qualified",
+  "adoption_status": "stable-compatibility-surface",
+  "qualification_evidence": {
+    "pr": 15,
+    "candidate_head": "e5649d6b5020763f38207cf12347cb3fafd31191",
+    "master_head": "cd67f422730418d1db6986be32588281f21fd0bd",
+    "post_merge_quality_run": 34664112682,
+    "post_merge_status": "success"
+  },
   "authority_contract": {
     "canonical": "Markdown + registry",
     "derived_planes_authoritative": false,
