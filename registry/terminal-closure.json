@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub-terminal-closure-v1",
+  "status": "open",
+  "product_gate": {
+    "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
+    "require_status": "pass",
+    "require_terminal": true
+  },
+  "external_closure": {
+    "source": "registry/knowledge-platform-p5-p10.json",
+    "required_gap_ids": [
+      "repository-private-boundary",
+      "master-ruleset-enforcement",
+      "mcp-official-conformance",
+      "connector-provider-pilot",
+      "attestation-signing-identity"
+    ],
+    "synthetic_evidence_may_close": false
+  },
+  "bounded_legacy": {
+    "max_oversized_legacy_modules": 11,
+    "max_legacy_artifact_references": 315,
+    "growth_allowed": false,
+    "terminal_interpretation": "Frozen historical compatibility debt is permitted only while it does not grow; quarterly burn-down remains required."
+  },
+  "branch_gc": {
+    "required": true,
+    "status": "open",
+    "retire_prefixes": [
+      "codex/knowledge-runtime-p0-p3",
+      "codex/knowledge-runtime-p4-interop",
+      "codex/knowledge-runtime-p5-p10",
+      "codex/knowledge-hub-cleanup",
+      "codex/readme-command-surface-authority",
+      "arch/runtime-consumer-contract-v1"
+    ],
+    "evidence": "remote branch inventory must prove completed implementation branches are deleted or explicitly retained with an owner and expiry"
+  },
+  "rules": {
+    "terminal_claim_requires_machine_pass": true,
+    "qualified_implementation_is_not_terminal": true,
+    "green_quality_is_not_terminal": true,
+    "owner_or_external_evidence_must_not_be_fabricated": true
+  }
+}
