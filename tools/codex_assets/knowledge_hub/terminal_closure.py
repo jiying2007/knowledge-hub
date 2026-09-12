@@ -38,6 +38,10 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
     require_evidence_refs = bool(external.get("require_evidence_refs_on_close", False))
     if not source or not isinstance(required_ids, list):
         raise KnowledgeHubError("terminal external closure policy is incomplete")
+    policy_required_ids = sorted({str(value) for value in required_ids if str(value).strip()})
+    if len(policy_required_ids) != len(required_ids):
+        raise KnowledgeHubError("terminal external required_gap_ids must be unique and non-empty")
+
     platform = _load_object(root / source, "external closure registry")
     rows = platform.get("external_closure_gaps", [])
     if not isinstance(rows, list):
@@ -47,8 +51,24 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
         for row in rows
         if isinstance(row, Mapping) and row.get("id")
     }
-    unresolved = []
-    for gap_id in [str(value) for value in required_ids]:
+    registry_required_ids = sorted(
+        gap_id
+        for gap_id, row in by_id.items()
+        if row.get("required") is True
+    )
+    unresolved: List[Dict[str, Any]] = []
+    if policy_required_ids != registry_required_ids:
+        unresolved.append(
+            {
+                "id": "terminal-policy-required-gap-drift",
+                "status": "blocked",
+                "owner": "terminal-policy",
+                "policy_required_gap_ids": policy_required_ids,
+                "registry_required_gap_ids": registry_required_ids,
+            }
+        )
+
+    for gap_id in policy_required_ids:
         row = by_id.get(gap_id)
         if row is None:
             unresolved.append({"id": gap_id, "status": "missing", "owner": ""})
