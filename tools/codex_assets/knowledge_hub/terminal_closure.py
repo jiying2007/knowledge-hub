@@ -99,21 +99,60 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
     return unresolved
 
 
+def _module_debt_limits(modules: Mapping[str, Any]) -> Dict[str, int]:
+    baseline = int(modules.get("baseline_count", 0) or 0)
+    current = int(modules.get("current_upper_bound_count", baseline) or 0)
+    if baseline < 0 or current < 0:
+        raise KnowledgeHubError("legacy module debt limits must be non-negative")
+    if current > baseline:
+        raise KnowledgeHubError("legacy module current upper bound may not exceed historical baseline")
+
+    history = modules.get("ratchet_history", [])
+    if history:
+        if not isinstance(history, list):
+            raise KnowledgeHubError("legacy module ratchet_history must be a list")
+        counts: List[int] = []
+        for row in history:
+            if not isinstance(row, Mapping) or "upper_bound_count" not in row:
+                raise KnowledgeHubError("legacy module ratchet history row is incomplete")
+            count = int(row.get("upper_bound_count", -1))
+            if count < 0:
+                raise KnowledgeHubError("legacy module ratchet counts must be non-negative")
+            counts.append(count)
+        if not counts or counts[0] != baseline:
+            raise KnowledgeHubError("legacy module ratchet history must start at historical baseline")
+        if counts[-1] != current:
+            raise KnowledgeHubError("legacy module current upper bound must match latest ratchet")
+        if any(after > before for before, after in zip(counts, counts[1:])):
+            raise KnowledgeHubError("legacy module ratchet history must be non-increasing")
+    return {"baseline": baseline, "current": current}
+
+
 def _legacy_limits(root: pathlib.Path, bounded: Mapping[str, Any]) -> Dict[str, int]:
     source = str(bounded.get("source", "")).strip()
     if not source:
+        modules = int(bounded.get("max_oversized_legacy_modules", 0) or 0)
+        refs = int(bounded.get("max_legacy_artifact_references", 0) or 0)
         return {
-            "modules": int(bounded.get("max_oversized_legacy_modules", 0) or 0),
-            "refs": int(bounded.get("max_legacy_artifact_references", 0) or 0),
+            "modules": modules,
+            "modules_baseline": modules,
+            "refs": refs,
+            "refs_baseline": refs,
         }
     debt = _load_object(root / source, "legacy debt registry")
     modules = debt.get("oversized_modules", {})
     refs = debt.get("legacy_artifact_references", {})
     if not isinstance(modules, Mapping) or not isinstance(refs, Mapping):
         raise KnowledgeHubError("legacy debt registry is incomplete")
+    module_limits = _module_debt_limits(modules)
+    ref_baseline = int(refs.get("baseline_count", 0) or 0)
+    if ref_baseline < 0:
+        raise KnowledgeHubError("legacy artifact reference baseline must be non-negative")
     return {
-        "modules": int(modules.get("baseline_count", 0) or 0),
-        "refs": int(refs.get("baseline_count", 0) or 0),
+        "modules": module_limits["current"],
+        "modules_baseline": module_limits["baseline"],
+        "refs": ref_baseline,
+        "refs_baseline": ref_baseline,
     }
 
 
@@ -140,9 +179,11 @@ def _bounded_legacy_state(
         if module_count <= limits["modules"] and ref_count <= limits["refs"]
         else "needs-fix",
         "legacy_module_count": module_count,
+        "legacy_module_baseline": limits["modules_baseline"],
         "legacy_module_max": limits["modules"],
         "legacy_attention_count": attention_count,
         "legacy_artifact_reference_count": ref_count,
+        "legacy_artifact_reference_baseline": limits["refs_baseline"],
         "legacy_artifact_reference_max": limits["refs"],
         "growth_allowed": bool(bounded.get("growth_allowed", False)),
     }
