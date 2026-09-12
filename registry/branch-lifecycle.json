@@ -16,7 +16,8 @@
     {"branch": "codex/knowledge-runtime-p5-p10", "reason": "implementation absorbed by master"},
     {"branch": "codex/knowledge-hub-cleanup", "reason": "cleanup absorbed by master"},
     {"branch": "codex/readme-command-surface-authority", "reason": "README authority fix absorbed by master"},
-    {"branch": "arch/runtime-consumer-contract-v1", "reason": "runtime consumer contract is already present on master; divergent branch CI is not authoritative"}
+    {"branch": "arch/runtime-consumer-contract-v1", "reason": "runtime consumer contract is already present on master; divergent branch CI is not authoritative"},
+    {"branch": "codex/terminal-closure-campaign-v1", "reason": "delete after PR #29 is merged and post-merge master evidence is retained"}
   ],
   "closure_evidence": {
     "status": "open",
