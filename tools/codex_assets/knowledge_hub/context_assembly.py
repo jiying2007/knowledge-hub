@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 import pathlib
 import time
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
 
 from .common import load_json, project_rows, registry_items, repository_rows, route_rows, utc_timestamp
-from .context import (
+from .context_support import (
     BUDGET_LIMITS,
     SUMMARY_JSON_MAX_ITEMS,
     TASK_TYPES,
@@ -38,6 +38,13 @@ from .retrieval_telemetry import (
 from .search import SearchFilters, query_terms, search
 
 
+SearchFunction = Callable[..., Dict[str, Any]]
+
+
+def _mapping(value: Any) -> Mapping[str, Any]:
+    return value if isinstance(value, Mapping) else {}
+
+
 def assemble_context(
     root: pathlib.Path,
     cwd: str,
@@ -46,6 +53,7 @@ def assemble_context(
     limit: int = 8,
     context_budget: str = "normal",
     project_hint: str = "",
+    _search_fn: Optional[SearchFunction] = None,
 ) -> Dict[str, Any]:
     started = time.monotonic()
     if task_type not in TASK_TYPES:
@@ -54,6 +62,7 @@ def assemble_context(
         raise ValueError("unsupported context budget")
     if limit < 1:
         raise ValueError("limit must be >= 1")
+    context_search = _search_fn or search
     effective_limit = min(limit, BUDGET_LIMITS[context_budget])
     routes = route_rows(root)
     explicit_route: Optional[Mapping[str, Any]] = None
@@ -71,9 +80,11 @@ def assemble_context(
     projects = {str(row.get("id")): row for row in projects_list if row.get("id")}
     repo_by_id = {str(row.get("repo_id")): row for row in repositories if row.get("repo_id")}
     repo_by_remote = {str(row.get("remote_key", "")).lower(): row for row in repositories if row.get("remote_key")}
-    groups_list = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
-    group_by_id = {str(row.get("id")): row for row in groups_list if row.get("id")}
-    local_workspaces = list((load_json(root / "local/workspaces.json", {}) or {}).get("workspaces", []))
+    groups_payload = _mapping(load_json(root / "registry/project-groups.json", {}))
+    groups_list = list(groups_payload.get("groups", []))
+    group_by_id = {str(row.get("id")): row for row in groups_list if isinstance(row, Mapping) and row.get("id")}
+    workspaces_payload = _mapping(load_json(root / "local/workspaces.json", {}))
+    local_workspaces = [row for row in workspaces_payload.get("workspaces", []) if isinstance(row, Mapping)]
     registry_loaded = time.monotonic()
 
     git_config, git_root = find_git_config(cwd)
@@ -86,9 +97,8 @@ def assemble_context(
             matched_remote = remote
             break
     workspace_ref, workspace_match = _workspace_for_cwd(cwd, local_workspaces, repositories, routes)
-    recorded_workspace_head = str(
-        (workspace_match.get("source_evidence") or {}).get("git_head", "")
-    ) if isinstance(workspace_match.get("source_evidence"), Mapping) else ""
+    workspace_source_evidence = _mapping(workspace_match.get("source_evidence"))
+    recorded_workspace_head = str(workspace_source_evidence.get("git_head", ""))
     current_workspace_head = _git_head_from_config(git_config)
     if recorded_workspace_head or current_workspace_head:
         evidence_state = (
@@ -132,10 +142,10 @@ def assemble_context(
             routes,
             exclude_project_id=str(cwd_route.get("project_id", "")),
         )
+        initial_route = _mapping(initial_query_selection.get("route"))
         if (
             target_selection["status"] == "unresolved"
-            and (initial_query_selection.get("route") or {}).get("project_id")
-            == cwd_route.get("project_id")
+            and initial_route.get("project_id") == cwd_route.get("project_id")
         ):
             query_selection = initial_query_selection
         else:
@@ -188,7 +198,7 @@ def assemble_context(
 
     search_filters = SearchFilters(domains=sorted(domain_refs)) if domain_refs else SearchFilters()
     search_started = time.monotonic()
-    search_payload = search(root, query, limit=effective_limit, filters=search_filters)
+    search_payload = context_search(root, query, limit=effective_limit, filters=search_filters)
     search_payload["fallback_terms"] = []
     search_payload["fallback_results"] = []
     search_payload["fallback_count"] = 0
@@ -198,7 +208,7 @@ def assemble_context(
         merged: List[Dict[str, Any]] = []
         seen: Set[Tuple[str, int, str]] = set()
         for term in fallback_terms:
-            fallback = search(root, term, limit=effective_limit, filters=search_filters)
+            fallback = context_search(root, term, limit=effective_limit, filters=search_filters)
             for result in fallback["results"]:
                 key = (str(result.get("path", "")), int(result.get("line", 0)), str(result.get("item_id", "")))
                 if key in seen:
@@ -214,7 +224,9 @@ def assemble_context(
         search_payload["fallback_terms"] = fallback_terms
         search_payload["fallback_results"] = merged
         search_payload["fallback_count"] = len(merged)
-        search_payload["zero_hit"]["degraded_terms"] = fallback_terms
+        zero_hit = search_payload.get("zero_hit")
+        if isinstance(zero_hit, dict):
+            zero_hit["degraded_terms"] = fallback_terms
     search_ready = time.monotonic()
 
     current: List[Dict[str, Any]] = []
@@ -388,23 +400,13 @@ def assemble_context(
 
 
 def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    context = payload.get("context") if isinstance(payload.get("context"), Mapping) else {}
-    route_selection = (
-        payload.get("route_selection") if isinstance(payload.get("route_selection"), Mapping) else {}
-    )
-    search_payload = payload.get("search") if isinstance(payload.get("search"), Mapping) else {}
-    zero_hit = search_payload.get("zero_hit") if isinstance(search_payload.get("zero_hit"), Mapping) else {}
-    search_trace = (
-        search_payload.get("search_trace")
-        if isinstance(search_payload.get("search_trace"), Mapping)
-        else {}
-    )
-    search_index = search_payload.get("index") if isinstance(search_payload.get("index"), Mapping) else {}
-    preflight = (
-        payload.get("knowledge_preflight")
-        if isinstance(payload.get("knowledge_preflight"), Mapping)
-        else {}
-    )
+    context = _mapping(payload.get("context"))
+    route_selection = _mapping(payload.get("route_selection"))
+    search_payload = _mapping(payload.get("search"))
+    zero_hit = _mapping(search_payload.get("zero_hit"))
+    search_trace = _mapping(search_payload.get("search_trace"))
+    search_index = _mapping(search_payload.get("index"))
+    preflight = _mapping(payload.get("knowledge_preflight"))
 
     compact_sections: Dict[str, List[Dict[str, Any]]] = {}
     seen_items: Set[str] = set()
@@ -436,7 +438,10 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         compact_sections[section] = compact_rows
 
     candidates: List[Dict[str, Any]] = []
-    for candidate in route_selection.get("candidates", []):
+    raw_candidates = route_selection.get("candidates", [])
+    if not isinstance(raw_candidates, list):
+        raw_candidates = []
+    for candidate in raw_candidates:
         compact_candidate = _compact_mapping(candidate, ("project_id", "score"))
         if compact_candidate:
             candidates.append(compact_candidate)
@@ -458,13 +463,15 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
         route_status,
         "low",
     )
-    telemetry = payload.get("telemetry") if isinstance(payload.get("telemetry"), Mapping) else {}
-    candidate_recommendation = (
-        payload.get("candidate_recommendation")
-        if isinstance(payload.get("candidate_recommendation"), Mapping)
-        else {}
-    )
+    telemetry = _mapping(payload.get("telemetry"))
+    candidate_recommendation = _mapping(payload.get("candidate_recommendation"))
 
+    search_results = search_payload.get("results", [])
+    if not isinstance(search_results, list):
+        search_results = []
+    risks = context.get("risks", [])
+    if not isinstance(risks, list):
+        risks = []
     summary = {
         "schema_version": payload.get("schema_version", 2),
         "projection": "agent-summary-v1",
@@ -497,11 +504,11 @@ def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
                 ("active_ids", "provisional_ids", "historical_ids"),
             )
             or {},
-            "risks": list(context.get("risks", []))[:2],
+            "risks": risks[:2],
         },
         "search_summary": {
             "status": search_payload.get("status", ""),
-            "count": search_payload.get("count", len(search_payload.get("results", []))),
+            "count": search_payload.get("count", len(search_results)),
             "total_matches": search_payload.get("total_matches", 0),
             "fallback_count": search_payload.get("fallback_count", 0),
             "latency_ms": search_payload.get("latency_ms", 0),
@@ -548,14 +555,27 @@ def record_context_telemetry(
     query = str(payload.get("query", ""))
     query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
     recorded_at = utc_timestamp()
-    context = payload.get("context") or {}
-    result_ids = []
+    context = _mapping(payload.get("context"))
+    result_ids: List[str] = []
     for section in ("current", "recent", "related", "search_fallback"):
-        for result in context.get(section, []):
+        results = context.get(section, [])
+        if not isinstance(results, list):
+            continue
+        for result in results:
+            if not isinstance(result, Mapping):
+                continue
             result_id = str(result.get("item_id") or result.get("id") or "")
             if result_id and result_id not in result_ids:
                 result_ids.append(result_id)
-    search_index = ((payload.get("search") or {}).get("index") or {})
+    search_payload = _mapping(payload.get("search"))
+    search_index = _mapping(search_payload.get("index"))
+    route = _mapping(payload.get("route"))
+    timing = _mapping(payload.get("timing"))
+    search_timing = _mapping(search_payload.get("timing"))
+    current_rows = context.get("current", [])
+    recent_rows = context.get("recent", [])
+    current_count = len(current_rows) if isinstance(current_rows, list) else 0
+    recent_count = len(recent_rows) if isinstance(recent_rows, list) else 0
     row = {
         "schema_version": INTERACTIVE_TELEMETRY_SCHEMA_VERSION,
         "sample_kind": "interactive",
@@ -567,9 +587,9 @@ def record_context_telemetry(
         "recorded_at": recorded_at,
         "query_sha256": query_hash,
         "task_type": payload.get("task_type", ""),
-        "selected_project_id": (payload.get("route") or {}).get("project_id", ""),
-        "current_count": len(context.get("current", [])),
-        "recent_count": len(context.get("recent", [])),
+        "selected_project_id": route.get("project_id", ""),
+        "current_count": current_count,
+        "recent_count": recent_count,
         "result_ids": result_ids,
         "latency_ms": payload.get("latency_ms", 0),
         "index_state": search_index.get("state", ""),
@@ -578,8 +598,8 @@ def record_context_telemetry(
         "token_cache_status": search_index.get("token_cache_status", ""),
         "token_cache_hits": search_index.get("token_cache_hits", 0),
         "token_cache_misses": search_index.get("token_cache_misses", 0),
-        "stage_timing": dict(payload.get("timing") or {}),
-        "search_stage_timing": dict(((payload.get("search") or {}).get("timing") or {})),
+        "stage_timing": dict(timing),
+        "search_stage_timing": dict(search_timing),
         "raw_query_stored": False,
     }
     path = root / ".cache/knowledge-hub/context-telemetry.jsonl"
