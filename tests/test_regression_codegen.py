@@ -3,10 +3,13 @@ import ast
 from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.regression_codegen import (
     DEFAULT_SOURCE_PATHS,
+    GOVERNANCE_MODULES,
+    GOVERNANCE_SOURCE_PATHS,
     LIFECYCLE_MODULES,
     LIFECYCLE_SOURCE_PATHS,
     MODEL_MODULES,
     MODEL_SOURCE_PATHS,
+    rebalance_governance_sources,
     rebalance_lifecycle_sources,
     rebalance_model_sources,
 )
@@ -53,6 +56,18 @@ def test_regression_codegen_round_trip_preserves_current_lifecycle_shards():
     )
 
 
+def test_regression_codegen_round_trip_preserves_current_governance_shards():
+    current = _current_sources(GOVERNANCE_MODULES)
+
+    rendered = rebalance_governance_sources(current)
+
+    assert tuple(rendered) == GOVERNANCE_MODULES
+    assert [rendered[name] for name in GOVERNANCE_MODULES] == current
+    assert all(
+        len(rendered[name].splitlines()) <= 800 for name in GOVERNANCE_MODULES
+    )
+
+
 def test_regression_codegen_preserves_test_identity_and_order():
     first = '''"""Generated regression cases: model."""\n\nfrom .support import *  # noqa: F401,F403\n\ndef test_a():\n    value = 1\n    assert value\n\ndef test_b():\n    value = 2\n    assert value\n'''
     second = '''"""Generated regression cases: model index."""\n\nfrom .support import *  # noqa: F401,F403\n\ndef test_c():\n    value = 3\n    assert value\n\ndef test_d():\n    value = 4\n    assert value\n'''
@@ -68,15 +83,15 @@ def test_regression_codegen_preserves_test_identity_and_order():
     assert len(after) == len(set(after))
 
 
-def test_regression_codegen_lifecycle_preserves_test_identity_and_order():
+def _four_shard_sources(prefix, module_names):
     sources = []
-    for module_index, module_name in enumerate(LIFECYCLE_MODULES):
+    for module_index, module_name in enumerate(module_names):
         functions = []
         for offset in range(2):
             test_index = module_index * 2 + offset
             functions.append(
-                "def test_lifecycle_{}():\n    value = {}\n    assert value >= 0\n".format(
-                    test_index, test_index
+                "def test_{}_{}():\n    value = {}\n    assert value >= 0\n".format(
+                    prefix, test_index, test_index
                 )
             )
         sources.append(
@@ -86,18 +101,36 @@ def test_regression_codegen_lifecycle_preserves_test_identity_and_order():
             + "from .support import *  # noqa: F401,F403\n\n"
             + "\n".join(functions)
         )
+    return sources
 
-    rendered = rebalance_lifecycle_sources(sources)
+
+def _assert_identity_and_order(sources, module_names, rendered):
     before = []
     after = []
     for source in sources:
         before.extend(_test_names(source))
-    for name in LIFECYCLE_MODULES:
+    for name in module_names:
         ast.parse(rendered[name])
         after.extend(_test_names(rendered[name]))
 
     assert after == before
     assert len(after) == len(set(after))
+
+
+def test_regression_codegen_lifecycle_preserves_test_identity_and_order():
+    sources = _four_shard_sources("lifecycle", LIFECYCLE_MODULES)
+
+    rendered = rebalance_lifecycle_sources(sources)
+
+    _assert_identity_and_order(sources, LIFECYCLE_MODULES, rendered)
+
+
+def test_regression_codegen_governance_preserves_test_identity_and_order():
+    sources = _four_shard_sources("governance", GOVERNANCE_MODULES)
+
+    rendered = rebalance_governance_sources(sources)
+
+    _assert_identity_and_order(sources, GOVERNANCE_MODULES, rendered)
 
 
 def test_regression_codegen_targets_only_generated_case_shards():
@@ -107,6 +140,12 @@ def test_regression_codegen_targets_only_generated_case_shards():
         "lifecycle_2",
         "lifecycle_3",
         "lifecycle_4",
+    )
+    assert GOVERNANCE_MODULES == (
+        "governance",
+        "governance_2",
+        "governance_3",
+        "governance_4",
     )
     assert MODEL_SOURCE_PATHS == (
         "tools/codex_assets/knowledge_hub/regression/model.py",
@@ -118,5 +157,13 @@ def test_regression_codegen_targets_only_generated_case_shards():
         "tools/codex_assets/knowledge_hub/regression/lifecycle_3.py",
         "tools/codex_assets/knowledge_hub/regression/lifecycle_4.py",
     )
-    assert DEFAULT_SOURCE_PATHS == MODEL_SOURCE_PATHS + LIFECYCLE_SOURCE_PATHS
+    assert GOVERNANCE_SOURCE_PATHS == (
+        "tools/codex_assets/knowledge_hub/regression/governance.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_2.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_3.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_4.py",
+    )
+    assert DEFAULT_SOURCE_PATHS == (
+        MODEL_SOURCE_PATHS + LIFECYCLE_SOURCE_PATHS + GOVERNANCE_SOURCE_PATHS
+    )
     assert all("knowledge-regression.sh" not in path for path in DEFAULT_SOURCE_PATHS)
