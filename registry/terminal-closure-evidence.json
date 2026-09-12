@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub-terminal-closure-evidence-v1",
+  "status": "open",
+  "source_revision": "",
+  "quality_run": null,
+  "terminal_closure_run": null,
+  "repository_admin": {
+    "private_boundary": "open",
+    "master_ruleset": "open"
+  },
+  "protocol_and_provider": {
+    "mcp_official_conformance": "open",
+    "real_connector_pilot": "open"
+  },
+  "production": {
+    "signed_attestation": "open",
+    "project_evidence": "open",
+    "adoption": "open"
+  },
+  "hygiene": {
+    "bounded_legacy": "frozen-non-growth",
+    "branch_gc": "open"
+  },
+  "note": "This ledger is descriptive only. Machine terminal status is computed from live gate outputs and canonical closure registries; changing this file never closes a gate."
+}
