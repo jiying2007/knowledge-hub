@@ -28,17 +28,34 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         phase["implementation_status"] == "qualified"
         for phase in payload["phases"].values()
     )
+    gaps = {row["id"]: row for row in payload["external_closure_gaps"]}
     required_open = {
-        row["id"]
-        for row in payload["external_closure_gaps"]
+        gap_id
+        for gap_id, row in gaps.items()
         if row["required"] and row["status"] == "open"
     }
     assert {
         "repository-private-boundary",
-        "master-ruleset-enforcement",
         "mcp-official-conformance",
         "connector-provider-pilot",
-    }.issubset(required_open)
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+        "attestation-signing-identity",
+    } == required_open
+    assert gaps["master-ruleset-enforcement"]["required"] is False
+    assert gaps["master-ruleset-enforcement"]["status"] == "not-required"
+    repository_target = payload["repository_security_target"]
+    assert repository_target["protected_default_branch_required"] is False
+    assert repository_target["required_status_checks"] == []
+    assert repository_target["block_force_push"] is False
+    assert repository_target["block_branch_deletion"] is False
+    assert repository_target["require_pull_request"] is False
+    assert repository_target["require_conversation_resolution"] is False
+    assert (
+        repository_target["default_branch_protection_policy"]
+        == "intentionally-unprotected-at-current-stage"
+    )
 
 
 def test_mcp_registry_marks_native_default_and_legacy_explicit_only():
