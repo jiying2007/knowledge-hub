@@ -197,4 +197,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except (KnowledgeHubError, json.JSONDecodeError, OSError, ValueError) as exc:
         print(json.dumps({"schema_version": 2, "status": "needs-fix", "error": str(exc)}, ensure_ascii=False))
-        raise SystemExit(1)
+        raise SystemExit(1) from exc

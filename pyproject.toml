@@ -30,11 +30,21 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "tools/codex_assets/knowledge_hub/regression/*.py" = ["F403", "F405"]
+# runtime_v3 is the stable compatibility facade that intentionally re-exports
+# selected contract/governance helpers from the split implementation modules.
+"tools/codex_assets/knowledge_hub/runtime_v3.py" = ["F401"]
+# product_gate is a legacy oversized module whose timeout constant currently
+# separates two import groups. Keep the waiver local until that module is split;
+# E402 remains enforced everywhere else.
+"tools/codex_assets/knowledge_hub/product_gate.py" = ["E402"]
 
 [tool.mypy]
-python_version = "3.8"
+# mypy 2.3 no longer accepts a Python 3.8 parser target. Runtime support for
+# 3.8/3.9 remains independently enforced by the system-Python CI jobs; this
+# value is only the static-analysis language floor accepted by the pinned mypy.
+python_version = "3.10"
 files = [
-    "tools/codex_assets/knowledge_hub/activity_report.py",
+    "tools/codex_assets/knowledge_hub/activity.py",
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",
     "tools/codex_assets/knowledge_hub/engineering.py",
@@ -52,6 +62,11 @@ files = [
     "tools/codex_assets/knowledge_hub/retrieval.py",
     "tools/codex_assets/knowledge_hub/restore.py",
     "tools/codex_assets/knowledge_hub/runtime_maintenance.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_contracts.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_governance.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3.py",
+    "tools/codex_assets/knowledge_hub/runtime_v3_cli.py",
+    "tools/codex_assets/knowledge_hub/mcp_v3_server.py",
     "tools/codex_assets/knowledge_hub/search.py",
     "tools/codex_assets/knowledge_hub/search_cli.py",
     "tools/codex_assets/knowledge_hub/source_runtime.py",

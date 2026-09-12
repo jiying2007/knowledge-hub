@@ -3,17 +3,104 @@ set -euo pipefail
 
 # GitHub-hosted runners do not provide Codex RTK. This least-capability transport
 # preserves the repository's governed command invocation contract in CI; it does
-# not implement RTK filtering, telemetry, trust, network or shell-eval features.
+# not implement RTK filtering, telemetry, trust, network or generic shell-eval.
 if [[ $# -lt 1 ]]; then
   printf '%s\n' 'ci rtk transport requires a command' >&2
   exit 64
 fi
 
+# Some quality tools emit diagnostics on stdout. The engineering runner raises on
+# non-zero exit and historically retained only stderr, which erased the useful
+# failure evidence. Mirror only bounded stdout for the explicitly named diagnostic
+# tools; successful behavior and exit codes remain unchanged.
+run_with_failure_stdout_mirror() {
+  local output status
+  set +e
+  output="$("$@")"
+  status=$?
+  set -e
+  if [[ -n "$output" ]]; then
+    if [[ $status -eq 0 ]]; then
+      printf '%s\n' "$output"
+    else
+      printf '%s\n' "$output" | tail -n 80 >&2
+    fi
+  fi
+  exit "$status"
+}
+
+skip_nested_final_gate_pytest() {
+  if [[ "${KNOWLEDGE_FINAL_GATE_INNER_REGRESSION:-}" == "1"
+        && $# -eq 3 && "$1" == "-m" && "$2" == "pytest" && "$3" == "-q" ]]; then
+    printf '%s\n' 'nested final-gate pytest skipped; outer regression/engineering test evidence owns this layer'
+    exit 0
+  fi
+}
+
 command_name="$1"
 shift
+
+# The runtime selector and engineering gate intentionally resolve Python to an
+# absolute path before execution. Accept that path only when its basename is an
+# allowlisted Python command and it resolves to the exact interpreter currently
+# selected by PATH. This closes the old command-name/absolute-path contract gap
+# without turning the CI transport into a generic absolute-command executor.
 case "$command_name" in
+  /*)
+    command_basename="${command_name##*/}"
+    case "$command_basename" in
+      python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14)
+        allowed_python="$(command -v "$command_basename" 2>/dev/null || true)"
+        command_real="$(readlink -f "$command_name" 2>/dev/null || true)"
+        allowed_real="$(readlink -f "$allowed_python" 2>/dev/null || true)"
+        if [[ -z "$allowed_python" || -z "$command_real" || -z "$allowed_real"
+              || ! -x "$command_name" || "$command_real" != "$allowed_real" ]]; then
+          printf 'ci rtk transport denied absolute python: %s\n' "$command_name" >&2
+          exit 64
+        fi
+        skip_nested_final_gate_pytest "$@"
+        if [[ $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
+          run_with_failure_stdout_mirror "$command_name" "$@"
+        fi
+        exec "$command_name" "$@"
+        ;;
+      *)
+        printf 'ci rtk transport denied command: %s\n' "$command_name" >&2
+        exit 64
+        ;;
+    esac
+    ;;
   python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14|git|test)
+    if [[ "$command_name" == python* ]]; then
+      skip_nested_final_gate_pytest "$@"
+      if [[ $# -ge 2 && "$1" == "-m" && ( "$2" == "ruff" || "$2" == "mypy" ) ]]; then
+        run_with_failure_stdout_mirror "$command_name" "$@"
+      fi
+    fi
     exec "$command_name" "$@"
+    ;;
+  mkdir)
+    # Runtime-selector cache directory only. No generic filesystem creation.
+    if [[ $# -eq 2 && "$1" == "-p" && "$2" == /*/.cache/knowledge-hub ]]; then
+      exec mkdir -p -- "$2"
+    fi
+    printf '%s\n' 'ci rtk transport denied mkdir outside runtime cache' >&2
+    exit 64
+    ;;
+  mv)
+    # Runtime-selector atomic cache publish only. Source and destination must be
+    # in the same private Knowledge Hub cache directory and use the fixed name.
+    if [[ $# -eq 3 && "$1" == "-f" ]]; then
+      source_path="$2"
+      target_path="$3"
+      cache_dir="${target_path%/python-runtime-selection-v1}"
+      if [[ "$target_path" == /*/.cache/knowledge-hub/python-runtime-selection-v1
+            && "$source_path" == "$cache_dir"/python-runtime-selection-v1.*.tmp ]]; then
+        exec mv -f -- "$source_path" "$target_path"
+      fi
+    fi
+    printf '%s\n' 'ci rtk transport denied mv outside runtime cache publish' >&2
+    exit 64
     ;;
   bash)
     if [[ $# -lt 1 ]]; then
@@ -22,8 +109,89 @@ case "$command_name" in
     fi
     script="$1"
     shift
+
+    # Legacy regression fixtures used `rtk bash -lc` only to inject a fixed
+    # recursion guard before invoking the already-allowlisted final gate, and to
+    # express a read-only `test -d`. Do not execute a shell command string. Parse
+    # these two exact grammars and dispatch them directly instead.
+    if [[ "$script" == "-lc" ]]; then
+      if [[ $# -ne 1 ]]; then
+        printf '%s\n' 'ci rtk transport denied non-canonical bash -lc arguments' >&2
+        exit 64
+      fi
+      inner="$1"
+      final_gate_prefix='KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json'
+      if [[ "$inner" == "$final_gate_prefix"* ]]; then
+        suffix="${inner#"$final_gate_prefix"}"
+        if [[ "$suffix" =~ ^[[:space:]A-Za-z0-9._~:/=-]*$ ]]; then
+          read -r -a final_gate_args <<< "$suffix"
+          KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 exec bash tools/knowledge-final-gate.sh --json "${final_gate_args[@]}"
+        fi
+        printf '%s\n' 'ci rtk transport denied unsafe final-gate regression arguments' >&2
+        exit 64
+      fi
+      if [[ "$inner" =~ ^test[[:space:]]+-d[[:space:]]+([A-Za-z0-9._/-]+)$ ]]; then
+        exec test -d "${BASH_REMATCH[1]}"
+      fi
+      printf '%s\n' 'ci rtk transport denied bash -lc command' >&2
+      exit 64
+    fi
+
     case "$script" in
-      tools/ci/bootstrap-path.sh|tools/knowledge-check.sh|tools/knowledge-regression.sh|tools/knowledge-retrieval-benchmark.sh)
+      tools/ci/bootstrap-path.sh|\
+      tools/ci/python-runtime.sh|\
+      tools/knowledge-health-summary.sh|\
+      tools/knowledge-new.sh|\
+      tools/knowledge-search.sh|\
+      tools/knowledge-review-after.sh|\
+      tools/knowledge-check.sh|\
+      tools/knowledge-context.sh|\
+      tools/knowledge-evidence-pack.sh|\
+      tools/knowledge-map.sh|\
+      tools/knowledge-metrics.sh|\
+      tools/knowledge-runtime-maintenance.sh|\
+      tools/knowledge-restore-drill.sh|\
+      tools/knowledge-index-plan.sh|\
+      tools/knowledge-source-check.sh|\
+      tools/knowledge-link-audit.sh|\
+      tools/knowledge-orphan-files.sh|\
+      tools/knowledge-obsidian-view-build.sh|\
+      tools/knowledge-export.sh|\
+      tools/knowledge-reviewing-triage.sh|\
+      tools/knowledge-status.sh|\
+      tools/knowledge-action-check.sh|\
+      tools/knowledge-capture.sh|\
+      tools/knowledge-evidence-ledger.sh|\
+      tools/knowledge-feedback.sh|\
+      tools/knowledge-owner-gates.sh|\
+      tools/knowledge-promote.sh|\
+      tools/knowledge-proposal-route.sh|\
+      tools/knowledge-retire.sh|\
+      tools/knowledge-review-attest.sh|\
+      tools/knowledge-review-queue-apply.sh|\
+      tools/knowledge-pcr02-owner-readiness.sh|\
+      tools/knowledge-pcr02-owner-targets.sh|\
+      tools/knowledge-artifact-ref-plan.sh|\
+      tools/knowledge-artifact-restore-drill.sh|\
+      tools/knowledge-compliance-eval.sh|\
+      tools/knowledge-engineering-check.sh|\
+      tools/knowledge-final-gate.sh|\
+      tools/knowledge-project-readiness.sh|\
+      tools/knowledge-regression.sh|\
+      tools/knowledge-regression-trend.sh|\
+      tools/knowledge-retrieval-benchmark.sh|\
+      tools/knowledge-doctor.sh|\
+      tools/knowledge-inventory.sh|\
+      tools/knowledge-path-audit.sh|\
+      tools/knowledge-proposal-shadow-stats.sh|\
+      tools/knowledge-recovery-audit.sh|\
+      tools/knowledge-activity.sh|\
+      tools/knowledge-source-control.sh|\
+      tools/knowledge-summary-backfill.sh|\
+      tools/knowledge-workspace-discover.sh)
+        if [[ "$script" == "tools/knowledge-retrieval-benchmark.sh" ]]; then
+          run_with_failure_stdout_mirror bash "$script" "$@"
+        fi
         exec bash "$script" "$@"
         ;;
       *)

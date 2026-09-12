@@ -91,6 +91,22 @@ def _active_search_filters(filters: SearchFilters) -> Optional[SearchFilters]:
     )
 
 
+def _constraint_domain_matches(
+    item: Mapping[str, Any], filters: SearchFilters
+) -> bool:
+    """Keep completeness constraints inside the caller's knowledge domain boundary."""
+
+    if not filters.domains:
+        return True
+    domain = str(item.get("domain", "")).rstrip("/")
+    return any(
+        domain == str(prefix).rstrip("/")
+        or domain.startswith(str(prefix).rstrip("/") + "/")
+        for prefix in filters.domains
+        if str(prefix).strip()
+    )
+
+
 def build_evidence_pack(
     root: pathlib.Path,
     query: str,
@@ -187,7 +203,11 @@ def build_evidence_pack(
             _append_unique(pack["context"], row)
 
     # Explicit active constraints are a completeness surface, not a retrieval guess.
+    # They must still obey the caller's domain boundary; completeness never grants
+    # permission to cross an Agent knowledge scope.
     for item in items:
+        if not _constraint_domain_matches(item, filters):
+            continue
         contract = _contract(item)
         guard = contract.get("guard")
         guard_query_match = any(

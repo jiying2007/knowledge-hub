@@ -93,6 +93,10 @@ def main(argv: Sequence[str] = ()) -> int:
         )
     except ValueError as exc:
         parser.error(str(exc))
+    if not payload.get("workspace_ref"):
+        repo_route = payload.get("repo_route") or {}
+        if isinstance(repo_route, dict) and repo_route.get("workspace_ref"):
+            payload["workspace_ref"] = repo_route["workspace_ref"]
     payload["telemetry"] = record_context_telemetry(root, payload, enabled=args.telemetry)
     if args.summary_json:
         summary = summarize_context(payload)

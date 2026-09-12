@@ -2,13 +2,28 @@
 
 import concurrent.futures
 
-from .model import *  # noqa: F401,F403
-from .lifecycle import *  # noqa: F401,F403
-from .retrieval import *  # noqa: F401,F403
-from .obsidian import *  # noqa: F401,F403
-from .governance import *  # noqa: F401,F403
-from .terminal_gates import *  # noqa: F401,F403
-from .product_gates import *  # noqa: F401,F403
+from . import support as _support
+
+# A full regression suite can span midnight. Freeze one resolved calendar date
+# into every child command so parent assertions and public Hub CLIs evaluate the
+# same deterministic snapshot for the lifetime of this run.
+_support.child_env["KNOWLEDGE_TODAY"] = _support.today.isoformat()
+if _support.today_source == "system-date":
+    _support.today_source = "captured-system-date"
+
+from .model import *  # noqa: F401,F403,E402
+from .lifecycle import *  # noqa: F401,F403,E402
+from .retrieval import *  # noqa: F401,F403,E402
+from .obsidian import *  # noqa: F401,F403,E402
+from .governance import *  # noqa: F401,F403,E402
+from .terminal_gates import *  # noqa: F401,F403,E402
+# Override the legacy generated status-source-governance case with the extracted
+# time-safe contract. The result id and full-suite position remain unchanged.
+from .source_governance import test_status_source_governance_summary  # noqa: E402
+from .product_gates import *  # noqa: F401,F403,E402
+# Preserve the owner-review result id and suite position while exposing the
+# exact failing predicate when this product contract drifts.
+from .owner_review_contract import test_final_gate_owner_review_blocker  # noqa: E402
 
 full_tests = [
     test_baseline,
