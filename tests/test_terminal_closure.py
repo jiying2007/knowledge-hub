@@ -36,6 +36,7 @@ def _policy():
 
 
 def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
     monkeypatch.setattr(
         terminal_closure,
         "evaluate_complexity_budget",
@@ -51,7 +52,7 @@ def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
     )
 
 
-def _write_branch_gc(tmp_path, remaining=None):
+def _write_branch_gc(tmp_path, remaining=None, revision=None):
     candidates = ["codex/old-branch"]
     _write_json(
         tmp_path / "registry/branch-lifecycle.json",
@@ -68,7 +69,7 @@ def _write_branch_gc(tmp_path, remaining=None):
         {
             "status": "pass" if not remaining else "needs-review",
             "repository": "example/knowledge-hub",
-            "source_revision": "a" * 40,
+            "source_revision": revision or "a" * 40,
             "retirement_candidates": candidates,
             "remaining_candidates": remaining,
         },
@@ -139,4 +140,19 @@ def test_terminal_closure_rejects_branch_gc_without_remote_clean_inventory(
 
     assert report["terminal"] is False
     assert report["branch_gc"]["status"] == "needs-review"
+    assert "branch_gc" in report["blockers"]
+
+
+def test_terminal_closure_rejects_branch_inventory_from_another_run(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    monkeypatch.setenv("GITHUB_SHA", "b" * 40)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["branch_gc"]["status"] == "blocked"
+    assert report["branch_gc"]["reason"] == "branch-inventory-revision-mismatch"
     assert "branch_gc" in report["blockers"]
