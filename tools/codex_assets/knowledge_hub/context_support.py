@@ -328,17 +328,17 @@ def _workspace_for_cwd(
         path = str(workspace.get("path", ""))
         if not path:
             continue
-        base = _safe_resolve(path)
-        if cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/"):
+        workspace_base = _safe_resolve(path)
+        if cwd == workspace_base or str(cwd).startswith(str(workspace_base).rstrip("/") + "/"):
             return str(workspace.get("workspace_ref", "")), dict(workspace)
     for repo in repositories:
-        base = _expand_workspace_ref(str(repo.get("workspace_ref", "")))
-        if base and (cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/")):
+        repo_base = _expand_workspace_ref(str(repo.get("workspace_ref", "")))
+        if repo_base and (cwd == repo_base or str(cwd).startswith(str(repo_base).rstrip("/") + "/")):
             return str(repo.get("workspace_ref", "")), {"repo_id": repo.get("repo_id")}
     for route in routes:
         for workspace_ref in route.get("workspace_refs", []):
-            base = _expand_workspace_ref(str(workspace_ref))
-            if base and (cwd == base or str(cwd).startswith(str(base).rstrip("/") + "/")):
+            route_base = _expand_workspace_ref(str(workspace_ref))
+            if route_base and (cwd == route_base or str(cwd).startswith(str(route_base).rstrip("/") + "/")):
                 return str(workspace_ref), {"project_id": route.get("project_id")}
     return "", {}
 
@@ -445,7 +445,8 @@ def _rank_item(
 
 
 def _public_item(score: int, item: Mapping[str, Any], reasons: Sequence[str]) -> Dict[str, Any]:
-    source = item.get("source") if isinstance(item.get("source"), dict) else {}
+    source_value = item.get("source")
+    source: Mapping[str, Any] = source_value if isinstance(source_value, Mapping) else {}
     return {
         "score": score,
         "id": item.get("id", ""),
