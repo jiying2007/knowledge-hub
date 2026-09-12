@@ -40,6 +40,59 @@ def test_legacy_debt_ratchet_preserves_historical_baseline_and_enforces_current_
     }
 
 
+def test_legacy_debt_ratchet_allows_explicit_current_ceiling_without_history():
+    assert terminal_closure._module_debt_limits(
+        {"baseline_count": 11, "current_upper_bound_count": 10}
+    ) == {"baseline": 11, "current": 10}
+
+
+@pytest.mark.parametrize(
+    ("modules", "message"),
+    [
+        ({"baseline_count": -1, "current_upper_bound_count": 0}, "non-negative"),
+        ({"baseline_count": 11, "current_upper_bound_count": -1}, "non-negative"),
+        (
+            {
+                "baseline_count": 11,
+                "current_upper_bound_count": 10,
+                "ratchet_history": "11,10",
+            },
+            "must be a list",
+        ),
+        (
+            {
+                "baseline_count": 11,
+                "current_upper_bound_count": 10,
+                "ratchet_history": [{}],
+            },
+            "row is incomplete",
+        ),
+        (
+            {
+                "baseline_count": 11,
+                "current_upper_bound_count": 10,
+                "ratchet_history": [{"upper_bound_count": -1}],
+            },
+            "counts must be non-negative",
+        ),
+        (
+            {
+                "baseline_count": 11,
+                "current_upper_bound_count": 10,
+                "ratchet_history": [
+                    {"upper_bound_count": 10},
+                    {"upper_bound_count": 10},
+                ],
+            },
+            "must start at historical baseline",
+        ),
+    ],
+)
+def test_legacy_debt_ratchet_rejects_invalid_policy_shapes(modules, message):
+    with pytest.raises(KnowledgeHubError, match=message):
+        terminal_closure._module_debt_limits(modules)
+
+
 def test_legacy_debt_ratchet_rejects_upward_step(tmp_path):
     bounded = _write_debt(tmp_path, current=11, history=[11, 10, 11])
 
