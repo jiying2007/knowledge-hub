@@ -140,6 +140,16 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         function_limit=function_limit,
         legacy_caps=legacy_caps,
     )
+    oversized_modules = [
+        {
+            "path": str(row.get("path", "")),
+            "lines": int(row.get("lines", 0) or 0),
+            "limit": module_limit,
+            "legacy_cap": row.get("legacy_cap"),
+        }
+        for row in module_rows
+        if int(row.get("lines", 0) or 0) > module_limit
+    ]
     wrapper_count = len(list((root / "tools").glob("knowledge-*.sh")))
     wrapper_baseline = int(command_policy.get("wrapper_baseline", wrapper_count) or 0)
     if wrapper_count > wrapper_baseline:
@@ -165,6 +175,8 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         "wrapper_baseline": wrapper_baseline,
         "regression_count": len(regressions),
         "regressions": regressions,
+        "oversized_module_count": len(oversized_modules),
+        "oversized_modules": oversized_modules,
         "legacy_attention_count": len(legacy_attention),
         "legacy_attention": legacy_attention,
         "module_count": len(module_rows),
