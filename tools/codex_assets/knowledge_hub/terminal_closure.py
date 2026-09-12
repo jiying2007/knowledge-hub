@@ -141,7 +141,7 @@ def _bounded_legacy_state(
         else "needs-fix",
         "legacy_module_count": module_count,
         "legacy_module_max": limits["modules"],
-        "uncapped_legacy_attention_count": attention_count,
+        "legacy_attention_count": attention_count,
         "legacy_artifact_reference_count": ref_count,
         "legacy_artifact_reference_max": limits["refs"],
         "growth_allowed": bool(bounded.get("growth_allowed", False)),
