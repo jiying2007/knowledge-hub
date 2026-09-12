@@ -1,0 +1,103 @@
+import json
+from pathlib import Path
+
+from tools.codex_assets.knowledge_hub import terminal_closure
+
+
+def _write_json(path: Path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value), encoding="utf-8")
+
+
+def _policy():
+    return {
+        "schema_version": 1,
+        "product_gate": {
+            "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
+            "require_status": "pass",
+            "require_terminal": True,
+        },
+        "external_closure": {
+            "source": "registry/knowledge-platform-p5-p10.json",
+            "required_gap_ids": ["repository-private-boundary"],
+        },
+        "bounded_legacy": {
+            "max_oversized_legacy_modules": 11,
+            "max_legacy_artifact_references": 315,
+            "growth_allowed": False,
+        },
+        "branch_gc": {"required": True, "status": "closed", "retire_prefixes": []},
+    }
+
+
+def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
+    monkeypatch.setattr(
+        terminal_closure,
+        "evaluate_complexity_budget",
+        lambda root: {"status": "pass", "legacy_attention_count": legacy_modules},
+    )
+    monkeypatch.setattr(
+        terminal_closure,
+        "evaluate_artifact_governance",
+        lambda root: {
+            "status": "pass",
+            "immutable_refs": {"legacy_reference_count": legacy_refs},
+        },
+    )
+
+
+def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_json(
+        tmp_path / "registry/knowledge-platform-p5-p10.json",
+        {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "closed"}]},
+    )
+    _write_json(
+        tmp_path / ".cache/knowledge-hub/final-gate-product-full.json",
+        {"status": "pass", "terminal": True},
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["status"] == "pass"
+    assert report["terminal"] is True
+    assert report["blockers"] == []
+
+
+def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_json(
+        tmp_path / "registry/knowledge-platform-p5-p10.json",
+        {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "open"}]},
+    )
+    _write_json(
+        tmp_path / ".cache/knowledge-hub/final-gate-product-full.json",
+        {"status": "pass", "terminal": True},
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["status"] == "needs-review"
+    assert report["terminal"] is False
+    assert "external_closure" in report["blockers"]
+
+
+def test_terminal_closure_rejects_legacy_growth(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch, legacy_modules=12, legacy_refs=316)
+    _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_json(
+        tmp_path / "registry/knowledge-platform-p5-p10.json",
+        {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "closed"}]},
+    )
+    _write_json(
+        tmp_path / ".cache/knowledge-hub/final-gate-product-full.json",
+        {"status": "pass", "terminal": True},
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["bounded_legacy"]["status"] == "needs-fix"
+    assert "bounded_legacy" in report["blockers"]
