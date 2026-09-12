@@ -1,6 +1,6 @@
 import argparse
 import datetime as dt
-import hashlib
+import hashlib  # noqa: F401 - compatibility export through support facade
 import json
 import os
 import pathlib
@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import threading
-import time
+import time  # noqa: F401 - compatibility export through support facade
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
