@@ -1,5 +1,6 @@
 import json
 
+from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.complexity_budget import evaluate_complexity_budget
 
 
@@ -42,3 +43,14 @@ def test_complexity_budget_counts_all_oversized_modules_explicitly(tmp_path):
         "tools/codex_assets/knowledge_hub/capped.py",
         "tools/codex_assets/knowledge_hub/uncapped.py",
     ]
+
+
+def test_context_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 10
+    assert "tools/codex_assets/knowledge_hub/context.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/context_support.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/context_assembly.py" not in oversized_paths
