@@ -32,12 +32,14 @@ def _policy():
             "source": "registry/branch-lifecycle.json",
             "evidence": ".cache/knowledge-hub/remote-branch-inventory.json",
             "require_current_github_sha_when_available": True,
+            "require_current_github_repository_when_available": True,
         },
     }
 
 
 def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
     monkeypatch.delenv("GITHUB_SHA", raising=False)
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
     monkeypatch.setattr(
         terminal_closure,
         "evaluate_complexity_budget",
@@ -53,7 +55,7 @@ def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
     )
 
 
-def _write_branch_gc(tmp_path, remaining=None, revision=None):
+def _write_branch_gc(tmp_path, remaining=None, revision=None, repository=None):
     candidates = ["codex/old-branch"]
     _write_json(
         tmp_path / "registry/branch-lifecycle.json",
@@ -69,7 +71,7 @@ def _write_branch_gc(tmp_path, remaining=None, revision=None):
         tmp_path / ".cache/knowledge-hub/remote-branch-inventory.json",
         {
             "status": "pass" if not remaining else "needs-review",
-            "repository": "example/knowledge-hub",
+            "repository": repository or "example/knowledge-hub",
             "source_revision": revision or "a" * 40,
             "retirement_candidates": candidates,
             "remaining_candidates": remaining,
@@ -201,4 +203,20 @@ def test_terminal_closure_rejects_branch_inventory_from_another_run(
     assert report["terminal"] is False
     assert report["branch_gc"]["status"] == "blocked"
     assert report["branch_gc"]["reason"] == "branch-inventory-revision-mismatch"
+    assert "branch_gc" in report["blockers"]
+
+
+def test_terminal_closure_rejects_branch_inventory_from_another_repository(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "expected/knowledge-hub")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["branch_gc"]["status"] == "blocked"
+    assert report["branch_gc"]["reason"] == "branch-inventory-repository-mismatch"
+    assert report["branch_gc"]["repository_matches_current_run"] is False
     assert "branch_gc" in report["blockers"]
