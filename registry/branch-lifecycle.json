@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "contract": "knowledge-hub-branch-lifecycle-v1",
+  "issue": 28,
   "status": "needs-external-gc",
   "default_branch": "master",
   "terminal_policy": {
