@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from tools.codex_assets.knowledge_hub import remote_branch_inventory
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 
@@ -75,3 +77,21 @@ def test_remote_branch_inventory_preserves_blocked_evidence(monkeypatch, tmp_pat
     assert report["status"] == "blocked"
     assert report["remaining_candidates"] == ["arch/retired", "codex/absorbed"]
     assert "request failed" in report["error"]
+
+
+def test_remote_branch_inventory_rejects_unbound_identity(tmp_path):
+    _write_lifecycle(tmp_path)
+
+    with pytest.raises(KnowledgeHubError, match="repository must use owner/name form"):
+        remote_branch_inventory.evaluate_remote_branch_inventory(
+            tmp_path,
+            repository="https://github.com/example/knowledge-hub",
+            source_revision="d" * 40,
+        )
+
+    with pytest.raises(KnowledgeHubError, match="source revision must be a full Git object id"):
+        remote_branch_inventory.evaluate_remote_branch_inventory(
+            tmp_path,
+            repository="example/knowledge-hub",
+            source_revision="main",
+        )
