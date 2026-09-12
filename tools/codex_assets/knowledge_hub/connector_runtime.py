@@ -22,7 +22,7 @@ class ConnectorAdapter(Protocol):
     def checkpoint(self) -> str:
         ...
 
-    def list_changed(self, checkpoint: str, limit: int) -> Sequence[Mapping[str, Any]]:
+    def list_changed(self, checkpoint: str, limit: int) -> Any:
         ...
 
 
@@ -101,10 +101,7 @@ def _normalize_acl(value: Any) -> List[str]:
     return rows
 
 
-def normalize_object(
-    connector_id: str,
-    row: Mapping[str, Any],
-) -> Dict[str, Any]:
+def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any]:
     object_id = str(row.get("object_id", "")).strip()
     version = str(row.get("version", "")).strip()
     if not object_id or len(object_id) > 1024:
@@ -142,6 +139,17 @@ def _quarantine_record(row: Mapping[str, Any], reason: str) -> Dict[str, Any]:
     }
 
 
+def _changed_rows(value: Any) -> Sequence[Mapping[str, Any]]:
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise KnowledgeHubError("connector list_changed must return a sequence")
+    result = []
+    for row in value:
+        if not isinstance(row, Mapping):
+            raise KnowledgeHubError("connector changed rows must be objects")
+        result.append(row)
+    return result
+
+
 def sync_connector(
     root: pathlib.Path,
     adapter: ConnectorAdapter,
@@ -154,16 +162,11 @@ def sync_connector(
         raise KnowledgeHubError("connector sync limit is outside policy")
     checkpoint = load_checkpoint(root, adapter.connector_id)
     cursor = str(checkpoint.get("cursor", ""))
-    changed = adapter.list_changed(cursor, limit)
-    if isinstance(changed, (str, bytes)) or not isinstance(changed, Sequence):
-        raise KnowledgeHubError("connector list_changed must return a sequence")
+    changed = _changed_rows(adapter.list_changed(cursor, limit))
     accepted: List[Dict[str, Any]] = []
     quarantined: List[Dict[str, Any]] = []
     tombstones: List[Dict[str, Any]] = []
     for row in changed:
-        if not isinstance(row, Mapping):
-            quarantined.append(_quarantine_record({}, "object-not-mapping"))
-            continue
         try:
             normalized = normalize_object(adapter.connector_id, row)
         except KnowledgeHubError as exc:
@@ -175,11 +178,10 @@ def sync_connector(
             accepted.append(normalized)
     saved = dict(checkpoint)
     if not quarantined:
-        next_cursor = str(adapter.checkpoint())
         saved = save_checkpoint(
             root,
             adapter.connector_id,
-            cursor=next_cursor,
+            cursor=str(adapter.checkpoint()),
             previous_sequence=int(checkpoint.get("sequence", 0) or 0),
         )
     return {
@@ -200,12 +202,7 @@ def sync_connector(
 
 
 class StaticConnectorAdapter:
-    def __init__(
-        self,
-        connector_id: str,
-        rows: Iterable[Mapping[str, Any]],
-        next_cursor: str = "static-complete",
-    ) -> None:
+    def __init__(self, connector_id: str, rows: Iterable[Mapping[str, Any]], next_cursor: str = "static-complete") -> None:
         self.connector_id = connector_id
         self._rows = [dict(row) for row in rows]
         self._next_cursor = next_cursor

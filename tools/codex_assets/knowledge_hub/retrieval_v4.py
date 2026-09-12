@@ -29,7 +29,7 @@ IDENTIFIER_RE = re.compile(r"(?:[A-Za-z]+[_./:-]\w+|\bv?\d+\.\d+(?:\.\d+)?\b)")
 TEMPORAL_TERMS = {"when", "timeline", "history", "historical", "当前", "历史", "何时", "版本"}
 GRAPH_TERMS = {"related", "depends", "relation", "关联", "依赖", "关系"}
 EmbeddingFn = Callable[[str], Sequence[float]]
-RerankFn = Callable[[str, Sequence[Mapping[str, Any]]], Sequence[Mapping[str, Any]]]
+RerankFn = Callable[[str, Sequence[Mapping[str, Any]]], Any]
 
 
 def _date(value: Any, label: str) -> Optional[dt.date]:
@@ -68,63 +68,50 @@ def _read_text(root: pathlib.Path, relative: str) -> str:
 
 
 def _chunk_id(item_id: str, heading: str, start: int, text: str) -> str:
-    digest = hashlib.sha256(
-        "{}\0{}\0{}\0{}".format(item_id, heading, start, text).encode("utf-8")
-    ).hexdigest()
-    return "{}:{}".format(item_id, digest[:20])
+    payload = "{}\0{}\0{}\0{}".format(item_id, heading, start, text)
+    return "{}:{}".format(item_id, hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20])
 
 
-def hierarchical_chunks(
-    root: pathlib.Path,
-    item: Mapping[str, Any],
-) -> List[Dict[str, Any]]:
+def _chunk_record(
+    item_id: str,
+    heading_path: Sequence[str],
+    start: int,
+    end: int,
+    text: str,
+) -> Dict[str, Any]:
+    clipped = text[:MAX_CHUNK_CHARS]
+    heading = "/".join(heading_path)
+    return {
+        "chunk_id": _chunk_id(item_id, heading, start, clipped),
+        "item_id": item_id,
+        "heading_path": list(heading_path),
+        "line_start": start,
+        "line_end": max(start, end),
+        "text": clipped,
+        "content_sha256": hashlib.sha256(clipped.encode("utf-8")).hexdigest(),
+    }
+
+
+def hierarchical_chunks(root: pathlib.Path, item: Mapping[str, Any]) -> List[Dict[str, Any]]:
     item_id = str(item.get("id", ""))
-    relative = str(item.get("path", ""))
-    body = _read_text(root, relative)
+    body = _read_text(root, str(item.get("path", "")))
     if not body:
         metadata = " ".join(
-            [
-                str(item.get("title", "")),
-                str(item.get("summary_zh", "")),
-                " ".join(str(value) for value in item.get("tags", [])),
-            ]
+            [str(item.get("title", "")), str(item.get("summary_zh", "")), " ".join(map(str, item.get("tags", [])))]
         ).strip()
-        if not metadata:
-            return []
-        return [
-            {
-                "chunk_id": _chunk_id(item_id, "metadata", 1, metadata),
-                "item_id": item_id,
-                "heading_path": ["metadata"],
-                "line_start": 1,
-                "line_end": 1,
-                "text": metadata[:MAX_CHUNK_CHARS],
-                "content_sha256": hashlib.sha256(metadata.encode("utf-8")).hexdigest(),
-            }
-        ]
+        return [_chunk_record(item_id, ["metadata"], 1, 1, metadata)] if metadata else []
     lines = body.splitlines()
-    heading_stack: List[Tuple[int, str]] = []
+    stack: List[Tuple[int, str]] = []
     chunks: List[Dict[str, Any]] = []
     buffer: List[str] = []
-    start_line = 1
+    start = 1
 
-    def flush(end_line: int) -> None:
-        nonlocal buffer, start_line
+    def flush(end: int) -> None:
+        nonlocal buffer, start
         text = "\n".join(buffer).strip()
         if text:
-            heading_path = [value for _, value in heading_stack] or ["document"]
-            clipped = text[:MAX_CHUNK_CHARS]
-            chunks.append(
-                {
-                    "chunk_id": _chunk_id(item_id, "/".join(heading_path), start_line, clipped),
-                    "item_id": item_id,
-                    "heading_path": heading_path,
-                    "line_start": start_line,
-                    "line_end": max(start_line, end_line),
-                    "text": clipped,
-                    "content_sha256": hashlib.sha256(clipped.encode("utf-8")).hexdigest(),
-                }
-            )
+            headings = [value for _, value in stack] or ["document"]
+            chunks.append(_chunk_record(item_id, headings, start, end, text))
         buffer = []
 
     for index, line in enumerate(lines, 1):
@@ -132,17 +119,16 @@ def hierarchical_chunks(
         if match:
             flush(index - 1)
             level = len(match.group(1))
-            heading_stack[:] = [row for row in heading_stack if row[0] < level]
-            heading_stack.append((level, match.group(2).strip()))
-            start_line = index
-            buffer = [line]
+            stack[:] = [row for row in stack if row[0] < level]
+            stack.append((level, match.group(2).strip()))
+            start, buffer = index, [line]
         else:
             if not buffer:
-                start_line = index
+                start = index
             buffer.append(line)
             if sum(len(value) + 1 for value in buffer) >= MAX_CHUNK_CHARS:
                 flush(index)
-                start_line = index + 1
+                start = index + 1
         if len(chunks) >= MAX_CHUNKS_PER_ITEM:
             break
     if len(chunks) < MAX_CHUNKS_PER_ITEM:
@@ -161,7 +147,7 @@ def _feature_vector(text: str, dims: int = DEFAULT_DIMS) -> Tuple[float, ...]:
 
 
 def _vector(text: str, embedding_fn: Optional[EmbeddingFn]) -> Tuple[float, ...]:
-    raw = embedding_fn(text) if embedding_fn is not None else _feature_vector(text)
+    raw: Any = embedding_fn(text) if embedding_fn is not None else _feature_vector(text)
     if isinstance(raw, (str, bytes)) or not isinstance(raw, Sequence):
         raise KnowledgeHubError("embedding provider must return a numeric sequence")
     if not raw or len(raw) > MAX_EMBEDDING_DIMS:
@@ -188,16 +174,12 @@ def _lexical_score(query: str, item: Mapping[str, Any], chunks: Sequence[Mapping
         return 0.0
     text = " ".join(
         [
-            str(item.get("id", "")),
-            str(item.get("title", "")),
-            str(item.get("summary_zh", "")),
-            " ".join(str(value) for value in item.get("tags", [])),
+            str(item.get("id", "")), str(item.get("title", "")), str(item.get("summary_zh", "")),
+            " ".join(map(str, item.get("tags", []))),
             " ".join(str(row.get("text", "")) for row in chunks[:8]),
         ]
     )
-    item_tokens = set(search_tokens(text))
-    overlap = len(query_tokens.intersection(item_tokens))
-    return overlap / max(1, len(query_tokens))
+    return len(query_tokens.intersection(search_tokens(text))) / max(1, len(query_tokens))
 
 
 def _authority(item: Mapping[str, Any]) -> float:
@@ -211,8 +193,7 @@ def _freshness(item: Mapping[str, Any], today: dt.date) -> float:
     updated = _date(item.get("updated_at"), "updated_at")
     if updated is None:
         return 0.5
-    age = max(0, (today - updated).days)
-    return max(0.25, 1.0 - min(age, 730) / 1000.0)
+    return max(0.25, 1.0 - min(max(0, (today - updated).days), 730) / 1000.0)
 
 
 def route_query(query: str) -> str:
@@ -233,7 +214,7 @@ def _dense_scores(
     embedding_fn: Optional[EmbeddingFn],
 ) -> Tuple[Dict[str, float], Dict[str, Dict[str, Any]]]:
     query_vector = _vector(query, embedding_fn)
-    item_scores: Dict[str, float] = {}
+    scores: Dict[str, float] = {}
     best_chunks: Dict[str, Dict[str, Any]] = {}
     for item_id, chunks in chunks_by_item.items():
         best_score = 0.0
@@ -241,12 +222,11 @@ def _dense_scores(
         for chunk in chunks:
             score = max(0.0, _cosine(query_vector, _vector(str(chunk["text"]), embedding_fn)))
             if score > best_score:
-                best_score = score
-                best = chunk
-        item_scores[item_id] = best_score
+                best_score, best = score, chunk
+        scores[item_id] = best_score
         if best is not None:
             best_chunks[item_id] = {key: value for key, value in best.items() if key != "text"}
-    return item_scores, best_chunks
+    return scores, best_chunks
 
 
 def _rank(scores: Mapping[str, float]) -> Dict[str, int]:
@@ -255,7 +235,7 @@ def _rank(scores: Mapping[str, float]) -> Dict[str, int]:
 
 
 def _rrf(ranks: Sequence[Mapping[str, int]], item_id: str, k: int = 60) -> float:
-    return sum(1.0 / (k + rank[item_id]) for rank in ranks if item_id in rank)
+    return sum(1.0 / (k + row[item_id]) for row in ranks if item_id in row)
 
 
 def _authorized_items(
@@ -265,24 +245,21 @@ def _authorized_items(
     today: dt.date,
 ) -> Tuple[Dict[str, Any], List[Mapping[str, Any]], int, int]:
     principal_value = principal_context(principal)
-    profile = agent_profile(root, agent_id)
-    scopes = [str(value) for value in profile.get("knowledge_scopes", [])]
+    scopes = [str(value) for value in agent_profile(root, agent_id).get("knowledge_scopes", [])]
     authorized: List[Mapping[str, Any]] = []
-    denied_count = 0
-    legacy_acl_count = 0
+    denied = legacy = 0
     for item in registry_items(root):
         if not _temporal_eligible(item, today):
             continue
         decision = authorize_item(item, principal_value, operation="search", agent_scopes=scopes)
-        if decision["authorized"]:
-            authorized.append(item)
-            if not bool(decision.get("acl_explicit", False)):
-                legacy_acl_count += 1
-        else:
-            denied_count += 1
+        if not decision["authorized"]:
+            denied += 1
+            continue
+        authorized.append(item)
+        legacy += 0 if decision.get("acl_explicit", False) else 1
     if len(authorized) > MAX_CORPUS_ITEMS:
         raise KnowledgeHubError("authorized retrieval corpus exceeds explicit budget")
-    return principal_value, authorized, denied_count, legacy_acl_count
+    return principal_value, authorized, denied, legacy
 
 
 def _score_lanes(
@@ -292,86 +269,56 @@ def _score_lanes(
     today: dt.date,
     embedding_fn: Optional[EmbeddingFn],
 ) -> Tuple[
-    Dict[str, Sequence[Mapping[str, Any]]],
-    Dict[str, float],
-    Dict[str, float],
-    Dict[str, float],
-    Dict[str, float],
-    Dict[str, Dict[str, Any]],
+    Dict[str, List[Dict[str, Any]]], Dict[str, float], Dict[str, float],
+    Dict[str, float], Dict[str, float], Dict[str, Dict[str, Any]],
 ]:
-    chunks_by_item = {
-        str(item["id"]): hierarchical_chunks(root, item)
-        for item in authorized
-        if item.get("id")
+    chunks = {str(item["id"]): hierarchical_chunks(root, item) for item in authorized if item.get("id")}
+    lexical = {
+        str(item["id"]): _lexical_score(query, item, chunks.get(str(item["id"]), []))
+        for item in authorized if item.get("id")
     }
-    lexical_scores = {
-        str(item["id"]): _lexical_score(query, item, chunks_by_item.get(str(item["id"]), []))
-        for item in authorized
-        if item.get("id")
-    }
-    dense_scores, best_chunks = _dense_scores(query, chunks_by_item, embedding_fn)
-    authority_scores = {
-        str(item["id"]): _authority(item)
-        for item in authorized
-        if item.get("id")
-    }
-    freshness_scores = {
-        str(item["id"]): _freshness(item, today)
-        for item in authorized
-        if item.get("id")
-    }
-    return chunks_by_item, lexical_scores, dense_scores, authority_scores, freshness_scores, best_chunks
+    dense, best = _dense_scores(query, chunks, embedding_fn)
+    authority = {str(item["id"]): _authority(item) for item in authorized if item.get("id")}
+    freshness = {str(item["id"]): _freshness(item, today) for item in authorized if item.get("id")}
+    return chunks, lexical, dense, authority, freshness, best
 
 
 def _ranked_rows(
     query: str,
     route: str,
     authorized: Sequence[Mapping[str, Any]],
-    lexical_scores: Mapping[str, float],
-    dense_scores: Mapping[str, float],
-    authority_scores: Mapping[str, float],
-    freshness_scores: Mapping[str, float],
+    lexical: Mapping[str, float], dense: Mapping[str, float],
+    authority: Mapping[str, float], freshness: Mapping[str, float],
     best_chunks: Mapping[str, Mapping[str, Any]],
 ) -> List[Dict[str, Any]]:
-    ranks = [_rank(lexical_scores), _rank(dense_scores), _rank(authority_scores)]
+    ranks = [_rank(lexical), _rank(dense), _rank(authority)]
     rows: List[Dict[str, Any]] = []
     for item in authorized:
         item_id = str(item.get("id", ""))
         if not item_id:
             continue
-        exact_bonus = 0.2 if route == "exact-first" and item_id.lower() in query.lower() else 0.0
-        score = _rrf(ranks, item_id) + 0.12 * authority_scores[item_id] + 0.05 * freshness_scores[item_id] + exact_bonus
-        rows.append(
-            {
-                "id": item_id,
-                "title": str(item.get("title", "")),
-                "path": str(item.get("path", "")),
-                "domain": str(item.get("domain", "")),
-                "status": str(item.get("status", "")),
-                "trust_class": trust_class(item),
-                "score": round(score, 8),
-                "score_components": {
-                    "lexical": round(lexical_scores.get(item_id, 0.0), 6),
-                    "dense": round(dense_scores.get(item_id, 0.0), 6),
-                    "authority": round(authority_scores[item_id], 6),
-                    "freshness": round(freshness_scores[item_id], 6),
-                },
-                "best_chunk": dict(best_chunks.get(item_id, {})),
-                "derived": True,
-                "authoritative": authority_scores[item_id] == 1.0,
-            }
-        )
+        exact = 0.2 if route == "exact-first" and item_id.lower() in query.lower() else 0.0
+        score = _rrf(ranks, item_id) + 0.12 * authority[item_id] + 0.05 * freshness[item_id] + exact
+        rows.append({
+            "id": item_id, "title": str(item.get("title", "")), "path": str(item.get("path", "")),
+            "domain": str(item.get("domain", "")), "status": str(item.get("status", "")),
+            "trust_class": trust_class(item), "score": round(score, 8),
+            "score_components": {
+                "lexical": round(lexical.get(item_id, 0.0), 6), "dense": round(dense.get(item_id, 0.0), 6),
+                "authority": round(authority[item_id], 6), "freshness": round(freshness[item_id], 6),
+            },
+            "best_chunk": dict(best_chunks.get(item_id, {})), "derived": True,
+            "authoritative": authority[item_id] == 1.0,
+        })
     rows.sort(key=lambda row: (-float(row["score"]), str(row["id"])))
     return rows
 
 
 def _secure_rerank(
-    query: str,
-    candidates: Sequence[Mapping[str, Any]],
-    rerank_fn: RerankFn,
+    query: str, candidates: Sequence[Mapping[str, Any]], rerank_fn: RerankFn,
 ) -> List[Dict[str, Any]]:
     by_id = {str(row.get("id", "")): dict(row) for row in candidates if row.get("id")}
-    returned = rerank_fn(query, [dict(row) for row in candidates])
+    returned: Any = rerank_fn(query, [dict(row) for row in candidates])
     if isinstance(returned, (str, bytes)) or not isinstance(returned, Sequence):
         raise KnowledgeHubError("reranker must return a sequence")
     result: List[Dict[str, Any]] = []
@@ -382,10 +329,9 @@ def _secure_rerank(
         item_id = str(row.get("id", ""))
         if item_id not in by_id:
             raise KnowledgeHubError("reranker attempted to inject unauthorized candidate")
-        if item_id in seen:
-            continue
-        result.append(by_id[item_id])
-        seen.add(item_id)
+        if item_id not in seen:
+            result.append(by_id[item_id])
+            seen.add(item_id)
     result.extend(by_id[item_id] for item_id in by_id if item_id not in seen)
     return result
 
@@ -407,25 +353,18 @@ def retrieve_v4(
     if not 1 <= int(limit) <= 100:
         raise KnowledgeHubError("limit must be between 1 and 100")
     today, source = resolve_today(as_of)
-    principal_value, authorized, denied_count, legacy_acl_count = _authorized_items(root, principal, agent_id, today)
-    chunks, lexical, dense, authority, freshness, best_chunks = _score_lanes(root, query, authorized, today, embedding_fn)
+    principal_value, authorized, denied, legacy = _authorized_items(root, principal, agent_id, today)
+    chunks, lexical, dense, authority, freshness, best = _score_lanes(root, query, authorized, today, embedding_fn)
     route = route_query(query)
-    rows = _ranked_rows(query, route, authorized, lexical, dense, authority, freshness, best_chunks)
+    rows = _ranked_rows(query, route, authorized, lexical, dense, authority, freshness, best)
     selected = rows[: max(limit * 3, limit)]
     if rerank_fn is not None:
         selected = _secure_rerank(query, selected, rerank_fn)
     return {
-        "schema_version": "knowledge-hub.retrieval-v4.v1",
-        "status": "pass",
-        "query_route": route,
-        "as_of": today.isoformat(),
-        "as_of_source": source,
-        "agent_id": agent_id,
-        "principal_id": principal_value["principal_id"],
-        "results": [dict(row) for row in selected[:limit]],
-        "authorized_item_count": len(authorized),
-        "denied_item_count": denied_count,
-        "legacy_acl_item_count": legacy_acl_count,
+        "schema_version": "knowledge-hub.retrieval-v4.v1", "status": "pass", "query_route": route,
+        "as_of": today.isoformat(), "as_of_source": source, "agent_id": agent_id,
+        "principal_id": principal_value["principal_id"], "results": [dict(row) for row in selected[:limit]],
+        "authorized_item_count": len(authorized), "denied_item_count": denied, "legacy_acl_item_count": legacy,
         "lane_health": {
             "lexical_nonzero": sum(value > 0 for value in lexical.values()),
             "dense_nonzero": sum(value > 0 for value in dense.values()),
@@ -434,8 +373,7 @@ def retrieve_v4(
             "dense_provider": "external-provider" if embedding_fn is not None else "deterministic-feature-hash-fallback",
         },
         "authority_contract": {
-            "ranking_is_authority": False,
-            "acl_applied_before_ranking": True,
+            "ranking_is_authority": False, "acl_applied_before_ranking": True,
             "canonical_markdown_registry_remain_authoritative": True,
         },
     }
