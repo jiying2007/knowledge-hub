@@ -4,6 +4,11 @@ from .product_gates import _run_product_gate, _skip_inside_product_gate
 from .support import *  # noqa: F401,F403
 
 
+def _count_is_reopened(owner, field, project_count):
+    value = owner.get(field)
+    return isinstance(value, int) and 0 <= value < project_count
+
+
 def _owner_review_predicates(result, payload, terminal_result, terminal_payload):
     owner = payload.get("owner_and_real_evidence", {})
     project_count = int(owner.get("project_count", 0) or 0)
@@ -25,11 +30,20 @@ def _owner_review_predicates(result, payload, terminal_result, terminal_payload)
         "platform-pass": platform.get("status") == "pass",
         "nonterminal": payload.get("terminal") is False,
         "owner-needs-review": owner.get("status") == "needs-review",
-        "project-boundary-owner-ready": owner.get("project_boundary_owner_ready") is True,
         "project-count-positive": project_count > 0,
-        "decision-owner-cardinality": owner.get("decision_owner_ready_count") == project_count,
-        "owner-ref-cardinality": owner.get("owner_ref_ready_count") == project_count,
-        "owner-boundary-cardinality": owner.get("owner_boundary_ready_count") == project_count,
+        # copy_repo_with_open_owner_gates deliberately reopens the associated
+        # owner-ready packages as reviewing/evidence-pending. The project-level
+        # authority boundary must therefore stop claiming complete readiness.
+        "project-boundary-owner-reopened": owner.get("project_boundary_owner_ready") is False,
+        "decision-owner-cardinality-reduced": _count_is_reopened(
+            owner, "decision_owner_ready_count", project_count
+        ),
+        "owner-ref-cardinality-reduced": _count_is_reopened(
+            owner, "owner_ref_ready_count", project_count
+        ),
+        "owner-boundary-cardinality-reduced": _count_is_reopened(
+            owner, "owner_boundary_ready_count", project_count
+        ),
         "specialized-owner-ready-three": owner.get("specialized_owner_ready_candidate_count") == 3,
         "specialized-owner-pending-zero": owner.get("pending_specialized_owner_candidate_count") == 0,
         "owner-gates-open-seven": owner.get("owner_gate_open_count") == 7,
@@ -48,6 +62,7 @@ def _owner_review_actuals(result, payload, terminal_result, terminal_payload):
         result, payload, terminal_result, terminal_payload
     )
     return {
+        "failed_assertions": [name for name, passed in predicates.items() if not passed],
         "exit_code": result["exit_code"],
         "terminal_exit_code": terminal_result["exit_code"],
         "status": payload.get("status"),
@@ -65,7 +80,6 @@ def _owner_review_actuals(result, payload, terminal_result, terminal_payload):
         "strict_status": payload.get("checks", {}).get("knowledge_status_strict", {}).get("status"),
         "platform_status": platform.get("status"),
         "platform_blockers": platform.get("blockers", []),
-        "failed_assertions": [name for name, passed in predicates.items() if not passed],
     }
 
 
