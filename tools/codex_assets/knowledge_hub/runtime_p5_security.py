@@ -211,9 +211,7 @@ def repository_posture(
     if not isinstance(observed, Mapping) or not isinstance(target, Mapping):
         raise KnowledgeHubError("repository posture inputs must be objects")
     failures: List[str] = []
-    if bool(target.get("private_required", False)) and not bool(
-        observed.get("private", False)
-    ):
+    if bool(target.get("private_required", False)) and not bool(observed.get("private", False)):
         failures.append("repository-must-be-private")
     if bool(target.get("protected_default_branch_required", False)) and not bool(
         observed.get("default_branch_protected", False)
@@ -234,6 +232,18 @@ def repository_posture(
         observed.get("force_push_blocked", False)
     ):
         failures.append("force-push-must-be-blocked")
+    if bool(target.get("block_branch_deletion", False)) and not bool(
+        observed.get("branch_deletion_blocked", False)
+    ):
+        failures.append("branch-deletion-must-be-blocked")
+    if bool(target.get("require_pull_request", False)) and not bool(
+        observed.get("pull_request_required", False)
+    ):
+        failures.append("pull-request-must-be-required")
+    if bool(target.get("require_conversation_resolution", False)) and not bool(
+        observed.get("conversation_resolution_required", False)
+    ):
+        failures.append("conversation-resolution-must-be-required")
     return {
         "schema_version": "knowledge-hub.repository-posture.v1",
         "status": "pass" if not failures else "blocked",
