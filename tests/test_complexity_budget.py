@@ -90,3 +90,18 @@ def test_regression_lifecycle_split_reduces_repository_oversized_module_debt():
     assert report["status"] == "pass"
     assert report["oversized_module_count"] <= 7
     assert not lifecycle_paths & oversized_paths
+
+
+def test_regression_governance_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    governance_paths = {
+        "tools/codex_assets/knowledge_hub/regression/governance.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_2.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_3.py",
+        "tools/codex_assets/knowledge_hub/regression/governance_4.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 6
+    assert not governance_paths & oversized_paths
