@@ -94,6 +94,8 @@
     "task_binding": "sha256-only",
     "task_echoed": false,
     "execution_receipt_correlation": "optional-but-verified-if-present",
+    "execution_receipt_agent_binding": "must-match-from-agent-if-present",
+    "scope_enforcement": "from-and-target-agent-knowledge-scopes",
     "consumer_work_item_ssot": true,
     "canonical_write_permitted": false,
     "handoff_executes_task": false

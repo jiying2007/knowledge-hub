@@ -12,9 +12,9 @@ from .common import KnowledgeHubError
 from .runtime_p4_interop import (
     DEFAULT_CONSUMER,
     consumer_handshake,
-    handoff_envelope,
     integration_readiness,
 )
+from .runtime_p4_policy import governed_handoff_envelope
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -77,7 +77,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 a2a_version=args.a2a_version,
             )
         else:
-            result = handoff_envelope(
+            result = governed_handoff_envelope(
                 root,
                 args.consumer,
                 args.from_agent,

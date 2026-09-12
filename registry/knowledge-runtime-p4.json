@@ -26,6 +26,8 @@
     "high_risk_capability_requires_review": true,
     "receipt_digest_verified_if_present": true,
     "raw_task_not_echoed": true,
-    "network_required": false
+    "network_required": false,
+    "handoff_scope_enforced": true,
+    "receipt_bound_to_initiating_agent": true
   }
 }
