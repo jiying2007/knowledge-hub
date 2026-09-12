@@ -26,7 +26,10 @@ def _policy():
             "max_legacy_artifact_references": 315,
             "growth_allowed": False,
         },
-        "branch_gc": {"required": True, "status": "closed", "retire_prefixes": []},
+        "branch_gc": {
+            "required": True,
+            "source": "registry/branch-lifecycle.json",
+        },
     }
 
 
@@ -46,9 +49,21 @@ def _stub_hygiene(monkeypatch, legacy_modules=11, legacy_refs=315):
     )
 
 
+def _write_closed_branch_gc(tmp_path):
+    _write_json(
+        tmp_path / "registry/branch-lifecycle.json",
+        {
+            "status": "closed",
+            "retirement_candidates": [],
+            "closure_evidence": {"status": "closed"},
+        },
+    )
+
+
 def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path):
     _stub_hygiene(monkeypatch)
     _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_closed_branch_gc(tmp_path)
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
         {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "closed"}]},
@@ -68,6 +83,7 @@ def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path)
 def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, tmp_path):
     _stub_hygiene(monkeypatch)
     _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_closed_branch_gc(tmp_path)
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
         {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "open"}]},
@@ -87,6 +103,7 @@ def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, t
 def test_terminal_closure_rejects_legacy_growth(monkeypatch, tmp_path):
     _stub_hygiene(monkeypatch, legacy_modules=12, legacy_refs=316)
     _write_json(tmp_path / "registry/terminal-closure.json", _policy())
+    _write_closed_branch_gc(tmp_path)
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
         {"external_closure_gaps": [{"id": "repository-private-boundary", "status": "closed"}]},
