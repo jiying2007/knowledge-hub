@@ -113,11 +113,13 @@
   },
   "repository_security_target": {
     "private_required": true,
-    "protected_default_branch_required": true,
-    "required_status_checks": ["quality"],
-    "block_force_push": true,
-    "require_pull_request": true,
-    "require_conversation_resolution": true
+    "protected_default_branch_required": false,
+    "required_status_checks": [],
+    "block_force_push": false,
+    "block_branch_deletion": false,
+    "require_pull_request": false,
+    "require_conversation_resolution": false,
+    "default_branch_protection_policy": "intentionally-unprotected-at-current-stage"
   },
   "protocols": {
     "mcp": {
@@ -189,35 +191,56 @@
       "owner": "repository-admin",
       "required": true,
       "status": "open",
-      "reason": "GitHub administration action is outside repository commit authority"
+      "reason": "Canonical internal knowledge still requires a real hosting privacy boundary or an explicit public-engine/private-vault split."
     },
     {
       "id": "master-ruleset-enforcement",
       "owner": "repository-admin",
-      "required": true,
-      "status": "open",
-      "reason": "server-side ruleset must be configured by repository administration"
+      "required": false,
+      "status": "not-required",
+      "reason": "Current-stage owner decision intentionally keeps the default branch unprotected; this is not a terminal blocker."
     },
     {
       "id": "mcp-official-conformance",
       "owner": "runtime-owner",
       "required": true,
       "status": "open",
-      "reason": "official conformance evidence must be produced outside static implementation"
+      "reason": "Official conformance evidence must be produced outside static implementation."
     },
     {
       "id": "connector-provider-pilot",
       "owner": "integration-owner",
       "required": true,
       "status": "open",
-      "reason": "real provider credentials and ACL/tombstone pilot evidence are required"
+      "reason": "Real provider credentials and ACL/tombstone pilot evidence are required."
+    },
+    {
+      "id": "production-retrieval-eval",
+      "owner": "runtime-owner",
+      "required": true,
+      "status": "open",
+      "reason": "Eval v2 requires at least 200 production-derived cases without synthetic padding."
+    },
+    {
+      "id": "memory-lifecycle-pilot",
+      "owner": "runtime-owner",
+      "required": true,
+      "status": "open",
+      "reason": "Real TTL, forget, supersede, scope isolation and deletion evidence is required."
+    },
+    {
+      "id": "real-adoption-evidence",
+      "owner": "product-owner",
+      "required": true,
+      "status": "open",
+      "reason": "Terminal adoption requires at least 30 days or 50 valid real calls plus at least 10 explicit feedback items."
     },
     {
       "id": "attestation-signing-identity",
       "owner": "release-owner",
-      "required": false,
+      "required": true,
       "status": "open",
-      "reason": "production signing identity is a deployment concern"
+      "reason": "Terminal production closure requires a real signing identity and verifiable signed quality attestation."
     }
   ]
 }

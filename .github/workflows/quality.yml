@@ -89,7 +89,7 @@ jobs:
         run: rtk bash tools/knowledge-compliance-eval.sh --root tests/fixtures/agent_compliance_root --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --require-verdict-coverage --json
       - name: Verify remote checkout in an offsite runner
         run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --json
-      - name: Run product final gate
+      - name: Assess product readiness (non-terminal)
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
       - name: Upload quality evidence
         if: always()

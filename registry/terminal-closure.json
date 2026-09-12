@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub-terminal-closure-v1",
+  "status": "open",
+  "product_gate": {
+    "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
+    "require_status": "pass",
+    "require_terminal": true
+  },
+  "external_closure": {
+    "source": "registry/knowledge-platform-p5-p10.json",
+    "required_gap_ids": [
+      "repository-private-boundary",
+      "mcp-official-conformance",
+      "connector-provider-pilot",
+      "production-retrieval-eval",
+      "memory-lifecycle-pilot",
+      "real-adoption-evidence",
+      "attestation-signing-identity"
+    ],
+    "require_evidence_refs_on_close": true,
+    "synthetic_evidence_may_close": false
+  },
+  "bounded_legacy": {
+    "source": "registry/legacy-debt-burndown.json",
+    "growth_allowed": false,
+    "terminal_interpretation": "Frozen historical compatibility debt is permitted only while it does not grow; quarterly burn-down remains required."
+  },
+  "branch_gc": {
+    "required": true,
+    "source": "registry/branch-lifecycle.json",
+    "evidence": ".cache/knowledge-hub/remote-branch-inventory.json",
+    "require_current_github_sha_when_available": true,
+    "require_current_github_repository_when_available": true
+  },
+  "rules": {
+    "terminal_claim_requires_machine_pass": true,
+    "qualified_implementation_is_not_terminal": true,
+    "green_quality_is_not_terminal": true,
+    "default_branch_protection_required": false,
+    "owner_or_external_evidence_must_not_be_fabricated": true,
+    "duplicate_closure_status_sources_forbidden": true
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub-legacy-debt-burndown-v1",
+  "issue": 27,
+  "baseline_as_of": "2026-09-12",
+  "status": "active",
+  "oversized_modules": {
+    "baseline_count": 11,
+    "target_direction": "decrease-only",
+    "quarterly_reduction_target": 0.15,
+    "preferred_order": [
+      "tools/codex_assets/knowledge_hub/regression/lifecycle.py",
+      "tools/codex_assets/knowledge_hub/regression/governance.py",
+      "tools/codex_assets/knowledge_hub/check_cli.py",
+      "tools/codex_assets/knowledge_hub/owner_gates_cli.py",
+      "tools/codex_assets/knowledge_hub/search.py",
+      "tools/codex_assets/knowledge_hub/status_cli.py",
+      "tools/codex_assets/knowledge_hub/index_plan_cli.py",
+      "tools/codex_assets/knowledge_hub/product_gate.py",
+      "tools/codex_assets/knowledge_hub/context.py",
+      "tools/codex_assets/knowledge_hub/regression/model.py",
+      "tools/codex_assets/knowledge_hub/regression/support.py"
+    ]
+  },
+  "legacy_artifact_references": {
+    "baseline_count": 315,
+    "target_direction": "decrease-only",
+    "new_producer_format": "knowledge-hub.immutable-artifact-ref.v1",
+    "acceptable_terminal_forms": [
+      "migrated-to-strict-v1",
+      "immutable-historical-exception-with-owner-and-reason"
+    ]
+  },
+  "rules": {
+    "baseline_may_not_increase": true,
+    "debt_reduction_must_not_change_external_behavior_without_regression_evidence": true,
+    "historical_provenance_must_not_be_deleted_to_improve_metrics": true
+  }
+}
