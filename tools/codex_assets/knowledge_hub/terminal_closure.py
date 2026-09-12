@@ -35,6 +35,7 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
         raise KnowledgeHubError("terminal external_closure policy must be an object")
     source = str(external.get("source", "")).strip()
     required_ids = external.get("required_gap_ids", [])
+    require_evidence_refs = bool(external.get("require_evidence_refs_on_close", False))
     if not source or not isinstance(required_ids, list):
         raise KnowledgeHubError("terminal external closure policy is incomplete")
     platform = _load_object(root / source, "external closure registry")
@@ -51,11 +52,27 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
         row = by_id.get(gap_id)
         if row is None:
             unresolved.append({"id": gap_id, "status": "missing", "owner": ""})
-        elif str(row.get("status", "")) != "closed":
+            continue
+        status = str(row.get("status", "open"))
+        evidence_refs = row.get("evidence_refs", [])
+        valid_refs = (
+            isinstance(evidence_refs, list)
+            and bool(evidence_refs)
+            and all(isinstance(value, str) and value.strip() for value in evidence_refs)
+        )
+        if status != "closed":
             unresolved.append(
                 {
                     "id": gap_id,
-                    "status": str(row.get("status", "open")),
+                    "status": status,
+                    "owner": str(row.get("owner", "")),
+                }
+            )
+        elif require_evidence_refs and not valid_refs:
+            unresolved.append(
+                {
+                    "id": gap_id,
+                    "status": "closed-without-evidence",
                     "owner": str(row.get("owner", "")),
                 }
             )
