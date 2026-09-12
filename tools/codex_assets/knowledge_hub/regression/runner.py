@@ -21,6 +21,9 @@ from .terminal_gates import *  # noqa: F401,F403,E402
 # time-safe contract. The result id and full-suite position remain unchanged.
 from .source_governance import test_status_source_governance_summary  # noqa: E402
 from .product_gates import *  # noqa: F401,F403,E402
+# Preserve the owner-review result id and suite position while exposing the
+# exact failing predicate when this product contract drifts.
+from .owner_review_contract import test_final_gate_owner_review_blocker  # noqa: E402
 
 full_tests = [
     test_baseline,
