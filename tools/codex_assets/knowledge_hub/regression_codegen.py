@@ -7,7 +7,7 @@ import ast
 import os
 import pathlib
 import subprocess
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 
 MODEL_MODULES = ("model", "model_index")
@@ -15,6 +15,7 @@ DEFAULT_SOURCE_PATHS = tuple(
     "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
     for name in MODEL_MODULES
 )
+_FunctionNode = Union[ast.FunctionDef, ast.AsyncFunctionDef]
 
 
 def _source_from_git(root: pathlib.Path, revision: str, path: str) -> str:
@@ -37,8 +38,8 @@ def _source_from_git(root: pathlib.Path, revision: str, path: str) -> str:
     return result.stdout
 
 
-def _slice(lines: Sequence[str], node: ast.AST) -> str:
-    if not hasattr(node, "end_lineno") or node.end_lineno is None:
+def _slice(lines: Sequence[str], node: _FunctionNode) -> str:
+    if node.end_lineno is None:
         raise RuntimeError("Python AST node is missing end_lineno")
     return "".join(lines[node.lineno - 1 : node.end_lineno])
 
