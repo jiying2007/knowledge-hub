@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "contract_version": "1.0",
+  "status": "candidate",
+  "provider": "knowledge-hub",
+  "consumer_class": "engineering-runtime-binding",
+  "public_operations": {
+    "context": "tools/knowledge-context.sh",
+    "evidence_pack": "tools/knowledge-evidence-pack.sh",
+    "action_check": "tools/knowledge-action-check.sh",
+    "proposal_route": "tools/knowledge-proposal-route.sh",
+    "activity_capture": "tools/knowledge-activity.sh capture"
+  },
+  "success_contract": {
+    "consumer_may_rely_on": [
+      "operation exit status",
+      "documented status/result fields",
+      "documented receipt/artifact reference",
+      "provider commit identity"
+    ],
+    "consumer_must_not_rely_on": [
+      "provider temporary directory layout",
+      "provider internal receipt path",
+      "provider local cache path",
+      "undocumented files under .tmp"
+    ]
+  },
+  "failure_semantics": {
+    "provider_unavailable": "BLOCKED",
+    "project_route_unresolved": "NEEDS_REVIEW_OR_BLOCKED",
+    "authority_or_acl_unresolved": "NEEDS_REVIEW_OR_BLOCKED",
+    "missing_context": "MISSING_NOT_PASS",
+    "conflicting_context": "CONFLICT_NOT_PASS"
+  },
+  "write_semantics": {
+    "runtime_direct_active_knowledge_write": false,
+    "proposal_only": true,
+    "owner_review_required": true
+  },
+  "source_of_truth_stays_at_source": true,
+  "production_claim": "candidate-only; provider CI and governed consumer project routes must be fresh green before default-provider promotion"
+}
