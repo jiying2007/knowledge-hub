@@ -4,9 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 from typing import Any, Dict, Mapping, Sequence
 
-from .common import KnowledgeHubError, repository_root
+from .common import (
+    KnowledgeHubError,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    repository_root,
+    resolve_inside,
+)
 from .terminal_closure import DEFAULT_POLICY, evaluate_terminal_closure
 
 
@@ -15,6 +22,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", default="")
     parser.add_argument("--policy", default=DEFAULT_POLICY)
     parser.add_argument("--snapshot", default="")
+    parser.add_argument("--output", default="")
     output = parser.add_mutually_exclusive_group()
     output.add_argument("--json", action="store_true")
     output.add_argument("--summary-json", action="store_true")
@@ -48,8 +56,19 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _write_output(root: pathlib.Path, relative: str, payload: Mapping[str, Any]) -> None:
+    path = resolve_inside(root, relative)
+    ensure_private_directory_tree(root, path.parent)
+    path.write_text(
+        json.dumps(dict(payload), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    ensure_private_file(path)
+
+
 def main(argv: Sequence[str] = ()) -> int:
-    args = _parser().parse_args(list(argv) if argv else None)
+    parser = _parser()
+    args = parser.parse_args(list(argv) if argv else None)
     try:
         root = repository_root(args.root)
         payload = evaluate_terminal_closure(
@@ -57,8 +76,10 @@ def main(argv: Sequence[str] = ()) -> int:
             policy_path=args.policy,
             snapshot_path=args.snapshot,
         )
+        if args.output:
+            _write_output(root, args.output, payload)
     except KnowledgeHubError as exc:
-        _parser().error(str(exc))
+        parser.error(str(exc))
     rendered = _summary(payload) if args.summary_json else payload
     print(json.dumps(rendered, ensure_ascii=False, indent=2 if args.json else None))
     return 0 if payload.get("terminal") is True else 2
