@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-runtime-p4-interop-v1",
+  "status": "implemented-candidate",
+  "extends": "registry/knowledge-runtime-v3.json",
+  "phase": "P4",
+  "scope": [
+    "digital-worker consumer handshake",
+    "A2A handoff envelope",
+    "execution receipt correlation",
+    "cross-repo readiness and SSOT boundary validation"
+  ],
+  "consumer_contracts": [
+    "registry/integrations/digital-worker.json"
+  ],
+  "authority_contract": {
+    "canonical": "Markdown + registry",
+    "consumer_work_item_authority_stays_with_consumer": true,
+    "source_system_authority_stays_at_source": true,
+    "handoff_executes_task": false,
+    "auto_promotion": false
+  },
+  "guards": {
+    "unknown_consumer_fail_closed": true,
+    "unknown_capability_fail_closed": true,
+    "high_risk_capability_requires_review": true,
+    "receipt_digest_verified_if_present": true,
+    "raw_task_not_echoed": true,
+    "network_required": false,
+    "handoff_scope_enforced": true,
+    "receipt_bound_to_initiating_agent": true
+  }
+}
