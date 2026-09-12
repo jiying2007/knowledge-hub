@@ -54,3 +54,14 @@ def test_context_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/context.py" not in oversized_paths
     assert "tools/codex_assets/knowledge_hub/context_support.py" not in oversized_paths
     assert "tools/codex_assets/knowledge_hub/context_assembly.py" not in oversized_paths
+
+
+def test_regression_support_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 9
+    assert "tools/codex_assets/knowledge_hub/regression/support.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/regression/support_runtime.py" not in oversized_paths
+    assert "tools/codex_assets/knowledge_hub/regression/support_fixtures.py" not in oversized_paths
