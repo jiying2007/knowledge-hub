@@ -8,6 +8,7 @@ quality workflow never implies terminal closure by itself.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 from typing import Any, Dict, List, Mapping
 
@@ -106,26 +107,73 @@ def _bounded_legacy_state(
     }
 
 
+def _branch_candidates(lifecycle: Mapping[str, Any]) -> List[str]:
+    rows = lifecycle.get("retirement_candidates", [])
+    if not isinstance(rows, list):
+        raise KnowledgeHubError("branch retirement candidates must be a list")
+    return sorted(
+        {
+            str(row.get("branch", ""))
+            for row in rows
+            if isinstance(row, Mapping) and row.get("branch")
+        }
+    )
+
+
 def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str, Any]:
     config = policy.get("branch_gc", {})
     if not isinstance(config, Mapping):
         raise KnowledgeHubError("branch_gc terminal policy must be an object")
-    required = bool(config.get("required", False))
+    if not bool(config.get("required", False)):
+        return {"required": False, "status": "pass", "remaining_candidates": []}
     source = str(config.get("source", "")).strip()
-    if not required:
-        return {"required": False, "status": "closed", "retirement_candidates": []}
-    if not source:
-        raise KnowledgeHubError("branch_gc source is missing")
+    evidence_path = str(config.get("evidence", "")).strip()
+    if not source or not evidence_path:
+        raise KnowledgeHubError("branch_gc source/evidence is missing")
     lifecycle = _load_object(root / source, "branch lifecycle registry")
-    closure = lifecycle.get("closure_evidence", {})
-    if not isinstance(closure, Mapping):
-        closure = {}
-    status = str(closure.get("status", lifecycle.get("status", "open")))
-    candidates = lifecycle.get("retirement_candidates", [])
+    candidates = _branch_candidates(lifecycle)
+    try:
+        evidence = _load_object(root / evidence_path, "remote branch inventory")
+    except KnowledgeHubError:
+        return {
+            "required": True,
+            "status": "blocked",
+            "retirement_candidates": candidates,
+            "remaining_candidates": candidates,
+            "reason": "fresh-remote-branch-inventory-missing",
+        }
+    evidence_candidates = sorted(
+        str(value) for value in evidence.get("retirement_candidates", [])
+    )
+    remaining = sorted(str(value) for value in evidence.get("remaining_candidates", []))
+    current_sha = os.environ.get("GITHUB_SHA", "").strip()
+    revision_matches = True
+    if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
+        revision_matches = str(evidence.get("source_revision", "")) == current_sha
+    status = "pass"
+    reason = ""
+    if evidence.get("status") != "pass":
+        status = "needs-review"
+        reason = "remote-branch-inventory-not-clean"
+    elif evidence_candidates != candidates:
+        status = "blocked"
+        reason = "branch-inventory-candidate-set-drift"
+    elif remaining:
+        status = "needs-review"
+        reason = "retirement-candidates-still-present"
+    elif not revision_matches:
+        status = "blocked"
+        reason = "branch-inventory-revision-mismatch"
     return {
         "required": True,
         "status": status,
-        "retirement_candidates": candidates if isinstance(candidates, list) else [],
+        "repository": str(evidence.get("repository", "")),
+        "source_revision": str(evidence.get("source_revision", "")),
+        "revision_matches_current_run": revision_matches,
+        "retirement_candidates": candidates,
+        "remaining_candidates": remaining,
+        "reason": reason,
+        "snapshot": evidence_path,
     }
 
 
@@ -156,7 +204,7 @@ def evaluate_terminal_closure(
         "complexity_no_regression": complexity.get("status") == "pass",
         "artifact_governance": artifacts.get("status") == "pass",
         "bounded_legacy": legacy.get("status") == "pass",
-        "branch_gc": branch_gc.get("status") == "closed",
+        "branch_gc": branch_gc.get("status") == "pass",
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
