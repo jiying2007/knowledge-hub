@@ -30,7 +30,8 @@
     "required": true,
     "source": "registry/branch-lifecycle.json",
     "evidence": ".cache/knowledge-hub/remote-branch-inventory.json",
-    "require_current_github_sha_when_available": true
+    "require_current_github_sha_when_available": true,
+    "require_current_github_repository_when_available": true
   },
   "rules": {
     "terminal_claim_requires_machine_pass": true,
