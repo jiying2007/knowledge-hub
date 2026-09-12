@@ -61,7 +61,26 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
     return unresolved
 
 
+def _legacy_limits(root: pathlib.Path, bounded: Mapping[str, Any]) -> Dict[str, int]:
+    source = str(bounded.get("source", "")).strip()
+    if not source:
+        return {
+            "modules": int(bounded.get("max_oversized_legacy_modules", 0) or 0),
+            "refs": int(bounded.get("max_legacy_artifact_references", 0) or 0),
+        }
+    debt = _load_object(root / source, "legacy debt registry")
+    modules = debt.get("oversized_modules", {})
+    refs = debt.get("legacy_artifact_references", {})
+    if not isinstance(modules, Mapping) or not isinstance(refs, Mapping):
+        raise KnowledgeHubError("legacy debt registry is incomplete")
+    return {
+        "modules": int(modules.get("baseline_count", 0) or 0),
+        "refs": int(refs.get("baseline_count", 0) or 0),
+    }
+
+
 def _bounded_legacy_state(
+    root: pathlib.Path,
     policy: Mapping[str, Any],
     complexity: Mapping[str, Any],
     artifacts: Mapping[str, Any],
@@ -69,20 +88,44 @@ def _bounded_legacy_state(
     bounded = policy.get("bounded_legacy", {})
     if not isinstance(bounded, Mapping):
         raise KnowledgeHubError("bounded_legacy policy must be an object")
-    max_modules = int(bounded.get("max_oversized_legacy_modules", 0) or 0)
-    max_refs = int(bounded.get("max_legacy_artifact_references", 0) or 0)
+    limits = _legacy_limits(root, bounded)
     module_count = int(complexity.get("legacy_attention_count", 0) or 0)
     immutable_refs = artifacts.get("immutable_refs", {})
     if not isinstance(immutable_refs, Mapping):
         immutable_refs = {}
     ref_count = int(immutable_refs.get("legacy_reference_count", 0) or 0)
     return {
-        "status": "pass" if module_count <= max_modules and ref_count <= max_refs else "needs-fix",
+        "status": "pass"
+        if module_count <= limits["modules"] and ref_count <= limits["refs"]
+        else "needs-fix",
         "legacy_module_count": module_count,
-        "legacy_module_max": max_modules,
+        "legacy_module_max": limits["modules"],
         "legacy_artifact_reference_count": ref_count,
-        "legacy_artifact_reference_max": max_refs,
+        "legacy_artifact_reference_max": limits["refs"],
         "growth_allowed": bool(bounded.get("growth_allowed", False)),
+    }
+
+
+def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str, Any]:
+    config = policy.get("branch_gc", {})
+    if not isinstance(config, Mapping):
+        raise KnowledgeHubError("branch_gc terminal policy must be an object")
+    required = bool(config.get("required", False))
+    source = str(config.get("source", "")).strip()
+    if not required:
+        return {"required": False, "status": "closed", "retirement_candidates": []}
+    if not source:
+        raise KnowledgeHubError("branch_gc source is missing")
+    lifecycle = _load_object(root / source, "branch lifecycle registry")
+    closure = lifecycle.get("closure_evidence", {})
+    if not isinstance(closure, Mapping):
+        closure = {}
+    status = str(closure.get("status", lifecycle.get("status", "open")))
+    candidates = lifecycle.get("retirement_candidates", [])
+    return {
+        "required": True,
+        "status": status,
+        "retirement_candidates": candidates if isinstance(candidates, list) else [],
     }
 
 
@@ -103,10 +146,8 @@ def evaluate_terminal_closure(
     external_gaps = _external_gaps(root, policy)
     complexity = evaluate_complexity_budget(root)
     artifacts = evaluate_artifact_governance(root)
-    legacy = _bounded_legacy_state(policy, complexity, artifacts)
-    branch_gc = policy.get("branch_gc", {})
-    if not isinstance(branch_gc, Mapping):
-        raise KnowledgeHubError("branch_gc terminal policy must be an object")
+    legacy = _bounded_legacy_state(root, policy, complexity, artifacts)
+    branch_gc = _branch_gc_state(root, policy)
 
     checks = {
         "product_status": snapshot.get("status") == product_policy.get("require_status", "pass"),
@@ -115,7 +156,7 @@ def evaluate_terminal_closure(
         "complexity_no_regression": complexity.get("status") == "pass",
         "artifact_governance": artifacts.get("status") == "pass",
         "bounded_legacy": legacy.get("status") == "pass",
-        "branch_gc": (not bool(branch_gc.get("required", False))) or branch_gc.get("status") == "closed",
+        "branch_gc": branch_gc.get("status") == "closed",
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
@@ -138,9 +179,5 @@ def evaluate_terminal_closure(
             "open_gaps": external_gaps,
         },
         "bounded_legacy": legacy,
-        "branch_gc": {
-            "status": str(branch_gc.get("status", "open")),
-            "required": bool(branch_gc.get("required", False)),
-            "retire_prefixes": list(branch_gc.get("retire_prefixes", [])),
-        },
+        "branch_gc": branch_gc,
     }
