@@ -1,14 +1,32 @@
 {
   "schema_version": 1,
-  "contract_version": "1.0",
-  "status": "candidate",
+  "contract_version": "1.1",
+  "status": "implemented-candidate",
   "consumer": "digital-worker",
   "provider": "knowledge-hub",
   "role": "knowledge-control-plane",
   "ssot": {
-    "digital_worker": ["work_item", "expert_routing", "gate", "technical_decision", "engineering_handoff", "verification", "review"],
-    "knowledge_hub": ["knowledge_registry", "knowledge_lifecycle", "knowledge_context", "knowledge_proposal_review"],
-    "source_systems": ["source_code", "build_artifact", "device", "ci_hil_evidence"]
+    "digital_worker": [
+      "work_item",
+      "expert_routing",
+      "gate",
+      "technical_decision",
+      "engineering_handoff",
+      "verification",
+      "review"
+    ],
+    "knowledge_hub": [
+      "knowledge_registry",
+      "knowledge_lifecycle",
+      "knowledge_context",
+      "knowledge_proposal_review"
+    ],
+    "source_systems": [
+      "source_code",
+      "build_artifact",
+      "device",
+      "ci_hil_evidence"
+    ]
   },
   "read_surfaces": {
     "context": "tools/knowledge-context.sh",
@@ -19,8 +37,18 @@
     "proposal_route": "tools/knowledge-proposal-route.sh"
   },
   "identity": {
-    "required_inputs": ["work_item_id", "run_id", "scope_ref"],
-    "returned_fields": ["source_fingerprint", "knowledge_ids", "status", "provenance", "acl_state"]
+    "required_inputs": [
+      "work_item_id",
+      "run_id",
+      "scope_ref"
+    ],
+    "returned_fields": [
+      "source_fingerprint",
+      "knowledge_ids",
+      "status",
+      "provenance",
+      "acl_state"
+    ]
   },
   "failure_semantics": {
     "missing_required_source": "BLOCKED",
@@ -32,6 +60,43 @@
     "direct_active_mutation": false,
     "knowledge_harvest_must_route_as_proposal": true,
     "owner_promotion_required": true
+  },
+  "runtime_contract": {
+    "phase": "P4",
+    "provider_entrypoint": "tools/runtime/knowledge-digital-worker-interop.sh",
+    "operations": [
+      "readiness",
+      "handshake",
+      "handoff"
+    ],
+    "required_provider_capabilities": [
+      "knowledge.search",
+      "knowledge.context",
+      "knowledge.evidence-pack",
+      "knowledge.action-check",
+      "a2a.preflight",
+      "execution.receipt.write"
+    ],
+    "protocols": {
+      "mcp": "2026-07-28",
+      "a2a": "1.0.0"
+    },
+    "network_required": false,
+    "task_execution": false
+  },
+  "handoff_contract": {
+    "schema_version": "knowledge-hub.agent-handoff.v1",
+    "required_identity": [
+      "work_item_id",
+      "run_id",
+      "scope_ref"
+    ],
+    "task_binding": "sha256-only",
+    "task_echoed": false,
+    "execution_receipt_correlation": "optional-but-verified-if-present",
+    "consumer_work_item_ssot": true,
+    "canonical_write_permitted": false,
+    "handoff_executes_task": false
   },
   "compatibility_intelligence": {
     "owner": "knowledge-hub",

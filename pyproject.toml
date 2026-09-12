@@ -65,6 +65,8 @@ files = [
     "tools/codex_assets/knowledge_hub/runtime_v3_contracts.py",
     "tools/codex_assets/knowledge_hub/runtime_v3_governance.py",
     "tools/codex_assets/knowledge_hub/runtime_v3.py",
+    "tools/codex_assets/knowledge_hub/runtime_p4_interop.py",
+    "tools/codex_assets/knowledge_hub/runtime_p4_cli.py",
     "tools/codex_assets/knowledge_hub/runtime_v3_cli.py",
     "tools/codex_assets/knowledge_hub/mcp_v3_server.py",
     "tools/codex_assets/knowledge_hub/search.py",
