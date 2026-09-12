@@ -18,6 +18,7 @@ from .common import (
 )
 
 _REPOSITORY_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_REVISION_PATTERN = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _MAX_PAGES = 10
 _PAGE_SIZE = 100
 _TIMEOUT_SECONDS = 20
@@ -44,6 +45,13 @@ def retirement_candidates(root: pathlib.Path, relative: str) -> List[str]:
         if isinstance(row, Mapping) and row.get("branch"):
             result.append(str(row["branch"]))
     return sorted(set(result))
+
+
+def _validate_identity(repository: str, source_revision: str) -> None:
+    if not _REPOSITORY_PATTERN.fullmatch(repository):
+        raise KnowledgeHubError("repository must use owner/name form")
+    if not _REVISION_PATTERN.fullmatch(source_revision):
+        raise KnowledgeHubError("source revision must be a full Git object id")
 
 
 def _request_page(repository: str, token: str, page: int) -> List[Mapping[str, Any]]:
@@ -98,6 +106,7 @@ def evaluate_remote_branch_inventory(
     token: str = "",
     lifecycle: str = "registry/branch-lifecycle.json",
 ) -> Dict[str, Any]:
+    _validate_identity(repository, source_revision)
     candidates = retirement_candidates(root, lifecycle)
     try:
         branches = fetch_remote_branches(repository, token)
