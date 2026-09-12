@@ -12,6 +12,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 MODEL_MODULES = ("model", "model_index")
 LIFECYCLE_MODULES = ("lifecycle", "lifecycle_2", "lifecycle_3", "lifecycle_4")
+GOVERNANCE_MODULES = ("governance", "governance_2", "governance_3", "governance_4")
 MODEL_SOURCE_PATHS = tuple(
     "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
     for name in MODEL_MODULES
@@ -20,7 +21,13 @@ LIFECYCLE_SOURCE_PATHS = tuple(
     "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
     for name in LIFECYCLE_MODULES
 )
-DEFAULT_SOURCE_PATHS = MODEL_SOURCE_PATHS + LIFECYCLE_SOURCE_PATHS
+GOVERNANCE_SOURCE_PATHS = tuple(
+    "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
+    for name in GOVERNANCE_MODULES
+)
+DEFAULT_SOURCE_PATHS = (
+    MODEL_SOURCE_PATHS + LIFECYCLE_SOURCE_PATHS + GOVERNANCE_SOURCE_PATHS
+)
 _FunctionNode = Union[ast.FunctionDef, ast.AsyncFunctionDef]
 _TestBlock = Tuple[str, str]
 
@@ -154,6 +161,10 @@ def rebalance_lifecycle_sources(sources: Sequence[str]) -> Dict[str, str]:
     return _rebalance_sources(LIFECYCLE_MODULES, sources)
 
 
+def rebalance_governance_sources(sources: Sequence[str]) -> Dict[str, str]:
+    return _rebalance_sources(GOVERNANCE_MODULES, sources)
+
+
 def _atomic_write(path: pathlib.Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + ".tmp")
@@ -169,11 +180,14 @@ def _normalize_source_paths(source_paths: Sequence[str]) -> Tuple[str, ...]:
     if len(paths) == len(DEFAULT_SOURCE_PATHS):
         return paths
     if len(paths) == len(MODEL_MODULES):
-        return paths + LIFECYCLE_SOURCE_PATHS
+        return paths + LIFECYCLE_SOURCE_PATHS + GOVERNANCE_SOURCE_PATHS
     if len(paths) == len(LIFECYCLE_MODULES):
-        return MODEL_SOURCE_PATHS + paths
+        return MODEL_SOURCE_PATHS + paths + GOVERNANCE_SOURCE_PATHS
+    if len(paths) == len(MODEL_MODULES) + len(LIFECYCLE_MODULES):
+        return paths + GOVERNANCE_SOURCE_PATHS
     raise RuntimeError(
-        "source paths must contain 2 model, 4 lifecycle, or all 6 generated shard paths"
+        "source paths must contain 2 model, 4 lifecycle, 6 model+lifecycle, "
+        "or all 10 generated shard paths"
     )
 
 
@@ -184,9 +198,11 @@ def generate(
 ) -> List[str]:
     normalized_paths = _normalize_source_paths(source_paths)
     sources = [_source_from_git(root, revision, path) for path in normalized_paths]
-    model_count = len(MODEL_MODULES)
-    rendered = rebalance_model_sources(sources[:model_count])
-    rendered.update(rebalance_lifecycle_sources(sources[model_count:]))
+    model_end = len(MODEL_MODULES)
+    lifecycle_end = model_end + len(LIFECYCLE_MODULES)
+    rendered = rebalance_model_sources(sources[:model_end])
+    rendered.update(rebalance_lifecycle_sources(sources[model_end:lifecycle_end]))
+    rendered.update(rebalance_governance_sources(sources[lifecycle_end:]))
     output_root = root / "tools/codex_assets/knowledge_hub/regression"
     outputs = {
         output_root / (name + ".py"): content for name, content in rendered.items()
@@ -206,7 +222,8 @@ def main(argv: Iterable[str] = ()) -> int:
         dest="source_paths",
         help=(
             "generated Python path inside the selected Git revision; pass 2 model, "
-            "4 lifecycle, or all 6 generated shard paths to override defaults"
+            "4 lifecycle, legacy 6 model+lifecycle, or all 10 generated shard paths "
+            "to override defaults"
         ),
     )
     args = parser.parse_args(list(argv) if argv else None)

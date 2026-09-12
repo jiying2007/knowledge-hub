@@ -20,6 +20,9 @@ from .lifecycle_4 import *  # noqa: F401,F403,E402
 from .retrieval import *  # noqa: F401,F403,E402
 from .obsidian import *  # noqa: F401,F403,E402
 from .governance import *  # noqa: F401,F403,E402
+from .governance_2 import *  # noqa: F401,F403,E402
+from .governance_3 import *  # noqa: F401,F403,E402
+from .governance_4 import *  # noqa: F401,F403,E402
 from .terminal_gates import *  # noqa: F401,F403,E402
 # Override the legacy generated status-source-governance case with the extracted
 # time-safe contract. The result id and full-suite position remain unchanged.
