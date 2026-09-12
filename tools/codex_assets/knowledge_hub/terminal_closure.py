@@ -184,9 +184,16 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
     )
     remaining = sorted(str(value) for value in evidence.get("remaining_candidates", []))
     current_sha = os.environ.get("GITHUB_SHA", "").strip()
+    current_repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
     revision_matches = True
+    repository_matches = True
     if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
         revision_matches = str(evidence.get("source_revision", "")) == current_sha
+    if (
+        bool(config.get("require_current_github_repository_when_available", False))
+        and current_repository
+    ):
+        repository_matches = str(evidence.get("repository", "")) == current_repository
     status = "pass"
     reason = ""
     if evidence.get("status") != "pass":
@@ -201,10 +208,14 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
     elif not revision_matches:
         status = "blocked"
         reason = "branch-inventory-revision-mismatch"
+    elif not repository_matches:
+        status = "blocked"
+        reason = "branch-inventory-repository-mismatch"
     return {
         "required": True,
         "status": status,
         "repository": str(evidence.get("repository", "")),
+        "repository_matches_current_run": repository_matches,
         "source_revision": str(evidence.get("source_revision", "")),
         "revision_matches_current_run": revision_matches,
         "retirement_candidates": candidates,
