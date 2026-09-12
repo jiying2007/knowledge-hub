@@ -37,7 +37,7 @@ jobs:
       - name: Assess product readiness without claiming terminal closure
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
       - name: Enforce terminal closure contract
-        run: rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json
+        run: rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json --output .cache/knowledge-hub/terminal-closure.json
       - name: Upload terminal closure evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -48,5 +48,6 @@ jobs:
             .cache/knowledge-hub/engineering-quality.json
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
+            .cache/knowledge-hub/terminal-closure.json
           if-no-files-found: error
           retention-days: 90
