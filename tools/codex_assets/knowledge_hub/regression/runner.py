@@ -14,6 +14,9 @@ if _support.today_source == "system-date":
 from .model import *  # noqa: F401,F403,E402
 from .model_index import *  # noqa: F401,F403,E402
 from .lifecycle import *  # noqa: F401,F403,E402
+from .lifecycle_2 import *  # noqa: F401,F403,E402
+from .lifecycle_3 import *  # noqa: F401,F403,E402
+from .lifecycle_4 import *  # noqa: F401,F403,E402
 from .retrieval import *  # noqa: F401,F403,E402
 from .obsidian import *  # noqa: F401,F403,E402
 from .governance import *  # noqa: F401,F403,E402
