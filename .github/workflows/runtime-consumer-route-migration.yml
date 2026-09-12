@@ -1,0 +1,57 @@
+name: runtime-consumer-route-migration
+
+on:
+  push:
+    branches:
+      - arch/runtime-consumer-route-v2
+    paths:
+      - tools/migrations/register-digital-worker.py
+      - .github/workflows/runtime-consumer-route-migration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Apply canonical registry migration
+        run: python3 tools/migrations/register-digital-worker.py
+      - name: Verify generated identity chain
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('.')
+          projects = json.loads((root/'registry/projects.json').read_text())['projects']
+          repos = json.loads((root/'registry/repositories.json').read_text())['repositories']
+          routes = json.loads((root/'registry/project-routes.json').read_text())['routes']
+          p = next(x for x in projects if x.get('id') == 'digital-worker')
+          r = next(x for x in repos if x.get('repo_id') == 'digital-worker')
+          q = next(x for x in routes if x.get('project_id') == 'digital-worker')
+          assert p['groups'] == ['agent-tools']
+          assert r['project_id'] == p['id']
+          assert r['remote_key'] == 'jiying2007/digital-worker'
+          assert r['remote_kind'] == 'github'
+          assert q['repo_refs'] == [r['repo_id']]
+          assert q['workspace_refs'] == [r['workspace_ref']]
+          assert q['route_key_policy'] == 'git-remote-first'
+          assert (root/q['hub_entry']).is_file()
+          print('digital-worker remote -> repository -> project -> route: PASS')
+          PY
+      - name: Commit generated canonical state
+        run: |
+          if git diff --quiet -- registry/projects.json registry/repositories.json registry/project-routes.json projects/digital-worker/README.md; then
+            echo 'canonical route already present'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add registry/projects.json registry/repositories.json registry/project-routes.json projects/digital-worker/README.md
+          git commit -m 'feat(registry): register digital-worker governed route'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
