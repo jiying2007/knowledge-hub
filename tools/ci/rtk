@@ -33,7 +33,7 @@ if [[ "$command_name" == /* ]]; then
 fi
 
 case "$command_name" in
-  python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14|git|test)
+  python|python3|python3.8|python3.9|python3.10|python3.11|python3.12|python3.13|python3.14|git|test|rg)
     exec "$command_name" "$@"
     ;;
   bash)
