@@ -20,8 +20,6 @@
   },
   "bounded_legacy": {
     "source": "registry/legacy-debt-burndown.json",
-    "max_oversized_legacy_modules": 11,
-    "max_legacy_artifact_references": 315,
     "growth_allowed": false,
     "terminal_interpretation": "Frozen historical compatibility debt is permitted only while it does not grow; quarterly burn-down remains required."
   },
