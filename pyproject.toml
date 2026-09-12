@@ -85,6 +85,7 @@ files = [
     "tools/codex_assets/knowledge_hub/attestation.py",
     "tools/codex_assets/knowledge_hub/engineering_debt.py",
     "tools/codex_assets/knowledge_hub/runtime_p5_p10_cli.py",
+    "tools/codex_assets/knowledge_hub/complexity_budget.py",
     "tools/codex_assets/knowledge_hub/terminal_closure.py",
     "tools/codex_assets/knowledge_hub/remote_branch_inventory.py",
 ]
