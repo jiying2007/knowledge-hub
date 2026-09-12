@@ -1,7 +1,16 @@
 {
-  "schema_version": 1,
-  "model": "knowledge-hub-runtime-p4-interop-v1",
-  "status": "implemented-candidate",
+  "schema_version": 2,
+  "model": "knowledge-hub-runtime-p4-interop-v2",
+  "status": "qualified-implementation",
+  "implementation_status": "qualified",
+  "adoption_status": "candidate",
+  "qualification_evidence": {
+    "pr": 17,
+    "candidate_head": "63d374488fe35667ec70b9a395cc2c58d431c028",
+    "master_head": "b856d3718ec6b863ecdbb7cfe2e33ec52ca79e5a",
+    "post_merge_quality_run": 34666044533,
+    "post_merge_status": "success"
+  },
   "extends": "registry/knowledge-runtime-v3.json",
   "phase": "P4",
   "scope": [

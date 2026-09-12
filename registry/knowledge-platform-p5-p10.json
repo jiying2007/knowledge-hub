@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-platform-p5-p10-v1",
+  "status": "implemented-candidate",
+  "extends": [
+    "registry/knowledge-runtime-v3.json",
+    "registry/knowledge-runtime-p4.json"
+  ],
+  "authority_contract": {
+    "canonical": "Markdown + registry",
+    "derived_indexes_authoritative": false,
+    "memory_authoritative": false,
+    "temporal_graph_authoritative": false,
+    "connector_payload_authoritative": false,
+    "auto_promotion": false
+  },
+  "phases": {
+    "P5": {
+      "name": "Security and Protocol Conformance",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "external-closure-required",
+      "capabilities": [
+        "principal-context",
+        "acl-first-authorization",
+        "trust-classification",
+        "instruction-risk",
+        "mcp-2026-07-28-stateless-profile",
+        "a2a-1.0-provider-card",
+        "repository-posture"
+      ]
+    },
+    "P6": {
+      "name": "Retrieval Intelligence v4",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "shadow-eval",
+      "capabilities": [
+        "hierarchical-chunking",
+        "pluggable-dense-provider",
+        "deterministic-fallback",
+        "query-routing",
+        "rrf-fusion",
+        "optional-reranker",
+        "versioned-eval-v2",
+        "retrieval-lane-health"
+      ]
+    },
+    "P7": {
+      "name": "Memory and Temporal Context",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "shadow",
+      "capabilities": [
+        "private-memory-event-store",
+        "ttl",
+        "forget",
+        "supersede",
+        "durable-consolidation-candidate",
+        "strict-temporal-validity",
+        "derived-temporal-context-graph"
+      ]
+    },
+    "P8": {
+      "name": "Source Integration",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "provider-pilot-required",
+      "capabilities": [
+        "connector-spi",
+        "incremental-checkpoint",
+        "acl-propagation",
+        "tombstone",
+        "quarantine",
+        "github-payload-adapter",
+        "feishu-payload-adapter",
+        "tapd-payload-adapter",
+        "ci-payload-adapter",
+        "google-drive-payload-adapter"
+      ]
+    },
+    "P9": {
+      "name": "Knowledge Platform Operations",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "local-first",
+      "capabilities": [
+        "w3c-traceparent",
+        "cross-agent-correlation",
+        "redacted-local-span-ledger",
+        "retrieval-lane-health",
+        "slo-summary"
+      ]
+    },
+    "P10": {
+      "name": "Engineering Debt and Supply Chain",
+      "implementation_status": "implemented-candidate",
+      "adoption_status": "incremental",
+      "capabilities": [
+        "debt-burn-down",
+        "branch-coverage-contract",
+        "mutation-contract",
+        "in-toto-style-quality-attestation"
+      ]
+    }
+  },
+  "repository_security_target": {
+    "private_required": true,
+    "protected_default_branch_required": true,
+    "required_status_checks": ["quality"],
+    "block_force_push": true,
+    "require_pull_request": true,
+    "require_conversation_resolution": true
+  },
+  "protocols": {
+    "mcp": {
+      "version": "2026-07-28",
+      "native_profile": "stateless-2026-07-28",
+      "legacy_compatibility_adapter": true,
+      "official_conformance_evidence_required": true
+    },
+    "a2a": {
+      "version": "1.0.0",
+      "knowledge_hub_role": "provider-card-and-preflight-only",
+      "task_execution_plane": "external",
+      "official_tck_required_if_task-server-implemented": true
+    }
+  },
+  "retrieval": {
+    "acl_before_ranking": true,
+    "canonical_item_authority_preserved": true,
+    "dense_provider_default": "deterministic-feature-hash-fallback",
+    "external_embedding_provider_opt_in": true,
+    "reranker_default_enabled": false,
+    "fresh_eval_required_for_default_change": true,
+    "eval_dataset_target_cases": 200,
+    "eval_dataset_stretch_cases": 500
+  },
+  "memory": {
+    "default_store": ".cache/knowledge-hub/memory/events.jsonl",
+    "canonical_write": false,
+    "durable_promotion_requires": [
+      "provenance",
+      "dedup",
+      "evidence",
+      "human-or-owner-gate"
+    ],
+    "forget_supported": true,
+    "ttl_supported": true
+  },
+  "connectors": {
+    "hub_credentials": false,
+    "network_transport_owned_by_caller": true,
+    "checkpoint_local_private": true,
+    "tombstone_supported": true,
+    "acl_passthrough_required": true,
+    "quarantine_supported": true,
+    "canonical_write": false
+  },
+  "observability": {
+    "store_raw_query": false,
+    "store_raw_task": false,
+    "store_raw_prompt": false,
+    "w3c_trace_context": true,
+    "network_export_default": false,
+    "private_local_ledger": true
+  },
+  "engineering": {
+    "legacy_debt_quarterly_reduction_target": 0.15,
+    "policy_branch_coverage_target": 70,
+    "global_statement_coverage_gate_unchanged": 75,
+    "mutation_probe_required_for_security_policy_changes": true,
+    "attestation_format": "in-toto-statement-v1-style"
+  },
+  "external_closure_gaps": [
+    {
+      "id": "repository-private-boundary",
+      "owner": "repository-admin",
+      "required": true,
+      "status": "open",
+      "reason": "GitHub administration action is outside repository commit authority"
+    },
+    {
+      "id": "master-ruleset-enforcement",
+      "owner": "repository-admin",
+      "required": true,
+      "status": "open",
+      "reason": "server-side ruleset must be configured by repository administration"
+    },
+    {
+      "id": "mcp-official-conformance",
+      "owner": "runtime-owner",
+      "required": true,
+      "status": "open",
+      "reason": "official conformance evidence must be produced outside static implementation"
+    },
+    {
+      "id": "connector-provider-pilot",
+      "owner": "integration-owner",
+      "required": true,
+      "status": "open",
+      "reason": "real provider credentials and ACL/tombstone pilot evidence are required"
+    },
+    {
+      "id": "attestation-signing-identity",
+      "owner": "release-owner",
+      "required": false,
+      "status": "open",
+      "reason": "production signing identity is a deployment concern"
+    }
+  ]
+}

@@ -1,7 +1,9 @@
 {
-  "schema_version": 1,
-  "contract_version": "1.1",
-  "status": "implemented-candidate",
+  "schema_version": 2,
+  "contract_version": "1.2",
+  "status": "qualified-provider-adoption-candidate",
+  "implementation_status": "qualified",
+  "adoption_status": "candidate",
   "consumer": "digital-worker",
   "provider": "knowledge-hub",
   "role": "knowledge-control-plane",
@@ -42,6 +44,14 @@
       "run_id",
       "scope_ref"
     ],
+    "optional_context": [
+      "principal_id",
+      "organization_id",
+      "groups",
+      "delegated_by",
+      "purpose",
+      "traceparent"
+    ],
     "returned_fields": [
       "source_fingerprint",
       "knowledge_ids",
@@ -54,7 +64,9 @@
     "missing_required_source": "BLOCKED",
     "conflicting_authority": "NEEDS_REVIEW",
     "provisional_only": "NEEDS_REVIEW",
-    "provider_unavailable": "BLOCKED"
+    "provider_unavailable": "BLOCKED",
+    "principal_acl_denied": "BLOCKED",
+    "untrusted_instruction": "DATA_ONLY"
   },
   "write_policy": {
     "direct_active_mutation": false,
@@ -62,8 +74,9 @@
     "owner_promotion_required": true
   },
   "runtime_contract": {
-    "phase": "P4",
+    "phase": "P4-P9",
     "provider_entrypoint": "tools/runtime/knowledge-digital-worker-interop.sh",
+    "platform_entrypoint": "tools/runtime/knowledge-platform-v5.sh",
     "operations": [
       "readiness",
       "handshake",
@@ -81,6 +94,8 @@
       "mcp": "2026-07-28",
       "a2a": "1.0.0"
     },
+    "mcp_native_profile": "stateless-2026-07-28",
+    "a2a_role": "provider-card-and-preflight-only",
     "network_required": false,
     "task_execution": false
   },
@@ -96,6 +111,8 @@
     "execution_receipt_correlation": "optional-but-verified-if-present",
     "execution_receipt_agent_binding": "must-match-from-agent-if-present",
     "scope_enforcement": "from-and-target-agent-knowledge-scopes",
+    "principal_acl_enforcement": "p6-pre-ranking",
+    "trace_propagation": "w3c-traceparent-optional",
     "consumer_work_item_ssot": true,
     "canonical_write_permitted": false,
     "handoff_executes_task": false
