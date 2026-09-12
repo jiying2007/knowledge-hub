@@ -6,7 +6,7 @@ import json
 import pathlib
 import re
 from collections import Counter
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional
 
 
 PLANES = (
@@ -25,6 +25,9 @@ DAILY_COMMANDS = (
     "knowledge-search",
 )
 _MODULE_PATTERN = re.compile(r"-m\s+(tools\.codex_assets\.knowledge_hub\.[A-Za-z0-9_.]+)")
+_README_COUNT_PATTERN = re.compile(
+    r"命令面的机器权威是 `registry/command-surface\.json`：当前 (\d+) 个稳定 wrapper"
+)
 
 
 def _load_catalog(root: pathlib.Path) -> Mapping[str, Any]:
@@ -70,12 +73,22 @@ def _command_rows(catalog: Mapping[str, Any]) -> List[Mapping[str, Any]]:
     return [row for row in rows if isinstance(row, Mapping)]
 
 
+def _readme_wrapper_count(root: pathlib.Path) -> Optional[int]:
+    try:
+        text = (root / "README.md").read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = _README_COUNT_PATTERN.search(text)
+    return int(match.group(1)) if match else None
+
+
 def evaluate_command_surface(root: pathlib.Path) -> Dict[str, Any]:
-    """Compare the declarative catalog with the executable wrapper surface."""
+    """Compare the declarative catalog with the executable and documented surface."""
 
     catalog = _load_catalog(root)
     rows = _command_rows(catalog)
     wrappers = _wrapper_names(root)
+    readme_wrapper_count = _readme_wrapper_count(root)
     by_name = {str(row.get("name", "")): row for row in rows if row.get("name")}
     catalog_names = set(by_name)
     wrapper_names = set(wrappers)
@@ -118,6 +131,10 @@ def evaluate_command_surface(root: pathlib.Path) -> Dict[str, Any]:
         errors.append("summary-json declaration differs from implementation")
     if wrapper_growth:
         errors.append("wrapper surface grew beyond baseline")
+    if readme_wrapper_count is None:
+        errors.append("README command-surface count is missing or not bound to the canonical registry")
+    elif readme_wrapper_count != len(wrappers):
+        errors.append("README command-surface count differs from executable wrapper surface")
     by_plane = Counter(str(row.get("plane", "")) for row in rows)
     by_tier = Counter(str(row.get("tier", "")) for row in rows)
     return {
@@ -126,6 +143,7 @@ def evaluate_command_surface(root: pathlib.Path) -> Dict[str, Any]:
         "read_only": True,
         "catalog": "registry/command-surface.json",
         "wrapper_count": len(wrappers),
+        "readme_wrapper_count": readme_wrapper_count,
         "wrapper_baseline": baseline,
         "wrapper_growth": wrapper_growth,
         "catalog_count": len(rows),
