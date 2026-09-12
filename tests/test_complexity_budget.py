@@ -3,7 +3,7 @@ import json
 from tools.codex_assets.knowledge_hub.complexity_budget import evaluate_complexity_budget
 
 
-def test_complexity_budget_counts_capped_and_uncapped_oversized_modules(tmp_path):
+def test_complexity_budget_counts_all_oversized_modules_explicitly(tmp_path):
     package = tmp_path / "tools/codex_assets/knowledge_hub"
     package.mkdir(parents=True)
     (package / "capped.py").write_text("\n".join(["x = 1"] * 10) + "\n", encoding="utf-8")
@@ -35,5 +35,10 @@ def test_complexity_budget_counts_capped_and_uncapped_oversized_modules(tmp_path
         "tools/codex_assets/knowledge_hub/capped.py",
         "tools/codex_assets/knowledge_hub/uncapped.py",
     ]
-    assert report["legacy_attention_count"] == 1
-    assert report["legacy_attention"][0]["path"] == "tools/codex_assets/knowledge_hub/uncapped.py"
+    # Legacy caps prevent growth regressions; they do not remove an oversized
+    # tracked module from the report-only legacy attention set.
+    assert report["legacy_attention_count"] == 2
+    assert [row["path"] for row in report["legacy_attention"]] == [
+        "tools/codex_assets/knowledge_hub/capped.py",
+        "tools/codex_assets/knowledge_hub/uncapped.py",
+    ]
