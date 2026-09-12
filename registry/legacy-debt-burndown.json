@@ -6,12 +6,28 @@
   "status": "active",
   "oversized_modules": {
     "baseline_count": 11,
+    "current_upper_bound_count": 10,
     "measurement_source": "tools.codex_assets.knowledge_hub.complexity_budget.evaluate_complexity_budget:oversized_module_count",
     "measurement_rule": "count every tools/codex_assets/knowledge_hub/**/*.py module whose line count is greater than registry/engineering-budgets.json python.new_module_max_lines; legacy caps constrain growth but do not remove oversized modules from the count",
     "legacy_attention_field": "legacy_attention_count",
     "legacy_attention_semantics": "report-only tracked legacy modules above the module-size budget, including capped modules that remain within their legacy cap",
     "target_direction": "decrease-only",
     "quarterly_reduction_target": 0.15,
+    "ratchet_history": [
+      {
+        "as_of": "2026-09-12",
+        "upper_bound_count": 11,
+        "basis": "historical-baseline"
+      },
+      {
+        "as_of": "2026-09-12",
+        "upper_bound_count": 10,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34690933514"
+        ]
+      }
+    ],
     "preferred_order": [
       "tools/codex_assets/knowledge_hub/regression/lifecycle.py",
       "tools/codex_assets/knowledge_hub/regression/governance.py",
@@ -21,7 +37,6 @@
       "tools/codex_assets/knowledge_hub/status_cli.py",
       "tools/codex_assets/knowledge_hub/index_plan_cli.py",
       "tools/codex_assets/knowledge_hub/product_gate.py",
-      "tools/codex_assets/knowledge_hub/context.py",
       "tools/codex_assets/knowledge_hub/regression/model.py",
       "tools/codex_assets/knowledge_hub/regression/support.py"
     ]
@@ -37,6 +52,8 @@
   },
   "rules": {
     "baseline_may_not_increase": true,
+    "ratchet_history_must_be_non_increasing": true,
+    "current_upper_bound_must_match_latest_ratchet": true,
     "debt_reduction_must_not_change_external_behavior_without_regression_evidence": true,
     "historical_provenance_must_not_be_deleted_to_improve_metrics": true
   }
