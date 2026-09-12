@@ -6,6 +6,9 @@
   "status": "active",
   "oversized_modules": {
     "baseline_count": 11,
+    "measurement_source": "tools.codex_assets.knowledge_hub.complexity_budget.evaluate_complexity_budget:oversized_module_count",
+    "measurement_rule": "count every tracked tools/codex_assets/knowledge_hub/**/*.py module whose line count is greater than registry/engineering-budgets.json python.new_module_max_lines, including modules with legacy caps",
+    "attention_subset_field": "legacy_attention_count",
     "target_direction": "decrease-only",
     "quarterly_reduction_target": 0.15,
     "preferred_order": [
