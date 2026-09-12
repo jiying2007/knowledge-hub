@@ -19,6 +19,7 @@
     "synthetic_evidence_may_close": false
   },
   "bounded_legacy": {
+    "source": "registry/legacy-debt-burndown.json",
     "max_oversized_legacy_modules": 11,
     "max_legacy_artifact_references": 315,
     "growth_allowed": false,
@@ -26,21 +27,13 @@
   },
   "branch_gc": {
     "required": true,
-    "status": "open",
-    "retire_prefixes": [
-      "codex/knowledge-runtime-p0-p3",
-      "codex/knowledge-runtime-p4-interop",
-      "codex/knowledge-runtime-p5-p10",
-      "codex/knowledge-hub-cleanup",
-      "codex/readme-command-surface-authority",
-      "arch/runtime-consumer-contract-v1"
-    ],
-    "evidence": "remote branch inventory must prove completed implementation branches are deleted or explicitly retained with an owner and expiry"
+    "source": "registry/branch-lifecycle.json"
   },
   "rules": {
     "terminal_claim_requires_machine_pass": true,
     "qualified_implementation_is_not_terminal": true,
     "green_quality_is_not_terminal": true,
-    "owner_or_external_evidence_must_not_be_fabricated": true
+    "owner_or_external_evidence_must_not_be_fabricated": true,
+    "duplicate_closure_status_sources_forbidden": true
   }
 }
