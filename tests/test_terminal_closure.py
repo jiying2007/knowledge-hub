@@ -40,7 +40,7 @@ def _policy():
 def _stub_hygiene(
     monkeypatch,
     legacy_modules=11,
-    legacy_attention_modules=4,
+    legacy_attention_modules=11,
     legacy_refs=315,
 ):
     monkeypatch.delenv("GITHUB_SHA", raising=False)
@@ -122,7 +122,7 @@ def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path)
     assert report["terminal"] is True
     assert report["blockers"] == []
     assert report["bounded_legacy"]["legacy_module_count"] == 11
-    assert report["bounded_legacy"]["uncapped_legacy_attention_count"] == 4
+    assert report["bounded_legacy"]["legacy_attention_count"] == 11
 
 
 def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, tmp_path):
@@ -178,7 +178,12 @@ def test_terminal_closure_rejects_required_gap_policy_drift(monkeypatch, tmp_pat
 
 
 def test_terminal_closure_rejects_legacy_growth(monkeypatch, tmp_path):
-    _stub_hygiene(monkeypatch, legacy_modules=12, legacy_refs=316)
+    _stub_hygiene(
+        monkeypatch,
+        legacy_modules=12,
+        legacy_attention_modules=12,
+        legacy_refs=316,
+    )
     _write_common_ready_state(tmp_path)
 
     report = terminal_closure.evaluate_terminal_closure(tmp_path)
@@ -189,13 +194,11 @@ def test_terminal_closure_rejects_legacy_growth(monkeypatch, tmp_path):
     assert "bounded_legacy" in report["blockers"]
 
 
-def test_terminal_closure_uses_total_oversized_count_not_attention_subset(
-    monkeypatch, tmp_path
-):
+def test_terminal_closure_uses_explicit_total_oversized_count(monkeypatch, tmp_path):
     _stub_hygiene(
         monkeypatch,
         legacy_modules=12,
-        legacy_attention_modules=4,
+        legacy_attention_modules=11,
         legacy_refs=315,
     )
     _write_common_ready_state(tmp_path)
@@ -204,7 +207,7 @@ def test_terminal_closure_uses_total_oversized_count_not_attention_subset(
 
     assert report["terminal"] is False
     assert report["bounded_legacy"]["legacy_module_count"] == 12
-    assert report["bounded_legacy"]["uncapped_legacy_attention_count"] == 4
+    assert report["bounded_legacy"]["legacy_attention_count"] == 11
     assert "bounded_legacy" in report["blockers"]
 
 
