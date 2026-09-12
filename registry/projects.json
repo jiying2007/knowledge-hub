@@ -429,6 +429,23 @@
       "evidence_profile": "software-tool"
     },
     {
+      "id": "digital-worker",
+      "name": "Digital Worker",
+      "type": "git-repository",
+      "domain": "projects/digital-worker",
+      "entry": "projects/digital-worker/README.md",
+      "current": "projects/digital-worker/current",
+      "archive": "projects/digital-worker/archive",
+      "decisions": "projects/digital-worker/decisions",
+      "validation": "projects/digital-worker/validation",
+      "groups": [
+        "agent-tools"
+      ],
+      "repo_boundary": "control-plane",
+      "status": "registered",
+      "evidence_profile": "software-tool"
+    },
+    {
       "id": "llm-tools",
       "name": "LLM Tools",
       "type": "git-repository",

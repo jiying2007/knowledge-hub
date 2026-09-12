@@ -770,6 +770,35 @@
       "route_key_policy": "git-remote-first"
     },
     {
+      "project_id": "digital-worker",
+      "name": "Digital Worker",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "agent-tools",
+      "aliases": [
+        "digital-worker",
+        "Digital Worker",
+        "digital_worker"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [
+        "digital-worker"
+      ],
+      "workspace_refs": [
+        "workspace://digital-worker"
+      ],
+      "hub_entry": "projects/digital-worker/README.md",
+      "current_path": "projects/digital-worker/current",
+      "archive_path": "projects/digital-worker/archive",
+      "decisions_path": "projects/digital-worker/decisions",
+      "validation_path": "projects/digital-worker/validation",
+      "domain_refs": [
+        "projects/digital-worker"
+      ],
+      "default_source_ids": [],
+      "route_key_policy": "git-remote-first"
+    },
+    {
       "project_id": "llm-tools",
       "name": "LLM Tools",
       "type": "project",
