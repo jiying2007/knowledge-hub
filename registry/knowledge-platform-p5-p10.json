@@ -1,7 +1,19 @@
 {
-  "schema_version": 1,
-  "model": "knowledge-hub-platform-p5-p10-v1",
-  "status": "implemented-candidate",
+  "schema_version": 2,
+  "model": "knowledge-hub-platform-p5-p10-v2",
+  "status": "qualified-implementation",
+  "implementation_status": "qualified",
+  "adoption_status": "external-closure-required",
+  "qualification_evidence": {
+    "pr": 22,
+    "candidate_head": "af7338c51121cb2d3166cc268971b41334dfd6c6",
+    "master_head": "d93ae754a754abf69d583d1f0af1a4ec9302b6d2",
+    "post_merge_quality_run": 34673250573,
+    "post_merge_status": "success",
+    "full_regression": "133/133",
+    "compliance": "52/52",
+    "coverage_percent": 78
+  },
   "extends": [
     "registry/knowledge-runtime-v3.json",
     "registry/knowledge-runtime-p4.json"
@@ -17,7 +29,7 @@
   "phases": {
     "P5": {
       "name": "Security and Protocol Conformance",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "external-closure-required",
       "capabilities": [
         "principal-context",
@@ -31,7 +43,7 @@
     },
     "P6": {
       "name": "Retrieval Intelligence v4",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "shadow-eval",
       "capabilities": [
         "hierarchical-chunking",
@@ -46,7 +58,7 @@
     },
     "P7": {
       "name": "Memory and Temporal Context",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "shadow",
       "capabilities": [
         "private-memory-event-store",
@@ -60,7 +72,7 @@
     },
     "P8": {
       "name": "Source Integration",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "provider-pilot-required",
       "capabilities": [
         "connector-spi",
@@ -77,7 +89,7 @@
     },
     "P9": {
       "name": "Knowledge Platform Operations",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "local-first",
       "capabilities": [
         "w3c-traceparent",
@@ -89,7 +101,7 @@
     },
     "P10": {
       "name": "Engineering Debt and Supply Chain",
-      "implementation_status": "implemented-candidate",
+      "implementation_status": "qualified",
       "adoption_status": "incremental",
       "capabilities": [
         "debt-burn-down",
@@ -111,7 +123,11 @@
     "mcp": {
       "version": "2026-07-28",
       "native_profile": "stateless-2026-07-28",
+      "native_default": true,
       "legacy_compatibility_adapter": true,
+      "legacy_default": false,
+      "legacy_opt_in_flag": "--legacy-compat",
+      "legacy_deprecation_status": "pending-official-conformance-and-consumer-closure",
       "official_conformance_evidence_required": true
     },
     "a2a": {
