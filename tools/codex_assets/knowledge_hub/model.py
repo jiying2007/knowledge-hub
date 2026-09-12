@@ -92,6 +92,9 @@ FRONTMATTER_MIRROR_FIELDS = (
     "evidence_refs",
     "created_at",
     "updated_at",
+    "valid_from",
+    "valid_to",
+    "superseded_by",
     "generated_by_ai",
     "ai_role",
     "ai_model_or_tool",
@@ -270,8 +273,8 @@ def validate_item(
         if evidence_validation_status != "verified":
             errors.append("active item requires evidence_validation_status verified")
 
-    created = updated = None
-    for field in ("created_at", "updated_at", "review_after"):
+    created = updated = valid_from = valid_to = None
+    for field in ("created_at", "updated_at", "review_after", "valid_from", "valid_to"):
         if item.get(field):
             try:
                 parsed = _iso_date(item[field], field)
@@ -279,10 +282,23 @@ def validate_item(
                     created = parsed
                 elif field == "updated_at":
                     updated = parsed
+                elif field == "valid_from":
+                    valid_from = parsed
+                elif field == "valid_to":
+                    valid_to = parsed
             except KnowledgeHubError as exc:
                 errors.append(str(exc))
     if created and updated and updated < created:
         errors.append("updated_at must not precede created_at")
+    if valid_from and valid_to and valid_from > valid_to:
+        errors.append("valid_from must not exceed valid_to")
+    superseded_by = item.get("superseded_by")
+    if superseded_by is not None and (
+        not isinstance(superseded_by, str)
+        or not superseded_by.strip()
+        or len(superseded_by) > 200
+    ):
+        errors.append("superseded_by must be a non-empty bounded string")
 
     if item.get("generated_by_ai"):
         for field in ("ai_role", "ai_model_or_tool", "ai_generated_at"):

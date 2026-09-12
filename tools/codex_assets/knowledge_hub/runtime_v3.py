@@ -76,11 +76,13 @@ def _sequence(
     return tuple(result)
 
 
-def _date(value: Any) -> Optional[dt.date]:
-    try:
-        return dt.date.fromisoformat(str(value)) if value else None
-    except ValueError:
+def _date(value: Any, field: str) -> Optional[dt.date]:
+    if value in (None, ""):
         return None
+    try:
+        return dt.date.fromisoformat(str(value))
+    except ValueError as exc:
+        raise KnowledgeHubError("{} must use YYYY-MM-DD".format(field)) from exc
 
 
 def _eligible(item: Mapping[str, Any], today: dt.date, scopes: Sequence[str]) -> bool:
@@ -88,8 +90,10 @@ def _eligible(item: Mapping[str, Any], today: dt.date, scopes: Sequence[str]) ->
         return False
     if str(item.get("visibility", "")) == "personal-local":
         return False
-    valid_from = _date(item.get("valid_from"))
-    valid_to = _date(item.get("valid_to"))
+    valid_from = _date(item.get("valid_from"), "valid_from")
+    valid_to = _date(item.get("valid_to"), "valid_to")
+    if valid_from and valid_to and valid_from > valid_to:
+        raise KnowledgeHubError("valid_from must not exceed valid_to")
     if valid_from and today < valid_from:
         return False
     if valid_to and today > valid_to:
@@ -115,7 +119,7 @@ def _authority(item: Mapping[str, Any]) -> float:
 
 
 def _freshness(item: Mapping[str, Any], today: dt.date) -> float:
-    updated = _date(item.get("updated_at"))
+    updated = _date(item.get("updated_at"), "updated_at")
     if not updated:
         return 0.5
     age = max(0, (today - updated).days)
