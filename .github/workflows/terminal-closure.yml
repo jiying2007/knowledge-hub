@@ -36,6 +36,10 @@ jobs:
         run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --summary-json
       - name: Assess product readiness without claiming terminal closure
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
+      - name: Capture fresh remote branch inventory
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: rtk python3 -m tools.codex_assets.knowledge_hub.remote_branch_inventory_cli --repository "${GITHUB_REPOSITORY}" --source-revision "${GITHUB_SHA}"
       - name: Enforce terminal closure contract
         run: rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json --output .cache/knowledge-hub/terminal-closure.json
       - name: Upload terminal closure evidence
@@ -48,6 +52,7 @@ jobs:
             .cache/knowledge-hub/engineering-quality.json
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
+            .cache/knowledge-hub/remote-branch-inventory.json
             .cache/knowledge-hub/terminal-closure.json
           if-no-files-found: error
           retention-days: 90
