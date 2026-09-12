@@ -1,4 +1,4 @@
-"""Deterministically rebalance generated regression model case shards."""
+"""Deterministically rebalance generated regression case shards."""
 
 from __future__ import annotations
 
@@ -11,11 +11,18 @@ from typing import Dict, Iterable, List, Sequence, Tuple, Union
 
 
 MODEL_MODULES = ("model", "model_index")
-DEFAULT_SOURCE_PATHS = tuple(
+LIFECYCLE_MODULES = ("lifecycle", "lifecycle_2", "lifecycle_3", "lifecycle_4")
+MODEL_SOURCE_PATHS = tuple(
     "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
     for name in MODEL_MODULES
 )
+LIFECYCLE_SOURCE_PATHS = tuple(
+    "tools/codex_assets/knowledge_hub/regression/{}.py".format(name)
+    for name in LIFECYCLE_MODULES
+)
+DEFAULT_SOURCE_PATHS = MODEL_SOURCE_PATHS + LIFECYCLE_SOURCE_PATHS
 _FunctionNode = Union[ast.FunctionDef, ast.AsyncFunctionDef]
+_TestBlock = Tuple[str, str]
 
 
 def _source_from_git(root: pathlib.Path, revision: str, path: str) -> str:
@@ -44,10 +51,10 @@ def _slice(lines: Sequence[str], node: _FunctionNode) -> str:
     return "".join(lines[node.lineno - 1 : node.end_lineno])
 
 
-def _test_blocks(source: str) -> List[Tuple[str, str]]:
+def _test_blocks(source: str) -> List[_TestBlock]:
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
-    blocks: List[Tuple[str, str]] = []
+    blocks: List[_TestBlock] = []
     for node in tree.body:
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
@@ -61,25 +68,45 @@ def _line_count(block: str) -> int:
     return block.count("\n") + 1
 
 
-def _balanced_partition(
-    blocks: Sequence[Tuple[str, str]],
-) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
-    if len(blocks) < 2:
-        raise RuntimeError("at least two generated model tests are required for sharding")
+def _balanced_partitions(
+    blocks: Sequence[_TestBlock],
+    part_count: int,
+) -> List[List[_TestBlock]]:
+    if part_count < 2:
+        raise RuntimeError("generated shard count must be at least two")
+    if len(blocks) < part_count:
+        raise RuntimeError(
+            "at least {} generated tests are required for sharding".format(part_count)
+        )
     total_lines = sum(_line_count(block) for _, block in blocks)
-    prefix_lines = 0
-    best_index = 1
-    best_delta = total_lines
-    for index, (_, block) in enumerate(blocks[:-1], start=1):
-        prefix_lines += _line_count(block)
-        delta = abs(total_lines - (2 * prefix_lines))
-        if delta < best_delta:
-            best_index = index
-            best_delta = delta
-    return list(blocks[:best_index]), list(blocks[best_index:])
+    indexes = [0]
+    start = 0
+    for part in range(1, part_count):
+        target = total_lines * part / float(part_count)
+        prefix_lines = sum(_line_count(block) for _, block in blocks[:start])
+        best_index = start + 1
+        best_delta = float("inf")
+        last_allowed = len(blocks) - (part_count - part)
+        for index in range(start + 1, last_allowed + 1):
+            candidate = prefix_lines + sum(
+                _line_count(block) for _, block in blocks[start:index]
+            )
+            delta = abs(candidate - target)
+            if delta < best_delta:
+                best_index = index
+                best_delta = delta
+            if candidate >= target and delta > best_delta:
+                break
+        indexes.append(best_index)
+        start = best_index
+    indexes.append(len(blocks))
+    return [
+        list(blocks[indexes[index] : indexes[index + 1]])
+        for index in range(part_count)
+    ]
 
 
-def _render_module(name: str, blocks: Sequence[Tuple[str, str]]) -> str:
+def _render_module(name: str, blocks: Sequence[_TestBlock]) -> str:
     title = name.replace("_", " ")
     header = (
         '"""Generated regression cases: {}."""\n\n'
@@ -90,32 +117,41 @@ def _render_module(name: str, blocks: Sequence[Tuple[str, str]]) -> str:
     return header + body + ("\n" if body else "")
 
 
-def rebalance_model_sources(sources: Sequence[str]) -> Dict[str, str]:
-    if len(sources) != len(MODEL_MODULES):
+def _rebalance_sources(
+    module_names: Sequence[str],
+    sources: Sequence[str],
+) -> Dict[str, str]:
+    if len(sources) != len(module_names):
         raise RuntimeError(
-            "expected {} generated model sources, got {}".format(
-                len(MODEL_MODULES),
+            "expected {} generated sources, got {}".format(
+                len(module_names),
                 len(sources),
             )
         )
-    blocks: List[Tuple[str, str]] = []
+    blocks: List[_TestBlock] = []
     for source in sources:
         blocks.extend(_test_blocks(source))
     if not blocks:
-        raise RuntimeError("no top-level generated model test functions found")
+        raise RuntimeError("no top-level generated test functions found")
     names = [name for name, _ in blocks]
-    duplicate_names = sorted(
-        name for name in set(names) if names.count(name) > 1
-    )
+    duplicate_names = sorted(name for name in set(names) if names.count(name) > 1)
     if duplicate_names:
         raise RuntimeError(
-            "duplicate generated model tests: {}".format(", ".join(duplicate_names))
+            "duplicate generated tests: {}".format(", ".join(duplicate_names))
         )
-    first, second = _balanced_partition(blocks)
+    partitions = _balanced_partitions(blocks, len(module_names))
     return {
-        MODEL_MODULES[0]: _render_module(MODEL_MODULES[0], first),
-        MODEL_MODULES[1]: _render_module(MODEL_MODULES[1], second),
+        module_name: _render_module(module_name, partition)
+        for module_name, partition in zip(module_names, partitions)
     }
+
+
+def rebalance_model_sources(sources: Sequence[str]) -> Dict[str, str]:
+    return _rebalance_sources(MODEL_MODULES, sources)
+
+
+def rebalance_lifecycle_sources(sources: Sequence[str]) -> Dict[str, str]:
+    return _rebalance_sources(LIFECYCLE_MODULES, sources)
 
 
 def _atomic_write(path: pathlib.Path, content: str) -> None:
@@ -128,17 +164,32 @@ def _atomic_write(path: pathlib.Path, content: str) -> None:
     os.replace(str(temporary), str(path))
 
 
+def _normalize_source_paths(source_paths: Sequence[str]) -> Tuple[str, ...]:
+    paths = tuple(source_paths)
+    if len(paths) == len(DEFAULT_SOURCE_PATHS):
+        return paths
+    if len(paths) == len(MODEL_MODULES):
+        return paths + LIFECYCLE_SOURCE_PATHS
+    if len(paths) == len(LIFECYCLE_MODULES):
+        return MODEL_SOURCE_PATHS + paths
+    raise RuntimeError(
+        "source paths must contain 2 model, 4 lifecycle, or all 6 generated shard paths"
+    )
+
+
 def generate(
     root: pathlib.Path,
     revision: str,
     source_paths: Sequence[str] = DEFAULT_SOURCE_PATHS,
 ) -> List[str]:
-    sources = [_source_from_git(root, revision, path) for path in source_paths]
-    rendered = rebalance_model_sources(sources)
+    normalized_paths = _normalize_source_paths(source_paths)
+    sources = [_source_from_git(root, revision, path) for path in normalized_paths]
+    model_count = len(MODEL_MODULES)
+    rendered = rebalance_model_sources(sources[:model_count])
+    rendered.update(rebalance_lifecycle_sources(sources[model_count:]))
     output_root = root / "tools/codex_assets/knowledge_hub/regression"
     outputs = {
-        output_root / (name + ".py"): content
-        for name, content in rendered.items()
+        output_root / (name + ".py"): content for name, content in rendered.items()
     }
     for path, content in outputs.items():
         _atomic_write(path, content)
@@ -154,8 +205,8 @@ def main(argv: Iterable[str] = ()) -> int:
         action="append",
         dest="source_paths",
         help=(
-            "generated model Python path inside the selected Git revision; "
-            "pass twice to override the default model/model_index pair"
+            "generated Python path inside the selected Git revision; pass 2 model, "
+            "4 lifecycle, or all 6 generated shard paths to override defaults"
         ),
     )
     args = parser.parse_args(list(argv) if argv else None)
@@ -163,9 +214,11 @@ def main(argv: Iterable[str] = ()) -> int:
         args.root or pathlib.Path(__file__).resolve().parents[3]
     ).resolve()
     source_paths = args.source_paths or DEFAULT_SOURCE_PATHS
-    if len(source_paths) != len(MODEL_MODULES):
-        parser.error("--source-path must be supplied exactly twice when overridden")
-    for path in generate(root, args.revision, source_paths):
+    try:
+        normalized_paths = _normalize_source_paths(source_paths)
+    except RuntimeError as exc:
+        parser.error(str(exc))
+    for path in generate(root, args.revision, normalized_paths):
         print(path)
     return 0
 

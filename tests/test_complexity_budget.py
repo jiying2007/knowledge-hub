@@ -75,3 +75,18 @@ def test_regression_model_split_reduces_repository_oversized_module_debt():
     assert report["oversized_module_count"] <= 8
     assert "tools/codex_assets/knowledge_hub/regression/model.py" not in oversized_paths
     assert "tools/codex_assets/knowledge_hub/regression/model_index.py" not in oversized_paths
+
+
+def test_regression_lifecycle_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    lifecycle_paths = {
+        "tools/codex_assets/knowledge_hub/regression/lifecycle.py",
+        "tools/codex_assets/knowledge_hub/regression/lifecycle_2.py",
+        "tools/codex_assets/knowledge_hub/regression/lifecycle_3.py",
+        "tools/codex_assets/knowledge_hub/regression/lifecycle_4.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 7
+    assert not lifecycle_paths & oversized_paths
