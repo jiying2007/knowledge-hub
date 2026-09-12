@@ -50,6 +50,25 @@ def test_ci_transport_allows_registered_path_audit_wrapper():
     assert result.returncode == 0, result.stderr
 
 
+def test_ci_transport_allows_governed_runtime_selector():
+    result = _run(
+        "bash",
+        "tools/ci/python-runtime.sh",
+        "-c",
+        "print('selector-ok')",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "selector-ok"
+
+
+def test_ci_transport_rejects_unregistered_internal_ci_wrapper():
+    result = _run("bash", "tools/ci/not-registered.sh", "--help")
+
+    assert result.returncode == 64
+    assert "denied wrapper: tools/ci/not-registered.sh" in result.stderr
+
+
 def test_ci_transport_allows_bounded_read_only_directory_probe():
     result = _run("bash", "-lc", "test -d tools/codex_assets/knowledge_hub")
 
