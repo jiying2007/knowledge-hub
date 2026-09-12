@@ -1,7 +1,8 @@
 """P7 derived temporal context graph from governed registry facts.
 
 No LLM extraction is performed here. The graph uses explicit relations, lifecycle
-fields, tags, and validity windows, and is always non-authoritative.
+fields, tags, and validity windows, and is always non-authoritative. Principal ACL
+and optional knowledge scopes are applied before graph construction.
 """
 
 from __future__ import annotations
@@ -9,9 +10,10 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import pathlib
-from typing import Any, Dict, List, Mapping, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .common import KnowledgeHubError, registry_items, resolve_today
+from .runtime_p5_security import authorize_item, principal_context
 
 
 def validate_temporal_fields(
@@ -51,7 +53,7 @@ def _date(value: Any, field: str) -> dt.date:
         raise KnowledgeHubError("{} must use YYYY-MM-DD".format(field)) from exc
 
 
-def _eligible(item: Mapping[str, Any], today: dt.date) -> bool:
+def _temporal_eligible(item: Mapping[str, Any], today: dt.date) -> bool:
     errors = validate_temporal_fields(item)
     if errors:
         raise KnowledgeHubError("; ".join(errors))
@@ -62,6 +64,33 @@ def _eligible(item: Mapping[str, Any], today: dt.date) -> bool:
     if valid_to and today > _date(valid_to, "valid_to"):
         return False
     return str(item.get("status", "")) not in {"rejected"}
+
+
+def _authorized(
+    item: Mapping[str, Any],
+    principal: Optional[Mapping[str, Any]],
+    knowledge_scopes: Sequence[str],
+) -> bool:
+    effective_principal = (
+        principal_context(principal)
+        if principal is not None
+        else {
+            "principal_id": "anonymous-local",
+            "organization_id": "",
+            "agent_id": "",
+            "groups": [],
+            "scopes": [],
+            "delegated_by": "",
+            "purpose": "temporal-graph",
+        }
+    )
+    decision = authorize_item(
+        item,
+        effective_principal,
+        operation="context",
+        agent_scopes=knowledge_scopes,
+    )
+    return bool(decision.get("authorized", False))
 
 
 def _episode_id(item: Mapping[str, Any]) -> str:
@@ -94,9 +123,17 @@ def temporal_context_graph(
     seed_ids: Sequence[str] = (),
     as_of: str = "",
     maximum_nodes: int = 1000,
+    principal: Optional[Mapping[str, Any]] = None,
+    knowledge_scopes: Sequence[str] = (),
 ) -> Dict[str, Any]:
     today, source = resolve_today(as_of)
-    rows = [row for row in registry_items(root) if row.get("id") and _eligible(row, today)]
+    rows = [
+        row
+        for row in registry_items(root)
+        if row.get("id")
+        and _temporal_eligible(row, today)
+        and _authorized(row, principal, knowledge_scopes)
+    ]
     by_id = {str(row["id"]): row for row in rows}
     if seed_ids:
         requested = {str(value) for value in seed_ids}
@@ -151,6 +188,9 @@ def temporal_context_graph(
                 "provenance": item.get("source", {}),
             }
         )
+    principal_id = "anonymous-local"
+    if principal is not None:
+        principal_id = principal_context(principal)["principal_id"]
     return {
         "schema_version": "knowledge-hub.temporal-context-graph.v1",
         "status": "pass",
@@ -158,6 +198,9 @@ def temporal_context_graph(
         "authoritative": False,
         "as_of": today.isoformat(),
         "as_of_source": source,
+        "principal_id": principal_id,
+        "knowledge_scopes": [str(value) for value in knowledge_scopes],
+        "authorization_applied_before_graph": True,
         "nodes": nodes,
         "edges": edges,
         "episodes": episodes,

@@ -16,7 +16,7 @@ from .runtime_v3_contracts import (
     DEFAULT_AGENT,
     MCP_PROTOCOL_VERSION,
     agent_profile,
-    rows,
+    rows as _rows,
 )
 
 MCP_NATIVE_PROFILE = "stateless-2026-07-28"
@@ -69,7 +69,7 @@ def _resource_read(root, request: Mapping[str, Any]) -> Dict[str, Any]:
     if uri == "knowledge://health":
         value: Any = runtime_health(root)
     elif uri == "knowledge://agents":
-        value = {"agents": rows(root, "agents")}
+        value = {"agents": _rows(root, "agents")}
     else:
         raise KnowledgeHubError("native MCP resource not available: {}".format(uri))
     return {
@@ -150,7 +150,10 @@ def handle_mcp_stateless_request(
         "jsonrpc": "2.0",
         "id": request.get("id"),
         "result": _dispatch_native(root, request, agent_id),
-        "_meta": {"protocolVersion": MCP_PROTOCOL_VERSION, "stateless": True},
+        "_meta": {
+            "protocolVersion": MCP_PROTOCOL_VERSION,
+            "stateless": True,
+        },
     }
 
 
@@ -188,7 +191,10 @@ def a2a_provider_card(
             }
             for skill in profile.get("skills", [])
         ],
-        "provider": {"organization": "knowledge-hub", "url": base_url},
+        "provider": {
+            "organization": "knowledge-hub",
+            "url": base_url,
+        },
         "extensions": {
             "knowledgeHub": {
                 "taskExecution": False,
@@ -211,14 +217,13 @@ def protocol_conformance_report(root, *, agent_id: str = DEFAULT_AGENT) -> Dict[
             "native_stateless": True,
             "legacy_compatibility_adapter": True,
             "legacy_initialize_is_native": False,
-            "official_conformance_evidence": "external-required",
+            "listed_resources_are_readable": True,
         },
         "a2a": {
             "declared": A2A_PROTOCOL_VERSION,
             "provider_card_profile": A2A_PROVIDER_PROFILE,
             "task_server_implemented_here": False,
             "execution_plane_expected_elsewhere": True,
-            "official_tck_if_task_server": "external-required",
         },
         "agent_id": agent_id,
         "agent_capability_count": len(profile.get("capabilities", [])),
