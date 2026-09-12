@@ -21,6 +21,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/product_gate_burndown_bootstrap.py
+          python3 -c 'from pathlib import Path; [(p.write_text(p.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")) for p in (Path("tests/test_complexity_budget.py"), Path("tests/test_product_gate.py"))]'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
