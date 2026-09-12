@@ -10,6 +10,7 @@
 | [PCR02 Product Test App](../../projects/app-product-test/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [PCR02 Tool App](../../projects/app-tool/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Codex Local Runtime Assets](../../domains/codex/README.md) | `runtime-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
+| [Digital Worker](../../projects/digital-worker/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Firmware Release Tools](../../projects/firmware-release-tools/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Firmware Toolchains](../../projects/firmware-toolchains/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [GD32L235 Firmware](../../projects/gd32l235/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |

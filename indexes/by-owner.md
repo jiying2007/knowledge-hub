@@ -440,6 +440,7 @@
 - `pcr02-user-sleep-wifi-recovery-state-gap-20260829`
 - `pcr02-export-readiness-compliance-gap-20260903`
 - `pcr02-dvr-ringframe-lease-closure-20260908`
+- `digital-worker-readiness-validation-20260713`
 
 ## pcr02-registry-owner
 
