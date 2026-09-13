@@ -24,7 +24,9 @@
   "bounded_legacy": {
     "source": "registry/legacy-debt-burndown.json",
     "growth_allowed": false,
-    "terminal_interpretation": "Frozen historical compatibility debt is permitted only while it does not grow; quarterly burn-down remains required."
+    "require_artifact_terminal_forms": true,
+    "artifact_terminal_form_registry": "registry/legacy-artifact-terminal-forms.json",
+    "terminal_interpretation": "Frozen historical compatibility debt is permitted only when every remaining legacy artifact reference is covered by a machine-verifiable accepted terminal form; growth remains forbidden and quarterly burn-down remains required."
   },
   "branch_gc": {
     "required": true,
