@@ -211,7 +211,13 @@ def build_review_queues(
             row = _make_source_row(source)
             if row.get("missing_fields"):
                 external_rows.append(row)
-    key = lambda row: (str(row.get("priority", "P9")), str(row.get("review_after", "") or "9999-12-31"), str(row.get("owner", "")), str(row.get("id", "")))
+    def key(row: Dict[str, Any]) -> Any:
+        return (
+            str(row.get("priority", "P9")),
+            str(row.get("review_after", "") or "9999-12-31"),
+            str(row.get("owner", "")),
+            str(row.get("id", "")),
+        )
     ai_rows = sorted(ai_rows, key=key)
     external_rows = sorted(external_rows, key=key)
     all_rows = ai_rows + external_rows

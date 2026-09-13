@@ -68,7 +68,7 @@ def load_json(root: pathlib.Path, errors: List[str], path: pathlib.Path) -> Dict
 
 
 def load_jsonl(root: pathlib.Path, errors: List[str], path: pathlib.Path) -> List[Dict[str, Any]]:
-    rows = []
+    rows: List[Dict[str, Any]] = []
     try:
         lines = path.read_text().splitlines()
     except Exception as exc:

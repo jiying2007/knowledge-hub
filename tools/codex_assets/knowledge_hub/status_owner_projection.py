@@ -61,7 +61,8 @@ def make_status_owner_handoff_packet(owner: str, source_id: str, owner_rows: Seq
 
 
 def make_next_open_queue_entry(row: Dict[str, Any]) -> Dict[str, Any]:
-    source_id = str(row.get("source_id", "")); worksheet_id = str(row.get("id", ""))
+    source_id = str(row.get("source_id", ""))
+    worksheet_id = str(row.get("id", ""))
     packages = row.get("owner_ready_packages", []) if isinstance(row.get("owner_ready_packages", []), list) else []
     package_ids = [str(item.get("id", "")) for item in packages if isinstance(item, dict) and item.get("id")]
     package_status = str(row.get("owner_ready_package_status", "")) or "unknown-owner-ready-status"
@@ -82,14 +83,16 @@ def make_next_open_queue_entry(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _unique_routes(rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    routes: List[Dict[str, Any]] = []; seen = set()
+    routes: List[Dict[str, Any]] = []
+    seen = set()
     for row in rows:
         route = row.get("owner_route", {})
         if not route:
             continue
         key = json.dumps(route, ensure_ascii=False, sort_keys=True)
         if key not in seen:
-            seen.add(key); routes.append(route)
+            seen.add(key)
+            routes.append(route)
     return routes
 
 
@@ -113,7 +116,7 @@ def _dispatch_row(source_id: str, owner: str, rows: Sequence[Dict[str, Any]]) ->
 
 
 def _scope_command_sets(open_rows: Sequence[Dict[str, Any]]) -> Dict[str, List[str]]:
-    result = {name: [] for name in ["summary_commands", "owner_summary_commands", "owner_forms_jsonl_commands", "owner_evidence_readiness_commands", "owner_validate_forms_command_templates", "owner_landing_plan_command_templates", "owner_landing_audit_command_templates", "forms_jsonl_commands", "evidence_readiness_commands", "validate_forms_command_templates", "landing_plan_command_templates", "landing_audit_command_templates"]}
+    result: Dict[str, List[str]] = {name: [] for name in ["summary_commands", "owner_summary_commands", "owner_forms_jsonl_commands", "owner_evidence_readiness_commands", "owner_validate_forms_command_templates", "owner_landing_plan_command_templates", "owner_landing_audit_command_templates", "forms_jsonl_commands", "evidence_readiness_commands", "validate_forms_command_templates", "landing_plan_command_templates", "landing_audit_command_templates"]}
     source_ids = sorted({str(row.get("source_id", "")) for row in open_rows if row.get("source_id")})
     owner_scopes = sorted({(str(row.get("source_id", "")), str(row.get("owner", ""))) for row in open_rows if row.get("source_id") and row.get("owner")})
     for source_id in source_ids:
@@ -134,7 +137,8 @@ def _scope_command_sets(open_rows: Sequence[Dict[str, Any]]) -> Dict[str, List[s
 
 
 def _next_owner_gate(first: Dict[str, Any]) -> Dict[str, Any]:
-    source_id = str(first.get("source_id", "")); worksheet_id = str(first.get("id", ""))
+    source_id = str(first.get("source_id", ""))
+    worksheet_id = str(first.get("id", ""))
     return {
         "worksheet_id": worksheet_id, "source_id": source_id, "source_path": first.get("source_path", ""), "owner": first.get("owner", ""),
         "owner_route": first.get("owner_route", {}), "review_after": first.get("review_after", ""), "selection_order": "review_after, worksheet_id",
