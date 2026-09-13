@@ -33,10 +33,6 @@ ignore = ["E501"]
 # runtime_v3 is the stable compatibility facade that intentionally re-exports
 # selected contract/governance helpers from the split implementation modules.
 "tools/codex_assets/knowledge_hub/runtime_v3.py" = ["F401"]
-# product_gate is a legacy oversized module whose timeout constant currently
-# separates two import groups. Keep the waiver local until that module is split;
-# E402 remains enforced everywhere else.
-"tools/codex_assets/knowledge_hub/product_gate.py" = ["E402"]
 
 [tool.mypy]
 # mypy 2.3 no longer accepts a Python 3.8 parser target. Runtime support for
@@ -57,6 +53,8 @@ files = [
     "tools/codex_assets/knowledge_hub/model.py",
     "tools/codex_assets/knowledge_hub/obsidian_view.py",
     "tools/codex_assets/knowledge_hub/product_gate.py",
+    "tools/codex_assets/knowledge_hub/product_gate_support.py",
+    "tools/codex_assets/knowledge_hub/product_gate_parallel.py",
     "tools/codex_assets/knowledge_hub/product_policy.py",
     "tools/codex_assets/knowledge_hub/recovery_cli.py",
     "tools/codex_assets/knowledge_hub/retrieval.py",
