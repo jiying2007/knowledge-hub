@@ -1,4 +1,4 @@
-name: Status Migration Syntax Repair
+name: Status Split Hosted Migration
 
 on:
   push:
@@ -9,34 +9,98 @@ permissions:
   contents: write
 
 jobs:
-  repair:
+  migrate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
-      - name: Repair invalid migration guard and retire helper
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.14'
+      - name: Install locked dependencies
+        run: |
+          tools/ci/rtk bash tools/ci/bootstrap-path.sh
+          rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Capture baseline status contracts
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 --json > /tmp/status-before.json
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 > /tmp/status-before.txt
+      - name: Apply dashboard split from retained migration recipe
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
 
-          target = Path('.github/workflows/status-split-migrate.yml')
-          lines = target.read_text(encoding='utf-8').splitlines()
-          matches = [i for i, line in enumerate(lines) if line.strip().startswith('if:') and 'contains(github.event.head_commit.message' in line]
-          if len(matches) != 1:
-              raise SystemExit(f'expected exactly one migration guard, found {len(matches)}')
-          i = matches[0]
-          expression = '$' + "{{ !contains(github.event.head_commit.message, 'refactor(status): split dashboard projections') }}"
-          lines[i] = f'    if: "{expression}"'
-          target.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-          Path('.github/workflows/status-migration-syntax-repair.yml').unlink()
+          workflow = Path('.github/workflows/status-split-migrate.yml').read_text(encoding='utf-8')
+          marker = "          python3 - <<'PY'\n"
+          start = workflow.index(marker) + len(marker)
+          end = workflow.index('\n          PY', start)
+          raw = workflow[start:end]
+          script = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
+          exec(compile(script, 'status-split-migration.py', 'exec'), {'__name__': '__main__'})
           PY
+      - name: Validate split and behavioral identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/codex_assets/knowledge_hub/status_*.py
+          rtk python3 -m ruff check tools/codex_assets/knowledge_hub/status_*.py tests/test_complexity_budget.py
+          rtk python3 -m mypy
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 --json > /tmp/status-after.json
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 > /tmp/status-after.txt
+          python3 - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+
+          def normalize(value):
+              if isinstance(value, dict):
+                  return {k: normalize(v) for k, v in value.items() if k != 'generated_at'}
+              if isinstance(value, list):
+                  return [normalize(v) for v in value]
+              return value
+
+          before = normalize(json.loads(Path('/tmp/status-before.json').read_text()))
+          after = normalize(json.loads(Path('/tmp/status-after.json').read_text()))
+          if before != after:
+              raise SystemExit('normalized status JSON changed during split')
+          if Path('/tmp/status-before.txt').read_text() != Path('/tmp/status-after.txt').read_text():
+              raise SystemExit('status text output changed during split')
+
+          for path in [
+              Path('tools/codex_assets/knowledge_hub/status_cli.py'),
+              Path('tools/codex_assets/knowledge_hub/status_common.py'),
+              Path('tools/codex_assets/knowledge_hub/status_owner_projection.py'),
+              Path('tools/codex_assets/knowledge_hub/status_product_audit.py'),
+              Path('tools/codex_assets/knowledge_hub/status_result.py'),
+              Path('tools/codex_assets/knowledge_hub/status_review.py'),
+          ]:
+              source = path.read_text(encoding='utf-8')
+              lines = len(source.splitlines())
+              print(f'{path}: {lines} lines')
+              if lines > 800:
+                  raise SystemExit(f'{path} exceeds 800 lines')
+              tree = ast.parse(source)
+              for node in ast.walk(tree):
+                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                      span = node.end_lineno - node.lineno + 1
+                      if span > 80:
+                          raise SystemExit(f'{path}:{node.name} exceeds 80 lines ({span})')
+          PY
+          rtk python3 -m pytest -q tests/test_complexity_budget.py tests/test_cli_help.py
+          git diff --check
+      - name: Commit migrated product files
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add tools/codex_assets/knowledge_hub/status_cli.py pyproject.toml tests/test_complexity_budget.py
           git diff --cached --check
-          git commit -m 'fix(status): repair migration workflow syntax'
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'refactor(status): split dashboard projections'
           git push origin HEAD:codex/legacy-burndown-status-v1
