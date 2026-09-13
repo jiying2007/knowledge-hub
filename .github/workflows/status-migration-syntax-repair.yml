@@ -67,6 +67,14 @@ jobs:
               raise SystemExit('owner-ready constant duplicate anchor missing after migration')
           cli.write_text(text.replace(duplicate, '', 1), encoding='utf-8')
 
+          common = Path('tools/codex_assets/knowledge_hub/status_common.py')
+          text = common.read_text(encoding='utf-8')
+          old = '    rows = []\n'
+          new = '    rows: List[Dict[str, Any]] = []\n'
+          if old not in text:
+              raise SystemExit('status_common rows annotation anchor missing')
+          common.write_text(text.replace(old, new, 1), encoding='utf-8')
+
           owner = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py')
           text = owner.read_text(encoding='utf-8')
           replacements = {
@@ -79,7 +87,11 @@ jobs:
               if old not in text:
                   raise SystemExit('owner projection lint anchor missing: {}'.format(old.strip()))
               text = text.replace(old, new, 1)
-          owner.write_text(text, encoding='utf-8')
+          old = '    result = {name: [] for name in ["summary_commands", "owner_summary_commands", "owner_forms_jsonl_commands", "owner_evidence_readiness_commands", "owner_validate_forms_command_templates", "owner_landing_plan_command_templates", "owner_landing_audit_command_templates", "forms_jsonl_commands", "evidence_readiness_commands", "validate_forms_command_templates", "landing_plan_command_templates", "landing_audit_command_templates"]}\n'
+          new = '    result: Dict[str, List[str]] = {name: [] for name in ["summary_commands", "owner_summary_commands", "owner_forms_jsonl_commands", "owner_evidence_readiness_commands", "owner_validate_forms_command_templates", "owner_landing_plan_command_templates", "owner_landing_audit_command_templates", "forms_jsonl_commands", "evidence_readiness_commands", "validate_forms_command_templates", "landing_plan_command_templates", "landing_audit_command_templates"]}\n'
+          if old not in text:
+              raise SystemExit('owner result annotation anchor missing')
+          owner.write_text(text.replace(old, new, 1), encoding='utf-8')
 
           review = Path('tools/codex_assets/knowledge_hub/status_review.py')
           text = review.read_text(encoding='utf-8')
