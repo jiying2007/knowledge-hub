@@ -84,7 +84,11 @@ def test_historical_reference_mutation_fails_closed(tmp_path):
 def test_repository_legacy_artifact_refs_have_machine_terminal_form():
     report = evaluate_legacy_artifact_terminal_forms(repository_root())
 
-    assert report["status"] == "pass", report
+    assert report["status"] == "pass", json.dumps(
+        report,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
     assert report["legacy_reference_count"] == 315
     assert report["accepted_legacy_reference_count"] == 315
     assert report["unaccepted_legacy_reference_count"] == 0
