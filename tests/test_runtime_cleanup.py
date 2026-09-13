@@ -2,6 +2,12 @@ import json
 
 from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.mcp_v3_server import _process
+from tools.codex_assets.knowledge_hub.protocol_conformance import (
+    MCP_CLIENT_CAPABILITIES_META_KEY,
+    MCP_CLIENT_INFO_META_KEY,
+    MCP_PROTOCOL_META_KEY,
+    MCP_SERVER_INFO_META_KEY,
+)
 from tools.codex_assets.knowledge_hub.runtime_v3_contracts import MCP_PROTOCOL_VERSION
 
 
@@ -11,7 +17,16 @@ def _native_request(method: str):
             "jsonrpc": "2.0",
             "id": 1,
             "method": method,
-            "_meta": {"protocolVersion": MCP_PROTOCOL_VERSION},
+            "params": {
+                "_meta": {
+                    MCP_PROTOCOL_META_KEY: MCP_PROTOCOL_VERSION,
+                    MCP_CLIENT_CAPABILITIES_META_KEY: {},
+                    MCP_CLIENT_INFO_META_KEY: {
+                        "name": "knowledge-hub-stdio-test",
+                        "version": "1.0.0",
+                    },
+                }
+            },
         }
     )
 
@@ -22,9 +37,10 @@ def test_mcp_stdio_defaults_to_native_stateless_profile():
         _native_request("tools/list"),
         "knowledge-reader",
     )
-    assert response["_meta"]["protocolVersion"] == MCP_PROTOCOL_VERSION
-    assert response["_meta"]["stateless"] is True
-    assert response["result"]["tools"]
+    result = response["result"]
+    assert result["resultType"] == "complete"
+    assert result["_meta"][MCP_SERVER_INFO_META_KEY]["name"] == "knowledge-hub"
+    assert result["tools"]
 
 
 def test_mcp_stdio_default_rejects_legacy_initialize():
@@ -33,8 +49,8 @@ def test_mcp_stdio_default_rejects_legacy_initialize():
         _native_request("initialize"),
         "knowledge-reader",
     )
-    assert response["error"]["code"] == -32602
-    assert "no initialize handshake" in response["error"]["message"]
+    assert response["error"]["code"] == -32601
+    assert "unsupported MCP native method: initialize" in response["error"]["message"]
 
 
 def test_mcp_stdio_legacy_initialize_requires_explicit_opt_in():
@@ -52,7 +68,12 @@ def test_mcp_notifications_remain_no_response_in_both_profiles():
         {
             "jsonrpc": "2.0",
             "method": "notifications/initialized",
-            "_meta": {"protocolVersion": MCP_PROTOCOL_VERSION},
+            "params": {
+                "_meta": {
+                    MCP_PROTOCOL_META_KEY: MCP_PROTOCOL_VERSION,
+                    MCP_CLIENT_CAPABILITIES_META_KEY: {},
+                }
+            },
         }
     )
     assert _process(repository_root(), raw, "knowledge-reader") is None
