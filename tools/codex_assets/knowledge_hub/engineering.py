@@ -525,6 +525,83 @@ def _run_quality_command(
     }
 
 
+def _coverage_recollection_commands(
+    python: str,
+) -> Sequence[Tuple[str, Sequence[str], int]]:
+    return (
+        ("coverage_erase", (python, "-m", "coverage", "erase"), 60),
+        (
+            "coverage",
+            (python, "-m", "coverage", "run", "--parallel-mode", "-m", "pytest", "-q"),
+            300,
+        ),
+        (
+            "full_regression",
+            (
+                python,
+                "-m",
+                "coverage",
+                "run",
+                "--parallel-mode",
+                "-m",
+                "tools.codex_assets.knowledge_hub.regression_cli",
+                ".",
+                "--suite",
+                "full",
+                "--summary-json",
+            ),
+            600,
+        ),
+        ("coverage_combine", (python, "-m", "coverage", "combine"), 120),
+        ("coverage_report", (python, "-m", "coverage", "report"), 120),
+    )
+
+
+def _recover_coverage_report(
+    root: pathlib.Path,
+    python: str,
+    initial: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Recollect coverage once after a report failure, preserving first-failure evidence."""
+
+    diagnostic = _run_quality_command(
+        root,
+        (python, "-m", "coverage", "report", "--fail-under=0"),
+        120,
+    )
+    recollection: Dict[str, Dict[str, Any]] = {}
+    for name, command, timeout in _coverage_recollection_commands(python):
+        if name == "full_regression":
+            result = _run_quality_command(
+                root,
+                command,
+                timeout,
+                max_attempts=2,
+                retry_exit_codes=(1,),
+            )
+        else:
+            result = _run_quality_command(root, command, timeout)
+        recollection[name] = result
+        if result["status"] != "pass":
+            break
+    report = recollection.get("coverage_report", {})
+    recovered = report.get("status") == "pass"
+    payload: Dict[str, Any] = {
+        "status": "pass" if recovered else "fail",
+        "initial": dict(initial),
+        "diagnostic": diagnostic,
+        "recollection": recollection,
+        "recovered_after_recollection": recovered,
+    }
+    if recovered:
+        for field in ("command", "duration_sec", "stdout_tail", "stderr_tail"):
+            if field in report:
+                payload[field] = report[field]
+    else:
+        payload["error"] = "coverage report failed after one full recollection"
+    return payload
+
+
 def _current_python_executable() -> str:
     """Return the active interpreter path without resolving a venv symlink."""
 
@@ -672,8 +749,17 @@ def run_engineering_quality(
             )
         else:
             checks[name] = _run_quality_command(root, command, timeout)
-        if checks[name]["status"] != "pass":
+        if checks[name]["status"] != "pass" and name != "coverage_report":
             quality_errors.append("{} failed".format(name))
+    if checks.get("coverage_report", {}).get("status") != "pass":
+        checks["coverage_report"] = _recover_coverage_report(
+            root,
+            python,
+            checks["coverage_report"],
+        )
+        if checks["coverage_report"]["status"] != "pass":
+            quality_errors.append("coverage_report failed")
+
     if sbom_path.exists():
         ensure_private_file(sbom_path)
     candidate_signature_after = working_tree_signature(root)

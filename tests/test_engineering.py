@@ -178,6 +178,69 @@ def test_quality_command_fails_after_retry_budget(tmp_path, monkeypatch):
     assert [attempt["status"] for attempt in payload["attempts"]] == ["fail", "fail"]
 
 
+def test_coverage_report_recollection_recovers_and_preserves_initial_evidence(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_run(root, command, timeout, **kwargs):
+        calls.append(tuple(command))
+        return {
+            "status": "pass",
+            "command": " ".join(command),
+            "duration_sec": 1.0,
+            "stdout_tail": ["TOTAL 78%"],
+            "stderr_tail": [],
+        }
+
+    monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
+    initial = {"status": "fail", "error": "first coverage report failed"}
+    payload = engineering._recover_coverage_report(tmp_path, "python", initial)
+
+    assert payload["status"] == "pass"
+    assert payload["recovered_after_recollection"] is True
+    assert payload["initial"] == initial
+    assert payload["diagnostic"]["status"] == "pass"
+    assert list(payload["recollection"]) == [
+        "coverage_erase",
+        "coverage",
+        "full_regression",
+        "coverage_combine",
+        "coverage_report",
+    ]
+    assert calls[0] == ("python", "-m", "coverage", "report", "--fail-under=0")
+    assert calls[-1] == ("python", "-m", "coverage", "report")
+
+
+def test_coverage_report_recollection_remains_fail_closed(tmp_path, monkeypatch):
+    def fake_run(root, command, timeout, **kwargs):
+        if tuple(command) == ("python", "-m", "coverage", "report"):
+            return {
+                "status": "fail",
+                "attempt_count": 1,
+                "recovered_after_retry": False,
+                "attempts": [{"attempt": 1, "status": "fail"}],
+                "error": "coverage threshold still failed",
+            }
+        return {
+            "status": "pass",
+            "command": " ".join(command),
+            "duration_sec": 1.0,
+            "stdout_tail": [],
+            "stderr_tail": [],
+        }
+
+    monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
+    payload = engineering._recover_coverage_report(
+        tmp_path,
+        "python",
+        {"status": "fail", "error": "first coverage report failed"},
+    )
+
+    assert payload["status"] == "fail"
+    assert payload["recovered_after_recollection"] is False
+    assert payload["recollection"]["coverage_report"]["status"] == "fail"
+    assert payload["error"] == "coverage report failed after one full recollection"
+
+
 def _write_minimal_contract(root: pathlib.Path) -> None:
     (root / ".github/workflows").mkdir(parents=True)
     (root / "pyproject.toml").write_text(
