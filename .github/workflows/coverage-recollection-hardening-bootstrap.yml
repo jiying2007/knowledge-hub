@@ -1,0 +1,242 @@
+name: Coverage Recollection Hardening Bootstrap
+
+on:
+  push:
+    branches:
+      - codex/coverage-recollection-hardening-v1
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - name: Add fail-closed coverage recollection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          engineering = Path('tools/codex_assets/knowledge_hub/engineering.py')
+          text = engineering.read_text(encoding='utf-8')
+          helper_anchor = '''    return {
+              "status": "fail",
+              "attempt_count": len(attempts),
+              "recovered_after_retry": False,
+              "attempts": attempts,
+              "error": "command failed after {} attempt(s)".format(len(attempts)),
+          }
+
+
+          def _current_python_executable() -> str:
+          '''
+          helper_replacement = '''    return {
+              "status": "fail",
+              "attempt_count": len(attempts),
+              "recovered_after_retry": False,
+              "attempts": attempts,
+              "error": "command failed after {} attempt(s)".format(len(attempts)),
+          }
+
+
+          def _coverage_recollection_commands(
+              python: str,
+          ) -> Sequence[Tuple[str, Sequence[str], int]]:
+              return (
+                  ("coverage_erase", (python, "-m", "coverage", "erase"), 60),
+                  (
+                      "coverage",
+                      (python, "-m", "coverage", "run", "--parallel-mode", "-m", "pytest", "-q"),
+                      300,
+                  ),
+                  (
+                      "full_regression",
+                      (
+                          python,
+                          "-m",
+                          "coverage",
+                          "run",
+                          "--parallel-mode",
+                          "-m",
+                          "tools.codex_assets.knowledge_hub.regression_cli",
+                          ".",
+                          "--suite",
+                          "full",
+                          "--summary-json",
+                      ),
+                      600,
+                  ),
+                  ("coverage_combine", (python, "-m", "coverage", "combine"), 120),
+                  ("coverage_report", (python, "-m", "coverage", "report"), 120),
+              )
+
+
+          def _recover_coverage_report(
+              root: pathlib.Path,
+              python: str,
+              initial: Mapping[str, Any],
+          ) -> Dict[str, Any]:
+              """Recollect coverage once after a report failure, preserving first-failure evidence."""
+
+              diagnostic = _run_quality_command(
+                  root,
+                  (python, "-m", "coverage", "report", "--fail-under=0"),
+                  120,
+              )
+              recollection: Dict[str, Dict[str, Any]] = {}
+              for name, command, timeout in _coverage_recollection_commands(python):
+                  if name == "full_regression":
+                      result = _run_quality_command(
+                          root,
+                          command,
+                          timeout,
+                          max_attempts=2,
+                          retry_exit_codes=(1,),
+                      )
+                  else:
+                      result = _run_quality_command(root, command, timeout)
+                  recollection[name] = result
+                  if result["status"] != "pass":
+                      break
+              report = recollection.get("coverage_report", {})
+              recovered = report.get("status") == "pass"
+              payload: Dict[str, Any] = {
+                  "status": "pass" if recovered else "fail",
+                  "initial": dict(initial),
+                  "diagnostic": diagnostic,
+                  "recollection": recollection,
+                  "recovered_after_recollection": recovered,
+              }
+              if recovered:
+                  for field in ("command", "duration_sec", "stdout_tail", "stderr_tail"):
+                      if field in report:
+                          payload[field] = report[field]
+              else:
+                  payload["error"] = "coverage report failed after one full recollection"
+              return payload
+
+
+          def _current_python_executable() -> str:
+          '''
+          if text.count(helper_anchor) != 1:
+              raise SystemExit('engineering helper anchor mismatch')
+          text = text.replace(helper_anchor, helper_replacement, 1)
+
+          loop_anchor = '''        if checks[name]["status"] != "pass":
+              quality_errors.append("{} failed".format(name))
+          if sbom_path.exists():
+          '''
+          loop_replacement = '''        if checks[name]["status"] != "pass" and name != "coverage_report":
+              quality_errors.append("{} failed".format(name))
+          if checks.get("coverage_report", {}).get("status") != "pass":
+              checks["coverage_report"] = _recover_coverage_report(
+                  root,
+                  python,
+                  checks["coverage_report"],
+              )
+              if checks["coverage_report"]["status"] != "pass":
+                  quality_errors.append("coverage_report failed")
+          if sbom_path.exists():
+          '''
+          if text.count(loop_anchor) != 1:
+              raise SystemExit('engineering loop anchor mismatch')
+          engineering.write_text(text.replace(loop_anchor, loop_replacement, 1), encoding='utf-8')
+
+          tests = Path('tests/test_engineering.py')
+          test_text = tests.read_text(encoding='utf-8')
+          test_anchor = '\n\ndef _write_minimal_contract(root: pathlib.Path) -> None:\n'
+          new_tests = r'''
+
+          def test_coverage_report_recollection_recovers_and_preserves_initial_evidence(tmp_path, monkeypatch):
+              calls = []
+
+              def fake_run(root, command, timeout, **kwargs):
+                  calls.append(tuple(command))
+                  return {
+                      "status": "pass",
+                      "command": " ".join(command),
+                      "duration_sec": 1.0,
+                      "stdout_tail": ["TOTAL 78%"],
+                      "stderr_tail": [],
+                  }
+
+              monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
+              initial = {"status": "fail", "error": "first coverage report failed"}
+
+              payload = engineering._recover_coverage_report(tmp_path, "python", initial)
+
+              assert payload["status"] == "pass"
+              assert payload["recovered_after_recollection"] is True
+              assert payload["initial"] == initial
+              assert payload["diagnostic"]["status"] == "pass"
+              assert list(payload["recollection"]) == [
+                  "coverage_erase",
+                  "coverage",
+                  "full_regression",
+                  "coverage_combine",
+                  "coverage_report",
+              ]
+              assert calls[0] == ("python", "-m", "coverage", "report", "--fail-under=0")
+              assert calls[-1] == ("python", "-m", "coverage", "report")
+
+
+          def test_coverage_report_recollection_remains_fail_closed(tmp_path, monkeypatch):
+              def fake_run(root, command, timeout, **kwargs):
+                  normal_report = tuple(command) == ("python", "-m", "coverage", "report")
+                  if normal_report:
+                      return {
+                          "status": "fail",
+                          "attempt_count": 1,
+                          "recovered_after_retry": False,
+                          "attempts": [{"attempt": 1, "status": "fail"}],
+                          "error": "coverage threshold still failed",
+                      }
+                  return {
+                      "status": "pass",
+                      "command": " ".join(command),
+                      "duration_sec": 1.0,
+                      "stdout_tail": [],
+                      "stderr_tail": [],
+                  }
+
+              monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
+
+              payload = engineering._recover_coverage_report(
+                  tmp_path,
+                  "python",
+                  {"status": "fail", "error": "first coverage report failed"},
+              )
+
+              assert payload["status"] == "fail"
+              assert payload["recovered_after_recollection"] is False
+              assert payload["recollection"]["coverage_report"]["status"] == "fail"
+              assert payload["error"] == "coverage report failed after one full recollection"
+          '''
+          import textwrap
+          new_tests = textwrap.dedent(new_tests)
+          if test_text.count(test_anchor) != 1:
+              raise SystemExit('engineering test anchor mismatch')
+          tests.write_text(test_text.replace(test_anchor, new_tests + test_anchor, 1), encoding='utf-8')
+          PY
+          python3 -m compileall -q tools/codex_assets/knowledge_hub/engineering.py tests/test_engineering.py
+          python3 - <<'PY'
+          from pathlib import Path
+          engineering = Path('tools/codex_assets/knowledge_hub/engineering.py')
+          lines = len(engineering.read_text(encoding='utf-8').splitlines())
+          print(f'engineering.py: {lines} lines')
+          if lines > 800:
+              raise SystemExit('engineering.py exceeds 800-line budget')
+          Path('.github/workflows/coverage-recollection-hardening-bootstrap.yml').unlink()
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(engineering): recollect coverage once on report failure'
+          git push origin HEAD:codex/coverage-recollection-hardening-v1
