@@ -44,5 +44,5 @@ def test_search_facade_monkeypatches_reach_split_implementation(monkeypatch):
     assert search_index._index_tokens is replacement_tokens
     assert search_index.SEARCH_MAX_FILE_BYTES == 12345
     assert search_index.read_repository_bytes_bounded is replacement_reader
-    assert search_query.SEARCH_MAX_FILE_BYTES == 12345
-    assert search_query.read_repository_bytes_bounded is replacement_reader
+    assert search_query_support.SEARCH_MAX_FILE_BYTES == 12345
+    assert search_query_support.read_repository_bytes_bounded is replacement_reader
