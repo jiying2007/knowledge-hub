@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "contract": "knowledge-hub.mcp-conformance-policy.v1",
+  "schema_version": 2,
+  "contract": "knowledge-hub.mcp-conformance-policy.v2",
   "protocol_version": "2026-07-28",
   "native_profile": "stateless-2026-07-28",
   "runner": {
@@ -14,6 +14,7 @@
     "full_mcp_server_requirements_claimed": false,
     "sdk_tier_claimed": false,
     "synthetic_conformance_tools_allowed": false,
+    "synthetic_conformance_resources_allowed": false,
     "synthetic_prompts_allowed": false,
     "unsupported_capabilities_may_be_advertised": false
   },
@@ -25,9 +26,10 @@
     "tasks_extension": false,
     "sampling": false,
     "elicitation": false,
-    "roots": false
+    "roots": false,
+    "resource_templates": false
   },
-  "required_official_scenarios": [
+  "hosted_official_scenarios": [
     "server-stateless",
     "tools-list",
     "resources-list",
@@ -36,10 +38,54 @@
     "dns-rebinding-protection",
     "caching"
   ],
+  "profile_applicability": {
+    "server-stateless": {
+      "allowed_non_applicable_failures": [
+        "ServerRejectsUndeclaredCapability",
+        "MissingCapabilityHttp400",
+        "HttpServerNoIndependentRequestsOnStream",
+        "ServerNoLogWithoutLogLevel"
+      ],
+      "reason": "The upstream structural probes require diagnostic-only tools test_missing_capability, test_streaming_elicitation and test_logging_tool. Knowledge Hub does not advertise sampling, elicitation, logging-control or those synthetic tools."
+    },
+    "tools-list": {
+      "allowed_non_applicable_failures": [],
+      "reason": "Tools are advertised and the official scenario is fully applicable."
+    },
+    "resources-list": {
+      "allowed_non_applicable_failures": [],
+      "reason": "Resources are advertised and the official scenario is fully applicable."
+    },
+    "resources-read-text": {
+      "allowed_non_applicable_failures": [
+        "ResourcesReadText"
+      ],
+      "reason": "The upstream scenario is fixture-specific and requires the synthetic URI test://static-text. Product resource/read behavior is covered by the native Knowledge Hub resource contract and tests; a fixture-only resource is not added to production."
+    },
+    "sep-2164-resource-not-found": {
+      "allowed_non_applicable_failures": [],
+      "reason": "Resource-not-found semantics are fully applicable."
+    },
+    "dns-rebinding-protection": {
+      "allowed_non_applicable_failures": [],
+      "reason": "The loopback HTTP transport is subject to the official DNS-rebinding checks."
+    },
+    "caching": {
+      "allowed_non_applicable_failures": [
+        "PromptsListCachingHints",
+        "ResourcesTemplatesListCachingHints"
+      ],
+      "reason": "The mixed upstream cache scenario also calls prompts/list and resources/templates/list, neither of which is advertised by the Knowledge Hub native profile. Its tools/list, resources/list and resources/read cache checks remain applicable and must pass."
+    }
+  },
   "exclusions": [
     {
       "class": "conformance-fixture-tools",
-      "reason": "Knowledge Hub must not add synthetic image/audio/progress/embedded-resource tools solely to satisfy the upstream everything-server fixture."
+      "reason": "Knowledge Hub must not add synthetic diagnostic/image/audio/progress/embedded-resource tools solely to satisfy the upstream everything-server fixture."
+    },
+    {
+      "class": "conformance-fixture-resources",
+      "reason": "Knowledge Hub must not add synthetic test:// resources solely to satisfy upstream fixture-specific scenarios."
     },
     {
       "class": "unadvertised-prompts-completion",
@@ -59,7 +105,11 @@
     "protocol_and_profile": true,
     "runner_package_and_version": true,
     "scenario_set_exact_match": true,
-    "all_required_checks_non_failure": true,
+    "raw_runner_status_retained": true,
+    "applicable_failures_must_be_zero": true,
+    "non_applicable_failure_set_must_match_exactly": true,
+    "expected_failure_baseline_used": false,
+    "product_resource_read_smoke_required": true,
     "result_digest": "sha256",
     "hosted_runner_required": true,
     "local_only_result_may_close": false
