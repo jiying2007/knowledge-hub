@@ -1,0 +1,42 @@
+name: Status Migration Syntax Repair
+
+on:
+  push:
+    branches:
+      - codex/legacy-burndown-status-v1
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - name: Repair invalid migration guard and retire helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          target = Path('.github/workflows/status-split-migrate.yml')
+          lines = target.read_text(encoding='utf-8').splitlines()
+          matches = [i for i, line in enumerate(lines) if line.strip().startswith('if:') and 'contains(github.event.head_commit.message' in line]
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one migration guard, found {len(matches)}')
+          i = matches[0]
+          expression = '$' + "{{ !contains(github.event.head_commit.message, 'refactor(status): split dashboard projections') }}"
+          lines[i] = f'    if: "{expression}"'
+          target.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          Path('.github/workflows/status-migration-syntax-repair.yml').unlink()
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(status): repair migration workflow syntax'
+          git push origin HEAD:codex/legacy-burndown-status-v1
