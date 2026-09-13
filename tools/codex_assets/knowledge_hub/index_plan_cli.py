@@ -8,48 +8,29 @@ import re
 import sys
 from typing import Any, Dict, List
 
-if __package__:
-    from .index_plan_linking import build_linking_audit
-    from .index_plan_manifest import classify_unpaired_manifest, manifest_profile_health
-    from .index_plan_review_forms import apply_review_queue_filters, configure_review_forms, validate_review_queue_forms
-    from .index_plan_review_queue import (
-        build_review_queue_view,
-        configure_review_queue,
-        first_present_field,
-        make_review_queue_form,
-    )
-    from .index_plan_support import (
-        display_path,
-        emit_json,
-        is_local_manifest_draft,
-        read_json_array,
-        read_jsonl,
-        repository_file_sha256,
-        select_source_coverage_closeout,
-    )
-else:
+if not __package__:
     repository_root = pathlib.Path(__file__).resolve().parents[3]
     if str(repository_root) not in sys.path:
         sys.path.insert(0, str(repository_root))
-    from tools.codex_assets.knowledge_hub.index_plan_linking import build_linking_audit
-    from tools.codex_assets.knowledge_hub.index_plan_manifest import classify_unpaired_manifest, manifest_profile_health
-    from tools.codex_assets.knowledge_hub.index_plan_review_forms import apply_review_queue_filters, configure_review_forms, validate_review_queue_forms
-    from tools.codex_assets.knowledge_hub.index_plan_review_queue import (
-        build_review_queue_view,
-        configure_review_queue,
-        first_present_field,
-        make_review_queue_form,
-    )
-    from tools.codex_assets.knowledge_hub.index_plan_support import (
-        display_path,
-        emit_json,
-        is_local_manifest_draft,
-        read_json_array,
-        read_jsonl,
-        repository_file_sha256,
-        select_source_coverage_closeout,
-    )
 
+from tools.codex_assets.knowledge_hub.index_plan_linking import build_linking_audit
+from tools.codex_assets.knowledge_hub.index_plan_manifest import classify_unpaired_manifest, manifest_profile_health
+from tools.codex_assets.knowledge_hub.index_plan_review_forms import apply_review_queue_filters, configure_review_forms, validate_review_queue_forms
+from tools.codex_assets.knowledge_hub.index_plan_review_queue import (
+    build_review_queue_view,
+    configure_review_queue,
+    first_present_field,
+    make_review_queue_form,
+)
+from tools.codex_assets.knowledge_hub.index_plan_support import (
+    display_path,
+    emit_json,
+    is_local_manifest_draft,
+    read_json_array,
+    read_jsonl,
+    repository_file_sha256,
+    select_source_coverage_closeout,
+)
 INDEX_PLAN_FULL_JSON_MAX_BYTES = 2 * 1024 * 1024
 INDEX_PLAN_SUMMARY_JSON_MAX_BYTES = 64 * 1024
 
