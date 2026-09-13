@@ -102,15 +102,46 @@ def _write_items(root):
     )
 
 
-def test_temporal_graph_never_leaks_acl_denied_nodes(tmp_path):
+def test_temporal_graph_anonymous_view_hides_acl_and_personal_nodes(tmp_path):
     _write_items(tmp_path)
-    result = temporal_context_graph(
+    graph = temporal_context_graph(tmp_path, as_of="2026-09-12")
+    ids = {row["id"] for row in graph["nodes"]}
+
+    assert graph["authorization_applied_before_graph"] is True
+    assert graph["principal_id"] == "anonymous-local"
+    assert ids == {"public-a"}
+    assert graph["edges"] == []
+
+
+def test_temporal_graph_principal_acl_and_scope_apply_before_edges(tmp_path):
+    _write_items(tmp_path)
+    alice = {"principal_id": "user:alice", "groups": []}
+    full = temporal_context_graph(
         tmp_path,
-        "public-a",
-        principal={"principal_id": "bob", "organization_id": "engineering"},
-        agent_scopes=[],
+        as_of="2026-09-12",
+        principal=alice,
     )
-    ids = {node["id"] for node in result["nodes"]}
-    assert "public-a" in ids
-    assert "acl-secret" not in ids
-    assert "personal-alice" not in ids
+    scoped = temporal_context_graph(
+        tmp_path,
+        as_of="2026-09-12",
+        principal=alice,
+        knowledge_scopes=["projects/a"],
+    )
+
+    assert {row["id"] for row in full["nodes"]} == {
+        "public-a",
+        "acl-secret",
+        "personal-alice",
+    }
+    assert full["edges"] == [
+        {
+            "source_id": "public-a",
+            "relation": "conflicts_with",
+            "target_id": "acl-secret",
+            "valid_from": "",
+            "valid_to": "",
+            "source_item_id": "public-a",
+        }
+    ]
+    assert {row["id"] for row in scoped["nodes"]} == {"public-a"}
+    assert scoped["edges"] == []
