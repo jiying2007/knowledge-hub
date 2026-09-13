@@ -166,3 +166,19 @@ def test_index_plan_split_reduces_repository_oversized_module_debt():
     assert report["status"] == "pass"
     assert report["oversized_module_count"] <= 2
     assert not index_plan_paths & oversized_paths
+
+
+def test_owner_gates_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    owner_gates_paths = {
+        "tools/codex_assets/knowledge_hub/owner_gates_cli.py",
+        "tools/codex_assets/knowledge_hub/owner_gates_support.py",
+        "tools/codex_assets/knowledge_hub/owner_gates_evidence.py",
+        "tools/codex_assets/knowledge_hub/owner_gates_forms.py",
+        "tools/codex_assets/knowledge_hub/owner_gates_dispatch.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 1
+    assert not owner_gates_paths & oversized_paths
