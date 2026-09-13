@@ -43,6 +43,48 @@ jobs:
           script = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
           exec(compile(script, 'status-split-migration.py', 'exec'), {'__name__': '__main__'})
           PY
+      - name: Repair migration boundary and split-module lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          cli = Path('tools/codex_assets/knowledge_hub/status_cli.py')
+          text = cli.read_text(encoding='utf-8')
+          old_import = 'from .status_common import load_json, load_jsonl, parse_date, run_json, shell_command\n'
+          new_import = '''from .status_common import (\n    load_json,\n    load_jsonl,\n    parse_date,\n    resolve_today,\n    run_json,\n    shell_command,\n)\n'''
+          if old_import not in text:
+              raise SystemExit('status_common import anchor missing after migration')
+          text = text.replace(old_import, new_import, 1)
+          anchor = 'if args.review_queue_limit < 1:\n    parser.error("--review-queue-limit must be a positive integer")\n\nerrors = []\n'
+          replacement = 'if args.review_queue_limit < 1:\n    parser.error("--review-queue-limit must be a positive integer")\n\ntoday, today_source = resolve_today(args, parser)\n\nerrors = []\n'
+          if anchor not in text:
+              raise SystemExit('today restoration anchor missing after migration')
+          cli.write_text(text.replace(anchor, replacement, 1), encoding='utf-8')
+
+          owner = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py')
+          text = owner.read_text(encoding='utf-8')
+          replacements = {
+              '    source_id = str(row.get("source_id", "")); worksheet_id = str(row.get("id", ""))\n': '    source_id = str(row.get("source_id", ""))\n    worksheet_id = str(row.get("id", ""))\n',
+              '    routes: List[Dict[str, Any]] = []; seen = set()\n': '    routes: List[Dict[str, Any]] = []\n    seen = set()\n',
+              '            seen.add(key); routes.append(route)\n': '            seen.add(key)\n            routes.append(route)\n',
+              '    source_id = str(first.get("source_id", "")); worksheet_id = str(first.get("id", ""))\n': '    source_id = str(first.get("source_id", ""))\n    worksheet_id = str(first.get("id", ""))\n',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit('owner projection lint anchor missing: {}'.format(old.strip()))
+              text = text.replace(old, new, 1)
+          owner.write_text(text, encoding='utf-8')
+
+          review = Path('tools/codex_assets/knowledge_hub/status_review.py')
+          text = review.read_text(encoding='utf-8')
+          old = '    key = lambda row: (str(row.get("priority", "P9")), str(row.get("review_after", "") or "9999-12-31"), str(row.get("owner", "")), str(row.get("id", "")))\n'
+          new = '''    def key(row: Dict[str, Any]) -> Any:\n        return (\n            str(row.get("priority", "P9")),\n            str(row.get("review_after", "") or "9999-12-31"),\n            str(row.get("owner", "")),\n            str(row.get("id", "")),\n        )\n'''
+          if old not in text:
+              raise SystemExit('review sort-key lint anchor missing')
+          review.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
       - name: Validate Python compilation
         run: python3 -m compileall -q tools/codex_assets/knowledge_hub/status_*.py
       - name: Validate Ruff
@@ -112,7 +154,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tools/codex_assets/knowledge_hub/status_cli.py pyproject.toml tests/test_complexity_budget.py
+          git add tools/codex_assets/knowledge_hub/status_*.py pyproject.toml tests/test_complexity_budget.py
           git diff --cached --check
           test -n "$(git diff --cached --name-only)"
           git commit -m 'refactor(status): split dashboard projections'
