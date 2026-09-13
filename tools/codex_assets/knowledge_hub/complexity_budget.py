@@ -66,12 +66,13 @@ def _evaluate_python(
         for path in tracked_files
         if path.startswith("tools/codex_assets/knowledge_hub/") and path.endswith(".py")
     }
-    # A regression fixture may intentionally `git init` a copied repository
-    # without populating its index. In that specific state there is no index
-    # authority for distinguishing existing copied modules from newly added code,
-    # so the copied tree is the baseline. A tree with no Git metadata remains a
-    # strict synthetic/new-code surface, while any non-empty index is authoritative.
-    baseline_without_git_index = git_index_available and not tracked_files
+    # Preserve the historical legacy-cap sentinel for synthetic baseline tests,
+    # and additionally recognize copied regression repositories that `git init`
+    # without populating an index. A no-Git tree with no legacy caps remains a
+    # strict new-code surface; any non-empty Git index is authoritative.
+    baseline_without_git_index = not tracked_files and (
+        git_index_available or bool(legacy_caps)
+    )
     regressions: List[Dict[str, Any]] = []
     legacy_attention: List[Dict[str, Any]] = []
     module_rows: List[Dict[str, Any]] = []
