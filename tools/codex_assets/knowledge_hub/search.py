@@ -95,4 +95,4 @@ class _SearchFacadeModule(_types.ModuleType):
                 setattr(module, name, value)
 
 
-setattr(_sys.modules[__name__], "__class__", _SearchFacadeModule)
+_sys.modules[__name__].__class__ = _SearchFacadeModule
