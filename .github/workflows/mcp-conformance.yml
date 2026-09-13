@@ -9,7 +9,10 @@ on:
       - "tools/ci/run-mcp-conformance.sh"
       - "tools/codex_assets/knowledge_hub/protocol_conformance.py"
       - "tools/codex_assets/knowledge_hub/mcp_http_server.py"
+      - "tools/codex_assets/knowledge_hub/mcp_v3_server.py"
       - "tests/test_runtime_p5_security_protocols.py"
+      - "tests/test_p5_p7_security_closure.py"
+      - "tests/test_runtime_cleanup.py"
   pull_request:
     paths:
       - ".github/workflows/mcp-conformance.yml"
@@ -18,7 +21,10 @@ on:
       - "tools/ci/run-mcp-conformance.sh"
       - "tools/codex_assets/knowledge_hub/protocol_conformance.py"
       - "tools/codex_assets/knowledge_hub/mcp_http_server.py"
+      - "tools/codex_assets/knowledge_hub/mcp_v3_server.py"
       - "tests/test_runtime_p5_security_protocols.py"
+      - "tests/test_p5_p7_security_closure.py"
+      - "tests/test_runtime_cleanup.py"
   workflow_dispatch:
 
 permissions:
