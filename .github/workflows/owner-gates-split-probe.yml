@@ -1,0 +1,85 @@
+name: Owner Gates Split Probe
+
+on:
+  push:
+    branches:
+      - codex/legacy-burndown-owner-gates-v1
+    paths:
+      - .github/workflows/owner-gates-split-probe.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Analyze owner-gates structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import ast
+          import pathlib
+          import re
+
+          path = pathlib.Path('tools/codex_assets/knowledge_hub/owner_gates_cli.py')
+          text = path.read_text(encoding='utf-8')
+          lines = text.splitlines()
+          tree = ast.parse(text)
+          print(f'TOTAL_LINES={len(lines)}')
+          print('FUNCTIONS_BEGIN')
+          funcs = []
+          for node in tree.body:
+              if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                  refs = sorted({n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)})
+                  size = (node.end_lineno or node.lineno) - node.lineno + 1
+                  funcs.append((node.name, node.lineno, node.end_lineno or node.lineno, size, refs))
+                  print(f'{node.name}|{node.lineno}|{node.end_lineno or node.lineno}|{size}|refs={",".join(refs)}')
+          print('FUNCTIONS_END')
+
+          defined = {name for name, *_ in funcs}
+          print('CALL_GRAPH_BEGIN')
+          for node in tree.body:
+              if isinstance(node, ast.FunctionDef):
+                  calls = sorted({n.func.id for n in ast.walk(node) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in defined})
+                  if calls:
+                      print(f'{node.name}->{",".join(calls)}')
+          print('CALL_GRAPH_END')
+
+          print('TOP_LEVEL_RANGES_BEGIN')
+          for node in tree.body:
+              if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Import, ast.ImportFrom)):
+                  continue
+              print(f'{type(node).__name__}|{node.lineno}|{node.end_lineno or node.lineno}')
+          print('TOP_LEVEL_RANGES_END')
+
+          print('CANDIDATE_GROUPS_BEGIN')
+          groups = {
+              'support_identity': ['load_jsonl','load_json','path_from_arg','_is_filled','source_path_values','source_path_matches','is_resolved','default_field_value','compute_source_identity','_row_ref','_display_path','user_path_prefixes','_read_jsonl_local'],
+              'owner_ready_evidence': ['inspect_owner_ready_item','owner_ready_items','owner_ready_state','owner_ready_evidence_refs','_is_evidence_field','_classify_evidence_command','_field_readiness','make_read_only_prefill_candidates','make_evidence_readiness','make_owner_inbox','make_owner_ready_coverage','make_owner_ready_blocking_context'],
+              'dispatch_handoff': ['_safe_slug','make_owner_handoff_packet','make_owner_dispatch','make_owner_handoff_packets','make_owner_summary'],
+              'forms_landing': ['make_decision_form','make_owner_checklist','validate_forms','owner_ready_landing_errors','required_manual_files_for_forms','make_landing_plan','make_landing_audit'],
+          }
+          by_name = {name:(start,end,size) for name,start,end,size,_ in funcs}
+          for group, names in groups.items():
+              present = [(name, *by_name[name]) for name in names if name in by_name]
+              print(group + '|lines=' + str(sum(row[3] for row in present)) + '|members=' + ','.join(row[0] for row in present))
+          print('CANDIDATE_GROUPS_END')
+
+          patterns = re.compile(r'(knowledge-owner-gates|owner[_-]gates|owner_ready|owner-ready|validate_forms|landing_plan|landing_audit|handoff_packet|evidence_readiness)')
+          print('TEST_REFERENCES_BEGIN')
+          for test in sorted(pathlib.Path('tests').glob('test_*.py')):
+              body = test.read_text(encoding='utf-8', errors='ignore')
+              hits = [line.strip() for line in body.splitlines() if patterns.search(line)]
+              if hits:
+                  print(f'{test}|hits={len(hits)}')
+                  for hit in hits[:30]:
+                      print('  ' + hit[:240])
+          print('TEST_REFERENCES_END')
+
+          pyproject = pathlib.Path('pyproject.toml').read_text(encoding='utf-8')
+          print('MYPY_OWNER_GATES_REFERENCED=' + str('owner_gates_cli.py' in pyproject))
+          PY
