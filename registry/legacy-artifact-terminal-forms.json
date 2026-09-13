@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub-legacy-artifact-terminal-forms-v1",
+  "status": "active",
+  "coverage": {
+    "terminal_form": "immutable-historical-exception-with-owner-and-reason",
+    "coverage_mode": "exact-reference-set-sha256",
+    "scope": "artifacts/manifests/**/*.jsonl",
+    "source_revision": "5e43739e97f47b6c26eee3f503f97ba5cf2fc1bf",
+    "legacy_reference_count": 315,
+    "legacy_reference_set_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "knowledge-hub-maintainers",
+    "reason": "Pre-v1 artifact references are preserved as immutable historical provenance. The exact legacy-reference set is cryptographically frozen; any addition, deletion, or mutation must fail governance until migrated to strict v1 or explicitly re-ratcheted with review evidence.",
+    "automatic_delete": false
+  }
+}
