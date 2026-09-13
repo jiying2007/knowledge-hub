@@ -149,3 +149,20 @@ def test_status_split_reduces_repository_oversized_module_debt():
     assert report["status"] == "pass"
     assert report["oversized_module_count"] <= 3
     assert not status_paths & oversized_paths
+
+
+def test_index_plan_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    index_plan_paths = {
+        "tools/codex_assets/knowledge_hub/index_plan_cli.py",
+        "tools/codex_assets/knowledge_hub/index_plan_support.py",
+        "tools/codex_assets/knowledge_hub/index_plan_review_queue.py",
+        "tools/codex_assets/knowledge_hub/index_plan_review_forms.py",
+        "tools/codex_assets/knowledge_hub/index_plan_manifest.py",
+        "tools/codex_assets/knowledge_hub/index_plan_linking.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 2
+    assert not index_plan_paths & oversized_paths
