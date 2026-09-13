@@ -26,28 +26,40 @@ jobs:
 
           test_path = Path('tools/codex_assets/knowledge_hub/regression/terminal_gates.py')
           text = test_path.read_text(encoding='utf-8')
-          old = '    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()\n'
-          new = '    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_owner_projection.py").read_text()\n'
-          if text.count(old) != 1:
-              raise SystemExit(f'expected one stale status source target, found {text.count(old)}')
-          test_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          old_source = '    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()\n'
+          new_source = '''    owner_source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_owner_projection.py").read_text()\n    status_source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()\n    source = owner_source + "\\n" + status_source\n'''
+          if text.count(old_source) != 1:
+              raise SystemExit(f'expected one stale status source target, found {text.count(old_source)}')
+          text = text.replace(old_source, new_source, 1)
+          old_required = '''    required_fragments = [\n        "OWNER_READY_ROW_STATUS_SOURCE = \\"knowledge-owner-gates.rows[].owner_ready_package_status\\"",\n        "\\"owner_ready_source\\": OWNER_READY_ROW_STATUS_SOURCE",\n        "\\"id\\": \\"owner-ready-row-schema-missing\\"",\n    ]\n    present_banned = [fragment for fragment in banned_fragments if fragment in source]\n    missing_required = [fragment for fragment in required_fragments if fragment not in source]\n'''
+          new_required = '''    owner_required_fragments = [\n        "OWNER_READY_ROW_STATUS_SOURCE = \\"knowledge-owner-gates.rows[].owner_ready_package_status\\"",\n        "\\"owner_ready_source\\": OWNER_READY_ROW_STATUS_SOURCE",\n    ]\n    status_required_fragments = [\n        "\\"id\\": \\"owner-ready-row-schema-missing\\"",\n    ]\n    present_banned = [fragment for fragment in banned_fragments if fragment in source]\n    missing_required = [\n        *[fragment for fragment in owner_required_fragments if fragment not in owner_source],\n        *[fragment for fragment in status_required_fragments if fragment not in status_source],\n    ]\n'''
+          if text.count(old_required) != 1:
+              raise SystemExit(f'expected one stale required-fragment block, found {text.count(old_required)}')
+          text = text.replace(old_required, new_required, 1)
+          test_path.write_text(text, encoding='utf-8')
 
-          source = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py').read_text(encoding='utf-8')
+          owner_source = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py').read_text(encoding='utf-8')
+          status_source = Path('tools/codex_assets/knowledge_hub/status_cli.py').read_text(encoding='utf-8')
+          combined = owner_source + '\n' + status_source
           banned = [
               'covered" if owner_ready_packages or registry_items else "missing',
               'owner_ready_package_ids = [str(item.get("id", "")) for item in registry_items',
               'owner_ready_package_count": len(owner_ready_packages) if owner_ready_packages else len(registry_items)',
           ]
-          required = [
+          owner_required = [
               'OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"',
               '"owner_ready_source": OWNER_READY_ROW_STATUS_SOURCE',
-              '"id": "owner-ready-row-schema-missing"',
           ]
-          present_banned = [fragment for fragment in banned if fragment in source]
-          missing_required = [fragment for fragment in required if fragment not in source]
+          status_required = ['"id": "owner-ready-row-schema-missing"']
+          present_banned = [fragment for fragment in banned if fragment in combined]
+          missing_required = [
+              *[fragment for fragment in owner_required if fragment not in owner_source],
+              *[fragment for fragment in status_required if fragment not in status_source],
+          ]
           if present_banned or missing_required:
-              raise SystemExit(f'owner projection contract mismatch: banned={present_banned}, missing={missing_required}')
+              raise SystemExit(f'split owner contract mismatch: banned={present_banned}, missing={missing_required}')
           PY
+          python3 -m compileall -q tools/codex_assets/knowledge_hub/regression/terminal_gates.py
           git diff --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
