@@ -12,7 +12,7 @@ import argparse
 import json
 import pathlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Optional, Sequence
 from urllib.parse import urlparse
 
 from .common import KnowledgeHubError, repository_root
@@ -231,8 +231,8 @@ class _Handler(BaseHTTPRequestHandler):
             request_id = request.get("id")
             validate_local_origin(self.headers)
             validate_http_request(request, self.headers)
-            root = getattr(self.server, "knowledge_root")
-            agent_id = getattr(self.server, "knowledge_agent_id")
+            root = self.server.knowledge_root  # type: ignore[attr-defined]
+            agent_id = self.server.knowledge_agent_id  # type: ignore[attr-defined]
             response = handle_mcp_stateless_request(root, request, agent_id=agent_id)
             self._send_json(200, response)
         except MCPProtocolError as exc:
