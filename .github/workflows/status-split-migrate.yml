@@ -1,0 +1,162 @@
+name: Status Split Migration
+
+on:
+  push:
+    branches:
+      - codex/legacy-burndown-status-v1
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, 'refactor(status): split dashboard projections') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.14'
+      - name: Install locked dependencies
+        run: |
+          tools/ci/rtk bash tools/ci/bootstrap-path.sh
+          rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Capture baseline status contracts
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 --json > /tmp/status-before.json
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 > /tmp/status-before.txt
+      - name: Migrate dashboard projections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('tools/codex_assets/knowledge_hub/status_cli.py')
+          text = path.read_text(encoding='utf-8')
+
+          imports_end = 'from .status_projection import status_summary\n'
+          prefix = '''import argparse\nimport json\nimport pathlib\nimport sys\n\nfrom .output_contract import status_contract\nfrom .source_coverage import select_source_coverage_closeout\nfrom .status_common import load_json, load_jsonl, parse_date, run_json, shell_command\nfrom .status_owner_projection import OWNER_READY_ROW_STATUS_SOURCE, build_owner_projection\nfrom .status_product_audit import build_product_noncanonical_residue_audit, build_product_source_inventory_audit\nfrom .status_projection import status_summary\nfrom .status_result import build_status_result\nfrom .status_review import build_review_queues\n'''
+          pos = text.index(imports_end) + len(imports_end)
+          text = prefix + text[pos:]
+
+          common_start = text.index('\ndef repository_file_sha256(')
+          common_end = text.index('\nitems = load_jsonl(', common_start)
+          text = text[:common_start] + '\n' + text[common_end:]
+          text = text.replace('items = load_jsonl(root / "registry" / "items.jsonl")', 'items = load_jsonl(root, errors, root / "registry" / "items.jsonl")')
+          text = text.replace('sources_payload = load_json(root / "registry" / "sources.json")', 'sources_payload = load_json(root, errors, root / "registry" / "sources.json")')
+          text = text.replace('retired_sources = load_jsonl(root / "registry" / "retired-sources.jsonl")', 'retired_sources = load_jsonl(root, errors, root / "registry" / "retired-sources.jsonl")')
+
+          review_start = text.index('\ndef is_blank(')
+          review_end = text.index('\nreview_queues = build_review_queues(items, sources)', review_start)
+          text = text[:review_start] + '\n' + text[review_end:]
+          text = text.replace(
+              'review_queues = build_review_queues(items, sources)',
+              'review_queues = build_review_queues(root, items, sources, today, args.final_profile, args.review_queue_limit)',
+          )
+          text = text.replace('knowledge_check = run_json([', 'knowledge_check = run_json(root, errors, [')
+          text = text.replace('owner_gates = run_json([', 'owner_gates = run_json(root, errors, [')
+          text = text.replace('source_runtime = run_json([', 'source_runtime = run_json(root, errors, [')
+
+          owner_start = text.index('\nnext_owner_gate = {}')
+          owner_end = text.index('\ndef build_product_source_inventory_audit()', owner_start)
+          owner_replacement = '''\nowner_projection = build_owner_projection(open_owner_rows)\nnext_owner_gate = owner_projection["next_owner_gate"]\nnext_open_queue = owner_projection["next_open_queue"]\nowner_dispatch = owner_projection["owner_dispatch"]\nsummary_commands = owner_projection["summary_commands"]\nowner_summary_commands = owner_projection["owner_summary_commands"]\nowner_forms_jsonl_commands = owner_projection["owner_forms_jsonl_commands"]\nowner_evidence_readiness_commands = owner_projection["owner_evidence_readiness_commands"]\nowner_validate_forms_command_templates = owner_projection["owner_validate_forms_command_templates"]\nowner_landing_plan_command_templates = owner_projection["owner_landing_plan_command_templates"]\nowner_landing_audit_command_templates = owner_projection["owner_landing_audit_command_templates"]\nforms_jsonl_commands = owner_projection["forms_jsonl_commands"]\nevidence_readiness_commands = owner_projection["evidence_readiness_commands"]\nvalidate_forms_command_templates = owner_projection["validate_forms_command_templates"]\nlanding_plan_command_templates = owner_projection["landing_plan_command_templates"]\nlanding_audit_command_templates = owner_projection["landing_audit_command_templates"]\n'''
+          text = text[:owner_start] + owner_replacement + text[owner_end:]
+
+          product_start = text.index('\ndef build_product_source_inventory_audit()')
+          product_end_marker = 'product_noncanonical_blocking_count = int(product_noncanonical_residue_audit.get("blocker_count", 0) or 0)\n'
+          product_end = text.index(product_end_marker, product_start) + len(product_end_marker)
+          product_replacement = '''\nproduct_source_inventory_audit = build_product_source_inventory_audit(root, errors, sources)\n\nowner_gates_failed = owner_gates["exit_code"] != 0\nreview_queue_blocking_count = int(review_queues.get("summary", {}).get("active_or_promotion_blocker_count", 0) or 0)\nreview_queue_product_blocking_count = int(review_queues.get("summary", {}).get("total_pending_count", 0) or 0)\nproduct_source_inventory_blocking_count = int(product_source_inventory_audit.get("blocker_count", 0) or 0)\nproduct_noncanonical_residue_audit = build_product_noncanonical_residue_audit(root, items, current_sources)\nproduct_noncanonical_blocking_count = int(product_noncanonical_residue_audit.get("blocker_count", 0) or 0)\n'''
+          text = text[:product_start] + product_replacement + text[product_end:]
+
+          result_start = text.index('\nresult = {')
+          result_end = text.index('\n\nif args.json or args.summary_json:', result_start)
+          state = '''\nstatus_state = {\n    "root": root, "args": args, "status": status, "public_status_contract": public_status_contract,\n    "today": today, "today_source": today_source, "owner_blocker_source": owner_blocker_source,\n    "knowledge_check": knowledge_check, "check_payload": check_payload, "items": items, "stale_items": stale_items,\n    "review_after_command": review_after_command, "review_after_near_due_command": review_after_near_due_command,\n    "sources": sources, "latest_source_coverage": latest_source_coverage, "latest_source_coverage_selection": latest_source_coverage_selection,\n    "source_check_health": source_check_health, "source_runtime": source_runtime, "source_runtime_payload": source_runtime_payload,\n    "source_recovery_rows": source_recovery_rows, "stale_sources": stale_sources, "source_review_after_command": source_review_after_command,\n    "source_check_report_command": source_check_report_command, "product_source_inventory_audit": product_source_inventory_audit,\n    "product_noncanonical_residue_audit": product_noncanonical_residue_audit, "review_queues": review_queues,\n    "owner_payload": owner_payload, "owner_projection": owner_projection, "owner_gates": owner_gates,\n    "open_owner_gate_count": open_owner_gate_count, "active_exposure_count": active_exposure_count,\n    "owner_ready_package_count": owner_ready_package_count, "owner_ready_missing_count": owner_ready_missing_count,\n    "owner_ready_invalid_count": owner_ready_invalid_count, "owner_ready_duplicate_count": owner_ready_duplicate_count,\n    "owner_ready_package_coverage": owner_ready_package_coverage, "owner_ready_row_schema_errors": owner_ready_row_schema_errors,\n    "errors": errors, "strict_blockers": strict_blockers, "final_gate_command": final_gate_command, "next_actions": next_actions,\n}\nresult = build_status_result(status_state)'''
+          text = text[:result_start] + state + text[result_end:]
+          text = text.replace('source_coverage_rows = load_jsonl(latest_source_coverage_path) if latest_source_coverage_path else []', 'source_coverage_rows = load_jsonl(root, errors, latest_source_coverage_path) if latest_source_coverage_path else []')
+          path.write_text(text, encoding='utf-8')
+
+          pyproject = Path('pyproject.toml')
+          ptext = pyproject.read_text(encoding='utf-8')
+          anchor = '    "tools/codex_assets/knowledge_hub/status_projection.py",\n'
+          if anchor not in ptext:
+              anchor = '    "tools/codex_assets/knowledge_hub/source_runtime.py",\n'
+              additions = ''.join('    "tools/codex_assets/knowledge_hub/{}",\n'.format(name) for name in [
+                  'status_common.py', 'status_owner_projection.py', 'status_product_audit.py', 'status_result.py', 'status_review.py'
+              ])
+              ptext = ptext.replace(anchor, anchor + additions, 1)
+          pyproject.write_text(ptext, encoding='utf-8')
+
+          test_path = Path('tests/test_complexity_budget.py')
+          ttext = test_path.read_text(encoding='utf-8')
+          marker = 'def test_live_oversized_module_count_does_not_exceed_burndown_ceiling():'
+          if marker in ttext and 'status_owner_projection.py' not in ttext:
+              insertion = '''\n\ndef test_status_split_modules_stay_within_new_module_budget():\n    root = repository_root()\n    paths = [\n        "tools/codex_assets/knowledge_hub/status_cli.py",\n        "tools/codex_assets/knowledge_hub/status_common.py",\n        "tools/codex_assets/knowledge_hub/status_owner_projection.py",\n        "tools/codex_assets/knowledge_hub/status_product_audit.py",\n        "tools/codex_assets/knowledge_hub/status_result.py",\n        "tools/codex_assets/knowledge_hub/status_review.py",\n    ]\n    for relative in paths:\n        assert len((root / relative).read_text(encoding="utf-8").splitlines()) <= 800\n\n'''
+              ttext = ttext.replace(marker, insertion + marker, 1)
+              test_path.write_text(ttext, encoding='utf-8')
+          PY
+      - name: Validate split and behavioral identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q tools/codex_assets/knowledge_hub/status_*.py
+          rtk python3 -m ruff check tools/codex_assets/knowledge_hub/status_*.py tests/test_complexity_budget.py
+          rtk python3 -m mypy
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 --json > /tmp/status-after.json
+          rtk bash tools/knowledge-status.sh --as-of 2026-09-13 > /tmp/status-after.txt
+          python3 - <<'PY'
+          import ast, json
+          from pathlib import Path
+
+          def normalize(value):
+              if isinstance(value, dict):
+                  return {k: normalize(v) for k, v in value.items() if k not in {"generated_at"}}
+              if isinstance(value, list):
+                  return [normalize(v) for v in value]
+              return value
+
+          before = normalize(json.loads(Path('/tmp/status-before.json').read_text()))
+          after = normalize(json.loads(Path('/tmp/status-after.json').read_text()))
+          if before != after:
+              raise SystemExit('normalized status JSON changed during split')
+          if Path('/tmp/status-before.txt').read_text() != Path('/tmp/status-after.txt').read_text():
+              raise SystemExit('status text output changed during split')
+
+          paths = [
+              Path('tools/codex_assets/knowledge_hub/status_cli.py'),
+              Path('tools/codex_assets/knowledge_hub/status_common.py'),
+              Path('tools/codex_assets/knowledge_hub/status_owner_projection.py'),
+              Path('tools/codex_assets/knowledge_hub/status_product_audit.py'),
+              Path('tools/codex_assets/knowledge_hub/status_result.py'),
+              Path('tools/codex_assets/knowledge_hub/status_review.py'),
+          ]
+          for path in paths:
+              source = path.read_text(encoding='utf-8')
+              lines = len(source.splitlines())
+              print(f'{path}: {lines} lines')
+              if lines > 800:
+                  raise SystemExit(f'{path} exceeds 800 lines')
+              tree = ast.parse(source)
+              for node in ast.walk(tree):
+                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                      span = node.end_lineno - node.lineno + 1
+                      if span > 80:
+                          raise SystemExit(f'{path}:{node.name} exceeds 80 lines ({span})')
+          PY
+          rtk python3 -m pytest -q tests/test_complexity_budget.py tests/test_cli_help.py
+          git diff --check
+      - name: Commit migrated split
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/status-split-migrate.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'refactor(status): split dashboard projections'
+          git push origin HEAD:codex/legacy-burndown-status-v1
