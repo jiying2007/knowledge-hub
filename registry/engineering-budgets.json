@@ -6,12 +6,7 @@
     "new_function_max_lines": 80,
     "legacy_module_line_caps": {
       "tools/codex_assets/knowledge_hub/check_cli.py": 2685,
-      "tools/codex_assets/knowledge_hub/status_cli.py": 1982,
-      "tools/codex_assets/knowledge_hub/owner_gates_cli.py": 2233,
-      "tools/codex_assets/knowledge_hub/search.py": 2104,
-      "tools/codex_assets/knowledge_hub/product_gate.py": 1401,
-      "tools/codex_assets/knowledge_hub/regression/governance.py": 2531,
-      "tools/codex_assets/knowledge_hub/regression/lifecycle.py": 2622
+      "tools/codex_assets/knowledge_hub/owner_gates_cli.py": 2233
     }
   },
   "commands": {

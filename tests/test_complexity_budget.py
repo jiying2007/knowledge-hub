@@ -132,3 +132,20 @@ def test_search_split_reduces_repository_oversized_module_debt():
     assert report["status"] == "pass"
     assert report["oversized_module_count"] <= 4
     assert not search_paths & oversized_paths
+
+
+def test_status_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    status_paths = {
+        "tools/codex_assets/knowledge_hub/status_cli.py",
+        "tools/codex_assets/knowledge_hub/status_common.py",
+        "tools/codex_assets/knowledge_hub/status_owner_projection.py",
+        "tools/codex_assets/knowledge_hub/status_product_audit.py",
+        "tools/codex_assets/knowledge_hub/status_result.py",
+        "tools/codex_assets/knowledge_hub/status_review.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 3
+    assert not status_paths & oversized_paths

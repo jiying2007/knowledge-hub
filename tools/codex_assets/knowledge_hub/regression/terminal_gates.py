@@ -284,19 +284,26 @@ def test_status_next_owner_gate():
         },
     )
 def test_status_owner_ready_source_no_registry_fallback():
-    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()
+    owner_source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_owner_projection.py").read_text()
+    status_source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()
+    source = owner_source + "\n" + status_source
     banned_fragments = [
         "covered\" if owner_ready_packages or registry_items else \"missing",
         "owner_ready_package_ids = [str(item.get(\"id\", \"\")) for item in registry_items",
         "owner_ready_package_count\": len(owner_ready_packages) if owner_ready_packages else len(registry_items)",
     ]
-    required_fragments = [
+    owner_required_fragments = [
         "OWNER_READY_ROW_STATUS_SOURCE = \"knowledge-owner-gates.rows[].owner_ready_package_status\"",
         "\"owner_ready_source\": OWNER_READY_ROW_STATUS_SOURCE",
+    ]
+    status_required_fragments = [
         "\"id\": \"owner-ready-row-schema-missing\"",
     ]
     present_banned = [fragment for fragment in banned_fragments if fragment in source]
-    missing_required = [fragment for fragment in required_fragments if fragment not in source]
+    missing_required = [
+        *[fragment for fragment in owner_required_fragments if fragment not in owner_source],
+        *[fragment for fragment in status_required_fragments if fragment not in status_source],
+    ]
     expect(
         not present_banned and not missing_required,
         "status-owner-ready-source-no-registry-fallback",
