@@ -127,7 +127,7 @@ jobs:
                   if checks["coverage_report"]["status"] != "pass":
                       quality_errors.append("coverage_report failed")
           '''
-          recovery = '\n' + textwrap.dedent(recovery).rstrip() + '\n'
+          recovery = '\n' + textwrap.indent(textwrap.dedent(recovery).strip(), "    ") + '\n'
           if text.count(sbom_marker) != 1:
               raise SystemExit('engineering SBOM marker mismatch')
           text = text.replace(sbom_marker, recovery + sbom_marker, 1)
