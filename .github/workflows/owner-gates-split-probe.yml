@@ -37,7 +37,9 @@ jobs:
                   refs = sorted({n.id for n in ast.walk(node) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)})
                   size = (node.end_lineno or node.lineno) - node.lineno + 1
                   funcs.append((node.name, node.lineno, node.end_lineno or node.lineno, size, refs))
-                  print(f'{node.name}|{node.lineno}|{node.end_lineno or node.lineno}|{size}|refs={",".join(refs)}')
+                  normalized = ast.unparse(node)
+                  normalized_size = len(normalized.splitlines())
+                  print(f'{node.name}|{node.lineno}|{node.end_lineno or node.lineno}|{size}|normalized={normalized_size}|refs={",".join(refs)}')
           print('FUNCTIONS_END')
 
           defined = {name for name, *_ in funcs}
@@ -58,15 +60,19 @@ jobs:
 
           print('CANDIDATE_GROUPS_BEGIN')
           groups = {
-              'support_identity': ['load_jsonl','load_json','path_from_arg','_is_filled','source_path_values','source_path_matches','is_resolved','default_field_value','compute_source_identity','_row_ref','_display_path','user_path_prefixes','_read_jsonl_local'],
-              'owner_ready_evidence': ['inspect_owner_ready_item','owner_ready_items','owner_ready_state','owner_ready_evidence_refs','_is_evidence_field','_classify_evidence_command','_field_readiness','make_read_only_prefill_candidates','make_evidence_readiness','make_owner_inbox','make_owner_ready_coverage','make_owner_ready_blocking_context'],
+              'support_identity': ['load_jsonl','load_json','path_from_arg','_is_filled','source_path_values','source_path_matches','is_resolved','default_field_value','compute_source_identity','_row_ref','_display_path','user_path_prefixes','_read_jsonl_local','shlex_quote','is_filled','owner_route_for','source_execution_root','effective_verification_commands'],
+              'owner_ready_evidence': ['inspect_owner_ready_item','owner_ready_items','owner_ready_state','owner_ready_evidence_refs','_is_evidence_field','_classify_evidence_command','_field_readiness','make_read_only_prefill_candidates','make_evidence_readiness','group_owner_required_fields','make_owner_inbox','make_owner_ready_coverage','make_owner_ready_blocking_context'],
               'dispatch_handoff': ['_safe_slug','make_owner_handoff_packet','make_owner_dispatch','make_owner_handoff_packets','make_owner_summary'],
-              'forms_landing': ['make_decision_form','make_owner_checklist','validate_forms','owner_ready_landing_errors','required_manual_files_for_forms','make_landing_plan','make_landing_audit'],
+              'forms_landing': ['make_decision_form','make_owner_checklist','validate_forms_file','owner_ready_landing_errors','required_manual_files_for_forms','make_landing_plan','make_landing_audit'],
           }
           by_name = {name:(start,end,size) for name,start,end,size,_ in funcs}
           for group, names in groups.items():
               present = [(name, *by_name[name]) for name in names if name in by_name]
-              print(group + '|lines=' + str(sum(row[3] for row in present)) + '|members=' + ','.join(row[0] for row in present))
+              normalized_lines = 0
+              for name, *_rest in present:
+                  node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name)
+                  normalized_lines += len(ast.unparse(node).splitlines())
+              print(group + '|source_lines=' + str(sum(row[3] for row in present)) + '|normalized_lines=' + str(normalized_lines) + '|members=' + ','.join(row[0] for row in present))
           print('CANDIDATE_GROUPS_END')
 
           patterns = re.compile(r'(knowledge-owner-gates|owner[_-]gates|owner_ready|owner-ready|validate_forms|landing_plan|landing_audit|handoff_packet|evidence_readiness)')
