@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "contract": "knowledge-hub.mcp-conformance-policy.v1",
+  "protocol_version": "2026-07-28",
+  "native_profile": "stateless-2026-07-28",
+  "runner": {
+    "package": "@modelcontextprotocol/conformance",
+    "version": "0.2.0-alpha.10",
+    "frozen_revision_anchor": "requirements/2026-07-28.yaml",
+    "expected_failure_baseline_allowed": false
+  },
+  "claim_scope": {
+    "advertised_native_profile_only": true,
+    "full_mcp_server_requirements_claimed": false,
+    "sdk_tier_claimed": false,
+    "synthetic_conformance_tools_allowed": false,
+    "synthetic_prompts_allowed": false,
+    "unsupported_capabilities_may_be_advertised": false
+  },
+  "advertised_capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false,
+    "completion": false,
+    "tasks_extension": false,
+    "sampling": false,
+    "elicitation": false,
+    "roots": false
+  },
+  "required_official_scenarios": [
+    "server-stateless",
+    "tools-list",
+    "resources-list",
+    "resources-read-text",
+    "sep-2164-resource-not-found",
+    "dns-rebinding-protection",
+    "caching"
+  ],
+  "exclusions": [
+    {
+      "class": "conformance-fixture-tools",
+      "reason": "Knowledge Hub must not add synthetic image/audio/progress/embedded-resource tools solely to satisfy the upstream everything-server fixture."
+    },
+    {
+      "class": "unadvertised-prompts-completion",
+      "reason": "The native profile does not advertise prompts or completion and must not fabricate those capabilities for closure evidence."
+    },
+    {
+      "class": "unadvertised-client-capability-roundtrips",
+      "reason": "Sampling, elicitation and roots are not advertised by Knowledge Hub and are outside the P5 provider profile."
+    },
+    {
+      "class": "optional-extensions",
+      "reason": "Tasks and other extensions are explicitly outside the Knowledge Hub execution-plane role."
+    }
+  ],
+  "evidence_requirements": {
+    "exact_knowledge_hub_commit": true,
+    "protocol_and_profile": true,
+    "runner_package_and_version": true,
+    "scenario_set_exact_match": true,
+    "all_required_checks_non_failure": true,
+    "result_digest": "sha256",
+    "hosted_runner_required": true,
+    "local_only_result_may_close": false
+  }
+}
