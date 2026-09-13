@@ -19,13 +19,13 @@ def _load_policy(root: pathlib.Path) -> Mapping[str, Any]:
     return payload if isinstance(payload, Mapping) else {}
 
 
-def _tracked_python(root: pathlib.Path) -> set[str]:
+def _tracked_files(root: pathlib.Path) -> set[str]:
     if not (root / ".git").exists():
         return set()
     try:
         result = run_rtk(
             root,
-            ["git", "ls-files", "tools/codex_assets/knowledge_hub/*.py"],
+            ["git", "ls-files"],
             timeout=20,
         )
     except (KnowledgeHubError, OSError):
@@ -59,8 +59,20 @@ def _evaluate_python(
     function_limit: int,
     legacy_caps: Mapping[str, Any],
 ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-    tracked = _tracked_python(root)
-    baseline_without_git_index = not tracked and bool(legacy_caps)
+    git_index_available = (root / ".git").exists()
+    tracked_files = _tracked_files(root)
+    tracked_python = {
+        path
+        for path in tracked_files
+        if path.startswith("tools/codex_assets/knowledge_hub/") and path.endswith(".py")
+    }
+    # Preserve the historical legacy-cap sentinel for synthetic baseline tests,
+    # and additionally recognize copied regression repositories that `git init`
+    # without populating an index. A no-Git tree with no legacy caps remains a
+    # strict new-code surface; any non-empty Git index is authoritative.
+    baseline_without_git_index = not tracked_files and (
+        git_index_available or bool(legacy_caps)
+    )
     regressions: List[Dict[str, Any]] = []
     legacy_attention: List[Dict[str, Any]] = []
     module_rows: List[Dict[str, Any]] = []
@@ -69,7 +81,7 @@ def _evaluate_python(
         relative = str(path.relative_to(root))
         line_count = len(path.read_text(encoding="utf-8").splitlines())
         functions = _function_lengths(path)
-        is_tracked = relative in tracked or baseline_without_git_index
+        is_tracked = relative in tracked_python or baseline_without_git_index
         cap = legacy_caps.get(relative)
         module_rows.append(
             {
