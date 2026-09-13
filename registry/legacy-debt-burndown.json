@@ -6,7 +6,7 @@
   "status": "active",
   "oversized_modules": {
     "baseline_count": 11,
-    "current_upper_bound_count": 4,
+    "current_upper_bound_count": 0,
     "measurement_source": "tools.codex_assets.knowledge_hub.complexity_budget.evaluate_complexity_budget:oversized_module_count",
     "measurement_rule": "count every tools/codex_assets/knowledge_hub/**/*.py module whose line count is greater than registry/engineering-budgets.json python.new_module_max_lines; legacy caps constrain growth but do not remove oversized modules from the count",
     "legacy_attention_field": "legacy_attention_count",
@@ -73,6 +73,38 @@
         "basis": "hosted-ci-proof",
         "evidence_refs": [
           "github-actions://jiying2007/knowledge-hub/runs/34729621708"
+        ]
+      },
+      {
+        "as_of": "2026-09-13",
+        "upper_bound_count": 3,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34737221074"
+        ]
+      },
+      {
+        "as_of": "2026-09-13",
+        "upper_bound_count": 2,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34742513846"
+        ]
+      },
+      {
+        "as_of": "2026-09-13",
+        "upper_bound_count": 1,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34747674251"
+        ]
+      },
+      {
+        "as_of": "2026-09-13",
+        "upper_bound_count": 0,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34759263800"
         ]
       }
     ],
