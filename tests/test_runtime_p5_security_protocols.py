@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.mcp_http_server import (
     validate_http_request,
     validate_local_origin,
