@@ -61,7 +61,11 @@ jobs:
           replacement = 'if args.review_queue_limit < 1:\n    parser.error("--review-queue-limit must be a positive integer")\n\ntoday, today_source = resolve_today(args, parser)\n\nerrors = []\n'
           if anchor not in text:
               raise SystemExit('today restoration anchor missing after migration')
-          cli.write_text(text.replace(anchor, replacement, 1), encoding='utf-8')
+          text = text.replace(anchor, replacement, 1)
+          duplicate = 'OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"\n'
+          if duplicate not in text:
+              raise SystemExit('owner-ready constant duplicate anchor missing after migration')
+          cli.write_text(text.replace(duplicate, '', 1), encoding='utf-8')
 
           owner = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py')
           text = owner.read_text(encoding='utf-8')
