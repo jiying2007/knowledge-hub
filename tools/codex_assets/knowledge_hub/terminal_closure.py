@@ -13,6 +13,10 @@ import pathlib
 from typing import Any, Dict, List, Mapping
 
 from .artifact_governance import evaluate_artifact_governance
+from .artifact_terminal_forms import (
+    DEFAULT_REGISTRY as DEFAULT_ARTIFACT_TERMINAL_FORMS,
+    evaluate_legacy_artifact_terminal_forms,
+)
 from .common import KnowledgeHubError, utc_timestamp
 from .complexity_budget import evaluate_complexity_budget
 
@@ -161,6 +165,7 @@ def _bounded_legacy_state(
     policy: Mapping[str, Any],
     complexity: Mapping[str, Any],
     artifacts: Mapping[str, Any],
+    terminal_forms: Mapping[str, Any],
 ) -> Dict[str, Any]:
     bounded = policy.get("bounded_legacy", {})
     if not isinstance(bounded, Mapping):
@@ -174,10 +179,26 @@ def _bounded_legacy_state(
     if not isinstance(immutable_refs, Mapping):
         immutable_refs = {}
     ref_count = int(immutable_refs.get("legacy_reference_count", 0) or 0)
+
+    require_terminal_forms = bool(bounded.get("require_artifact_terminal_forms", False))
+    terminal_ref_count = int(terminal_forms.get("legacy_reference_count", ref_count) or 0)
+    accepted_ref_count = int(
+        terminal_forms.get("accepted_legacy_reference_count", 0) or 0
+    )
+    unaccepted_ref_count = int(
+        terminal_forms.get("unaccepted_legacy_reference_count", 0) or 0
+    )
+    terminal_forms_match_artifacts = terminal_ref_count == ref_count
+    terminal_forms_ok = (not require_terminal_forms) or (
+        terminal_forms.get("status") == "pass"
+        and terminal_forms_match_artifacts
+        and accepted_ref_count == ref_count
+        and unaccepted_ref_count == 0
+    )
+    counts_ok = module_count <= limits["modules"] and ref_count <= limits["refs"]
+    status = "pass" if counts_ok and terminal_forms_ok else "needs-fix"
     return {
-        "status": "pass"
-        if module_count <= limits["modules"] and ref_count <= limits["refs"]
-        else "needs-fix",
+        "status": status,
         "legacy_module_count": module_count,
         "legacy_module_baseline": limits["modules_baseline"],
         "legacy_module_max": limits["modules"],
@@ -185,6 +206,14 @@ def _bounded_legacy_state(
         "legacy_artifact_reference_count": ref_count,
         "legacy_artifact_reference_baseline": limits["refs_baseline"],
         "legacy_artifact_reference_max": limits["refs"],
+        "legacy_artifact_reference_accepted_count": accepted_ref_count,
+        "legacy_artifact_reference_unaccepted_count": unaccepted_ref_count,
+        "artifact_terminal_forms_required": require_terminal_forms,
+        "artifact_terminal_forms_status": str(terminal_forms.get("status", "")),
+        "artifact_terminal_forms_match_artifact_governance": terminal_forms_match_artifacts,
+        "artifact_terminal_forms_set_sha256": str(
+            terminal_forms.get("legacy_reference_set_sha256", "")
+        ),
         "growth_allowed": bool(bounded.get("growth_allowed", False)),
     }
 
@@ -287,7 +316,43 @@ def evaluate_terminal_closure(
     external_gaps = _external_gaps(root, policy)
     complexity = evaluate_complexity_budget(root)
     artifacts = evaluate_artifact_governance(root)
-    legacy = _bounded_legacy_state(root, policy, complexity, artifacts)
+
+    bounded_policy = policy.get("bounded_legacy", {})
+    if not isinstance(bounded_policy, Mapping):
+        raise KnowledgeHubError("bounded_legacy policy must be an object")
+    immutable_refs = artifacts.get("immutable_refs", {})
+    if not isinstance(immutable_refs, Mapping):
+        immutable_refs = {}
+    artifact_ref_count = int(immutable_refs.get("legacy_reference_count", 0) or 0)
+    if bool(bounded_policy.get("require_artifact_terminal_forms", False)):
+        registry_path = str(
+            bounded_policy.get(
+                "artifact_terminal_form_registry",
+                DEFAULT_ARTIFACT_TERMINAL_FORMS,
+            )
+        ).strip()
+        if not registry_path:
+            raise KnowledgeHubError("artifact terminal-form registry path is missing")
+        terminal_forms = evaluate_legacy_artifact_terminal_forms(
+            root,
+            registry_path=registry_path,
+        )
+    else:
+        terminal_forms = {
+            "status": "not-required",
+            "legacy_reference_count": artifact_ref_count,
+            "accepted_legacy_reference_count": 0,
+            "unaccepted_legacy_reference_count": 0,
+            "legacy_reference_set_sha256": "",
+        }
+
+    legacy = _bounded_legacy_state(
+        root,
+        policy,
+        complexity,
+        artifacts,
+        terminal_forms,
+    )
     branch_gc = _branch_gc_state(root, policy)
 
     checks = {
@@ -319,6 +384,7 @@ def evaluate_terminal_closure(
             "open_count": len(external_gaps),
             "open_gaps": external_gaps,
         },
+        "artifact_terminal_forms": terminal_forms,
         "bounded_legacy": legacy,
         "branch_gc": branch_gc,
     }
