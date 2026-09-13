@@ -19,13 +19,13 @@ def _load_policy(root: pathlib.Path) -> Mapping[str, Any]:
     return payload if isinstance(payload, Mapping) else {}
 
 
-def _tracked_python(root: pathlib.Path) -> set[str]:
+def _tracked_files(root: pathlib.Path) -> set[str]:
     if not (root / ".git").exists():
         return set()
     try:
         result = run_rtk(
             root,
-            ["git", "ls-files", "tools/codex_assets/knowledge_hub/*.py"],
+            ["git", "ls-files"],
             timeout=20,
         )
     except (KnowledgeHubError, OSError):
@@ -59,8 +59,18 @@ def _evaluate_python(
     function_limit: int,
     legacy_caps: Mapping[str, Any],
 ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-    tracked = _tracked_python(root)
-    baseline_without_git_index = not tracked and bool(legacy_caps)
+    tracked_files = _tracked_files(root)
+    tracked_python = {
+        path
+        for path in tracked_files
+        if path.startswith("tools/codex_assets/knowledge_hub/") and path.endswith(".py")
+    }
+    # Regression fixtures and exported snapshots can intentionally have an empty
+    # Git index. In that state there is no authority for distinguishing existing
+    # tree content from newly added code, so treat the copied tree as the baseline.
+    # Once any file is tracked, the index is authoritative and untracked Python
+    # modules remain subject to the strict new-code module/function budgets.
+    baseline_without_git_index = not tracked_files
     regressions: List[Dict[str, Any]] = []
     legacy_attention: List[Dict[str, Any]] = []
     module_rows: List[Dict[str, Any]] = []
@@ -69,7 +79,7 @@ def _evaluate_python(
         relative = str(path.relative_to(root))
         line_count = len(path.read_text(encoding="utf-8").splitlines())
         functions = _function_lengths(path)
-        is_tracked = relative in tracked or baseline_without_git_index
+        is_tracked = relative in tracked_python or baseline_without_git_index
         cap = legacy_caps.get(relative)
         module_rows.append(
             {
