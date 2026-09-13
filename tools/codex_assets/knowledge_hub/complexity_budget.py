@@ -59,18 +59,19 @@ def _evaluate_python(
     function_limit: int,
     legacy_caps: Mapping[str, Any],
 ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    git_index_available = (root / ".git").exists()
     tracked_files = _tracked_files(root)
     tracked_python = {
         path
         for path in tracked_files
         if path.startswith("tools/codex_assets/knowledge_hub/") and path.endswith(".py")
     }
-    # Regression fixtures and exported snapshots can intentionally have an empty
-    # Git index. In that state there is no authority for distinguishing existing
-    # tree content from newly added code, so treat the copied tree as the baseline.
-    # Once any file is tracked, the index is authoritative and untracked Python
-    # modules remain subject to the strict new-code module/function budgets.
-    baseline_without_git_index = not tracked_files
+    # A regression fixture may intentionally `git init` a copied repository
+    # without populating its index. In that specific state there is no index
+    # authority for distinguishing existing copied modules from newly added code,
+    # so the copied tree is the baseline. A tree with no Git metadata remains a
+    # strict synthetic/new-code surface, while any non-empty index is authoritative.
+    baseline_without_git_index = git_index_available and not tracked_files
     regressions: List[Dict[str, Any]] = []
     legacy_attention: List[Dict[str, Any]] = []
     module_rows: List[Dict[str, Any]] = []
