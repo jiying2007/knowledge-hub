@@ -116,3 +116,19 @@ def test_product_gate_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/product_gate.py" not in oversized_paths
     assert "tools/codex_assets/knowledge_hub/product_gate_support.py" not in oversized_paths
     assert "tools/codex_assets/knowledge_hub/product_gate_parallel.py" not in oversized_paths
+
+
+def test_search_split_reduces_repository_oversized_module_debt():
+    report = evaluate_complexity_budget(repository_root())
+    oversized_paths = {row["path"] for row in report["oversized_modules"]}
+    search_paths = {
+        "tools/codex_assets/knowledge_hub/search.py",
+        "tools/codex_assets/knowledge_hub/search_core.py",
+        "tools/codex_assets/knowledge_hub/search_index.py",
+        "tools/codex_assets/knowledge_hub/search_query_support.py",
+        "tools/codex_assets/knowledge_hub/search_query.py",
+    }
+
+    assert report["status"] == "pass"
+    assert report["oversized_module_count"] <= 4
+    assert not search_paths & oversized_paths

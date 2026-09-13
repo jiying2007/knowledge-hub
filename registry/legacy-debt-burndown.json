@@ -6,7 +6,7 @@
   "status": "active",
   "oversized_modules": {
     "baseline_count": 11,
-    "current_upper_bound_count": 5,
+    "current_upper_bound_count": 4,
     "measurement_source": "tools.codex_assets.knowledge_hub.complexity_budget.evaluate_complexity_budget:oversized_module_count",
     "measurement_rule": "count every tools/codex_assets/knowledge_hub/**/*.py module whose line count is greater than registry/engineering-budgets.json python.new_module_max_lines; legacy caps constrain growth but do not remove oversized modules from the count",
     "legacy_attention_field": "legacy_attention_count",
@@ -66,12 +66,19 @@
         "evidence_refs": [
           "github-actions://jiying2007/knowledge-hub/runs/34718376554"
         ]
+      },
+      {
+        "as_of": "2026-09-13",
+        "upper_bound_count": 4,
+        "basis": "hosted-ci-proof",
+        "evidence_refs": [
+          "github-actions://jiying2007/knowledge-hub/runs/34729621708"
+        ]
       }
     ],
     "preferred_order": [
       "tools/codex_assets/knowledge_hub/check_cli.py",
       "tools/codex_assets/knowledge_hub/owner_gates_cli.py",
-      "tools/codex_assets/knowledge_hub/search.py",
       "tools/codex_assets/knowledge_hub/status_cli.py",
       "tools/codex_assets/knowledge_hub/index_plan_cli.py"
     ]
