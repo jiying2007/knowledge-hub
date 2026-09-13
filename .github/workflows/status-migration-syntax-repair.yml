@@ -43,17 +43,19 @@ jobs:
           script = '\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
           exec(compile(script, 'status-split-migration.py', 'exec'), {'__name__': '__main__'})
           PY
-      - name: Validate split and behavioral identity
+      - name: Validate Python compilation
+        run: python3 -m compileall -q tools/codex_assets/knowledge_hub/status_*.py
+      - name: Validate Ruff
+        run: rtk python3 -m ruff check tools/codex_assets/knowledge_hub/status_*.py tests/test_complexity_budget.py
+      - name: Validate mypy
+        run: rtk python3 -m mypy
+      - name: Validate status behavioral identity
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m compileall -q tools/codex_assets/knowledge_hub/status_*.py
-          rtk python3 -m ruff check tools/codex_assets/knowledge_hub/status_*.py tests/test_complexity_budget.py
-          rtk python3 -m mypy
           rtk bash tools/knowledge-status.sh --as-of 2026-09-13 --json > /tmp/status-after.json
           rtk bash tools/knowledge-status.sh --as-of 2026-09-13 > /tmp/status-after.txt
           python3 - <<'PY'
-          import ast
           import json
           from pathlib import Path
 
@@ -70,6 +72,14 @@ jobs:
               raise SystemExit('normalized status JSON changed during split')
           if Path('/tmp/status-before.txt').read_text() != Path('/tmp/status-after.txt').read_text():
               raise SystemExit('status text output changed during split')
+          PY
+      - name: Validate status structural budgets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
 
           for path in [
               Path('tools/codex_assets/knowledge_hub/status_cli.py'),
@@ -91,6 +101,9 @@ jobs:
                       if span > 80:
                           raise SystemExit(f'{path}:{node.name} exceeds 80 lines ({span})')
           PY
+      - name: Validate focused tests and diff
+        run: |
+          set -euo pipefail
           rtk python3 -m pytest -q tests/test_complexity_budget.py tests/test_cli_help.py
           git diff --check
       - name: Commit migrated product files
