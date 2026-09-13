@@ -40,6 +40,7 @@ CANONICAL_ROUTES = {}
 DETECTOR_CONFIG_PATHS = {
     "tests/fixtures/retrieval_cases.json",
     "tools/codex_assets/knowledge_hub/check_cli.py",
+    "tools/codex_assets/knowledge_hub/check_validation_pre.py",
     "tools/codex_assets/knowledge_hub/path_audit_cli.py",
     "tools/codex_assets/knowledge_hub/retrieval.py",
 }
