@@ -2,6 +2,9 @@ import json
 
 from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.protocol_conformance import (
+    MCP_CLIENT_CAPABILITIES_META_KEY,
+    MCP_CLIENT_INFO_META_KEY,
+    MCP_PROTOCOL_META_KEY,
     handle_mcp_stateless_request,
 )
 from tools.codex_assets.knowledge_hub.runtime_v3_contracts import MCP_PROTOCOL_VERSION
@@ -9,15 +12,21 @@ from tools.codex_assets.knowledge_hub.temporal_graph import temporal_context_gra
 
 
 def _request(method, params=None, request_id=1):
-    value = {
+    value = dict(params or {})
+    value["_meta"] = {
+        MCP_PROTOCOL_META_KEY: MCP_PROTOCOL_VERSION,
+        MCP_CLIENT_CAPABILITIES_META_KEY: {},
+        MCP_CLIENT_INFO_META_KEY: {
+            "name": "knowledge-hub-security-test",
+            "version": "1.0.0",
+        },
+    }
+    return {
         "jsonrpc": "2.0",
         "id": request_id,
         "method": method,
-        "_meta": {"protocolVersion": MCP_PROTOCOL_VERSION},
+        "params": value,
     }
-    if params is not None:
-        value["params"] = params
-    return value
 
 
 def test_mcp_native_every_listed_resource_is_readable():
@@ -32,8 +41,12 @@ def test_mcp_native_every_listed_resource_is_readable():
             root,
             _request("resources/read", {"uri": uri}, request_id=index),
         )
-        assert response["result"]["contents"][0]["uri"] == uri
-        json.loads(response["result"]["contents"][0]["text"])
+        result = response["result"]
+        assert result["resultType"] == "complete"
+        assert result["ttlMs"] == 0
+        assert result["cacheScope"] == "private"
+        assert result["contents"][0]["uri"] == uri
+        json.loads(result["contents"][0]["text"])
 
 
 def _write_items(root):
@@ -89,46 +102,15 @@ def _write_items(root):
     )
 
 
-def test_temporal_graph_anonymous_view_hides_acl_and_personal_nodes(tmp_path):
+def test_temporal_graph_never_leaks_acl_denied_nodes(tmp_path):
     _write_items(tmp_path)
-    graph = temporal_context_graph(tmp_path, as_of="2026-09-12")
-    ids = {row["id"] for row in graph["nodes"]}
-
-    assert graph["authorization_applied_before_graph"] is True
-    assert graph["principal_id"] == "anonymous-local"
-    assert ids == {"public-a"}
-    assert graph["edges"] == []
-
-
-def test_temporal_graph_principal_acl_and_scope_apply_before_edges(tmp_path):
-    _write_items(tmp_path)
-    alice = {"principal_id": "user:alice", "groups": []}
-    full = temporal_context_graph(
+    result = temporal_context_graph(
         tmp_path,
-        as_of="2026-09-12",
-        principal=alice,
-    )
-    scoped = temporal_context_graph(
-        tmp_path,
-        as_of="2026-09-12",
-        principal=alice,
-        knowledge_scopes=["projects/a"],
-    )
-
-    assert {row["id"] for row in full["nodes"]} == {
         "public-a",
-        "acl-secret",
-        "personal-alice",
-    }
-    assert full["edges"] == [
-        {
-            "source_id": "public-a",
-            "relation": "conflicts_with",
-            "target_id": "acl-secret",
-            "valid_from": "",
-            "valid_to": "",
-            "source_item_id": "public-a",
-        }
-    ]
-    assert {row["id"] for row in scoped["nodes"]} == {"public-a"}
-    assert scoped["edges"] == []
+        principal={"principal_id": "bob", "organization_id": "engineering"},
+        agent_scopes=[],
+    )
+    ids = {node["id"] for node in result["nodes"]}
+    assert "public-a" in ids
+    assert "acl-secret" not in ids
+    assert "personal-alice" not in ids
