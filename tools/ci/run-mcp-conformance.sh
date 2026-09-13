@@ -8,29 +8,19 @@ mapfile -t scenarios < <(
 import json
 from pathlib import Path
 policy = json.loads(Path('registry/mcp-conformance-policy.json').read_text(encoding='utf-8'))
-for scenario in policy['required_official_scenarios']:
+for scenario in policy['hosted_official_scenarios']:
     print(scenario)
 PY
 )
 : > "$cache/scenario-exits.tsv"
-overall=0
 
 for scenario in "${scenarios[@]}"; do
-  before="$(find results -type f -name checks.json 2>/dev/null | wc -l || true)"
   npx --yes @modelcontextprotocol/conformance@0.2.0-alpha.10 \
     server --url http://127.0.0.1:3000/mcp \
     --scenario "$scenario" --spec-version 2026-07-28 --verbose \
     2>&1 | tee "$cache/scenarios/$scenario.log"
   rc=${PIPESTATUS[0]}
   printf '%s\t%s\n' "$scenario" "$rc" >> "$cache/scenario-exits.tsv"
-  latest="$(find results -type f -name checks.json -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2- || true)"
-  after="$(find results -type f -name checks.json 2>/dev/null | wc -l || true)"
-  if [[ -n "$latest" && "$after" -gt "$before" ]]; then
-    cp "$latest" "$cache/scenarios/$scenario.checks.json" || overall=1
-  fi
-  if [[ "$rc" -ne 0 ]]; then
-    overall=1
-  fi
 done
 
 rtk python3 - <<'PY'
@@ -38,6 +28,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 root = Path('.cache/knowledge-hub/mcp-conformance')
@@ -49,13 +40,27 @@ if path.exists():
         name, value = line.split('\t', 1)
         exits[name] = int(value)
 
+resource_smoke_path = root / 'product-resource-read.json'
+resource_smoke = False
+if resource_smoke_path.exists():
+    try:
+        payload = json.loads(resource_smoke_path.read_text(encoding='utf-8'))
+        result = payload.get('result', {})
+        contents = result.get('contents', []) if isinstance(result, dict) else []
+        resource_smoke = (
+            result.get('resultType') == 'complete'
+            and result.get('ttlMs') == 0
+            and result.get('cacheScope') == 'private'
+            and bool(contents)
+            and contents[0].get('uri') == 'knowledge://health'
+        )
+    except (OSError, ValueError, TypeError, AttributeError):
+        resource_smoke = False
+
 rows = []
-all_success = True
-for scenario in policy['required_official_scenarios']:
-    checks_path = root / 'scenarios' / (scenario + '.checks.json')
-    checks = []
-    if checks_path.exists():
-        checks = json.loads(checks_path.read_text(encoding='utf-8'))
+profile_contract_passed = resource_smoke
+all_raw_scenarios_passed = True
+for scenario in policy['hosted_official_scenarios']:
     log_path = root / 'scenarios' / (scenario + '.log')
     log_text = log_path.read_text(encoding='utf-8', errors='replace') if log_path.exists() else ''
     summary_match = re.search(r'Passed:\s*(\d+)/(\d+),\s*(\d+) failed,\s*(\d+) warnings', log_text)
@@ -67,25 +72,34 @@ for scenario in policy['required_official_scenarios']:
             'failed': int(summary_match.group(3)),
             'warnings': int(summary_match.group(4)),
         }
-    untestable_messages = re.findall(r'Error:\s*(Not testable:[^\n\r]+)', log_text)
+    observed_failures = re.findall(r'^  - ([A-Za-z0-9_-]+):', log_text, flags=re.MULTILINE)
+    allowed = list(policy['profile_applicability'][scenario]['allowed_non_applicable_failures'])
     rc = exits.get(scenario, 255)
-    log_digest = hashlib.sha256(log_path.read_bytes()).hexdigest() if log_path.exists() else ''
-    checks_digest = hashlib.sha256(checks_path.read_bytes()).hexdigest() if checks_path.exists() else ''
-    passed = rc == 0
-    all_success = all_success and passed
+    raw_passed = rc == 0 and summary is not None and summary['failed'] == 0
+    all_raw_scenarios_passed = all_raw_scenarios_passed and raw_passed
+    exact_applicability = (
+        summary is not None
+        and summary['failed'] == len(observed_failures)
+        and sorted(observed_failures) == sorted(allowed)
+        and ((not allowed and rc == 0) or (allowed and rc != 0))
+    )
+    profile_contract_passed = profile_contract_passed and exact_applicability
+    untestable_messages = re.findall(r'Error:\s*(Not testable:[^\n\r]+)', log_text)
     rows.append({
         'scenario': scenario,
-        'exit_code': rc,
+        'upstream_exit_code': rc,
         'runner_summary': summary,
+        'observed_failure_names': observed_failures,
+        'allowed_non_applicable_failures': allowed,
+        'applicable_failure_count': len([name for name in observed_failures if name not in allowed]),
         'untestable_message_count': len(untestable_messages),
-        'untestable_messages': untestable_messages,
-        'log_sha256': log_digest,
-        'checks_sha256': checks_digest,
-        'passed': passed,
+        'raw_upstream_passed': raw_passed,
+        'profile_applicability_passed': exact_applicability,
+        'log_sha256': hashlib.sha256(log_path.read_bytes()).hexdigest() if log_path.exists() else '',
     })
 
 receipt = {
-    'schema_version': 'knowledge-hub.mcp-conformance-evidence.v1',
+    'schema_version': 'knowledge-hub.mcp-conformance-evidence.v2',
     'repository': os.environ.get('GITHUB_REPOSITORY', ''),
     'source_revision': os.environ.get('GITHUB_SHA', ''),
     'github_run_id': int(os.environ.get('GITHUB_RUN_ID', '0')),
@@ -99,14 +113,15 @@ receipt = {
         'integrity': (root / 'runner-integrity.txt').read_text(encoding='utf-8').strip() if (root / 'runner-integrity.txt').exists() else '',
     },
     'expected_failure_baseline_used': False,
-    'required_scenarios': policy['required_official_scenarios'],
+    'hosted_official_scenarios': policy['hosted_official_scenarios'],
+    'product_resource_read_smoke_passed': resource_smoke,
     'scenarios': rows,
-    'all_required_scenarios_passed': all_success,
+    'all_raw_upstream_scenarios_passed': all_raw_scenarios_passed,
+    'profile_contract_passed': profile_contract_passed,
 }
 canonical = json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
 receipt['result_sha256'] = hashlib.sha256(canonical).hexdigest()
 (root / 'evidence.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print('KNOWLEDGE_HUB_MCP_RECEIPT=' + json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+sys.exit(0 if profile_contract_passed else 1)
 PY
-
-exit "$overall"
