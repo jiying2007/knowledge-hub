@@ -23,6 +23,7 @@ def expect(condition, *args, **kwargs):
         detail = dict(detail)
         detail["predicate_probe"] = {
             "exit_code_zero": detail.get("exit_code") == 0,
+            "status": detail.get("status"),
             "regression_status_pass": regression.get("status") == "pass",
             "full_regression_executed": regression.get("full_regression_executed") is True,
             "result_count_one": regression.get("result_count") == 1,
@@ -30,6 +31,10 @@ def expect(condition, *args, **kwargs):
             in regression.get("command", ""),
             "hard_check_full_regression": hard_checks.get("full_regression") is True,
             "delivery_full_regression_ready": delivery.get("full_regression_ready") is True,
+            "false_hard_checks": sorted(
+                key for key, value in hard_checks.items() if value is not True
+            ),
+            "platform_blockers": list(detail.get("blockers", [])),
         }
         if len(positional) >= 3:
             positional[2] = detail
