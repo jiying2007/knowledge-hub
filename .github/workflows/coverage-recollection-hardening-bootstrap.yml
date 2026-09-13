@@ -22,28 +22,12 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import textwrap
 
           engineering = Path('tools/codex_assets/knowledge_hub/engineering.py')
           text = engineering.read_text(encoding='utf-8')
-          helper_anchor = '''    return {
-              "status": "fail",
-              "attempt_count": len(attempts),
-              "recovered_after_retry": False,
-              "attempts": attempts,
-              "error": "command failed after {} attempt(s)".format(len(attempts)),
-          }
-
-
-          def _current_python_executable() -> str:
-          '''
-          helper_replacement = '''    return {
-              "status": "fail",
-              "attempt_count": len(attempts),
-              "recovered_after_retry": False,
-              "attempts": attempts,
-              "error": "command failed after {} attempt(s)".format(len(attempts)),
-          }
-
+          helper_marker = '\n\ndef _current_python_executable() -> str:\n'
+          helper = r'''
 
           def _coverage_recollection_commands(
               python: str,
@@ -120,33 +104,34 @@ jobs:
               else:
                   payload["error"] = "coverage report failed after one full recollection"
               return payload
-
-
-          def _current_python_executable() -> str:
           '''
-          if text.count(helper_anchor) != 1:
-              raise SystemExit('engineering helper anchor mismatch')
-          text = text.replace(helper_anchor, helper_replacement, 1)
+          helper = textwrap.dedent(helper)
+          if text.count(helper_marker) != 1:
+              raise SystemExit('engineering helper marker mismatch')
+          text = text.replace(helper_marker, helper + helper_marker, 1)
 
-          loop_anchor = '''        if checks[name]["status"] != "pass":
-              quality_errors.append("{} failed".format(name))
-          if sbom_path.exists():
+          old_error = '        if checks[name]["status"] != "pass":\n            quality_errors.append("{} failed".format(name))'
+          new_error = '        if checks[name]["status"] != "pass" and name != "coverage_report":\n            quality_errors.append("{} failed".format(name))'
+          if text.count(old_error) != 1:
+              raise SystemExit('engineering quality-error marker mismatch')
+          text = text.replace(old_error, new_error, 1)
+
+          sbom_marker = '\n    if sbom_path.exists():\n'
+          recovery = r'''
+              if checks.get("coverage_report", {}).get("status") != "pass":
+                  checks["coverage_report"] = _recover_coverage_report(
+                      root,
+                      python,
+                      checks["coverage_report"],
+                  )
+                  if checks["coverage_report"]["status"] != "pass":
+                      quality_errors.append("coverage_report failed")
           '''
-          loop_replacement = '''        if checks[name]["status"] != "pass" and name != "coverage_report":
-              quality_errors.append("{} failed".format(name))
-          if checks.get("coverage_report", {}).get("status") != "pass":
-              checks["coverage_report"] = _recover_coverage_report(
-                  root,
-                  python,
-                  checks["coverage_report"],
-              )
-              if checks["coverage_report"]["status"] != "pass":
-                  quality_errors.append("coverage_report failed")
-          if sbom_path.exists():
-          '''
-          if text.count(loop_anchor) != 1:
-              raise SystemExit('engineering loop anchor mismatch')
-          engineering.write_text(text.replace(loop_anchor, loop_replacement, 1), encoding='utf-8')
+          recovery = '\n' + textwrap.dedent(recovery).rstrip() + '\n'
+          if text.count(sbom_marker) != 1:
+              raise SystemExit('engineering SBOM marker mismatch')
+          text = text.replace(sbom_marker, recovery + sbom_marker, 1)
+          engineering.write_text(text, encoding='utf-8')
 
           tests = Path('tests/test_engineering.py')
           test_text = tests.read_text(encoding='utf-8')
@@ -168,7 +153,6 @@ jobs:
 
               monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
               initial = {"status": "fail", "error": "first coverage report failed"}
-
               payload = engineering._recover_coverage_report(tmp_path, "python", initial)
 
               assert payload["status"] == "pass"
@@ -188,8 +172,7 @@ jobs:
 
           def test_coverage_report_recollection_remains_fail_closed(tmp_path, monkeypatch):
               def fake_run(root, command, timeout, **kwargs):
-                  normal_report = tuple(command) == ("python", "-m", "coverage", "report")
-                  if normal_report:
+                  if tuple(command) == ("python", "-m", "coverage", "report"):
                       return {
                           "status": "fail",
                           "attempt_count": 1,
@@ -206,7 +189,6 @@ jobs:
                   }
 
               monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
-
               payload = engineering._recover_coverage_report(
                   tmp_path,
                   "python",
@@ -218,10 +200,9 @@ jobs:
               assert payload["recollection"]["coverage_report"]["status"] == "fail"
               assert payload["error"] == "coverage report failed after one full recollection"
           '''
-          import textwrap
           new_tests = textwrap.dedent(new_tests)
           if test_text.count(test_anchor) != 1:
-              raise SystemExit('engineering test anchor mismatch')
+              raise SystemExit('engineering test marker mismatch')
           tests.write_text(test_text.replace(test_anchor, new_tests + test_anchor, 1), encoding='utf-8')
           PY
           python3 -m compileall -q tools/codex_assets/knowledge_hub/engineering.py tests/test_engineering.py
