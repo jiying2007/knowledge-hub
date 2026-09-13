@@ -65,11 +65,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .cache/knowledge-hub/mcp-conformance
+          cache=.cache/knowledge-hub/mcp-conformance
+          mkdir -p "$cache"
           rtk python3 -m tools.codex_assets.knowledge_hub.mcp_http_server \
             --host 127.0.0.1 --port 3000 \
-            > .cache/knowledge-hub/mcp-conformance/server.log 2>&1 &
-          echo "$!" > .cache/knowledge-hub/mcp-conformance/server.pid
+            > "$cache/server.log" 2>&1 &
+          echo "$!" > "$cache/server.pid"
+          ready=0
           for _ in $(seq 1 40); do
             if curl --fail --silent --show-error \
               -H 'Content-Type: application/json' \
@@ -78,13 +80,25 @@ jobs:
               -H 'Mcp-Method: server/discover' \
               --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
               http://127.0.0.1:3000/mcp \
-              > .cache/knowledge-hub/mcp-conformance/discover.json; then
-              exit 0
+              > "$cache/discover.json"; then
+              ready=1
+              break
             fi
             sleep 0.25
           done
-          cat .cache/knowledge-hub/mcp-conformance/server.log
-          exit 1
+          if [[ "$ready" -ne 1 ]]; then
+            cat "$cache/server.log"
+            exit 1
+          fi
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            -H 'MCP-Protocol-Version: 2026-07-28' \
+            -H 'Mcp-Method: resources/read' \
+            -H 'Mcp-Name: knowledge://health' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"knowledge://health","_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+            http://127.0.0.1:3000/mcp \
+            > "$cache/product-resource-read.json"
       - name: Run pinned official native-profile scenarios
         shell: bash
         run: bash tools/ci/run-mcp-conformance.sh
