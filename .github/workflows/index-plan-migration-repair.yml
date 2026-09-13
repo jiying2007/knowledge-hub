@@ -1,0 +1,45 @@
+name: Index Plan Migration Repair
+
+on:
+  push:
+    branches:
+      - codex/legacy-burndown-index-plan-v1
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: "${{ !contains(github.event.head_commit.message, 'chore(index-plan): fix split migration dependencies') }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - name: Patch migration dependency wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/index-plan-split-migrate.yml')
+          text = path.read_text(encoding='utf-8')
+          replacements = [
+              ('from .index_plan_review_queue import build_review_queue_command\\n\\nSHA256_RE', 'from .index_plan_review_queue import as_list, build_review_queue_command\\n\\nSHA256_RE'),
+              ('    as_list,\\n    build_review_queue_view,', '    build_review_queue_view,'),
+              ("'def build_linking_audit(root, warnings, by_project, by_source, by_topic, decisions, by_decision, items, sources, topics):'", "'def build_linking_audit(root, warnings, by_project, by_source, by_topic, decisions, by_decision, items, sources, topics, projects):'"),
+              ("'linking_audit = build_linking_audit(root, warnings, by_project, by_source, by_topic, decisions, by_decision, items, sources, topics)'", "'linking_audit = build_linking_audit(root, warnings, by_project, by_source, by_topic, decisions, by_decision, items, sources, topics, projects)'"),
+          ]
+          for old, new in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'expected one migration fragment, got {text.count(old)}: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/index-plan-split-migrate.yml
+          git commit -m 'chore(index-plan): fix split migration dependencies'
+          git push origin HEAD:codex/legacy-burndown-index-plan-v1
