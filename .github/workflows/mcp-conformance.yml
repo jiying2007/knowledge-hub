@@ -1,0 +1,212 @@
+name: mcp-conformance
+
+on:
+  push:
+    paths:
+      - ".github/workflows/mcp-conformance.yml"
+      - "registry/mcp-conformance-policy.json"
+      - "registry/knowledge-platform-p5-p10.json"
+      - "tools/codex_assets/knowledge_hub/protocol_conformance.py"
+      - "tools/codex_assets/knowledge_hub/mcp_http_server.py"
+      - "tests/test_runtime_p5_security_protocols.py"
+  pull_request:
+    paths:
+      - ".github/workflows/mcp-conformance.yml"
+      - "registry/mcp-conformance-policy.json"
+      - "registry/knowledge-platform-p5-p10.json"
+      - "tools/codex_assets/knowledge_hub/protocol_conformance.py"
+      - "tools/codex_assets/knowledge_hub/mcp_http_server.py"
+      - "tests/test_runtime_p5_security_protocols.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-conformance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-profile:
+    name: Official MCP 2026 native profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+      - name: Verify pinned upstream runner exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/mcp-conformance
+          runner="@modelcontextprotocol/conformance@0.2.0-alpha.10"
+          actual="$(npm view "$runner" version --json | tr -d '\"[:space:]')"
+          test "$actual" = "0.2.0-alpha.10"
+          printf '%s\n' "$actual" > .cache/knowledge-hub/mcp-conformance/runner-version.txt
+          npm view "$runner" dist.integrity --json | tr -d '\"[:space:]' \
+            > .cache/knowledge-hub/mcp-conformance/runner-integrity.txt
+          node --version > .cache/knowledge-hub/mcp-conformance/node-version.txt
+          npm --version > .cache/knowledge-hub/mcp-conformance/npm-version.txt
+      - name: Start local-only Knowledge Hub MCP server
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/mcp-conformance
+          rtk python3 -m tools.codex_assets.knowledge_hub.mcp_http_server \
+            --host 127.0.0.1 --port 3000 \
+            > .cache/knowledge-hub/mcp-conformance/server.log 2>&1 &
+          echo "$!" > .cache/knowledge-hub/mcp-conformance/server.pid
+          for _ in $(seq 1 40); do
+            if curl --fail --silent --show-error \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json, text/event-stream' \
+              -H 'MCP-Protocol-Version: 2026-07-28' \
+              -H 'Mcp-Method: server/discover' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+              http://127.0.0.1:3000/mcp \
+              > .cache/knowledge-hub/mcp-conformance/discover.json; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+          cat .cache/knowledge-hub/mcp-conformance/server.log
+          exit 1
+      - name: Run pinned official native-profile scenarios
+        id: conformance
+        shell: bash
+        run: |
+          set -uo pipefail
+          cache=.cache/knowledge-hub/mcp-conformance
+          mkdir -p "$cache/scenarios"
+          mapfile -t scenarios < <(
+            rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+          policy = json.loads(Path('registry/mcp-conformance-policy.json').read_text(encoding='utf-8'))
+          for scenario in policy['required_official_scenarios']:
+              print(scenario)
+          PY
+          )
+          : > "$cache/scenario-exits.tsv"
+          overall=0
+          for scenario in "${scenarios[@]}"; do
+            before="$(find results -type f -name checks.json 2>/dev/null | wc -l || true)"
+            npx --yes @modelcontextprotocol/conformance@0.2.0-alpha.10 \
+              server --url http://127.0.0.1:3000/mcp \
+              --scenario "$scenario" --spec-version 2026-07-28 --verbose \
+              2>&1 | tee "$cache/scenarios/$scenario.log"
+            rc=${PIPESTATUS[0]}
+            printf '%s\t%s\n' "$scenario" "$rc" >> "$cache/scenario-exits.tsv"
+            latest="$(find results -type f -name checks.json -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-)"
+            after="$(find results -type f -name checks.json 2>/dev/null | wc -l || true)"
+            if [[ -n "$latest" && "$after" -gt "$before" ]]; then
+              cp "$latest" "$cache/scenarios/$scenario.checks.json"
+            else
+              overall=1
+            fi
+            if [[ "$rc" -ne 0 ]]; then
+              overall=1
+            fi
+          done
+          exit "$overall"
+      - name: Build immutable conformance receipt
+        if: always()
+        shell: bash
+        env:
+          KNOWLEDGE_HUB_SHA: ${{ github.sha }}
+          KNOWLEDGE_HUB_REPOSITORY: ${{ github.repository }}
+          KNOWLEDGE_HUB_RUN_ID: ${{ github.run_id }}
+          KNOWLEDGE_HUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('.cache/knowledge-hub/mcp-conformance')
+          policy = json.loads(Path('registry/mcp-conformance-policy.json').read_text(encoding='utf-8'))
+          exits = {}
+          path = root / 'scenario-exits.tsv'
+          if path.exists():
+              for line in path.read_text(encoding='utf-8').splitlines():
+                  name, value = line.split('\t', 1)
+                  exits[name] = int(value)
+
+          rows = []
+          all_success = True
+          for scenario in policy['required_official_scenarios']:
+              checks_path = root / 'scenarios' / (scenario + '.checks.json')
+              checks = []
+              if checks_path.exists():
+                  checks = json.loads(checks_path.read_text(encoding='utf-8'))
+              failures = [row for row in checks if str(row.get('status', '')).upper() == 'FAILURE']
+              digest = hashlib.sha256(checks_path.read_bytes()).hexdigest() if checks_path.exists() else ''
+              rc = exits.get(scenario, 255)
+              passed = rc == 0 and bool(checks) and not failures
+              all_success = all_success and passed
+              rows.append({
+                  'scenario': scenario,
+                  'exit_code': rc,
+                  'check_count': len(checks),
+                  'failure_count': len(failures),
+                  'checks_sha256': digest,
+                  'passed': passed,
+              })
+
+          receipt = {
+              'schema_version': 'knowledge-hub.mcp-conformance-evidence.v1',
+              'repository': os.environ['KNOWLEDGE_HUB_REPOSITORY'],
+              'source_revision': os.environ['KNOWLEDGE_HUB_SHA'],
+              'github_run_id': int(os.environ['KNOWLEDGE_HUB_RUN_ID']),
+              'github_run_attempt': int(os.environ['KNOWLEDGE_HUB_RUN_ATTEMPT']),
+              'protocol_version': policy['protocol_version'],
+              'native_profile': policy['native_profile'],
+              'claim_scope': policy['claim_scope'],
+              'runner': {
+                  'package': policy['runner']['package'],
+                  'version': (root / 'runner-version.txt').read_text(encoding='utf-8').strip() if (root / 'runner-version.txt').exists() else '',
+                  'integrity': (root / 'runner-integrity.txt').read_text(encoding='utf-8').strip() if (root / 'runner-integrity.txt').exists() else '',
+              },
+              'expected_failure_baseline_used': False,
+              'required_scenarios': policy['required_official_scenarios'],
+              'scenarios': rows,
+              'all_required_scenarios_passed': all_success,
+          }
+          canonical = json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+          receipt['result_sha256'] = hashlib.sha256(canonical).hexdigest()
+          (root / 'evidence.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Stop local MCP server
+        if: always()
+        shell: bash
+        run: |
+          pid_file=.cache/knowledge-hub/mcp-conformance/server.pid
+          if [[ -f "$pid_file" ]]; then
+            kill "$(cat "$pid_file")" 2>/dev/null || true
+          fi
+      - name: Upload official conformance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-mcp-conformance-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            registry/mcp-conformance-policy.json
+            .cache/knowledge-hub/mcp-conformance/
+            results/
+          if-no-files-found: error
+          retention-days: 90
