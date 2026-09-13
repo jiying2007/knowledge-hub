@@ -1,0 +1,57 @@
+name: Status Regression Owner Repair
+
+on:
+  push:
+    branches:
+      - codex/legacy-burndown-status-v1
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: "${{ !contains(github.event.head_commit.message, 'test(status): follow split owner projection') }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+      - name: Repair regression ownership target
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          test_path = Path('tools/codex_assets/knowledge_hub/regression/terminal_gates.py')
+          text = test_path.read_text(encoding='utf-8')
+          old = '    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_cli.py").read_text()\n'
+          new = '    source = (root / "tools" / "codex_assets" / "knowledge_hub" / "status_owner_projection.py").read_text()\n'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one stale status source target, found {text.count(old)}')
+          test_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          source = Path('tools/codex_assets/knowledge_hub/status_owner_projection.py').read_text(encoding='utf-8')
+          banned = [
+              'covered" if owner_ready_packages or registry_items else "missing',
+              'owner_ready_package_ids = [str(item.get("id", "")) for item in registry_items',
+              'owner_ready_package_count": len(owner_ready_packages) if owner_ready_packages else len(registry_items)',
+          ]
+          required = [
+              'OWNER_READY_ROW_STATUS_SOURCE = "knowledge-owner-gates.rows[].owner_ready_package_status"',
+              '"owner_ready_source": OWNER_READY_ROW_STATUS_SOURCE',
+              '"id": "owner-ready-row-schema-missing"',
+          ]
+          present_banned = [fragment for fragment in banned if fragment in source]
+          missing_required = [fragment for fragment in required if fragment not in source]
+          if present_banned or missing_required:
+              raise SystemExit(f'owner projection contract mismatch: banned={present_banned}, missing={missing_required}')
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/codex_assets/knowledge_hub/regression/terminal_gates.py
+          git diff --cached --check
+          git commit -m 'test(status): follow split owner projection'
+          git push origin HEAD:codex/legacy-burndown-status-v1
