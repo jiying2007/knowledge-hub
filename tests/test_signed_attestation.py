@@ -13,7 +13,13 @@ def _write(path: Path, value):
     path.write_text(json.dumps(value) + "\n", encoding="utf-8")
 
 
-def _evidence(root: Path, *, terminal_status="needs-review"):
+def _evidence(
+    root: Path,
+    *,
+    terminal_status="needs-review",
+    product_status="needs-review",
+    product_terminal=False,
+):
     _write(
         root / ".cache/knowledge-hub/engineering-quality.json",
         {"status": "pass", "candidate_integrity": {"status": "pass"}},
@@ -22,7 +28,7 @@ def _evidence(root: Path, *, terminal_status="needs-review"):
     _write(root / ".cache/knowledge-hub/restore-drill-head.json", {"status": "pass"})
     _write(
         root / ".cache/knowledge-hub/final-gate-product-full.json",
-        {"status": "pass", "terminal": False},
+        {"status": product_status, "terminal": product_terminal},
     )
     _write(
         root / ".cache/knowledge-hub/terminal-closure.json",
@@ -53,6 +59,7 @@ def test_signed_materials_bind_quality_sbom_and_actual_terminal_verdict(monkeypa
     assert statement["predicate"]["source_commit"] == "a" * 40
     assert statement["predicate"]["evidence_artifact_sha256"] == receipt["manifest_sha256"]
     assert statement["predicate"]["sbom_sha256"] == receipt["sbom_sha256"]
+    assert statement["predicate"]["quality_gates"]["product_gate"] == "needs-review"
     assert statement["predicate"]["terminal_closure"]["status"] == "needs-review"
     assert statement["predicate"]["terminal_closure"]["terminal"] is False
     assert statement["predicate"]["terminal_closure"]["blockers"] == [
@@ -82,6 +89,24 @@ def test_evidence_mutation_changes_manifest_identity(monkeypatch, tmp_path):
 def test_signed_materials_reject_invalid_terminal_verdict(tmp_path):
     _evidence(tmp_path, terminal_status="closed")
     with pytest.raises(KnowledgeHubError, match="terminal closure verdict has invalid status"):
+        signed_attestation.build_signed_quality_materials(
+            tmp_path,
+            source_revision="c" * 40,
+        )
+
+
+def test_signed_materials_reject_nonterminal_product_without_false_terminal(tmp_path):
+    _evidence(tmp_path, product_status="needs-review", product_terminal=True)
+    with pytest.raises(KnowledgeHubError, match="must declare terminal=false"):
+        signed_attestation.build_signed_quality_materials(
+            tmp_path,
+            source_revision="c" * 40,
+        )
+
+
+def test_signed_materials_reject_failed_product_evidence(tmp_path):
+    _evidence(tmp_path, product_status="needs-fix")
+    with pytest.raises(KnowledgeHubError, match="product evidence has invalid status"):
         signed_attestation.build_signed_quality_materials(
             tmp_path,
             source_revision="c" * 40,
