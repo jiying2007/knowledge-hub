@@ -281,6 +281,8 @@
         "https://github.com/jiying2007/knowledge-hub/attestations/47234390"
       ],
       "evidence": {
+        "closure_scope": "attestation-signing-identity-only",
+        "terminal_claimed": false,
         "source_revision": "7bab61c64f19977c7a30ccd4a15b58f1f6278c69",
         "source_ref": "refs/heads/codex/signed-attestation-identity-v1",
         "observed_at": "2026-09-14T02:11:10Z",
