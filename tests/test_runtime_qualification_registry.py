@@ -36,13 +36,26 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     }
     assert {
         "repository-private-boundary",
-        "mcp-official-conformance",
         "connector-provider-pilot",
         "production-retrieval-eval",
         "memory-lifecycle-pilot",
         "real-adoption-evidence",
         "attestation-signing-identity",
     } == required_open
+    mcp_gap = gaps["mcp-official-conformance"]
+    assert mcp_gap["required"] is True
+    assert mcp_gap["status"] == "closed"
+    assert mcp_gap["evidence_refs"]
+    evidence = mcp_gap["evidence"]
+    assert evidence["source_revision"] == "73d050aae8adae51092c2ac580094d506ae066ac"
+    assert evidence["protocol_version"] == "2026-07-28"
+    assert evidence["native_profile"] == "stateless-2026-07-28"
+    assert evidence["runner"]["package"] == "@modelcontextprotocol/conformance"
+    assert evidence["runner"]["version"] == "0.2.0-alpha.10"
+    assert evidence["profile_contract_passed"] is True
+    assert evidence["applicable_failure_count"] == 0
+    assert evidence["product_resource_read_smoke_passed"] is True
+    assert evidence["expected_failure_baseline_used"] is False
     assert gaps["master-ruleset-enforcement"]["required"] is False
     assert gaps["master-ruleset-enforcement"]["status"] == "not-required"
     repository_target = payload["repository_security_target"]
@@ -65,3 +78,7 @@ def test_mcp_registry_marks_native_default_and_legacy_explicit_only():
     assert mcp["legacy_compatibility_adapter"] is True
     assert mcp["legacy_default"] is False
     assert mcp["legacy_opt_in_flag"] == "--legacy-compat"
+    assert (
+        mcp["legacy_deprecation_status"]
+        == "official-conformance-closed-consumer-closure-pending"
+    )

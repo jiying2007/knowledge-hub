@@ -12,14 +12,17 @@ import sys
 from typing import Any, Mapping, Sequence
 
 from .common import KnowledgeHubError, repository_root
-from .protocol_conformance import handle_mcp_stateless_request
+from .protocol_conformance import MCPProtocolError, handle_mcp_stateless_request
 from .runtime_v3 import DEFAULT_AGENT, handle_mcp_request
 
 MAX_LINE_BYTES = 1024 * 1024
 
 
-def _error(request_id: Any, code: int, message: str):
-    return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message[:2048]}}
+def _error(request_id: Any, code: int, message: str, data=None):
+    error = {"code": int(code), "message": str(message)[:2048]}
+    if data:
+        error["data"] = dict(data)
+    return {"jsonrpc": "2.0", "id": request_id, "error": error}
 
 
 def _process(root, raw: str, agent_id: str, *, legacy_compat: bool = False):
@@ -37,6 +40,8 @@ def _process(root, raw: str, agent_id: str, *, legacy_compat: bool = False):
         if legacy_compat:
             return handle_mcp_request(root, request, agent_id=agent_id)
         return handle_mcp_stateless_request(root, request, agent_id=agent_id)
+    except MCPProtocolError as exc:
+        return _error(request.get("id"), exc.code, str(exc), exc.data)
     except KnowledgeHubError as exc:
         return _error(request.get("id"), -32602, str(exc))
 
