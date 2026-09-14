@@ -21,6 +21,7 @@ EVIDENCE_PATHS = {
     "terminal": ".cache/knowledge-hub/terminal-closure.json",
     "sbom": ".tmp/engineering/knowledge-hub.cdx.json",
 }
+MAX_BUNDLE_BYTES = 16 * 1024 * 1024
 
 
 def _load_object(path: pathlib.Path, label: str) -> Dict[str, Any]:
@@ -180,7 +181,8 @@ def verify_hosted_attestation(
     output_relative: str = DEFAULT_OUTPUT,
 ) -> Dict[str, Any]:
     root = pathlib.Path(root).resolve()
-    materials = _load_object(root / output_relative / "materials-receipt.json", "materials receipt")
+    output = root / output_relative
+    materials = _load_object(output / "materials-receipt.json", "materials receipt")
     value = json.loads(verification_path.read_text(encoding="utf-8"))
     if not isinstance(value, list) or not value:
         raise KnowledgeHubError("hosted attestation verification returned no verified attestations")
@@ -214,9 +216,9 @@ def verify_hosted_attestation(
             continue
         if predicate.get("terminal_closure") != expected_terminal:
             continue
-        certificate = verification.get("signature", {})
+        signature = verification.get("signature", {})
         timestamps = verification.get("verifiedTimestamps", [])
-        if not isinstance(certificate, Mapping) or not certificate.get("certificate"):
+        if not isinstance(signature, Mapping) or not signature.get("certificate"):
             continue
         if not isinstance(timestamps, list) or not timestamps:
             continue
@@ -226,6 +228,10 @@ def verify_hosted_attestation(
         raise KnowledgeHubError("verified hosted attestation does not match local quality materials")
     if not bundle_path.is_file() or bundle_path.is_symlink():
         raise KnowledgeHubError("signed attestation bundle is unavailable")
+    if bundle_path.stat().st_size > MAX_BUNDLE_BYTES:
+        raise KnowledgeHubError("signed attestation bundle exceeds byte budget")
+    retained_bundle = output / "sigstore-bundle.json"
+    retained_bundle.write_bytes(bundle_path.read_bytes())
     receipt = {
         "schema_version": "knowledge-hub.hosted-signed-attestation.v1",
         "status": "pass",
@@ -238,12 +244,13 @@ def verify_hosted_attestation(
         "terminal_closure": expected_terminal,
         "attestation_id": str(attestation_id),
         "attestation_url": str(attestation_url),
-        "bundle_sha256": _sha256(bundle_path),
+        "bundle_path": str(retained_bundle.relative_to(root)),
+        "bundle_sha256": _sha256(retained_bundle),
         "verification_sha256": _sha256(verification_path),
         "sigstore_identity_verified": True,
         "private_key_used": False,
         "self_hosted_runner_allowed": False,
         "generated_at": utc_timestamp(),
     }
-    _canonical_write(root / output_relative / "hosted-verification-receipt.json", receipt)
+    _canonical_write(output / "hosted-verification-receipt.json", receipt)
     return receipt
