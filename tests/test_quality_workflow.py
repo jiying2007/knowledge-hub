@@ -4,6 +4,12 @@ import yaml
 
 
 WORKFLOW = Path(".github/workflows/quality.yml")
+REQUIRED_QUALITY_EVIDENCE = (
+    ".tmp/engineering/knowledge-hub.cdx.json",
+    ".cache/knowledge-hub/engineering-quality.json",
+    ".cache/knowledge-hub/restore-drill-head.json",
+    ".cache/knowledge-hub/final-gate-product-full.json",
+)
 
 
 def _workflow():
@@ -43,3 +49,25 @@ def test_quality_still_deduplicates_superseded_non_master_runs():
     assert "github.ref" in group
     assert "refs/heads/master" in group
     assert "refs/heads/master" in cancel
+
+
+def test_quality_fails_closed_on_missing_or_empty_evidence():
+    payload = _workflow()
+    engineering = payload["jobs"]["engineering"]
+    steps = engineering["steps"]
+
+    verify = next(step for step in steps if step.get("name") == "Verify required quality evidence")
+    assert verify.get("if") == "always()"
+    verify_run = verify.get("run", "")
+    assert verify_run.startswith("rtk python3 -c ")
+    assert "Path(path).is_file()" in verify_run
+    assert "Path(path).stat().st_size == 0" in verify_run
+    for path in REQUIRED_QUALITY_EVIDENCE:
+        assert path in verify_run
+
+    upload = next(step for step in steps if step.get("name") == "Upload quality evidence")
+    assert upload.get("if") == "always()"
+    upload_with = upload["with"]
+    assert upload_with["if-no-files-found"] == "error"
+    uploaded = tuple(line.strip() for line in upload_with["path"].splitlines() if line.strip())
+    assert uploaded == REQUIRED_QUALITY_EVIDENCE
