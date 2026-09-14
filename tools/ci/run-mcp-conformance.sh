@@ -3,6 +3,12 @@ set -uo pipefail
 
 cache=.cache/knowledge-hub/mcp-conformance
 mkdir -p "$cache/scenarios"
+source_revision="$(git rev-parse --verify HEAD)"
+if [[ ! "$source_revision" =~ ^[0-9a-f]{40}$ ]]; then
+  printf 'invalid checked-out revision: %s\n' "$source_revision" >&2
+  exit 1
+fi
+export KNOWLEDGE_HUB_SOURCE_REVISION="$source_revision"
 mapfile -t scenarios < <(
   rtk python3 - <<'PY'
 import json
@@ -101,7 +107,7 @@ for scenario in policy['hosted_official_scenarios']:
 receipt = {
     'schema_version': 'knowledge-hub.mcp-conformance-evidence.v2',
     'repository': os.environ.get('GITHUB_REPOSITORY', ''),
-    'source_revision': os.environ.get('GITHUB_SHA', ''),
+    'source_revision': os.environ.get('KNOWLEDGE_HUB_SOURCE_REVISION', ''),
     'github_run_id': int(os.environ.get('GITHUB_RUN_ID', '0')),
     'github_run_attempt': int(os.environ.get('GITHUB_RUN_ATTEMPT', '0')),
     'protocol_version': policy['protocol_version'],
