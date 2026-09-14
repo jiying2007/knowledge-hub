@@ -2,7 +2,7 @@
   "schema_version": 1,
   "contract": "knowledge-hub-branch-lifecycle-v1",
   "issue": 28,
-  "status": "needs-external-gc",
+  "status": "closed",
   "default_branch": "master",
   "terminal_policy": {
     "completed_implementation_branch_retention_days": 0,
@@ -20,7 +20,17 @@
     {"branch": "codex/terminal-closure-campaign-v1", "reason": "delete after PR #29 is merged and post-merge master evidence is retained"}
   ],
   "closure_evidence": {
-    "status": "open",
-    "required": "fresh remote branch inventory after deletion proving all retirement candidates absent or explicitly retained with owner and expiry"
+    "status": "closed",
+    "closed_at": "2026-09-14",
+    "issue": 28,
+    "delete_run": 34762877768,
+    "terminal_verification_run": 34763304730,
+    "terminal_verification_artifact_id": 10318774997,
+    "terminal_verification_artifact_sha256": "9cf7f664fc00e3f900a79b4b6157c43ae5331038375ae065b543cf279b782aec",
+    "post_merge_residue_gc_run": 34803085463,
+    "post_merge_residue_gc_artifact_id": 10331986148,
+    "post_merge_residue_gc_artifact_sha256": "cd9bf9fc0d740cbd7b50f301e6d49aabaed2099baa1217dce9aae44ab4947cfe",
+    "fresh_remote_inventory": "master plus open Dependabot maintenance branches only; no codex/* or arch/* heads remain",
+    "retirement_candidates_absent": true
   }
 }
