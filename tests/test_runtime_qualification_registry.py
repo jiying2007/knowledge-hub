@@ -85,14 +85,16 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     )
 
 
-def test_mcp_registry_marks_native_default_and_legacy_explicit_only():
+def test_mcp_registry_is_native_only():
     payload = _load("registry/knowledge-platform-p5-p10.json")
     mcp = payload["protocols"]["mcp"]
     assert mcp["native_default"] is True
-    assert mcp["legacy_compatibility_adapter"] is True
-    assert mcp["legacy_default"] is False
-    assert mcp["legacy_opt_in_flag"] == "--legacy-compat"
-    assert (
-        mcp["legacy_deprecation_status"]
-        == "official-conformance-closed-consumer-closure-pending"
-    )
+    assert mcp["native_profile"] == "stateless-2026-07-28"
+    assert mcp["official_conformance_evidence_required"] is True
+    for retired_key in (
+        "legacy_compatibility_adapter",
+        "legacy_default",
+        "legacy_opt_in_flag",
+        "legacy_deprecation_status",
+    ):
+        assert retired_key not in mcp

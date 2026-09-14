@@ -4,6 +4,13 @@ import pytest
 
 from tools.codex_assets.knowledge_hub import runtime_v3 as rv3
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.protocol_conformance import (
+    MCP_CLIENT_CAPABILITIES_META_KEY,
+    MCP_PROTOCOL_META_KEY,
+    MCPProtocolError,
+    handle_mcp_stateless_request,
+)
+from tools.codex_assets.knowledge_hub.runtime_v3_contracts import MCP_PROTOCOL_VERSION
 
 
 def _root(tmp_path):
@@ -15,6 +22,20 @@ def _root(tmp_path):
     items.parent.mkdir(parents=True, exist_ok=True)
     items.write_text("", encoding="utf-8")
     return tmp_path
+
+
+def _native_request(method, params=None, request_id=1):
+    value = dict(params or {})
+    value["_meta"] = {
+        MCP_PROTOCOL_META_KEY: MCP_PROTOCOL_VERSION,
+        MCP_CLIENT_CAPABILITIES_META_KEY: {},
+    }
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "method": method,
+        "params": value,
+    }
 
 
 def test_local_write_flag_does_not_bypass_agent_capability(tmp_path):
@@ -31,44 +52,46 @@ def test_local_write_flag_does_not_bypass_agent_capability(tmp_path):
 
 def test_mcp_unknown_or_write_like_tools_fail_closed(tmp_path):
     root = _root(tmp_path)
-    with pytest.raises(KnowledgeHubError, match="unsupported MCP tool"):
-        rv3.handle_mcp_request(
+    with pytest.raises(MCPProtocolError, match="unsupported MCP tool"):
+        handle_mcp_stateless_request(
             root,
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "tools/call",
-                "params": {
+            _native_request(
+                "tools/call",
+                {
                     "name": "knowledge_feedback",
                     "arguments": {"query": "q", "outcome": "accepted"},
                 },
-            },
+            ),
         )
 
-    with pytest.raises(KnowledgeHubError, match="unsupported MCP resource"):
-        rv3.handle_mcp_request(
+    with pytest.raises(MCPProtocolError, match="native MCP resource not available"):
+        handle_mcp_stateless_request(
+            root,
+            _native_request(
+                "resources/read",
+                {"uri": "knowledge://canonical/write"},
+                request_id=2,
+            ),
+        )
+
+
+def test_mcp_protocol_envelope_fails_closed(tmp_path):
+    root = _root(tmp_path)
+    with pytest.raises(MCPProtocolError, match="JSON-RPC 2.0"):
+        handle_mcp_stateless_request(
             root,
             {
-                "jsonrpc": "2.0",
-                "id": 2,
-                "method": "resources/read",
-                "params": {"uri": "knowledge://canonical/write"},
+                "jsonrpc": "1.0",
+                "id": 1,
+                "method": "ping",
+                "params": {
+                    "_meta": {
+                        MCP_PROTOCOL_META_KEY: MCP_PROTOCOL_VERSION,
+                        MCP_CLIENT_CAPABILITIES_META_KEY: {},
+                    }
+                },
             },
         )
-
-
-def test_mcp_protocol_and_notifications_fail_closed(tmp_path):
-    root = _root(tmp_path)
-    with pytest.raises(KnowledgeHubError, match="JSON-RPC 2.0"):
-        rv3.handle_mcp_request(root, {"jsonrpc": "1.0", "id": 1, "method": "ping"})
-
-    assert (
-        rv3.handle_mcp_request(
-            root,
-            {"jsonrpc": "2.0", "method": "notifications/initialized"},
-        )
-        is None
-    )
 
 
 def test_semantic_corpus_budget_fails_instead_of_truncating(tmp_path, monkeypatch):

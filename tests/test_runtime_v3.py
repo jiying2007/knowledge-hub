@@ -309,24 +309,13 @@ def test_context_api_rejects_non_loopback_bind():
     assert exc.value.code == 2
 
 
-def test_mcp_is_read_only_and_reports_current_protocol(tmp_path):
-    root = _root(tmp_path)
-    tools = rv3.handle_mcp_request(
-        root,
-        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
-    )
-    assert {tool["name"] for tool in tools["result"]["tools"]} == {
+def test_mcp_tool_catalog_remains_read_only_surface():
+    assert {tool["name"] for tool in rv3.mcp_tools()} == {
         "knowledge_search",
         "knowledge_context",
         "knowledge_evidence_pack",
         "knowledge_action_check",
     }
-    init = rv3.handle_mcp_request(
-        root,
-        {"jsonrpc": "2.0", "id": 2, "method": "initialize"},
-    )
-    assert init["result"]["protocolVersion"] == "2026-07-28"
-    assert init["result"]["stateless"] is True
 
 
 def test_a2a_high_risk_delegation_is_fail_closed(tmp_path):

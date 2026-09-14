@@ -126,10 +126,6 @@
       "version": "2026-07-28",
       "native_profile": "stateless-2026-07-28",
       "native_default": true,
-      "legacy_compatibility_adapter": true,
-      "legacy_default": false,
-      "legacy_opt_in_flag": "--legacy-compat",
-      "legacy_deprecation_status": "official-conformance-closed-consumer-closure-pending",
       "official_conformance_evidence_required": true
     },
     "a2a": {

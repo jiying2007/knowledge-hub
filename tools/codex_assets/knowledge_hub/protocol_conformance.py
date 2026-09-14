@@ -60,7 +60,6 @@ def mcp_native_capabilities() -> Dict[str, Any]:
         "completion": False,
         "tasks_extension": False,
         "network_auth_required_if_remote": True,
-        "legacy_initialize_supported_by_compat_adapter": True,
     }
 
 
@@ -359,8 +358,6 @@ def protocol_conformance_report(root, *, agent_id: str = DEFAULT_AGENT) -> Dict[
             "declared": MCP_PROTOCOL_VERSION,
             "native_profile": MCP_NATIVE_PROFILE,
             "native_stateless": True,
-            "legacy_compatibility_adapter": True,
-            "legacy_initialize_is_native": False,
             "server_discover": True,
             "wire_result_type": True,
             "wire_server_identity_meta": True,

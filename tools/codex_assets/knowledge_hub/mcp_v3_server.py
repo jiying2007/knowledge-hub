@@ -1,8 +1,4 @@
-"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub.
-
-The legacy initialize/session-style adapter is available only with
-``--legacy-compat`` and is not the default protocol surface.
-"""
+"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub."""
 
 from __future__ import annotations
 
@@ -13,7 +9,7 @@ from typing import Any, Mapping, Sequence
 
 from .common import KnowledgeHubError, repository_root
 from .protocol_conformance import MCPProtocolError, handle_mcp_stateless_request
-from .runtime_v3 import DEFAULT_AGENT, handle_mcp_request
+from .runtime_v3 import DEFAULT_AGENT
 
 MAX_LINE_BYTES = 1024 * 1024
 
@@ -25,7 +21,7 @@ def _error(request_id: Any, code: int, message: str, data=None):
     return {"jsonrpc": "2.0", "id": request_id, "error": error}
 
 
-def _process(root, raw: str, agent_id: str, *, legacy_compat: bool = False):
+def _process(root, raw: str, agent_id: str):
     if len(raw.encode("utf-8")) > MAX_LINE_BYTES:
         return _error(None, -32600, "request exceeds byte budget")
     try:
@@ -37,8 +33,6 @@ def _process(root, raw: str, agent_id: str, *, legacy_compat: bool = False):
     if str(request.get("method", "")).startswith("notifications/"):
         return None
     try:
-        if legacy_compat:
-            return handle_mcp_request(root, request, agent_id=agent_id)
         return handle_mcp_stateless_request(root, request, agent_id=agent_id)
     except MCPProtocolError as exc:
         return _error(request.get("id"), exc.code, str(exc), exc.data)
@@ -51,24 +45,19 @@ def main(argv: Sequence[str] = ()) -> int:
     parser.add_argument("--root", default="")
     parser.add_argument("--agent-id", default=DEFAULT_AGENT)
     parser.add_argument("--one-shot", default="")
-    parser.add_argument(
-        "--legacy-compat",
-        action="store_true",
-        help="explicitly enable the deprecated initialize/session-style compatibility adapter",
-    )
     args = parser.parse_args(list(argv) if argv else None)
     try:
         root = repository_root(args.root)
     except KnowledgeHubError as exc:
         parser.error(str(exc))
     if args.one_shot:
-        response = _process(root, args.one_shot, args.agent_id, legacy_compat=args.legacy_compat)
+        response = _process(root, args.one_shot, args.agent_id)
         if response is not None:
             print(json.dumps(response, ensure_ascii=False))
         return 0
     for raw in sys.stdin:
         if raw.strip():
-            response = _process(root, raw, args.agent_id, legacy_compat=args.legacy_compat)
+            response = _process(root, raw, args.agent_id)
             if response is not None:
                 print(json.dumps(response, ensure_ascii=False), flush=True)
     return 0

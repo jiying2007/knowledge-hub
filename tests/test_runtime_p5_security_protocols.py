@@ -24,7 +24,6 @@ from tools.codex_assets.knowledge_hub.runtime_p5_security import (
     principal_context,
     repository_posture,
 )
-from tools.codex_assets.knowledge_hub.runtime_v3 import handle_mcp_request
 from tools.codex_assets.knowledge_hub.runtime_v3_contracts import MCP_PROTOCOL_VERSION
 
 
@@ -180,16 +179,12 @@ def test_mcp_server_discover_matches_advertised_native_surface():
     assert result["cacheScope"] == "private"
 
 
-def test_mcp_native_rejects_initialize_but_legacy_adapter_remains_available():
+def test_mcp_native_rejects_initialize():
     root = repository_root()
     with pytest.raises(MCPProtocolError) as caught:
         handle_mcp_stateless_request(root, _mcp_request("initialize"))
     assert caught.value.code == -32601
     assert caught.value.http_status == 404
-
-    legacy = handle_mcp_request(root, {"jsonrpc": "2.0", "id": 1, "method": "initialize"})
-    assert legacy is not None
-    assert legacy["result"]["protocolVersion"] == MCP_PROTOCOL_VERSION
 
 
 def test_mcp_native_rejects_missing_required_meta_fields():
