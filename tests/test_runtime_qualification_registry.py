@@ -40,7 +40,6 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         "production-retrieval-eval",
         "memory-lifecycle-pilot",
         "real-adoption-evidence",
-        "attestation-signing-identity",
     } == required_open
     mcp_gap = gaps["mcp-official-conformance"]
     assert mcp_gap["required"] is True
@@ -56,6 +55,21 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     assert evidence["applicable_failure_count"] == 0
     assert evidence["product_resource_read_smoke_passed"] is True
     assert evidence["expected_failure_baseline_used"] is False
+    signing_gap = gaps["attestation-signing-identity"]
+    assert signing_gap["required"] is True
+    assert signing_gap["status"] == "closed"
+    assert signing_gap["evidence_refs"]
+    signing_evidence = signing_gap["evidence"]
+    assert signing_evidence["source_revision"] == "7bab61c64f19977c7a30ccd4a15b58f1f6278c69"
+    assert signing_evidence["github_run_id"] == 34797968706
+    assert signing_evidence["artifact_id"] == 10330542489
+    assert signing_evidence["attestation_id"] == "47234390"
+    assert signing_evidence["sigstore_identity_verified"] is True
+    assert signing_evidence["private_key_used"] is False
+    assert signing_evidence["self_hosted_runner_allowed"] is False
+    assert signing_evidence["product_gate_status"] == "needs-review"
+    assert signing_evidence["terminal_closure_status"] == "needs-review"
+    assert signing_evidence["terminal_closure_terminal"] is False
     assert gaps["master-ruleset-enforcement"]["required"] is False
     assert gaps["master-ruleset-enforcement"]["status"] == "not-required"
     repository_target = payload["repository_security_target"]
