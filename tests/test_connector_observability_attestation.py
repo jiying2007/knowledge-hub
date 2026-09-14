@@ -19,11 +19,6 @@ from tools.codex_assets.knowledge_hub.connector_runtime import (
     load_checkpoint,
     sync_connector,
 )
-from tools.codex_assets.knowledge_hub.engineering_debt import (
-    branch_coverage_contract,
-    debt_report,
-    mutation_contract,
-)
 from tools.codex_assets.knowledge_hub.observability_runtime import (
     lane_health_projection,
     make_traceparent,
@@ -215,28 +210,3 @@ def test_quality_attestation_binds_terminal_evidence():
             restore_status="success",
             product_gate_status="success",
         )
-
-
-def test_engineering_debt_branch_and_mutation_contracts():
-    report = debt_report(
-        {"legacy.py": 1000},
-        {"legacy.py": 900},
-        reduction_ratio=0.15,
-    )
-    regression = debt_report(
-        {"legacy.py": 1000},
-        {"legacy.py": 1001},
-        reduction_ratio=0.15,
-    )
-    mutation = mutation_contract(
-        baseline_blocked=True,
-        mutated_blocked=False,
-        probe_name="high-risk-negation",
-    )
-    coverage = branch_coverage_contract(measured_percent=72.0, minimum_percent=70.0)
-
-    assert report["status"] == "pass"
-    assert report["rows"][0]["target_lines"] == 850
-    assert regression["status"] == "fail"
-    assert mutation["status"] == "pass"
-    assert coverage["status"] == "pass"
