@@ -6,7 +6,7 @@ import hashlib
 import json
 import pathlib
 import re
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Dict, Mapping
 
 from .attestation import PREDICATE_TYPE, quality_attestation, statement_digest, verify_quality_attestation
 from .common import KnowledgeHubError, utc_timestamp
