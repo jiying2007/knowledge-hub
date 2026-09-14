@@ -1,0 +1,170 @@
+name: external-evidence-ratchet-candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      intake_run_id:
+        description: Successful external-evidence-intake workflow run id
+        required: true
+        type: string
+      artifact_name:
+        description: Exact bounded intake artifact name
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: external-evidence-ratchet-candidate-${{ github.ref }}-${{ inputs.intake_run_id }}
+  cancel-in-progress: false
+
+jobs:
+  candidate:
+    name: Build reviewed external evidence ratchet candidate
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable ratchet builder
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Validate intake selectors
+        env:
+          INTAKE_RUN_ID: ${{ inputs.intake_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          [[ "${INTAKE_RUN_ID}" =~ ^[0-9]+$ ]] || { echo "intake_run_id must be numeric" >&2; exit 2; }
+          [[ "${ARTIFACT_NAME}" =~ ^knowledge-hub-external-evidence-[A-Za-z0-9._-]+$ ]] || {
+            echo "artifact_name must identify a bounded external evidence intake artifact" >&2
+            exit 2
+          }
+      - name: Verify hosted intake workflow and artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INTAKE_RUN_ID: ${{ inputs.intake_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/external-ratchet
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${INTAKE_RUN_ID}" > .cache/knowledge-hub/external-ratchet/intake-run.json
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${INTAKE_RUN_ID}/artifacts?per_page=100" > .cache/knowledge-hub/external-ratchet/intake-artifacts.json
+          rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('.cache/knowledge-hub/external-ratchet')
+          run = json.loads((root / 'intake-run.json').read_text(encoding='utf-8'))
+          if run.get('status') != 'completed' or run.get('conclusion') != 'success':
+              raise SystemExit('intake workflow run must be completed/success')
+          repository = run.get('repository') or {}
+          if repository.get('full_name') != os.environ['GITHUB_REPOSITORY']:
+              raise SystemExit('intake workflow run must belong to the current repository')
+          if run.get('event') != 'workflow_dispatch':
+              raise SystemExit('intake workflow run must be manually dispatched')
+          if run.get('path') != '.github/workflows/external-evidence-intake.yml':
+              raise SystemExit('source run must be the external-evidence-intake workflow')
+          if run.get('head_branch') != 'master':
+              raise SystemExit('intake workflow run must execute from master')
+          head_sha = str(run.get('head_sha') or '').lower()
+          if len(head_sha) != 40 or any(ch not in '0123456789abcdef' for ch in head_sha):
+              raise SystemExit('intake workflow run must expose an exact git revision')
+
+          artifacts = json.loads((root / 'intake-artifacts.json').read_text(encoding='utf-8'))
+          wanted = os.environ['ARTIFACT_NAME']
+          matches = [item for item in artifacts.get('artifacts', []) if item.get('name') == wanted]
+          if len(matches) != 1:
+              raise SystemExit('expected exactly one bounded intake artifact')
+          artifact = matches[0]
+          if artifact.get('expired') is True:
+              raise SystemExit('intake artifact is expired')
+          digest = str(artifact.get('digest') or '')
+          if not digest.startswith('sha256:') or len(digest) != 71:
+              raise SystemExit('intake artifact must expose a sha256 digest')
+          binding = {
+              'schema_version': 1,
+              'projection': 'knowledge-hub-external-evidence-intake-host-binding-v1',
+              'status': 'pass',
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'workflow_path': str(run['path']),
+              'intake_run_id': int(run['id']),
+              'intake_run_attempt': int(run['run_attempt']),
+              'intake_run_head_sha': head_sha,
+              'artifact_id': int(artifact['id']),
+              'artifact_name': str(artifact['name']),
+              'artifact_digest': digest,
+          }
+          (root / 'host-binding-pre.json').write_text(
+              json.dumps(binding, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+      - name: Download exact bounded intake artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INTAKE_RUN_ID: ${{ inputs.intake_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/external-ratchet-intake
+          gh run download "${INTAKE_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --name "${ARTIFACT_NAME}" --dir .tmp/external-ratchet-intake
+          test -f .tmp/external-ratchet-intake/closure-candidate-receipt.json
+          test -f .tmp/external-ratchet-intake/intake-receipt.json
+          test -f .tmp/external-ratchet-intake/source-provenance.json
+          test ! -L .tmp/external-ratchet-intake/closure-candidate-receipt.json
+          test ! -L .tmp/external-ratchet-intake/intake-receipt.json
+      - name: Finish immutable host binding
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.cache/knowledge-hub/external-ratchet')
+          binding = json.loads((root / 'host-binding-pre.json').read_text(encoding='utf-8'))
+          intake = Path('.tmp/external-ratchet-intake/intake-receipt.json')
+          binding['intake_receipt_sha256'] = hashlib.sha256(intake.read_bytes()).hexdigest()
+          (root / 'host-binding.json').write_text(
+              json.dumps(binding, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+      - name: Build review-only canonical candidate
+        run: |
+          set -euo pipefail
+          rtk python3 -m tools.codex_assets.knowledge_hub.external_evidence_ratchet_cli \
+            --closure-receipt .tmp/external-ratchet-intake/closure-candidate-receipt.json \
+            --intake-receipt .tmp/external-ratchet-intake/intake-receipt.json \
+            --host-binding .cache/knowledge-hub/external-ratchet/host-binding.json \
+            --candidate-registry .cache/knowledge-hub/external-ratchet/candidate-registry.json \
+            --proposal .cache/knowledge-hub/external-ratchet/ratchet-proposal.json
+      - name: Prove canonical registry stayed untouched
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- registry/knowledge-platform-p5-p10.json
+          git status --short -- registry/knowledge-platform-p5-p10.json
+      - name: Upload bounded ratchet candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-external-ratchet-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .cache/knowledge-hub/external-ratchet/host-binding.json
+            .cache/knowledge-hub/external-ratchet/candidate-registry.json
+            .cache/knowledge-hub/external-ratchet/ratchet-proposal.json
+          if-no-files-found: error
+          retention-days: 90
