@@ -273,8 +273,37 @@
       "id": "attestation-signing-identity",
       "owner": "release-owner",
       "required": true,
-      "status": "open",
-      "reason": "Terminal production closure requires a real signing identity and verifiable signed quality attestation."
+      "status": "closed",
+      "reason": "GitHub-hosted OIDC/Sigstore signing and cryptographic attestation verification succeeded for an exact source revision while preserving the actual nonterminal product and terminal-closure verdicts; no repository or artifact private key was used.",
+      "evidence_refs": [
+        "https://github.com/jiying2007/knowledge-hub/actions/runs/34797968706",
+        "https://github.com/jiying2007/knowledge-hub/actions/runs/34797968706/artifacts/10330542489",
+        "https://github.com/jiying2007/knowledge-hub/attestations/47234390"
+      ],
+      "evidence": {
+        "source_revision": "7bab61c64f19977c7a30ccd4a15b58f1f6278c69",
+        "source_ref": "refs/heads/codex/signed-attestation-identity-v1",
+        "observed_at": "2026-09-14T02:11:10Z",
+        "github_run_id": 34797968706,
+        "github_run_attempt": 1,
+        "artifact_id": 10330542489,
+        "artifact_digest": "sha256:99fa3f0efb62538756727247d17cb60ddf0d6ab48e2b8c18a17843da93fcb18a",
+        "attestation_id": "47234390",
+        "attestation_url": "https://github.com/jiying2007/knowledge-hub/attestations/47234390",
+        "signer_workflow": "jiying2007/knowledge-hub/.github/workflows/signed-quality-attestation.yml",
+        "predicate_type": "https://knowledge-hub.local/attestation/quality/v1",
+        "manifest_sha256": "b07fef6b4bd3752436def4b99ec53d851769f211b2acea9bb42a0ab7b4f3e444",
+        "statement_sha256": "7b18cb0e097e8fef9e52957b1845602ba706b71d514fe0fa285d29c3daf7a878",
+        "sbom_sha256": "585b8a9c8fc39742a7a9f0e448eb39385300f830d10cc3a56c132a15c1525746",
+        "bundle_sha256": "5bfb3caed9378473122e47dc62874a5def9ec7ffcdea532357062e8f0c15fab6",
+        "verification_sha256": "e985da29c78ceae36ab9495ac8b11277aab06f2d86a96fa002a5d0475e1d740d",
+        "sigstore_identity_verified": true,
+        "private_key_used": false,
+        "self_hosted_runner_allowed": false,
+        "product_gate_status": "needs-review",
+        "terminal_closure_status": "needs-review",
+        "terminal_closure_terminal": false
+      }
     }
   ]
 }
