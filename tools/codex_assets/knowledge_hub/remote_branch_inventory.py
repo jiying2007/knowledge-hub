@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Mapping
@@ -22,6 +23,9 @@ _REVISION_PATTERN = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 _MAX_PAGES = 10
 _PAGE_SIZE = 100
 _TIMEOUT_SECONDS = 20
+_IMPLEMENTATION_BRANCH_PREFIXES = ("codex/", "arch/")
+_DEFAULT_CONVERGENCE_ATTEMPTS = 6
+_DEFAULT_CONVERGENCE_DELAY_SECONDS = 2.0
 
 
 def _load_lifecycle(root: pathlib.Path, relative: str) -> Mapping[str, Any]:
@@ -98,6 +102,26 @@ def fetch_remote_branches(repository: str, token: str = "") -> List[str]:
     return sorted(set(names))
 
 
+def _implementation_branches(branches: List[str]) -> List[str]:
+    return sorted(
+        branch
+        for branch in set(branches)
+        if any(branch.startswith(prefix) for prefix in _IMPLEMENTATION_BRANCH_PREFIXES)
+    )
+
+
+def _residue_state(candidates: List[str], branches: List[str]) -> Dict[str, List[str]]:
+    candidate_set = set(candidates)
+    implementation = _implementation_branches(branches)
+    remaining = sorted(candidate_set.intersection(branches))
+    unexpected = sorted(set(implementation).difference(candidate_set))
+    return {
+        "remaining_candidates": remaining,
+        "implementation_branches": implementation,
+        "unexpected_implementation_branches": unexpected,
+    }
+
+
 def evaluate_remote_branch_inventory(
     root: pathlib.Path,
     *,
@@ -105,33 +129,103 @@ def evaluate_remote_branch_inventory(
     source_revision: str,
     token: str = "",
     lifecycle: str = "registry/branch-lifecycle.json",
+    convergence_attempts: int = _DEFAULT_CONVERGENCE_ATTEMPTS,
+    convergence_delay_seconds: float = _DEFAULT_CONVERGENCE_DELAY_SECONDS,
 ) -> Dict[str, Any]:
     _validate_identity(repository, source_revision)
+    if convergence_attempts < 1:
+        raise KnowledgeHubError("convergence_attempts must be at least 1")
+    if convergence_delay_seconds < 0:
+        raise KnowledgeHubError("convergence_delay_seconds must be non-negative")
+
     candidates = retirement_candidates(root, lifecycle)
-    try:
-        branches = fetch_remote_branches(repository, token)
-    except KnowledgeHubError as exc:
-        return {
-            "schema_version": "knowledge-hub.remote-branch-inventory.v1",
-            "generated_at": utc_timestamp(),
-            "repository": repository,
-            "source_revision": source_revision,
-            "status": "blocked",
-            "branches": [],
-            "retirement_candidates": candidates,
-            "remaining_candidates": candidates,
-            "error": str(exc),
-        }
-    remaining = sorted(set(candidates).intersection(branches))
+    observations: List[Dict[str, Any]] = []
+    branches: List[str] = []
+    residue: Dict[str, List[str]] = {
+        "remaining_candidates": [],
+        "implementation_branches": [],
+        "unexpected_implementation_branches": [],
+    }
+
+    for attempt in range(1, convergence_attempts + 1):
+        try:
+            branches = fetch_remote_branches(repository, token)
+        except KnowledgeHubError as exc:
+            remaining = (
+                residue["remaining_candidates"] if observations else list(candidates)
+            )
+            return {
+                "schema_version": "knowledge-hub.remote-branch-inventory.v1",
+                "generated_at": utc_timestamp(),
+                "repository": repository,
+                "source_revision": source_revision,
+                "status": "blocked",
+                "branches": branches,
+                "retirement_candidates": candidates,
+                "remaining_candidates": remaining,
+                "implementation_branch_prefixes": list(_IMPLEMENTATION_BRANCH_PREFIXES),
+                "implementation_branches": residue["implementation_branches"],
+                "unexpected_implementation_branches": residue[
+                    "unexpected_implementation_branches"
+                ],
+                "observation_count": len(observations),
+                "converged_after_retry": False,
+                "observations": observations,
+                "error": str(exc),
+            }
+
+        residue = _residue_state(candidates, branches)
+        observations.append(
+            {
+                "attempt": attempt,
+                "remaining_candidates": residue["remaining_candidates"],
+                "unexpected_implementation_branches": residue[
+                    "unexpected_implementation_branches"
+                ],
+            }
+        )
+        dirty = bool(
+            residue["remaining_candidates"]
+            or residue["unexpected_implementation_branches"]
+        )
+        if not dirty:
+            return {
+                "schema_version": "knowledge-hub.remote-branch-inventory.v1",
+                "generated_at": utc_timestamp(),
+                "repository": repository,
+                "source_revision": source_revision,
+                "status": "pass",
+                "branches": branches,
+                "retirement_candidates": candidates,
+                "remaining_candidates": [],
+                "implementation_branch_prefixes": list(_IMPLEMENTATION_BRANCH_PREFIXES),
+                "implementation_branches": residue["implementation_branches"],
+                "unexpected_implementation_branches": [],
+                "observation_count": len(observations),
+                "converged_after_retry": attempt > 1,
+                "observations": observations,
+                "error": "",
+            }
+        if attempt < convergence_attempts and convergence_delay_seconds:
+            time.sleep(convergence_delay_seconds)
+
     return {
         "schema_version": "knowledge-hub.remote-branch-inventory.v1",
         "generated_at": utc_timestamp(),
         "repository": repository,
         "source_revision": source_revision,
-        "status": "pass" if not remaining else "needs-review",
+        "status": "needs-review",
         "branches": branches,
         "retirement_candidates": candidates,
-        "remaining_candidates": remaining,
+        "remaining_candidates": residue["remaining_candidates"],
+        "implementation_branch_prefixes": list(_IMPLEMENTATION_BRANCH_PREFIXES),
+        "implementation_branches": residue["implementation_branches"],
+        "unexpected_implementation_branches": residue[
+            "unexpected_implementation_branches"
+        ],
+        "observation_count": len(observations),
+        "converged_after_retry": False,
+        "observations": observations,
         "error": "",
     }
 
