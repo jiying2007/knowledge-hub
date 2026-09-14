@@ -1,4 +1,7 @@
-"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub."""
+"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub.
+
+Only the native stateless profile is accepted; initialize/session compatibility is retired.
+"""
 
 from __future__ import annotations
 
