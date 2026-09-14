@@ -129,7 +129,7 @@
       "legacy_compatibility_adapter": true,
       "legacy_default": false,
       "legacy_opt_in_flag": "--legacy-compat",
-      "legacy_deprecation_status": "pending-official-conformance-and-consumer-closure",
+      "legacy_deprecation_status": "official-conformance-closed-consumer-closure-pending",
       "official_conformance_evidence_required": true
     },
     "a2a": {
@@ -204,8 +204,42 @@
       "id": "mcp-official-conformance",
       "owner": "runtime-owner",
       "required": true,
-      "status": "open",
-      "reason": "Official conformance evidence must be produced outside static implementation."
+      "status": "closed",
+      "reason": "Pinned upstream MCP 2026-07-28 hosted conformance completed for the advertised native stateless tools/resources profile; non-applicable upstream fixture-only checks remain preserved in the retained raw evidence.",
+      "evidence_refs": [
+        "https://github.com/jiying2007/knowledge-hub/actions/runs/34791234617",
+        "https://github.com/jiying2007/knowledge-hub/actions/runs/34791234617/artifacts/10328028248"
+      ],
+      "evidence": {
+        "source_revision": "73d050aae8adae51092c2ac580094d506ae066ac",
+        "protocol_version": "2026-07-28",
+        "native_profile": "stateless-2026-07-28",
+        "observed_at": "2026-09-13T23:59:59Z",
+        "github_run_id": 34791234617,
+        "github_run_attempt": 1,
+        "artifact_id": 10328028248,
+        "artifact_digest": "sha256:40de32acada377e50c7487de397e30be122c78eb5e7e503edddca9fad36993e7",
+        "receipt_schema": "knowledge-hub.mcp-conformance-evidence.v2",
+        "receipt_result_sha256": "987a1757a03ea61ca68b806bca106e1180e50cbe37e6cd1de8d559b1c92109cc",
+        "runner": {
+          "package": "@modelcontextprotocol/conformance",
+          "version": "0.2.0-alpha.10",
+          "integrity": "sha512-0V/HZDdWHcg6j0zVBzBsXcPZ571IVi6umKgTpnBhtTx/jm/LONmGF6cIWL2k4Xjyps0OiHV6B37nj2s0pUg0nQ=="
+        },
+        "hosted_official_scenarios": [
+          "server-stateless",
+          "tools-list",
+          "resources-list",
+          "resources-read-text",
+          "sep-2164-resource-not-found",
+          "dns-rebinding-protection",
+          "caching"
+        ],
+        "profile_contract_passed": true,
+        "applicable_failure_count": 0,
+        "product_resource_read_smoke_passed": true,
+        "expected_failure_baseline_used": false
+      }
     },
     {
       "id": "connector-provider-pilot",
