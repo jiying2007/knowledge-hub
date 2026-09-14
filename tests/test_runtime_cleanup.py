@@ -1,7 +1,9 @@
 import json
 
+import pytest
+
 from tools.codex_assets.knowledge_hub.common import repository_root
-from tools.codex_assets.knowledge_hub.mcp_v3_server import _process
+from tools.codex_assets.knowledge_hub.mcp_v3_server import _process, main as mcp_stdio_main
 from tools.codex_assets.knowledge_hub.protocol_conformance import (
     MCP_CLIENT_CAPABILITIES_META_KEY,
     MCP_CLIENT_INFO_META_KEY,
@@ -53,17 +55,13 @@ def test_mcp_stdio_default_rejects_legacy_initialize():
     assert "unsupported MCP native method: initialize" in response["error"]["message"]
 
 
-def test_mcp_stdio_legacy_initialize_requires_explicit_opt_in():
-    response = _process(
-        repository_root(),
-        json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}),
-        "knowledge-reader",
-        legacy_compat=True,
-    )
-    assert response["result"]["protocolVersion"] == MCP_PROTOCOL_VERSION
+def test_mcp_stdio_rejects_retired_legacy_compat_flag():
+    with pytest.raises(SystemExit) as caught:
+        mcp_stdio_main(["--legacy-compat"])
+    assert caught.value.code == 2
 
 
-def test_mcp_notifications_remain_no_response_in_both_profiles():
+def test_mcp_notifications_remain_no_response_in_native_profile():
     raw = json.dumps(
         {
             "jsonrpc": "2.0",
@@ -77,7 +75,6 @@ def test_mcp_notifications_remain_no_response_in_both_profiles():
         }
     )
     assert _process(repository_root(), raw, "knowledge-reader") is None
-    assert _process(repository_root(), raw, "knowledge-reader", legacy_compat=True) is None
 
 
 def test_duplicate_context_api_runtime_alias_is_retired():

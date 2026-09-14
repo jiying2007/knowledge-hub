@@ -3,7 +3,7 @@
   "contract": "knowledge-hub-legacy-debt-burndown-v1",
   "issue": 27,
   "baseline_as_of": "2026-09-12",
-  "status": "active",
+  "status": "closed",
   "oversized_modules": {
     "baseline_count": 11,
     "current_upper_bound_count": 0,
@@ -123,6 +123,21 @@
       "migrated-to-strict-v1",
       "immutable-historical-exception-with-owner-and-reason"
     ]
+  },
+  "closure_evidence": {
+    "status": "closed",
+    "closed_at": "2026-09-13",
+    "issue": 27,
+    "terminal_verification_run": 34763304730,
+    "terminal_verification_artifact_id": 10318774997,
+    "terminal_verification_artifact_sha256": "9cf7f664fc00e3f900a79b4b6157c43ae5331038375ae065b543cf279b782aec",
+    "legacy_module_count": 0,
+    "legacy_attention_count": 0,
+    "historical_artifact_reference_count": 315,
+    "accepted_historical_artifact_reference_count": 315,
+    "unaccepted_historical_artifact_reference_count": 0,
+    "legacy_reference_set_sha256": "154996b5b1f334b13db2133f8372066387dce0dd316c02bb8ff5498debc895d2",
+    "historical_provenance_preserved": true
   },
   "rules": {
     "baseline_may_not_increase": true,

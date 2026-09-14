@@ -1,0 +1,150 @@
+name: merged-branch-gc
+
+on:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: merged-branch-gc-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gc:
+    name: Evidence-backed merged branch GC
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+      EXPECTED_TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - name: Delete exact merged head when no other PR still uses it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          owner = repo.split("/", 1)[0]
+          token = os.environ["GITHUB_TOKEN"]
+          target = os.environ["TARGET_BRANCH"]
+          expected_target = os.environ["EXPECTED_TARGET_SHA"]
+          pr_number = int(os.environ["PR_NUMBER"])
+          merge_sha = os.environ["MERGE_SHA"]
+
+          def api(path, method="GET", allow_404=False):
+              url = "https://api.github.com/repos/{}/{}".format(repo, path.lstrip("/"))
+              request = urllib.request.Request(
+                  url,
+                  method=method,
+                  headers={
+                      "Authorization": "Bearer {}".format(token),
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "knowledge-hub-merged-branch-gc",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      body = response.read()
+                      return json.loads(body.decode("utf-8")) if body else None
+              except urllib.error.HTTPError as exc:
+                  if allow_404 and exc.code == 404:
+                      return None
+                  detail = exc.read().decode("utf-8", errors="replace")
+                  raise RuntimeError(
+                      "GitHub API {} {} failed: {} {}".format(method, path, exc.code, detail)
+                  ) from exc
+
+          pr = api("pulls/{}".format(pr_number))
+          if not pr.get("merged_at"):
+              raise SystemExit("pull request is no longer merged; refusing branch deletion")
+          if pr["head"]["ref"] != target or pr["head"]["sha"] != expected_target:
+              raise SystemExit("pull request head no longer matches event-bound exact ref")
+          if pr.get("merge_commit_sha") != merge_sha:
+              raise SystemExit("merge commit no longer matches event-bound merge SHA")
+
+          query = urllib.parse.urlencode(
+              {"state": "open", "head": "{}:{}".format(owner, target), "per_page": 100}
+          )
+          other_open_prs = [row["number"] for row in api("pulls?{}".format(query))]
+
+          encoded = urllib.parse.quote(target, safe="")
+          live = api("branches/{}".format(encoded), allow_404=True)
+          already_absent = live is None
+          deleted = False
+          retained_reason = ""
+
+          if other_open_prs:
+              retained_reason = "branch-still-used-by-open-pr"
+          elif live is not None:
+              actual_target = live["commit"]["sha"]
+              if actual_target != expected_target:
+                  raise SystemExit(
+                      "branch moved after merge: expected {} got {}".format(
+                          expected_target, actual_target
+                      )
+                  )
+              api("git/refs/heads/{}".format(target), method="DELETE")
+              deleted = True
+
+          converged_absent = already_absent
+          if deleted:
+              for _ in range(10):
+                  time.sleep(2)
+                  branch_live = api("branches/{}".format(encoded), allow_404=True)
+                  ref_live = api("git/ref/heads/{}".format(target), allow_404=True)
+                  if branch_live is None and ref_live is None:
+                      converged_absent = True
+                      break
+              if not converged_absent:
+                  raise SystemExit("deleted ref did not converge to absent state")
+
+          result = "retained" if retained_reason else "absent" if already_absent else "deleted"
+          evidence = {
+              "schema_version": 1,
+              "contract": "knowledge-hub.merged-branch-gc.v1",
+              "repository": repo,
+              "pr_number": pr_number,
+              "merge_sha": merge_sha,
+              "target_branch": target,
+              "target_revision": expected_target,
+              "other_open_prs": other_open_prs,
+              "already_absent": already_absent,
+              "deleted": deleted,
+              "converged_absent": converged_absent,
+              "retained_reason": retained_reason,
+              "result": result,
+              "run_id": int(os.environ["GITHUB_RUN_ID"]),
+              "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+          }
+          pathlib.Path("merged-branch-gc.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(json.dumps(evidence, sort_keys=True))
+          PY
+
+      - name: Upload branch GC receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: merged-branch-gc-${{ env.PR_NUMBER }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: merged-branch-gc.json
+          if-no-files-found: error
+          retention-days: 90

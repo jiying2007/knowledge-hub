@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - codex/signed-attestation-identity-v1
     paths:
       - ".github/workflows/signed-quality-attestation.yml"
       - "registry/knowledge-platform-p5-p10.json"
