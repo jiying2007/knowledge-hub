@@ -13,6 +13,8 @@ STATEMENT_TYPE = "https://in-toto.io/Statement/v1"
 PREDICATE_TYPE = "https://knowledge-hub.local/attestation/quality/v1"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 TERMINAL_STATUSES = {"pass", "needs-review", "needs-fix", "blocked"}
+PASSING_QUALITY_STATUSES = {"pass", "success"}
+PRODUCT_EVIDENCE_STATUSES = {"pass", "success", "needs-review"}
 
 
 def _sha256(value: str, label: str) -> str:
@@ -70,8 +72,27 @@ def quality_attestation(
         "restore": restore_status,
         "product_gate": product_gate_status,
     }
-    if any(value not in {"success", "pass"} for value in statuses.values()):
+    if any(
+        statuses[key] not in PASSING_QUALITY_STATUSES
+        for key in ("engineering", "compliance", "restore")
+    ):
         raise KnowledgeHubError("quality attestation requires passing quality evidence")
+    if product_gate_status not in PRODUCT_EVIDENCE_STATUSES:
+        raise KnowledgeHubError("quality attestation product evidence status is invalid")
+    terminal_requested = any(
+        [
+            terminal_closure_status,
+            terminal_closure_terminal is not None,
+            terminal_closure_sha256,
+            bool(terminal_closure_blockers),
+        ]
+    )
+    if product_gate_status == "needs-review" and (
+        not terminal_requested or terminal_closure_terminal is not False
+    ):
+        raise KnowledgeHubError(
+            "nonterminal product evidence requires terminal=false closure evidence"
+        )
     predicate: Dict[str, Any] = {
         "source_commit": str(source_commit),
         "evidence_artifact_sha256": _sha256(
@@ -83,14 +104,6 @@ def quality_attestation(
     }
     if sbom_sha256:
         predicate["sbom_sha256"] = _sha256(sbom_sha256, "SBOM digest")
-    terminal_requested = any(
-        [
-            terminal_closure_status,
-            terminal_closure_terminal is not None,
-            terminal_closure_sha256,
-            bool(terminal_closure_blockers),
-        ]
-    )
     if terminal_requested:
         predicate["terminal_closure"] = _terminal_closure(
             status=terminal_closure_status,
@@ -147,10 +160,21 @@ def verify_quality_attestation(
         failures.append("predicate-object")
     else:
         gates = predicate.get("quality_gates", {})
+        product_gate_status = ""
         if not isinstance(gates, Mapping):
             failures.append("quality-gates")
-        elif any(str(value) not in {"success", "pass"} for value in gates.values()):
-            failures.append("quality-gate-not-pass")
+        else:
+            required_gates = {"engineering", "compliance", "restore", "product_gate"}
+            if set(gates) != required_gates:
+                failures.append("quality-gates")
+            elif any(
+                str(gates.get(key, "")) not in PASSING_QUALITY_STATUSES
+                for key in ("engineering", "compliance", "restore")
+            ):
+                failures.append("quality-gate-not-pass")
+            product_gate_status = str(gates.get("product_gate", ""))
+            if product_gate_status not in PRODUCT_EVIDENCE_STATUSES:
+                failures.append("product-gate-status")
         artifact_digest = str(predicate.get("evidence_artifact_sha256", ""))
         if not SHA256_RE.fullmatch(artifact_digest):
             failures.append("artifact-digest")
@@ -170,6 +194,10 @@ def verify_quality_attestation(
                     not isinstance(value, str) or not value for value in blockers
                 ):
                     failures.append("terminal-closure-blockers")
+        if product_gate_status == "needs-review" and (
+            not isinstance(terminal, Mapping) or terminal.get("terminal") is not False
+        ):
+            failures.append("nonterminal-product-without-closure")
     return {
         "schema_version": "knowledge-hub.attestation-verdict.v1",
         "status": "pass" if not failures else "fail",
