@@ -62,6 +62,15 @@ def _status(payload: Mapping[str, Any], label: str) -> str:
     return status
 
 
+def _product_status(payload: Mapping[str, Any]) -> str:
+    status = str(payload.get("status", "")).strip()
+    if status not in {"pass", "success", "needs-review"}:
+        raise KnowledgeHubError("product evidence has invalid status")
+    if status == "needs-review" and payload.get("terminal") is not False:
+        raise KnowledgeHubError("nonterminal product evidence must declare terminal=false")
+    return status
+
+
 def build_signed_quality_materials(
     root: pathlib.Path,
     *,
@@ -90,7 +99,7 @@ def build_signed_quality_materials(
         "engineering": _status(objects["engineering"], "engineering"),
         "compliance": _status(objects["compliance"], "compliance"),
         "restore": _status(objects["restore"], "restore"),
-        "product": _status(objects["product"], "product"),
+        "product": _product_status(objects["product"]),
     }
     terminal = objects["terminal"]
     terminal_status = str(terminal.get("status", "")).strip()
@@ -102,6 +111,10 @@ def build_signed_quality_materials(
         raise KnowledgeHubError("terminal closure verdict must include boolean terminal")
     if not isinstance(blockers, list):
         raise KnowledgeHubError("terminal closure blockers must be a list")
+    if statuses["product"] == "needs-review" and terminal_value is not False:
+        raise KnowledgeHubError(
+            "nonterminal product evidence requires terminal=false closure evidence"
+        )
 
     evidence_rows = []
     for key, relative in EVIDENCE_PATHS.items():
