@@ -4,24 +4,10 @@ on:
   push:
     branches:
       - master
-    paths:
-      - ".github/workflows/signed-quality-attestation.yml"
-      - "registry/knowledge-platform-p5-p10.json"
-      - "registry/terminal-closure.json"
-      - "tools/codex_assets/knowledge_hub/attestation.py"
-      - "tools/codex_assets/knowledge_hub/signed_attestation.py"
-      - "tools/codex_assets/knowledge_hub/signed_attestation_cli.py"
-      - "tools/codex_assets/knowledge_hub/terminal_closure.py"
-      - "tests/test_connector_observability_attestation.py"
-      - "tests/test_signed_attestation.py"
   workflow_dispatch:
 
 permissions:
   contents: read
-
-concurrency:
-  group: signed-quality-attestation-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   sign-and-verify:
