@@ -1,0 +1,239 @@
+name: legacy-mcp-hardcut-once
+
+on:
+  push:
+    branches:
+      - codex/canonical-state-cleanup-v1
+    paths:
+      - ".github/workflows/legacy-mcp-hardcut-once.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: legacy-mcp-hardcut-once
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Retire legacy MCP compatibility surface
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout migration head
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+      - name: Verify exact migration parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "da2ed251485a6ea369ef669cd3b027de59f6ff21"
+          test "${GITHUB_REF}" = "refs/heads/codex/canonical-state-cleanup-v1"
+      - name: Apply native-only MCP hard cut
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          root = pathlib.Path(".")
+
+          def read(path):
+              return (root / path).read_text(encoding="utf-8")
+
+          def write(path, text):
+              (root / path).write_text(text, encoding="utf-8")
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return text.replace(old, new, 1)
+
+          def replace_function(text, start_marker, end_marker, replacement, label):
+              start = text.find(start_marker)
+              if start < 0:
+                  raise SystemExit(f"{label}: start marker missing")
+              end = text.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit(f"{label}: end marker missing")
+              return text[:start] + replacement.rstrip() + "\n\n\n" + text[end:]
+
+          # Public stdio MCP server: native-only, no compatibility flag or dispatcher.
+          path = "tools/codex_assets/knowledge_hub/mcp_v3_server.py"
+          text = read(path)
+          old_doc = '''"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub.\n\nThe legacy initialize/session-style adapter is available only with\n``--legacy-compat`` and is not the default protocol surface.\n"""'''
+          text = replace_once(
+              text,
+              old_doc,
+              '"""Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub."""',
+              "mcp server docstring",
+          )
+          text = replace_once(
+              text,
+              "from .runtime_v3 import DEFAULT_AGENT, handle_mcp_request",
+              "from .runtime_v3 import DEFAULT_AGENT",
+              "mcp server legacy import",
+          )
+          text = replace_once(
+              text,
+              "def _process(root, raw: str, agent_id: str, *, legacy_compat: bool = False):",
+              "def _process(root, raw: str, agent_id: str):",
+              "mcp server process signature",
+          )
+          text = replace_once(
+              text,
+              "        if legacy_compat:\n            return handle_mcp_request(root, request, agent_id=agent_id)\n        return handle_mcp_stateless_request(root, request, agent_id=agent_id)",
+              "        return handle_mcp_stateless_request(root, request, agent_id=agent_id)",
+              "mcp server dispatcher",
+          )
+          text = replace_once(
+              text,
+              '''    parser.add_argument(\n        "--legacy-compat",\n        action="store_true",\n        help="explicitly enable the deprecated initialize/session-style compatibility adapter",\n    )\n''',
+              "",
+              "mcp server legacy flag",
+          )
+          text = replace_once(
+              text,
+              "response = _process(root, args.one_shot, args.agent_id, legacy_compat=args.legacy_compat)",
+              "response = _process(root, args.one_shot, args.agent_id)",
+              "mcp server one-shot call",
+          )
+          text = replace_once(
+              text,
+              "response = _process(root, raw, args.agent_id, legacy_compat=args.legacy_compat)",
+              "response = _process(root, raw, args.agent_id)",
+              "mcp server stream call",
+          )
+          write(path, text)
+
+          # Native capability report must not advertise a retired adapter.
+          path = "tools/codex_assets/knowledge_hub/protocol_conformance.py"
+          text = read(path)
+          text = replace_once(
+              text,
+              '        "legacy_initialize_supported_by_compat_adapter": True,\n',
+              "",
+              "native capability legacy claim",
+          )
+          write(path, text)
+
+          # Remove the duplicate legacy MCP dispatcher while retaining mcp_tools(),
+          # which is the tool catalog consumed by the native profile.
+          path = "tools/codex_assets/knowledge_hub/runtime_v3.py"
+          text = read(path)
+          marker = "\ndef handle_mcp_request("
+          if text.count(marker) != 1:
+              raise SystemExit("runtime_v3 legacy handler marker is not unique")
+          text = text[: text.index(marker)].rstrip() + "\n"
+          write(path, text)
+
+          # Canonical platform registry: native MCP only.
+          path = root / "registry/knowledge-platform-p5-p10.json"
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          mcp = payload["protocols"]["mcp"]
+          for key in (
+              "legacy_compatibility_adapter",
+              "legacy_default",
+              "legacy_opt_in_flag",
+              "legacy_deprecation_status",
+          ):
+              if key not in mcp:
+                  raise SystemExit(f"registry MCP key already missing: {key}")
+              del mcp[key]
+          path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+          # Security/protocol tests now prove native initialize is rejected, period.
+          path = "tests/test_runtime_p5_security_protocols.py"
+          text = read(path)
+          text = replace_once(
+              text,
+              "from tools.codex_assets.knowledge_hub.runtime_v3 import handle_mcp_request\n",
+              "",
+              "P5 legacy import",
+          )
+          text = replace_function(
+              text,
+              "def test_mcp_native_rejects_initialize_but_legacy_adapter_remains_available():",
+              "def test_mcp_native_rejects_missing_required_meta_fields():",
+              '''def test_mcp_native_rejects_initialize():\n    root = repository_root()\n    with pytest.raises(MCPProtocolError) as caught:\n        handle_mcp_stateless_request(root, _mcp_request("initialize"))\n    assert caught.value.code == -32601\n    assert caught.value.http_status == 404''',
+              "P5 legacy compatibility test",
+          )
+          write(path, text)
+
+          # Cleanup tests assert the retired flag is no longer accepted.
+          path = "tests/test_runtime_cleanup.py"
+          text = read(path)
+          text = replace_once(text, "import json\n", "import json\n\nimport pytest\n", "cleanup pytest import")
+          text = replace_once(
+              text,
+              "from tools.codex_assets.knowledge_hub.mcp_v3_server import _process",
+              "from tools.codex_assets.knowledge_hub.mcp_v3_server import _process, main as mcp_stdio_main",
+              "cleanup server import",
+          )
+          text = replace_function(
+              text,
+              "def test_mcp_stdio_legacy_initialize_requires_explicit_opt_in():",
+              "def test_mcp_notifications_remain_no_response_in_both_profiles():",
+              '''def test_mcp_stdio_rejects_retired_legacy_compat_flag():\n    with pytest.raises(SystemExit) as caught:\n        mcp_stdio_main(["--legacy-compat"])\n    assert caught.value.code == 2''',
+              "cleanup legacy opt-in test",
+          )
+          text = text.replace(
+              "def test_mcp_notifications_remain_no_response_in_both_profiles():",
+              "def test_mcp_notifications_remain_no_response_in_native_profile():",
+              1,
+          )
+          text = replace_once(
+              text,
+              '    assert _process(repository_root(), raw, "knowledge-reader") is None\n    assert _process(repository_root(), raw, "knowledge-reader", legacy_compat=True) is None',
+              '    assert _process(repository_root(), raw, "knowledge-reader") is None',
+              "cleanup dual-profile notification assertion",
+          )
+          write(path, text)
+
+          # Runtime-v3 unit coverage retains the active native tool catalog only.
+          path = "tests/test_runtime_v3.py"
+          text = read(path)
+          text = replace_function(
+              text,
+              "def test_mcp_is_read_only_and_reports_current_protocol(tmp_path):",
+              "def test_a2a_high_risk_delegation_is_fail_closed(tmp_path):",
+              '''def test_mcp_tool_catalog_remains_read_only_surface():\n    assert {tool["name"] for tool in rv3.mcp_tools()} == {\n        "knowledge_search",\n        "knowledge_context",\n        "knowledge_evidence_pack",\n        "knowledge_action_check",\n    }''',
+              "runtime-v3 legacy MCP test",
+          )
+          write(path, text)
+
+          # Registry qualification test now rejects reintroduction of legacy fields.
+          path = "tests/test_runtime_qualification_registry.py"
+          text = read(path)
+          start = "def test_mcp_registry_marks_native_default_and_legacy_explicit_only():"
+          if text.count(start) != 1:
+              raise SystemExit("registry legacy test marker missing or duplicated")
+          prefix = text[: text.index(start)].rstrip()
+          replacement = '''def test_mcp_registry_is_native_only():\n    payload = _load("registry/knowledge-platform-p5-p10.json")\n    mcp = payload["protocols"]["mcp"]\n    assert mcp["native_default"] is True\n    assert mcp["native_profile"] == "stateless-2026-07-28"\n    assert mcp["official_conformance_evidence_required"] is True\n    for retired_key in (\n        "legacy_compatibility_adapter",\n        "legacy_default",\n        "legacy_opt_in_flag",\n        "legacy_deprecation_status",\n    ):\n        assert retired_key not in mcp\n'''
+          write(path, prefix + "\n\n\n" + replacement)
+          PY
+
+          rm .github/workflows/legacy-mcp-hardcut-once.yml
+
+          # Prove the current runtime/control-plane surface contains no legacy MCP route.
+          if git grep -nE -- 'legacy-compat|legacy_compatibility_adapter|legacy_opt_in_flag|legacy_deprecation_status|handle_mcp_request' -- tools tests registry README.md docs; then
+            echo "legacy MCP compatibility residue remains in current surfaces" >&2
+            exit 1
+          fi
+
+          python3 -m compileall -q tools/codex_assets/knowledge_hub tests
+          python3 -m json.tool registry/knowledge-platform-p5-p10.json >/dev/null
+          git diff --check
+          git status --short
+      - name: Commit hard cut as one candidate revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "refactor(mcp): retire legacy compatibility surface"
+          git push origin HEAD:refs/heads/codex/canonical-state-cleanup-v1
