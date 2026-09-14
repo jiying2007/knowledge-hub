@@ -29,6 +29,8 @@ def test_repository_engineering_contract_is_complete():
     assert payload["dependencies"]["build_backend"] == {"setuptools": "83.0.0"}
     assert payload["locks"]["requirements-runtime.lock"]["hash_complete"] is True
     assert payload["locks"]["requirements-dev.lock"]["hash_complete"] is True
+    assert payload["locks"]["requirements-runtime.lock"]["direct_version_mismatches"] == []
+    assert payload["locks"]["requirements-dev.lock"]["direct_version_mismatches"] == []
     assert payload["ci"]["all_actions_sha_pinned"] is True
     assert payload["ci"]["least_privilege_permissions"] is True
     assert payload["ci"]["dangerous_pull_request_target"] is False

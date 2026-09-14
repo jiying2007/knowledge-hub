@@ -1,83 +1,33 @@
-import pathlib
-import re
-
 from tools.codex_assets.knowledge_hub.common import repository_root
-
-
-_PIN = re.compile(r"^([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==([^\s;\\]+)")
-
-
-def _normalized_name(value: str) -> str:
-    return re.sub(r"[-_.]+", "-", value).lower()
-
-
-def _manifest_pins(path: pathlib.Path) -> dict[str, str]:
-    pins: dict[str, str] = {}
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or line.startswith("-r "):
-            continue
-        match = _PIN.match(line)
-        assert match is not None, "{} contains a non-exact dependency pin: {}".format(path, line)
-        pins[_normalized_name(match.group(1))] = match.group(2)
-    return pins
-
-
-def _lock_versions(path: pathlib.Path) -> dict[str, set[str]]:
-    versions: dict[str, set[str]] = {}
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or line.startswith("--"):
-            continue
-        match = _PIN.match(line)
-        if match is None:
-            continue
-        versions.setdefault(_normalized_name(match.group(1)), set()).add(match.group(2))
-    return versions
-
-
-def _mismatches(pins: dict[str, str], lock_versions: dict[str, set[str]]) -> list[str]:
-    result = []
-    for name, expected in sorted(pins.items()):
-        observed = sorted(lock_versions.get(name, set()))
-        if expected not in observed:
-            result.append(
-                "{}: manifest={} lock={}".format(
-                    name,
-                    expected,
-                    ",".join(observed) if observed else "<missing>",
-                )
-            )
-    return result
+from tools.codex_assets.knowledge_hub.engineering import evaluate_engineering_contract
+from tools.codex_assets.knowledge_hub.engineering_dependencies import (
+    lock_health,
+    lock_version_mismatches,
+)
 
 
 def test_repository_direct_dependency_versions_match_hash_locks():
-    root = repository_root()
-    runtime = _manifest_pins(root / "requirements-runtime.txt")
-    development = _manifest_pins(root / "requirements-dev.txt")
-    runtime_lock = _lock_versions(root / "requirements-runtime.lock")
-    development_lock = _lock_versions(root / "requirements-dev.lock")
+    payload = evaluate_engineering_contract(repository_root())
 
-    runtime_mismatches = _mismatches(runtime, runtime_lock)
-    development_mismatches = _mismatches({**runtime, **development}, development_lock)
+    assert payload["locks"]["requirements-runtime.lock"]["direct_version_mismatches"] == []
+    assert payload["locks"]["requirements-dev.lock"]["direct_version_mismatches"] == []
 
-    assert runtime_mismatches == [], "runtime manifest/lock version drift: {}".format(
-        "; ".join(runtime_mismatches)
-    )
-    assert development_mismatches == [], "development manifest/lock version drift: {}".format(
-        "; ".join(development_mismatches)
+
+def test_lock_version_contract_accepts_marker_specific_versions():
+    hashed = " --hash=sha256:" + "a" * 64 + "\n"
+    health = lock_health(
+        "demo==1.0 ; python_full_version < '3.9'" + hashed
+        + "demo==2.0 ; python_full_version >= '3.9'" + hashed
     )
 
+    assert health["versions"] == {"demo": ["1.0", "2.0"]}
+    assert lock_version_mismatches({"demo": "2.0"}, health["versions"]) == []
 
-def test_dependency_lock_contract_detects_stale_direct_version(tmp_path):
-    manifest = tmp_path / "requirements-dev.txt"
-    lock = tmp_path / "requirements-dev.lock"
-    manifest.write_text("ruff==0.16.6\n", encoding="utf-8")
-    lock.write_text(
-        "ruff==0.15.20 \\\n    --hash=sha256:" + "a" * 64 + "\n",
-        encoding="utf-8",
-    )
 
-    mismatches = _mismatches(_manifest_pins(manifest), _lock_versions(lock))
+def test_lock_version_contract_detects_stale_direct_version():
+    hashed = " --hash=sha256:" + "a" * 64 + "\n"
+    health = lock_health("ruff==0.15.20" + hashed)
 
-    assert mismatches == ["ruff: manifest=0.16.6 lock=0.15.20"]
+    assert lock_version_mismatches({"ruff": "0.16.6"}, health["versions"]) == [
+        {"package": "ruff", "expected": "0.16.6", "observed": ["0.15.20"]}
+    ]

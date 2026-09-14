@@ -44,6 +44,7 @@ files = [
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",
     "tools/codex_assets/knowledge_hub/engineering.py",
+    "tools/codex_assets/knowledge_hub/engineering_dependencies.py",
     "tools/codex_assets/knowledge_hub/export.py",
     "tools/codex_assets/knowledge_hub/health.py",
     "tools/codex_assets/knowledge_hub/lifecycle.py",

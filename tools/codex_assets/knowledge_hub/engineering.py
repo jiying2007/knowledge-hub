@@ -27,6 +27,11 @@ from .common import (
 from .artifact_governance import evaluate_artifact_governance
 from .command_surface import evaluate_command_surface
 from .complexity_budget import evaluate_complexity_budget
+from .engineering_dependencies import (
+    direct_pins as _direct_pins,
+    lock_health as _lock_health,
+    lock_version_mismatches as _lock_version_mismatches,
+)
 
 
 CONTRACT_MAX_BYTES = 4 * 1024 * 1024
@@ -60,16 +65,8 @@ REQUIRED_FILES = (
     "tools/ci/bootstrap-path.sh",
     "tools/ci/python-runtime.sh",
 )
-PIN_PATTERN = re.compile(
-    r"^([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==([^\s;\\]+)(?:\s*;\s*(.+?))?(?:\s+\\.*)?$"
-)
 ACTION_PATTERN = re.compile(r"\buses:\s*([^\s#]+)")
 FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
-HASH_PATTERN = re.compile(r"--hash=sha256:([0-9a-f]{64})(?:\s|$)")
-
-
-def _normalized_name(value: str) -> str:
-    return re.sub(r"[-_.]+", "-", value).lower()
 
 
 def _read(root: pathlib.Path, relative: str) -> str:
@@ -79,73 +76,6 @@ def _read(root: pathlib.Path, relative: str) -> str:
         "engineering contract file",
     )
 
-
-def _direct_pins(text: str, allow_include: bool = False) -> Tuple[Dict[str, str], List[str]]:
-    rows: Dict[str, str] = {}
-    errors: List[str] = []
-    for line_no, raw in enumerate(text.splitlines(), 1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if allow_include and line.startswith("-r "):
-            continue
-        match = PIN_PATTERN.match(line)
-        if not match:
-            errors.append("line {} is not an exact dependency pin".format(line_no))
-            continue
-        name = _normalized_name(match.group(1))
-        if name in rows:
-            errors.append("line {} duplicates dependency {}".format(line_no, name))
-        rows[name] = match.group(2)
-    return rows, errors
-
-
-def _logical_lock_entries(text: str) -> List[str]:
-    entries: List[str] = []
-    current: List[str] = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("--") and not current:
-            entries.append(line)
-            continue
-        continuation = line.endswith("\\")
-        current.append(line[:-1].strip() if continuation else line)
-        if not continuation:
-            entries.append(" ".join(current))
-            current = []
-    if current:
-        entries.append(" ".join(current))
-    return entries
-
-
-def _lock_health(text: str) -> Dict[str, Any]:
-    entries = _logical_lock_entries(text)
-    requirement_entries = [row for row in entries if not row.startswith("--")]
-    invalid_options = [row for row in entries if row.startswith("--")]
-    unhashed = []
-    unpinned = []
-    package_names = []
-    for row in requirement_entries:
-        head = row.split(" --hash=", 1)[0].strip()
-        match = PIN_PATTERN.match(head)
-        if not match:
-            unpinned.append(head)
-            continue
-        package_names.append(_normalized_name(match.group(1)))
-        if not HASH_PATTERN.findall(row):
-            unhashed.append(head)
-    hash_complete = bool(requirement_entries) and not unhashed and not unpinned
-    return {
-        "entry_count": len(requirement_entries),
-        "package_count": len(set(package_names)),
-        "packages": sorted(set(package_names)),
-        "hash_complete": hash_complete,
-        "unhashed_entries": unhashed[:20],
-        "unpinned_entries": unpinned[:20],
-        "unsupported_global_options": invalid_options[:20],
-    }
 
 
 def _python_contract(pyproject: Mapping[str, Any], workflow_text: str) -> Dict[str, Any]:
@@ -381,6 +311,35 @@ def evaluate_engineering_contract(root: pathlib.Path) -> Dict[str, Any]:
     dev_lock_packages = set(locks["requirements-dev.lock"]["packages"])
     if not (set(runtime_direct) | set(dev_direct)).issubset(dev_lock_packages):
         errors.append("dev lock does not cover every direct runtime and development dependency")
+
+    runtime_version_mismatches = _lock_version_mismatches(
+        runtime_direct,
+        locks["requirements-runtime.lock"]["versions"],
+    )
+    locks["requirements-runtime.lock"]["direct_version_mismatches"] = runtime_version_mismatches
+    for mismatch in runtime_version_mismatches:
+        errors.append(
+            "runtime lock direct dependency version mismatch for {}: expected {}, observed {}".format(
+                mismatch["package"],
+                mismatch["expected"],
+                ",".join(mismatch["observed"]) if mismatch["observed"] else "<missing>",
+            )
+        )
+    dev_expected = dict(runtime_direct)
+    dev_expected.update(dev_direct)
+    dev_version_mismatches = _lock_version_mismatches(
+        dev_expected,
+        locks["requirements-dev.lock"]["versions"],
+    )
+    locks["requirements-dev.lock"]["direct_version_mismatches"] = dev_version_mismatches
+    for mismatch in dev_version_mismatches:
+        errors.append(
+            "dev lock direct dependency version mismatch for {}: expected {}, observed {}".format(
+                mismatch["package"],
+                mismatch["expected"],
+                ",".join(mismatch["observed"]) if mismatch["observed"] else "<missing>",
+            )
+        )
 
     ci = _ci_contract(workflow_text)
     if not ci["all_actions_sha_pinned"]:
