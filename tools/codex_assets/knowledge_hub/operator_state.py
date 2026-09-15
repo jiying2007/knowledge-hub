@@ -7,6 +7,7 @@ from typing import Any, Dict, Mapping
 
 from .common import KnowledgeHubError, parse_json_output, run_rtk, utc_timestamp
 from .operator_actions import HUMAN_EXECUTION_CLASSES, build_action_queue, project_actions
+from .operator_discovery import build_discovery_projection
 from .product_gate_support import _project_readiness
 from .terminal_closure import DEFAULT_POLICY, _external_gaps, _load_object, evaluate_terminal_closure
 
@@ -133,6 +134,7 @@ def build_operator_state(root: pathlib.Path) -> Dict[str, Any]:
     external = _external_state(root)
     terminal = _terminal_state(root)
     action_queue = build_action_queue(readiness["projects"], external)
+    discovery = build_discovery_projection(root, action_queue)
     next_actions = list(status.get("next_actions_zh", []))[:20]
     return {
         "schema_version": 1,
@@ -143,6 +145,7 @@ def build_operator_state(root: pathlib.Path) -> Dict[str, Any]:
         "status_summary": status,
         "readiness": readiness,
         "action_queue": action_queue,
+        "discovery": discovery,
         "external_closure": external,
         "terminal_closure": terminal,
         "next_actions_zh": next_actions,
