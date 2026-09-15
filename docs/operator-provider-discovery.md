@@ -4,14 +4,16 @@ Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller �
 
 ## 使用
 
+P2.2 不增加新的公共 `tools/knowledge-*.sh` wrapper，避免扩张 canonical command surface。显式调用内部 module CLI：
+
 ```bash
-bash tools/knowledge-operator-discovery.sh --json
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --json
 ```
 
 限制到单个项目或 evidence field：
 
 ```bash
-bash tools/knowledge-operator-discovery.sh --project agent-dev-kit --field release_ref --json
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --project agent-dev-kit --field release_ref --json
 ```
 
 支持的 field 为 `source_refs`、`validation_refs`、`artifact_refs`、`release_ref`。
@@ -47,4 +49,4 @@ Provider result 始终声明：
 
 ## 与 Operator UI 的关系
 
-Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；本工具显式执行 GitHub provider query；候选经后续治理验证后，才可能通过独立的 governed PR 写入 canonical evidence。
+Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；候选经后续治理验证后，才可能通过独立的 governed PR 写入 canonical evidence。
