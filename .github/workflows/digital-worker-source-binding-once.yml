@@ -40,22 +40,18 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          from __future__ import annotations
-
           import json
           from pathlib import Path
 
           ITEM_ID = "digital-worker-readiness-validation-20260713"
-          REPO = "https://github.com/jiying2007/digital-worker.git"
-          COMMIT = "048e1c0460ded66111f29d44a8cab78f09faaef4"
-          TODAY = "2026-09-15"
+          SOURCE_REF = "jiying2007/digital-worker@048e1c0460ded66111f29d44a8cab78f09faaef4"
 
           registry = Path("registry/items.jsonl")
           original = registry.read_text(encoding="utf-8")
-          had_final_newline = original.endswith("\n")
+          final_newline = original.endswith("\n")
           old_lines = original.splitlines()
-          new_lines: list[str] = []
-          target_count = 0
+          new_lines = []
+          matches = 0
 
           for line in old_lines:
               obj = json.loads(line)
@@ -63,7 +59,7 @@ jobs:
                   new_lines.append(line)
                   continue
 
-              target_count += 1
+              matches += 1
               contract = obj.get("evidence_contract")
               if not isinstance(contract, dict):
                   raise SystemExit("digital-worker evidence_contract missing or invalid")
@@ -82,90 +78,37 @@ jobs:
               if contract.get("rollback_ref") is not None:
                   raise SystemExit("rollback_ref unexpectedly populated")
 
-              contract["source_refs"] = [
-                  {
-                      "kind": "registered-repository",
-                      "note": "canonical repository mapping",
-                      "ref": REPO,
-                  },
-                  {
-                      "kind": "git-commit",
-                      "note": "main",
-                      "ref": COMMIT,
-                  },
-              ]
-              obj["updated_at"] = TODAY
+              contract["source_refs"] = [{"kind": "source-commit", "ref": SOURCE_REF}]
               new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
 
-          if target_count != 1:
-              raise SystemExit(f"expected exactly one {ITEM_ID!r}, found {target_count}")
+          if matches != 1:
+              raise SystemExit(f"expected exactly one target item, found {matches}")
           if len(new_lines) != len(old_lines):
               raise SystemExit("registry line count changed unexpectedly")
           for old, new in zip(old_lines, new_lines):
-              old_obj = json.loads(old)
-              if old_obj.get("id") != ITEM_ID and old != new:
+              if json.loads(old).get("id") != ITEM_ID and old != new:
                   raise SystemExit("non-target registry line changed")
 
-          rendered = "\n".join(new_lines) + ("\n" if had_final_newline else "")
-          registry.write_text(rendered, encoding="utf-8")
+          registry.write_text("\n".join(new_lines) + ("\n" if final_newline else ""), encoding="utf-8")
 
-          readiness = Path("projects/digital-worker/validation/project-readiness.md")
-          text = readiness.read_text(encoding="utf-8")
-
-          replacements = [
-              (
-                  "updated_at: '2026-07-13'",
-                  f"updated_at: '{TODAY}'",
-              ),
-              (
-                  "project_id: digital-worker\nreadiness_slot: validation",
-                  "project_id: digital-worker\n"
-                  f"source_repo: {REPO}\n"
-                  f"source_commit: {COMMIT}\n"
-                  "source_mapping_status: ready\n"
-                  "readiness_slot: validation",
-              ),
-              (
-                  "结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，真实 owner、工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。",
-                  "结构性工作台已建立；canonical source mapping 已由 live GitHub repository、`main` 与 exact commit 固定，本机 workspace 仍按运行环境动态发现且不是 hosted source prerequisite。真实 owner、工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论仍是 `structurally-ready / evidence-pending`，不是 release-ready。",
-              ),
-              (
-                  "- [x] search known-answer 与 link audit 通过。\n- [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。",
-                  "- [x] search known-answer 与 link audit 通过。\n"
-                  f"- [x] canonical source mapping：`{REPO}` / `main` / `{COMMIT}`；仅证明源码映射，不代表工程验证、发布或 owner 签收。\n"
-                  "- [ ] 本机 workspace 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown，也不得作为 hosted source prerequisite。",
-              ),
-              (
-                  "- [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。",
-                  f"- [x] 来源映射：live GitHub repository / `main` / exact commit `{COMMIT}` 已确认；Hub 不代替源仓工程、发布或 owner 事实。",
-              ),
-              (
-                  "| source repo / commit / version | pending |",
-                  f"| source repo / commit / version | `{REPO}` / `main` / `{COMMIT}`；version 未声明 |",
-              ),
-          ]
-
-          for old, new in replacements:
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f"readiness replacement precondition failed ({count=}): {old[:80]!r}")
-              text = text.replace(old, new, 1)
-
-          readiness.write_text(text, encoding="utf-8")
-
-          target = next(json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines() if json.loads(line).get("id") == ITEM_ID)
+          target = next(
+              json.loads(line)
+              for line in registry.read_text(encoding="utf-8").splitlines()
+              if json.loads(line).get("id") == ITEM_ID
+          )
           contract = target["evidence_contract"]
           assert contract["status"] == "pending"
+          assert contract["source_refs"] == [{"kind": "source-commit", "ref": SOURCE_REF}]
           assert contract["owner_ref"] is None
           assert contract["validation_refs"] == []
           assert contract["artifact_refs"] == []
           assert contract["release_ref"] is None
           assert contract["rollback_ref"] is None
-          assert len(contract["source_refs"]) == 2
           PY
 
+          test "$(git diff --name-only)" = "registry/items.jsonl"
           git diff --check
-          git diff -- registry/items.jsonl projects/digital-worker/validation/project-readiness.md
+          git diff -- registry/items.jsonl
 
       - name: Run focused control-plane validation
         shell: bash
@@ -176,9 +119,14 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-          json.loads(Path('/tmp/knowledge-check.json').read_text(encoding='utf-8'))
-          json.loads(Path('/tmp/final-gate.json').read_text(encoding='utf-8'))
-          print('focused validation JSON parsed successfully')
+
+          check = json.loads(Path("/tmp/knowledge-check.json").read_text(encoding="utf-8"))
+          gate = json.loads(Path("/tmp/final-gate.json").read_text(encoding="utf-8"))
+          if gate.get("terminal") is not False:
+              raise SystemExit(f"unexpected terminal state: {gate.get('terminal')!r}")
+          if gate.get("status") in {"needs-fix", "blocked"}:
+              raise SystemExit(f"unexpected product gate status: {gate.get('status')!r}")
+          print(json.dumps({"knowledge_check_parsed": bool(check), "status": gate.get("status"), "terminal": gate.get("terminal")}, ensure_ascii=False))
           PY
 
       - name: Commit source-only binding
@@ -187,7 +135,8 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add registry/items.jsonl projects/digital-worker/validation/project-readiness.md
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git add registry/items.jsonl
           git diff --cached --check
           git commit -m "docs: bind digital-worker canonical source evidence"
           git push origin HEAD:codex/digital-worker-source-binding
