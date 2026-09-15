@@ -73,15 +73,16 @@ def _telemetry_result(
     error_code: str,
     receipt_sha256: str = "",
 ) -> Dict[str, Any]:
-    return {
+    result: Dict[str, Any] = {
         "status": status,
         "recorded": recorded,
         "non_blocking": True,
         "reason": reason,
         "error_code": error_code,
-        "receipt_sha256": receipt_sha256,
-        "raw_query_stored": False,
     }
+    if receipt_sha256:
+        result["receipt_sha256"] = receipt_sha256
+    return result
 
 
 def append_optional_telemetry(
