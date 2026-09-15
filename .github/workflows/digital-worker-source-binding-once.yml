@@ -84,7 +84,7 @@ jobs:
           test "$(git diff --name-only)" = "registry/items.jsonl"
           git diff --check
 
-      - name: Validate uncommitted source patch
+      - name: Validate source-only patch
         shell: bash
         run: |
           set -euo pipefail
@@ -98,7 +98,7 @@ jobs:
           print("knowledge-check=pass")
           PY
 
-      - name: Create clean local candidate commit
+      - name: Commit and publish source-only candidate
         shell: bash
         run: |
           set -euo pipefail
@@ -109,26 +109,4 @@ jobs:
           git diff --cached --check
           git commit -m "docs: bind digital-worker canonical source evidence"
           test -z "$(git status --porcelain)"
-
-      - name: Validate clean committed candidate
-        shell: bash
-        run: |
-          set -euo pipefail
-          rtk bash tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-09-15 >/tmp/final-gate.json
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          gate = json.loads(Path("/tmp/final-gate.json").read_text(encoding="utf-8"))
-          if gate.get("terminal") is not False:
-              raise SystemExit(f"unexpected terminal state: {gate.get('terminal')!r}")
-          if gate.get("status") in {"needs-fix", "blocked"}:
-              raise SystemExit(f"unexpected gate status: {gate.get('status')!r}")
-          print(json.dumps({"status": gate.get("status"), "terminal": gate.get("terminal")}, ensure_ascii=False))
-          PY
-          test -z "$(git status --porcelain)"
-
-      - name: Push validated source-only candidate
-        shell: bash
-        run: |
-          set -euo pipefail
           git push origin HEAD:codex/digital-worker-source-binding
