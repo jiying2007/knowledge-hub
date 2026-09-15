@@ -1,0 +1,193 @@
+name: external-pilot-evidence-producer
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_gap:
+        description: External gap represented by the observation artifact
+        required: true
+        type: choice
+        options:
+          - connector-provider-pilot
+          - production-retrieval-eval
+          - memory-lifecycle-pilot
+      source_run_id:
+        description: Successful same-repository run containing the real observation artifact
+        required: true
+        type: string
+      artifact_name:
+        description: Exact observation artifact name
+        required: true
+        type: string
+      observation_file:
+        description: Observation JSON filename at the artifact root
+        required: true
+        default: pilot-observation.json
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: external-pilot-evidence-producer-${{ github.ref }}-${{ inputs.expected_gap }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+jobs:
+  produce:
+    name: Project hosted real observation into strict evidence
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable producer revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Validate producer selectors
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          OBSERVATION_FILE: ${{ inputs.observation_file }}
+        run: |
+          set -euo pipefail
+          [[ "${SOURCE_RUN_ID}" =~ ^[0-9]+$ ]] || { echo "source_run_id must be numeric" >&2; exit 2; }
+          [[ "${ARTIFACT_NAME}" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "artifact_name contains unsupported characters" >&2; exit 2; }
+          [[ "${OBSERVATION_FILE}" =~ ^[A-Za-z0-9._-]+\.json$ ]] || { echo "observation_file must be a root JSON filename" >&2; exit 2; }
+      - name: Verify successful same-repository observation run and artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/external-pilot-evidence
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" > .cache/knowledge-hub/external-pilot-evidence/source-run.json
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts?per_page=100" > .cache/knowledge-hub/external-pilot-evidence/source-artifacts.json
+          rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('.cache/knowledge-hub/external-pilot-evidence')
+          run = json.loads((root / 'source-run.json').read_text(encoding='utf-8'))
+          expected_repo = os.environ['GITHUB_REPOSITORY']
+          if run.get('status') != 'completed' or run.get('conclusion') != 'success':
+              raise SystemExit('observation source run must be completed/success')
+          if (run.get('repository') or {}).get('full_name') != expected_repo:
+              raise SystemExit('observation source run must belong to the current repository')
+          head_sha = str(run.get('head_sha') or '').lower()
+          if len(head_sha) != 40 or any(ch not in '0123456789abcdef' for ch in head_sha):
+              raise SystemExit('observation source run must expose an exact git revision')
+
+          artifacts = json.loads((root / 'source-artifacts.json').read_text(encoding='utf-8'))
+          wanted = os.environ['ARTIFACT_NAME']
+          matches = [item for item in artifacts.get('artifacts', []) if item.get('name') == wanted]
+          if len(matches) != 1:
+              raise SystemExit('expected exactly one observation artifact with the requested name')
+          artifact = matches[0]
+          if artifact.get('expired') is True:
+              raise SystemExit('observation artifact is expired')
+          digest = str(artifact.get('digest') or '')
+          if not digest.startswith('sha256:') or len(digest) != 71:
+              raise SystemExit('observation artifact must expose a sha256 digest')
+          bounded = {
+              'schema_version': 1,
+              'projection': 'knowledge-hub-external-pilot-observation-source-v1',
+              'repository': expected_repo,
+              'source_run_id': int(run['id']),
+              'source_run_head_sha': head_sha,
+              'source_run_event': str(run.get('event') or ''),
+              'artifact_id': int(artifact['id']),
+              'artifact_name': str(artifact['name']),
+              'artifact_digest': digest,
+          }
+          (root / 'source-provenance.json').write_text(
+              json.dumps(bounded, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+      - name: Download exact observation artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/external-pilot-observation
+          gh run download "${SOURCE_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --name "${ARTIFACT_NAME}" --dir .tmp/external-pilot-observation
+      - name: Project observation into strict external evidence
+        env:
+          EXPECTED_GAP: ${{ inputs.expected_gap }}
+          OBSERVATION_FILE: ${{ inputs.observation_file }}
+        run: |
+          set -euo pipefail
+          test -f ".tmp/external-pilot-observation/${OBSERVATION_FILE}"
+          test ! -L ".tmp/external-pilot-observation/${OBSERVATION_FILE}"
+          rtk python3 -m tools.codex_assets.knowledge_hub.pilot_evidence_cli \
+            --input ".tmp/external-pilot-observation/${OBSERVATION_FILE}" \
+            --expected-gap "${EXPECTED_GAP}" \
+            --output .cache/knowledge-hub/external-pilot-evidence/external-evidence.json
+      - name: Bind evidence to observation source and prove no canonical write
+        env:
+          EXPECTED_GAP: ${{ inputs.expected_gap }}
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- registry/knowledge-platform-p5-p10.json
+          rtk python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('.cache/knowledge-hub/external-pilot-evidence')
+          evidence_path = root / 'external-evidence.json'
+          evidence = json.loads(evidence_path.read_text(encoding='utf-8'))
+          source = json.loads((root / 'source-provenance.json').read_text(encoding='utf-8'))
+          gap = os.environ['EXPECTED_GAP']
+          if evidence.get('gap_id') != gap:
+              raise SystemExit('projected evidence gap does not match requested gap')
+          if evidence.get('source_revision') != source['source_run_head_sha']:
+              raise SystemExit('evidence source_revision must equal observation source run head')
+          if gap == 'connector-provider-pilot':
+              provider = evidence.get('provider') or {}
+              if provider.get('adapter_commit') != source['source_run_head_sha']:
+                  raise SystemExit('connector adapter_commit must equal observation source run head')
+          receipt = {
+              'schema_version': 1,
+              'projection': 'knowledge-hub-external-pilot-evidence-producer-v1',
+              'status': 'pass',
+              'gap_id': gap,
+              'canonical_write_performed': False,
+              'raw_observation_uploaded': False,
+              'source_provenance': source,
+              'evidence_sha256': hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
+              'producer_run_id': int(os.environ['GITHUB_RUN_ID']),
+              'producer_run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
+              'producer_revision': os.environ['GITHUB_SHA'],
+          }
+          (root / 'producer-receipt.json').write_text(
+              json.dumps(receipt, sort_keys=True, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+          PY
+      - name: Upload bounded strict evidence artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-external-pilot-evidence-${{ inputs.expected_gap }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .cache/knowledge-hub/external-pilot-evidence/source-provenance.json
+            .cache/knowledge-hub/external-pilot-evidence/external-evidence.json
+            .cache/knowledge-hub/external-pilot-evidence/producer-receipt.json
+          if-no-files-found: error
+          retention-days: 90
