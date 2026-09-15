@@ -16,13 +16,15 @@ from tools.codex_assets.knowledge_hub.common import (
 )
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
 from tools.codex_assets.knowledge_hub.project_readiness import (
-    PROFILE_VALIDATION_EXPECTATIONS,
     RETIRED_PROJECTION_SLOTS,
     SLOT_NAMES,
     _preserve_existing_readiness_item,
     _project_paths,
-    _validate_existing_validation_body,
     generate_project_readiness,
+)
+from tools.codex_assets.knowledge_hub.project_readiness_validation import (
+    PROFILE_VALIDATION_EXPECTATIONS,
+    validate_existing_validation_body,
 )
 from tools.codex_assets.knowledge_hub.project_readiness_cli import main as project_readiness_main
 
@@ -331,7 +333,7 @@ def test_readiness_documents_are_count_neutral_and_profile_aligned():
         path = root / _project_paths(project)["validation"]
         text = path.read_text(encoding="utf-8")
         assert not numeric_route.search(text), project["id"]
-        _validate_existing_validation_body(project, text)
+        validate_existing_validation_body(project, text)
 
 
 def test_validation_expectations_follow_evidence_profile_not_repo_topology():
@@ -358,7 +360,7 @@ def test_existing_manual_readiness_evidence_is_preserved():
     assert "check-all.sh --full` 均为 62/62" in text
     assert "313 篇 corpus" in text
     assert "- [x] 工程验证：" in text
-    _validate_existing_validation_body(project, text)
+    validate_existing_validation_body(project, text)
 
 
 def test_existing_readiness_body_profile_drift_fails_closed():
@@ -370,5 +372,5 @@ def test_existing_readiness_body_profile_drift_fails_closed():
         KnowledgeHubError,
         match="existing readiness evidence-profile statement drift: x5-rdk",
     ):
-        _validate_existing_validation_body(project, text)
+        validate_existing_validation_body(project, text)
 
