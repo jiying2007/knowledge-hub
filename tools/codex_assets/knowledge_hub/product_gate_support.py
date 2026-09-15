@@ -445,6 +445,7 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         evaluation = evaluate_evidence_contract(
             validation_item.get("evidence_contract", {}),
             ready_member_ids=sorted(ready_project_ids),
+            current_project_id=project_id,
         )
         evidence = (
             row["structural_status"] == "pass"

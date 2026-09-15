@@ -45,3 +45,56 @@ def test_complete_software_contract_is_ready():
         }
     )
     assert evaluate_evidence_contract(contract)["status"] == "ready"
+
+
+def _ready_aggregate_contract(*members):
+    contract = new_evidence_contract("aggregate-group", members)
+    contract.update(
+        {
+            "status": "ready",
+            "owner_ref": _ref("owner-decision", "decision://aggregate-owner"),
+        }
+    )
+    return contract
+
+
+def test_aggregate_self_membership_is_not_a_readiness_dependency():
+    contract = _ready_aggregate_contract("x5-rdk")
+    result = evaluate_evidence_contract(
+        contract,
+        ready_member_ids=[],
+        current_project_id="x5-rdk",
+    )
+    assert result["status"] == "ready"
+    assert result["missing_fields"] == []
+
+
+def test_aggregate_self_and_ready_real_member_are_ready():
+    contract = _ready_aggregate_contract("mcu", "gd32l235")
+    result = evaluate_evidence_contract(
+        contract,
+        ready_member_ids=["gd32l235"],
+        current_project_id="mcu",
+    )
+    assert result["status"] == "ready"
+    assert result["missing_fields"] == []
+
+
+def test_aggregate_missing_real_member_remains_fail_closed():
+    contract = _ready_aggregate_contract("mcu", "gd32l235")
+    result = evaluate_evidence_contract(
+        contract,
+        ready_member_ids=[],
+        current_project_id="mcu",
+    )
+    assert result["status"] == "pending"
+    assert "member_project_ids" in result["missing_fields"]
+    assert "status" in result["invalid_fields"]
+
+
+def test_aggregate_without_current_project_keeps_legacy_member_check():
+    contract = _ready_aggregate_contract("x5-rdk")
+    result = evaluate_evidence_contract(contract, ready_member_ids=[])
+    assert result["status"] == "pending"
+    assert "member_project_ids" in result["missing_fields"]
+
