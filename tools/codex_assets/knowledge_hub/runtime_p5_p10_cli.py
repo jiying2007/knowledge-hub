@@ -26,6 +26,12 @@ from .runtime_p5_security import repository_posture
 from .temporal_graph import temporal_context_graph
 
 
+class _NoAbbrevArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("allow_abbrev", False)
+        super().__init__(*args, **kwargs)
+
+
 def _json_object(value: str, label: str) -> Dict[str, Any]:
     try:
         parsed = json.loads(value)
@@ -67,7 +73,7 @@ def _memory_identity(parser: argparse.ArgumentParser) -> None:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser = _NoAbbrevArgumentParser(description=__doc__)
     parser.add_argument("--root", default="")
     sub = parser.add_subparsers(dest="operation", required=True)
 
