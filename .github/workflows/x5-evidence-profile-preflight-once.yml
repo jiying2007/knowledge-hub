@@ -1,0 +1,47 @@
+name: x5-evidence-profile-preflight-once
+
+on:
+  push:
+    branches:
+      - codex/x5-evidence-profile
+    paths:
+      - .github/workflows/x5-evidence-profile-preflight-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/x5-evidence-profile
+          fetch-depth: 0
+      - name: Print bounded X5 readiness evidence
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          projects = json.loads(Path('registry/projects.json').read_text(encoding='utf-8'))['projects']
+          groups = json.loads(Path('registry/project-groups.json').read_text(encoding='utf-8'))['groups']
+          repos = json.loads(Path('registry/repositories.json').read_text(encoding='utf-8'))['repositories']
+          items = [json.loads(line) for line in Path('registry/items.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
+
+          project = next(row for row in projects if row.get('id') == 'x5-rdk')
+          group = next(row for row in groups if row.get('id') == 'x5-rdk')
+          repo_rows = [row for row in repos if row.get('project_id') == 'x5-rdk']
+          item = next(row for row in items if row.get('id') == 'x5-rdk-readiness-validation-20260713')
+          payload = {
+              'project': project,
+              'group': group,
+              'repositories': repo_rows,
+              'item_status': item.get('status'),
+              'decision_owner': item.get('decision_owner'),
+              'evidence_profile': item.get('evidence_profile'),
+              'evidence_contract': item.get('evidence_contract'),
+          }
+          print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
+          PY
