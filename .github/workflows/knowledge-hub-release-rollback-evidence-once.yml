@@ -1,0 +1,151 @@
+name: knowledge-hub-release-rollback-evidence-once
+
+on:
+  push:
+    branches:
+      - codex/knowledge-hub-release-rollback-evidence
+    paths:
+      - .github/workflows/knowledge-hub-release-rollback-evidence-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  ratchet-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Bind exact-master release and restore evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          ITEM_ID = "knowledge-hub-readiness-validation-20260713"
+          MASTER = "39b781620051f49ef29925e2befef6d7153599bf"
+          RUN_ID = "34929234148"
+          ARTIFACT_ID = "10380913306"
+          ARTIFACT_DIGEST = "eccb48debbe418590faa5da1c28fc08880f6befd2804f9e380b59f84929c68e9"
+          RESTORE_DIGEST = "10cd0a164a246acc8aee1a58d17225272bd8f44886d168d354156eb2b9b59b6c"
+          SOURCE_REF = f"jiying2007/knowledge-hub@{MASTER}"
+          ARTIFACT_REF = (
+              f"github-actions://jiying2007/knowledge-hub/runs/{RUN_ID}/artifacts/{ARTIFACT_ID}"
+              f"#sha256={ARTIFACT_DIGEST}"
+          )
+          RESTORE_REF = ARTIFACT_REF + (
+              f"/.cache/knowledge-hub/restore-drill-head.json#evidence_sha256={RESTORE_DIGEST}"
+          )
+
+          registry = Path("registry/items.jsonl")
+          original = registry.read_text(encoding="utf-8")
+          final_newline = original.endswith("\n")
+          old_lines = original.splitlines()
+          new_lines = []
+          matches = 0
+
+          for line in old_lines:
+              obj = json.loads(line)
+              if obj.get("id") != ITEM_ID:
+                  new_lines.append(line)
+                  continue
+              matches += 1
+              contract = obj.get("evidence_contract")
+              if not isinstance(contract, dict):
+                  raise SystemExit("knowledge-hub evidence_contract missing")
+              if contract.get("profile") != "control-plane" or contract.get("status") != "pending":
+                  raise SystemExit("unexpected knowledge-hub contract profile/status")
+              if contract.get("release_ref") is not None or contract.get("rollback_ref") is not None:
+                  raise SystemExit("release/rollback already populated; refuse overwrite")
+              if not contract.get("owner_ref") or not contract.get("source_refs") or not contract.get("validation_refs"):
+                  raise SystemExit("existing owner/source/validation prerequisites are not ready")
+
+              if not any(row.get("ref") == SOURCE_REF for row in contract["source_refs"]):
+                  contract["source_refs"].append({
+                      "kind": "source-commit",
+                      "ref": SOURCE_REF,
+                      "outcome": "fresh-master-signed-quality-pass",
+                  })
+              validation_ref = {
+                  "kind": "signed-quality-attestation",
+                  "ref": ARTIFACT_REF,
+                  "outcome": "quality-mcp-signed-oidc-offsite-pass-terminal-remains-false",
+              }
+              if not any(row.get("ref") == ARTIFACT_REF for row in contract["validation_refs"]):
+                  contract["validation_refs"].append(validation_ref)
+              contract["release_ref"] = {
+                  "kind": "signed-release-attestation",
+                  "ref": ARTIFACT_REF,
+                  "status": "published",
+                  "outcome": "exact-master-remote-published-oidc-signed-and-verified",
+              }
+              contract["rollback_ref"] = {
+                  "kind": "restore-drill",
+                  "ref": RESTORE_REF,
+                  "outcome": "committed-head-git-archive-offsite-restore-pass-zero-missing-zero-hash-mismatch",
+              }
+              new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
+
+          if matches != 1:
+              raise SystemExit(f"expected exactly one target row, found {matches}")
+          if len(new_lines) != len(old_lines):
+              raise SystemExit("registry line count changed")
+          for old, new in zip(old_lines, new_lines):
+              if json.loads(old).get("id") != ITEM_ID and old != new:
+                  raise SystemExit("non-target registry line changed")
+          registry.write_text("\n".join(new_lines) + ("\n" if final_newline else ""), encoding="utf-8")
+
+          target = next(json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines() if json.loads(line).get("id") == ITEM_ID)
+          c = target["evidence_contract"]
+          assert c["status"] == "pending"
+          assert c["release_ref"]["ref"] == ARTIFACT_REF
+          assert c["rollback_ref"]["ref"] == RESTORE_REF
+          PY
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git diff --check
+
+      - name: Validate source-only registry ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/check.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload=json.loads(Path('/tmp/check.json').read_text(encoding='utf-8'))
+          if payload.get('status') != 'pass':
+              raise SystemExit(f"knowledge-check status={payload.get('status')!r}")
+          PY
+
+      - name: Commit and publish evidence candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git add registry/items.jsonl
+          git diff --cached --check
+          git commit -m "docs: bind knowledge-hub release and restore evidence"
+          git push origin HEAD:codex/knowledge-hub-release-rollback-evidence
