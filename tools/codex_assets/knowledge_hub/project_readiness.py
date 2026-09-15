@@ -574,6 +574,12 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
             if evidence_profile == "aggregate-group"
             else []
         )
+        if evidence_profile == "aggregate-group" and not member_project_ids:
+            raise KnowledgeHubError(
+                "aggregate-group project must declare at least one non-self member project: {}".format(
+                    project_id
+                )
+            )
         paths = _project_paths(project)
         project_paths[project_id] = paths
         repos = _repo_rows_for_project(project, repositories)

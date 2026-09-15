@@ -2,11 +2,15 @@ import datetime as dt
 import json
 import shutil
 
+import pytest
+
 from tools.codex_assets.knowledge_hub.common import (
+    KnowledgeHubError,
     load_json,
     project_rows,
     registry_items,
     repository_root,
+    repository_rows,
     route_rows,
 )
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
@@ -258,3 +262,58 @@ def test_generator_accepts_an_additional_registry_project_without_core_code_chan
     validation = fixture_root / "projects/scalable-project-31/validation/project-readiness.md"
     assert validation.is_file()
     assert "{} 项目 route matrix".format(expected_project_count) in validation.read_text()
+
+
+def test_x5_multi_repository_project_uses_embedded_target_evidence():
+    root = repository_root()
+    project = next(row for row in project_rows(root) if row["id"] == "x5-rdk")
+    item = next(
+        row
+        for row in registry_items(root)
+        if row["id"] == "x5-rdk-readiness-validation-20260713"
+    )
+    repos = [row for row in repository_rows(root) if row.get("project_id") == "x5-rdk"]
+
+    assert project["type"] == "product-group"
+    assert project["repo_boundary"] == "group"
+    assert project["evidence_profile"] == "embedded-target"
+    assert {row["repo_id"] for row in repos} == {
+        "x5-integration",
+        "x5-manifest",
+        "x5-vendor-docs",
+    }
+    assert item["evidence_profile"] == "embedded-target"
+    assert item["evidence_contract"]["profile"] == "embedded-target"
+    assert item["evidence_contract"]["status"] == "pending"
+    assert item["evidence_contract"]["member_project_ids"] == []
+
+
+def test_aggregate_group_requires_a_non_self_member_project(tmp_path):
+    source_root = repository_root()
+    fixture_root = tmp_path / "hub"
+    shutil.copytree(
+        source_root,
+        fixture_root,
+        ignore=shutil.ignore_patterns(".git", ".cache", ".tmp", "__pycache__"),
+    )
+    projects_path = fixture_root / "registry/projects.json"
+    projects_payload = json.loads(projects_path.read_text(encoding="utf-8"))
+    project = next(
+        row for row in projects_payload["projects"] if row["id"] == "x5-rdk"
+    )
+    project["evidence_profile"] = "aggregate-group"
+    projects_path.write_text(
+        json.dumps(projects_payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="aggregate-group project must declare at least one non-self member project",
+    ):
+        generate_project_readiness(
+            fixture_root,
+            dt.date(2026, 7, 13),
+            apply=False,
+        )
+
