@@ -68,7 +68,9 @@ def memory_event(
     if event_type not in {"upsert", "forget", "supersede"}:
         raise KnowledgeHubError("invalid memory event type")
     summary = str(summary).strip()
-    if event_type == "upsert" and (not summary or len(summary) > MAX_SUMMARY_CHARS):
+    if event_type == "upsert" and (
+        not summary or len(summary) > MAX_SUMMARY_CHARS
+    ):
         raise KnowledgeHubError("memory summary must be non-empty and bounded")
     if ttl_seconds < 0 or ttl_seconds > 365 * 24 * 3600:
         raise KnowledgeHubError("memory TTL is outside policy")
@@ -91,7 +93,9 @@ def memory_event(
         "recorded_at": utc_timestamp(),
         "canonical_write": False,
     }
-    payload["memory_id"] = str(memory_id) if memory_id else "mem-" + _digest(payload)[:24]
+    payload["memory_id"] = (
+        str(memory_id) if memory_id else "mem-" + _digest(payload)[:24]
+    )
     return payload
 
 
@@ -185,16 +189,29 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
             record = dict(event)
             record["previous_event_sha256"] = previous
             record["event_sha256"] = _digest(record)
-            flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
+            flags = (
+                os.O_APPEND
+                | os.O_CREAT
+                | os.O_WRONLY
+                | getattr(os, "O_NOFOLLOW", 0)
+            )
             descriptor = os.open(str(path), flags, 0o600)
             os.fchmod(descriptor, 0o600)
             with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-                handle.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+                handle.write(
+                    json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+                    + "\n"
+                )
                 handle.flush()
                 os.fsync(handle.fileno())
         finally:
             fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
-    return {"status": "recorded", "record": record, "canonical_write_performed": False}
+    return {
+        "status": "recorded",
+        "record": record,
+        "receipt_sha256": record["event_sha256"],
+        "canonical_write_performed": False,
+    }
 
 
 def _expired(row: Mapping[str, Any], now: dt.datetime) -> bool:
@@ -277,6 +294,52 @@ def supersede_memory(
     return append_memory_event(root, event)
 
 
+def forget_scope(
+    root: pathlib.Path,
+    *,
+    principal_id: str,
+    agent_id: str,
+    scope_ref: str,
+) -> Dict[str, Any]:
+    """Forget every active memory in one exact principal/agent/scope boundary."""
+    if not str(scope_ref).strip():
+        raise KnowledgeHubError("scope_ref is required for scoped memory deletion")
+    active = active_memories(
+        root,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
+    receipts = []
+    for row in active:
+        result = forget_memory(
+            root,
+            memory_id=str(row.get("memory_id", "")),
+            principal_id=principal_id,
+            agent_id=agent_id,
+            scope_ref=scope_ref,
+        )
+        receipts.append(str(result.get("receipt_sha256", "")))
+    remaining = active_memories(
+        root,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
+    summary = {
+        "schema_version": "knowledge-hub.memory-scope-delete.v1",
+        "principal_id_sha256": hashlib.sha256(principal_id.encode("utf-8")).hexdigest(),
+        "agent_id_sha256": hashlib.sha256(agent_id.encode("utf-8")).hexdigest(),
+        "scope_ref_sha256": hashlib.sha256(scope_ref.encode("utf-8")).hexdigest(),
+        "deleted_count": len(receipts),
+        "event_receipt_sha256": receipts,
+        "scope_deleted": not remaining,
+        "canonical_write_performed": False,
+    }
+    summary["receipt_sha256"] = _digest(summary)
+    return summary
+
+
 def consolidation_candidates(
     root: pathlib.Path,
     *,
@@ -284,7 +347,9 @@ def consolidation_candidates(
     agent_id: str,
     scope_ref: str = "",
 ) -> Dict[str, Any]:
-    rows = active_memories(root, principal_id=principal_id, agent_id=agent_id, scope_ref=scope_ref)
+    rows = active_memories(
+        root, principal_id=principal_id, agent_id=agent_id, scope_ref=scope_ref
+    )
     groups: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
     for row in rows:
         key = (str(row.get("level", "")), str(row.get("scope_ref", "")))
@@ -293,7 +358,9 @@ def consolidation_candidates(
     for (level, scope), group in sorted(groups.items()):
         if level not in DURABLE_LEVELS or len(group) < 2:
             continue
-        refs = sorted({str(ref) for row in group for ref in row.get("source_refs", [])})
+        refs = sorted(
+            {str(ref) for row in group for ref in row.get("source_refs", [])}
+        )
         summaries = [str(row.get("summary", "")) for row in group]
         candidates.append(
             {
@@ -301,15 +368,24 @@ def consolidation_candidates(
                 "scope_ref": scope,
                 "source_refs": refs[:MAX_SOURCE_REFS],
                 "memory_ids": [str(row.get("memory_id", "")) for row in group],
-                "summary_sha256": hashlib.sha256("\n".join(summaries).encode("utf-8")).hexdigest(),
+                "summary_sha256": hashlib.sha256(
+                    "\n".join(summaries).encode("utf-8")
+                ).hexdigest(),
                 "promotion_status": "candidate-only",
-                "requires": ["provenance", "dedup", "evidence", "human-or-owner-gate"],
+                "requires": [
+                    "provenance",
+                    "dedup",
+                    "evidence",
+                    "human-or-owner-gate",
+                ],
             }
         )
-    return {
+    result: Dict[str, Any] = {
         "schema_version": "knowledge-hub.memory-consolidation.v1",
         "status": "pass",
         "candidate_count": len(candidates),
         "candidates": candidates,
         "canonical_write_performed": False,
     }
+    result["receipt_sha256"] = _digest(result)
+    return result
