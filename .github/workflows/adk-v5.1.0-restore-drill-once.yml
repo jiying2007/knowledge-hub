@@ -1,0 +1,168 @@
+name: adk-v5.1.0-restore-drill-once
+
+on:
+  push:
+    branches:
+      - codex/adk-v5.1.0-restore-drill
+    paths:
+      - .github/workflows/adk-v5.1.0-restore-drill-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Download immutable v5.1.0 release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/adk-restore
+          curl --fail --location --silent --show-error \
+            https://github.com/jiying2007/agent-dev-kit/releases/download/v5.1.0/agent-dev-kit-5.1.0.tar.gz \
+            --output /tmp/adk-restore/agent-dev-kit-5.1.0.tar.gz
+          printf '%s  %s\n' \
+            'd4684fe5888203b4a25e7dda9ab51b83fb900cae2d09adb6e5179a775748c965' \
+            '/tmp/adk-restore/agent-dev-kit-5.1.0.tar.gz' \
+            | sha256sum --check --strict
+
+      - name: Restore release into clean room and verify identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/adk-restore/unpacked
+          tar -xzf /tmp/adk-restore/agent-dev-kit-5.1.0.tar.gz -C /tmp/adk-restore/unpacked
+          python - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import tomllib
+
+          root = pathlib.Path('/tmp/adk-restore/unpacked')
+          manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
+          release = json.loads((root / 'release-manifest.json').read_text(encoding='utf-8'))
+          sbom = root / release['sbom']['path']
+          source_manifest = json.loads((root / 'source/manifest.json').read_text(encoding='utf-8'))
+          pyproject = tomllib.loads((root / 'source/pyproject.toml').read_text(encoding='utf-8'))
+
+          def sha256(path):
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          assert manifest['version'] == '5.1.0'
+          assert source_manifest['version'] == '5.1.0'
+          assert pyproject['project']['version'] == '5.1.0'
+          assert release['version'] == '5.1.0'
+          assert release['reproducible'] is True
+          assert release['release_eligible'] is True
+          assert release['source_distribution'] is True
+          assert release['source_file_count'] > 0
+          provenance = release['source_provenance']
+          assert provenance['kind'] == 'git-clean-commit'
+          assert provenance['commit'] == '59cbd5cb40ca7077ee5407636bfc617e295ec7e5'
+          assert provenance['tree'] == '16d3c99d4dac8c41c09509b82c536a11cc058ca9'
+          assert provenance['dirty'] is False
+          assert provenance['release_eligible'] is True
+          assert release['sbom']['validated'] is True
+          assert sha256(sbom) == release['sbom']['sha256']
+          for required in ('source/scripts/devkit.sh', 'source/tests/run_all.sh', 'source/src/agent_dev_kit/cli.py'):
+              assert (root / required).is_file(), required
+          PY
+
+      - name: Install restored source runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install /tmp/adk-restore/unpacked/source
+
+      - name: Execute restored package validation and smoke gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/adk-restore/unpacked/source
+          export ADK_REQUIRE_SUPPORTED_PYTHON=1
+          bash scripts/devkit.sh validate --quick
+          bash scripts/devkit.sh validate
+          bash scripts/devkit.sh doctor >/tmp/adk-restore/doctor.json
+          bash scripts/devkit.sh release check >/tmp/adk-restore/release-check.json
+          python -m agent_dev_kit.distribution.release_contract \
+            /tmp/adk-restore/agent-dev-kit-5.1.0.tar.gz \
+            >/tmp/adk-restore/release-contract-recheck.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          doctor = json.loads(Path('/tmp/adk-restore/doctor.json').read_text(encoding='utf-8'))
+          check = json.loads(Path('/tmp/adk-restore/release-check.json').read_text(encoding='utf-8'))
+          contract = json.loads(Path('/tmp/adk-restore/release-contract-recheck.json').read_text(encoding='utf-8'))
+          assert doctor.get('failures') == []
+          assert check.get('status') == 'pass'
+          assert check.get('failures') == []
+          assert contract.get('status') == 'pass'
+          rows = contract.get('artifacts', [])
+          assert len(rows) == 1
+          assert rows[0].get('version') == '5.1.0'
+          assert rows[0].get('artifact_sha256') == 'd4684fe5888203b4a25e7dda9ab51b83fb900cae2d09adb6e5179a775748c965'
+          PY
+
+      - name: Build bounded restore receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          receipt = {
+            'schema_version': 1,
+            'kind': 'adk-release-clean-room-restore-drill',
+            'status': 'pass',
+            'provider': 'github-release',
+            'repository': 'jiying2007/agent-dev-kit',
+            'release_id': 387547816,
+            'release_asset_id': 559143645,
+            'version': 'v5.1.0',
+            'source_commit': '59cbd5cb40ca7077ee5407636bfc617e295ec7e5',
+            'source_tree': '16d3c99d4dac8c41c09509b82c536a11cc058ca9',
+            'release_asset_sha256': 'd4684fe5888203b4a25e7dda9ab51b83fb900cae2d09adb6e5179a775748c965',
+            'restore_semantics': 'immutable-github-release-asset-to-clean-room-source-tree',
+            'clean_room': True,
+            'asset_digest_verified': True,
+            'release_identity_verified': True,
+            'source_provenance_verified': True,
+            'sbom_digest_verified': True,
+            'restored_validate_quick': 'pass',
+            'restored_validate': 'pass',
+            'restored_doctor': 'pass',
+            'restored_release_check': 'pass',
+            'release_contract_recheck': 'pass',
+            'strict_freshness_gate_used': False,
+            'strict_freshness_note': 'not part of restore semantics; current official-doc freshness is independently time-bound',
+            'canonical_registry_written': False,
+          }
+          out = Path('/tmp/adk-restore/adk-v5.1.0-restore-receipt.json')
+          out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          digest = hashlib.sha256(out.read_bytes()).hexdigest()
+          Path('/tmp/adk-restore/adk-v5.1.0-restore-receipt.sha256').write_text(
+              f'{digest}  adk-v5.1.0-restore-receipt.json\n', encoding='utf-8'
+          )
+          PY
+
+      - name: Upload restore evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: adk-v5.1.0-clean-room-restore-receipt
+          path: |
+            /tmp/adk-restore/adk-v5.1.0-restore-receipt.json
+            /tmp/adk-restore/adk-v5.1.0-restore-receipt.sha256
+            /tmp/adk-restore/release-contract-recheck.json
+          if-no-files-found: error
