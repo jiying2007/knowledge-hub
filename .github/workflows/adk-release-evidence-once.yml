@@ -1,0 +1,173 @@
+name: adk-release-evidence-once
+
+on:
+  push:
+    branches:
+      - codex/adk-release-evidence
+    paths:
+      - .github/workflows/adk-release-evidence-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  ratchet-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Bind exact ADK release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          PROJECT = "agent-dev-kit"
+          RELEASE_COMMIT = "59cbd5cb40ca7077ee5407636bfc617e295ec7e5"
+          VERSION = "v5.1.0"
+          CI_RUN = "34689589669"
+          RELEASE_RUN = "34690751760"
+          ACTIONS_ARTIFACT_ID = "10296803772"
+          ACTIONS_ARTIFACT_DIGEST = "8a3fff930147d344daedc6fb5194f211ebb9a717ec7a874e424a0531fa1da1c5"
+          RELEASE_ID = "387547816"
+          RELEASE_ASSET_ID = "559143645"
+          RELEASE_ASSET_DIGEST = "d4684fe5888203b4a25e7dda9ab51b83fb900cae2d09adb6e5179a775748c965"
+
+          source_ref = {
+              "kind": "source-release-commit",
+              "ref": f"jiying2007/agent-dev-kit@{RELEASE_COMMIT}#{VERSION}",
+              "outcome": "tag-bound-release-source",
+          }
+          ci_ref = {
+              "kind": "github-actions-ci",
+              "ref": f"github-actions://jiying2007/agent-dev-kit/runs/{CI_RUN}@{RELEASE_COMMIT}",
+              "outcome": "fresh-main-ci-success",
+          }
+          release_validation_ref = {
+              "kind": "github-actions-release",
+              "ref": f"github-actions://jiying2007/agent-dev-kit/runs/{RELEASE_RUN}@{RELEASE_COMMIT}#{VERSION}",
+              "outcome": "strict-validation-tests-release-check-reproducible-build-release-contract-provenance-attestation-success",
+          }
+          actions_artifact_ref = {
+              "kind": "github-actions-release-artifact",
+              "ref": (
+                  f"github-actions://jiying2007/agent-dev-kit/runs/{RELEASE_RUN}/artifacts/{ACTIONS_ARTIFACT_ID}"
+                  f"#sha256={ACTIONS_ARTIFACT_DIGEST}"
+              ),
+              "outcome": "release-bundle-uploaded",
+          }
+          release_asset_ref = {
+              "kind": "github-release-asset",
+              "ref": (
+                  f"github-release://jiying2007/agent-dev-kit/releases/{RELEASE_ID}/assets/{RELEASE_ASSET_ID}"
+                  f"#{VERSION};sha256={RELEASE_ASSET_DIGEST}"
+              ),
+              "outcome": "immutable-release-asset-published",
+          }
+          release_ref = {
+              "kind": "github-release",
+              "ref": (
+                  f"github-release://jiying2007/agent-dev-kit/releases/{RELEASE_ID}#{VERSION}"
+                  f"@{RELEASE_COMMIT}"
+              ),
+              "status": "published",
+              "outcome": "immutable-release-published-from-successful-tag-bound-release-workflow",
+          }
+
+          registry = Path("registry/items.jsonl")
+          original = registry.read_text(encoding="utf-8")
+          final_newline = original.endswith("\n")
+          old_lines = original.splitlines()
+          new_lines = []
+          matches = 0
+
+          for line in old_lines:
+              obj = json.loads(line)
+              if obj.get("project_id") != PROJECT or obj.get("readiness_slot") != "validation":
+                  new_lines.append(line)
+                  continue
+              matches += 1
+              contract = obj.get("evidence_contract")
+              if not isinstance(contract, dict):
+                  raise SystemExit("agent-dev-kit evidence_contract missing")
+              if contract.get("profile") != "software-tool" or contract.get("status") != "pending":
+                  raise SystemExit("unexpected ADK contract profile/status")
+              if not contract.get("owner_ref") or not contract.get("source_refs") or not contract.get("validation_refs"):
+                  raise SystemExit("existing ADK owner/source/validation prerequisites are not ready")
+              if contract.get("artifact_refs"):
+                  raise SystemExit("ADK artifact_refs already populated; refuse overwrite")
+              if contract.get("release_ref") is not None:
+                  raise SystemExit("ADK release_ref already populated; refuse overwrite")
+              if contract.get("rollback_ref") is not None:
+                  raise SystemExit("ADK rollback_ref unexpectedly populated")
+
+              if not any(row.get("ref") == source_ref["ref"] for row in contract["source_refs"]):
+                  contract["source_refs"].append(source_ref)
+              for row in (ci_ref, release_validation_ref):
+                  if not any(existing.get("ref") == row["ref"] for existing in contract["validation_refs"]):
+                      contract["validation_refs"].append(row)
+              contract["artifact_refs"] = [actions_artifact_ref, release_asset_ref]
+              contract["release_ref"] = release_ref
+              # Deliberately do not synthesize rollback evidence.
+              assert contract.get("rollback_ref") is None
+              assert contract.get("status") == "pending"
+              new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
+
+          if matches != 1:
+              raise SystemExit(f"expected exactly one ADK readiness row, found {matches}")
+          if len(new_lines) != len(old_lines):
+              raise SystemExit("registry line count changed")
+          for old, new in zip(old_lines, new_lines):
+              old_obj = json.loads(old)
+              if not (old_obj.get("project_id") == PROJECT and old_obj.get("readiness_slot") == "validation") and old != new:
+                  raise SystemExit("non-target registry line changed")
+          registry.write_text("\n".join(new_lines) + ("\n" if final_newline else ""), encoding="utf-8")
+          PY
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git diff --check
+
+      - name: Validate bounded registry ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/check.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload=json.loads(Path('/tmp/check.json').read_text(encoding='utf-8'))
+          if payload.get('status') != 'pass':
+              raise SystemExit(f"knowledge-check status={payload.get('status')!r}")
+          PY
+
+      - name: Commit and publish evidence candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git add registry/items.jsonl
+          git diff --cached --check
+          git commit -m "docs: bind ADK v5.1.0 release evidence"
+          git push origin HEAD:codex/adk-release-evidence
