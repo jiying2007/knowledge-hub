@@ -69,7 +69,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 32 项目 route matrix 能将 `digital-worker` 稳定解析为本项目。
+- [x] 项目 route matrix 能将 `digital-worker` 稳定解析为本项目。
 - [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
@@ -79,7 +79,8 @@ related:
 - [ ] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵通过。
 - [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。
 - [ ] 责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。
-- [ ] 控制面验证：执行 check、unit、retrieval、route、link、export 和 restore drill。
+- [ ] 工具验证：覆盖 CLI help、错误码、输入边界、制品 hash 和目标平台 smoke test。
+- [ ] 发布验证：覆盖可安装/可运行制品、版本信息、回滚和消费者兼容性。
 
 ## 证据记录模板
 

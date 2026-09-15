@@ -47,7 +47,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 30 项目 route matrix 能将 `llm-agent` 稳定解析为本项目。
+- [x] 项目 route matrix 能将 `llm-agent` 稳定解析为本项目。
 - [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [x] 本机 source 定位：2026-07-17 动态发现 `workspace://llm-agent` 的 HEAD 为 `150fdee1509b899bbb0d8c0762b7a9313b63ba94`；绝对路径不写入 tracked Markdown。
@@ -58,8 +58,8 @@ related:
 - [x] 来源验证：本地 `main` 与 `origin/main` 均为 `150fdee1509b899bbb0d8c0762b7a9313b63ba94`、分叉 `0 0`；远端由直接父提交 `383274fed93ad143cabb1dbd977e1b766eca5c04` fast-forward，七个 gitlink 未变化。
 - [x] 责任验证：真实 decision owner `leiwenjun` 已通过 `knowledge-hub-terminal-owner-attestation-20260716` 接受权威边界，并要求继续保持 `reviewing`。
 - [x] 工程验证：推送前隔离精确源码与推送后纯远端来源 clone 的 `check-all.sh --full` 均为 62/62；主工作区 `check-wechat-intake-ledger.sh . --require-corpus` 对 313 篇 corpus 返回 `mode=live-corpus`。远端 clone 的私有 `agent-dev-kit` 需要临时 SSH URL override，详见 `2026-07-17-portable-full-gate-remediation.md`。
-- [ ] 设备验证：需要硬件行为的结论必须补 HIL/实机、环境条件和可复现实验记录。
-- [ ] 发布验证：记录制品身份、版本、回滚路径和端到端验收，不以 Hub 文档替代发布签收。
+- [ ] 工具验证：覆盖 CLI help、错误码、输入边界、制品 hash 和目标平台 smoke test。
+- [ ] 发布验证：覆盖可安装/可运行制品、版本信息、回滚和消费者兼容性。
 
 ## 证据记录模板
 

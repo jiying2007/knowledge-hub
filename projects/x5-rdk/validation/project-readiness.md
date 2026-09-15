@@ -69,7 +69,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 31 项目 route matrix 能将 `x5-rdk` 稳定解析为本项目。
+- [x] 项目 route matrix 能将 `x5-rdk` 稳定解析为本项目。
 - [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
@@ -79,7 +79,9 @@ related:
 - [ ] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵通过。
 - [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。
 - [ ] 责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。
-- [ ] 项目组验证：每个成员仓分别补源码、设备/平台和发布证据，不能用组级结论替代。
+- [ ] 工程验证：在源项目运行适用的构建、单元/集成测试并保留命令、版本和日志摘要。
+- [ ] 设备验证：需要硬件行为的结论必须补 HIL/实机、环境条件和可复现实验记录。
+- [ ] 发布验证：记录制品身份、版本、回滚路径和端到端验收，不以 Hub 文档替代发布签收。
 
 ## 证据记录模板
 
