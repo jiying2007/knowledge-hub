@@ -26,13 +26,28 @@ tools/knowledge-status.sh --ui --json
 
 - control-plane status；
 - 项目 structural/source/owner/evidence 覆盖；
-- `complete-awaiting-declaration` 等需要人工处理的项目；
+- Machine Queue：先由机器检索候选或等待前置依赖的 action；
+- Human / External Queue：必须由 owner、真实设备、生产环境或外部管理员处理的例外；
 - evidence contract 的 missing/invalid fields；
 - external closure open gaps；
 - terminal closure（本机存在 fresh snapshot 时）；
 - `knowledge-status` 给出的下一步动作。
 
 JSON API 为 `GET /api/state`，健康检查为 `GET /healthz`。
+
+## Action Queue 语义
+
+Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=false`，所有 action 都是只读分类：
+
+- `machine-discovery`：机器应先检索已有 source、validation、artifact 或 release 候选；没有真实候选时保持 open；
+- `machine-after-prerequisite`：前置 release/artifact 身份就绪后可由机器执行 restore/rollback drill；
+- `dependency-gate`：等待其它真实项目/成员 evidence ready，不通过补字段绕过；
+- `human-authorization`：必须由授权 owner/admin 明确决策；
+- `real-world-evidence`：必须来自真实设备、生产评估、生命周期或真实 adoption；
+- `external-environment`：必须在真实外部 provider、ACL、repository administration 等环境执行；
+- `governance-review`：已有 evidence 无效或出现未知 contract 语义，需要先审计而不是覆盖。
+
+`release_ref` 的默认策略是**先机器发现现有 release**；如果不存在，则升级为 `human-authorization`，UI 不会自动创建或发布版本。
 
 ## 安全与治理边界
 
@@ -41,6 +56,7 @@ JSON API 为 `GET /api/state`，健康检查为 `GET /healthz`。
 - 不引入数据库、浏览器端持久化或第二份 readiness 计算；
 - project readiness 直接复用 product gate 的 canonical evaluator；
 - external closure 直接复用 terminal closure evaluator；
+- Action Queue 只分类，不执行任何仓库或外部写操作；
 - owner approval、release、promote、retire、registry mutation 等写操作不由 UI 执行。
 
-后续需要交互式写操作时，仍应遵循 `Plan → Diff → Governed PR → CI → Merge`，并对 owner/release 等高风险动作保留显式授权。
+后续开放自动处理时，只允许从 `machine-discovery` / 已满足前置的 `machine-after-prerequisite` 开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration 等高风险动作继续保留显式授权。
