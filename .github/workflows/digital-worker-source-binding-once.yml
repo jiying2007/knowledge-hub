@@ -45,7 +45,6 @@ jobs:
 
           ITEM_ID = "digital-worker-readiness-validation-20260713"
           SOURCE_REF = "jiying2007/digital-worker@048e1c0460ded66111f29d44a8cab78f09faaef4"
-
           registry = Path("registry/items.jsonl")
           original = registry.read_text(encoding="utf-8")
           final_newline = original.endswith("\n")
@@ -58,78 +57,48 @@ jobs:
               if obj.get("id") != ITEM_ID:
                   new_lines.append(line)
                   continue
-
               matches += 1
               contract = obj.get("evidence_contract")
               if not isinstance(contract, dict):
                   raise SystemExit("digital-worker evidence_contract missing or invalid")
-              if contract.get("status") != "pending":
-                  raise SystemExit(f"unexpected declared status: {contract.get('status')!r}")
-              if contract.get("source_refs") != []:
-                  raise SystemExit(f"source_refs no longer empty: {contract.get('source_refs')!r}")
+              if contract.get("status") != "pending" or contract.get("source_refs") != []:
+                  raise SystemExit("digital-worker source precondition changed")
               if contract.get("owner_ref") is not None:
                   raise SystemExit("owner_ref unexpectedly populated")
-              if contract.get("validation_refs") != []:
-                  raise SystemExit("validation_refs unexpectedly populated")
-              if contract.get("artifact_refs") != []:
-                  raise SystemExit("artifact_refs unexpectedly populated")
-              if contract.get("release_ref") is not None:
-                  raise SystemExit("release_ref unexpectedly populated")
-              if contract.get("rollback_ref") is not None:
-                  raise SystemExit("rollback_ref unexpectedly populated")
-
+              if contract.get("validation_refs") != [] or contract.get("artifact_refs") != []:
+                  raise SystemExit("validation/artifact evidence unexpectedly populated")
+              if contract.get("release_ref") is not None or contract.get("rollback_ref") is not None:
+                  raise SystemExit("release/rollback evidence unexpectedly populated")
               contract["source_refs"] = [{"kind": "source-commit", "ref": SOURCE_REF}]
               new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
 
           if matches != 1:
-              raise SystemExit(f"expected exactly one target item, found {matches}")
+              raise SystemExit(f"expected one target item, found {matches}")
           if len(new_lines) != len(old_lines):
-              raise SystemExit("registry line count changed unexpectedly")
+              raise SystemExit("registry line count changed")
           for old, new in zip(old_lines, new_lines):
               if json.loads(old).get("id") != ITEM_ID and old != new:
                   raise SystemExit("non-target registry line changed")
-
           registry.write_text("\n".join(new_lines) + ("\n" if final_newline else ""), encoding="utf-8")
-
-          target = next(
-              json.loads(line)
-              for line in registry.read_text(encoding="utf-8").splitlines()
-              if json.loads(line).get("id") == ITEM_ID
-          )
-          contract = target["evidence_contract"]
-          assert contract["status"] == "pending"
-          assert contract["source_refs"] == [{"kind": "source-commit", "ref": SOURCE_REF}]
-          assert contract["owner_ref"] is None
-          assert contract["validation_refs"] == []
-          assert contract["artifact_refs"] == []
-          assert contract["release_ref"] is None
-          assert contract["rollback_ref"] is None
           PY
-
           test "$(git diff --name-only)" = "registry/items.jsonl"
           git diff --check
-          git diff -- registry/items.jsonl
 
-      - name: Run focused control-plane validation
+      - name: Validate uncommitted source patch
         shell: bash
         run: |
           set -euo pipefail
           rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/knowledge-check.json
-          rtk bash tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-09-15 >/tmp/final-gate.json
           python3 - <<'PY'
           import json
           from pathlib import Path
-
-          check = json.loads(Path("/tmp/knowledge-check.json").read_text(encoding="utf-8"))
-          gate = json.loads(Path("/tmp/final-gate.json").read_text(encoding="utf-8"))
-          if gate.get("terminal") is not False:
-              raise SystemExit(f"unexpected terminal state: {gate.get('terminal')!r}")
-          if gate.get("status") in {"needs-fix", "blocked"}:
-              raise SystemExit(f"unexpected product gate status: {gate.get('status')!r}")
-          print(json.dumps({"knowledge_check_parsed": bool(check), "status": gate.get("status"), "terminal": gate.get("terminal")}, ensure_ascii=False))
+          payload = json.loads(Path("/tmp/knowledge-check.json").read_text(encoding="utf-8"))
+          if payload.get("status") != "pass":
+              raise SystemExit(f"knowledge-check status={payload.get('status')!r}")
+          print("knowledge-check=pass")
           PY
 
-      - name: Commit source-only binding
+      - name: Create clean local candidate commit
         shell: bash
         run: |
           set -euo pipefail
@@ -139,4 +108,27 @@ jobs:
           git add registry/items.jsonl
           git diff --cached --check
           git commit -m "docs: bind digital-worker canonical source evidence"
+          test -z "$(git status --porcelain)"
+
+      - name: Validate clean committed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-09-15 >/tmp/final-gate.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          gate = json.loads(Path("/tmp/final-gate.json").read_text(encoding="utf-8"))
+          if gate.get("terminal") is not False:
+              raise SystemExit(f"unexpected terminal state: {gate.get('terminal')!r}")
+          if gate.get("status") in {"needs-fix", "blocked"}:
+              raise SystemExit(f"unexpected gate status: {gate.get('status')!r}")
+          print(json.dumps({"status": gate.get("status"), "terminal": gate.get("terminal")}, ensure_ascii=False))
+          PY
+          test -z "$(git status --porcelain)"
+
+      - name: Push validated source-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
           git push origin HEAD:codex/digital-worker-source-binding
