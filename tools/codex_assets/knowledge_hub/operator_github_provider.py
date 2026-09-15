@@ -6,7 +6,7 @@ import http.client
 import json
 import re
 import urllib.parse
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 GITHUB_API_HOST = "api.github.com"
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
