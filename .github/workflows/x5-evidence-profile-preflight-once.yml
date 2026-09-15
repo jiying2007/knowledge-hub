@@ -1,4 +1,4 @@
-name: x5-evidence-profile-preflight-once
+name: x5-evidence-profile-migration-once
 
 on:
   push:
@@ -8,40 +8,40 @@ on:
       - .github/workflows/x5-evidence-profile-preflight-once.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  inspect:
+  migrate-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: codex/x5-evidence-profile
           fetch-depth: 0
-      - name: Print bounded X5 readiness evidence
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Apply bounded X5 evidence profile migration
+        run: python tools/ci/x5_evidence_profile_once.py
+      - name: Run profile and readiness regressions
+        run: python -m pytest -q tests/test_evidence.py tests/test_project_readiness.py
+      - name: Verify project readiness is idempotent
+        run: bash tools/knowledge-project-readiness.sh --check --as-of 2026-07-13 --json
+      - name: Run focused Ruff checks
+        run: python -m ruff check tools/codex_assets/knowledge_hub/project_readiness.py tests/test_project_readiness.py
+      - name: Commit bounded migration
         shell: bash
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          projects = json.loads(Path('registry/projects.json').read_text(encoding='utf-8'))['projects']
-          groups = json.loads(Path('registry/project-groups.json').read_text(encoding='utf-8'))['groups']
-          repos = json.loads(Path('registry/repositories.json').read_text(encoding='utf-8'))['repositories']
-          items = [json.loads(line) for line in Path('registry/items.jsonl').read_text(encoding='utf-8').splitlines() if line.strip()]
-
-          project = next(row for row in projects if row.get('id') == 'x5-rdk')
-          group = next(row for row in groups if row.get('id') == 'x5-rdk')
-          repo_rows = [row for row in repos if row.get('project_id') == 'x5-rdk']
-          item = next(row for row in items if row.get('id') == 'x5-rdk-readiness-validation-20260713')
-          payload = {
-              'project': project,
-              'group': group,
-              'repositories': repo_rows,
-              'item_status': item.get('status'),
-              'decision_owner': item.get('decision_owner'),
-              'evidence_profile': item.get('evidence_profile'),
-              'evidence_contract': item.get('evidence_contract'),
-          }
-          print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
-          PY
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add registry/projects.json \
+                  registry/items.jsonl \
+                  tools/codex_assets/knowledge_hub/project_readiness.py \
+                  tests/test_project_readiness.py
+          test "$(git diff --cached --name-only | wc -l)" -eq 4
+          git commit -m 'Model X5 as embedded target evidence'
+          git push origin HEAD:codex/x5-evidence-profile
