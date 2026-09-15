@@ -26,6 +26,7 @@ tools/knowledge-status.sh --ui --json
 
 - control-plane status；
 - 项目 structural/source/owner/evidence 覆盖；
+- Discovery Queue：本地自动发现候选，远端生成精确 provider query；
 - Machine Queue：先由机器检索候选或等待前置依赖的 action；
 - Human / External Queue：必须由 owner、真实设备、生产环境或外部管理员处理的例外；
 - evidence contract 的 missing/invalid fields；
@@ -49,6 +50,29 @@ Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=fals
 
 `release_ref` 的默认策略是**先机器发现现有 release**；如果不存在，则升级为 `human-authorization`，UI 不会自动创建或发布版本。
 
+## Discovery Executor
+
+Discovery Executor 只处理 `machine-discovery` action，并保持只读：
+
+- `source_refs`：从 `registry/project-routes.json`、`registry/repositories.json` 与 `registry/sources.json` 生成 canonical repository/source 候选；
+- `validation_refs`：从 `registry/items.jsonl` 中项目 `validation_path` 下的已登记条目生成候选；
+- `artifact_refs` / `release_ref`：只根据项目已登记 repository remote 生成精确 provider query；
+- GitHub provider query 会区分 workflow、release/tag、release asset / Actions artifact；内部 Git 则生成对应只读查询意图；
+- Hub core 本身不执行这些远端 query，transport 仍属于 provider adapter / caller。
+
+所有本地 discovery candidate 都固定为：
+
+- `candidate_only=true`；
+- `eligible_for_binding=false`。
+
+整个 discovery projection 还固定声明：
+
+- `network_performed=false`；
+- `canonical_write_performed=false`；
+- `automatic_binding_enabled=false`。
+
+因此“发现候选”不等于“证据有效”，也不会改变 readiness。远端 provider 找不到现有 release 时，后续应升级到显式发布授权，而不是由 UI 自动创建 release。
+
 ## 安全与治理边界
 
 - 只绑定 loopback `127.0.0.1`；
@@ -56,7 +80,7 @@ Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=fals
 - 不引入数据库、浏览器端持久化或第二份 readiness 计算；
 - project readiness 直接复用 product gate 的 canonical evaluator；
 - external closure 直接复用 terminal closure evaluator；
-- Action Queue 只分类，不执行任何仓库或外部写操作；
+- Action Queue 与 Discovery Queue 都只分类/发现，不执行 canonical 或外部写操作；
 - owner approval、release、promote、retire、registry mutation 等写操作不由 UI 执行。
 
-后续开放自动处理时，只允许从 `machine-discovery` / 已满足前置的 `machine-after-prerequisite` 开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration 等高风险动作继续保留显式授权。
+后续开放自动处理时，只允许从经过 provider 验证的 `machine-discovery` / 已满足前置的 `machine-after-prerequisite` 开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration 等高风险动作继续保留显式授权。
