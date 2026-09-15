@@ -1,0 +1,174 @@
+name: aggregate-readiness-self-dependency-once
+
+on:
+  push:
+    branches:
+      - codex/aggregate-readiness-self-dependency
+    paths:
+      - .github/workflows/aggregate-readiness-self-dependency-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/aggregate-readiness-self-dependency
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Apply bounded self-dependency repair
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          evidence_path = Path('tools/codex_assets/knowledge_hub/evidence.py')
+          text = evidence_path.read_text(encoding='utf-8')
+          old = '''def evaluate_evidence_contract(
+              contract: Mapping[str, Any],
+              ready_member_ids: Sequence[str] = (),
+          ) -> Dict[str, Any]:'''
+          new = '''def evaluate_evidence_contract(
+              contract: Mapping[str, Any],
+              ready_member_ids: Sequence[str] = (),
+              current_project_id: str = "",
+          ) -> Dict[str, Any]:'''
+          if text.count(old) != 1:
+              raise SystemExit('unexpected evidence evaluator signature')
+          text = text.replace(old, new, 1)
+
+          old = '''    ready_members = set(str(value) for value in ready_member_ids)
+              missing: List[str] = []'''
+          new = '''    ready_members = set(str(value) for value in ready_member_ids)
+              current_project = str(current_project_id).strip()
+              missing: List[str] = []'''
+          if text.count(old) != 1:
+              raise SystemExit('unexpected ready member setup')
+          text = text.replace(old, new, 1)
+
+          old = '''        if field == "member_project_ids":
+                  members = {str(row) for row in value or []}
+                  if not members:
+                      missing.append(field)
+                  elif not members.issubset(ready_members):
+                      missing.append(field)
+                  continue'''
+          new = '''        if field == "member_project_ids":
+                  members = {str(row) for row in value or []}
+                  dependency_members = (
+                      members - {current_project} if current_project else members
+                  )
+                  if not members:
+                      missing.append(field)
+                  elif not dependency_members.issubset(ready_members):
+                      missing.append(field)
+                  continue'''
+          if text.count(old) != 1:
+              raise SystemExit('unexpected aggregate member evaluation block')
+          evidence_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          support_path = Path('tools/codex_assets/knowledge_hub/product_gate_support.py')
+          text = support_path.read_text(encoding='utf-8')
+          old = '''        evaluation = evaluate_evidence_contract(
+                  validation_item.get("evidence_contract", {}),
+                  ready_member_ids=sorted(ready_project_ids),
+              )'''
+          new = '''        evaluation = evaluate_evidence_contract(
+                  validation_item.get("evidence_contract", {}),
+                  ready_member_ids=sorted(ready_project_ids),
+                  current_project_id=project_id,
+              )'''
+          if text.count(old) != 1:
+              raise SystemExit('unexpected aggregate second-pass evaluator call')
+          support_path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          tests_path = Path('tests/test_evidence.py')
+          text = tests_path.read_text(encoding='utf-8')
+          marker = 'def test_complete_software_contract_is_ready():'
+          if marker not in text:
+              raise SystemExit('expected evidence test marker missing')
+          addition = '''\n\ndef _ready_aggregate_contract(*members):
+              contract = new_evidence_contract("aggregate-group", members)
+              contract.update(
+                  {
+                      "status": "ready",
+                      "owner_ref": _ref("owner-decision", "decision://aggregate-owner"),
+                  }
+              )
+              return contract
+
+
+def test_aggregate_self_membership_is_not_a_readiness_dependency():
+              contract = _ready_aggregate_contract("x5-rdk")
+              result = evaluate_evidence_contract(
+                  contract,
+                  ready_member_ids=[],
+                  current_project_id="x5-rdk",
+              )
+              assert result["status"] == "ready"
+              assert result["missing_fields"] == []
+
+
+def test_aggregate_self_and_ready_real_member_are_ready():
+              contract = _ready_aggregate_contract("mcu", "gd32l235")
+              result = evaluate_evidence_contract(
+                  contract,
+                  ready_member_ids=["gd32l235"],
+                  current_project_id="mcu",
+              )
+              assert result["status"] == "ready"
+              assert result["missing_fields"] == []
+
+
+def test_aggregate_missing_real_member_remains_fail_closed():
+              contract = _ready_aggregate_contract("mcu", "gd32l235")
+              result = evaluate_evidence_contract(
+                  contract,
+                  ready_member_ids=[],
+                  current_project_id="mcu",
+              )
+              assert result["status"] == "pending"
+              assert "member_project_ids" in result["missing_fields"]
+              assert "status" in result["invalid_fields"]
+
+
+def test_aggregate_without_current_project_keeps_legacy_member_check():
+              contract = _ready_aggregate_contract("x5-rdk")
+              result = evaluate_evidence_contract(contract, ready_member_ids=[])
+              assert result["status"] == "pending"
+              assert "member_project_ids" in result["missing_fields"]
+'''
+          if '_ready_aggregate_contract' in text:
+              raise SystemExit('aggregate regression tests already present')
+          tests_path.write_text(text.rstrip() + addition + '\n', encoding='utf-8')
+          PY
+
+      - name: Run focused regression tests
+        run: |
+          python -m pytest -q tests/test_evidence.py
+          python -m ruff check tools/codex_assets/knowledge_hub/evidence.py tools/codex_assets/knowledge_hub/product_gate_support.py tests/test_evidence.py
+
+      - name: Commit bounded repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/codex_assets/knowledge_hub/evidence.py \
+                  tools/codex_assets/knowledge_hub/product_gate_support.py \
+                  tests/test_evidence.py
+          test -n "$(git diff --cached --name-only)"
+          test "$(git diff --cached --name-only | wc -l)" -eq 3
+          git commit -m 'Fix aggregate readiness self-dependency'
+          git push origin HEAD:codex/aggregate-readiness-self-dependency
