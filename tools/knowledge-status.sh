@@ -6,4 +6,10 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$ROOT"
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
-exec "$ROOT/tools/ci/python-runtime.sh" -m tools.codex_assets.knowledge_hub.status_cli "$ROOT" "$@"
+
+if [[ "${1:-}" != "--ui" ]]; then
+  exec "$ROOT/tools/ci/python-runtime.sh" -m tools.codex_assets.knowledge_hub.status_cli "$ROOT" "$@"
+fi
+
+shift
+exec "$ROOT/tools/ci/python-runtime.sh" -m tools.codex_assets.knowledge_hub.operator_ui "$ROOT" "$@"
