@@ -31,16 +31,8 @@ PROFILE_EXPECTATIONS = {
 }
 
 OLD_GROUP_LINE = "项目组验证：每个成员仓分别补源码、设备/平台和发布证据，不能用组级结论替代。"
-OLD_EXPECTATIONS = {
-    "工程验证：在源项目运行适用的构建、单元/集成测试并保留命令、版本和日志摘要。",
-    "设备验证：需要硬件行为的结论必须补 HIL/实机、环境条件和可复现实验记录。",
-    "发布验证：记录制品身份、版本、回滚路径和端到端验收，不以 Hub 文档替代发布签收。",
-    "工具验证：覆盖 CLI help、错误码、输入边界、制品 hash 和目标平台 smoke test。",
-    "发布验证：覆盖可安装/可运行制品、版本信息、回滚和消费者兼容性。",
-    "运行态验证：执行声明式 build/doctor/plan/dry-run/apply/check 链路并保留回滚证据。",
-    "控制面验证：执行 check、unit、retrieval、route、link、export 和 restore drill。",
-    OLD_GROUP_LINE,
-}
+OLD_EXPECTATIONS = {row for rows in PROFILE_EXPECTATIONS.values() for row in rows}
+OLD_EXPECTATIONS.add(OLD_GROUP_LINE)
 
 
 def replace_section(text: str, start: str, end: str, replacement: str, label: str) -> str:
@@ -53,12 +45,15 @@ def replace_section(text: str, start: str, end: str, replacement: str, label: st
     return text[:start_index] + replacement.rstrip() + "\n\n\n" + text[end_index:]
 
 
+def expectation_marker(text: str) -> str:
+    return text.split("：", 1)[0] + "："
+
+
 projects = json.loads(PROJECTS_PATH.read_text(encoding="utf-8"))["projects"]
 project_by_id = {row["id"]: row for row in projects}
 if len(project_by_id) != 32:
     raise SystemExit(f"unexpected project count: {len(project_by_id)}")
 
-# Migrate only the exact machine-generated route-count line in every readiness body.
 route_pattern = re.compile(
     r"^- \[x\] \d+ 项目 route matrix 能将 `([^`]+)` 稳定解析为本项目。$",
     re.M,
@@ -78,7 +73,7 @@ for project in projects:
     path.write_text(text, encoding="utf-8")
     route_migrated.append(project_id)
 
-# Repair only the four audited semantic mismatches. Refuse to overwrite manual variants.
+# Only unchecked, exact machine-template lines are replaced. Manual/completed evidence is preserved.
 semantic_targets = {
     "llm-agent": "software-tool",
     "agent-dev-kit": "software-tool",
@@ -91,26 +86,31 @@ for project_id, expected_profile in semantic_targets.items():
         raise SystemExit(f"unexpected evidence profile for {project_id}")
     path = Path(str(project["validation"]).rstrip("/")) / "project-readiness.md"
     lines = path.read_text(encoding="utf-8").splitlines()
-    generated_indexes = []
-    for index, line in enumerate(lines):
-        if line.startswith("- [ ] ") and line[6:] in OLD_EXPECTATIONS:
-            generated_indexes.append(index)
+    generated_indexes = [
+        index
+        for index, line in enumerate(lines)
+        if line.startswith("- [ ] ") and line[6:] in OLD_EXPECTATIONS
+    ]
     if not generated_indexes:
         raise SystemExit(f"no exact generated expectation lines for {project_id}")
-    prefixes = ("工程验证：", "设备验证：", "发布验证：", "工具验证：", "运行态验证：", "控制面验证：", "项目组验证：")
-    for index, line in enumerate(lines):
-        if any(prefix in line for prefix in prefixes) and index not in generated_indexes:
-            raise SystemExit(f"manual profile expectation line would be overwritten for {project_id}: {line}")
+
     insert_at = generated_indexes[0]
     generated_set = set(generated_indexes)
     kept = [line for index, line in enumerate(lines) if index not in generated_set]
-    removed_before = sum(1 for index in generated_indexes if index < insert_at)
-    insert_at -= removed_before
-    expected_lines = [f"- [ ] {value}" for value in PROFILE_EXPECTATIONS[expected_profile]]
+    insert_at -= sum(1 for index in generated_indexes if index < insert_at)
+
+    expected_lines = []
+    for expectation in PROFILE_EXPECTATIONS[expected_profile]:
+        marker = expectation_marker(expectation)
+        if any(
+            line.startswith(("- [ ] ", "- [x] ")) and marker in line
+            for line in kept
+        ):
+            continue
+        expected_lines.append(f"- [ ] {expectation}")
     kept[insert_at:insert_at] = expected_lines
     path.write_text("\n".join(kept) + "\n", encoding="utf-8")
 
-# Make evidence profile the single source of validation semantics and make route text count-neutral.
 source = READINESS_PATH.read_text(encoding="utf-8")
 new_expectations = '''PROFILE_VALIDATION_EXPECTATIONS = {
     "embedded-target": (
@@ -132,6 +132,10 @@ new_expectations = '''PROFILE_VALIDATION_EXPECTATIONS = {
         "项目组验证：每个成员项目分别补齐所需真实证据，组级结论不得替代成员项目 readiness。",
     ),
 }
+
+
+def _expectation_marker(text: str) -> str:
+    return text.split("：", 1)[0] + "："
 
 
 def _validation_expectations(
@@ -159,23 +163,35 @@ def _validate_existing_validation_body(
         raise KnowledgeHubError(
             "existing readiness route statement drift: {}".format(project_id)
         )
+
     profile = project_evidence_profile(project)
-    all_markers = {
-        row.split("：", 1)[0] + "："
+    expected_rows = set(PROFILE_VALIDATION_EXPECTATIONS[profile])
+    all_rows = {
+        row
         for rows in PROFILE_VALIDATION_EXPECTATIONS.values()
         for row in rows
     }
-    expected_markers = {
-        row.split("：", 1)[0] + "："
-        for row in PROFILE_VALIDATION_EXPECTATIONS[profile]
+    all_markers = {_expectation_marker(row) for row in all_rows}
+    expected_markers = {_expectation_marker(row) for row in expected_rows}
+    actual_markers = {
+        _expectation_marker(line[6:])
+        for line in text.splitlines()
+        if line.startswith(("- [ ] ", "- [x] "))
+        and "：" in line[6:]
+        and _expectation_marker(line[6:]) in all_markers
     }
-    actual_markers = {marker for marker in all_markers if marker in text}
-    if actual_markers != expected_markers:
+    missing_markers = expected_markers - actual_markers
+    stale_generated = sorted(
+        row
+        for row in all_rows - expected_rows
+        if "- [ ] {}".format(row) in text
+    )
+    if missing_markers or stale_generated:
         raise KnowledgeHubError(
-            "existing readiness evidence-profile statement drift: {} expected={} actual={}".format(
+            "existing readiness evidence-profile statement drift: {} missing={} stale_generated={}".format(
                 project_id,
-                sorted(expected_markers),
-                sorted(actual_markers),
+                sorted(missing_markers),
+                stale_generated,
             )
         )
 '''
@@ -186,6 +202,7 @@ source = replace_section(
     new_expectations,
     "validation expectation section",
 )
+
 new_body = '''def _validation_body(
     project: Mapping[str, Any],
     path: str,
@@ -252,6 +269,7 @@ source = replace_section(
     new_body,
     "validation body section",
 )
+
 old_call = '''                _validation_body(
                     project,
                     paths["validation"],
@@ -268,6 +286,7 @@ new_call = '''                _validation_body(
 if source.count(old_call) != 1:
     raise SystemExit("unexpected validation body call")
 source = source.replace(old_call, new_call, 1)
+
 old_existing = '''            if existing_item:
                 if not target_exists:
                     raise KnowledgeHubError(
@@ -290,7 +309,6 @@ if source.count(old_existing) != 1:
 source = source.replace(old_existing, new_existing, 1)
 READINESS_PATH.write_text(source, encoding="utf-8")
 
-# Ratchet tests: no numeric route count, profile-driven semantics, and fail-closed body drift detection.
 tests = TESTS_PATH.read_text(encoding="utf-8")
 old_import = '''from tools.codex_assets.knowledge_hub.project_readiness import (
     RETIRED_PROJECTION_SLOTS,
@@ -311,6 +329,7 @@ new_import = '''from tools.codex_assets.knowledge_hub.project_readiness import (
 if tests.count(old_import) != 1:
     raise SystemExit("unexpected project readiness test import")
 tests = tests.replace(old_import, new_import, 1)
+
 old_assert = '''    assert "{} 项目 route matrix".format(expected_project_count) in validation.read_text()'''
 new_assert = '''    assert (
         "- [x] 项目 route matrix 能将 `scalable-project-31` 稳定解析为本项目。"
@@ -319,6 +338,7 @@ new_assert = '''    assert (
 if tests.count(old_assert) != 1:
     raise SystemExit("unexpected scalable route count assertion")
 tests = tests.replace(old_assert, new_assert, 1)
+
 addition = r'''
 
 
@@ -340,13 +360,23 @@ def test_validation_expectations_follow_evidence_profile_not_repo_topology():
         assert project["evidence_profile"] == "software-tool"
         text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")
         for expected in PROFILE_VALIDATION_EXPECTATIONS["software-tool"]:
-            assert expected in text
+            assert expected.split("：", 1)[0] + "：" in text
     x5 = projects["x5-rdk"]
     assert x5["repo_boundary"] == "group"
     assert x5["evidence_profile"] == "embedded-target"
     x5_text = (root / _project_paths(x5)["validation"]).read_text(encoding="utf-8")
     for expected in PROFILE_VALIDATION_EXPECTATIONS["embedded-target"]:
-        assert expected in x5_text
+        assert expected.split("：", 1)[0] + "：" in x5_text
+
+
+def test_existing_manual_readiness_evidence_is_preserved():
+    root = repository_root()
+    project = next(row for row in project_rows(root) if row["id"] == "llm-agent")
+    text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")
+    assert "check-all.sh --full` 均为 62/62" in text
+    assert "313 篇 corpus" in text
+    assert "- [x] 工程验证：" in text
+    _validate_existing_validation_body(project, text)
 
 
 def test_existing_readiness_body_profile_drift_fails_closed():
@@ -362,15 +392,21 @@ def test_existing_readiness_body_profile_drift_fails_closed():
 '''
 if "test_readiness_documents_are_count_neutral_and_profile_aligned" in tests:
     raise SystemExit("readiness drift tests already present")
-# The new tests use re directly.
 if "import re\n" not in tests:
     tests = tests.replace("import json\n", "import json\nimport re\n", 1)
 tests = tests.rstrip() + addition + "\n"
 TESTS_PATH.write_text(tests, encoding="utf-8")
 
-print(json.dumps({
-    "route_documents_migrated": len(route_migrated),
-    "semantic_documents_migrated": sorted(semantic_targets),
-    "generator_semantics": "evidence-profile",
-    "route_statement": "count-neutral",
-}, ensure_ascii=False, sort_keys=True))
+print(
+    json.dumps(
+        {
+            "route_documents_migrated": len(route_migrated),
+            "semantic_documents_migrated": sorted(semantic_targets),
+            "generator_semantics": "evidence-profile",
+            "route_statement": "count-neutral",
+            "manual_evidence_policy": "preserve",
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+)
