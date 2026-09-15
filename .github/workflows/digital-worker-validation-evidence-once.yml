@@ -1,0 +1,149 @@
+name: digital-worker-validation-evidence-once
+
+on:
+  push:
+    branches:
+      - codex/digital-worker-validation-evidence
+    paths:
+      - .github/workflows/digital-worker-validation-evidence-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  ratchet-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Bind exact Digital Worker hosted validation evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          PROJECT = "digital-worker"
+          SOURCE_COMMIT = "1a752b71d212fd8e9248defdd4691ec26ae8b67e"
+          VALIDATION_RUN = "34928860343"
+          receipts = [
+              ("10381136656", "edge-foundation-phase3-readiness", "d065da051ac1cb169790f589d3a482c89d4fa4939908b08f01395554e006e601"),
+              ("10380742401", "edge-foundation-pilot-shadow-receipt", "168cdaf39e8e1bfd358357faec13e5d68d9065e99317c91f2667108707cee9fe"),
+              ("10380732403", "edge-foundation-shadow-evaluation", "5dc1b4006539ae6151bccdf27e44e5bb6376d9a303e388130256a38d54fb34be"),
+              ("10380309509", "cross-repo-verification", "ad72378b2e4c3506448048467f4dd02d7d13ef284b7b548ee9d1cf9c8a70a360"),
+          ]
+          source_ref = {
+              "kind": "source-main-commit",
+              "ref": f"jiying2007/digital-worker@{SOURCE_COMMIT}",
+              "outcome": "github-verified-main-source",
+          }
+          validation_refs = [{
+              "kind": "github-actions-contract-validation",
+              "ref": f"github-actions://jiying2007/digital-worker/runs/{VALIDATION_RUN}@{SOURCE_COMMIT}",
+              "outcome": "embedded-expert-contracts-success",
+          }]
+          for artifact_id, name, digest in receipts:
+              validation_refs.append({
+                  "kind": "github-actions-validation-receipt",
+                  "ref": f"github-actions://jiying2007/digital-worker/runs/{VALIDATION_RUN}/artifacts/{artifact_id}#sha256={digest}",
+                  "outcome": f"{name}-uploaded",
+              })
+
+          registry = Path("registry/items.jsonl")
+          original = registry.read_text(encoding="utf-8")
+          final_newline = original.endswith("\n")
+          old_lines = original.splitlines()
+          new_lines = []
+          matches = 0
+
+          for line in old_lines:
+              obj = json.loads(line)
+              if obj.get("project_id") != PROJECT or obj.get("readiness_slot") != "validation":
+                  new_lines.append(line)
+                  continue
+              matches += 1
+              contract = obj.get("evidence_contract")
+              if not isinstance(contract, dict):
+                  raise SystemExit("digital-worker evidence_contract missing")
+              if contract.get("profile") != "software-tool" or contract.get("status") != "pending":
+                  raise SystemExit("unexpected digital-worker contract profile/status")
+              if contract.get("validation_refs"):
+                  raise SystemExit("digital-worker validation_refs already populated; refuse overwrite")
+              if contract.get("artifact_refs"):
+                  raise SystemExit("digital-worker artifact_refs unexpectedly populated")
+              if contract.get("owner_ref") is not None:
+                  raise SystemExit("digital-worker owner_ref unexpectedly populated")
+              if contract.get("release_ref") is not None or contract.get("rollback_ref") is not None:
+                  raise SystemExit("digital-worker release/rollback unexpectedly populated")
+              if not contract.get("source_refs"):
+                  raise SystemExit("existing digital-worker source mapping prerequisite is not ready")
+
+              if not any(row.get("ref") == source_ref["ref"] for row in contract["source_refs"]):
+                  contract["source_refs"].append(source_ref)
+              contract["validation_refs"] = validation_refs
+
+              # Validation receipts are not release artifacts; preserve all other real gaps.
+              assert not contract.get("artifact_refs")
+              assert contract.get("owner_ref") is None
+              assert contract.get("release_ref") is None
+              assert contract.get("rollback_ref") is None
+              assert contract.get("status") == "pending"
+              new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
+
+          if matches != 1:
+              raise SystemExit(f"expected exactly one digital-worker readiness row, found {matches}")
+          if len(new_lines) != len(old_lines):
+              raise SystemExit("registry line count changed")
+          for old, new in zip(old_lines, new_lines):
+              old_obj = json.loads(old)
+              if not (old_obj.get("project_id") == PROJECT and old_obj.get("readiness_slot") == "validation") and old != new:
+                  raise SystemExit("non-target registry line changed")
+          registry.write_text("\n".join(new_lines) + ("\n" if final_newline else ""), encoding="utf-8")
+          PY
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git diff --check
+
+      - name: Validate bounded validation ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/check.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload=json.loads(Path('/tmp/check.json').read_text(encoding='utf-8'))
+          if payload.get('status') != 'pass':
+              raise SystemExit(f"knowledge-check status={payload.get('status')!r}")
+          PY
+
+      - name: Commit and publish validation candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git add registry/items.jsonl
+          git diff --cached --check
+          git commit -m "docs: bind Digital Worker hosted validation evidence"
+          git push origin HEAD:codex/digital-worker-validation-evidence
