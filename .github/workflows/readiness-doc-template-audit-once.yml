@@ -1,4 +1,4 @@
-name: readiness-doc-template-audit-once
+name: readiness-doc-template-migration-once
 
 on:
   push:
@@ -8,87 +8,70 @@ on:
       - .github/workflows/readiness-doc-template-audit-once.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  audit:
+  migrate-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: codex/readiness-doc-template-drift
-          fetch-depth: 1
-      - name: Audit generated readiness body drift
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Apply bounded readiness document migration
+        run: python tools/ci/readiness_doc_template_drift_once.py
+      - name: Verify bounded changed paths
         shell: bash
         run: |
           python - <<'PY'
           import json
-          import re
+          import subprocess
           from pathlib import Path
 
           projects = json.loads(Path('registry/projects.json').read_text(encoding='utf-8'))['projects']
-          project_count = len(projects)
-          labels = {
-              'engineering': '工程验证：',
-              'device': '设备验证：',
-              'release': '发布验证：',
-              'tool': '工具验证：',
-              'runtime': '运行态验证：',
-              'control': '控制面验证：',
-              'group': '项目组验证：',
-          }
           expected = {
-              'embedded-target': {'engineering', 'device', 'release'},
-              'software-tool': {'tool', 'release'},
-              'runtime-assets': {'runtime'},
-              'control-plane': {'control'},
-              'aggregate-group': {'group'},
+              'tools/codex_assets/knowledge_hub/project_readiness.py',
+              'tests/test_project_readiness.py',
           }
-          route_pattern = re.compile(r'^- \[x\] (\d+) 项目 route matrix 能将 `([^`]+)` 稳定解析为本项目。$', re.M)
-          stale_counts = []
-          semantic_mismatches = []
-          counts = {}
-          rows = []
-          for project in projects:
-              project_id = project['id']
-              path = Path(str(project['validation']).rstrip('/')) / 'project-readiness.md'
-              text = path.read_text(encoding='utf-8')
-              match = route_pattern.search(text)
-              route_count = int(match.group(1)) if match else None
-              route_project = match.group(2) if match else None
-              if route_count is not None:
-                  counts[str(route_count)] = counts.get(str(route_count), 0) + 1
-              if route_count != project_count or route_project != project_id:
-                  stale_counts.append({
-                      'project_id': project_id,
-                      'route_count': route_count,
-                      'route_project': route_project,
-                  })
-              actual = {key for key, marker in labels.items() if marker in text}
-              profile = project.get('evidence_profile')
-              expected_set = expected.get(profile, set())
-              if actual != expected_set:
-                  semantic_mismatches.append({
-                      'project_id': project_id,
-                      'profile': profile,
-                      'repo_boundary': project.get('repo_boundary'),
-                      'actual': sorted(actual),
-                      'expected': sorted(expected_set),
-                  })
-              rows.append({
-                  'project_id': project_id,
-                  'profile': profile,
-                  'route_count': route_count,
-                  'expectations': sorted(actual),
-              })
-          payload = {
-              'project_count': project_count,
-              'route_count_histogram': counts,
-              'stale_route_count_count': len(stale_counts),
-              'stale_route_counts': stale_counts,
-              'semantic_mismatch_count': len(semantic_mismatches),
-              'semantic_mismatches': semantic_mismatches,
-              'rows': rows,
-          }
-          print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
+          expected.update(
+              str(Path(str(row['validation']).rstrip('/')) / 'project-readiness.md')
+              for row in projects
+          )
+          actual = set(
+              subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], text=True).splitlines()
+          )
+          if actual != expected:
+              raise SystemExit('unexpected changed paths: expected={} actual={}'.format(
+                  sorted(expected), sorted(actual)
+              ))
+          print(json.dumps({'changed_count': len(actual), 'paths': sorted(actual)}, ensure_ascii=False))
           PY
+          git diff --check
+      - name: Run readiness and evidence regressions
+        run: python -m pytest -q tests/test_project_readiness.py tests/test_evidence.py
+      - name: Verify canonical readiness idempotence
+        run: python -m tools.codex_assets.knowledge_hub.project_readiness_cli --check --as-of 2026-07-13 --json
+      - name: Run focused Ruff checks
+        run: python -m ruff check tools/codex_assets/knowledge_hub/project_readiness.py tests/test_project_readiness.py
+      - name: Commit bounded migration
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/codex_assets/knowledge_hub/project_readiness.py tests/test_project_readiness.py
+          python - <<'PY' > /tmp/readiness-paths.txt
+          import json
+          from pathlib import Path
+          projects = json.loads(Path('registry/projects.json').read_text(encoding='utf-8'))['projects']
+          for row in projects:
+              print(Path(str(row['validation']).rstrip('/')) / 'project-readiness.md')
+          PY
+          while IFS= read -r path; do git add -- "$path"; done < /tmp/readiness-paths.txt
+          git commit -m 'Eliminate readiness document template drift'
+          git push origin HEAD:codex/readiness-doc-template-drift
