@@ -40,6 +40,11 @@ def make_interaction_id(
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def telemetry_receipt_sha256(row: Mapping[str, Any]) -> str:
+    """Return the digest of the exact privacy-safe telemetry row persisted."""
+    return hashlib.sha256(compact_json(row).encode("utf-8")).hexdigest()
+
+
 def append_telemetry_row(path: pathlib.Path, row: Mapping[str, Any]) -> None:
     """Append one private JSONL telemetry row under an exclusive file lock."""
     ensure_private_directory(path.parent)
@@ -60,6 +65,25 @@ def append_telemetry_row(path: pathlib.Path, row: Mapping[str, Any]) -> None:
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
+def _telemetry_result(
+    *,
+    status: str,
+    recorded: bool,
+    reason: str,
+    error_code: str,
+    receipt_sha256: str = "",
+) -> Dict[str, Any]:
+    return {
+        "status": status,
+        "recorded": recorded,
+        "non_blocking": True,
+        "reason": reason,
+        "error_code": error_code,
+        "receipt_sha256": receipt_sha256,
+        "raw_query_stored": False,
+    }
+
+
 def append_optional_telemetry(
     path: pathlib.Path,
     row: Mapping[str, Any],
@@ -67,46 +91,41 @@ def append_optional_telemetry(
 ) -> Dict[str, Any]:
     """Append local telemetry without making observation a command dependency."""
     if not enabled:
-        return {
-            "status": "disabled",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": "cli-disabled",
-            "error_code": "",
-        }
+        return _telemetry_result(
+            status="disabled", recorded=False, reason="cli-disabled", error_code=""
+        )
     if os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {
         "0",
         "false",
         "off",
         "no",
     }:
-        return {
-            "status": "disabled",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": "environment-disabled",
-            "error_code": "",
-        }
+        return _telemetry_result(
+            status="disabled",
+            recorded=False,
+            reason="environment-disabled",
+            error_code="",
+        )
+    receipt = telemetry_receipt_sha256(row)
     try:
         append_telemetry_row(path, row)
     except OSError as exc:
         error_code = errno.errorcode.get(exc.errno or 0, "OSERROR")
         permission_errors = {errno.EACCES, errno.EPERM, errno.EROFS}
-        return {
-            "status": "degraded",
-            "recorded": False,
-            "non_blocking": True,
-            "reason": (
+        return _telemetry_result(
+            status="degraded",
+            recorded=False,
+            reason=(
                 "read-only-or-permission-denied"
                 if exc.errno in permission_errors
                 else "local-storage-unavailable"
             ),
-            "error_code": error_code,
-        }
-    return {
-        "status": "recorded",
-        "recorded": True,
-        "non_blocking": True,
-        "reason": "",
-        "error_code": "",
-    }
+            error_code=error_code,
+        )
+    return _telemetry_result(
+        status="recorded",
+        recorded=True,
+        reason="",
+        error_code="",
+        receipt_sha256=receipt,
+    )
