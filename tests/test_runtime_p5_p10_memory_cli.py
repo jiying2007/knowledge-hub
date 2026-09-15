@@ -1,5 +1,3 @@
-import pathlib
-
 import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
