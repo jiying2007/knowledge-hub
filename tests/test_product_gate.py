@@ -13,6 +13,9 @@ from tools.codex_assets.knowledge_hub.common import (
 )
 from tools.codex_assets.knowledge_hub.final_gate_cli import main as final_gate_main
 from tools.codex_assets.knowledge_hub.product_gate import _candidate_integrity
+from tools.codex_assets.knowledge_hub.product_gate_support import (
+    _canonical_source_mapping_ready,
+)
 from tools.codex_assets.knowledge_hub.product_gate import (
     _engineering_quality_state,
     _write_snapshot,
@@ -38,6 +41,10 @@ def test_product_readiness_separates_structure_from_real_evidence():
     assert payload["slot_count"] == expected_project_count
     assert payload["structural_ready_count"] == expected_project_count
     assert "source_mapping_ready_count" in payload
+    assert "local_workspace_ready_count" in payload
+    assert 0 <= payload["local_workspace_ready_count"] <= payload["project_count"]
+    assert 0 <= payload["source_mapping_ready_count"] <= payload["project_count"]
+    assert all("local_workspace_ready" in row for row in payload["rows"])
     assert payload["route_matrix_failure_count"] == 0
     assert payload["evidence_ready_count"] < payload["project_count"]
     assert 0 <= payload["evidence_field_complete_count"] <= payload["project_count"]
@@ -45,6 +52,28 @@ def test_product_readiness_separates_structure_from_real_evidence():
         row["evidence_field_status"] in {"incomplete", "complete-awaiting-declaration"}
         for row in payload["rows"]
     )
+
+
+def test_canonical_source_mapping_is_independent_from_local_workspace_presence():
+    ready = {
+        "profile": "software-tool",
+        "required_fields": ["owner_ref", "source_refs", "validation_refs"],
+        "missing_fields": [],
+        "invalid_fields": [],
+    }
+    missing = {**ready, "missing_fields": ["source_refs"]}
+    invalid = {**ready, "invalid_fields": ["source_refs"]}
+    aggregate = {
+        "profile": "aggregate-group",
+        "required_fields": ["owner_ref", "member_project_ids"],
+        "missing_fields": [],
+        "invalid_fields": [],
+    }
+
+    assert _canonical_source_mapping_ready(ready) is True
+    assert _canonical_source_mapping_ready(missing) is False
+    assert _canonical_source_mapping_ready(invalid) is False
+    assert _canonical_source_mapping_ready(aggregate) is True
 
 
 def test_product_is_the_only_executable_final_profile():

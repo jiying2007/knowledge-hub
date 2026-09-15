@@ -57,6 +57,22 @@ def _source_runtime_ready(payload: Mapping[str, Any], exit_code: int) -> bool:
         and selected_ids == expected_ids
     )
 
+def _canonical_source_mapping_ready(
+    contract_evaluation: Mapping[str, Any],
+) -> bool:
+    """Report canonical source evidence independently from host-local workspaces."""
+    if contract_evaluation.get("profile") == "aggregate-group":
+        return True
+    required = set(contract_evaluation.get("required_fields", []))
+    missing = set(contract_evaluation.get("missing_fields", []))
+    invalid = set(contract_evaluation.get("invalid_fields", []))
+    return bool(
+        "source_refs" in required
+        and "source_refs" not in missing
+        and "source_refs" not in invalid
+    )
+
+
 def _unit_test_evidence_reuse_mode(
     regression_suite: str,
     reuse_engineering_evidence: bool,
@@ -319,6 +335,7 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
     rows = []
     structural_ready = 0
     source_mapped = 0
+    local_workspace_ready = 0
     decision_owner_ready = 0
     owner_ref_ready = 0
     owner_boundary_ready = 0
@@ -352,12 +369,17 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         structural_ready += int(structural)
         repos = _repo_rows_for_project(project, repositories)
         workspace_state = _workspace_state(repos, local_workspaces)
-        mapped = workspace_state in {"all-mapped-and-present", "not-applicable-group-or-control-plane"}
-        source_mapped += int(mapped)
+        local_workspace_mapped = workspace_state in {
+            "all-mapped-and-present",
+            "not-applicable-group-or-control-plane",
+        }
+        local_workspace_ready += int(local_workspace_mapped)
         validation_item = slot_items["validation"]
         contract_evaluation = evaluate_evidence_contract(
             validation_item.get("evidence_contract", {})
         )
+        source_mapping_ready = _canonical_source_mapping_ready(contract_evaluation)
+        source_mapped += int(source_mapping_ready)
         decision_owner_values = {
             str(item.get("decision_owner", "unassigned")) for item in slot_items.values()
         }
@@ -375,7 +397,7 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         owner_boundary_ready += int(project_owner_boundary_ready)
         evidence = (
             structural
-            and mapped
+            and source_mapping_ready
             and contract_evaluation["status"] == "ready"
             and contract_evaluation["profile"] != "aggregate-group"
         )
@@ -394,7 +416,8 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
                 "structural_status": "pass" if structural else "fail",
                 "route_scope": route.get("route_scope", "missing"),
                 "workspace_state": workspace_state,
-                "source_mapping_ready": mapped,
+                "local_workspace_ready": local_workspace_mapped,
+                "source_mapping_ready": source_mapping_ready,
                 "evidence_profile": contract_evaluation["profile"],
                 "evidence_status": "ready" if evidence else "contract-evidence-pending",
                 "evidence_contract": contract_evaluation,
@@ -455,6 +478,7 @@ def _project_readiness(root: pathlib.Path) -> Dict[str, Any]:
         "structural_ready_count": structural_ready,
         "structural_coverage": round(structural_ready / float(max(1, project_count)), 4),
         "source_mapping_ready_count": source_mapped,
+        "local_workspace_ready_count": local_workspace_ready,
         "decision_owner_ready_count": decision_owner_ready,
         "owner_ref_ready_count": owner_ref_ready,
         "owner_boundary_ready_count": owner_boundary_ready,
