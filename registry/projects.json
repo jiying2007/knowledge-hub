@@ -530,7 +530,7 @@
       ],
       "repo_boundary": "group",
       "status": "registered",
-      "evidence_profile": "aggregate-group"
+      "evidence_profile": "embedded-target"
     },
     {
       "id": "knowledge-hub",
