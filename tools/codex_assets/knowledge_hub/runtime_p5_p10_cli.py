@@ -9,11 +9,27 @@ from typing import Any, Dict, Mapping, Sequence
 
 from .attestation import verify_quality_attestation
 from .common import KnowledgeHubError, repository_root
-from .memory_runtime import active_memories, consolidation_candidates
+from .memory_runtime import (
+    MAX_SUMMARY_CHARS,
+    MEMORY_LEVELS,
+    active_memories,
+    append_memory_event,
+    consolidation_candidates,
+    forget_memory,
+    forget_scope,
+    memory_event,
+    supersede_memory,
+)
 from .protocol_conformance import protocol_conformance_report
 from .retrieval_v4 import retrieve_v4
 from .runtime_p5_security import repository_posture
 from .temporal_graph import temporal_context_graph
+
+
+class _NoAbbrevArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("allow_abbrev", False)
+        super().__init__(*args, **kwargs)
 
 
 def _json_object(value: str, label: str) -> Dict[str, Any]:
@@ -35,8 +51,29 @@ def _load_object(path: str, label: str) -> Dict[str, Any]:
     return _json_object(file_path.read_text(encoding="utf-8"), label)
 
 
+def _load_summary(path: str) -> str:
+    file_path = pathlib.Path(path)
+    if not file_path.exists() or file_path.is_symlink() or not file_path.is_file():
+        raise KnowledgeHubError("memory summary file is unavailable")
+    if file_path.stat().st_size > MAX_SUMMARY_CHARS * 4:
+        raise KnowledgeHubError("memory summary file exceeds byte budget")
+    try:
+        value = file_path.read_text(encoding="utf-8").strip()
+    except UnicodeDecodeError as exc:
+        raise KnowledgeHubError("memory summary file must be UTF-8 text") from exc
+    if not value or len(value) > MAX_SUMMARY_CHARS:
+        raise KnowledgeHubError("memory summary must be non-empty and bounded")
+    return value
+
+
+def _memory_identity(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--principal-id", required=True)
+    parser.add_argument("--agent-id", required=True)
+    parser.add_argument("--scope-ref", required=True)
+
+
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = _NoAbbrevArgumentParser(description=__doc__)
     parser.add_argument("--root", default="")
     sub = parser.add_subparsers(dest="operation", required=True)
 
@@ -62,6 +99,24 @@ def _parser() -> argparse.ArgumentParser:
     memory.add_argument("--agent-id", required=True)
     memory.add_argument("--scope-ref", default="")
 
+    record = sub.add_parser("memory-record")
+    _memory_identity(record)
+    record.add_argument("--level", required=True, choices=sorted(MEMORY_LEVELS))
+    record.add_argument("--summary-file", required=True)
+    record.add_argument("--source-ref", action="append", default=[])
+    record.add_argument("--ttl-seconds", type=int, default=0)
+
+    forget = sub.add_parser("memory-forget")
+    _memory_identity(forget)
+    forget.add_argument("--memory-id", required=True)
+
+    supersede = sub.add_parser("memory-supersede")
+    _memory_identity(supersede)
+    supersede.add_argument("--memory-id", required=True)
+
+    forget_scope_parser = sub.add_parser("memory-forget-scope")
+    _memory_identity(forget_scope_parser)
+
     consolidate = sub.add_parser("memory-consolidate")
     consolidate.add_argument("--principal-id", required=True)
     consolidate.add_argument("--agent-id", required=True)
@@ -86,6 +141,29 @@ def _target_policy(root: pathlib.Path, relative: str) -> Dict[str, Any]:
     if not isinstance(target, Mapping):
         raise KnowledgeHubError("platform policy repository target must be an object")
     return dict(target)
+
+
+def _memory_record(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
+    event = memory_event(
+        agent_id=args.agent_id,
+        principal_id=args.principal_id,
+        level=args.level,
+        summary=_load_summary(args.summary_file),
+        scope_ref=args.scope_ref,
+        source_refs=args.source_ref,
+        ttl_seconds=args.ttl_seconds,
+    )
+    return append_memory_event(root, event)
+
+
+def _memory_forget_scope(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
+    result = forget_scope(
+        root,
+        principal_id=args.principal_id,
+        agent_id=args.agent_id,
+        scope_ref=args.scope_ref,
+    )
+    return {"status": "pass", **result}
 
 
 def _dispatch(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
@@ -116,6 +194,26 @@ def _dispatch(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
             "status": "pass",
             "memories": rows,
         }
+    if args.operation == "memory-record":
+        return _memory_record(root, args)
+    if args.operation == "memory-forget":
+        return forget_memory(
+            root,
+            memory_id=args.memory_id,
+            principal_id=args.principal_id,
+            agent_id=args.agent_id,
+            scope_ref=args.scope_ref,
+        )
+    if args.operation == "memory-supersede":
+        return supersede_memory(
+            root,
+            memory_id=args.memory_id,
+            principal_id=args.principal_id,
+            agent_id=args.agent_id,
+            scope_ref=args.scope_ref,
+        )
+    if args.operation == "memory-forget-scope":
+        return _memory_forget_scope(root, args)
     if args.operation == "memory-consolidate":
         return consolidation_candidates(
             root,
