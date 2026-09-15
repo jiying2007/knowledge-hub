@@ -1,0 +1,160 @@
+from __future__ import annotations
+
+import json
+import pathlib
+import threading
+import urllib.error
+import urllib.request
+
+from tools.codex_assets.knowledge_hub import operator_state, operator_ui
+
+
+def _sample_state():
+    return {
+        "schema_version": 1,
+        "projection": "knowledge-operator-state-v1",
+        "generated_at": "2026-09-15T12:00:00Z",
+        "read_only": True,
+        "status": "needs-review",
+        "status_summary": {
+            "status": "needs-review",
+            "next_actions_zh": ["处理 owner gate"],
+        },
+        "readiness": {
+            "project_count": 2,
+            "structural_ready_count": 2,
+            "source_mapping_ready_count": 1,
+            "owner_boundary_ready_count": 1,
+            "evidence_field_complete_count": 1,
+            "evidence_ready_count": 0,
+            "human_attention_count": 2,
+            "projects": [
+                {
+                    "project_id": "demo",
+                    "name": "<script>alert(1)</script>",
+                    "evidence_profile": "software-tool",
+                    "evidence_status": "contract-evidence-pending",
+                    "evidence_field_status": "complete-awaiting-declaration",
+                    "owner_boundary_status": "ready",
+                    "source_mapping_ready": True,
+                    "missing_fields": [],
+                    "invalid_fields": [],
+                    "attention": ["owner-declaration"],
+                    "needs_human_attention": True,
+                }
+            ],
+        },
+        "external_closure": {
+            "status": "needs-review",
+            "open_count": 1,
+            "open_gaps": [
+                {
+                    "id": "production-retrieval-eval",
+                    "status": "open",
+                    "owner": "production",
+                }
+            ],
+        },
+        "terminal_closure": {
+            "status": "needs-review",
+            "terminal": False,
+            "blockers": ["external_closure"],
+        },
+        "next_actions_zh": ["处理 owner gate"],
+    }
+
+
+def test_project_projection_marks_owner_declaration_as_attention():
+    row = {
+        "project_id": "demo",
+        "name": "Demo",
+        "evidence_profile": "software-tool",
+        "evidence_status": "contract-evidence-pending",
+        "evidence_field_status": "complete-awaiting-declaration",
+        "owner_boundary_status": "ready",
+        "source_mapping_ready": True,
+        "evidence_contract": {
+            "missing_fields": [],
+            "invalid_fields": [],
+        },
+    }
+    projected = operator_state._project_projection(row)
+    assert projected["needs_human_attention"] is True
+    assert projected["attention"] == ["owner-declaration"]
+
+
+def test_operator_state_stays_read_only(monkeypatch, tmp_path: pathlib.Path):
+    monkeypatch.setattr(
+        operator_state,
+        "_status_summary",
+        lambda root: {"status": "needs-review", "next_actions_zh": ["owner"]},
+    )
+    monkeypatch.setattr(
+        operator_state,
+        "_project_readiness",
+        lambda root: {
+            "project_count": 1,
+            "structural_ready_count": 1,
+            "source_mapping_ready_count": 1,
+            "owner_boundary_ready_count": 1,
+            "evidence_field_complete_count": 1,
+            "evidence_ready_count": 0,
+            "rows": [],
+        },
+    )
+    monkeypatch.setattr(
+        operator_state,
+        "_external_state",
+        lambda root: {"status": "needs-review", "open_count": 1, "open_gaps": []},
+    )
+    monkeypatch.setattr(
+        operator_state,
+        "_terminal_state",
+        lambda root: {"status": "not-evaluated", "terminal": False},
+    )
+    state = operator_state.build_operator_state(tmp_path)
+    assert state["read_only"] is True
+    assert state["status"] == "needs-review"
+    assert state["external_closure"]["open_count"] == 1
+
+
+def test_dashboard_escapes_dynamic_project_name():
+    page = operator_ui.render_dashboard(_sample_state())
+    assert "<script>alert(1)</script>" not in page
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page
+    assert "Machine-first" in page
+    assert "read-only" in page.lower()
+
+
+def test_http_surface_is_loopback_and_rejects_write_methods(tmp_path: pathlib.Path):
+    server = operator_ui.OperatorHTTPServer(
+        (operator_ui.LOOPBACK_HOST, 0),
+        tmp_path,
+        state_builder=lambda root: _sample_state(),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_address[1]
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:{}/api/state".format(port), timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            assert payload["read_only"] is True
+            assert response.headers["Cache-Control"] == "no-store"
+
+        request = urllib.request.Request(
+            "http://127.0.0.1:{}/api/state".format(port),
+            data=b"{}",
+            method="POST",
+        )
+        try:
+            urllib.request.urlopen(request, timeout=5)
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 405
+            body = json.loads(exc.read().decode("utf-8"))
+            assert body["status"] == "read-only"
+        else:
+            raise AssertionError("POST unexpectedly succeeded")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
