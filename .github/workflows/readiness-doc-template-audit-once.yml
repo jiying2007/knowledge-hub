@@ -26,7 +26,20 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Apply bounded readiness document migration
-        run: python tools/ci/readiness_doc_template_drift_once.py
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/ci/readiness_doc_template_drift_once.py')
+          text = path.read_text(encoding='utf-8')
+          old = '"def _managed_readme(\\n",'
+          new = '"def _managed_readme(",'
+          if text.count(old) != 1:
+              raise SystemExit('unexpected managed-readme boundary marker')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          python tools/ci/readiness_doc_template_drift_once.py
+          git checkout -- tools/ci/readiness_doc_template_drift_once.py
       - name: Verify bounded changed paths
         shell: bash
         run: |
