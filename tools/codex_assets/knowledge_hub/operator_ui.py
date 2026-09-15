@@ -15,6 +15,7 @@ from .operator_state import build_operator_state
 
 LOOPBACK_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
+_MACHINE_CLASSES = {"machine-discovery", "machine-after-prerequisite", "dependency-gate"}
 
 _CSS = """
 :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
@@ -62,23 +63,24 @@ def _project_rows(readiness: Mapping[str, Any]) -> str:
         rendered.append(
             "<tr>"
             "<td><code>{}</code><br><span class=\"muted\">{}</span></td>"
-            "<td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
+            "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
             "</tr>".format(
                 _escape(row.get("project_id", "")),
                 _escape(row.get("name", "")),
                 _escape(row.get("evidence_profile", "")),
                 _escape(row.get("owner_boundary_status", "")),
                 _escape(row.get("evidence_field_status", "")),
+                _badges(row.get("action_classes", [])),
                 _badges(row.get("attention", [])),
             )
         )
     return "".join(rendered)
 
 
-def _actions(state: Mapping[str, Any]) -> str:
+def _status_actions(state: Mapping[str, Any]) -> str:
     rows = [str(value) for value in state.get("next_actions_zh", []) if str(value)]
     if not rows:
-        return '<p class="ok">当前 status projection 没有给出下一步人工动作。</p>'
+        return '<p class="ok">当前 status projection 没有给出下一步动作。</p>'
     return "<ul>{}</ul>".format("".join("<li>{}</li>".format(_escape(row)) for row in rows))
 
 
@@ -100,10 +102,36 @@ def _external_rows(external: Mapping[str, Any]) -> str:
     return "<ul>{}</ul>".format("".join(items))
 
 
+def _queue_rows(queue: Mapping[str, Any], *, machine: bool) -> str:
+    rows = []
+    for row in queue.get("actions", []):
+        if not isinstance(row, Mapping):
+            continue
+        execution_class = str(row.get("execution_class", ""))
+        if (execution_class in _MACHINE_CLASSES) != machine:
+            continue
+        target = str(row.get("project_id", "")) or str(row.get("field", ""))
+        rows.append(
+            "<tr><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+                _escape(execution_class),
+                _escape(target),
+                _escape(row.get("field", "")),
+                _escape(row.get("summary_zh", "")),
+            )
+        )
+    if not rows:
+        return '<p class="ok">当前没有此类 action。</p>'
+    return (
+        "<table><thead><tr><th>Execution class</th><th>Target</th><th>Field</th><th>Next step</th>"
+        "</tr></thead><tbody>{}</tbody></table>".format("".join(rows))
+    )
+
+
 def render_dashboard(state: Mapping[str, Any]) -> str:
     readiness = state.get("readiness", {})
     external = state.get("external_closure", {})
     terminal = state.get("terminal_closure", {})
+    queue = state.get("action_queue", {})
     cards = "".join(
         (
             _card("Control plane", state.get("status", "")),
@@ -111,8 +139,10 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
             _card("Source mapped", "{}/{}".format(readiness.get("source_mapping_ready_count", 0), readiness.get("project_count", 0))),
             _card("Field complete", "{}/{}".format(readiness.get("evidence_field_complete_count", 0), readiness.get("project_count", 0))),
             _card("Evidence ready", "{}/{}".format(readiness.get("evidence_ready_count", 0), readiness.get("project_count", 0))),
+            _card("Machine discovery", queue.get("machine_candidate_count", 0)),
+            _card("Machine blocked", queue.get("machine_blocked_count", 0)),
+            _card("Human projects", queue.get("human_project_count", 0)),
             _card("External open", external.get("open_count", 0)),
-            _card("Human attention", readiness.get("human_attention_count", 0)),
             _card("Terminal", "true" if terminal.get("terminal") else terminal.get("status", "false")),
         )
     )
@@ -126,16 +156,20 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
 <p class="muted">Machine-first · Human-on-exception · Read-only</p></div>
 <div><a href="/api/state">JSON API</a></div></header>
 <div class="grid">{cards}</div>
-<section><h2>Human Action Queue</h2>{actions}</section>
+<section><h2>Machine Queue</h2><p class="muted">先由机器发现候选或等待前置；当前不会自动写仓库。</p>{machine}</section>
+<section><h2>Human / External Queue</h2>{human}</section>
+<section><h2>Status Next Actions</h2>{actions}</section>
 <section><h2>External Closure</h2>{external}</section>
 <section><h2>Projects</h2>
-<table><thead><tr><th>Project</th><th>Profile</th><th>Owner boundary</th><th>Evidence fields</th><th>Attention</th></tr></thead>
+<table><thead><tr><th>Project</th><th>Profile</th><th>Owner boundary</th><th>Evidence fields</th><th>Action class</th><th>Raw attention</th></tr></thead>
 <tbody>{projects}</tbody></table></section>
-<footer>只读界面；事实源仍是 registry / status / readiness / terminal closure。页面不会执行 promote、retire、owner approval、release 或 registry 写入。</footer>
+<footer>只读界面；事实源仍是 registry / status / readiness / terminal closure。Machine Queue 仅表示可由机器先发现候选，不表示允许自动发布、自动签收或自动制造证据。</footer>
 </main></body></html>""".format(
         css=_CSS,
         cards=cards,
-        actions=_actions(state),
+        machine=_queue_rows(queue if isinstance(queue, Mapping) else {}, machine=True),
+        human=_queue_rows(queue if isinstance(queue, Mapping) else {}, machine=False),
+        actions=_status_actions(state),
         external=_external_rows(external if isinstance(external, Mapping) else {}),
         projects=_project_rows(readiness if isinstance(readiness, Mapping) else {}),
     )
