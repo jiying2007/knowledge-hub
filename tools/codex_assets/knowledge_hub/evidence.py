@@ -135,6 +135,7 @@ def _approved_not_applicable(contract: Mapping[str, Any], field: str) -> bool:
 def evaluate_evidence_contract(
     contract: Mapping[str, Any],
     ready_member_ids: Sequence[str] = (),
+    current_project_id: str = "",
 ) -> Dict[str, Any]:
     profile = str(contract.get("profile", ""))
     requirements = EVIDENCE_PROFILE_REQUIREMENTS.get(profile)
@@ -146,15 +147,19 @@ def evaluate_evidence_contract(
             "invalid_fields": ["profile"],
         }
     ready_members = set(str(value) for value in ready_member_ids)
+    current_project = str(current_project_id).strip()
     missing: List[str] = []
     invalid: List[str] = []
     for field in requirements:
         value = contract.get(field)
         if field == "member_project_ids":
             members = {str(row) for row in value or []}
+            dependency_members = (
+                members - {current_project} if current_project else members
+            )
             if not members:
                 missing.append(field)
-            elif not members.issubset(ready_members):
+            elif not dependency_members.issubset(ready_members):
                 missing.append(field)
             continue
         if field == "owner_ref":
