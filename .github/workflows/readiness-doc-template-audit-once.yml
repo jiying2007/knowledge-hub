@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
 
+# One-shot migration: preserve any manual/completed evidence and only rewrite exact machine templates.
 jobs:
   migrate-and-test:
     runs-on: ubuntu-latest
