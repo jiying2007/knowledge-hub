@@ -1,0 +1,132 @@
+name: adk-rollback-evidence-once
+
+on:
+  push:
+    branches:
+      - codex/adk-v5.1.0-restore-drill
+    paths:
+      - .github/workflows/adk-rollback-evidence-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  ratchet-rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Bind successful clean-room restore receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          PROJECT = 'agent-dev-kit'
+          RUN_ID = '34932197702'
+          ARTIFACT_ID = '10382127251'
+          ARTIFACT_DIGEST = '89a977263a0fcccc2b45e3432726690bb02d485ab7b5fc1af1ce5e8dbf9c6402'
+          RECEIPT_DIGEST = '89d9b05d719007e0f7d4b102a54edaa6ad8b40982af1bc098e9474994b7d4011'
+          RELEASE_COMMIT = '59cbd5cb40ca7077ee5407636bfc617e295ec7e5'
+          ref = (
+              f'github-actions://jiying2007/knowledge-hub/runs/{RUN_ID}/artifacts/{ARTIFACT_ID}'
+              f'#sha256={ARTIFACT_DIGEST}/adk-v5.1.0-restore-receipt.json'
+              f'#evidence_sha256={RECEIPT_DIGEST}'
+          )
+          rollback_ref = {
+              'kind': 'restore-drill',
+              'ref': ref,
+              'outcome': (
+                  'immutable-v5.1.0-release-asset-sha-provenance-sbom-and-release-contract-verified;'
+                  'clean-room-source-restored;validate-quick-validate-doctor-release-check-pass'
+              ),
+          }
+
+          registry = Path('registry/items.jsonl')
+          original = registry.read_text(encoding='utf-8')
+          final_newline = original.endswith('\n')
+          old_lines = original.splitlines()
+          new_lines = []
+          matches = 0
+          for line in old_lines:
+              obj = json.loads(line)
+              if obj.get('project_id') != PROJECT or obj.get('readiness_slot') != 'validation':
+                  new_lines.append(line)
+                  continue
+              matches += 1
+              contract = obj.get('evidence_contract')
+              if not isinstance(contract, dict):
+                  raise SystemExit('ADK evidence_contract missing')
+              if contract.get('profile') != 'software-tool' or contract.get('status') != 'pending':
+                  raise SystemExit('unexpected ADK profile/status')
+              if not contract.get('owner_ref') or not contract.get('source_refs') or not contract.get('validation_refs'):
+                  raise SystemExit('ADK owner/source/validation prerequisites missing')
+              if not contract.get('artifact_refs') or contract.get('release_ref') is None:
+                  raise SystemExit('ADK release evidence from #71 is not present')
+              release_refs = [str(r.get('ref', '')) for r in contract.get('source_refs', [])]
+              if not any(RELEASE_COMMIT in r and 'v5.1.0' in r for r in release_refs):
+                  raise SystemExit('ADK v5.1.0 source-release identity missing')
+              if contract.get('rollback_ref') is not None:
+                  raise SystemExit('ADK rollback_ref already populated; refuse overwrite')
+              contract['rollback_ref'] = rollback_ref
+              assert contract['status'] == 'pending'
+              new_lines.append(json.dumps(obj, ensure_ascii=False, separators=(',', ':')))
+
+          if matches != 1:
+              raise SystemExit(f'expected exactly one ADK readiness row, found {matches}')
+          if len(new_lines) != len(old_lines):
+              raise SystemExit('registry line count changed')
+          for old, new in zip(old_lines, new_lines):
+              old_obj = json.loads(old)
+              if not (old_obj.get('project_id') == PROJECT and old_obj.get('readiness_slot') == 'validation') and old != new:
+                  raise SystemExit('non-target registry line changed')
+          registry.write_text('\n'.join(new_lines) + ('\n' if final_newline else ''), encoding='utf-8')
+          PY
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git diff --check
+
+      - name: Validate bounded rollback ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/check.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/check.json').read_text(encoding='utf-8'))
+          if payload.get('status') != 'pass':
+              raise SystemExit(f"knowledge-check status={payload.get('status')!r}")
+          PY
+
+      - name: Commit and publish rollback candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          test "$(git diff --name-only)" = "registry/items.jsonl"
+          git add registry/items.jsonl
+          git diff --cached --check
+          git commit -m "docs: bind ADK v5.1.0 restore evidence"
+          git push origin HEAD:codex/adk-v5.1.0-restore-drill
