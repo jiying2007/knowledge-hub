@@ -1,0 +1,94 @@
+name: readiness-doc-template-audit-once
+
+on:
+  push:
+    branches:
+      - codex/readiness-doc-template-drift
+    paths:
+      - .github/workflows/readiness-doc-template-audit-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/readiness-doc-template-drift
+          fetch-depth: 1
+      - name: Audit generated readiness body drift
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          projects = json.loads(Path('registry/projects.json').read_text(encoding='utf-8'))['projects']
+          project_count = len(projects)
+          labels = {
+              'engineering': '工程验证：',
+              'device': '设备验证：',
+              'release': '发布验证：',
+              'tool': '工具验证：',
+              'runtime': '运行态验证：',
+              'control': '控制面验证：',
+              'group': '项目组验证：',
+          }
+          expected = {
+              'embedded-target': {'engineering', 'device', 'release'},
+              'software-tool': {'tool', 'release'},
+              'runtime-assets': {'runtime'},
+              'control-plane': {'control'},
+              'aggregate-group': {'group'},
+          }
+          route_pattern = re.compile(r'^- \[x\] (\d+) 项目 route matrix 能将 `([^`]+)` 稳定解析为本项目。$', re.M)
+          stale_counts = []
+          semantic_mismatches = []
+          counts = {}
+          rows = []
+          for project in projects:
+              project_id = project['id']
+              path = Path(str(project['validation']).rstrip('/')) / 'project-readiness.md'
+              text = path.read_text(encoding='utf-8')
+              match = route_pattern.search(text)
+              route_count = int(match.group(1)) if match else None
+              route_project = match.group(2) if match else None
+              if route_count is not None:
+                  counts[str(route_count)] = counts.get(str(route_count), 0) + 1
+              if route_count != project_count or route_project != project_id:
+                  stale_counts.append({
+                      'project_id': project_id,
+                      'route_count': route_count,
+                      'route_project': route_project,
+                  })
+              actual = {key for key, marker in labels.items() if marker in text}
+              profile = project.get('evidence_profile')
+              expected_set = expected.get(profile, set())
+              if actual != expected_set:
+                  semantic_mismatches.append({
+                      'project_id': project_id,
+                      'profile': profile,
+                      'repo_boundary': project.get('repo_boundary'),
+                      'actual': sorted(actual),
+                      'expected': sorted(expected_set),
+                  })
+              rows.append({
+                  'project_id': project_id,
+                  'profile': profile,
+                  'route_count': route_count,
+                  'expectations': sorted(actual),
+              })
+          payload = {
+              'project_count': project_count,
+              'route_count_histogram': counts,
+              'stale_route_count_count': len(stale_counts),
+              'stale_route_counts': stale_counts,
+              'semantic_mismatch_count': len(semantic_mismatches),
+              'semantic_mismatches': semantic_mismatches,
+              'rows': rows,
+          }
+          print(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2))
+          PY
