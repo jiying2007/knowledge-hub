@@ -22,6 +22,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Set up representative Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
       - name: Bind canonical source evidence only
         shell: bash
         run: |
@@ -140,7 +153,6 @@ jobs:
 
           readiness.write_text(text, encoding="utf-8")
 
-          # Fail closed: source-only binding must not populate unrelated evidence.
           target = next(json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines() if json.loads(line).get("id") == ITEM_ID)
           contract = target["evidence_contract"]
           assert contract["status"] == "pending"
@@ -159,8 +171,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tools/ci/rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/knowledge-check.json
-          tools/ci/rtk bash tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-09-15 >/tmp/final-gate.json
+          rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics >/tmp/knowledge-check.json
+          rtk bash tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-09-15 >/tmp/final-gate.json
           python3 - <<'PY'
           import json
           from pathlib import Path
