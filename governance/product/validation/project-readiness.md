@@ -151,7 +151,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 30 项目 route matrix 能将 `knowledge-hub` 稳定解析为本项目。
+- [x] 项目 route matrix 能将 `knowledge-hub` 稳定解析为本项目。
 - [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [x] 本机 source 定位：2026-07-16 已运行 `knowledge-workspace-discover.sh --apply --first-party-only --json`，29/29 注册远端可定位、0 scan error；结果只写未跟踪 `local/workspaces.json`，不复制绝对路径到 tracked Markdown。

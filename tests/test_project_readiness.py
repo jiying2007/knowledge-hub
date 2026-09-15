@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+import re
 import shutil
 
 import pytest
@@ -15,10 +16,12 @@ from tools.codex_assets.knowledge_hub.common import (
 )
 from tools.codex_assets.knowledge_hub.context import TASK_TYPES, _query_route
 from tools.codex_assets.knowledge_hub.project_readiness import (
+    PROFILE_VALIDATION_EXPECTATIONS,
     RETIRED_PROJECTION_SLOTS,
     SLOT_NAMES,
     _preserve_existing_readiness_item,
     _project_paths,
+    _validate_existing_validation_body,
     generate_project_readiness,
 )
 from tools.codex_assets.knowledge_hub.project_readiness_cli import main as project_readiness_main
@@ -261,7 +264,10 @@ def test_generator_accepts_an_additional_registry_project_without_core_code_chan
     assert payload["evidence_contract_count"] == expected_project_count
     validation = fixture_root / "projects/scalable-project-31/validation/project-readiness.md"
     assert validation.is_file()
-    assert "{} 项目 route matrix".format(expected_project_count) in validation.read_text()
+    assert (
+        "- [x] 项目 route matrix 能将 `scalable-project-31` 稳定解析为本项目。"
+        in validation.read_text()
+    )
 
 
 def test_x5_multi_repository_project_uses_embedded_target_evidence():
@@ -316,4 +322,53 @@ def test_aggregate_group_requires_a_non_self_member_project(tmp_path):
             dt.date(2026, 7, 13),
             apply=False,
         )
+
+
+def test_readiness_documents_are_count_neutral_and_profile_aligned():
+    root = repository_root()
+    numeric_route = re.compile(r"^- \[x\] \d+ 项目 route matrix", re.M)
+    for project in project_rows(root):
+        path = root / _project_paths(project)["validation"]
+        text = path.read_text(encoding="utf-8")
+        assert not numeric_route.search(text), project["id"]
+        _validate_existing_validation_body(project, text)
+
+
+def test_validation_expectations_follow_evidence_profile_not_repo_topology():
+    root = repository_root()
+    projects = {row["id"]: row for row in project_rows(root)}
+    for project_id in ("llm-agent", "agent-dev-kit", "digital-worker"):
+        project = projects[project_id]
+        assert project["evidence_profile"] == "software-tool"
+        text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")
+        for expected in PROFILE_VALIDATION_EXPECTATIONS["software-tool"]:
+            assert expected.split("：", 1)[0] + "：" in text
+    x5 = projects["x5-rdk"]
+    assert x5["repo_boundary"] == "group"
+    assert x5["evidence_profile"] == "embedded-target"
+    x5_text = (root / _project_paths(x5)["validation"]).read_text(encoding="utf-8")
+    for expected in PROFILE_VALIDATION_EXPECTATIONS["embedded-target"]:
+        assert expected.split("：", 1)[0] + "：" in x5_text
+
+
+def test_existing_manual_readiness_evidence_is_preserved():
+    root = repository_root()
+    project = next(row for row in project_rows(root) if row["id"] == "llm-agent")
+    text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")
+    assert "check-all.sh --full` 均为 62/62" in text
+    assert "313 篇 corpus" in text
+    assert "- [x] 工程验证：" in text
+    _validate_existing_validation_body(project, text)
+
+
+def test_existing_readiness_body_profile_drift_fails_closed():
+    root = repository_root()
+    project = dict(next(row for row in project_rows(root) if row["id"] == "x5-rdk"))
+    text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")
+    project["evidence_profile"] = "software-tool"
+    with pytest.raises(
+        KnowledgeHubError,
+        match="existing readiness evidence-profile statement drift: x5-rdk",
+    ):
+        _validate_existing_validation_body(project, text)
 

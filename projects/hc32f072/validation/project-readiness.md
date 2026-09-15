@@ -46,7 +46,7 @@ related:
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
-- [x] 30 项目 route matrix 能将 `hc32f072` 稳定解析为本项目。
+- [x] 项目 route matrix 能将 `hc32f072` 稳定解析为本项目。
 - [x] 单一 evidence contract 已登记，统一 dashboard 可从项目入口访问。
 - [x] search known-answer 与 link audit 通过。
 - [ ] 本机 source 定位：运行 `knowledge-workspace-discover.sh --plan --json`，由 project gate 动态读取；结果不得复制到 tracked Markdown。
