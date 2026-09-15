@@ -6,9 +6,16 @@ import hashlib
 import json
 import os
 import pathlib
+import time
 from typing import Any, Dict, Iterable, List, Mapping, Protocol, Sequence
 
 from .common import KnowledgeHubError, ensure_private_directory, utc_timestamp
+from .observability_runtime import (
+    append_optional_span,
+    new_span_id,
+    new_trace_id,
+    span_record,
+)
 from .runtime_p5_security import principal_context
 
 MAX_OBJECTS_PER_BATCH = 1000
@@ -27,7 +34,10 @@ class ConnectorAdapter(Protocol):
 
 
 def _checkpoint_path(root: pathlib.Path, connector_id: str) -> pathlib.Path:
-    if not connector_id or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789-_" for character in connector_id):
+    if not connector_id or any(
+        character not in "abcdefghijklmnopqrstuvwxyz0123456789-_"
+        for character in connector_id
+    ):
         raise KnowledgeHubError("invalid connector id")
     path = root / CHECKPOINT_ROOT / connector_id / "checkpoint.json"
     ensure_private_directory(path.parent)
@@ -110,7 +120,9 @@ def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any
     if len(body) > MAX_BODY_CHARS:
         raise KnowledgeHubError("connector body exceeds budget")
     tombstone = bool(row.get("tombstone", False))
-    content_sha = hashlib.sha256(body.encode("utf-8")).hexdigest() if not tombstone else ""
+    content_sha = (
+        hashlib.sha256(body.encode("utf-8")).hexdigest() if not tombstone else ""
+    )
     return {
         "schema_version": "knowledge-hub.connector-object.v1",
         "connector_id": connector_id,
@@ -150,6 +162,54 @@ def _changed_rows(value: Any) -> Sequence[Mapping[str, Any]]:
     return result
 
 
+def _sha256_text(value: Any) -> str:
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+
+
+def _sync_observation(
+    root: pathlib.Path,
+    adapter: ConnectorAdapter,
+    principal_id: str,
+    checkpoint_before: Mapping[str, Any],
+    checkpoint_after: Mapping[str, Any],
+    result: Mapping[str, Any],
+    latency_ms: float,
+) -> Dict[str, Any]:
+    origin = str(getattr(adapter, "observation_origin", "unspecified"))[:128]
+    span = span_record(
+        name="knowledge.connector.sync",
+        trace_id=new_trace_id(),
+        span_id=new_span_id(),
+        status="ok" if result.get("status") == "pass" else "degraded",
+        latency_ms=latency_ms,
+        attributes={
+            "connector_id": adapter.connector_id,
+            "observation_origin": origin,
+            "principal_id_sha256": _sha256_text(principal_id),
+            "checkpoint_before_sha256": _sha256_text(
+                checkpoint_before.get("cursor", "")
+            ),
+            "checkpoint_after_sha256": _sha256_text(
+                checkpoint_after.get("cursor", "")
+            ),
+            "checkpoint_advanced": bool(result.get("checkpoint_advanced", False)),
+            "accepted_count": len(result.get("accepted", [])),
+            "tombstone_count": len(result.get("tombstones", [])),
+            "quarantine_count": len(result.get("quarantine", [])),
+            "canonical_write_performed": False,
+        },
+    )
+    observation = append_optional_span(root, span)
+    observation["observation_origin"] = origin
+    observation["checkpoint_before_sha256"] = span["attributes"][
+        "checkpoint_before_sha256"
+    ]
+    observation["checkpoint_after_sha256"] = span["attributes"][
+        "checkpoint_after_sha256"
+    ]
+    return observation
+
+
 def sync_connector(
     root: pathlib.Path,
     adapter: ConnectorAdapter,
@@ -157,6 +217,7 @@ def sync_connector(
     *,
     limit: int = 200,
 ) -> Dict[str, Any]:
+    started = time.monotonic()
     principal_value = principal_context(principal)
     if not 1 <= limit <= MAX_OBJECTS_PER_BATCH:
         raise KnowledgeHubError("connector sync limit is outside policy")
@@ -184,7 +245,7 @@ def sync_connector(
             cursor=str(adapter.checkpoint()),
             previous_sequence=int(checkpoint.get("sequence", 0) or 0),
         )
-    return {
+    result: Dict[str, Any] = {
         "schema_version": "knowledge-hub.connector-sync.v1",
         "status": "pass" if not quarantined else "needs-review",
         "connector_id": adapter.connector_id,
@@ -199,10 +260,27 @@ def sync_connector(
         "transport_owned_by_adapter_or_caller": True,
         "promotion_status": "proposal-or-reference-only",
     }
+    result["observation"] = _sync_observation(
+        root,
+        adapter,
+        principal_value["principal_id"],
+        checkpoint,
+        saved,
+        result,
+        (time.monotonic() - started) * 1000,
+    )
+    return result
 
 
 class StaticConnectorAdapter:
-    def __init__(self, connector_id: str, rows: Iterable[Mapping[str, Any]], next_cursor: str = "static-complete") -> None:
+    observation_origin = "static-fixture"
+
+    def __init__(
+        self,
+        connector_id: str,
+        rows: Iterable[Mapping[str, Any]],
+        next_cursor: str = "static-complete",
+    ) -> None:
         self.connector_id = connector_id
         self._rows = [dict(row) for row in rows]
         self._next_cursor = next_cursor
@@ -210,7 +288,9 @@ class StaticConnectorAdapter:
     def checkpoint(self) -> str:
         return self._next_cursor
 
-    def list_changed(self, checkpoint: str, limit: int) -> Sequence[Mapping[str, Any]]:
+    def list_changed(
+        self, checkpoint: str, limit: int
+    ) -> Sequence[Mapping[str, Any]]:
         if checkpoint == self._next_cursor:
             return []
         return self._rows[:limit]

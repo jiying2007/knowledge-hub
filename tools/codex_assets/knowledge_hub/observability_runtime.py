@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
@@ -54,9 +55,15 @@ def _safe_attributes(value: Mapping[str, Any]) -> Dict[str, Any]:
         name = str(key)
         if name in SENSITIVE_ATTRIBUTE_NAMES:
             if raw:
-                result[name + "_sha256"] = hashlib.sha256(str(raw).encode("utf-8")).hexdigest()
+                result[name + "_sha256"] = hashlib.sha256(
+                    str(raw).encode("utf-8")
+                ).hexdigest()
             continue
-        result[name] = raw if isinstance(raw, (bool, int, float)) else str(raw)[:MAX_ATTRIBUTE_CHARS]
+        result[name] = (
+            raw
+            if isinstance(raw, (bool, int, float))
+            else str(raw)[:MAX_ATTRIBUTE_CHARS]
+        )
     return result
 
 
@@ -91,19 +98,71 @@ def span_record(
     }
 
 
+def _serialized_span(span: Mapping[str, Any]) -> str:
+    return json.dumps(dict(span), ensure_ascii=False, separators=(",", ":"))
+
+
+def span_receipt_sha256(span: Mapping[str, Any]) -> str:
+    """Digest the exact JSON payload written to the local span ledger."""
+    return hashlib.sha256(_serialized_span(span).encode("utf-8")).hexdigest()
+
+
 def append_span(root: pathlib.Path, span: Mapping[str, Any]) -> Dict[str, Any]:
     path = root / TRACE_ROOT / "spans.jsonl"
     ensure_private_directory(path.parent)
     if path.exists() and path.is_symlink():
         raise KnowledgeHubError("trace ledger must not be a symlink")
+    serialized = _serialized_span(span)
+    receipt = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0)
     descriptor = os.open(str(path), flags, 0o600)
     os.fchmod(descriptor, 0o600)
     with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-        handle.write(json.dumps(dict(span), ensure_ascii=False, separators=(",", ":")) + "\n")
+        handle.write(serialized + "\n")
         handle.flush()
         os.fsync(handle.fileno())
-    return {"status": "recorded", "path": str(TRACE_ROOT / "spans.jsonl")}
+    return {
+        "status": "recorded",
+        "recorded": True,
+        "path": str(TRACE_ROOT / "spans.jsonl"),
+        "receipt_sha256": receipt,
+        "raw_query_stored": False,
+    }
+
+
+def append_optional_span(
+    root: pathlib.Path,
+    span: Mapping[str, Any],
+    *,
+    enabled: bool = True,
+) -> Dict[str, Any]:
+    """Record local observability without making it a runtime dependency."""
+    if not enabled or os.environ.get("KNOWLEDGE_TELEMETRY", "1").lower() in {
+        "0",
+        "false",
+        "off",
+        "no",
+    }:
+        return {
+            "status": "disabled",
+            "recorded": False,
+            "receipt_sha256": "",
+            "non_blocking": True,
+            "raw_query_stored": False,
+        }
+    try:
+        result = append_span(root, span)
+    except OSError as exc:
+        return {
+            "status": "degraded",
+            "recorded": False,
+            "receipt_sha256": "",
+            "non_blocking": True,
+            "error_code": errno.errorcode.get(exc.errno or 0, "OSERROR"),
+            "raw_query_stored": False,
+        }
+    result["non_blocking"] = True
+    return result
 
 
 def propagation_context(
@@ -114,11 +173,15 @@ def propagation_context(
     handoff_id: str = "",
     receipt_sha256: str = "",
 ) -> Dict[str, str]:
-    parsed = parse_traceparent(traceparent) if traceparent else {
-        "trace_id": new_trace_id(),
-        "parent_span_id": "",
-        "trace_flags": "00",
-    }
+    parsed = (
+        parse_traceparent(traceparent)
+        if traceparent
+        else {
+            "trace_id": new_trace_id(),
+            "parent_span_id": "",
+            "trace_flags": "00",
+        }
+    )
     span_id = new_span_id()
     return {
         "trace_id": parsed["trace_id"],
@@ -191,6 +254,9 @@ def slo_summary(
         "p50_ms": round(statistics.median(latencies) if latencies else 0.0, 3),
         "p95_ms": round(p95, 3),
         "error_rate": round(error_rate, 6),
-        "targets": {"p95_ms": p95_target_ms, "maximum_error_rate": maximum_error_rate},
+        "targets": {
+            "p95_ms": p95_target_ms,
+            "maximum_error_rate": maximum_error_rate,
+        },
         "failures": failures,
     }
