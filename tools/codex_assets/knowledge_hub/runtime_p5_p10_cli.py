@@ -67,7 +67,7 @@ def _memory_identity(parser: argparse.ArgumentParser) -> None:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument("--root", default="")
     sub = parser.add_subparsers(dest="operation", required=True)
 
