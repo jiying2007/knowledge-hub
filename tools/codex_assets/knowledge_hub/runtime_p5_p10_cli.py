@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Sequence
 
 from .attestation import verify_quality_attestation
 from .common import KnowledgeHubError, repository_root
+from .memory_observation import EXPECTED_STATES, observe_memory_state
 from .memory_runtime import (
     MAX_SUMMARY_CHARS,
     MEMORY_LEVELS,
@@ -98,6 +99,11 @@ def _parser() -> argparse.ArgumentParser:
     memory.add_argument("--principal-id", required=True)
     memory.add_argument("--agent-id", required=True)
     memory.add_argument("--scope-ref", default="")
+
+    observe = sub.add_parser("memory-observe")
+    _memory_identity(observe)
+    observe.add_argument("--memory-id", default="")
+    observe.add_argument("--expect", choices=sorted(EXPECTED_STATES), default="any")
 
     record = sub.add_parser("memory-record")
     _memory_identity(record)
@@ -194,6 +200,15 @@ def _dispatch(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
             "status": "pass",
             "memories": rows,
         }
+    if args.operation == "memory-observe":
+        return observe_memory_state(
+            root,
+            principal_id=args.principal_id,
+            agent_id=args.agent_id,
+            scope_ref=args.scope_ref,
+            memory_id=args.memory_id,
+            expected_state=args.expect,
+        )
     if args.operation == "memory-record":
         return _memory_record(root, args)
     if args.operation == "memory-forget":
