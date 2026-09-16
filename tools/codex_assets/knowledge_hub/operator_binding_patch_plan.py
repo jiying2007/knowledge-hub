@@ -117,8 +117,18 @@ def _selected_row_reasons(row: Mapping[str, Any]) -> List[str]:
     snapshot_fingerprint = str(row.get("candidate_snapshot_fingerprint", ""))
     if not isinstance(snapshot, Mapping) or not snapshot:
         reasons.append("candidate-snapshot-missing")
-    elif _json_fingerprint(dict(snapshot)) != snapshot_fingerprint:
-        reasons.append("candidate-snapshot-fingerprint-mismatch")
+    else:
+        if _json_fingerprint(dict(snapshot)) != snapshot_fingerprint:
+            reasons.append("candidate-snapshot-fingerprint-mismatch")
+        if snapshot.get("provider_verified") is not True:
+            reasons.append("candidate-snapshot-provider-not-verified")
+        if snapshot.get("candidate_only") is not True:
+            reasons.append("candidate-snapshot-candidate-only-invalid")
+        if snapshot.get("eligible_for_binding") is not False:
+            reasons.append("candidate-snapshot-binding-state-invalid")
+        for key in ("provider", "kind", "ref"):
+            if str(snapshot.get(key, "")) != str(row.get(key, "")):
+                reasons.append("candidate-snapshot-{}-mismatch".format(key))
     if row.get("proposal_status") != "ready-for-governed-review":
         reasons.append("proposal-not-ready-for-governed-review")
     if row.get("proposal_ready_for_review") is not True:
@@ -154,8 +164,21 @@ def _selected_row_reasons(row: Mapping[str, Any]) -> List[str]:
     target = row.get("target", {})
     if not isinstance(target, Mapping):
         reasons.append("proposal-target-invalid")
-    elif str(target.get("registry_path", "")) != "registry/items.jsonl":
-        reasons.append("proposal-registry-target-invalid")
+    else:
+        if str(target.get("registry_path", "")) != "registry/items.jsonl":
+            reasons.append("proposal-registry-target-invalid")
+        if str(target.get("project_id", "")) != str(row.get("project_id", "")):
+            reasons.append("proposal-target-project-mismatch")
+        if str(target.get("contract_field", "")) != field:
+            reasons.append("proposal-target-field-mismatch")
+        if str(target.get("readiness_slot", "")) != "validation":
+            reasons.append("proposal-target-readiness-slot-invalid")
+        if not str(target.get("item_id", "")).strip():
+            reasons.append("proposal-target-item-id-missing")
+        if not str(target.get("item_path", "")).strip():
+            reasons.append("proposal-target-item-path-missing")
+        if not str(target.get("evidence_profile", "")).strip():
+            reasons.append("proposal-target-evidence-profile-missing")
     return list(dict.fromkeys(reasons))
 
 
