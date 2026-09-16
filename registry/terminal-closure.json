@@ -39,7 +39,8 @@
     "terminal_claim_requires_machine_pass": true,
     "qualified_implementation_is_not_terminal": true,
     "green_quality_is_not_terminal": true,
-    "default_branch_protection_required": false,
+    "default_branch": "master",
+    "default_branch_protection_required": true,
     "owner_or_external_evidence_must_not_be_fabricated": true,
     "duplicate_closure_status_sources_forbidden": true
   }
