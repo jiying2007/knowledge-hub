@@ -64,6 +64,7 @@ def _terminal_state(root: pathlib.Path) -> Dict[str, Any]:
         "terminal": bool(payload.get("terminal", False)),
         "blockers": list(payload.get("blockers", [])),
         "branch_gc": payload.get("branch_gc", {}),
+        "default_branch_protection": payload.get("default_branch_protection", {}),
     }
 
 
@@ -138,7 +139,7 @@ def build_operator_state(
     external = _external_state(root)
     terminal = _terminal_state(root)
     lifecycle = build_binding_lifecycle_projection(root, lifecycle_inputs)
-    action_queue = build_action_queue(readiness["projects"], external, lifecycle)
+    action_queue = build_action_queue(readiness["projects"], external, lifecycle, terminal)
     discovery = build_discovery_projection(root, action_queue)
     next_actions = list(status.get("next_actions_zh", []))[:20]
     return {
