@@ -4,7 +4,7 @@ Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller �
 
 ## 使用
 
-P2.2/P2.3 不增加新的公共 `tools/knowledge-*.sh` wrapper，避免扩张 canonical command surface。显式调用内部 module CLI：
+P2.2/P2.3/P2.4 不增加新的公共 `tools/knowledge-*.sh` wrapper，避免扩张 canonical command surface。显式调用内部 module CLI：
 
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --json
@@ -21,6 +21,14 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --project agent-dev-kit --field release_ref --qualify --json
 ```
+
+在 P2.3 qualification 之后生成 P2.4 proposal-only governed binding projection：
+
+```bash
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --project agent-dev-kit --field release_ref --propose --json
+```
+
+`--propose` 会在同一次显式调用中执行 P2.2 → P2.3 → P2.4，但只输出 proposal；它不会修改 `registry/items.jsonl`、项目 readiness Markdown、owner、evidence contract status 或其它 canonical state。
 
 支持的 field 为 `source_refs`、`validation_refs`、`artifact_refs`、`release_ref`。
 
@@ -52,7 +60,39 @@ P2.3 不执行新的网络请求，只消费 P2.2 provider execution projection�
 
 拒绝结果输出稳定的 `reason_codes`，例如 `artifact-digest-missing`、`validation-head-sha-missing`、`immutable-release-policy-not-met`。projection 最多资格化 400 个候选，超出时 `truncated=true`，不会静默无限扩张。
 
-无论 `review_eligible` 为何，P2.3 顶层与每个 row 都继续声明 `eligible_for_binding=false`、`automatic_binding_enabled=false`、`automatic_execution_enabled=false`、`canonical_write_performed=false`。后续如要真正绑定 evidence，必须经过独立 governed review/PR 与既有 evidence contract 验证，不能由本层直接升级。
+无论 `review_eligible` 为何，P2.3 顶层与每个 row 都继续声明 `eligible_for_binding=false`、`automatic_binding_enabled=false`、`automatic_execution_enabled=false`、`canonical_write_performed=false`。
+
+## P2.4 proposal-only governed binding
+
+P2.4 只消费完整、未截断、无 upstream error 的 P2.3 qualification projection。它把 `reviewable` 候选映射成**可供 governed PR 审阅的确定性变更提案**，但本层仍不执行任何 canonical mutation。
+
+Canonical target 不重新定义：P2.4 只允许定位到现有项目 validation slot 的单一 evidence contract，目标由以下条件共同确定：
+
+- `registry/project-routes.json` 中项目必须只有一个 canonical route；
+- route 的 `validation_path` 固定映射到 `<validation_path>/project-readiness.md`；
+- `registry/items.jsonl` 中必须存在且只存在一个同 `project_id`、`readiness_slot=validation`、exact path 的 item；
+- 目标字段必须已由该 contract 的现有 evidence profile 声明为 required field。
+
+提案只允许两种 mutation intent：
+
+- `source_refs`、`validation_refs`、`artifact_refs`：`append-reference`，只追加 `{kind, ref}`；
+- `release_ref`：`set-if-empty`，只有当前值为 `null` 时才提出设置。
+
+如果引用已经存在，结果为 `already-present`；如果单值字段已有不同引用、现有字段形状无效、canonical route/item 不唯一、field 不属于该 evidence profile，或该 field 已有显式授权的 `not_applicable`，结果都会 fail-closed 为 `blocked-conflict` / `unmappable`，不会生成覆盖动作。
+
+每条 ready proposal 都包含 canonical target locator、当前值、建议值、mutation intent 与 deterministic `sha256:` proposal fingerprint。fingerprint 只用于审阅时识别同一提案，不是 evidence 签名，也不是授权。
+
+P2.4 顶层和每条 row 始终保持：
+
+- `read_only=true`、`network_performed=false`；
+- `proposal_only=true`；
+- `canonical_write_performed=false`；
+- `automatic_binding_enabled=false`、`automatic_execution_enabled=false`；
+- `eligible_for_binding=false`；
+- `status_mutation_planned=false`、`owner_mutation_planned=false`、`readiness_mutation_planned=false`；
+- `requires_governed_review=true`。
+
+因此 `proposal_status=ready-for-governed-review` 只表示“机器已经形成可审阅的最小变更提案”，不表示该变更已获 owner 授权、不表示 evidence contract 可以声明 `ready`，也不表示 readiness/terminal closure 可以关闭。真正写入仍必须由独立 governed PR 完成，并重新跑既有 evidence/readiness/terminal gates。
 
 ## Fail-closed 边界
 
@@ -72,4 +112,4 @@ Provider result 始终声明：
 
 ## 与 Operator UI 的关系
 
-Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates。任何候选仍必须经过后续独立治理验证，才可能通过 governed PR 写入 canonical evidence。
+Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates；P2.4 只生成 proposal-only governed binding projection。任何 canonical evidence 写入仍必须经过后续独立 governed PR 与现有 evidence contract/readiness gates。
