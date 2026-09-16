@@ -50,6 +50,15 @@ def _blocked(reasons: Sequence[str], transaction_id: str = "") -> Dict[str, Any]
     }
 
 
+def _identity_acknowledgement_valid(payload: Mapping[str, Any]) -> bool:
+    if payload.get("reviewer_identity_unverified_acknowledged") is True:
+        return True
+    return bool(
+        "reviewer_identity_unverified_acknowledged" not in payload
+        and payload.get("reviewer_identity_boundary_acknowledged") is True
+    )
+
+
 def _apply_payload_reasons(payload: Mapping[str, Any]) -> List[str]:
     reasons: List[str] = []
     expected = {
@@ -68,7 +77,6 @@ def _apply_payload_reasons(payload: Mapping[str, Any]) -> List[str]:
         "authorization_validated": True,
         "reviewer_identity_provider_verified": False,
         "explicit_operator_confirmation_verified": True,
-        "reviewer_identity_boundary_acknowledged": True,
         "status_mutation_performed": False,
         "owner_mutation_performed": False,
         "readiness_mutation_performed": False,
@@ -77,6 +85,8 @@ def _apply_payload_reasons(payload: Mapping[str, Any]) -> List[str]:
     for key, expected_value in expected.items():
         if payload.get(key) != expected_value:
             reasons.append("apply-receipt-{}-invalid".format(key.replace("_", "-")))
+    if not _identity_acknowledgement_valid(payload):
+        reasons.append("apply-receipt-reviewer-identity-unverified-acknowledged-invalid")
     if payload.get("changed_paths") != [REGISTRY_PATH]:
         reasons.append("apply-receipt-changed-paths-invalid")
     if payload.get("registry_path") != REGISTRY_PATH:
