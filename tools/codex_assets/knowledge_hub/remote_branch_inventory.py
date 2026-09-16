@@ -8,7 +8,7 @@ import re
 import time
 import urllib.error
 import urllib.request
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Sequence
 
 from .common import (
     KnowledgeHubError,
@@ -138,7 +138,7 @@ def _residue_state(candidates: List[str], branches: List[str]) -> Dict[str, List
 
 
 def _default_branch_state(
-    records: List[Mapping[str, Any]], default_branch: str
+    records: Sequence[Mapping[str, Any]], default_branch: str
 ) -> Dict[str, Any]:
     matches = [row for row in records if str(row.get("name", "")) == default_branch]
     present = len(matches) == 1
