@@ -5,9 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from typing import Sequence
+import pathlib
+from typing import Mapping, Sequence
 
 from .common import KnowledgeHubError, repository_root
+from .operator_binding_authorization import validate_binding_authorization
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_proposal import build_binding_proposal
 from .operator_binding_review_bundle import build_binding_review_bundle
@@ -57,6 +59,15 @@ def build_parser() -> argparse.ArgumentParser:
             "selection is not authorization and no canonical write is performed"
         ),
     )
+    parser.add_argument(
+        "--validate-binding-authorization",
+        default="",
+        metavar="JSON_FILE",
+        help=(
+            "validate externally supplied owner authorization against the exact review bundle; "
+            "requires --review-binding and never applies canonical evidence"
+        ),
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -65,11 +76,28 @@ def _token() -> str:
     return os.environ.get("GITHUB_TOKEN", "") or os.environ.get("GH_TOKEN", "")
 
 
+def _load_authorization(root: pathlib.Path, value: str) -> Mapping[str, object]:
+    path = pathlib.Path(value).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError(
+            "cannot load binding authorization JSON {}: {}".format(path, exc)
+        ) from exc
+    if not isinstance(payload, dict):
+        raise KnowledgeHubError("binding authorization JSON must be an object")
+    return payload
+
+
 def main(argv: Sequence[str] = ()) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
     if args.plan_binding and args.review_binding:
         parser.error("--plan-binding and --review-binding are mutually exclusive")
+    if args.validate_binding_authorization and not args.review_binding:
+        parser.error("--validate-binding-authorization requires --review-binding")
     try:
         root = repository_root(args.root)
         state = build_operator_state(root)
@@ -83,31 +111,35 @@ def main(argv: Sequence[str] = ()) -> int:
             field=args.field,
         )
         selected_binding = args.review_binding or args.plan_binding
-        needs_qualification = bool(
-            args.qualify or args.propose or selected_binding
-        )
+        needs_qualification = bool(args.qualify or args.propose or selected_binding)
         qualification_payload = (
-            qualify_provider_projection(provider_payload)
-            if needs_qualification
-            else {}
+            qualify_provider_projection(provider_payload) if needs_qualification else {}
         )
         needs_proposal = bool(args.propose or selected_binding)
         proposal_payload = (
-            build_binding_proposal(root, qualification_payload)
-            if needs_proposal
-            else {}
+            build_binding_proposal(root, qualification_payload) if needs_proposal else {}
         )
         patch_plan_payload = (
             build_binding_patch_plan(root, proposal_payload, selected_binding)
             if selected_binding
             else {}
         )
-        if args.review_binding:
-            payload = build_binding_review_bundle(
-                root,
-                proposal_payload,
-                patch_plan_payload,
+        review_bundle_payload = (
+            build_binding_review_bundle(root, proposal_payload, patch_plan_payload)
+            if args.review_binding
+            else {}
+        )
+        if args.validate_binding_authorization:
+            authorization = _load_authorization(
+                root, args.validate_binding_authorization
             )
+            payload = validate_binding_authorization(
+                root,
+                review_bundle_payload,
+                authorization,
+            )
+        elif args.review_binding:
+            payload = review_bundle_payload
         elif args.plan_binding:
             payload = patch_plan_payload
         elif args.propose:
@@ -120,6 +152,21 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.validate_binding_authorization:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("authorization_input_generated: false")
+        print("authorization_validated: {}".format(str(payload["authorization_validated"]).lower()))
+        print("reviewer_identity_provider_verified: false")
+        print("apply_enabled: false")
+        print("canonical_write_performed: false")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print("authorization_count: {}".format(payload["authorization_count"]))
+        print("approved_count: {}".format(payload["approved_count"]))
+        print("rejected_count: {}".format(payload["rejected_count"]))
+        for reason in payload.get("reason_codes", []):
+            print("reason: {}".format(reason))
     elif args.review_binding:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
@@ -159,24 +206,12 @@ def main(argv: Sequence[str] = ()) -> int:
         print("selection_is_authorization: false")
         print("automatic_binding_enabled: false")
         print("automatic_execution_enabled: false")
-        print(
-            "selected_proposal_count: {}".format(
-                payload["selected_proposal_count"]
-            )
-        )
+        print("selected_proposal_count: {}".format(payload["selected_proposal_count"]))
         print("planned_item_count: {}".format(payload["planned_item_count"]))
         print("planned_write_count: {}".format(payload["planned_write_count"]))
         if payload.get("registry_before_sha256"):
-            print(
-                "registry_before_sha256: {}".format(
-                    payload["registry_before_sha256"]
-                )
-            )
-            print(
-                "registry_after_sha256: {}".format(
-                    payload["registry_after_sha256"]
-                )
-            )
+            print("registry_before_sha256: {}".format(payload["registry_before_sha256"]))
+            print("registry_after_sha256: {}".format(payload["registry_after_sha256"]))
         for row in payload["rows"]:
             print(
                 "{} {} fields={} proposals={}".format(
@@ -257,6 +292,8 @@ def main(argv: Sequence[str] = ()) -> int:
         return 3
     if selected_binding and payload.get("status") == "blocked":
         return 4
+    if args.validate_binding_authorization and payload.get("status") == "rejected-by-governance":
+        return 5
     return 0
 
 
