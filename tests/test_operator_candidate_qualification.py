@@ -7,6 +7,9 @@ from tools.codex_assets.knowledge_hub.operator_candidate_qualification import (
     qualify_provider_projection,
 )
 
+_SOURCE_SHA = "a" * 40
+_ARTIFACT_DIGEST = "sha256:" + ("b" * 64)
+
 
 class OperatorCandidateQualificationTests(unittest.TestCase):
     def _execution(self, field: str, candidate: dict) -> dict:
@@ -59,10 +62,10 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
     def _source_candidate(self) -> dict:
         return self._candidate(
             "github-source-revision",
-            "github://jiying2007/agent-dev-kit@abc123",
+            "github://jiying2007/agent-dev-kit@{}".format(_SOURCE_SHA),
             {
                 "repository": "jiying2007/agent-dev-kit",
-                "commit_sha": "abc123",
+                "commit_sha": _SOURCE_SHA,
                 "exact_identity": True,
             },
         )
@@ -82,6 +85,16 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         self.assertTrue(row["requires_governed_review"])
         self.assertFalse(row["eligible_for_binding"])
         self.assertEqual(row["reason_codes"], ["review-floor-met"])
+
+    def test_source_identity_must_match_provider_target(self) -> None:
+        candidate = self._source_candidate()
+        candidate["details"]["repository"] = "jiying2007/other-repo"
+        payload = qualify_provider_projection(self._execution("source_refs", candidate))
+
+        row = payload["rows"][0]
+        self.assertFalse(row["review_eligible"])
+        self.assertIn("source-repository-target-mismatch", row["reason_codes"])
+        self.assertIn("source-ref-identity-mismatch", row["reason_codes"])
 
     def test_successful_workflow_run_requires_exact_head_sha(self) -> None:
         candidate = self._candidate(
@@ -113,6 +126,21 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         row = payload["rows"][0]
         self.assertFalse(row["review_eligible"])
         self.assertIn("artifact-digest-missing", row["reason_codes"])
+
+    def test_exact_actions_artifact_is_reviewable(self) -> None:
+        candidate = self._candidate(
+            "github-actions-artifact",
+            "github-actions-artifact://jiying2007/agent-dev-kit/44",
+            {
+                "artifact_id": "44",
+                "digest": _ARTIFACT_DIGEST,
+                "expired": False,
+            },
+        )
+        payload = qualify_provider_projection(self._execution("artifact_refs", candidate))
+
+        self.assertEqual(payload["reviewable_count"], 1)
+        self.assertTrue(payload["rows"][0]["review_eligible"])
 
     def test_immutable_release_is_reviewable(self) -> None:
         candidate = self._candidate(
