@@ -138,7 +138,7 @@ def main(argv: Sequence[str] = ()) -> int:
                     error.get("error", ""),
                 )
             )
-    return 3 if provider_payload["error_count"] else 0
+    return 3 if provider_payload["error_count"] or payload.get("status") == "upstream-error" else 0
 
 
 if __name__ == "__main__":
