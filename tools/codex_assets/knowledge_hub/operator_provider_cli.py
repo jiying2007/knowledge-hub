@@ -8,6 +8,7 @@ import os
 from typing import Sequence
 
 from .common import KnowledgeHubError, repository_root
+from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
 from .operator_state import build_operator_state
 
@@ -22,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--field",
         choices=("", "source_refs", "validation_refs", "artifact_refs", "release_ref"),
         default="",
+    )
+    parser.add_argument(
+        "--qualify",
+        action="store_true",
+        help="classify provider candidates for governed review without binding evidence",
     )
     parser.add_argument("--json", action="store_true")
     return parser
@@ -40,16 +46,39 @@ def main(argv: Sequence[str] = ()) -> int:
         discovery = state.get("discovery", {})
         if not isinstance(discovery, dict):
             raise KnowledgeHubError("operator discovery projection is unavailable")
-        payload = execute_projection_queries(
+        provider_payload = execute_projection_queries(
             discovery,
             token=_token(),
             project_id=args.project,
             field=args.field,
         )
+        payload = (
+            qualify_provider_projection(provider_payload)
+            if args.qualify
+            else provider_payload
+        )
     except (KnowledgeHubError, OSError, UnicodeError) as exc:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.qualify:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("automatic_binding_enabled: false")
+        print("candidate_count: {}".format(payload["candidate_count"]))
+        print("reviewable_count: {}".format(payload["reviewable_count"]))
+        print("rejected_count: {}".format(payload["rejected_count"]))
+        print("truncated: {}".format(str(payload["truncated"]).lower()))
+        for row in payload["rows"]:
+            print(
+                "{} {} {} {} {}".format(
+                    row.get("project_id", ""),
+                    row.get("field", ""),
+                    row.get("qualification_status", ""),
+                    row.get("kind", ""),
+                    row.get("ref", ""),
+                )
+            )
     else:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
@@ -76,7 +105,7 @@ def main(argv: Sequence[str] = ()) -> int:
                     error.get("error", ""),
                 )
             )
-    return 3 if payload["error_count"] else 0
+    return 3 if provider_payload["error_count"] else 0
 
 
 if __name__ == "__main__":
