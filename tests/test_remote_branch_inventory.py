@@ -22,14 +22,20 @@ def _write_lifecycle(tmp_path):
     )
 
 
+def _records(*names, protected=True):
+    return [{"name": name, "protected": protected} for name in names]
+
+
 def test_remote_branch_inventory_passes_when_retirement_candidates_are_absent(
     monkeypatch, tmp_path
 ):
     _write_lifecycle(tmp_path)
     monkeypatch.setattr(
         remote_branch_inventory,
-        "fetch_remote_branches",
-        lambda repository, token="": ["master", "dependabot/pip/example"],
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records(
+            "master", "dependabot/pip/example", protected=True
+        ),
     )
 
     report = remote_branch_inventory.evaluate_remote_branch_inventory(
@@ -41,16 +47,97 @@ def test_remote_branch_inventory_passes_when_retirement_candidates_are_absent(
     assert report["status"] == "pass"
     assert report["remaining_candidates"] == []
     assert report["unexpected_implementation_branches"] == []
+    assert report["default_branch"] == "master"
+    assert report["default_branch_present"] is True
+    assert report["default_branch_protection_observed"] is True
+    assert report["default_branch_protected"] is True
     assert report["observation_count"] == 1
     assert report["converged_after_retry"] is False
+
+
+def test_remote_branch_inventory_keeps_unprotected_default_branch_as_remote_fact(
+    monkeypatch, tmp_path
+):
+    _write_lifecycle(tmp_path)
+    monkeypatch.setattr(
+        remote_branch_inventory,
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records("master", protected=False),
+    )
+
+    report = remote_branch_inventory.evaluate_remote_branch_inventory(
+        tmp_path,
+        repository="example/knowledge-hub",
+        source_revision="4" * 40,
+    )
+
+    assert report["status"] == "pass"
+    assert report["default_branch_present"] is True
+    assert report["default_branch_protection_observed"] is True
+    assert report["default_branch_protected"] is False
+
+
+def test_remote_branch_inventory_marks_missing_protection_field_unobserved(
+    monkeypatch, tmp_path
+):
+    _write_lifecycle(tmp_path)
+    monkeypatch.setattr(
+        remote_branch_inventory,
+        "fetch_remote_branch_records",
+        lambda repository, token="": [{"name": "master", "protected": None}],
+    )
+
+    report = remote_branch_inventory.evaluate_remote_branch_inventory(
+        tmp_path,
+        repository="example/knowledge-hub",
+        source_revision="5" * 40,
+    )
+
+    assert report["status"] == "pass"
+    assert report["default_branch_present"] is True
+    assert report["default_branch_protection_observed"] is False
+    assert report["default_branch_protected"] is False
+
+
+def test_remote_branch_inventory_marks_missing_default_branch(monkeypatch, tmp_path):
+    _write_lifecycle(tmp_path)
+    monkeypatch.setattr(
+        remote_branch_inventory,
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records("develop", protected=True),
+    )
+
+    report = remote_branch_inventory.evaluate_remote_branch_inventory(
+        tmp_path,
+        repository="example/knowledge-hub",
+        source_revision="6" * 40,
+    )
+
+    assert report["status"] == "pass"
+    assert report["default_branch_present"] is False
+    assert report["default_branch_protection_observed"] is False
+    assert report["default_branch_protected"] is False
+
+
+def test_fetch_remote_branches_remains_name_projection(monkeypatch):
+    monkeypatch.setattr(
+        remote_branch_inventory,
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records("master", "topic", protected=True),
+    )
+
+    assert remote_branch_inventory.fetch_remote_branches("example/knowledge-hub") == [
+        "master",
+        "topic",
+    ]
 
 
 def test_remote_branch_inventory_reports_remaining_candidates(monkeypatch, tmp_path):
     _write_lifecycle(tmp_path)
     monkeypatch.setattr(
         remote_branch_inventory,
-        "fetch_remote_branches",
-        lambda repository, token="": ["master", "codex/absorbed"],
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records("master", "codex/absorbed"),
     )
 
     report = remote_branch_inventory.evaluate_remote_branch_inventory(
@@ -71,13 +158,13 @@ def test_remote_branch_inventory_detects_unknown_implementation_residue(
     _write_lifecycle(tmp_path)
     monkeypatch.setattr(
         remote_branch_inventory,
-        "fetch_remote_branches",
-        lambda repository, token="": [
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records(
             "master",
             "codex/new-unregistered-work",
             "arch/new-unregistered-architecture",
             "dependabot/pip/example",
-        ],
+        ),
     )
 
     report = remote_branch_inventory.evaluate_remote_branch_inventory(
@@ -103,13 +190,13 @@ def test_remote_branch_inventory_allows_bounded_gc_convergence(monkeypatch, tmp_
     _write_lifecycle(tmp_path)
     observations = iter(
         [
-            ["master", "codex/just-merged"],
-            ["master"],
+            _records("master", "codex/just-merged"),
+            _records("master"),
         ]
     )
     monkeypatch.setattr(
         remote_branch_inventory,
-        "fetch_remote_branches",
+        "fetch_remote_branch_records",
         lambda repository, token="": next(observations),
     )
 
@@ -138,10 +225,10 @@ def test_remote_branch_inventory_blocks_if_retry_request_fails(monkeypatch, tmp_
     def _fetch(repository, token=""):
         calls["count"] += 1
         if calls["count"] == 1:
-            return ["master", "codex/just-merged"]
+            return _records("master", "codex/just-merged")
         raise KnowledgeHubError("remote branch inventory request failed")
 
-    monkeypatch.setattr(remote_branch_inventory, "fetch_remote_branches", _fetch)
+    monkeypatch.setattr(remote_branch_inventory, "fetch_remote_branch_records", _fetch)
 
     report = remote_branch_inventory.evaluate_remote_branch_inventory(
         tmp_path,
@@ -153,6 +240,8 @@ def test_remote_branch_inventory_blocks_if_retry_request_fails(monkeypatch, tmp_
 
     assert report["status"] == "blocked"
     assert report["unexpected_implementation_branches"] == ["codex/just-merged"]
+    assert report["default_branch_present"] is True
+    assert report["default_branch_protected"] is True
     assert report["observation_count"] == 1
     assert "request failed" in report["error"]
 
@@ -163,7 +252,7 @@ def test_remote_branch_inventory_preserves_blocked_evidence(monkeypatch, tmp_pat
     def _blocked(repository, token=""):
         raise KnowledgeHubError("remote branch inventory request failed")
 
-    monkeypatch.setattr(remote_branch_inventory, "fetch_remote_branches", _blocked)
+    monkeypatch.setattr(remote_branch_inventory, "fetch_remote_branch_records", _blocked)
 
     report = remote_branch_inventory.evaluate_remote_branch_inventory(
         tmp_path,
@@ -173,6 +262,8 @@ def test_remote_branch_inventory_preserves_blocked_evidence(monkeypatch, tmp_pat
 
     assert report["status"] == "blocked"
     assert report["remaining_candidates"] == ["arch/retired", "codex/absorbed"]
+    assert report["default_branch_present"] is False
+    assert report["default_branch_protection_observed"] is False
     assert report["observation_count"] == 0
     assert "request failed" in report["error"]
 
@@ -192,6 +283,14 @@ def test_remote_branch_inventory_rejects_unbound_identity(tmp_path):
             tmp_path,
             repository="example/knowledge-hub",
             source_revision="main",
+        )
+
+    with pytest.raises(KnowledgeHubError, match="default branch name"):
+        remote_branch_inventory.evaluate_remote_branch_inventory(
+            tmp_path,
+            repository="example/knowledge-hub",
+            source_revision="d" * 40,
+            default_branch="refs/heads/master",
         )
 
 
