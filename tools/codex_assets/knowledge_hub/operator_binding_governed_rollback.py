@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .common import KnowledgeHubError, file_sha256, resolve_inside
 from .operator_binding_apply_receipt import build_governed_apply_receipt
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, TransactionResult
 
 ROLLBACK_PROJECTION = "knowledge-operator-binding-governed-rollback-v1"
 FINGERPRINT_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -356,26 +356,11 @@ def _authorization_material(
     }
 
 
-def validate_rollback_authorization(
-    root: pathlib.Path,
-    apply_payload: Mapping[str, Any],
-    authorization: Mapping[str, Any],
+def _authorization_success(
+    receipt: Mapping[str, Any],
+    scope: Sequence[Mapping[str, Any]],
+    rows: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
-    """Validate an external rollback decision without mutating canonical evidence."""
-
-    receipt = build_governed_apply_receipt(root, apply_payload)
-    if receipt.get("status") != "verified-current-post-apply-state":
-        return _blocked(
-            ["rollback-receipt-not-ready:{}".format(receipt.get("status", ""))]
-            + [str(value) for value in receipt.get("reason_codes", [])]
-        )
-    scope, _before_raw, reasons = _derive_scope(root, receipt)
-    reasons.extend(_authorization_input_reasons(authorization, receipt))
-    if reasons:
-        return _blocked(reasons)
-    rows, row_reasons = _match_authorizations(scope, authorization)
-    if row_reasons:
-        return _blocked(row_reasons)
     decisions = Counter(str(row.get("owner_decision", "")) for row in rows)
     rejected = decisions.get("reject-rollback", 0)
     approved = decisions.get("approve-rollback", 0)
@@ -410,11 +395,34 @@ def validate_rollback_authorization(
         "approved_count": approved,
         "rejected_count": rejected,
         "rollback_scope": [dict(row) for row in scope],
-        "rows": rows,
+        "rows": [dict(row) for row in rows],
         "reason_codes": [
             "governed-rollback-required" if not rejected else "governance-rejected"
         ],
     }
+
+
+def validate_rollback_authorization(
+    root: pathlib.Path,
+    apply_payload: Mapping[str, Any],
+    authorization: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Validate an external rollback decision without mutating canonical evidence."""
+
+    receipt = build_governed_apply_receipt(root, apply_payload)
+    if receipt.get("status") != "verified-current-post-apply-state":
+        return _blocked(
+            ["rollback-receipt-not-ready:{}".format(receipt.get("status", ""))]
+            + [str(value) for value in receipt.get("reason_codes", [])]
+        )
+    scope, _before_raw, reasons = _derive_scope(root, receipt)
+    reasons.extend(_authorization_input_reasons(authorization, receipt))
+    if reasons:
+        return _blocked(reasons)
+    rows, row_reasons = _match_authorizations(scope, authorization)
+    if row_reasons:
+        return _blocked(row_reasons)
+    return _authorization_success(receipt, scope, rows)
 
 
 def _prepare_transaction(
@@ -487,77 +495,44 @@ def _confirmation_reasons(
     return reasons
 
 
-def perform_governed_rollback(
+def _execution_material(
     root: pathlib.Path,
-    apply_payload: Mapping[str, Any],
-    authorization_input: Mapping[str, Any],
-    *,
-    confirm_receipt_fingerprint: str,
-    confirm_rollback_authorization_fingerprint: str,
-    confirm_registry_current_sha256: str,
-    acknowledge_reviewer_identity_unverified: bool = False,
-) -> Dict[str, Any]:
-    """Revalidate and explicitly restore one authorized binding apply transaction."""
-
-    validated = validate_rollback_authorization(
-        root, apply_payload, authorization_input
-    )
-    if validated.get("status") != "ready-for-governed-rollback":
-        return _blocked(
-            [
-                "rollback-authorization-not-ready:{}".format(
-                    validated.get("status", "")
-                )
-            ]
-            + [str(value) for value in validated.get("reason_codes", [])]
-        )
-    receipt = build_governed_apply_receipt(root, apply_payload)
-    reasons = _confirmation_reasons(
-        receipt,
-        validated,
-        confirm_receipt_fingerprint=confirm_receipt_fingerprint,
-        confirm_rollback_authorization_fingerprint=(
-            confirm_rollback_authorization_fingerprint
-        ),
-        confirm_registry_current_sha256=confirm_registry_current_sha256,
-        acknowledge_reviewer_identity_unverified=(
-            acknowledge_reviewer_identity_unverified
-        ),
-    )
-    if reasons:
-        return _blocked(reasons)
+    receipt: Mapping[str, Any],
+    validated: Mapping[str, Any],
+) -> Tuple[bytes, str, str, str, List[str]]:
+    reasons: List[str] = []
     if validated.get("approved_count") != validated.get("authorization_count"):
-        return _blocked(["rollback-authorization-not-unanimously-approved"])
+        reasons.append("rollback-authorization-not-unanimously-approved")
     if int(validated.get("rejected_count", -1) or 0) != 0:
-        return _blocked(["rollback-authorization-rejection-present"])
+        reasons.append("rollback-authorization-rejection-present")
     current_sha256 = str(receipt.get("registry_after_sha256", ""))
     restore_sha256 = str(receipt.get("registry_before_sha256", ""))
     registry_path = root / REGISTRY_PATH
     if file_sha256(registry_path) != current_sha256:
-        return _blocked(["rollback-registry-precondition-stale"])
+        reasons.append("rollback-registry-precondition-stale")
     _scope, before_raw, scope_reasons = _derive_scope(root, receipt)
-    if scope_reasons:
-        return _blocked(scope_reasons)
+    reasons.extend(scope_reasons)
     rollback_fingerprint = str(
         validated.get("rollback_authorization_fingerprint", "")
     )
-    transaction = _prepare_transaction(
-        root,
+    return (
         before_raw,
         current_sha256,
         restore_sha256,
         rollback_fingerprint,
+        list(dict.fromkeys(reasons)),
     )
-    result = transaction.apply()
-    post_sha256 = file_sha256(registry_path)
-    if result.status != "applied" or post_sha256 != restore_sha256:
-        raise KnowledgeHubError(
-            "governed rollback postcondition failed: expected {} actual {} status {}".format(
-                restore_sha256,
-                post_sha256,
-                result.status,
-            )
-        )
+
+
+def _rollback_success(
+    receipt: Mapping[str, Any],
+    validated: Mapping[str, Any],
+    rollback_fingerprint: str,
+    current_sha256: str,
+    restore_sha256: str,
+    post_sha256: str,
+    result: TransactionResult,
+) -> Dict[str, Any]:
     return {
         "schema_version": 1,
         "projection": ROLLBACK_PROJECTION,
@@ -597,3 +572,75 @@ def perform_governed_rollback(
         "transaction": result.to_dict(),
         "reason_codes": ["explicit-governed-rollback-completed"],
     }
+
+
+def perform_governed_rollback(
+    root: pathlib.Path,
+    apply_payload: Mapping[str, Any],
+    authorization_input: Mapping[str, Any],
+    *,
+    confirm_receipt_fingerprint: str,
+    confirm_rollback_authorization_fingerprint: str,
+    confirm_registry_current_sha256: str,
+    acknowledge_reviewer_identity_unverified: bool = False,
+) -> Dict[str, Any]:
+    """Revalidate and explicitly restore one authorized binding apply transaction."""
+
+    validated = validate_rollback_authorization(
+        root, apply_payload, authorization_input
+    )
+    if validated.get("status") != "ready-for-governed-rollback":
+        return _blocked(
+            [
+                "rollback-authorization-not-ready:{}".format(
+                    validated.get("status", "")
+                )
+            ]
+            + [str(value) for value in validated.get("reason_codes", [])]
+        )
+    receipt = build_governed_apply_receipt(root, apply_payload)
+    reasons = _confirmation_reasons(
+        receipt,
+        validated,
+        confirm_receipt_fingerprint=confirm_receipt_fingerprint,
+        confirm_rollback_authorization_fingerprint=(
+            confirm_rollback_authorization_fingerprint
+        ),
+        confirm_registry_current_sha256=confirm_registry_current_sha256,
+        acknowledge_reviewer_identity_unverified=(
+            acknowledge_reviewer_identity_unverified
+        ),
+    )
+    if reasons:
+        return _blocked(reasons)
+    before_raw, current_sha256, restore_sha256, rollback_fingerprint, reasons = (
+        _execution_material(root, receipt, validated)
+    )
+    if reasons:
+        return _blocked(reasons)
+    transaction = _prepare_transaction(
+        root,
+        before_raw,
+        current_sha256,
+        restore_sha256,
+        rollback_fingerprint,
+    )
+    result = transaction.apply()
+    post_sha256 = file_sha256(root / REGISTRY_PATH)
+    if result.status != "applied" or post_sha256 != restore_sha256:
+        raise KnowledgeHubError(
+            "governed rollback postcondition failed: expected {} actual {} status {}".format(
+                restore_sha256,
+                post_sha256,
+                result.status,
+            )
+        )
+    return _rollback_success(
+        receipt,
+        validated,
+        rollback_fingerprint,
+        current_sha256,
+        restore_sha256,
+        post_sha256,
+        result,
+    )
