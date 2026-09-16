@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 import pathlib
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Tuple
 
 from .artifact_governance import evaluate_artifact_governance
 from .artifact_terminal_forms import (
@@ -231,6 +231,23 @@ def _branch_candidates(lifecycle: Mapping[str, Any]) -> List[str]:
     )
 
 
+def _inventory_identity(
+    config: Mapping[str, Any], evidence: Mapping[str, Any]
+) -> Tuple[bool, bool]:
+    current_sha = os.environ.get("GITHUB_SHA", "").strip()
+    current_repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    revision_matches = True
+    repository_matches = True
+    if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
+        revision_matches = str(evidence.get("source_revision", "")) == current_sha
+    if (
+        bool(config.get("require_current_github_repository_when_available", False))
+        and current_repository
+    ):
+        repository_matches = str(evidence.get("repository", "")) == current_repository
+    return revision_matches, repository_matches
+
+
 def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str, Any]:
     config = policy.get("branch_gc", {})
     if not isinstance(config, Mapping):
@@ -257,17 +274,7 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
         str(value) for value in evidence.get("retirement_candidates", [])
     )
     remaining = sorted(str(value) for value in evidence.get("remaining_candidates", []))
-    current_sha = os.environ.get("GITHUB_SHA", "").strip()
-    current_repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
-    revision_matches = True
-    repository_matches = True
-    if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
-        revision_matches = str(evidence.get("source_revision", "")) == current_sha
-    if (
-        bool(config.get("require_current_github_repository_when_available", False))
-        and current_repository
-    ):
-        repository_matches = str(evidence.get("repository", "")) == current_repository
+    revision_matches, repository_matches = _inventory_identity(config, evidence)
     status = "pass"
     reason = ""
     if evidence.get("status") != "pass":
@@ -294,6 +301,88 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
         "revision_matches_current_run": revision_matches,
         "retirement_candidates": candidates,
         "remaining_candidates": remaining,
+        "reason": reason,
+        "snapshot": evidence_path,
+    }
+
+
+def _default_branch_protection_state(
+    root: pathlib.Path, policy: Mapping[str, Any]
+) -> Dict[str, Any]:
+    rules = policy.get("rules", {})
+    if not isinstance(rules, Mapping):
+        raise KnowledgeHubError("terminal rules policy must be an object")
+    required = bool(rules.get("default_branch_protection_required", False))
+    branch = str(rules.get("default_branch", "master")).strip()
+    if not required:
+        return {
+            "required": False,
+            "status": "pass",
+            "branch": branch,
+            "owner": "repository-admin",
+            "reason": "",
+        }
+    if not branch:
+        raise KnowledgeHubError("terminal default branch name is missing")
+    config = policy.get("branch_gc", {})
+    if not isinstance(config, Mapping):
+        raise KnowledgeHubError("branch_gc terminal policy must be an object")
+    evidence_path = str(config.get("evidence", "")).strip()
+    if not evidence_path:
+        raise KnowledgeHubError("branch_gc evidence is missing")
+    try:
+        evidence = _load_object(root / evidence_path, "remote branch inventory")
+    except KnowledgeHubError:
+        return {
+            "required": True,
+            "status": "blocked",
+            "branch": branch,
+            "owner": "repository-admin",
+            "protected": False,
+            "protection_observed": False,
+            "reason": "fresh-remote-branch-inventory-missing",
+            "snapshot": evidence_path,
+        }
+    revision_matches, repository_matches = _inventory_identity(config, evidence)
+    snapshot_branch = str(evidence.get("default_branch", ""))
+    present = evidence.get("default_branch_present") is True
+    observed = evidence.get("default_branch_protection_observed") is True
+    protected = evidence.get("default_branch_protected") is True
+    status = "pass"
+    reason = ""
+    if evidence.get("status") == "blocked":
+        status = "blocked"
+        reason = "remote-branch-inventory-unavailable"
+    elif not revision_matches:
+        status = "blocked"
+        reason = "default-branch-protection-revision-mismatch"
+    elif not repository_matches:
+        status = "blocked"
+        reason = "default-branch-protection-repository-mismatch"
+    elif snapshot_branch != branch:
+        status = "blocked"
+        reason = "default-branch-identity-mismatch"
+    elif not present:
+        status = "blocked"
+        reason = "default-branch-missing"
+    elif not observed:
+        status = "blocked"
+        reason = "default-branch-protection-evidence-missing"
+    elif not protected:
+        status = "needs-review"
+        reason = "default-branch-unprotected"
+    return {
+        "required": True,
+        "status": status,
+        "branch": branch,
+        "owner": "repository-admin",
+        "repository": str(evidence.get("repository", "")),
+        "repository_matches_current_run": repository_matches,
+        "source_revision": str(evidence.get("source_revision", "")),
+        "revision_matches_current_run": revision_matches,
+        "present": present,
+        "protection_observed": observed,
+        "protected": protected,
         "reason": reason,
         "snapshot": evidence_path,
     }
@@ -354,6 +443,7 @@ def evaluate_terminal_closure(
         terminal_forms,
     )
     branch_gc = _branch_gc_state(root, policy)
+    branch_protection = _default_branch_protection_state(root, policy)
 
     checks = {
         "product_status": snapshot.get("status") == product_policy.get("require_status", "pass"),
@@ -363,6 +453,7 @@ def evaluate_terminal_closure(
         "artifact_governance": artifacts.get("status") == "pass",
         "bounded_legacy": legacy.get("status") == "pass",
         "branch_gc": branch_gc.get("status") == "pass",
+        "default_branch_protection": branch_protection.get("status") == "pass",
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
@@ -387,4 +478,5 @@ def evaluate_terminal_closure(
         "artifact_terminal_forms": terminal_forms,
         "bounded_legacy": legacy,
         "branch_gc": branch_gc,
+        "default_branch_protection": branch_protection,
     }
