@@ -8,6 +8,7 @@ import os
 from typing import Sequence
 
 from .common import KnowledgeHubError, repository_root
+from .operator_binding_proposal import build_binding_proposal
 from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
 from .operator_state import build_operator_state
@@ -28,6 +29,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--qualify",
         action="store_true",
         help="classify provider candidates for governed review without binding evidence",
+    )
+    parser.add_argument(
+        "--propose",
+        action="store_true",
+        help="build proposal-only canonical evidence changes for governed review",
     )
     parser.add_argument("--json", action="store_true")
     return parser
@@ -52,15 +58,42 @@ def main(argv: Sequence[str] = ()) -> int:
             project_id=args.project,
             field=args.field,
         )
-        payload = (
+        qualification_payload = (
             qualify_provider_projection(provider_payload)
-            if args.qualify
-            else provider_payload
+            if args.qualify or args.propose
+            else {}
         )
+        if args.propose:
+            payload = build_binding_proposal(root, qualification_payload)
+        elif args.qualify:
+            payload = qualification_payload
+        else:
+            payload = provider_payload
     except (KnowledgeHubError, OSError, UnicodeError) as exc:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.propose:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("proposal_only: true")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print("candidate_count: {}".format(payload["candidate_count"]))
+        print("proposal_count: {}".format(payload["proposal_count"]))
+        print("already_present_count: {}".format(payload["already_present_count"]))
+        print("blocked_conflict_count: {}".format(payload["blocked_conflict_count"]))
+        print("unmappable_count: {}".format(payload["unmappable_count"]))
+        for row in payload["rows"]:
+            print(
+                "{} {} {} {} {}".format(
+                    row.get("project_id", ""),
+                    row.get("field", ""),
+                    row.get("proposal_status", ""),
+                    row.get("mutation_intent", ""),
+                    row.get("ref", ""),
+                )
+            )
     elif args.qualify:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
