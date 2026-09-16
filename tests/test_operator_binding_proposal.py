@@ -4,6 +4,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+from typing import Dict, List, Optional, Tuple
 
 from tools.codex_assets.knowledge_hub.operator_binding_proposal import (
     build_binding_proposal,
@@ -11,7 +12,7 @@ from tools.codex_assets.knowledge_hub.operator_binding_proposal import (
 
 
 class OperatorBindingProposalTests(unittest.TestCase):
-    def _contract(self, profile: str = "software-tool") -> dict:
+    def _contract(self, profile: str = "software-tool") -> Dict[str, object]:
         return {
             "schema_version": 1,
             "profile": profile,
@@ -27,7 +28,9 @@ class OperatorBindingProposalTests(unittest.TestCase):
             "member_project_ids": [],
         }
 
-    def _root(self, contract: dict | None = None) -> tuple[tempfile.TemporaryDirectory, pathlib.Path]:
+    def _root(
+        self, contract: Optional[Dict[str, object]] = None
+    ) -> Tuple[tempfile.TemporaryDirectory, pathlib.Path]:
         temporary = tempfile.TemporaryDirectory()
         root = pathlib.Path(temporary.name)
         (root / "registry").mkdir()
@@ -50,14 +53,14 @@ class OperatorBindingProposalTests(unittest.TestCase):
             "project_id": "agent-dev-kit",
             "readiness_slot": "validation",
             "path": "projects/agent-dev-kit/validation/project-readiness.md",
-            "evidence_contract": contract or self._contract(),
+            "evidence_contract": self._contract() if contract is None else contract,
         }
         (root / "registry/items.jsonl").write_text(
             json.dumps(item) + "\n", encoding="utf-8"
         )
         return temporary, root
 
-    def _candidate(self, kind: str, ref: str) -> dict:
+    def _candidate(self, kind: str, ref: str) -> Dict[str, object]:
         return {
             "provider": "github",
             "kind": kind,
@@ -69,7 +72,7 @@ class OperatorBindingProposalTests(unittest.TestCase):
             "details": {},
         }
 
-    def _row(self, field: str, kind: str, ref: str) -> dict:
+    def _row(self, field: str, kind: str, ref: str) -> Dict[str, object]:
         candidate = self._candidate(kind, ref)
         return {
             "project_id": "agent-dev-kit",
@@ -88,7 +91,7 @@ class OperatorBindingProposalTests(unittest.TestCase):
             "candidate": candidate,
         }
 
-    def _qualification(self, rows: list[dict]) -> dict:
+    def _qualification(self, rows: List[Dict[str, object]]) -> Dict[str, object]:
         reviewable = sum(
             1 for row in rows if row.get("qualification_status") == "reviewable"
         )
@@ -171,7 +174,9 @@ class OperatorBindingProposalTests(unittest.TestCase):
             first["rows"][0]["proposal_fingerprint"],
             second["rows"][0]["proposal_fingerprint"],
         )
-        self.assertEqual(first["rows"][0]["proposed_value"], second["rows"][0]["proposed_value"])
+        self.assertEqual(
+            first["rows"][0]["proposed_value"], second["rows"][0]["proposed_value"]
+        )
 
     def test_release_is_set_only_when_empty(self) -> None:
         temporary, root = self._root()
