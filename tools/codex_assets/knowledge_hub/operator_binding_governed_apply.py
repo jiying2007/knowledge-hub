@@ -37,6 +37,7 @@ def _blocked(reasons: Sequence[str]) -> Dict[str, Any]:
         "authorization_input_generated": False,
         "authorization_validated": False,
         "reviewer_identity_provider_verified": False,
+        "reviewer_identity_unverified_acknowledged": False,
         "explicit_operator_confirmation_verified": False,
         "status_mutation_performed": False,
         "owner_mutation_performed": False,
@@ -65,7 +66,6 @@ def _prepare_transaction(
     selected: Sequence[str],
     before_sha256: str,
     after_sha256: str,
-    authorization_fingerprint: str,
 ) -> RepositoryTransaction:
     chosen, reasons = _selected_rows(proposal, selected)
     if reasons:
@@ -79,12 +79,7 @@ def _prepare_transaction(
         raise KnowledgeHubError(
             "governed apply materialization failed: {}".format(", ".join(reasons))
         )
-    transaction = RepositoryTransaction(
-        root,
-        transaction_id="kh-operator-binding-apply-{}".format(
-            authorization_fingerprint.split(":", 1)[1][:16]
-        ),
-    )
+    transaction = RepositoryTransaction(root)
     transaction.add_text(
         "registry/items.jsonl",
         encode_jsonl(items),
@@ -114,6 +109,7 @@ def apply_governed_binding(
     *,
     confirm_authorization_fingerprint: str,
     confirm_registry_before_sha256: str,
+    acknowledge_reviewer_identity_unverified: bool,
 ) -> Dict[str, Any]:
     """Revalidate the whole chain and explicitly apply one authorized registry transaction."""
 
@@ -149,6 +145,10 @@ def apply_governed_binding(
             ["apply-authorization-not-ready:{}".format(authorization.get("status", ""))]
             + [str(value) for value in authorization.get("reason_codes", [])]
         )
+    if authorization.get("reviewer_identity_provider_verified") is not False:
+        return _blocked(["apply-reviewer-identity-boundary-invalid"])
+    if not acknowledge_reviewer_identity_unverified:
+        return _blocked(["apply-reviewer-identity-unverified-ack-required"])
     authorization_fingerprint = str(
         authorization.get("authorization_fingerprint", "")
     )
@@ -180,7 +180,6 @@ def apply_governed_binding(
         selected,
         before_sha256,
         after_sha256,
-        authorization_fingerprint,
     )
     result = transaction.apply()
     post_sha256 = file_sha256(registry_path)
@@ -208,6 +207,7 @@ def apply_governed_binding(
         "authorization_validated": True,
         "authorization_fingerprint": authorization_fingerprint,
         "reviewer_identity_provider_verified": False,
+        "reviewer_identity_unverified_acknowledged": True,
         "explicit_operator_confirmation_verified": True,
         "review_bundle_fingerprint": str(
             authorization.get("review_bundle_fingerprint", "")
