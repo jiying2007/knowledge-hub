@@ -99,6 +99,13 @@ def _reviewable_row_reasons(row: Mapping[str, Any]) -> List[str]:
         reasons.append("qualification-candidate-only-state-invalid")
     if candidate.get("eligible_for_binding") is not False:
         reasons.append("qualification-candidate-binding-state-invalid")
+    details = candidate.get("details", {})
+    if not isinstance(details, Mapping):
+        reasons.append("qualification-candidate-details-invalid")
+    try:
+        json.dumps(dict(candidate), ensure_ascii=False, sort_keys=True)
+    except (TypeError, ValueError):
+        reasons.append("qualification-candidate-not-json-serializable")
     return list(dict.fromkeys(reasons))
 
 
@@ -115,6 +122,22 @@ def _approved_not_applicable(contract: Mapping[str, Any], field: str) -> bool:
 
 def _reference(row: Mapping[str, Any]) -> Dict[str, str]:
     return {"kind": str(row.get("kind", "")), "ref": str(row.get("ref", ""))}
+
+
+def _candidate_snapshot(row: Mapping[str, Any]) -> Dict[str, Any]:
+    candidate = row.get("candidate", {})
+    if not isinstance(candidate, Mapping):
+        return {}
+    # Deep-copy through JSON to keep the proposal deterministic and detached
+    # from the live qualification payload while preserving verified metadata.
+    return json.loads(
+        json.dumps(
+            dict(candidate),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
 
 
 def _same_reference(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
@@ -256,6 +279,7 @@ def _proposal_row(
     field = str(row.get("field", ""))
     proposed = _reference(row)
     row_reasons = _reviewable_row_reasons(row)
+    snapshot = _candidate_snapshot(row) if not row_reasons else {}
     target: Dict[str, Any] = {}
     contract: Mapping[str, Any] = {}
     target_reasons: List[str] = []
@@ -285,6 +309,7 @@ def _proposal_row(
         "proposed_reference": proposed,
         "proposed_value": proposed_value,
         "mutation_intent": intent,
+        "candidate_snapshot": snapshot,
     }
     return {
         "project_id": project_id,
@@ -306,6 +331,8 @@ def _proposal_row(
         "proposed_reference": proposed,
         "proposed_value": proposed_value,
         "mutation_intent": intent,
+        "candidate_snapshot": snapshot,
+        "candidate_snapshot_fingerprint": _fingerprint(snapshot) if snapshot else "",
         "status_mutation_planned": False,
         "owner_mutation_planned": False,
         "readiness_mutation_planned": False,
