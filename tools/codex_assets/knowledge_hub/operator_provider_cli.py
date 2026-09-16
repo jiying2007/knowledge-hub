@@ -10,6 +10,7 @@ from typing import Sequence
 from .common import KnowledgeHubError, repository_root
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_proposal import build_binding_proposal
+from .operator_binding_review_bundle import build_binding_review_bundle
 from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
 from .operator_state import build_operator_state
@@ -46,6 +47,16 @@ def build_parser() -> argparse.ArgumentParser:
             "repeat only for different target fields"
         ),
     )
+    parser.add_argument(
+        "--review-binding",
+        action="append",
+        default=[],
+        metavar="PROPOSAL_FINGERPRINT",
+        help=(
+            "build a deterministic review-only bundle for selected proposal fingerprints; "
+            "selection is not authorization and no canonical write is performed"
+        ),
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -57,6 +68,8 @@ def _token() -> str:
 def main(argv: Sequence[str] = ()) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
+    if args.plan_binding and args.review_binding:
+        parser.error("--plan-binding and --review-binding are mutually exclusive")
     try:
         root = repository_root(args.root)
         state = build_operator_state(root)
@@ -69,24 +82,34 @@ def main(argv: Sequence[str] = ()) -> int:
             project_id=args.project,
             field=args.field,
         )
-        needs_qualification = bool(args.qualify or args.propose or args.plan_binding)
+        selected_binding = args.review_binding or args.plan_binding
+        needs_qualification = bool(
+            args.qualify or args.propose or selected_binding
+        )
         qualification_payload = (
             qualify_provider_projection(provider_payload)
             if needs_qualification
             else {}
         )
-        needs_proposal = bool(args.propose or args.plan_binding)
+        needs_proposal = bool(args.propose or selected_binding)
         proposal_payload = (
             build_binding_proposal(root, qualification_payload)
             if needs_proposal
             else {}
         )
-        if args.plan_binding:
-            payload = build_binding_patch_plan(
+        patch_plan_payload = (
+            build_binding_patch_plan(root, proposal_payload, selected_binding)
+            if selected_binding
+            else {}
+        )
+        if args.review_binding:
+            payload = build_binding_review_bundle(
                 root,
                 proposal_payload,
-                args.plan_binding,
+                patch_plan_payload,
             )
+        elif args.plan_binding:
+            payload = patch_plan_payload
         elif args.propose:
             payload = proposal_payload
         elif args.qualify:
@@ -97,6 +120,37 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.review_binding:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("review_bundle_only: true")
+        print("apply_enabled: false")
+        print("selection_is_authorization: false")
+        print("authorization_state: {}".format(payload["authorization_state"]))
+        print("requires_governed_authorization: true")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print("selected_proposal_count: {}".format(payload["selected_proposal_count"]))
+        print("review_row_count: {}".format(payload["review_row_count"]))
+        if payload.get("patch_plan_fingerprint"):
+            print("patch_plan_fingerprint: {}".format(payload["patch_plan_fingerprint"]))
+            print(
+                "review_bundle_fingerprint: {}".format(
+                    payload["review_bundle_fingerprint"]
+                )
+            )
+        for row in payload["rows"]:
+            print(
+                "{} {} {} {} {}".format(
+                    row.get("project_id", ""),
+                    row.get("item_id", ""),
+                    row.get("field", ""),
+                    row.get("mutation_intent", ""),
+                    row.get("proposal_fingerprint", ""),
+                )
+            )
+        for reason in payload.get("reason_codes", []):
+            print("reason: {}".format(reason))
     elif args.plan_binding:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
@@ -201,7 +255,7 @@ def main(argv: Sequence[str] = ()) -> int:
             )
     if provider_payload["error_count"] or payload.get("status") == "upstream-error":
         return 3
-    if args.plan_binding and payload.get("status") == "blocked":
+    if selected_binding and payload.get("status") == "blocked":
         return 4
     return 0
 
