@@ -26,6 +26,7 @@ tools/knowledge-status.sh --ui --json
 
 - control-plane status；
 - 项目 structural/source/owner/evidence 覆盖；
+- Governed Binding Lifecycle：可选地观测 P2.4–P2.11 已保存 JSON；
 - Discovery Queue：本地自动发现候选，远端生成精确 provider query；
 - Machine Queue：先由机器检索候选或等待前置依赖的 action；
 - Human / External Queue：必须由 owner、真实设备、生产环境或外部管理员处理的例外；
@@ -36,12 +37,76 @@ tools/knowledge-status.sh --ui --json
 
 JSON API 为 `GET /api/state`，健康检查为 `GET /healthz`。
 
+## Governed Binding Lifecycle
+
+P2.4–P2.11 的 CLI 输出由调用方决定是否保存，目前**没有 canonical lifecycle result 目录**。因此 Operator UI 不扫描 `.tmp`、不猜文件名，也不会把某个 transaction journal 自动解释成 owner decision。
+
+需要观测 lifecycle 时，由 operator 在启动时显式传入已保存 JSON：
+
+```bash
+tools/knowledge-status.sh --ui \
+  --binding-proposal /path/to/proposal.json \
+  --binding-patch-plan /path/to/patch-plan.json \
+  --binding-review-bundle /path/to/review-bundle.json \
+  --binding-authorization-result /path/to/authorization-result.json \
+  --binding-apply-result /path/to/apply-result.json \
+  --binding-rollback-result /path/to/rollback-result.json
+```
+
+也可以只传其中一个或若干阶段。完全不传时：
+
+- `binding_lifecycle.status=not-observed`；
+- 不会产生 lifecycle action；
+- `not-observed` **不表示失败，也不表示生命周期尚未完成**，只表示当前 Operator 进程没有拿到显式观测输入。
+
+观测阶段与 P2.x 对应如下：
+
+- `proposal`：P2.4 governed evidence binding proposal；
+- `patch_plan`：P2.5 deterministic patch plan；
+- `review_bundle`：P2.6 governed review bundle；
+- `authorization`：P2.7 authorization validation result；
+- `apply`：P2.8 governed apply result；
+- `apply_receipt`：由 UI 调用现有 P2.9 verifier 现场重算，不从独立文件读取；
+- `rollback`：P2.10 rollback validation/execution result；
+- `rollback_receipt`：由 UI 调用现有 P2.11 verifier 现场重算，不从独立文件读取。
+
+### 信任边界
+
+保存的 proposal / patch plan / review bundle / authorization result 只标记为 `observed-output-not-revalidated`。UI 会检查 projection/schema/read-only/automatic-execution 等基本边界，并在同时提供相邻阶段时核 fingerprint、selection、registry before/after SHA 等链身份，但不会把“文件存在”升级为授权证明。
+
+对 `apply.status=applied`：
+
+- UI 调用 `build_governed_apply_receipt()`；
+- 重新核 transaction journal、before backup、authorization-bound transaction id 与当前 registry SHA；
+- receipt 状态直接进入 lifecycle projection。
+
+对 `rollback.status=rolled-back`：
+
+- UI 调用 `build_governed_rollback_receipt()`；
+- 重新核 apply→rollback lifecycle、独立 rollback journal/backup、恢复 SHA 与 scope；
+- 完成 rollback 后不会生成自动 reapply action。
+
+若同时提供的 JSON 来自不同操作，selection/fingerprint/SHA 链不一致时，projection 固定进入 `observation-error`，下一责任分类为 `governance-review`。UI 不尝试“自动挑一个看起来最新的文件”来修复链。
+
+### 生命周期责任进入现有 Action Queue
+
+Lifecycle 不建立第二套 queue。`next_execution_class` 只允许复用现有七类责任模型：
+
+- proposal 等待显式选择/审计时使用 `governance-review`；
+- patch plan 已观测、下一步可构建确定性 review bundle 时使用 `machine-after-prerequisite`；
+- review bundle 等待真实 owner decision 时使用 `human-authorization`；
+- authorization 已 ready、等待显式 apply CLI 三重确认时仍使用 `human-authorization`；
+- receipt drift、contract mismatch 或 observation error 使用 `governance-review`；
+- `verified-current-post-apply-state` 与 `verified-current-post-rollback-state` 本身不会强制制造 rollback/reapply action。
+
+Lifecycle action 与其它 Operator action 一样固定 `automatic_execution_enabled=false`。页面没有 apply、rollback、authorize 或 reapply 按钮。
+
 ## Action Queue 语义
 
 Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=false`，所有 action 都是只读分类：
 
 - `machine-discovery`：机器应先检索已有 source、validation、artifact 或 release 候选；没有真实候选时保持 open；
-- `machine-after-prerequisite`：前置 release/artifact 身份就绪后可由机器执行 restore/rollback drill；
+- `machine-after-prerequisite`：前置身份/计划就绪后可执行受限机器步骤；
 - `dependency-gate`：等待其它真实项目/成员 evidence ready，不通过补字段绕过；
 - `human-authorization`：必须由授权 owner/admin 明确决策；
 - `real-world-evidence`：必须来自真实设备、生产评估、生命周期或真实 adoption；
@@ -77,10 +142,12 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 
 - 只绑定 loopback `127.0.0.1`；
 - UI 只实现 GET；POST 返回 HTTP 405；
+- lifecycle 文件只能由启动参数显式提供，浏览器不能上传或选择文件；
+- 不扫描 `.tmp` transaction 目录来推断业务授权；
 - 不引入数据库、浏览器端持久化或第二份 readiness 计算；
 - project readiness 直接复用 product gate 的 canonical evaluator；
 - external closure 直接复用 terminal closure evaluator；
-- Action Queue 与 Discovery Queue 都只分类/发现，不执行 canonical 或外部写操作；
-- owner approval、release、promote、retire、registry mutation 等写操作不由 UI 执行。
+- Action Queue、Discovery Queue 与 Lifecycle projection 都不会执行 canonical 或外部写操作；
+- owner approval、release、promote、retire、apply、rollback、reapply、registry mutation 等写操作不由 UI 执行。
 
-后续开放自动处理时，只允许从经过 provider 验证的 `machine-discovery` / 已满足前置的 `machine-after-prerequisite` 开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration 等高风险动作继续保留显式授权。
+后续开放自动处理时，只允许从经过 provider 验证的 `machine-discovery` / 已满足前置的受限机器步骤开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration/apply/rollback 等高风险动作继续保留显式授权与确认。
