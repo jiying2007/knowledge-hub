@@ -164,7 +164,9 @@ def _canonical_owner_inventory(
     result: Dict[Tuple[str, str, str], Mapping[str, Any]] = {}
     for key, rows in matches.items():
         if len(rows) != 1:
-            reasons.append("canonical-authorization-target-not-unique:{}".format("|".join(key)))
+            reasons.append(
+                "canonical-authorization-target-not-unique:{}".format("|".join(key))
+            )
             continue
         contract = rows[0].get("evidence_contract", {})
         if not isinstance(contract, Mapping):
@@ -187,8 +189,7 @@ def _authorization_row_reasons(
     fingerprint = str(bundle_row.get("proposal_fingerprint", ""))
     if str(row.get("proposal_fingerprint", "")) != fingerprint:
         reasons.append("authorization-proposal-fingerprint-mismatch")
-    authorization_id = str(row.get("authorization_id", "")).strip()
-    if not authorization_id:
+    if not str(row.get("authorization_id", "")).strip():
         reasons.append("authorization-id-missing")
     decision = str(row.get("owner_decision", ""))
     if decision not in ALLOWED_DECISIONS:
@@ -210,8 +211,9 @@ def _match_authorizations(
     contracts: Mapping[Tuple[str, str, str], Mapping[str, Any]],
 ) -> Tuple[List[Dict[str, Any]], List[str]]:
     reasons: List[str] = []
-    auth_rows = [row for row in authorization.get("authorizations", []) if isinstance(row, Mapping)]
-    if len(auth_rows) != len(authorization.get("authorizations", [])):
+    raw_rows = authorization.get("authorizations", [])
+    auth_rows = [row for row in raw_rows if isinstance(row, Mapping)]
+    if len(auth_rows) != len(raw_rows):
         reasons.append("authorization-row-type-invalid")
     by_proposal: Dict[str, List[Mapping[str, Any]]] = {}
     for row in auth_rows:
@@ -239,9 +241,27 @@ def _match_authorizations(
     selected = {str(value) for value in bundle.get("selected_proposal_fingerprints", [])}
     extras = sorted(set(by_proposal) - selected)
     reasons.extend("authorization-extra-proposal:{}".format(value) for value in extras)
-    duplicates = [value for value, count in Counter(authorization_ids).items() if value and count > 1]
-    reasons.extend("authorization-id-reused:{}".format(value) for value in sorted(duplicates))
+    duplicates = [
+        value
+        for value, count in Counter(authorization_ids).items()
+        if value and count > 1
+    ]
+    reasons.extend(
+        "authorization-id-reused:{}".format(value) for value in sorted(duplicates)
+    )
     return output, list(dict.fromkeys(reasons))
+
+
+def _authorization_fingerprint_material(
+    bundle: Mapping[str, Any], rows: Sequence[Mapping[str, Any]]
+) -> Dict[str, Any]:
+    return {
+        "review_bundle_fingerprint": str(bundle.get("review_bundle_fingerprint", "")),
+        "patch_plan_fingerprint": str(bundle.get("patch_plan_fingerprint", "")),
+        "registry_before_sha256": str(bundle.get("registry_before_sha256", "")),
+        "registry_after_sha256": str(bundle.get("registry_after_sha256", "")),
+        "authorizations": [dict(row) for row in rows],
+    }
 
 
 def _blocked(reasons: Sequence[str], status: str = "blocked") -> Dict[str, Any]:
@@ -257,6 +277,7 @@ def _blocked(reasons: Sequence[str], status: str = "blocked") -> Dict[str, Any]:
         "apply_enabled": False,
         "authorization_input_generated": False,
         "authorization_validated": False,
+        "authorization_fingerprint": "",
         "reviewer_identity_provider_verified": False,
         "requires_governed_apply": False,
         "status_mutation_planned": False,
@@ -266,7 +287,9 @@ def _blocked(reasons: Sequence[str], status: str = "blocked") -> Dict[str, Any]:
         "approved_count": 0,
         "rejected_count": 0,
         "rows": [],
-        "reason_codes": list(dict.fromkeys(str(value) for value in reasons if str(value))),
+        "reason_codes": list(
+            dict.fromkeys(str(value) for value in reasons if str(value))
+        ),
     }
 
 
@@ -282,7 +305,9 @@ def validate_binding_authorization(
     registry_path = root / "registry/items.jsonl"
     if file_sha256(registry_path) != str(bundle.get("registry_before_sha256", "")):
         reasons.append("authorization-registry-precondition-stale")
-    bundle_rows = [row for row in bundle.get("rows", []) if isinstance(row, Mapping)]
+    bundle_rows = [
+        row for row in bundle.get("rows", []) if isinstance(row, Mapping)
+    ]
     contracts, inventory_reasons = _canonical_owner_inventory(root, bundle_rows)
     reasons.extend(inventory_reasons)
     if reasons:
@@ -294,6 +319,9 @@ def validate_binding_authorization(
     rejected = decisions.get("reject-binding", 0)
     approved = decisions.get("approve-binding", 0)
     status = "rejected-by-governance" if rejected else "ready-for-governed-apply"
+    authorization_fingerprint = _fingerprint(
+        _authorization_fingerprint_material(bundle, rows)
+    )
     return {
         "schema_version": 1,
         "projection": AUTHORIZATION_PROJECTION,
@@ -306,6 +334,7 @@ def validate_binding_authorization(
         "apply_enabled": False,
         "authorization_input_generated": False,
         "authorization_validated": True,
+        "authorization_fingerprint": authorization_fingerprint,
         "reviewer_identity_provider_verified": False,
         "requires_governed_apply": not bool(rejected),
         "status_mutation_planned": False,
