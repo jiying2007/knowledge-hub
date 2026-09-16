@@ -18,9 +18,7 @@ from .operator_state import build_operator_state
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Explicitly apply an externally authorized Operator evidence binding transaction."
-        )
+        description="Explicitly apply an externally authorized Operator evidence binding transaction."
     )
     parser.add_argument("--root", default="")
     parser.add_argument("--project", default="")
@@ -53,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         metavar="SHA256",
         help="exact current registry/items.jsonl SHA256 reviewed by the invoking operator",
+    )
+    parser.add_argument(
+        "--acknowledge-reviewer-identity-unverified",
+        action="store_true",
+        help="acknowledge that P2.7 reviewer identity was not verified by an external identity provider",
     )
     parser.add_argument("--json", action="store_true")
     return parser
@@ -104,6 +107,7 @@ def main(argv: Sequence[str] = ()) -> int:
             authorization,
             confirm_authorization_fingerprint=args.confirm_authorization_fingerprint,
             confirm_registry_before_sha256=args.confirm_registry_before_sha256,
+            acknowledge_reviewer_identity_unverified=args.acknowledge_reviewer_identity_unverified,
         )
     except (KnowledgeHubError, OSError, UnicodeError) as exc:
         parser.error(str(exc))
@@ -114,14 +118,15 @@ def main(argv: Sequence[str] = ()) -> int:
         print("status: {}".format(payload["status"]))
         print("apply_requested: true")
         print("apply_performed: {}".format(str(payload["apply_performed"]).lower()))
-        print(
-            "canonical_write_performed: {}".format(
-                str(payload["canonical_write_performed"]).lower()
-            )
-        )
+        print("canonical_write_performed: {}".format(str(payload["canonical_write_performed"]).lower()))
         print("automatic_binding_enabled: false")
         print("automatic_execution_enabled: false")
         print("reviewer_identity_provider_verified: false")
+        print(
+            "reviewer_identity_unverified_acknowledged: {}".format(
+                str(payload.get("reviewer_identity_unverified_acknowledged", False)).lower()
+            )
+        )
         print(
             "explicit_operator_confirmation_verified: {}".format(
                 str(payload["explicit_operator_confirmation_verified"]).lower()
