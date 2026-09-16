@@ -235,15 +235,10 @@ def _selection_conflict_reasons(rows: Sequence[Mapping[str, Any]]) -> List[str]:
         if not item_id or not field:
             reasons.append("selected-target-key-invalid")
             continue
-        if field in SINGLE_FIELDS and len(group) > 1:
-            refs = {
-                _json_fingerprint(row.get("proposed_reference", {}))
-                for row in group
-            }
-            if len(refs) > 1:
-                reasons.append(
-                    "multiple-single-value-proposals:{}:{}".format(item_id, field)
-                )
+        if len(group) > 1:
+            reasons.append(
+                "multiple-proposals-same-target-field:{}:{}".format(item_id, field)
+            )
         canonical_refs: Dict[str, str] = {}
         for row in group:
             reference_key = _json_fingerprint(row.get("proposed_reference", {}))
