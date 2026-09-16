@@ -115,6 +115,26 @@ Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=fals
 
 `release_ref` 的默认策略是**先机器发现现有 release**；如果不存在，则升级为 `human-authorization`，UI 不会自动创建或发布版本。
 
+## Default branch protection
+
+Terminal closure 现在要求默认分支 `master` 在真实 GitHub 托管环境中处于 protected 状态。该事实不由仓库内配置自报，而是复用 Signed workflow 已有的 `.cache/knowledge-hub/remote-branch-inventory.json` fresh remote snapshot：同一次 GitHub `/branches` 读取既记录 branch inventory，也记录默认分支的 `protected` 布尔值。
+
+这条 gate 与 branch GC 独立：
+
+- branch GC 只判断 retirement / implementation branch residue；
+- default branch protection 只判断 `master` 是否存在、是否观测到 protection 字段、以及 `protected=true`；
+- 两者共用同一 repository/source revision 身份绑定，避免把其它仓库或旧 run 的快照当作当前事实；
+- `protected=false` 会使 terminal check `default_branch_protection` 进入 `needs-review`；
+- protection 字段缺失、默认分支缺失、repository/revision 不匹配会 fail-closed 为 `blocked`。
+
+Operator UI 不会尝试开启 branch protection。未保护默认分支只会进入现有 Human / External Queue：
+
+- `execution_class=external-environment`；
+- `owner=repository-admin`；
+- `automatic_execution_enabled=false`。
+
+因此开启保护仍必须由具备 repository administration 权限的人或外部受控流程完成；本仓代码只负责采集、验证和阻塞 terminal overclaim。
+
 ## Discovery Executor
 
 Discovery Executor 只处理 `machine-discovery` action，并保持只读：
@@ -146,8 +166,8 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 - 不扫描 `.tmp` transaction 目录来推断业务授权；
 - 不引入数据库、浏览器端持久化或第二份 readiness 计算；
 - project readiness 直接复用 product gate 的 canonical evaluator；
-- external closure 直接复用 terminal closure evaluator；
+- external closure 与 default-branch protection 直接复用 terminal closure evaluator；
 - Action Queue、Discovery Queue 与 Lifecycle projection 都不会执行 canonical 或外部写操作；
-- owner approval、release、promote、retire、apply、rollback、reapply、registry mutation 等写操作不由 UI 执行。
+- owner approval、release、promote、retire、apply、rollback、reapply、branch-protection administration、registry mutation 等写操作不由 UI 执行。
 
 后续开放自动处理时，只允许从经过 provider 验证的 `machine-discovery` / 已满足前置的受限机器步骤开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration/apply/rollback 等高风险动作继续保留显式授权与确认。
