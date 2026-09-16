@@ -73,7 +73,7 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     assert gaps["master-ruleset-enforcement"]["required"] is False
     assert gaps["master-ruleset-enforcement"]["status"] == "not-required"
     repository_target = payload["repository_security_target"]
-    assert repository_target["protected_default_branch_required"] is False
+    assert repository_target["protected_default_branch_required"] is True
     assert repository_target["required_status_checks"] == []
     assert repository_target["block_force_push"] is False
     assert repository_target["block_branch_deletion"] is False
@@ -81,7 +81,7 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     assert repository_target["require_conversation_resolution"] is False
     assert (
         repository_target["default_branch_protection_policy"]
-        == "intentionally-unprotected-at-current-stage"
+        == "required-for-terminal-closure-external-admin"
     )
 
 
