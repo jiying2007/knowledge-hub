@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 from .common import KnowledgeHubError, parse_json_output, run_rtk, utc_timestamp
 from .operator_actions import HUMAN_EXECUTION_CLASSES, build_action_queue, project_actions
+from .operator_binding_lifecycle import build_binding_lifecycle_projection
 from .operator_discovery import build_discovery_projection
 from .product_gate_support import _project_readiness
 from .terminal_closure import DEFAULT_POLICY, _external_gaps, _load_object, evaluate_terminal_closure
@@ -128,12 +129,16 @@ def _readiness_projection(readiness: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
-def build_operator_state(root: pathlib.Path) -> Dict[str, Any]:
+def build_operator_state(
+    root: pathlib.Path,
+    lifecycle_inputs: Optional[Mapping[str, str]] = None,
+) -> Dict[str, Any]:
     readiness = _readiness_projection(_project_readiness(root))
     status = _status_summary(root)
     external = _external_state(root)
     terminal = _terminal_state(root)
-    action_queue = build_action_queue(readiness["projects"], external)
+    lifecycle = build_binding_lifecycle_projection(root, lifecycle_inputs)
+    action_queue = build_action_queue(readiness["projects"], external, lifecycle)
     discovery = build_discovery_projection(root, action_queue)
     next_actions = list(status.get("next_actions_zh", []))[:20]
     return {
@@ -146,6 +151,7 @@ def build_operator_state(root: pathlib.Path) -> Dict[str, Any]:
         "readiness": readiness,
         "action_queue": action_queue,
         "discovery": discovery,
+        "binding_lifecycle": lifecycle,
         "external_closure": external,
         "terminal_closure": terminal,
         "next_actions_zh": next_actions,
