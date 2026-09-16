@@ -9,7 +9,7 @@ def _write_json(path: Path, value):
     path.write_text(json.dumps(value), encoding="utf-8")
 
 
-def _policy():
+def _policy(default_branch_protection_required=False):
     return {
         "schema_version": 1,
         "product_gate": {
@@ -33,6 +33,10 @@ def _policy():
             "evidence": ".cache/knowledge-hub/remote-branch-inventory.json",
             "require_current_github_sha_when_available": True,
             "require_current_github_repository_when_available": True,
+        },
+        "rules": {
+            "default_branch": "master",
+            "default_branch_protection_required": default_branch_protection_required,
         },
     }
 
@@ -64,7 +68,17 @@ def _stub_hygiene(
     )
 
 
-def _write_branch_gc(tmp_path, remaining=None, revision=None, repository=None):
+def _write_branch_gc(
+    tmp_path,
+    remaining=None,
+    revision=None,
+    repository=None,
+    *,
+    default_branch="master",
+    default_branch_present=True,
+    protection_observed=True,
+    protected=True,
+):
     candidates = ["codex/old-branch"]
     _write_json(
         tmp_path / "registry/branch-lifecycle.json",
@@ -84,6 +98,10 @@ def _write_branch_gc(tmp_path, remaining=None, revision=None, repository=None):
             "source_revision": revision or "a" * 40,
             "retirement_candidates": candidates,
             "remaining_candidates": remaining,
+            "default_branch": default_branch,
+            "default_branch_present": default_branch_present,
+            "default_branch_protection_observed": protection_observed,
+            "default_branch_protected": protected,
         },
     )
 
@@ -92,9 +110,22 @@ def _write_common_ready_state(
     tmp_path,
     external_status="closed",
     include_external_evidence=True,
+    *,
+    default_branch_protection_required=False,
+    protected=True,
+    protection_observed=True,
+    default_branch_present=True,
 ):
-    _write_json(tmp_path / "registry/terminal-closure.json", _policy())
-    _write_branch_gc(tmp_path)
+    _write_json(
+        tmp_path / "registry/terminal-closure.json",
+        _policy(default_branch_protection_required),
+    )
+    _write_branch_gc(
+        tmp_path,
+        protected=protected,
+        protection_observed=protection_observed,
+        default_branch_present=default_branch_present,
+    )
     row = {
         "id": "repository-private-boundary",
         "required": True,
@@ -123,6 +154,84 @@ def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path)
     assert report["blockers"] == []
     assert report["bounded_legacy"]["legacy_module_count"] == 11
     assert report["bounded_legacy"]["legacy_attention_count"] == 11
+
+
+def test_terminal_closure_passes_branch_protection_axis_when_protected(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=True,
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is True
+    assert report["default_branch_protection"]["status"] == "pass"
+    assert report["default_branch_protection"]["protected"] is True
+    assert report["checks"]["default_branch_protection"] is True
+
+
+def test_terminal_closure_blocks_terminal_claim_when_default_branch_unprotected(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=False,
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["default_branch_protection"]["status"] == "needs-review"
+    assert report["default_branch_protection"]["reason"] == "default-branch-unprotected"
+    assert report["default_branch_protection"]["owner"] == "repository-admin"
+    assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_fails_closed_without_protection_observation(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protection_observed=False,
+        protected=False,
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["default_branch_protection"]["status"] == "blocked"
+    assert (
+        report["default_branch_protection"]["reason"]
+        == "default-branch-protection-evidence-missing"
+    )
+    assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_fails_closed_when_default_branch_missing(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        default_branch_present=False,
+        protection_observed=False,
+        protected=False,
+    )
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["default_branch_protection"]["status"] == "blocked"
+    assert report["default_branch_protection"]["reason"] == "default-branch-missing"
 
 
 def test_terminal_closure_rejects_green_quality_with_external_gap(monkeypatch, tmp_path):
@@ -240,6 +349,27 @@ def test_terminal_closure_rejects_branch_inventory_from_another_run(
     assert "branch_gc" in report["blockers"]
 
 
+def test_terminal_closure_rejects_protection_evidence_from_another_run(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=True,
+    )
+    monkeypatch.setenv("GITHUB_SHA", "b" * 40)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["default_branch_protection"]["status"] == "blocked"
+    assert (
+        report["default_branch_protection"]["reason"]
+        == "default-branch-protection-revision-mismatch"
+    )
+    assert "default_branch_protection" in report["blockers"]
+
+
 def test_terminal_closure_rejects_branch_inventory_from_another_repository(
     monkeypatch, tmp_path
 ):
@@ -254,3 +384,25 @@ def test_terminal_closure_rejects_branch_inventory_from_another_repository(
     assert report["branch_gc"]["reason"] == "branch-inventory-repository-mismatch"
     assert report["branch_gc"]["repository_matches_current_run"] is False
     assert "branch_gc" in report["blockers"]
+
+
+def test_terminal_closure_rejects_protection_evidence_from_another_repository(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=True,
+    )
+    monkeypatch.setenv("GITHUB_REPOSITORY", "expected/knowledge-hub")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["default_branch_protection"]["status"] == "blocked"
+    assert (
+        report["default_branch_protection"]["reason"]
+        == "default-branch-protection-repository-mismatch"
+    )
+    assert report["default_branch_protection"]["repository_matches_current_run"] is False
+    assert "default_branch_protection" in report["blockers"]
