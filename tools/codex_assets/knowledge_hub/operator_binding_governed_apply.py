@@ -66,6 +66,7 @@ def _prepare_transaction(
     selected: Sequence[str],
     before_sha256: str,
     after_sha256: str,
+    authorization_fingerprint: str,
 ) -> RepositoryTransaction:
     chosen, reasons = _selected_rows(proposal, selected)
     if reasons:
@@ -79,7 +80,12 @@ def _prepare_transaction(
         raise KnowledgeHubError(
             "governed apply materialization failed: {}".format(", ".join(reasons))
         )
-    transaction = RepositoryTransaction(root)
+    if not AUTHORIZATION_FINGERPRINT_RE.fullmatch(authorization_fingerprint):
+        raise KnowledgeHubError("governed apply authorization fingerprint is invalid")
+    transaction_id = "kh-operator-binding-apply-{}".format(
+        authorization_fingerprint.split(":", 1)[1][:16]
+    )
+    transaction = RepositoryTransaction(root, transaction_id=transaction_id)
     transaction.add_text(
         "registry/items.jsonl",
         encode_jsonl(items),
@@ -180,6 +186,7 @@ def apply_governed_binding(
         selected,
         before_sha256,
         after_sha256,
+        authorization_fingerprint,
     )
     result = transaction.apply()
     post_sha256 = file_sha256(registry_path)
