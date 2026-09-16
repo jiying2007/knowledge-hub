@@ -11,7 +11,8 @@ A governed apply invocation must provide all of the following:
 1. the exact proposal fingerprints selected for the transaction;
 2. an external P2.7 authorization JSON object created outside the Operator;
 3. the exact deterministic P2.7 `authorization_fingerprint` reviewed by the invoking operator;
-4. the exact current `registry/items.jsonl` SHA256 reviewed by the invoking operator.
+4. the exact current `registry/items.jsonl` SHA256 reviewed by the invoking operator;
+5. an explicit acknowledgement that P2.7 reviewer identity is **not** authenticated by an external identity provider.
 
 Immediately before any write, P2.8 recomputes from the current workspace:
 
@@ -29,12 +30,13 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_binding_
   --authorization <external-owner-authorization.json> \
   --confirm-authorization-fingerprint sha256:<authorization> \
   --confirm-registry-before-sha256 <64-hex-registry-sha256> \
+  --acknowledge-reviewer-identity-unverified \
   --json
 ```
 
 Repeat `--proposal-fingerprint` only for distinct proposal targets included in the same externally authorized review bundle.
 
-There is deliberately no default apply, no automatic selection, and no generated authorization file.
+There is deliberately no default apply, no automatic selection, and no generated authorization file. Omitting the reviewer-identity acknowledgement leaves the executor fail-closed.
 
 ## Write scope
 
@@ -73,7 +75,7 @@ P2.8 does not improve the trust level of P2.7 owner identity evidence.
 
 `reviewer_identity_provider_verified=false` remains explicit. The P2.7 file proves that the supplied authorization fields are structurally coherent with the exact canonical `owner_ref`; it does not prove identity through an external identity provider.
 
-The two P2.8 confirmation arguments are an **operator anti-accident boundary**, not identity authentication. They force the invoking operator to name the exact reviewed authorization and exact pre-write registry state, but they must not be described as cryptographic owner identity verification.
+The fingerprint/SHA confirmations and `--acknowledge-reviewer-identity-unverified` are an **operator anti-accident boundary**, not identity authentication. They force the invoking operator to name the exact reviewed authorization, exact pre-write registry state, and consciously acknowledge the remaining identity limitation. They must not be described as cryptographic owner identity verification.
 
 ## Automatic execution remains disabled
 
