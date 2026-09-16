@@ -63,14 +63,19 @@ def _proposal_reasons(proposal: Mapping[str, Any]) -> List[str]:
     reasons: List[str] = []
     expected = {
         "projection": PROPOSAL_PROJECTION,
+        "status": "needs-governed-review",
         "read_only": True,
         "network_performed": False,
         "canonical_write_performed": False,
         "automatic_binding_enabled": False,
         "automatic_execution_enabled": False,
         "proposal_only": True,
+        "candidate_only": True,
         "eligible_for_binding": False,
         "requires_governed_review": True,
+        "status_mutation_planned": False,
+        "owner_mutation_planned": False,
+        "readiness_mutation_planned": False,
     }
     for key, expected_value in expected.items():
         if proposal.get(key) != expected_value:
@@ -92,12 +97,6 @@ def _proposal_reasons(proposal: Mapping[str, Any]) -> List[str]:
     for key, value in expected_counts.items():
         if int(proposal.get(key, -1) or 0) != value:
             reasons.append("proposal-{}-mismatch".format(key.replace("_", "-")))
-    if proposal.get("status") not in {
-        "needs-governed-review",
-        "no-change",
-        "blocked",
-    }:
-        reasons.append("proposal-status-invalid")
     return list(dict.fromkeys(reasons))
 
 
@@ -116,15 +115,12 @@ def _row_reasons(row: Mapping[str, Any]) -> List[str]:
             row.get("candidate_snapshot_fingerprint", "")
         ):
             reasons.append("candidate-snapshot-fingerprint-mismatch")
-        for key, expected in (
-            ("provider_verified", True),
-            ("candidate_only", True),
-            ("eligible_for_binding", False),
-        ):
-            if snapshot.get(key) is not expected:
-                reasons.append(
-                    "candidate-snapshot-{}-invalid".format(key.replace("_", "-"))
-                )
+        if snapshot.get("provider_verified") is not True:
+            reasons.append("candidate-snapshot-provider-not-verified")
+        if snapshot.get("candidate_only") is not True:
+            reasons.append("candidate-snapshot-candidate-only-invalid")
+        if snapshot.get("eligible_for_binding") is not False:
+            reasons.append("candidate-snapshot-binding-state-invalid")
         for key in ("provider", "kind", "ref"):
             if str(snapshot.get(key, "")) != str(row.get(key, "")):
                 reasons.append("candidate-snapshot-{}-mismatch".format(key))
