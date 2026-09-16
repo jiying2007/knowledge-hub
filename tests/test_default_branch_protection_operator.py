@@ -119,5 +119,5 @@ def test_dashboard_surfaces_branch_protection_action_without_write_control():
 
     assert "default-branch-protection" in page
     assert "repository administrator" in page
-    assert "automatic_execution_enabled" not in page
-    assert "apply" not in page.lower() or "apply" in "lifecycle"
+    assert "<form" not in page.lower()
+    assert 'method="post"' not in page.lower()
