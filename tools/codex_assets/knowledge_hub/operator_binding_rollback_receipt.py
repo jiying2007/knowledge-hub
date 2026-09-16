@@ -83,22 +83,30 @@ def _rollback_payload_reasons(payload: Mapping[str, Any]) -> List[str]:
     reasons: List[str] = []
     for key, value in expected.items():
         if payload.get(key) != value:
-            reasons.append("rollback-receipt-{}-invalid".format(key.replace("_", "-")))
+            reasons.append(
+                "rollback-receipt-{}-invalid".format(key.replace("_", "-"))
+            )
     for key in (
         "rollback_authorization_fingerprint",
         "receipt_fingerprint",
         "apply_authorization_fingerprint",
     ):
         if not FINGERPRINT_RE.fullmatch(str(payload.get(key, ""))):
-            reasons.append("rollback-receipt-{}-invalid".format(key.replace("_", "-")))
+            reasons.append(
+                "rollback-receipt-{}-invalid".format(key.replace("_", "-"))
+            )
     for key in (
         "registry_pre_rollback_sha256",
         "registry_restore_sha256",
         "registry_post_rollback_sha256",
     ):
         if not RAW_SHA256_RE.fullmatch(str(payload.get(key, ""))):
-            reasons.append("rollback-receipt-{}-invalid".format(key.replace("_", "-")))
-    if payload.get("registry_post_rollback_sha256") != payload.get("registry_restore_sha256"):
+            reasons.append(
+                "rollback-receipt-{}-invalid".format(key.replace("_", "-"))
+            )
+    if payload.get("registry_post_rollback_sha256") != payload.get(
+        "registry_restore_sha256"
+    ):
         reasons.append("rollback-receipt-post-restore-sha-mismatch")
     if int(payload.get("authorization_count", -1) or 0) <= 0:
         reasons.append("rollback-receipt-authorization-count-invalid")
@@ -106,7 +114,9 @@ def _rollback_payload_reasons(payload: Mapping[str, Any]) -> List[str]:
         reasons.append("rollback-receipt-approval-count-mismatch")
     if int(payload.get("rejected_count", -1) or 0) != 0:
         reasons.append("rollback-receipt-rejection-present")
-    if not isinstance(payload.get("rollback_scope"), list) or not payload.get("rollback_scope"):
+    if not isinstance(payload.get("rollback_scope"), list) or not payload.get(
+        "rollback_scope"
+    ):
         reasons.append("rollback-receipt-scope-invalid")
     return reasons
 
@@ -116,9 +126,12 @@ def _transaction_identity(payload: Mapping[str, Any]) -> Tuple[str, str, List[st
     transaction = payload.get("transaction", {})
     if not isinstance(transaction, Mapping):
         return "", "", ["rollback-receipt-transaction-invalid"]
-    rollback_fingerprint = str(payload.get("rollback_authorization_fingerprint", ""))
+    rollback_fingerprint = str(
+        payload.get("rollback_authorization_fingerprint", "")
+    )
     expected_id = (
-        "kh-operator-binding-rollback-" + rollback_fingerprint.split(":", 1)[1][:16]
+        "kh-operator-binding-rollback-"
+        + rollback_fingerprint.split(":", 1)[1][:16]
         if FINGERPRINT_RE.fullmatch(rollback_fingerprint)
         else ""
     )
@@ -146,7 +159,9 @@ def _load_journal(
     try:
         path = resolve_inside(root, journal_relative)
     except Exception:
-        return root / "__invalid_journal__", {}, ["rollback-receipt-journal-path-invalid"]
+        return root / "__invalid_journal__", {}, [
+            "rollback-receipt-journal-path-invalid"
+        ]
     if not path.is_file():
         return path, {}, ["rollback-receipt-journal-missing"]
     try:
@@ -176,7 +191,11 @@ def _journal_reasons(
     if journal.get("rollback_paths") not in ([], None):
         reasons.append("rollback-receipt-journal-rollback-paths-invalid")
     writes = journal.get("writes", [])
-    if not (isinstance(writes, list) and len(writes) == 1 and isinstance(writes[0], Mapping)):
+    if not (
+        isinstance(writes, list)
+        and len(writes) == 1
+        and isinstance(writes[0], Mapping)
+    ):
         return reasons + ["rollback-receipt-journal-writes-invalid"]
     write = writes[0]
     checks = {
@@ -188,7 +207,11 @@ def _journal_reasons(
     }
     for key, expected in checks.items():
         if write.get(key) != expected:
-            reasons.append("rollback-receipt-journal-write-{}-mismatch".format(key.replace("_", "-")))
+            reasons.append(
+                "rollback-receipt-journal-write-{}-mismatch".format(
+                    key.replace("_", "-")
+                )
+            )
     return reasons
 
 
@@ -197,7 +220,9 @@ def _load_backup(
     transaction_id: str,
     expected_sha256: str,
 ) -> Tuple[str, str, bytes, List[str]]:
-    relative = ".tmp/transactions/{}/before/{}".format(transaction_id, REGISTRY_PATH)
+    relative = ".tmp/transactions/{}/before/{}".format(
+        transaction_id, REGISTRY_PATH
+    )
     try:
         path = resolve_inside(root, relative)
     except Exception:
@@ -206,7 +231,11 @@ def _load_backup(
         return relative, "", b"", ["rollback-receipt-backup-missing"]
     raw = path.read_bytes()
     actual_sha256 = hashlib.sha256(raw).hexdigest()
-    reasons = [] if actual_sha256 == expected_sha256 else ["rollback-receipt-backup-sha-mismatch"]
+    reasons = (
+        []
+        if actual_sha256 == expected_sha256
+        else ["rollback-receipt-backup-sha-mismatch"]
+    )
     return relative, actual_sha256, raw, reasons
 
 
@@ -216,7 +245,9 @@ def _rederive_scope(
     rollback_backup_raw: bytes,
 ) -> Tuple[List[Dict[str, Any]], List[str]]:
     try:
-        apply_backup = resolve_inside(root, str(apply_receipt.get("backup_path", "")))
+        apply_backup = resolve_inside(
+            root, str(apply_receipt.get("backup_path", ""))
+        )
     except Exception:
         return [], ["rollback-receipt-apply-backup-path-invalid"]
     if not apply_backup.is_file():
@@ -243,7 +274,9 @@ def _rederive_scope(
             scope.append(row)
     if not scope:
         reasons.append("rollback-receipt-scope-empty")
-    return sorted(scope, key=lambda row: row["item_id"]), list(dict.fromkeys(reasons))
+    return sorted(scope, key=lambda row: row["item_id"]), list(
+        dict.fromkeys(reasons)
+    )
 
 
 def _receipt_material(
@@ -255,13 +288,23 @@ def _receipt_material(
     scope: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
     return {
-        "apply_receipt_fingerprint": str(apply_receipt.get("receipt_fingerprint", "")),
+        "apply_receipt_fingerprint": str(
+            apply_receipt.get("receipt_fingerprint", "")
+        ),
         "apply_transaction_id": str(apply_receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(apply_receipt.get("authorization_fingerprint", "")),
-        "rollback_authorization_fingerprint": str(rollback_payload.get("rollback_authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            apply_receipt.get("authorization_fingerprint", "")
+        ),
+        "rollback_authorization_fingerprint": str(
+            rollback_payload.get("rollback_authorization_fingerprint", "")
+        ),
         "rollback_transaction_id": transaction_id,
-        "registry_pre_rollback_sha256": str(rollback_payload.get("registry_pre_rollback_sha256", "")),
-        "registry_restore_sha256": str(rollback_payload.get("registry_restore_sha256", "")),
+        "registry_pre_rollback_sha256": str(
+            rollback_payload.get("registry_pre_rollback_sha256", "")
+        ),
+        "registry_restore_sha256": str(
+            rollback_payload.get("registry_restore_sha256", "")
+        ),
         "rollback_scope": [dict(row) for row in scope],
         "apply_journal_sha256": str(apply_receipt.get("journal_sha256", "")),
         "apply_backup_sha256": str(apply_receipt.get("backup_sha256", "")),
@@ -270,16 +313,12 @@ def _receipt_material(
     }
 
 
-def build_governed_rollback_receipt(
+def _apply_chain(
     root: pathlib.Path,
     apply_payload: Mapping[str, Any],
     rollback_payload: Mapping[str, Any],
-) -> Dict[str, Any]:
-    """Verify a completed rollback and emit a read-only lifecycle receipt."""
-
-    reasons = _rollback_payload_reasons(rollback_payload)
-    transaction_id, journal_relative, transaction_reasons = _transaction_identity(rollback_payload)
-    reasons.extend(transaction_reasons)
+) -> Tuple[Mapping[str, Any], str, str, List[str]]:
+    reasons: List[str] = []
     apply_receipt = build_governed_apply_receipt(root, apply_payload)
     if not apply_receipt.get("receipt_generated"):
         reasons.extend(
@@ -288,27 +327,44 @@ def build_governed_rollback_receipt(
         )
     elif apply_receipt.get("status") != "post-apply-state-drift":
         reasons.append("rollback-receipt-apply-receipt-state-invalid")
-    if str(rollback_payload.get("receipt_fingerprint", "")) != str(
-        apply_receipt.get("receipt_fingerprint", "")
-    ):
-        reasons.append("rollback-receipt-apply-receipt-fingerprint-mismatch")
-    if str(rollback_payload.get("apply_transaction_id", "")) != str(
-        apply_receipt.get("transaction_id", "")
-    ):
-        reasons.append("rollback-receipt-apply-transaction-id-mismatch")
-    if str(rollback_payload.get("apply_authorization_fingerprint", "")) != str(
-        apply_receipt.get("authorization_fingerprint", "")
-    ):
-        reasons.append("rollback-receipt-apply-authorization-fingerprint-mismatch")
+    checks = {
+        "receipt_fingerprint": "receipt_fingerprint",
+        "apply_transaction_id": "transaction_id",
+        "apply_authorization_fingerprint": "authorization_fingerprint",
+    }
+    for rollback_key, receipt_key in checks.items():
+        if str(rollback_payload.get(rollback_key, "")) != str(
+            apply_receipt.get(receipt_key, "")
+        ):
+            reasons.append(
+                "rollback-receipt-{}-mismatch".format(
+                    rollback_key.replace("_", "-")
+                )
+            )
     before_sha256 = str(rollback_payload.get("registry_pre_rollback_sha256", ""))
     after_sha256 = str(rollback_payload.get("registry_restore_sha256", ""))
     if before_sha256 != str(apply_receipt.get("registry_after_sha256", "")):
         reasons.append("rollback-receipt-pre-rollback-sha-chain-mismatch")
     if after_sha256 != str(apply_receipt.get("registry_before_sha256", "")):
         reasons.append("rollback-receipt-restore-sha-chain-mismatch")
+    return apply_receipt, before_sha256, after_sha256, reasons
+
+
+def _rollback_evidence(
+    root: pathlib.Path,
+    rollback_payload: Mapping[str, Any],
+    apply_receipt: Mapping[str, Any],
+    transaction_id: str,
+    journal_relative: str,
+    before_sha256: str,
+    after_sha256: str,
+) -> Tuple[pathlib.Path, str, str, List[Dict[str, Any]], List[str]]:
+    reasons: List[str] = []
     journal_path, journal, load_reasons = _load_journal(root, journal_relative)
     reasons.extend(load_reasons)
-    reasons.extend(_journal_reasons(journal, transaction_id, before_sha256, after_sha256))
+    reasons.extend(
+        _journal_reasons(journal, transaction_id, before_sha256, after_sha256)
+    )
     backup_relative, backup_sha256, backup_raw, backup_reasons = _load_backup(
         root, transaction_id, before_sha256
     )
@@ -317,22 +373,24 @@ def build_governed_rollback_receipt(
     reasons.extend(scope_reasons)
     if scope != rollback_payload.get("rollback_scope"):
         reasons.append("rollback-receipt-scope-mismatch")
-    if reasons:
-        return _blocked(reasons, transaction_id)
-    journal_sha256 = file_sha256(journal_path)
-    registry_path = root / REGISTRY_PATH
-    current_sha256 = file_sha256(registry_path) if registry_path.is_file() else ""
+    return journal_path, backup_relative, backup_sha256, scope, reasons
+
+
+def _success_payload(
+    apply_receipt: Mapping[str, Any],
+    rollback_payload: Mapping[str, Any],
+    transaction_id: str,
+    journal_relative: str,
+    journal_sha256: str,
+    backup_relative: str,
+    backup_sha256: str,
+    scope: Sequence[Mapping[str, Any]],
+    before_sha256: str,
+    after_sha256: str,
+    current_sha256: str,
+    fingerprint: str,
+) -> Dict[str, Any]:
     current_matches_restore = current_sha256 == after_sha256
-    fingerprint = _fingerprint(
-        _receipt_material(
-            apply_receipt,
-            rollback_payload,
-            transaction_id,
-            journal_sha256,
-            backup_sha256,
-            scope,
-        )
-    )
     return {
         "schema_version": 1,
         "projection": ROLLBACK_RECEIPT_PROJECTION,
@@ -348,10 +406,16 @@ def build_governed_rollback_receipt(
         "automatic_execution_enabled": False,
         "receipt_generated": True,
         "rollback_receipt_fingerprint": fingerprint,
-        "apply_receipt_fingerprint": str(apply_receipt.get("receipt_fingerprint", "")),
+        "apply_receipt_fingerprint": str(
+            apply_receipt.get("receipt_fingerprint", "")
+        ),
         "apply_transaction_id": str(apply_receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(apply_receipt.get("authorization_fingerprint", "")),
-        "rollback_authorization_fingerprint": str(rollback_payload.get("rollback_authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            apply_receipt.get("authorization_fingerprint", "")
+        ),
+        "rollback_authorization_fingerprint": str(
+            rollback_payload.get("rollback_authorization_fingerprint", "")
+        ),
         "rollback_transaction_id": transaction_id,
         "reviewer_identity_provider_verified": False,
         "registry_path": REGISTRY_PATH,
@@ -380,3 +444,62 @@ def build_governed_rollback_receipt(
             else "post-rollback-state-drift-detected"
         ],
     }
+
+
+def build_governed_rollback_receipt(
+    root: pathlib.Path,
+    apply_payload: Mapping[str, Any],
+    rollback_payload: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Verify a completed rollback and emit a read-only lifecycle receipt."""
+
+    reasons = _rollback_payload_reasons(rollback_payload)
+    transaction_id, journal_relative, transaction_reasons = _transaction_identity(
+        rollback_payload
+    )
+    reasons.extend(transaction_reasons)
+    apply_receipt, before_sha256, after_sha256, apply_reasons = _apply_chain(
+        root, apply_payload, rollback_payload
+    )
+    reasons.extend(apply_reasons)
+    journal_path, backup_relative, backup_sha256, scope, evidence_reasons = (
+        _rollback_evidence(
+            root,
+            rollback_payload,
+            apply_receipt,
+            transaction_id,
+            journal_relative,
+            before_sha256,
+            after_sha256,
+        )
+    )
+    reasons.extend(evidence_reasons)
+    if reasons:
+        return _blocked(reasons, transaction_id)
+    journal_sha256 = file_sha256(journal_path)
+    registry_path = root / REGISTRY_PATH
+    current_sha256 = file_sha256(registry_path) if registry_path.is_file() else ""
+    fingerprint = _fingerprint(
+        _receipt_material(
+            apply_receipt,
+            rollback_payload,
+            transaction_id,
+            journal_sha256,
+            backup_sha256,
+            scope,
+        )
+    )
+    return _success_payload(
+        apply_receipt,
+        rollback_payload,
+        transaction_id,
+        journal_relative,
+        journal_sha256,
+        backup_relative,
+        backup_sha256,
+        scope,
+        before_sha256,
+        after_sha256,
+        current_sha256,
+        fingerprint,
+    )
