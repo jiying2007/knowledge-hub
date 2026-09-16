@@ -83,7 +83,8 @@ class OperatorBindingPatchPlanTests(unittest.TestCase):
         if field == "release_ref":
             proposed_value = dict(proposed_reference)
         else:
-            proposed_value = list(current_value) + [dict(proposed_reference)]
+            current_list = list(current_value) if isinstance(current_value, list) else []
+            proposed_value = current_list + [dict(proposed_reference)]
         snapshot = {
             "provider": "github",
             "kind": kind,
@@ -291,6 +292,40 @@ class OperatorBindingPatchPlanTests(unittest.TestCase):
         self.assertTrue(
             any(
                 "proposal-fingerprint-mismatch" in reason
+                for reason in payload["reason_codes"]
+            )
+        )
+
+    def test_recomputed_unverified_snapshot_still_fails_closed(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        row = self._row()
+        snapshot = dict(row["candidate_snapshot"])
+        snapshot["provider_verified"] = False
+        row["candidate_snapshot"] = snapshot
+        row["candidate_snapshot_fingerprint"] = _fingerprint(snapshot)
+        material = {
+            "project_id": row["project_id"],
+            "field": row["field"],
+            "target": row["target"],
+            "current_value": row["current_value"],
+            "proposed_reference": row["proposed_reference"],
+            "proposed_value": row["proposed_value"],
+            "mutation_intent": row["mutation_intent"],
+            "candidate_snapshot": row["candidate_snapshot"],
+        }
+        row["proposal_fingerprint"] = _fingerprint(material)
+
+        payload = build_binding_patch_plan(
+            root,
+            self._proposal([row]),
+            [str(row["proposal_fingerprint"])],
+        )
+
+        self.assertEqual(payload["status"], "blocked")
+        self.assertTrue(
+            any(
+                "candidate-snapshot-provider-not-verified" in reason
                 for reason in payload["reason_codes"]
             )
         )
