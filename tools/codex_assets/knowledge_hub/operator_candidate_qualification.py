@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Mapping, Sequence
 
 REVIEW_FIELDS = {"source_refs", "validation_refs", "artifact_refs", "release_ref"}
 MAX_REVIEW_CANDIDATES = 400
+MAX_PROVIDER_RESULTS = 20
+MAX_PROVIDER_CANDIDATES_PER_RESULT = 20
 
 _EXPECTED_KINDS = {
     "source_refs": {"github-source-revision"},
@@ -30,11 +32,16 @@ _EXPECTED_REF_PREFIXES = {
 }
 _GIT_OBJECT_ID = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
 _SHA256_DIGEST = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
+_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
 
 def _details(candidate: Mapping[str, Any]) -> Mapping[str, Any]:
     value = candidate.get("details", {})
     return value if isinstance(value, Mapping) else {}
+
+
+def _is_nonnegative_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
 def _upstream_contract_reasons(execution: Mapping[str, Any]) -> List[str]:
@@ -43,25 +50,77 @@ def _upstream_contract_reasons(execution: Mapping[str, Any]) -> List[str]:
         reasons.append("upstream-schema-version-invalid")
     if str(execution.get("projection", "")) != "knowledge-operator-github-provider-v1":
         reasons.append("upstream-projection-identity-invalid")
-    if str(execution.get("status", "")) not in {"pass", "error"}:
-        reasons.append("upstream-status-invalid")
     if execution.get("read_only") is not True:
         reasons.append("upstream-not-read-only")
     if execution.get("canonical_write_performed") is not False:
         reasons.append("upstream-canonical-write-state-invalid")
     if execution.get("automatic_binding_enabled") is not False:
         reasons.append("upstream-automatic-binding-state-invalid")
-    error_count = execution.get("error_count")
-    if not isinstance(error_count, int) or isinstance(error_count, bool) or error_count < 0:
-        reasons.append("upstream-error-count-invalid")
-    if not isinstance(execution.get("results", []), list):
+
+    count_fields = (
+        "selected_query_count",
+        "executed_query_count",
+        "unsupported_query_count",
+        "error_count",
+    )
+    counts = {}
+    for field in count_fields:
+        value = execution.get(field)
+        if not _is_nonnegative_int(value):
+            reasons.append("upstream-{}-invalid".format(field.replace("_", "-")))
+        else:
+            counts[field] = int(value)
+
+    raw_results = execution.get("results", [])
+    raw_unsupported = execution.get("unsupported", [])
+    raw_errors = execution.get("errors", [])
+    if not isinstance(raw_results, list):
         reasons.append("upstream-results-shape-invalid")
+    if not isinstance(raw_unsupported, list):
+        reasons.append("upstream-unsupported-shape-invalid")
+    if not isinstance(raw_errors, list):
+        reasons.append("upstream-errors-shape-invalid")
+
+    selected = counts.get("selected_query_count")
+    executed = counts.get("executed_query_count")
+    unsupported_count = counts.get("unsupported_query_count")
+    error_count = counts.get("error_count")
+    if selected is not None and selected > MAX_PROVIDER_RESULTS:
+        reasons.append("upstream-selected-query-limit-exceeded")
+    if executed is not None and isinstance(raw_results, list) and executed != len(raw_results):
+        reasons.append("upstream-executed-query-count-mismatch")
+    if (
+        unsupported_count is not None
+        and isinstance(raw_unsupported, list)
+        and unsupported_count != len(raw_unsupported)
+    ):
+        reasons.append("upstream-unsupported-query-count-mismatch")
+    if error_count is not None and isinstance(raw_errors, list) and error_count != len(raw_errors):
+        reasons.append("upstream-error-count-mismatch")
+    if selected is not None and executed is not None and error_count is not None:
+        if selected != executed + error_count:
+            reasons.append("upstream-selected-query-accounting-mismatch")
+
+    status = str(execution.get("status", ""))
+    if error_count is not None:
+        expected_status = "error" if error_count else "pass"
+        if status != expected_status:
+            reasons.append("upstream-status-error-count-mismatch")
+    elif status not in {"pass", "error"}:
+        reasons.append("upstream-status-invalid")
+
+    network_performed = execution.get("network_performed")
+    if not isinstance(network_performed, bool):
+        reasons.append("upstream-network-state-invalid")
+    elif selected is not None and network_performed is not bool(selected):
+        reasons.append("upstream-network-selection-mismatch")
     return reasons
 
 
 def _result_contract_reasons(result: Mapping[str, Any]) -> List[str]:
     reasons = []
     field = str(result.get("field", ""))
+    target = str(result.get("target", ""))
     if not str(result.get("project_id", "")):
         reasons.append("result-project-id-missing")
     if field not in REVIEW_FIELDS:
@@ -78,16 +137,21 @@ def _result_contract_reasons(result: Mapping[str, Any]) -> List[str]:
         reasons.append("result-canonical-write-state-invalid")
     if result.get("automatic_binding_enabled") is not False:
         reasons.append("result-automatic-binding-state-invalid")
-    if not str(result.get("target", "")):
+    if not target:
         reasons.append("result-target-missing")
+    elif not _TARGET.fullmatch(target):
+        reasons.append("result-target-invalid")
     expected_operation = _EXPECTED_OPERATIONS.get(field)
     if expected_operation and str(result.get("operation", "")) != expected_operation:
         reasons.append("result-operation-does-not-match-field")
     candidates = result.get("candidates", [])
     if not isinstance(candidates, list):
         reasons.append("result-candidates-shape-invalid")
-    elif result.get("candidate_count") != len(candidates):
-        reasons.append("result-candidate-count-mismatch")
+    else:
+        if len(candidates) > MAX_PROVIDER_CANDIDATES_PER_RESULT:
+            reasons.append("result-candidate-limit-exceeded")
+        if result.get("candidate_count") != len(candidates):
+            reasons.append("result-candidate-count-mismatch")
     if candidates and str(result.get("status", "")) != "candidate-found":
         reasons.append("result-status-does-not-match-candidates")
     if not candidates and str(result.get("status", "")) != "no-candidate":
@@ -99,6 +163,8 @@ def _generic_reasons(candidate: Mapping[str, Any]) -> List[str]:
     reasons = []
     if str(candidate.get("provider", "")) != "github":
         reasons.append("provider-not-github")
+    if str(candidate.get("provenance", "")) != "github-read-only-api":
+        reasons.append("candidate-provenance-invalid")
     if candidate.get("provider_verified") is not True:
         reasons.append("provider-not-verified")
     if candidate.get("candidate_only") is not True:
@@ -187,10 +253,14 @@ def _artifact_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
             expected_ref = "github-release-asset://{}/{}".format(target, asset_id)
             if str(candidate.get("ref", "")) != expected_ref:
                 reasons.append("release-asset-ref-identity-mismatch")
-        if bool(details.get("release_draft", False)):
-            reasons.append("release-asset-from-draft")
-        if bool(details.get("release_prerelease", False)):
-            reasons.append("release-asset-from-prerelease")
+        if not str(details.get("release_id", "")):
+            reasons.append("release-asset-release-id-missing")
+        if not str(details.get("tag_name", "")):
+            reasons.append("release-asset-tag-missing")
+        if details.get("release_draft") is not False:
+            reasons.append("release-asset-draft-state-invalid")
+        if details.get("release_prerelease") is not False:
+            reasons.append("release-asset-prerelease-state-invalid")
     return reasons
 
 
@@ -202,10 +272,10 @@ def _release_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
         reasons.append("immutable-release-policy-not-met")
     if details.get("immutable") is not True:
         reasons.append("release-not-immutable")
-    if bool(details.get("draft", False)):
-        reasons.append("release-is-draft")
-    if bool(details.get("prerelease", False)):
-        reasons.append("release-is-prerelease")
+    if details.get("draft") is not False:
+        reasons.append("release-draft-state-invalid")
+    if details.get("prerelease") is not False:
+        reasons.append("release-prerelease-state-invalid")
     if not release_id:
         reasons.append("release-id-missing")
     else:
@@ -304,13 +374,7 @@ def qualify_provider_projection(execution: Mapping[str, Any]) -> Dict[str, Any]:
             break
     counts = Counter(str(row.get("qualification_status", "")) for row in rows)
     raw_error_count = execution.get("error_count", 0)
-    source_error_count = (
-        raw_error_count
-        if isinstance(raw_error_count, int)
-        and not isinstance(raw_error_count, bool)
-        and raw_error_count >= 0
-        else 1
-    )
+    source_error_count = raw_error_count if _is_nonnegative_int(raw_error_count) else 1
     if upstream_reasons or source_error_count or result_contract_error_count:
         status = "upstream-error"
     elif counts.get("reviewable", 0):
