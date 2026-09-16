@@ -30,7 +30,7 @@ h1 { margin:0; font-size:26px; }
 small,.muted { opacity:.7; }
 .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:20px 0; }
 .card,section { border:1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius:12px; padding:14px; }
-.card strong { display:block; font-size:24px; margin-top:6px; }
+.card strong { display:block; font-size:24px; margin-top:6px; overflow-wrap:anywhere; }
 section { margin:16px 0; overflow:auto; }
 table { width:100%; border-collapse:collapse; font-size:14px; }
 th,td { text-align:left; padding:9px 8px; border-bottom:1px solid color-mix(in srgb, CanvasText 12%, transparent); vertical-align:top; }
@@ -67,10 +67,8 @@ def _project_rows(readiness: Mapping[str, Any]) -> str:
         if not isinstance(row, Mapping):
             continue
         rendered.append(
-            "<tr>"
-            "<td><code>{}</code><br><span class=\"muted\">{}</span></td>"
-            "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-            "</tr>".format(
+            "<tr><td><code>{}</code><br><span class=\"muted\">{}</span></td>"
+            "<td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                 _escape(row.get("project_id", "")),
                 _escape(row.get("name", "")),
                 _escape(row.get("evidence_profile", "")),
@@ -84,9 +82,7 @@ def _project_rows(readiness: Mapping[str, Any]) -> str:
 
 
 def _status_actions(state: Mapping[str, Any]) -> str:
-    rows = [
-        str(value) for value in state.get("next_actions_zh", []) if str(value)
-    ]
+    rows = [str(value) for value in state.get("next_actions_zh", []) if str(value)]
     if not rows:
         return '<p class="ok">当前 status projection 没有给出下一步动作。</p>'
     return "<ul>{}</ul>".format(
@@ -127,9 +123,9 @@ def _queue_rows(queue: Mapping[str, Any], *, machine: bool) -> str:
             continue
         target = str(row.get("project_id", "")) or str(row.get("field", ""))
         rows.append(
-            "<tr><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td>"
-            "</tr>".format(
+            "<tr><td>{}</td><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
                 _escape(execution_class),
+                _escape(row.get("scope", "")),
                 _escape(target),
                 _escape(row.get("field", "")),
                 _escape(row.get("summary_zh", "")),
@@ -138,18 +134,18 @@ def _queue_rows(queue: Mapping[str, Any], *, machine: bool) -> str:
     if not rows:
         return '<p class="ok">当前没有此类 action。</p>'
     return (
-        "<table><thead><tr><th>Execution class</th><th>Target</th>"
-        "<th>Field</th><th>Next step</th></tr></thead>"
-        "<tbody>{}</tbody></table>".format("".join(rows))
+        "<table><thead><tr><th>Execution class</th><th>Scope</th><th>Target</th>"
+        "<th>Field</th><th>Next step</th></tr></thead><tbody>{}</tbody></table>".format(
+            "".join(rows)
+        )
     )
 
 
 def _candidate_refs(row: Mapping[str, Any]) -> str:
     refs = []
     for candidate in row.get("candidates", []):
-        if not isinstance(candidate, Mapping):
-            continue
-        refs.append(str(candidate.get("ref", "")))
+        if isinstance(candidate, Mapping):
+            refs.append(str(candidate.get("ref", "")))
     return _badges(refs)
 
 
@@ -174,8 +170,7 @@ def _discovery_rows(discovery: Mapping[str, Any]) -> str:
         if not isinstance(row, Mapping):
             continue
         rows.append(
-            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td>"
-            "<td>{}</td><td>{}</td></tr>".format(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                 _escape(row.get("project_id", "")),
                 _escape(row.get("field", "")),
                 _escape(row.get("status", "")),
@@ -192,6 +187,30 @@ def _discovery_rows(discovery: Mapping[str, Any]) -> str:
     )
 
 
+def _lifecycle_rows(lifecycle: Mapping[str, Any]) -> str:
+    rows = []
+    for row in lifecycle.get("stages", []):
+        if not isinstance(row, Mapping):
+            continue
+        rows.append(
+            "<tr><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                _escape(row.get("stage", "")),
+                _escape(row.get("status", "")),
+                _escape(row.get("trust_state", "")),
+                _badges(row.get("reason_codes", [])),
+            )
+        )
+    if not rows:
+        return (
+            '<p class="ok">没有显式 lifecycle JSON 输入；状态为 not-observed，'
+            "不表示生命周期失败或未完成。</p>"
+        )
+    return (
+        "<table><thead><tr><th>Stage</th><th>Status</th><th>Trust</th><th>Reasons</th>"
+        "</tr></thead><tbody>{}</tbody></table>".format("".join(rows))
+    )
+
+
 def _cards(
     state: Mapping[str, Any],
     readiness: Mapping[str, Any],
@@ -199,44 +218,24 @@ def _cards(
     terminal: Mapping[str, Any],
     queue: Mapping[str, Any],
     discovery: Mapping[str, Any],
+    lifecycle: Mapping[str, Any],
 ) -> str:
     return "".join(
         (
             _card("Control plane", state.get("status", "")),
             _card("Projects", readiness.get("project_count", 0)),
-            _card(
-                "Source mapped",
-                "{}/{}".format(
-                    readiness.get("source_mapping_ready_count", 0),
-                    readiness.get("project_count", 0),
-                ),
-            ),
-            _card(
-                "Field complete",
-                "{}/{}".format(
-                    readiness.get("evidence_field_complete_count", 0),
-                    readiness.get("project_count", 0),
-                ),
-            ),
-            _card(
-                "Evidence ready",
-                "{}/{}".format(
-                    readiness.get("evidence_ready_count", 0),
-                    readiness.get("project_count", 0),
-                ),
-            ),
+            _card("Source mapped", "{}/{}".format(readiness.get("source_mapping_ready_count", 0), readiness.get("project_count", 0))),
+            _card("Field complete", "{}/{}".format(readiness.get("evidence_field_complete_count", 0), readiness.get("project_count", 0))),
+            _card("Evidence ready", "{}/{}".format(readiness.get("evidence_ready_count", 0), readiness.get("project_count", 0))),
+            _card("Lifecycle stage", lifecycle.get("current_stage", "") or "not-observed"),
+            _card("Lifecycle status", lifecycle.get("status", "not-observed")),
             _card("Machine discovery", queue.get("machine_candidate_count", 0)),
             _card("Candidates found", discovery.get("candidate_found_count", 0)),
             _card("Provider needed", discovery.get("provider_required_count", 0)),
             _card("Machine blocked", queue.get("machine_blocked_count", 0)),
             _card("Human projects", queue.get("human_project_count", 0)),
             _card("External open", external.get("open_count", 0)),
-            _card(
-                "Terminal",
-                "true"
-                if terminal.get("terminal")
-                else terminal.get("status", "false"),
-            ),
+            _card("Terminal", "true" if terminal.get("terminal") else terminal.get("status", "false")),
         )
     )
 
@@ -247,11 +246,13 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
     terminal = state.get("terminal_closure", {})
     queue = state.get("action_queue", {})
     discovery = state.get("discovery", {})
+    lifecycle = state.get("binding_lifecycle", {})
     readiness_map = readiness if isinstance(readiness, Mapping) else {}
     external_map = external if isinstance(external, Mapping) else {}
     terminal_map = terminal if isinstance(terminal, Mapping) else {}
     queue_map = queue if isinstance(queue, Mapping) else {}
     discovery_map = discovery if isinstance(discovery, Mapping) else {}
+    lifecycle_map = lifecycle if isinstance(lifecycle, Mapping) else {}
     cards = _cards(
         state,
         readiness_map,
@@ -259,6 +260,7 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
         terminal_map,
         queue_map,
         discovery_map,
+        lifecycle_map,
     )
     return """<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
@@ -270,11 +272,12 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
 <p class="muted">Machine-first · Human-on-exception · Read-only</p></div>
 <div><a href="/api/state">JSON API</a></div></header>
 <div class="grid">{cards}</div>
+<section><h2>Governed Binding Lifecycle</h2>
+<p class="muted">仅观测启动时显式传入的 P2.4–P2.11 JSON。apply/rollback receipt 会现场重验证；
+页面不会生成授权、执行 apply/rollback 或自动 reapply。</p>{lifecycle}</section>
 <section><h2>Discovery Queue</h2>
-<p class="muted">自动执行本地 registry discovery；远端只生成 provider query，
-不在 Hub core 内发起网络或写入。</p>{discovery}</section>
-<section><h2>Machine Queue</h2>
-<p class="muted">先由机器发现候选或等待前置；当前不会自动写仓库。</p>{machine}</section>
+<p class="muted">自动执行本地 registry discovery；远端只生成 provider query，不在 Hub core 内发起网络或写入。</p>{discovery}</section>
+<section><h2>Machine Queue</h2><p class="muted">先由机器发现候选或等待前置；当前不会自动写仓库。</p>{machine}</section>
 <section><h2>Human / External Queue</h2>{human}</section>
 <section><h2>Status Next Actions</h2>{actions}</section>
 <section><h2>External Closure</h2>{external}</section>
@@ -283,11 +286,12 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
 <th>Evidence fields</th><th>Action class</th><th>Raw attention</th></tr></thead>
 <tbody>{projects}</tbody></table></section>
 <footer>只读界面；事实源仍是 registry / status / readiness / terminal closure。
-Discovery candidate 永远是 candidate-only；provider query 只描述应由 provider 执行的
-只读查询，不代表查询已经执行，也不代表 evidence 可以绑定。</footer>
+Lifecycle 输入必须由 operator 显式提供；not-observed 不等于失败。Discovery candidate 永远是 candidate-only；
+provider query 不代表查询已经执行，也不代表 evidence 可以绑定。</footer>
 </main></body></html>""".format(
         css=_CSS,
         cards=cards,
+        lifecycle=_lifecycle_rows(lifecycle_map),
         discovery=_discovery_rows(discovery_map),
         machine=_queue_rows(queue_map, machine=True),
         human=_queue_rows(queue_map, machine=False),
@@ -347,11 +351,7 @@ class OperatorRequestHandler(BaseHTTPRequestHandler):
             body = json.dumps(
                 {"status": "error", "read_only": True, "error": str(exc)}
             ).encode("utf-8")
-            self._send(
-                HTTPStatus.INTERNAL_SERVER_ERROR,
-                body,
-                "application/json; charset=utf-8",
-            )
+            self._send(HTTPStatus.INTERNAL_SERVER_ERROR, body, "application/json; charset=utf-8")
             return
         if self.path == "/api/state":
             body = json.dumps(state, ensure_ascii=False, indent=2).encode("utf-8")
@@ -361,11 +361,7 @@ class OperatorRequestHandler(BaseHTTPRequestHandler):
             body = render_dashboard(state).encode("utf-8")
             self._send(HTTPStatus.OK, body, "text/html; charset=utf-8")
             return
-        self._send(
-            HTTPStatus.NOT_FOUND,
-            b'{"status":"not-found"}',
-            "application/json; charset=utf-8",
-        )
+        self._send(HTTPStatus.NOT_FOUND, b'{"status":"not-found"}', "application/json; charset=utf-8")
 
     def do_POST(self) -> None:
         self._send(
@@ -382,8 +378,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", nargs="?", default="")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--binding-proposal", default="", metavar="JSON_FILE")
+    parser.add_argument("--binding-patch-plan", default="", metavar="JSON_FILE")
+    parser.add_argument("--binding-review-bundle", default="", metavar="JSON_FILE")
+    parser.add_argument("--binding-authorization-result", default="", metavar="JSON_FILE")
+    parser.add_argument("--binding-apply-result", default="", metavar="JSON_FILE")
+    parser.add_argument("--binding-rollback-result", default="", metavar="JSON_FILE")
     parser.add_argument("--json", action="store_true", help="Print operator state and exit.")
     return parser
+
+
+def _lifecycle_inputs(args: argparse.Namespace) -> Dict[str, str]:
+    values = {
+        "proposal": args.binding_proposal,
+        "patch_plan": args.binding_patch_plan,
+        "review_bundle": args.binding_review_bundle,
+        "authorization": args.binding_authorization_result,
+        "apply": args.binding_apply_result,
+        "rollback": args.binding_rollback_result,
+    }
+    return {key: str(value) for key, value in values.items() if str(value).strip()}
 
 
 def main(argv: Sequence[str] = ()) -> int:
@@ -395,10 +409,15 @@ def main(argv: Sequence[str] = ()) -> int:
         root = repository_root(args.root)
     except KnowledgeHubError as exc:
         parser.error(str(exc))
+    lifecycle_inputs = _lifecycle_inputs(args)
+
+    def state_builder(repo_root: pathlib.Path) -> Dict[str, Any]:
+        return build_operator_state(repo_root, lifecycle_inputs=lifecycle_inputs)
+
     if args.json:
-        print(json.dumps(build_operator_state(root), ensure_ascii=False, indent=2))
+        print(json.dumps(state_builder(root), ensure_ascii=False, indent=2))
         return 0
-    server = OperatorHTTPServer((LOOPBACK_HOST, args.port), root)
+    server = OperatorHTTPServer((LOOPBACK_HOST, args.port), root, state_builder=state_builder)
     print(
         "Knowledge Hub Operator UI: http://{}:{}/".format(LOOPBACK_HOST, args.port),
         flush=True,

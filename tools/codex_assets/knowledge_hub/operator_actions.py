@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 
 HUMAN_EXECUTION_CLASSES = {
@@ -205,6 +205,28 @@ def external_actions(external: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return actions
 
 
+def lifecycle_actions(lifecycle: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    execution_class = str(lifecycle.get("next_execution_class", ""))
+    summary = str(lifecycle.get("next_summary_zh", ""))
+    if not execution_class or not summary:
+        return []
+    allowed = HUMAN_EXECUTION_CLASSES | MACHINE_EXECUTION_CLASSES
+    if execution_class not in allowed:
+        execution_class = "governance-review"
+        summary = "生命周期 projection 返回未知责任分类；需要先审计 projection contract。"
+    stage = str(lifecycle.get("current_stage", "")) or "observation"
+    status = str(lifecycle.get("status", "")) or "unknown"
+    return [
+        _action(
+            action_id="binding-lifecycle:{}:{}".format(stage, status),
+            execution_class=execution_class,
+            summary_zh=summary,
+            scope="lifecycle",
+            field=stage,
+        )
+    ]
+
+
 def _sort_key(row: Mapping[str, Any]) -> tuple:
     return (
         _EXECUTION_ORDER.get(str(row.get("execution_class", "")), 99),
@@ -215,7 +237,9 @@ def _sort_key(row: Mapping[str, Any]) -> tuple:
 
 
 def build_action_queue(
-    projects: Sequence[Mapping[str, Any]], external: Mapping[str, Any]
+    projects: Sequence[Mapping[str, Any]],
+    external: Mapping[str, Any],
+    lifecycle: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     actions: List[Dict[str, Any]] = []
     for row in projects:
@@ -225,6 +249,7 @@ def build_action_queue(
         else:
             actions.extend(project_actions(row))
     actions.extend(external_actions(external))
+    actions.extend(lifecycle_actions(lifecycle or {}))
     actions.sort(key=_sort_key)
     counts = Counter(str(row.get("execution_class", "")) for row in actions)
     human_project_ids = sorted(
