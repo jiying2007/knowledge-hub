@@ -27,7 +27,12 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
             "network_performed": True,
             "canonical_write_performed": False,
             "automatic_binding_enabled": False,
+            "selected_query_count": 1,
+            "executed_query_count": 1,
+            "unsupported_query_count": 0,
             "error_count": 0,
+            "unsupported": [],
+            "errors": [],
             "results": [
                 {
                     "project_id": "agent-dev-kit",
@@ -115,11 +120,7 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         candidate = self._candidate(
             "github-actions-artifact",
             "github-actions-artifact://jiying2007/agent-dev-kit/44",
-            {
-                "artifact_id": "44",
-                "digest": "",
-                "expired": False,
-            },
+            {"artifact_id": "44", "digest": "", "expired": False},
         )
         payload = qualify_provider_projection(self._execution("artifact_refs", candidate))
 
@@ -141,6 +142,24 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
 
         self.assertEqual(payload["reviewable_count"], 1)
         self.assertTrue(payload["rows"][0]["review_eligible"])
+
+    def test_release_asset_requires_explicit_release_state(self) -> None:
+        candidate = self._candidate(
+            "github-release-asset",
+            "github-release-asset://jiying2007/agent-dev-kit/77",
+            {
+                "asset_id": "77",
+                "release_id": "55",
+                "tag_name": "v5.1.0",
+                "digest": _ARTIFACT_DIGEST,
+            },
+        )
+        payload = qualify_provider_projection(self._execution("artifact_refs", candidate))
+
+        row = payload["rows"][0]
+        self.assertFalse(row["review_eligible"])
+        self.assertIn("release-asset-draft-state-invalid", row["reason_codes"])
+        self.assertIn("release-asset-prerelease-state-invalid", row["reason_codes"])
 
     def test_immutable_release_is_reviewable(self) -> None:
         candidate = self._candidate(
@@ -178,9 +197,9 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         payload = qualify_provider_projection(execution)
 
         self.assertEqual(payload["status"], "upstream-error")
-        self.assertEqual(
+        self.assertIn(
+            "upstream-automatic-binding-state-invalid",
             payload["upstream_contract_reason_codes"],
-            ["upstream-automatic-binding-state-invalid"],
         )
         self.assertFalse(payload["rows"][0]["review_eligible"])
 
@@ -195,6 +214,21 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
             payload["upstream_contract_reason_codes"],
         )
         self.assertFalse(payload["rows"][0]["review_eligible"])
+
+    def test_projection_count_accounting_is_fail_closed(self) -> None:
+        execution = self._execution("source_refs", self._source_candidate())
+        execution["selected_query_count"] = 2
+        payload = qualify_provider_projection(execution)
+
+        self.assertEqual(payload["status"], "upstream-error")
+        self.assertIn(
+            "upstream-selected-query-accounting-mismatch",
+            payload["upstream_contract_reason_codes"],
+        )
+        self.assertIn(
+            "upstream-network-selection-mismatch",
+            payload["upstream_contract_reason_codes"],
+        )
 
     def test_result_contract_violation_rejects_candidate(self) -> None:
         execution = self._execution("source_refs", self._source_candidate())
@@ -228,11 +262,14 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
 
         self.assertEqual(payload["candidate_count"], MAX_REVIEW_CANDIDATES)
         self.assertTrue(payload["truncated"])
+        self.assertEqual(payload["status"], "upstream-error")
 
     def test_source_provider_errors_keep_projection_fail_closed(self) -> None:
         execution = self._execution("source_refs", self._source_candidate())
-        execution["error_count"] = 1
         execution["status"] = "error"
+        execution["selected_query_count"] = 2
+        execution["error_count"] = 1
+        execution["errors"] = [{"error": "provider failure"}]
         payload = qualify_provider_projection(execution)
 
         self.assertEqual(payload["status"], "upstream-error")
