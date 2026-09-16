@@ -18,12 +18,9 @@ ROLLBACK_PROJECTION = "knowledge-operator-binding-governed-rollback-v1"
 FINGERPRINT_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 RAW_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 REGISTRY_PATH = "registry/items.jsonl"
-ALLOWED_EVIDENCE_FIELDS = {
-    "source_refs",
-    "validation_refs",
-    "artifact_refs",
-    "release_ref",
-}
+LIST_FIELDS = {"source_refs", "validation_refs", "artifact_refs"}
+SINGLE_FIELDS = {"release_ref"}
+ALLOWED_EVIDENCE_FIELDS = LIST_FIELDS | SINGLE_FIELDS
 
 
 def _fingerprint(value: Any) -> str:
@@ -116,12 +113,43 @@ def _contract_changed_fields(
     )
 
 
+def _mutation_shape_reasons(
+    before: Mapping[str, Any],
+    after: Mapping[str, Any],
+    changed_fields: Sequence[str],
+) -> List[str]:
+    reasons: List[str] = []
+    if before.get("status") != "pending" or after.get("status") != "pending":
+        reasons.append("rollback-evidence-status-not-pending")
+    for field in changed_fields:
+        before_value = before.get(field)
+        after_value = after.get(field)
+        if field in LIST_FIELDS:
+            valid = bool(
+                isinstance(before_value, list)
+                and isinstance(after_value, list)
+                and len(after_value) == len(before_value) + 1
+                and after_value[:-1] == before_value
+                and _valid_reference(after_value[-1])
+            )
+            if not valid:
+                reasons.append("rollback-list-mutation-shape-invalid:{}".format(field))
+        elif field in SINGLE_FIELDS:
+            if before_value is not None or not _valid_reference(after_value):
+                reasons.append("rollback-single-mutation-shape-invalid:{}".format(field))
+    return reasons
+
+
 def _scope_row(
     before: Mapping[str, Any], after: Mapping[str, Any]
 ) -> Tuple[Dict[str, Any], List[str]]:
     reasons: List[str] = []
-    before_outer = {key: value for key, value in before.items() if key != "evidence_contract"}
-    after_outer = {key: value for key, value in after.items() if key != "evidence_contract"}
+    before_outer = {
+        key: value for key, value in before.items() if key != "evidence_contract"
+    }
+    after_outer = {
+        key: value for key, value in after.items() if key != "evidence_contract"
+    }
     if before_outer != after_outer:
         reasons.append("rollback-item-non-evidence-drift")
     before_contract = before.get("evidence_contract", {})
@@ -133,10 +161,18 @@ def _scope_row(
         return {}, reasons + ["rollback-item-change-missing"]
     unsupported = sorted(set(changed_fields) - ALLOWED_EVIDENCE_FIELDS)
     if unsupported:
-        reasons.append("rollback-evidence-field-unsupported:{}".format(",".join(unsupported)))
+        reasons.append(
+            "rollback-evidence-field-unsupported:{}".format(",".join(unsupported))
+        )
+    else:
+        reasons.extend(
+            _mutation_shape_reasons(before_contract, after_contract, changed_fields)
+        )
     for key in ("status", "profile", "owner_ref"):
         if before_contract.get(key) != after_contract.get(key):
-            reasons.append("rollback-evidence-{}-drift".format(key.replace("_", "-")))
+            reasons.append(
+                "rollback-evidence-{}-drift".format(key.replace("_", "-"))
+            )
     owner_ref = after_contract.get("owner_ref", {})
     if not _valid_reference(owner_ref):
         reasons.append("rollback-owner-ref-invalid")
@@ -195,7 +231,11 @@ def _derive_scope(
             scope.append(row)
     if not scope:
         reasons.append("rollback-scope-empty")
-    return sorted(scope, key=lambda row: row["item_id"]), before_raw, list(dict.fromkeys(reasons))
+    return (
+        sorted(scope, key=lambda row: row["item_id"]),
+        before_raw,
+        list(dict.fromkeys(reasons)),
+    )
 
 
 def _authorization_input_reasons(
@@ -206,13 +246,17 @@ def _authorization_input_reasons(
         "schema_version": 1,
         "receipt_fingerprint": str(receipt.get("receipt_fingerprint", "")),
         "transaction_id": str(receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(receipt.get("authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            receipt.get("authorization_fingerprint", "")
+        ),
         "registry_after_sha256": str(receipt.get("registry_after_sha256", "")),
         "registry_restore_sha256": str(receipt.get("registry_before_sha256", "")),
     }
     for key, expected in checks.items():
         if authorization.get(key) != expected:
-            reasons.append("rollback-authorization-{}-mismatch".format(key.replace("_", "-")))
+            reasons.append(
+                "rollback-authorization-{}-mismatch".format(key.replace("_", "-"))
+            )
     rows = authorization.get("authorizations", [])
     if not isinstance(rows, list):
         reasons.append("rollback-authorization-rows-invalid")
@@ -231,8 +275,13 @@ def _authorization_row_reasons(
     }
     for key, expected in checks.items():
         if row.get(key) != expected:
-            reasons.append("rollback-authorization-{}-mismatch".format(key.replace("_", "-")))
-    if str(row.get("owner_decision", "")) not in {"approve-rollback", "reject-rollback"}:
+            reasons.append(
+                "rollback-authorization-{}-mismatch".format(key.replace("_", "-"))
+            )
+    if str(row.get("owner_decision", "")) not in {
+        "approve-rollback",
+        "reject-rollback",
+    }:
         reasons.append("rollback-authorization-decision-invalid")
     if not str(row.get("authorization_id", "")).strip():
         reasons.append("rollback-authorization-id-missing")
@@ -265,7 +314,9 @@ def _match_authorizations(
         item_id = str(scope_row.get("item_id", ""))
         matches = by_item.get(item_id, [])
         if len(matches) != 1:
-            reasons.append("rollback-authorization-item-coverage-invalid:{}".format(item_id))
+            reasons.append(
+                "rollback-authorization-item-coverage-invalid:{}".format(item_id)
+            )
             continue
         reasons.extend(
             "{}:{}".format(item_id, reason)
@@ -295,7 +346,9 @@ def _authorization_material(
     return {
         "receipt_fingerprint": str(receipt.get("receipt_fingerprint", "")),
         "transaction_id": str(receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(receipt.get("authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            receipt.get("authorization_fingerprint", "")
+        ),
         "registry_after_sha256": str(receipt.get("registry_after_sha256", "")),
         "registry_restore_sha256": str(receipt.get("registry_before_sha256", "")),
         "rollback_scope": [dict(row) for row in scope],
@@ -330,7 +383,9 @@ def validate_rollback_authorization(
     return {
         "schema_version": 1,
         "projection": ROLLBACK_PROJECTION,
-        "status": "rejected-by-governance" if rejected else "ready-for-governed-rollback",
+        "status": (
+            "rejected-by-governance" if rejected else "ready-for-governed-rollback"
+        ),
         "read_only": True,
         "network_performed": False,
         "canonical_write_performed": False,
@@ -344,7 +399,9 @@ def validate_rollback_authorization(
         "reviewer_identity_boundary_acknowledged": False,
         "receipt_fingerprint": str(receipt.get("receipt_fingerprint", "")),
         "apply_transaction_id": str(receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(receipt.get("authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            receipt.get("authorization_fingerprint", "")
+        ),
         "registry_after_sha256": str(receipt.get("registry_after_sha256", "")),
         "registry_restore_sha256": str(receipt.get("registry_before_sha256", "")),
         "rollback_ready": not bool(rejected),
@@ -354,7 +411,9 @@ def validate_rollback_authorization(
         "rejected_count": rejected,
         "rollback_scope": [dict(row) for row in scope],
         "rows": rows,
-        "reason_codes": ["governed-rollback-required" if not rejected else "governance-rejected"],
+        "reason_codes": [
+            "governed-rollback-required" if not rejected else "governance-rejected"
+        ],
     }
 
 
@@ -388,8 +447,44 @@ def _prepare_transaction(
         and writes[0].get("after_sha256") == restore_sha256
         and writes[0].get("expected_sha256") == current_sha256
     ):
-        raise KnowledgeHubError("governed rollback transaction does not match exact receipt plan")
+        raise KnowledgeHubError(
+            "governed rollback transaction does not match exact receipt plan"
+        )
     return transaction
+
+
+def _confirmation_reasons(
+    receipt: Mapping[str, Any],
+    validated: Mapping[str, Any],
+    *,
+    confirm_receipt_fingerprint: str,
+    confirm_rollback_authorization_fingerprint: str,
+    confirm_registry_current_sha256: str,
+    acknowledge_reviewer_identity_unverified: bool,
+) -> List[str]:
+    reasons: List[str] = []
+    receipt_fingerprint = str(receipt.get("receipt_fingerprint", ""))
+    rollback_fingerprint = str(
+        validated.get("rollback_authorization_fingerprint", "")
+    )
+    current_sha256 = str(receipt.get("registry_after_sha256", ""))
+    if not FINGERPRINT_RE.fullmatch(confirm_receipt_fingerprint):
+        reasons.append("rollback-confirm-receipt-fingerprint-invalid")
+    elif confirm_receipt_fingerprint != receipt_fingerprint:
+        reasons.append("rollback-confirm-receipt-fingerprint-mismatch")
+    if not FINGERPRINT_RE.fullmatch(confirm_rollback_authorization_fingerprint):
+        reasons.append("rollback-confirm-authorization-fingerprint-invalid")
+    elif confirm_rollback_authorization_fingerprint != rollback_fingerprint:
+        reasons.append("rollback-confirm-authorization-fingerprint-mismatch")
+    if not RAW_SHA256_RE.fullmatch(confirm_registry_current_sha256):
+        reasons.append("rollback-confirm-current-sha256-invalid")
+    elif confirm_registry_current_sha256 != current_sha256:
+        reasons.append("rollback-confirm-current-sha256-mismatch")
+    if not acknowledge_reviewer_identity_unverified:
+        reasons.append(
+            "rollback-reviewer-identity-boundary-acknowledgement-required"
+        )
+    return reasons
 
 
 def perform_governed_rollback(
@@ -404,41 +499,48 @@ def perform_governed_rollback(
 ) -> Dict[str, Any]:
     """Revalidate and explicitly restore one authorized binding apply transaction."""
 
-    validated = validate_rollback_authorization(root, apply_payload, authorization_input)
+    validated = validate_rollback_authorization(
+        root, apply_payload, authorization_input
+    )
     if validated.get("status") != "ready-for-governed-rollback":
         return _blocked(
-            ["rollback-authorization-not-ready:{}".format(validated.get("status", ""))]
+            [
+                "rollback-authorization-not-ready:{}".format(
+                    validated.get("status", "")
+                )
+            ]
             + [str(value) for value in validated.get("reason_codes", [])]
         )
     receipt = build_governed_apply_receipt(root, apply_payload)
-    if confirm_receipt_fingerprint != str(receipt.get("receipt_fingerprint", "")):
-        return _blocked(["rollback-confirm-receipt-fingerprint-mismatch"])
-    if not FINGERPRINT_RE.fullmatch(confirm_receipt_fingerprint):
-        return _blocked(["rollback-confirm-receipt-fingerprint-invalid"])
-    rollback_fingerprint = str(validated.get("rollback_authorization_fingerprint", ""))
-    if confirm_rollback_authorization_fingerprint != rollback_fingerprint:
-        return _blocked(["rollback-confirm-authorization-fingerprint-mismatch"])
-    if not FINGERPRINT_RE.fullmatch(confirm_rollback_authorization_fingerprint):
-        return _blocked(["rollback-confirm-authorization-fingerprint-invalid"])
-    current_sha256 = str(receipt.get("registry_after_sha256", ""))
-    restore_sha256 = str(receipt.get("registry_before_sha256", ""))
-    if not RAW_SHA256_RE.fullmatch(confirm_registry_current_sha256):
-        return _blocked(["rollback-confirm-current-sha256-invalid"])
-    if confirm_registry_current_sha256 != current_sha256:
-        return _blocked(["rollback-confirm-current-sha256-mismatch"])
-    if not acknowledge_reviewer_identity_unverified:
-        return _blocked(["rollback-reviewer-identity-boundary-acknowledgement-required"])
+    reasons = _confirmation_reasons(
+        receipt,
+        validated,
+        confirm_receipt_fingerprint=confirm_receipt_fingerprint,
+        confirm_rollback_authorization_fingerprint=(
+            confirm_rollback_authorization_fingerprint
+        ),
+        confirm_registry_current_sha256=confirm_registry_current_sha256,
+        acknowledge_reviewer_identity_unverified=(
+            acknowledge_reviewer_identity_unverified
+        ),
+    )
+    if reasons:
+        return _blocked(reasons)
     if validated.get("approved_count") != validated.get("authorization_count"):
         return _blocked(["rollback-authorization-not-unanimously-approved"])
     if int(validated.get("rejected_count", -1) or 0) != 0:
         return _blocked(["rollback-authorization-rejection-present"])
+    current_sha256 = str(receipt.get("registry_after_sha256", ""))
+    restore_sha256 = str(receipt.get("registry_before_sha256", ""))
     registry_path = root / REGISTRY_PATH
     if file_sha256(registry_path) != current_sha256:
         return _blocked(["rollback-registry-precondition-stale"])
-    _scope, before_raw, reasons = _derive_scope(root, receipt)
-    if reasons:
-        return _blocked(reasons)
-
+    _scope, before_raw, scope_reasons = _derive_scope(root, receipt)
+    if scope_reasons:
+        return _blocked(scope_reasons)
+    rollback_fingerprint = str(
+        validated.get("rollback_authorization_fingerprint", "")
+    )
     transaction = _prepare_transaction(
         root,
         before_raw,
@@ -473,7 +575,9 @@ def perform_governed_rollback(
         "reviewer_identity_boundary_acknowledged": True,
         "receipt_fingerprint": str(receipt.get("receipt_fingerprint", "")),
         "apply_transaction_id": str(receipt.get("transaction_id", "")),
-        "apply_authorization_fingerprint": str(receipt.get("authorization_fingerprint", "")),
+        "apply_authorization_fingerprint": str(
+            receipt.get("authorization_fingerprint", "")
+        ),
         "rollback_ready": False,
         "rollback_performed": True,
         "authorization_count": int(validated.get("authorization_count", 0)),
