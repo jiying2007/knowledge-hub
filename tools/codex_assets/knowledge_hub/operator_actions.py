@@ -227,6 +227,30 @@ def lifecycle_actions(lifecycle: Mapping[str, Any]) -> List[Dict[str, Any]]:
     ]
 
 
+def terminal_governance_actions(terminal: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    posture = terminal.get("default_branch_protection", {})
+    if not isinstance(posture, Mapping):
+        return []
+    if posture.get("required") is not True or posture.get("status") == "pass":
+        return []
+    branch = str(posture.get("branch", "master")) or "master"
+    reason = str(posture.get("reason", ""))
+    summary = (
+        "默认分支 {} 必须由 repository administrator 在真实托管环境启用保护；"
+        "当前 machine evidence={}，本仓不会自动修改 GitHub 管理设置。"
+    ).format(branch, reason or "needs-review")
+    return [
+        _action(
+            action_id="governance:default-branch-protection:{}".format(branch),
+            execution_class="external-environment",
+            summary_zh=summary,
+            scope="external",
+            field="default-branch-protection",
+            owner=str(posture.get("owner", "repository-admin")) or "repository-admin",
+        )
+    ]
+
+
 def _sort_key(row: Mapping[str, Any]) -> tuple:
     return (
         _EXECUTION_ORDER.get(str(row.get("execution_class", "")), 99),
@@ -240,6 +264,7 @@ def build_action_queue(
     projects: Sequence[Mapping[str, Any]],
     external: Mapping[str, Any],
     lifecycle: Optional[Mapping[str, Any]] = None,
+    terminal: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     actions: List[Dict[str, Any]] = []
     for row in projects:
@@ -250,6 +275,7 @@ def build_action_queue(
             actions.extend(project_actions(row))
     actions.extend(external_actions(external))
     actions.extend(lifecycle_actions(lifecycle or {}))
+    actions.extend(terminal_governance_actions(terminal or {}))
     actions.sort(key=_sort_key)
     counts = Counter(str(row.get("execution_class", "")) for row in actions)
     human_project_ids = sorted(
