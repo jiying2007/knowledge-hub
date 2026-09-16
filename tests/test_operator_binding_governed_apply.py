@@ -204,6 +204,25 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
         self.assertEqual(validated["status"], "ready-for-governed-apply")
         return temporary, root, row, proposal, selected, bundle, authorization, validated
 
+    def _apply(self, root, proposal, selected, authorization, validated, **overrides):
+        values = {
+            "confirm_authorization_fingerprint": str(
+                validated["authorization_fingerprint"]
+            ),
+            "confirm_registry_before_sha256": file_sha256(
+                root / "registry/items.jsonl"
+            ),
+            "acknowledge_reviewer_identity_unverified": True,
+        }
+        values.update(overrides)
+        return apply_governed_binding(
+            root,
+            proposal,
+            selected,
+            authorization,
+            **values,
+        )
+
     def test_explicit_confirmed_apply_writes_only_registry_evidence(self) -> None:
         (
             temporary,
@@ -216,23 +235,14 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
             validated,
         ) = self._ready()
         self.addCleanup(temporary.cleanup)
-        before_sha = file_sha256(root / "registry/items.jsonl")
 
-        payload = apply_governed_binding(
-            root,
-            proposal,
-            selected,
-            authorization,
-            confirm_authorization_fingerprint=str(
-                validated["authorization_fingerprint"]
-            ),
-            confirm_registry_before_sha256=before_sha,
-        )
+        payload = self._apply(root, proposal, selected, authorization, validated)
 
         self.assertEqual(payload["status"], "applied")
         self.assertTrue(payload["canonical_write_performed"])
         self.assertTrue(payload["apply_performed"])
         self.assertTrue(payload["explicit_operator_confirmation_verified"])
+        self.assertTrue(payload["reviewer_identity_unverified_acknowledged"])
         self.assertFalse(payload["automatic_binding_enabled"])
         self.assertFalse(payload["automatic_execution_enabled"])
         self.assertFalse(payload["reviewer_identity_provider_verified"])
@@ -255,19 +265,41 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
         journal = root / payload["transaction"]["journal"]
         self.assertTrue(journal.is_file())
 
+    def test_unverified_identity_boundary_must_be_acknowledged(self) -> None:
+        temporary, root, _row, proposal, selected, _bundle, authorization, validated = self._ready()
+        self.addCleanup(temporary.cleanup)
+        registry = root / "registry/items.jsonl"
+        before = registry.read_text(encoding="utf-8")
+
+        payload = self._apply(
+            root,
+            proposal,
+            selected,
+            authorization,
+            validated,
+            acknowledge_reviewer_identity_unverified=False,
+        )
+
+        self.assertEqual(payload["status"], "blocked")
+        self.assertIn(
+            "apply-reviewer-identity-unverified-ack-required",
+            payload["reason_codes"],
+        )
+        self.assertEqual(registry.read_text(encoding="utf-8"), before)
+
     def test_authorization_fingerprint_confirmation_is_mandatory(self) -> None:
         temporary, root, _row, proposal, selected, _bundle, authorization, validated = self._ready()
         self.addCleanup(temporary.cleanup)
         registry = root / "registry/items.jsonl"
         before = registry.read_text(encoding="utf-8")
 
-        payload = apply_governed_binding(
+        payload = self._apply(
             root,
             proposal,
             selected,
             authorization,
+            validated,
             confirm_authorization_fingerprint="sha256:" + "0" * 64,
-            confirm_registry_before_sha256=file_sha256(registry),
         )
 
         self.assertEqual(payload["status"], "blocked")
@@ -285,12 +317,12 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
         registry = root / "registry/items.jsonl"
         before = registry.read_text(encoding="utf-8")
 
-        payload = apply_governed_binding(
+        payload = self._apply(
             root,
             proposal,
             selected,
             authorization,
-            confirm_authorization_fingerprint=str(validated["authorization_fingerprint"]),
+            validated,
             confirm_registry_before_sha256="0" * 64,
         )
 
@@ -317,6 +349,7 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
             authorization,
             confirm_authorization_fingerprint=str(rejected["authorization_fingerprint"]),
             confirm_registry_before_sha256=file_sha256(registry),
+            acknowledge_reviewer_identity_unverified=True,
         )
 
         self.assertEqual(payload["status"], "blocked")
@@ -346,6 +379,7 @@ class OperatorBindingGovernedApplyTests(unittest.TestCase):
             authorization,
             confirm_authorization_fingerprint=str(validated["authorization_fingerprint"]),
             confirm_registry_before_sha256=str(validated["registry_before_sha256"]),
+            acknowledge_reviewer_identity_unverified=True,
         )
 
         self.assertEqual(result["status"], "blocked")
