@@ -113,13 +113,13 @@
   },
   "repository_security_target": {
     "private_required": true,
-    "protected_default_branch_required": false,
+    "protected_default_branch_required": true,
     "required_status_checks": [],
     "block_force_push": false,
     "block_branch_deletion": false,
     "require_pull_request": false,
     "require_conversation_resolution": false,
-    "default_branch_protection_policy": "intentionally-unprotected-at-current-stage"
+    "default_branch_protection_policy": "required-for-terminal-closure-external-admin"
   },
   "protocols": {
     "mcp": {
@@ -194,7 +194,7 @@
       "owner": "repository-admin",
       "required": false,
       "status": "not-required",
-      "reason": "Current-stage owner decision intentionally keeps the default branch unprotected; this is not a terminal blocker."
+      "reason": "Superseded by the dedicated default_branch_protection terminal machine check; retained only as a non-authoritative compatibility row to avoid a duplicate closure status source."
     },
     {
       "id": "mcp-official-conformance",
