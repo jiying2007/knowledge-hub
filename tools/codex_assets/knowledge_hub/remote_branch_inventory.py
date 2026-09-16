@@ -26,6 +26,7 @@ _TIMEOUT_SECONDS = 20
 _IMPLEMENTATION_BRANCH_PREFIXES = ("codex/", "arch/")
 _DEFAULT_CONVERGENCE_ATTEMPTS = 6
 _DEFAULT_CONVERGENCE_DELAY_SECONDS = 2.0
+_DEFAULT_BRANCH = "master"
 
 
 def _load_lifecycle(root: pathlib.Path, relative: str) -> Mapping[str, Any]:
@@ -88,18 +89,32 @@ def _request_page(repository: str, token: str, page: int) -> List[Mapping[str, A
     return [row for row in value if isinstance(row, Mapping)]
 
 
-def fetch_remote_branches(repository: str, token: str = "") -> List[str]:
+def fetch_remote_branch_records(
+    repository: str, token: str = ""
+) -> List[Dict[str, Any]]:
     if not _REPOSITORY_PATTERN.fullmatch(repository):
         raise KnowledgeHubError("repository must use owner/name form")
-    names: List[str] = []
+    records: Dict[str, Dict[str, Any]] = {}
     for page in range(1, _MAX_PAGES + 1):
         rows = _request_page(repository, token, page)
-        names.extend(str(row.get("name", "")) for row in rows if row.get("name"))
+        for row in rows:
+            name = str(row.get("name", ""))
+            if not name:
+                continue
+            protected = row.get("protected")
+            records[name] = {
+                "name": name,
+                "protected": protected if isinstance(protected, bool) else None,
+            }
         if len(rows) < _PAGE_SIZE:
             break
     else:
         raise KnowledgeHubError("remote branch inventory exceeds page budget")
-    return sorted(set(names))
+    return [records[name] for name in sorted(records)]
+
+
+def fetch_remote_branches(repository: str, token: str = "") -> List[str]:
+    return [row["name"] for row in fetch_remote_branch_records(repository, token)]
 
 
 def _implementation_branches(branches: List[str]) -> List[str]:
@@ -122,6 +137,21 @@ def _residue_state(candidates: List[str], branches: List[str]) -> Dict[str, List
     }
 
 
+def _default_branch_state(
+    records: List[Mapping[str, Any]], default_branch: str
+) -> Dict[str, Any]:
+    matches = [row for row in records if str(row.get("name", "")) == default_branch]
+    present = len(matches) == 1
+    protected_value = matches[0].get("protected") if present else None
+    observed = isinstance(protected_value, bool)
+    return {
+        "default_branch": default_branch,
+        "default_branch_present": present,
+        "default_branch_protection_observed": observed,
+        "default_branch_protected": protected_value is True,
+    }
+
+
 def evaluate_remote_branch_inventory(
     root: pathlib.Path,
     *,
@@ -129,10 +159,13 @@ def evaluate_remote_branch_inventory(
     source_revision: str,
     token: str = "",
     lifecycle: str = "registry/branch-lifecycle.json",
+    default_branch: str = _DEFAULT_BRANCH,
     convergence_attempts: int = _DEFAULT_CONVERGENCE_ATTEMPTS,
     convergence_delay_seconds: float = _DEFAULT_CONVERGENCE_DELAY_SECONDS,
 ) -> Dict[str, Any]:
     _validate_identity(repository, source_revision)
+    if not default_branch or "/" in default_branch:
+        raise KnowledgeHubError("default branch name is invalid")
     if convergence_attempts < 1:
         raise KnowledgeHubError("convergence_attempts must be at least 1")
     if convergence_delay_seconds < 0:
@@ -141,6 +174,12 @@ def evaluate_remote_branch_inventory(
     candidates = retirement_candidates(root, lifecycle)
     observations: List[Dict[str, Any]] = []
     branches: List[str] = []
+    default_state = {
+        "default_branch": default_branch,
+        "default_branch_present": False,
+        "default_branch_protection_observed": False,
+        "default_branch_protected": False,
+    }
     residue: Dict[str, List[str]] = {
         "remaining_candidates": [],
         "implementation_branches": [],
@@ -149,7 +188,9 @@ def evaluate_remote_branch_inventory(
 
     for attempt in range(1, convergence_attempts + 1):
         try:
-            branches = fetch_remote_branches(repository, token)
+            records = fetch_remote_branch_records(repository, token)
+            branches = [str(row["name"]) for row in records]
+            default_state = _default_branch_state(records, default_branch)
         except KnowledgeHubError as exc:
             remaining = (
                 residue["remaining_candidates"] if observations else list(candidates)
@@ -168,6 +209,7 @@ def evaluate_remote_branch_inventory(
                 "unexpected_implementation_branches": residue[
                     "unexpected_implementation_branches"
                 ],
+                **default_state,
                 "observation_count": len(observations),
                 "converged_after_retry": False,
                 "observations": observations,
@@ -181,6 +223,13 @@ def evaluate_remote_branch_inventory(
                 "remaining_candidates": residue["remaining_candidates"],
                 "unexpected_implementation_branches": residue[
                     "unexpected_implementation_branches"
+                ],
+                "default_branch_present": default_state["default_branch_present"],
+                "default_branch_protection_observed": default_state[
+                    "default_branch_protection_observed"
+                ],
+                "default_branch_protected": default_state[
+                    "default_branch_protected"
                 ],
             }
         )
@@ -201,6 +250,7 @@ def evaluate_remote_branch_inventory(
                 "implementation_branch_prefixes": list(_IMPLEMENTATION_BRANCH_PREFIXES),
                 "implementation_branches": residue["implementation_branches"],
                 "unexpected_implementation_branches": [],
+                **default_state,
                 "observation_count": len(observations),
                 "converged_after_retry": attempt > 1,
                 "observations": observations,
@@ -223,6 +273,7 @@ def evaluate_remote_branch_inventory(
         "unexpected_implementation_branches": residue[
             "unexpected_implementation_branches"
         ],
+        **default_state,
         "observation_count": len(observations),
         "converged_after_retry": False,
         "observations": observations,
