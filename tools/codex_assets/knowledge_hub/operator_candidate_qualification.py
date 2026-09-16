@@ -14,6 +14,12 @@ _EXPECTED_KINDS = {
     "artifact_refs": {"github-release-asset", "github-actions-artifact"},
     "release_ref": {"github-release"},
 }
+_EXPECTED_OPERATIONS = {
+    "source_refs": "inspect-repository-source",
+    "validation_refs": "list-workflow-runs",
+    "artifact_refs": "list-release-assets-and-actions-artifacts",
+    "release_ref": "list-releases-and-tags",
+}
 _EXPECTED_REF_PREFIXES = {
     "github-source-revision": "github://",
     "github-workflow-run": "github-actions://",
@@ -30,12 +36,59 @@ def _details(candidate: Mapping[str, Any]) -> Mapping[str, Any]:
 
 def _upstream_contract_reasons(execution: Mapping[str, Any]) -> List[str]:
     reasons = []
+    if execution.get("schema_version") != 1:
+        reasons.append("upstream-schema-version-invalid")
+    if str(execution.get("projection", "")) != "knowledge-operator-github-provider-v1":
+        reasons.append("upstream-projection-identity-invalid")
+    if str(execution.get("status", "")) not in {"pass", "error"}:
+        reasons.append("upstream-status-invalid")
     if execution.get("read_only") is not True:
         reasons.append("upstream-not-read-only")
     if execution.get("canonical_write_performed") is not False:
         reasons.append("upstream-canonical-write-state-invalid")
     if execution.get("automatic_binding_enabled") is not False:
         reasons.append("upstream-automatic-binding-state-invalid")
+    error_count = execution.get("error_count")
+    if not isinstance(error_count, int) or isinstance(error_count, bool) or error_count < 0:
+        reasons.append("upstream-error-count-invalid")
+    if not isinstance(execution.get("results", []), list):
+        reasons.append("upstream-results-shape-invalid")
+    return reasons
+
+
+def _result_contract_reasons(result: Mapping[str, Any]) -> List[str]:
+    reasons = []
+    field = str(result.get("field", ""))
+    if not str(result.get("project_id", "")):
+        reasons.append("result-project-id-missing")
+    if field not in REVIEW_FIELDS:
+        reasons.append("result-field-invalid")
+    if str(result.get("provider", "")) != "github":
+        reasons.append("result-provider-not-github")
+    if result.get("executed") is not True:
+        reasons.append("result-not-executed")
+    if result.get("read_only") is not True:
+        reasons.append("result-not-read-only")
+    if result.get("network_performed") is not True:
+        reasons.append("result-network-state-invalid")
+    if result.get("canonical_write_performed") is not False:
+        reasons.append("result-canonical-write-state-invalid")
+    if result.get("automatic_binding_enabled") is not False:
+        reasons.append("result-automatic-binding-state-invalid")
+    if not str(result.get("target", "")):
+        reasons.append("result-target-missing")
+    expected_operation = _EXPECTED_OPERATIONS.get(field)
+    if expected_operation and str(result.get("operation", "")) != expected_operation:
+        reasons.append("result-operation-does-not-match-field")
+    candidates = result.get("candidates", [])
+    if not isinstance(candidates, list):
+        reasons.append("result-candidates-shape-invalid")
+    elif result.get("candidate_count") != len(candidates):
+        reasons.append("result-candidate-count-mismatch")
+    if candidates and str(result.get("status", "")) != "candidate-found":
+        reasons.append("result-status-does-not-match-candidates")
+    if not candidates and str(result.get("status", "")) != "no-candidate":
+        reasons.append("result-status-does-not-match-candidates")
     return reasons
 
 
@@ -143,9 +196,11 @@ def _qualification_row(
     result: Mapping[str, Any],
     candidate: Mapping[str, Any],
     upstream_reasons: Sequence[str],
+    result_reasons: Sequence[str],
 ) -> Dict[str, Any]:
     field = str(result.get("field", ""))
     reasons = list(upstream_reasons)
+    reasons.extend(result_reasons)
     reasons.extend(_generic_reasons(candidate))
     reasons.extend(_field_reasons(field, candidate))
     reasons = list(dict.fromkeys(reasons))
@@ -173,12 +228,22 @@ def qualify_provider_projection(execution: Mapping[str, Any]) -> Dict[str, Any]:
 
     upstream_reasons = _upstream_contract_reasons(execution)
     rows: List[Dict[str, Any]] = []
+    result_contract_error_count = 0
     truncated = False
-    for result in execution.get("results", []):
+    raw_results = execution.get("results", [])
+    results = raw_results if isinstance(raw_results, list) else []
+    for result in results:
         if not isinstance(result, Mapping):
+            result_contract_error_count += 1
             continue
-        for candidate in result.get("candidates", []):
+        result_reasons = _result_contract_reasons(result)
+        if result_reasons:
+            result_contract_error_count += 1
+        raw_candidates = result.get("candidates", [])
+        candidates = raw_candidates if isinstance(raw_candidates, list) else []
+        for candidate in candidates:
             if not isinstance(candidate, Mapping):
+                result_contract_error_count += 1
                 continue
             if len(rows) >= MAX_REVIEW_CANDIDATES:
                 truncated = True
@@ -188,13 +253,21 @@ def qualify_provider_projection(execution: Mapping[str, Any]) -> Dict[str, Any]:
                     result=result,
                     candidate=candidate,
                     upstream_reasons=upstream_reasons,
+                    result_reasons=result_reasons,
                 )
             )
         if truncated:
             break
     counts = Counter(str(row.get("qualification_status", "")) for row in rows)
-    source_error_count = int(execution.get("error_count", 0) or 0)
-    if upstream_reasons or source_error_count:
+    raw_error_count = execution.get("error_count", 0)
+    source_error_count = (
+        raw_error_count
+        if isinstance(raw_error_count, int)
+        and not isinstance(raw_error_count, bool)
+        and raw_error_count >= 0
+        else 1
+    )
+    if upstream_reasons or source_error_count or result_contract_error_count:
         status = "upstream-error"
     elif counts.get("reviewable", 0):
         status = "needs-governed-review"
@@ -218,6 +291,7 @@ def qualify_provider_projection(execution: Mapping[str, Any]) -> Dict[str, Any]:
         "rejected_count": counts.get("rejected", 0),
         "truncated": truncated,
         "source_error_count": source_error_count,
+        "result_contract_error_count": result_contract_error_count,
         "upstream_contract_reason_codes": upstream_reasons,
         "rows": rows,
     }
