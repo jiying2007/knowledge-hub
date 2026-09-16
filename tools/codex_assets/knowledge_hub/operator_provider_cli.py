@@ -8,6 +8,7 @@ import os
 from typing import Sequence
 
 from .common import KnowledgeHubError, repository_root
+from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_proposal import build_binding_proposal
 from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
@@ -35,6 +36,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="build proposal-only canonical evidence changes for governed review",
     )
+    parser.add_argument(
+        "--plan-binding",
+        action="append",
+        default=[],
+        metavar="PROPOSAL_FINGERPRINT",
+        help=(
+            "plan an exact registry patch for one explicitly selected proposal fingerprint; "
+            "repeat only for different target fields"
+        ),
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -58,13 +69,26 @@ def main(argv: Sequence[str] = ()) -> int:
             project_id=args.project,
             field=args.field,
         )
+        needs_qualification = bool(args.qualify or args.propose or args.plan_binding)
         qualification_payload = (
             qualify_provider_projection(provider_payload)
-            if args.qualify or args.propose
+            if needs_qualification
             else {}
         )
-        if args.propose:
-            payload = build_binding_proposal(root, qualification_payload)
+        needs_proposal = bool(args.propose or args.plan_binding)
+        proposal_payload = (
+            build_binding_proposal(root, qualification_payload)
+            if needs_proposal
+            else {}
+        )
+        if args.plan_binding:
+            payload = build_binding_patch_plan(
+                root,
+                proposal_payload,
+                args.plan_binding,
+            )
+        elif args.propose:
+            payload = proposal_payload
         elif args.qualify:
             payload = qualification_payload
         else:
@@ -73,6 +97,43 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.plan_binding:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("patch_plan_only: true")
+        print("apply_enabled: false")
+        print("selection_is_authorization: false")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print(
+            "selected_proposal_count: {}".format(
+                payload["selected_proposal_count"]
+            )
+        )
+        print("planned_item_count: {}".format(payload["planned_item_count"]))
+        print("planned_write_count: {}".format(payload["planned_write_count"]))
+        if payload.get("registry_before_sha256"):
+            print(
+                "registry_before_sha256: {}".format(
+                    payload["registry_before_sha256"]
+                )
+            )
+            print(
+                "registry_after_sha256: {}".format(
+                    payload["registry_after_sha256"]
+                )
+            )
+        for row in payload["rows"]:
+            print(
+                "{} {} fields={} proposals={}".format(
+                    row.get("project_id", ""),
+                    row.get("item_id", ""),
+                    ",".join(row.get("changed_fields", [])),
+                    len(row.get("selected_proposal_fingerprints", [])),
+                )
+            )
+        for reason in payload.get("reason_codes", []):
+            print("reason: {}".format(reason))
     elif args.propose:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
@@ -138,7 +199,11 @@ def main(argv: Sequence[str] = ()) -> int:
                     error.get("error", ""),
                 )
             )
-    return 3 if provider_payload["error_count"] or payload.get("status") == "upstream-error" else 0
+    if provider_payload["error_count"] or payload.get("status") == "upstream-error":
+        return 3
+    if args.plan_binding and payload.get("status") == "blocked":
+        return 4
+    return 0
 
 
 if __name__ == "__main__":
