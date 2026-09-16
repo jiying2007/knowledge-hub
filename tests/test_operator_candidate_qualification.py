@@ -10,6 +10,12 @@ from tools.codex_assets.knowledge_hub.operator_candidate_qualification import (
 
 class OperatorCandidateQualificationTests(unittest.TestCase):
     def _execution(self, field: str, candidate: dict) -> dict:
+        operations = {
+            "source_refs": "inspect-repository-source",
+            "validation_refs": "list-workflow-runs",
+            "artifact_refs": "list-release-assets-and-actions-artifacts",
+            "release_ref": "list-releases-and-tags",
+        }
         return {
             "schema_version": 1,
             "projection": "knowledge-operator-github-provider-v1",
@@ -24,8 +30,15 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
                     "project_id": "agent-dev-kit",
                     "field": field,
                     "provider": "github",
-                    "operation": "test-operation",
+                    "operation": operations[field],
                     "target": "jiying2007/agent-dev-kit",
+                    "status": "candidate-found",
+                    "executed": True,
+                    "read_only": True,
+                    "network_performed": True,
+                    "canonical_write_performed": False,
+                    "automatic_binding_enabled": False,
+                    "candidate_count": 1,
                     "candidates": [candidate],
                 }
             ],
@@ -43,8 +56,8 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
             "details": details,
         }
 
-    def test_exact_source_revision_is_reviewable_but_never_binding_eligible(self) -> None:
-        candidate = self._candidate(
+    def _source_candidate(self) -> dict:
+        return self._candidate(
             "github-source-revision",
             "github://jiying2007/agent-dev-kit@abc123",
             {
@@ -53,7 +66,11 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
                 "exact_identity": True,
             },
         )
-        payload = qualify_provider_projection(self._execution("source_refs", candidate))
+
+    def test_exact_source_revision_is_reviewable_but_never_binding_eligible(self) -> None:
+        payload = qualify_provider_projection(
+            self._execution("source_refs", self._source_candidate())
+        )
 
         self.assertEqual(payload["status"], "needs-governed-review")
         self.assertEqual(payload["reviewable_count"], 1)
@@ -128,16 +145,7 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         self.assertIn("candidate-kind-does-not-match-field", row["reason_codes"])
 
     def test_upstream_contract_violation_rejects_otherwise_valid_candidate(self) -> None:
-        candidate = self._candidate(
-            "github-source-revision",
-            "github://jiying2007/agent-dev-kit@abc123",
-            {
-                "repository": "jiying2007/agent-dev-kit",
-                "commit_sha": "abc123",
-                "exact_identity": True,
-            },
-        )
-        execution = self._execution("source_refs", candidate)
+        execution = self._execution("source_refs", self._source_candidate())
         execution["automatic_binding_enabled"] = True
         payload = qualify_provider_projection(execution)
 
@@ -148,16 +156,31 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         )
         self.assertFalse(payload["rows"][0]["review_eligible"])
 
-    def test_candidate_that_claims_binding_eligibility_is_rejected(self) -> None:
-        candidate = self._candidate(
-            "github-source-revision",
-            "github://jiying2007/agent-dev-kit@abc123",
-            {
-                "repository": "jiying2007/agent-dev-kit",
-                "commit_sha": "abc123",
-                "exact_identity": True,
-            },
+    def test_wrong_projection_identity_is_fail_closed(self) -> None:
+        execution = self._execution("source_refs", self._source_candidate())
+        execution["projection"] = "other-projection"
+        payload = qualify_provider_projection(execution)
+
+        self.assertEqual(payload["status"], "upstream-error")
+        self.assertIn(
+            "upstream-projection-identity-invalid",
+            payload["upstream_contract_reason_codes"],
         )
+        self.assertFalse(payload["rows"][0]["review_eligible"])
+
+    def test_result_contract_violation_rejects_candidate(self) -> None:
+        execution = self._execution("source_refs", self._source_candidate())
+        execution["results"][0]["automatic_binding_enabled"] = True
+        payload = qualify_provider_projection(execution)
+
+        self.assertEqual(payload["status"], "upstream-error")
+        self.assertEqual(payload["result_contract_error_count"], 1)
+        row = payload["rows"][0]
+        self.assertFalse(row["review_eligible"])
+        self.assertIn("result-automatic-binding-state-invalid", row["reason_codes"])
+
+    def test_candidate_that_claims_binding_eligibility_is_rejected(self) -> None:
+        candidate = self._source_candidate()
         candidate["eligible_for_binding"] = True
         payload = qualify_provider_projection(self._execution("source_refs", candidate))
 
@@ -167,38 +190,21 @@ class OperatorCandidateQualificationTests(unittest.TestCase):
         self.assertFalse(row["eligible_for_binding"])
 
     def test_projection_is_bounded_and_marks_truncation(self) -> None:
-        candidate = self._candidate(
-            "github-source-revision",
-            "github://jiying2007/agent-dev-kit@abc123",
-            {
-                "repository": "jiying2007/agent-dev-kit",
-                "commit_sha": "abc123",
-                "exact_identity": True,
-            },
-        )
+        candidate = self._source_candidate()
         execution = self._execution("source_refs", candidate)
         execution["results"][0]["candidates"] = [
             dict(candidate) for _ in range(MAX_REVIEW_CANDIDATES + 1)
         ]
+        execution["results"][0]["candidate_count"] = MAX_REVIEW_CANDIDATES + 1
         payload = qualify_provider_projection(execution)
 
         self.assertEqual(payload["candidate_count"], MAX_REVIEW_CANDIDATES)
         self.assertTrue(payload["truncated"])
 
     def test_source_provider_errors_keep_projection_fail_closed(self) -> None:
-        execution = self._execution(
-            "source_refs",
-            self._candidate(
-                "github-source-revision",
-                "github://jiying2007/agent-dev-kit@abc123",
-                {
-                    "repository": "jiying2007/agent-dev-kit",
-                    "commit_sha": "abc123",
-                    "exact_identity": True,
-                },
-            ),
-        )
+        execution = self._execution("source_refs", self._source_candidate())
         execution["error_count"] = 1
+        execution["status"] = "error"
         payload = qualify_provider_projection(execution)
 
         self.assertEqual(payload["status"], "upstream-error")
