@@ -4,7 +4,7 @@ Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller �
 
 ## 使用
 
-P2.2/P2.3/P2.4 不增加新的公共 `tools/knowledge-*.sh` wrapper，避免扩张 canonical command surface。显式调用内部 module CLI：
+P2.2/P2.3/P2.4/P2.5 不增加新的公共 `tools/knowledge-*.sh` wrapper，避免扩张 canonical command surface。显式调用内部 module CLI：
 
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli --root . --json
@@ -29,6 +29,19 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 ```
 
 `--propose` 会在同一次显式调用中执行 P2.2 → P2.3 → P2.4，但只输出 proposal；它不会修改 `registry/items.jsonl`、项目 readiness Markdown、owner、evidence contract status 或其它 canonical state。
+
+P2.5 在已经看到并明确选择某条 proposal fingerprint 后，生成 exact patch plan：
+
+```bash
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
+  --root . \
+  --project agent-dev-kit \
+  --field release_ref \
+  --plan-binding sha256:<proposal-fingerprint> \
+  --json
+```
+
+`--plan-binding` 可以重复，但同一 canonical target field 一次只允许选择一个 proposal；不同 field 可以放在同一个 patch plan 中。选择 fingerprint 只是“指定要审阅哪条机器提案”，**不是 owner 授权，也不会触发 apply**。
 
 支持的 field 为 `source_refs`、`validation_refs`、`artifact_refs`、`release_ref`。
 
@@ -80,7 +93,7 @@ Canonical target 不重新定义：P2.4 只允许定位到现有项目 validatio
 
 如果引用已经存在，结果为 `already-present`；如果单值字段已有不同引用、现有字段形状无效、canonical route/item 不唯一、field 不属于该 evidence profile，或该 field 已有显式授权的 `not_applicable`，结果都会 fail-closed 为 `blocked-conflict` / `unmappable`，不会生成覆盖动作。
 
-每条 ready proposal 都包含 canonical target locator、当前值、建议值、mutation intent 与 deterministic `sha256:` proposal fingerprint。fingerprint 只用于审阅时识别同一提案，不是 evidence 签名，也不是授权。
+每条 ready proposal 都包含 canonical target locator、当前值、建议值、mutation intent、完整 verified candidate snapshot 与 deterministic `sha256:` proposal fingerprint。canonical 建议值保持现有 `{kind, ref}` contract 形状；provider 的 digest、head SHA、immutable 等验证细节保留在 candidate snapshot，并被 proposal fingerprint 绑定。fingerprint 只用于审阅时识别同一提案，不是 evidence 签名，也不是授权。
 
 P2.4 顶层和每条 row 始终保持：
 
@@ -92,7 +105,40 @@ P2.4 顶层和每条 row 始终保持：
 - `status_mutation_planned=false`、`owner_mutation_planned=false`、`readiness_mutation_planned=false`；
 - `requires_governed_review=true`。
 
-因此 `proposal_status=ready-for-governed-review` 只表示“机器已经形成可审阅的最小变更提案”，不表示该变更已获 owner 授权、不表示 evidence contract 可以声明 `ready`，也不表示 readiness/terminal closure 可以关闭。真正写入仍必须由独立 governed PR 完成，并重新跑既有 evidence/readiness/terminal gates。
+因此 `proposal_status=ready-for-governed-review` 只表示“机器已经形成可审阅的最小变更提案”，不表示该变更已获 owner 授权、不表示 evidence contract 可以声明 `ready`，也不表示 readiness/terminal closure 可以关闭。
+
+## P2.5 governed patch plan
+
+P2.5 只消费 P2.4 proposal projection 和**显式选中的 proposal fingerprint**。它不会直接写 registry，而是把选中提案重新绑定到当前 canonical `registry/items.jsonl`，验证没有 stale/drift 后，使用现有 `RepositoryTransaction.plan()` 生成 exact write plan。
+
+P2.5 会重新验证：
+
+- P2.4 顶层仍是 read-only / proposal-only / no automatic binding；
+- proposal fingerprint 与 candidate snapshot fingerprint 都能重算一致；
+- snapshot 仍是 `provider_verified=true`、`candidate_only=true`、`eligible_for_binding=false`，且 provider/kind/ref 与 proposal 一致；
+- target 的 project、validation slot、item id/path、contract field、evidence profile 一致；
+- canonical item 当前 field 仍与 proposal 的 `current_value` 完全一致；
+- evidence contract 的 declared status 必须仍为 `pending`；P2.5 不允许在 plan 阶段把 readiness 自动提升为 ready；
+- 同一 item + field 一次只能选择一个 proposal，避免多个 proposal 基于同一个旧 `current_value` 时破坏 optimistic precondition。
+
+成功结果为 `status=needs-governed-pr`，并输出：
+
+- `registry_before_sha256` / `registry_after_sha256`；
+- 每个受影响 canonical item 的 before/after row fingerprint；
+- `changed_fields` 与对应 selected proposal fingerprints；
+- `RepositoryTransaction.plan()` 的 `expected_sha256`、before/after SHA256、changed count。
+
+P2.5 始终声明：
+
+- `read_only=true`；
+- `canonical_write_performed=false`；
+- `apply_enabled=false`；
+- `selection_is_authorization=false`；
+- `automatic_binding_enabled=false`、`automatic_execution_enabled=false`；
+- `status_mutation_planned=false`、`owner_mutation_planned=false`、`readiness_mutation_planned=false`；
+- `requires_governed_pr=true`。
+
+因此 P2.5 的输出只是**可重复核对的 governed PR patch plan**。后续真正 canonical write 必须是单独阶段，要求重新核 optimistic SHA256、明确治理授权、生成真实 diff，并再次执行完整 evidence/readiness/terminal gates；P2.5 自身不会调用 `RepositoryTransaction.apply()`。
 
 ## Fail-closed 边界
 
@@ -112,4 +158,4 @@ Provider result 始终声明：
 
 ## 与 Operator UI 的关系
 
-Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates；P2.4 只生成 proposal-only governed binding projection。任何 canonical evidence 写入仍必须经过后续独立 governed PR 与现有 evidence contract/readiness gates。
+Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates；P2.4 只生成 proposal-only governed binding projection；P2.5 只为显式选择的 proposal 生成 governed patch plan。任何 canonical evidence 写入仍必须经过后续独立 governed PR 与现有 evidence contract/readiness/terminal gates。
