@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from typing import Any, Dict, List, Mapping, Sequence
 
@@ -27,6 +28,8 @@ _EXPECTED_REF_PREFIXES = {
     "github-actions-artifact": "github-actions-artifact://",
     "github-release": "github-release://",
 }
+_GIT_OBJECT_ID = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
+_SHA256_DIGEST = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
 
 
 def _details(candidate: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -113,44 +116,77 @@ def _generic_reasons(candidate: Mapping[str, Any]) -> List[str]:
     return reasons
 
 
-def _source_reasons(candidate: Mapping[str, Any]) -> List[str]:
+def _source_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
     details = _details(candidate)
     reasons = []
+    repository = str(details.get("repository", ""))
+    commit_sha = str(details.get("commit_sha", ""))
     if details.get("exact_identity") is not True:
         reasons.append("source-exact-identity-missing")
-    if not str(details.get("commit_sha", "")):
+    if not commit_sha:
         reasons.append("source-commit-sha-missing")
-    if not str(details.get("repository", "")):
+    elif not _GIT_OBJECT_ID.fullmatch(commit_sha):
+        reasons.append("source-commit-sha-invalid")
+    if not repository:
         reasons.append("source-repository-missing")
+    elif repository != target:
+        reasons.append("source-repository-target-mismatch")
+    if repository and commit_sha:
+        expected_ref = "github://{}@{}".format(repository, commit_sha)
+        if str(candidate.get("ref", "")) != expected_ref:
+            reasons.append("source-ref-identity-mismatch")
     return reasons
 
 
-def _validation_reasons(candidate: Mapping[str, Any]) -> List[str]:
+def _validation_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
     details = _details(candidate)
     reasons = []
+    run_id = str(details.get("run_id", ""))
+    head_sha = str(details.get("head_sha", ""))
     if str(details.get("conclusion", "")) != "success":
         reasons.append("validation-not-successful")
-    if not str(details.get("run_id", "")):
+    if not run_id:
         reasons.append("validation-run-id-missing")
-    if not str(details.get("head_sha", "")):
+    if not head_sha:
         reasons.append("validation-head-sha-missing")
+    elif not _GIT_OBJECT_ID.fullmatch(head_sha):
+        reasons.append("validation-head-sha-invalid")
+    if run_id:
+        expected_ref = "github-actions://{}/runs/{}".format(target, run_id)
+        if str(candidate.get("ref", "")) != expected_ref:
+            reasons.append("validation-ref-identity-mismatch")
     return reasons
 
 
-def _artifact_reasons(candidate: Mapping[str, Any]) -> List[str]:
+def _artifact_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
     details = _details(candidate)
     kind = str(candidate.get("kind", ""))
     reasons = []
-    if not str(details.get("digest", "")):
+    digest = str(details.get("digest", ""))
+    if not digest:
         reasons.append("artifact-digest-missing")
+    elif not _SHA256_DIGEST.fullmatch(digest):
+        reasons.append("artifact-digest-invalid")
     if kind == "github-actions-artifact":
+        artifact_id = str(details.get("artifact_id", ""))
         if details.get("expired") is not False:
             reasons.append("actions-artifact-expiry-state-invalid")
-        if not str(details.get("artifact_id", "")):
+        if not artifact_id:
             reasons.append("actions-artifact-id-missing")
+        else:
+            expected_ref = "github-actions-artifact://{}/{}".format(
+                target, artifact_id
+            )
+            if str(candidate.get("ref", "")) != expected_ref:
+                reasons.append("actions-artifact-ref-identity-mismatch")
     elif kind == "github-release-asset":
-        if not str(details.get("asset_id", "")):
+        asset_id = str(details.get("asset_id", ""))
+        if not asset_id:
             reasons.append("release-asset-id-missing")
+        else:
+            expected_ref = "github-release-asset://{}/{}".format(target, asset_id)
+            if str(candidate.get("ref", "")) != expected_ref:
+                reasons.append("release-asset-ref-identity-mismatch")
         if bool(details.get("release_draft", False)):
             reasons.append("release-asset-from-draft")
         if bool(details.get("release_prerelease", False)):
@@ -158,9 +194,10 @@ def _artifact_reasons(candidate: Mapping[str, Any]) -> List[str]:
     return reasons
 
 
-def _release_reasons(candidate: Mapping[str, Any]) -> List[str]:
+def _release_reasons(candidate: Mapping[str, Any], target: str) -> List[str]:
     details = _details(candidate)
     reasons = []
+    release_id = str(details.get("release_id", ""))
     if details.get("meets_immutable_release_policy") is not True:
         reasons.append("immutable-release-policy-not-met")
     if details.get("immutable") is not True:
@@ -169,26 +206,32 @@ def _release_reasons(candidate: Mapping[str, Any]) -> List[str]:
         reasons.append("release-is-draft")
     if bool(details.get("prerelease", False)):
         reasons.append("release-is-prerelease")
-    if not str(details.get("release_id", "")):
+    if not release_id:
         reasons.append("release-id-missing")
+    else:
+        expected_ref = "github-release://{}/{}".format(target, release_id)
+        if str(candidate.get("ref", "")) != expected_ref:
+            reasons.append("release-ref-identity-mismatch")
     if not str(details.get("tag_name", "")):
         reasons.append("release-tag-missing")
     return reasons
 
 
-def _field_reasons(field: str, candidate: Mapping[str, Any]) -> List[str]:
+def _field_reasons(
+    field: str, candidate: Mapping[str, Any], target: str
+) -> List[str]:
     kind = str(candidate.get("kind", ""))
     if field not in REVIEW_FIELDS:
         return ["unsupported-evidence-field"]
     if kind not in _EXPECTED_KINDS[field]:
         return ["candidate-kind-does-not-match-field"]
     if field == "source_refs":
-        return _source_reasons(candidate)
+        return _source_reasons(candidate, target)
     if field == "validation_refs":
-        return _validation_reasons(candidate)
+        return _validation_reasons(candidate, target)
     if field == "artifact_refs":
-        return _artifact_reasons(candidate)
-    return _release_reasons(candidate)
+        return _artifact_reasons(candidate, target)
+    return _release_reasons(candidate, target)
 
 
 def _qualification_row(
@@ -199,10 +242,11 @@ def _qualification_row(
     result_reasons: Sequence[str],
 ) -> Dict[str, Any]:
     field = str(result.get("field", ""))
+    target = str(result.get("target", ""))
     reasons = list(upstream_reasons)
     reasons.extend(result_reasons)
     reasons.extend(_generic_reasons(candidate))
-    reasons.extend(_field_reasons(field, candidate))
+    reasons.extend(_field_reasons(field, candidate, target))
     reasons = list(dict.fromkeys(reasons))
     reviewable = not reasons
     return {
@@ -210,7 +254,7 @@ def _qualification_row(
         "field": field,
         "provider": str(result.get("provider", "")),
         "operation": str(result.get("operation", "")),
-        "target": str(result.get("target", "")),
+        "target": target,
         "kind": str(candidate.get("kind", "")),
         "ref": str(candidate.get("ref", "")),
         "qualification_status": "reviewable" if reviewable else "rejected",
