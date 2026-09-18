@@ -103,7 +103,7 @@ Lifecycle action 与其它 Operator action 一样固定 `automatic_execution_ena
 
 ## Action Queue 语义
 
-Action Queue 不等于自动执行器。当前 `automatic_execution_enabled=false`，所有 action 都是只读分类：
+Action Queue 不等于浏览器自动执行器。UI 中 `automatic_execution_enabled=false` 始终表示“页面本身不执行动作”。AI-first 后，machine 类 action 可由独立受控 execution workflow 自动处理；每条 action 通过 `automation_eligible` / `execution_plane` 区分是否可交给外部 AI 自动化：
 
 - `machine-discovery`：机器应先检索已有 source、validation、artifact 或 release 候选；没有真实候选时保持 open；
 - `machine-after-prerequisite`：前置身份/计划就绪后可执行受限机器步骤；
@@ -150,11 +150,13 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 - `candidate_only=true`；
 - `eligible_for_binding=false`。
 
-整个 discovery projection 还固定声明：
+整个 UI discovery projection 还固定声明：
 
 - `network_performed=false`；
 - `canonical_write_performed=false`；
 - `automatic_binding_enabled=false`。
+
+独立 `.github/workflows/ai-provider-discovery.yml` 可在受信 `master` 上定时执行 P2.2→P2.4，并对同一 canonical target field 只有唯一合格 proposal 的情况自动推进到 review bundle。这个“自动选择”仍明确 `selection_is_authorization=false`，不会 canonical apply；只有达到 `needs-governed-authorization` 才向人暴露一个授权队列。
 
 因此“发现候选”不等于“证据有效”，也不会改变 readiness。远端 provider 找不到现有 release 时，后续应升级到显式发布授权，而不是由 UI 自动创建 release。
 
@@ -170,4 +172,4 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 - Action Queue、Discovery Queue 与 Lifecycle projection 都不会执行 canonical 或外部写操作；
 - owner approval、release、promote、retire、apply、rollback、reapply、branch-protection administration、registry mutation 等写操作不由 UI 执行。
 
-后续开放自动处理时，只允许从经过 provider 验证的 `machine-discovery` / 已满足前置的受限机器步骤开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration/apply/rollback 等高风险动作继续保留显式授权与确认。
+AI-first 自动处理已从 provider 验证的 `machine-discovery` / 已满足前置的受限机器步骤开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration/apply/rollback 等高风险动作继续保留显式授权与确认；master 未 protected 前自动 merge 保持关闭。
