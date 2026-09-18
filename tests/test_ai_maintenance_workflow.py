@@ -37,3 +37,12 @@ def test_ai_maintenance_closes_stale_critical_issue_after_recovery():
     assert "Close stale critical maintenance issue when recovered" in text
     assert "gh issue close" in text
     assert "no longer requires a critical human decision" in text
+
+
+def test_ai_maintenance_accepts_health_status_exit_codes_for_analysis():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert '[[ "${health_rc}" -eq 0 || "${health_rc}" -eq 1 ]]' in text
+    assert '[[ "${review_rc}" -eq 0 || "${review_rc}" -eq 1 ]]' in text
+    assert "health-exit-code.txt" in text
+    assert "review-exit-code.txt" in text
+    assert "json.loads" in text
