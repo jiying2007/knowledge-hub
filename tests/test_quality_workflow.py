@@ -84,15 +84,15 @@ def test_quality_pr_uses_minimum_runtime_and_engineering_boundaries_while_master
     compatibility = jobs["compatibility"]
     engineering = jobs["engineering"]
 
-    assert system_runtime["if"] == "github.event_name == 'push' || matrix.python-version == '3.8'"
-    assert system_runtime["strategy"]["matrix"]["python-version"] == ["3.8", "3.9"]
-    assert compatibility["if"] == "github.event_name == 'push' || matrix.python-version == '3.10'"
-    assert compatibility["strategy"]["matrix"]["python-version"] == [
-        "3.10",
-        "3.11",
-        "3.12",
-        "3.13",
-        "3.14",
-    ]
+    assert "if" not in system_runtime
+    assert system_runtime["strategy"]["matrix"]["python-version"] == (
+        "${{ fromJSON(github.event_name == 'push' && "
+        "'[\"3.8\",\"3.9\"]' || '[\"3.8\"]') }}"
+    )
+    assert "if" not in compatibility
+    assert compatibility["strategy"]["matrix"]["python-version"] == (
+        "${{ fromJSON(github.event_name == 'push' && "
+        "'[\"3.10\",\"3.11\",\"3.12\",\"3.13\",\"3.14\"]' || '[\"3.10\"]') }}"
+    )
     assert "if" not in engineering
     assert engineering["steps"]
