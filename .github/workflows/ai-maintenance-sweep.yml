@@ -145,6 +145,20 @@ jobs:
             gh issue create --repo "${GITHUB_REPOSITORY}" --title "${title}" --body "${body}"
           fi
 
+      - name: Close stale critical maintenance issue when recovered
+        if: steps.decision.outputs.human_required == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          title="AI maintenance: critical human decision required"
+          number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
+          if [[ -n "${number}" ]]; then
+            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Fresh AI maintenance sweep no longer requires a critical human decision; closing the stale queue item automatically."
+          fi
+
       - name: Upload bounded maintenance evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
