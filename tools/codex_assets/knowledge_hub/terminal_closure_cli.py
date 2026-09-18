@@ -34,6 +34,7 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
     operational = payload.get("operational_qualification", {})
     legacy = payload.get("bounded_legacy", {})
     branch_gc = payload.get("branch_gc", {})
+    hosting = payload.get("hosting_posture", {})
     product = payload.get("product", {})
     return {
         "schema_version": 2,
@@ -68,6 +69,12 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "branch_gc_status": str(branch_gc.get("status", "open"))
         if isinstance(branch_gc, Mapping)
         else "open",
+        "hosting_posture_status": str(hosting.get("status", "blocked"))
+        if isinstance(hosting, Mapping)
+        else "blocked",
+        "hosting_fact_drift_count": len(hosting.get("fact_drift", []))
+        if isinstance(hosting, Mapping) and isinstance(hosting.get("fact_drift", []), list)
+        else 0,
     }
 
 def _write_output(root: pathlib.Path, relative: str, payload: Mapping[str, Any]) -> None:
