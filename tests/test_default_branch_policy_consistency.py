@@ -41,3 +41,35 @@ def test_master_ruleset_row_is_not_a_duplicate_terminal_closure_source():
     assert ruleset["status"] == "not-required"
     assert "default_branch_protection" in ruleset["reason"]
     assert "master-ruleset-enforcement" not in required_ids
+
+def test_operational_observation_gaps_do_not_block_github_terminal():
+    root = Path(__file__).resolve().parents[1]
+    terminal = _load(root, "registry/terminal-closure.json")
+    platform = _load(root, "registry/knowledge-platform-p5-p10.json")
+
+    rows = {
+        row["id"]: row
+        for row in platform["external_closure_gaps"]
+        if isinstance(row, dict) and row.get("id")
+    }
+    required_ids = set(terminal["external_closure"]["required_gap_ids"])
+    observational_ids = set(terminal["external_closure"]["observational_gap_ids"])
+
+    assert terminal["closure_scope"] == "github-repository"
+    assert terminal["rules"]["production_observation_may_block_github_terminal"] is False
+    assert observational_ids == {
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+    }
+    assert required_ids == {
+        "repository-private-boundary",
+        "mcp-official-conformance",
+        "attestation-signing-identity",
+    }
+    for gap_id in observational_ids:
+        assert rows[gap_id]["required"] is False
+        assert rows[gap_id]["github_terminal_blocking"] is False
+        assert rows[gap_id]["qualification_scope"] == "operational"
+
