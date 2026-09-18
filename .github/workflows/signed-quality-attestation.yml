@@ -31,6 +31,7 @@ jobs:
       id-token: write
       attestations: write
       artifact-metadata: write
+      issues: write
     env:
       SOURCE_REVISION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
       SOURCE_REF: refs/heads/master
@@ -219,6 +220,46 @@ jobs:
             --bundle "${BUNDLE_PATH}" \
             --attestation-id "${ATTESTATION_ID}" \
             --attestation-url "${ATTESTATION_URL}"
+
+      - name: Reconcile hosting blocker trackers from fresh signed evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Reaching this step proves a private-repository GitHub-hosted runner
+          # executed the exact-source signing workflow and the OIDC attestation
+          # verified successfully.
+          state100="$(gh issue view 100 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+          if [[ "${state100}" == "OPEN" ]]; then
+            gh issue close 100 --repo "${GITHUB_REPOSITORY}" \
+              --comment "Fresh exact-source Signed verification executed successfully on a GitHub-hosted private-repository runner; the runner-allocation blocker is closed automatically."
+          fi
+
+          protection_status="$(
+            rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(
+              Path(".cache/knowledge-hub/terminal-closure.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          print(
+              str(
+                  (payload.get("default_branch_protection") or {}).get(
+                      "status", "blocked"
+                  )
+              )
+          )
+          PY
+          )"
+          if [[ "${protection_status}" == "pass" ]]; then
+            state95="$(gh issue view 95 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state95}" == "OPEN" ]]; then
+              gh issue close 95 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh signed hosting evidence reports default_branch_protection.status=pass for current master; the protection capability blocker is closed automatically."
+            fi
+          fi
 
       - name: Upload signed quality evidence
         if: always()
