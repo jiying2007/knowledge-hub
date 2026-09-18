@@ -7,7 +7,7 @@ import pathlib
 import re
 from typing import Any, Dict, Mapping, Sequence
 
-from .common import KnowledgeHubError, file_sha256, utc_timestamp
+from .common import KnowledgeHubError, file_sha256, resolve_inside, utc_timestamp
 
 SOURCE_RE = re.compile(r"^[0-9a-f]{40}$")
 DEFAULT_OUTPUT = ".cache/knowledge-hub/quality-evidence-binding.json"
@@ -22,12 +22,7 @@ QUALITY_EVIDENCE_PATHS = (
 
 
 def _inside(root: pathlib.Path, relative: str) -> pathlib.Path:
-    candidate = (root / relative).resolve()
-    try:
-        candidate.relative_to(root)
-    except ValueError as exc:
-        raise KnowledgeHubError("quality evidence path escapes repository") from exc
-    return candidate
+    return resolve_inside(root, relative)
 
 
 def _evidence_row(root: pathlib.Path, relative: str) -> Dict[str, Any]:
