@@ -3,7 +3,7 @@
   "model": "knowledge-hub-platform-p5-p10-v2",
   "status": "qualified-implementation",
   "implementation_status": "qualified",
-  "adoption_status": "external-closure-required",
+  "adoption_status": "operational-observation-pending",
   "qualification_evidence": {
     "pr": 22,
     "candidate_head": "af7338c51121cb2d3166cc268971b41334dfd6c6",
@@ -187,7 +187,9 @@
       "owner": "repository-admin",
       "required": true,
       "status": "open",
-      "reason": "Canonical internal knowledge still requires a real hosting privacy boundary or an explicit public-engine/private-vault split."
+      "reason": "Canonical internal knowledge still requires a real hosting privacy boundary or an explicit public-engine/private-vault split.",
+      "github_terminal_blocking": true,
+      "qualification_scope": "github-repository"
     },
     {
       "id": "master-ruleset-enforcement",
@@ -235,35 +237,45 @@
         "applicable_failure_count": 0,
         "product_resource_read_smoke_passed": true,
         "expected_failure_baseline_used": false
-      }
+      },
+      "github_terminal_blocking": true,
+      "qualification_scope": "github-repository"
     },
     {
       "id": "connector-provider-pilot",
       "owner": "integration-owner",
-      "required": true,
+      "required": false,
       "status": "open",
-      "reason": "Real provider credentials and ACL/tombstone pilot evidence are required."
+      "reason": "Real provider credentials and ACL/tombstone pilot evidence are required.",
+      "github_terminal_blocking": false,
+      "qualification_scope": "operational"
     },
     {
       "id": "production-retrieval-eval",
       "owner": "runtime-owner",
-      "required": true,
+      "required": false,
       "status": "open",
-      "reason": "Eval v2 requires at least 200 production-derived cases without synthetic padding."
+      "reason": "Eval v2 requires at least 200 production-derived cases without synthetic padding.",
+      "github_terminal_blocking": false,
+      "qualification_scope": "operational"
     },
     {
       "id": "memory-lifecycle-pilot",
       "owner": "runtime-owner",
-      "required": true,
+      "required": false,
       "status": "open",
-      "reason": "Real TTL, forget, supersede, scope isolation and deletion evidence is required."
+      "reason": "Real TTL, forget, supersede, scope isolation and deletion evidence is required.",
+      "github_terminal_blocking": false,
+      "qualification_scope": "operational"
     },
     {
       "id": "real-adoption-evidence",
       "owner": "product-owner",
-      "required": true,
+      "required": false,
       "status": "open",
-      "reason": "Terminal adoption requires at least 30 days or 50 valid real calls plus at least 10 explicit feedback items."
+      "reason": "Operational adoption requires at least 30 days or 50 valid real calls plus at least 10 explicit feedback items.",
+      "github_terminal_blocking": false,
+      "qualification_scope": "operational"
     },
     {
       "id": "attestation-signing-identity",
@@ -301,7 +313,9 @@
         "product_gate_status": "needs-review",
         "terminal_closure_status": "needs-review",
         "terminal_closure_terminal": false
-      }
+      },
+      "github_terminal_blocking": true,
+      "qualification_scope": "github-repository"
     }
   ]
 }

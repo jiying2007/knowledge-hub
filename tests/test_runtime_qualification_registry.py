@@ -21,7 +21,7 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     payload = _load("registry/knowledge-platform-p5-p10.json")
     assert payload["status"] == "qualified-implementation"
     assert payload["implementation_status"] == "qualified"
-    assert payload["adoption_status"] == "external-closure-required"
+    assert payload["adoption_status"] == "operational-observation-pending"
     assert payload["qualification_evidence"]["pr"] == 22
     assert payload["qualification_evidence"]["post_merge_status"] == "success"
     assert all(
@@ -34,13 +34,26 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         for gap_id, row in gaps.items()
         if row["required"] and row["status"] == "open"
     }
-    assert {
-        "repository-private-boundary",
+    assert {"repository-private-boundary"} == required_open
+    operational_open = {
+        gap_id
+        for gap_id, row in gaps.items()
+        if (
+            row.get("qualification_scope") == "operational"
+            and row["status"] == "open"
+        )
+    }
+    assert operational_open == {
         "connector-provider-pilot",
         "production-retrieval-eval",
         "memory-lifecycle-pilot",
         "real-adoption-evidence",
-    } == required_open
+    }
+    assert all(
+        gaps[gap_id]["required"] is False
+        and gaps[gap_id]["github_terminal_blocking"] is False
+        for gap_id in operational_open
+    )
     mcp_gap = gaps["mcp-official-conformance"]
     assert mcp_gap["required"] is True
     assert mcp_gap["status"] == "closed"

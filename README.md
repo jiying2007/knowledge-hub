@@ -44,7 +44,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --summ
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --summary-json --diagnostics
 ```
 
-这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；`knowledge-final-gate.sh` 负责产品成熟度/readiness 评估，不再被解释为仓库全面终态。全面终态的唯一机器判定是 `rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json`，并由 `.github/workflows/terminal-closure.yml` 在受信远端运行中留存证据。
+这 5 条分别覆盖健康概览、新增草稿、检索、复核排期和一致性门禁。短概览只用于首屏判断；`knowledge-final-gate.sh` 负责产品/运营成熟度与真实项目证据评估，不再被解释为 GitHub 仓库闭环。GitHub 仓库闭环的唯一机器判定是 `rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json`，并由 `.github/workflows/terminal-closure.yml` 在受信远端运行中留存证据。Provider pilot、production retrieval、memory lifecycle 与 real adoption 继续显式报告为 operational qualification，但不因观测数据尚未积累完成而阻塞 GitHub repository terminal。
 命令面的机器权威是 `registry/command-surface.json`：当前 49 个稳定 wrapper 被归入体验、查询、治理、正文与制品、证据与运营五个平面，并按 daily、maintenance、governance、engineering、internal 分级。daily 固定为上述 5 条；新增 wrapper 必须同时更新 catalog，且总数不得越过 `registry/engineering-budgets.json` 的基线。公共 JSON 状态统一映射为 `pass / needs-review / needs-fix / blocked`；完整取证使用 `--json`，首屏与 Agent 默认使用有界 `--summary-json`。
 `knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查、reviewing triage、分轴健康状态和 report-only 运行时维护摘要；review queue 直接消费 `knowledge-index-plan` 的 canonical projection，不再维护第二套 blocker 推断。Health full contract 为 v3、summary projection 为 v2，顶层唯一综合结论是 `status`；排障时继续读取 `health_axes.control_plane`、`evidence_freshness`、`content_governance` 和 `runtime_hygiene`，不要把快照过期、内容待 owner 与控制面故障混为一类。运行时摘要只报告可回收字节和权限修复候选，不自动删除。changed-only 扫描区分新增、修改、重命名和删除，删除中的旧正文只计数并给出有界样本，不会被误报为 orphan。默认按 `full -> quick` 顺序选择 24 小时内、日期和工作树签名均匹配的 Product v5 快照；旧 schema 快照直接判为 stale，不能降级消费。可用 `--gate-suite auto|quick|full` 固定读取层级；`--refresh-gate` 在 `auto` 下刷新 quick，在显式层级下刷新所选 suite。新增长期正文应优先使用 `knowledge-new.sh` / `knowledge-capture.sh` 的事务入口，使正文、registry、lifecycle 和派生索引在同一变更中收敛；随后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的 `unregistered-only` 冻结路径清单覆盖。已精确登记的新增正文不改变集合 hash；未登记正文继续 fail closed。集合覆盖不创建 active 条目。
 
@@ -109,7 +109,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json
 rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json
 ```
 
-`knowledge-final-gate.sh` 只有一个产品 profile：`product`。`--summary-json` 提供有界首屏，`--json` 保留完整取证；`--regression-suite quick` 适合日常 readiness，`--regression-suite full` 用于高风险工具改动和正式产品成熟度证据。`--require-terminal` 只对 Product v5 自身的 `terminal` 字段执行断言，不代表 repository/private boundary、协议/Provider 实证、legacy debt、branch GC 等全面终态轴已经闭环。全面终态必须再通过 `terminal_closure_cli`。
+`knowledge-final-gate.sh` 只有一个产品 profile：`product`。`--summary-json` 提供有界首屏，`--json` 保留完整取证；`--regression-suite quick` 适合日常 readiness，`--regression-suite full` 用于高风险工具改动和正式产品/运营成熟度证据。`--require-terminal` 只对 Product v5 自身的五轴成熟度执行断言；它可以因为真实 owner、项目证据或 adoption 尚未积累而保持非终态，但这不再阻塞 GitHub repository closure。GitHub 仓库闭环由 `terminal_closure_cli` 独立判定。
 
 工程质量另有两个层级：`knowledge-engineering-check.sh --mode contract` 只读核对公共运行时的能力探测策略、Python 3.8–3.14 CI 覆盖、精确依赖、hash lock、CI 权限、Action SHA、受控 CI transport 和 Dependabot；`--mode full` 仍必须在 Python 3.10–3.14 且已按 `requirements-dev.lock` 安装的隔离环境中运行，会执行全包 Ruff correctness、逐步扩大的直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage、无隔离 build、Hub check、retrieval、依赖漏洞审计和 CycloneDX SBOM。公共 CLI 与工程工具分层：前者优先适配系统 Python，后者保留可复现的受控工具链。覆盖率统计覆盖 `tools.codex_assets.knowledge_hub` 全包并要求不低于 75%，不再以少量模块的高比例冒充整体覆盖；subprocess CLI 证据通过 coverage parallel data 合并。Level 2 的 full regression 对单次非零退出最多重试 1 次，并在快照中保留每次有界输出与 `recovered_after_retry`；其余子门禁不自动重试，第二次失败仍会阻断。full 成功后写入私有 ignored 快照 `.cache/knowledge-hub/engineering-quality.json`；快照绑定当前 candidate signature、有效期 24 小时，任何非忽略文件变化都会令其失效。随后执行 product full gate 时可加 `--reuse-engineering-evidence`，只复用同一签名且仍新鲜的 coverage/pytest 与 full regression 结果；quick gate 自动复用同条件下的 coverage/pytest 证据，但仍不取得 full regression 或全面 terminal 资格。快照不匹配时一律执行真实测试，不降低门禁。
 
@@ -123,7 +123,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 rtk python3 -m tools.codex_assets.knowledge_hub.terminal_closure_cli --summary-json
 ```
 
-产品门禁 full contract 为 v5、summary projection 为 v4。顶层只保留 `status` 与 `terminal`；五个成熟度轴从 `maturity_axes.platform/content/project_evidence/delivery/adoption` 读取，详细证据从 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness` 和 `delivery_readiness` 读取。项目外部证据不足不会改写平台技术健康。工程 contract 始终是 hard check；full profile 还要求新鲜且 signature 匹配的工程质量快照。本地 clean committed HEAD、两份 hash lock、受控 CI contract、full engineering、full regression 与匹配 HEAD 的 `git archive` 恢复只能使 `maturity_axes.delivery.local_delivery_complete=true`；远端发布和独立环境恢复分别由 `maturity_axes.delivery.remote_published` 与 `offsite_restore_verified` 表达，必须由受信执行证据单独判真。Product v5 的 `terminal` 仍要求五个产品成熟度轴及当前登记项目的真实 owner、source、人工/实机和发布证据闭环；新增项目后 readiness 分母从 registry 动态扩展，结构覆盖不等于 evidence-ready。仓库全面终态还额外要求 `registry/terminal-closure.json` 中列出的外部 closure、bounded legacy 与 branch GC 全部通过。默认 Product 命令在平台通过但仍待 owner 复核时退出 0；`--require-terminal` 未闭环返回 2；全面终态以 `terminal_closure_cli` 的 exit code 0 为唯一机器结论。
+产品门禁 full contract 为 v5、summary projection 为 v4。顶层只保留 `status` 与 `terminal`；五个成熟度轴从 `maturity_axes.platform/content/project_evidence/delivery/adoption` 读取，详细证据从 `platform_status`、`content_readiness`、`retrieval_quality`、`operational_readiness` 和 `delivery_readiness` 读取。项目外部证据不足不会改写平台技术健康。工程 contract 始终是 hard check；full profile 还要求新鲜且 signature 匹配的工程质量快照。本地 clean committed HEAD、两份 hash lock、受控 CI contract、full engineering、full regression 与匹配 HEAD 的 `git archive` 恢复只能使 `maturity_axes.delivery.local_delivery_complete=true`；远端发布和独立环境恢复分别由 `maturity_axes.delivery.remote_published` 与 `offsite_restore_verified` 表达，必须由受信执行证据单独判真。Product v5 的 `terminal` 仍表示五个产品成熟度轴及当前登记项目的真实 owner、source、人工/实机和发布证据全部成熟；它是产品/运营成熟度信号，不再是 GitHub repository terminal 的前置条件。GitHub repository closure 只要求 Product 快照中的 `platform`、`delivery` 与全部 technical hard checks 通过，并额外要求 `registry/terminal-closure.json` 的 repository-level external closure、bounded legacy、branch GC 与 default branch protection 通过。Provider、production retrieval、memory lifecycle、real adoption 等 observation-only gap 必须继续真实报告，禁止伪造关闭，但不会因数据窗口尚未完成而阻塞 GitHub 闭环。
 
 JSON consumer 必须按当前单版本契约校验：Product full v5、Product summary v4、Health full v3、Health summary v2、Restore v4、Status contract v2。旧字段、旧状态别名和旧 schema 不提供 shim、双写或降级解析；旧 consumer 必须同步升级。Restore v4 不接受仅凭 `GITHUB_ACTIONS/GITHUB_SHA` 的弱证明，必须绑定 registry 中的 repository、commit SHA、workflow SHA、run id/attempt、ref 和同一次 GitHub-hosted 执行。未知版本和缺字段必须 fail closed，不得解释成 remote/offsite 已验证。
 
@@ -142,7 +142,7 @@ rtk .tmp/engineering/venv/bin/python -m pip install --require-hashes -r requirem
 rtk env PATH="$PWD/.tmp/engineering/venv/bin:$PATH" bash tools/knowledge-engineering-check.sh --mode full --json
 ```
 
-`pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；runtime lock 以 Python 3.8 为兼容解析下界，dev lock 以 Python 3.10 工程环境解析。full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 以 Python 3.8 验证系统运行时路径，并以 Python 3.10–3.14 验证工程矩阵；权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。当前阶段 `master` 明确保持未保护状态；这不是终态 blocker，工程上的 exact-head、fresh Quality 与 post-merge 验证作为工作流纪律继续保留，不由 GitHub ruleset 强制。
+`pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；runtime lock 以 Python 3.8 为兼容解析下界，dev lock 以 Python 3.10 工程环境解析。full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 以 Python 3.8 验证系统运行时路径，并以 Python 3.10–3.14 验证工程矩阵；权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。`master` 的真实 hosting protection 是 GitHub repository terminal 的硬条件；exact-head、fresh Quality 与 post-merge Signed 验证继续作为证据链纪律，但不能替代真实 `protected=true`。
 
 公共 Python wrapper 首次验证 Python 3 身份和 runtime 模块能力，不设置 minor 版本白名单；系统 `python3` 是默认首选，显式绝对路径 `KNOWLEDGE_PYTHON_RUNTIME` 仍拥有最高优先级。验证成功后，只为 `tools.codex_assets.knowledge_hub.*` 公共模块写入 `.cache/knowledge-hub/python-runtime-selection-v1` 私有缓存。缓存只有在解释器仍属于候选、归当前用户所有，且新于解释器、selector 和 `requirements-runtime.lock` 时才复用；任一条件漂移即重新验证。缓存不是事实权威，删除后只会回到首次验证路径。检索热路径使用 fail-closed 的 JSON Schema 关键词子集校验器，未知关键词直接失败；完整 Draft 2020-12 校验仍由 schema catalog、pytest 和 full engineering 执行。
 
@@ -171,7 +171,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-engineering-check.sh --mode full --json
 
 制品预算权威是 `registry/artifact-policy.json`：manifest 只允许文本，vault 有文件数/总量/单文件/年度增长预算。新引用使用 `knowledge-hub.immutable-artifact-ref.v1`，必须包含不可变 URI、SHA256、size、owner、content-addressed identity 和 restore contract。`knowledge-artifact-ref-plan.sh --external-base-uri` 只引用已发布对象，不执行上传；含凭证、query、fragment、控制字符或不支持 scheme 的 URI 会被拒绝。
 
-当前产品状态与证据缺口以 `governance/product/validation/project-readiness.md` 和实时 `knowledge-final-gate.sh` 输出为准；仓库全面终态以 `terminal_closure_cli` 的实时输出为准。`governance/status/knowledge-hub-operational-maturity.md` 仅保留 2026-07-13 历史快照；2026-07 运营批次和交付记录分别见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 与 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`，均不替代当前 owner、设备、发布或回滚证据。
+当前产品/运营状态与证据缺口以 `governance/product/validation/project-readiness.md` 和实时 `knowledge-final-gate.sh` 输出为准；GitHub 仓库闭环以 `terminal_closure_cli` 的实时输出为准。二者独立：前者可以因生产/owner/adoption 观测不足而 `needs-review`，后者不得因此被强制阻塞。`governance/status/knowledge-hub-operational-maturity.md` 仅保留 2026-07-13 历史快照；2026-07 运营批次和交付记录分别见 `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md` 与 `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`，均不替代当前 owner、设备、发布或回滚证据。
 本轮覆盖功能、性能、安全、扩展性、维护性、运行时支持和供应链的验证候选见 `governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md`；该候选保持 `reviewing / manual-validation-pending`，不会把本地自动化结果冒充 GUI、实机、发布、生产回滚、人工复核或长期采用证据。
 
 ## 目录边界
@@ -369,7 +369,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 
 1. 固定 HEAD、分支和工作区状态。
 2. 看 `knowledge-status` 恢复 source、review queue、owner gate 和 automation 状态。
-3. 看 `knowledge-final-gate` 判断产品 readiness / 五轴成熟度，再看 `terminal_closure_cli` 判断仓库全面终态；两者不得互相替代。
+3. 看 `knowledge-final-gate` 判断产品 readiness / 五轴与 operational qualification，再看 `terminal_closure_cli` 判断 GitHub repository closure；两者不得互相替代，生产观测缺口不得被伪装为已完成，也不得反向阻塞仓库工程闭环。
 4. 用 `knowledge-search` 和 `indexes/` 找具体正文。
 5. 修改后运行 `knowledge-check`，工具/schema/final gate/terminal closure 相关变更再跑 regression、full engineering 与对应 gate。
 

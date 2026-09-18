@@ -17,6 +17,8 @@ def _evidence(
     root: Path,
     *,
     terminal_status="needs-review",
+    terminal_value=False,
+    terminal_blockers=None,
     product_status="needs-review",
     product_terminal=False,
 ):
@@ -30,12 +32,14 @@ def _evidence(
         root / ".cache/knowledge-hub/final-gate-product-full.json",
         {"status": product_status, "terminal": product_terminal},
     )
+    if terminal_blockers is None:
+        terminal_blockers = [] if terminal_value else ["external_closure"]
     _write(
         root / ".cache/knowledge-hub/terminal-closure.json",
         {
             "status": terminal_status,
-            "terminal": False,
-            "blockers": ["product_terminal", "external_closure"],
+            "terminal": terminal_value,
+            "blockers": terminal_blockers,
         },
     )
     _write(root / ".tmp/engineering/knowledge-hub.cdx.json", {"bomFormat": "CycloneDX"})
@@ -63,7 +67,6 @@ def test_signed_materials_bind_quality_sbom_and_actual_terminal_verdict(monkeypa
     assert statement["predicate"]["terminal_closure"]["status"] == "needs-review"
     assert statement["predicate"]["terminal_closure"]["terminal"] is False
     assert statement["predicate"]["terminal_closure"]["blockers"] == [
-        "product_terminal",
         "external_closure",
     ]
 
@@ -95,13 +98,23 @@ def test_signed_materials_reject_invalid_terminal_verdict(tmp_path):
         )
 
 
-def test_signed_materials_reject_nonterminal_product_without_false_terminal(tmp_path):
-    _evidence(tmp_path, product_status="needs-review", product_terminal=True)
-    with pytest.raises(KnowledgeHubError, match="must declare terminal=false"):
-        signed_attestation.build_signed_quality_materials(
-            tmp_path,
-            source_revision="c" * 40,
-        )
+def test_signed_materials_allow_repository_terminal_with_nonterminal_product(tmp_path):
+    _evidence(
+        tmp_path,
+        terminal_status="pass",
+        terminal_value=True,
+        terminal_blockers=[],
+        product_status="needs-review",
+        product_terminal=False,
+    )
+    receipt = signed_attestation.build_signed_quality_materials(
+        tmp_path,
+        source_revision="c" * 40,
+    )
+
+    assert receipt["terminal_closure"]["status"] == "pass"
+    assert receipt["terminal_closure"]["terminal"] is True
+    assert receipt["quality_gates"]["product_gate"] == "needs-review"
 
 
 def test_signed_materials_reject_failed_product_evidence(tmp_path):

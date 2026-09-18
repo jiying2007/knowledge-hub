@@ -34,7 +34,7 @@ jobs:
         run: rtk python3 -m tools.codex_assets.knowledge_hub.engineering_cli --mode full --summary-json
       - name: Restore and validate committed HEAD
         run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --summary-json
-      - name: Assess product readiness without claiming terminal closure
+      - name: Assess product and operational maturity independently
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
       - name: Capture fresh remote branch inventory
         env:
