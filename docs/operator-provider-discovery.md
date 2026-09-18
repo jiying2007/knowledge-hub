@@ -1,6 +1,6 @@
 # Operator Provider Discovery
 
-Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller 执行层。它只执行 Discovery Executor 已生成的 GitHub read-only query，不改变 canonical readiness，也不自动绑定 evidence。
+Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller 执行层。它只执行 Discovery Executor 已生成的 GitHub read-only query，不改变 canonical readiness，也不自动绑定 evidence。AI-first 模式下既可显式 CLI 调用，也可由 `.github/workflows/ai-provider-discovery.yml` 定时执行。
 
 ## 使用
 
@@ -30,7 +30,16 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 
 `--propose` 会在同一次显式调用中执行 P2.2 → P2.3 → P2.4，但只输出 proposal；它不会修改 `registry/items.jsonl`、项目 readiness Markdown、owner、evidence contract status 或其它 canonical state。
 
-P2.5 在已经看到并明确选择某条 proposal fingerprint 后，生成 exact patch plan：
+AI-first 唯一候选路径可以自动完成“选择但不授权”：当每个 canonical item + field 只有一个 `ready-for-governed-review` proposal、且没有 conflict/unmappable 时：
+
+```bash
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
+  --root . --auto-review-unique --json
+```
+
+该入口在同一次 fresh provider projection 上生成 patch plan + review bundle，并固定 `selection_is_authorization=false`、`canonical_write_performed=false`。一旦同 target 有多个候选则返回 `ambiguous`，不替人猜选。
+
+P2.5 在已经看到并明确选择某条 proposal fingerprint 后，仍可生成 exact patch plan：
 
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
@@ -159,3 +168,18 @@ Provider result 始终声明：
 ## 与 Operator UI 的关系
 
 Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates；P2.4 只生成 proposal-only governed binding projection；P2.5 只为显式选择的 proposal 生成 governed patch plan。任何 canonical evidence 写入仍必须经过后续独立 governed PR 与现有 evidence contract/readiness/terminal gates。
+
+
+## 定时 AI execution
+
+`.github/workflows/ai-provider-discovery.yml` 只在 schedule / manual dispatch 上运行，不接受 PR 输入。它：
+
+1. 自动执行 bounded GitHub provider discovery；
+2. 自动 qualification；
+3. 自动 proposal；
+4. 只对唯一、无冲突 target 自动形成 review bundle；
+5. 没有 canonical write、push、merge 或 apply；
+6. 只有到达 `needs-governed-authorization` 才创建/更新单一授权 Issue；
+7. ambiguous/blocked 留给下一次机器刷新，不先升级人工。
+
+因此大部分“找证据/整理候选/形成审阅包”的操作从人工队列移到了 AI execution plane。
