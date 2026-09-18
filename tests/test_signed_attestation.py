@@ -58,6 +58,13 @@ def _evidence(
             "default_branch_protected": False,
         },
     )
+    _write(
+        root / ".cache/knowledge-hub/mcp-conformance/evidence.json",
+        {
+            "schema_version": "knowledge-hub.mcp-conformance-evidence.v2",
+            "source_revision": source_revision,
+        },
+    )
     _write(root / ".tmp/engineering/knowledge-hub.cdx.json", {"bomFormat": "CycloneDX"})
     binding = build_quality_evidence_binding(root, source_revision=source_revision)
     _write(root / ".cache/knowledge-hub/quality-evidence-binding.json", binding)
