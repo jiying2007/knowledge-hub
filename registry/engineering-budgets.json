@@ -10,5 +10,30 @@
     "wrapper_baseline": 49,
     "daily_max": 5,
     "readme_daily_max": 7
+  },
+  "data_growth": {
+    "policy": "segment-before-hard-cap",
+    "tracked_paths": {
+      "registry/items.jsonl": {
+        "segment_at_bytes": 4194304,
+        "hard_max_bytes": 8388608
+      },
+      "registry/lifecycle-events.jsonl": {
+        "segment_at_bytes": 4194304,
+        "hard_max_bytes": 8388608
+      },
+      "registry/authorizations.jsonl": {
+        "segment_at_bytes": 2097152,
+        "hard_max_bytes": 4194304
+      },
+      "registry/automation-runs.jsonl": {
+        "segment_at_bytes": 2097152,
+        "hard_max_bytes": 4194304
+      },
+      "registry/durable-evidence-ledger.jsonl": {
+        "segment_at_bytes": 2097152,
+        "hard_max_bytes": 4194304
+      }
+    }
   }
 }
