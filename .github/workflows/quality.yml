@@ -102,9 +102,11 @@ jobs:
         run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --json
       - name: Assess product readiness (non-terminal)
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
+      - name: Build exact quality evidence binding
+        run: rtk python3 -m tools.codex_assets.knowledge_hub.quality_evidence_binding_cli build --source-revision "${{ github.event.pull_request.head.sha || github.sha }}" --json
       - name: Verify required quality evidence
         if: always()
-        run: rtk python3 -c 'from pathlib import Path; required=(".tmp/engineering/knowledge-hub.cdx.json",".cache/knowledge-hub/engineering-quality.json",".cache/knowledge-hub/compliance-eval.json",".cache/knowledge-hub/restore-drill-head.json",".cache/knowledge-hub/final-gate-product-full.json"); missing=[path for path in required if not Path(path).is_file() or Path(path).stat().st_size == 0]; assert not missing, "missing-or-empty-quality-evidence={}".format(",".join(missing))'
+        run: rtk python3 -c 'from pathlib import Path; required=(".tmp/engineering/knowledge-hub.cdx.json",".cache/knowledge-hub/engineering-quality.json",".cache/knowledge-hub/compliance-eval.json",".cache/knowledge-hub/restore-drill-head.json",".cache/knowledge-hub/final-gate-product-full.json",".cache/knowledge-hub/quality-evidence-binding.json"); missing=[path for path in required if not Path(path).is_file() or Path(path).stat().st_size == 0]; assert not missing, "missing-or-empty-quality-evidence={}".format(",".join(missing))'
       - name: Upload quality evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -116,5 +118,6 @@ jobs:
             .cache/knowledge-hub/compliance-eval.json
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
+            .cache/knowledge-hub/quality-evidence-binding.json
           if-no-files-found: error
           retention-days: 30
