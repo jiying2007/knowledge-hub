@@ -334,8 +334,14 @@ def _branch_candidates(lifecycle: Mapping[str, Any]) -> List[str]:
 def _inventory_identity(
     config: Mapping[str, Any], evidence: Mapping[str, Any]
 ) -> Tuple[bool, bool]:
-    current_sha = os.environ.get("GITHUB_SHA", "").strip()
-    current_repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    current_sha = (
+        os.environ.get("KNOWLEDGE_SOURCE_REVISION", "").strip()
+        or os.environ.get("GITHUB_SHA", "").strip()
+    )
+    current_repository = (
+        os.environ.get("KNOWLEDGE_GITHUB_REPOSITORY", "").strip()
+        or os.environ.get("GITHUB_REPOSITORY", "").strip()
+    )
     revision_matches = True
     repository_matches = True
     if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
