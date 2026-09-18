@@ -310,8 +310,9 @@ jobs:
           active="$(
             gh api --method GET \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/signed-quality-attestation.yml/runs?branch=master&per_page=20" \
-              --jq '.workflow_runs[] | select((.status == "queued" or .status == "in_progress" or .status == "waiting") and .head_sha == env.SOURCE_REVISION) | .id' \
-            | head -n 1
+              --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
+            | awk -v sha="${SOURCE_REVISION}" \
+                '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting") {print $1; exit}'
           )"
           if [[ -n "${active}" ]]; then
             echo "fresh Signed verification already active for current master: ${active}"
