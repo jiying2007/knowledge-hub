@@ -10,6 +10,7 @@ REQUIRED_QUALITY_EVIDENCE = (
     ".cache/knowledge-hub/compliance-eval.json",
     ".cache/knowledge-hub/restore-drill-head.json",
     ".cache/knowledge-hub/final-gate-product-full.json",
+    ".cache/knowledge-hub/quality-evidence-binding.json",
 )
 
 
@@ -107,3 +108,20 @@ def test_quality_publishes_compliance_for_signed_reuse():
     )
     assert "tee .cache/knowledge-hub/compliance-eval.json" in compliance["run"]
     assert ".cache/knowledge-hub/compliance-eval.json" in REQUIRED_QUALITY_EVIDENCE
+
+
+def test_quality_builds_exact_source_binding_before_upload():
+    payload = _workflow()
+    steps = payload["jobs"]["engineering"]["steps"]
+    binding = next(
+        step for step in steps if step.get("name") == "Build exact quality evidence binding"
+    )
+    run = binding["run"]
+    assert "quality_evidence_binding_cli build" in run
+    assert '--source-revision "${{ github.event.pull_request.head.sha || github.sha }}"' in run
+    verify_index = next(
+        index for index, step in enumerate(steps)
+        if step.get("name") == "Verify required quality evidence"
+    )
+    binding_index = steps.index(binding)
+    assert binding_index < verify_index
