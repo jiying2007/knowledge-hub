@@ -196,11 +196,16 @@ def verify_hosted_attestation(
     source_revision: str,
     source_ref: str,
     signer_workflow: str,
+    signer_source_revision: str,
     bundle_path: pathlib.Path,
     attestation_id: str,
     attestation_url: str,
     output_relative: str = DEFAULT_OUTPUT,
 ) -> Dict[str, Any]:
+    if not SOURCE_RE.fullmatch(str(signer_source_revision).lower()):
+        raise KnowledgeHubError(
+            "signer source revision must be a lowercase 40-character git SHA"
+        )
     root = pathlib.Path(root).resolve()
     output = root / output_relative
     materials = _load_object(output / "materials-receipt.json", "materials receipt")
@@ -259,6 +264,7 @@ def verify_hosted_attestation(
         "source_revision": source_revision,
         "source_ref": source_ref,
         "signer_workflow": signer_workflow,
+        "signer_source_revision": str(signer_source_revision).lower(),
         "predicate_type": PREDICATE_TYPE,
         "manifest_sha256": expected_manifest,
         "sbom_sha256": expected_sbom,
