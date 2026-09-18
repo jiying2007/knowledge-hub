@@ -75,3 +75,24 @@ def test_quality_fails_closed_on_missing_or_empty_evidence():
     assert upload_with["if-no-files-found"] == "error"
     uploaded = tuple(line.strip() for line in upload_with["path"].splitlines() if line.strip())
     assert uploaded == REQUIRED_QUALITY_EVIDENCE
+
+
+def test_quality_pr_uses_minimum_runtime_and_engineering_boundaries_while_master_keeps_full_matrix():
+    payload = _workflow()
+    jobs = payload["jobs"]
+    system_runtime = jobs["system-runtime"]
+    compatibility = jobs["compatibility"]
+    engineering = jobs["engineering"]
+
+    assert system_runtime["if"] == "github.event_name == 'push' || matrix.python-version == '3.8'"
+    assert system_runtime["strategy"]["matrix"]["python-version"] == ["3.8", "3.9"]
+    assert compatibility["if"] == "github.event_name == 'push' || matrix.python-version == '3.10'"
+    assert compatibility["strategy"]["matrix"]["python-version"] == [
+        "3.10",
+        "3.11",
+        "3.12",
+        "3.13",
+        "3.14",
+    ]
+    assert "if" not in engineering
+    assert engineering["steps"]
