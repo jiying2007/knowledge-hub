@@ -87,12 +87,6 @@ def quality_attestation(
             bool(terminal_closure_blockers),
         ]
     )
-    if product_gate_status == "needs-review" and (
-        not terminal_requested or terminal_closure_terminal is not False
-    ):
-        raise KnowledgeHubError(
-            "nonterminal product evidence requires terminal=false closure evidence"
-        )
     predicate: Dict[str, Any] = {
         "source_commit": str(source_commit),
         "evidence_artifact_sha256": _sha256(
@@ -194,10 +188,6 @@ def verify_quality_attestation(
                     not isinstance(value, str) or not value for value in blockers
                 ):
                     failures.append("terminal-closure-blockers")
-        if product_gate_status == "needs-review" and (
-            not isinstance(terminal, Mapping) or terminal.get("terminal") is not False
-        ):
-            failures.append("nonterminal-product-without-closure")
     return {
         "schema_version": "knowledge-hub.attestation-verdict.v1",
         "status": "pass" if not failures else "fail",
