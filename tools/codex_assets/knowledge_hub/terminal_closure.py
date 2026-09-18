@@ -1,8 +1,9 @@
-"""Fail-closed terminal closure evaluation for Knowledge Hub.
+"""Fail-closed GitHub repository closure evaluation for Knowledge Hub.
 
-Engineering qualification, product maturity, external administration/provider evidence,
-and bounded historical debt are deliberately evaluated as separate concerns. A green
-quality workflow never implies terminal closure by itself.
+Repository closure proves that the governed source is technically releasable, recoverable,
+and protected by the required hosting controls. Production/provider/adoption observations
+remain explicit operational qualification signals, but they do not block GitHub closure.
+A green quality workflow never implies repository closure by itself.
 """
 
 from __future__ import annotations
@@ -33,18 +34,34 @@ def _load_object(path: pathlib.Path, label: str) -> Dict[str, Any]:
     return dict(value)
 
 
-def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _external_gap_state(
+    root: pathlib.Path, policy: Mapping[str, Any]
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     external = policy.get("external_closure", {})
     if not isinstance(external, Mapping):
         raise KnowledgeHubError("terminal external_closure policy must be an object")
     source = str(external.get("source", "")).strip()
     required_ids = external.get("required_gap_ids", [])
+    observational_ids = external.get("observational_gap_ids", [])
     require_evidence_refs = bool(external.get("require_evidence_refs_on_close", False))
-    if not source or not isinstance(required_ids, list):
+    if (
+        not source
+        or not isinstance(required_ids, list)
+        or not isinstance(observational_ids, list)
+    ):
         raise KnowledgeHubError("terminal external closure policy is incomplete")
     policy_required_ids = sorted({str(value) for value in required_ids if str(value).strip()})
+    policy_observational_ids = sorted(
+        {str(value) for value in observational_ids if str(value).strip()}
+    )
     if len(policy_required_ids) != len(required_ids):
         raise KnowledgeHubError("terminal external required_gap_ids must be unique and non-empty")
+    if len(policy_observational_ids) != len(observational_ids):
+        raise KnowledgeHubError(
+            "terminal external observational_gap_ids must be unique and non-empty"
+        )
+    if set(policy_required_ids) & set(policy_observational_ids):
+        raise KnowledgeHubError("terminal required and observational gap ids must not overlap")
 
     platform = _load_object(root / source, "external closure registry")
     rows = platform.get("external_closure_gaps", [])
@@ -56,9 +73,7 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
         if isinstance(row, Mapping) and row.get("id")
     }
     registry_required_ids = sorted(
-        gap_id
-        for gap_id, row in by_id.items()
-        if row.get("required") is True
+        gap_id for gap_id, row in by_id.items() if row.get("required") is True
     )
     unresolved: List[Dict[str, Any]] = []
     if policy_required_ids != registry_required_ids:
@@ -69,6 +84,28 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
                 "owner": "terminal-policy",
                 "policy_required_gap_ids": policy_required_ids,
                 "registry_required_gap_ids": registry_required_ids,
+            }
+        )
+
+    observational: List[Dict[str, Any]] = []
+    for gap_id in policy_observational_ids:
+        row = by_id.get(gap_id)
+        if row is None or row.get("required") is True:
+            unresolved.append(
+                {
+                    "id": "terminal-policy-observational-gap-drift",
+                    "status": "blocked",
+                    "owner": "terminal-policy",
+                    "gap_id": gap_id,
+                }
+            )
+            continue
+        observational.append(
+            {
+                "id": gap_id,
+                "status": str(row.get("status", "open")),
+                "owner": str(row.get("owner", "")),
+                "github_terminal_blocking": False,
             }
         )
 
@@ -100,8 +137,58 @@ def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[s
                     "owner": str(row.get("owner", "")),
                 }
             )
-    return unresolved
+    return unresolved, observational
 
+
+def _product_repository_state(
+    snapshot: Mapping[str, Any], policy: Mapping[str, Any]
+) -> Dict[str, Any]:
+    required_axes = policy.get("required_maturity_axes", [])
+    if not isinstance(required_axes, list) or not required_axes:
+        raise KnowledgeHubError("terminal product required_maturity_axes must be non-empty")
+    axis_ids = [str(value).strip() for value in required_axes]
+    if any(not value for value in axis_ids) or len(set(axis_ids)) != len(axis_ids):
+        raise KnowledgeHubError("terminal product required_maturity_axes must be unique")
+
+    maturity = snapshot.get("maturity_axes", {})
+    if not isinstance(maturity, Mapping):
+        maturity = {}
+    axis_statuses = {}
+    for axis_id in axis_ids:
+        row = maturity.get(axis_id, {})
+        axis_statuses[axis_id] = (
+            str(row.get("status", "")) if isinstance(row, Mapping) else ""
+        )
+    axes_ready = all(status == "pass" for status in axis_statuses.values())
+
+    require_hard_checks = bool(policy.get("require_all_hard_checks", False))
+    hard_checks = snapshot.get("hard_checks", {})
+    failed_hard_checks: List[str] = []
+    if require_hard_checks:
+        if not isinstance(hard_checks, Mapping) or not hard_checks:
+            failed_hard_checks = ["hard-checks-missing"]
+        else:
+            failed_hard_checks = sorted(
+                str(name) for name, passed in hard_checks.items() if passed is not True
+            )
+    hard_checks_ready = not require_hard_checks or not failed_hard_checks
+    status = "pass" if axes_ready and hard_checks_ready else "needs-review"
+    return {
+        "status": status,
+        "required_maturity_axes": axis_statuses,
+        "all_required_axes_pass": axes_ready,
+        "all_hard_checks_required": require_hard_checks,
+        "all_hard_checks_pass": hard_checks_ready,
+        "failed_hard_checks": failed_hard_checks,
+        "overall_product_status": str(snapshot.get("status", "")),
+        "overall_product_terminal": bool(snapshot.get("terminal", False)),
+        "overall_product_status_informational": bool(
+            policy.get("overall_product_status_informational", False)
+        ),
+        "overall_product_terminal_informational": bool(
+            policy.get("overall_product_terminal_informational", False)
+        ),
+    }
 
 def _module_debt_limits(modules: Mapping[str, Any]) -> Dict[str, int]:
     baseline = int(modules.get("baseline_count", 0) or 0)
@@ -402,7 +489,8 @@ def evaluate_terminal_closure(
     if not snapshot_name:
         raise KnowledgeHubError("terminal product snapshot path is missing")
     snapshot = _load_object(root / snapshot_name, "product final gate snapshot")
-    external_gaps = _external_gaps(root, policy)
+    product_repository = _product_repository_state(snapshot, product_policy)
+    external_gaps, operational_gaps = _external_gap_state(root, policy)
     complexity = evaluate_complexity_budget(root)
     artifacts = evaluate_artifact_governance(root)
 
@@ -446,8 +534,7 @@ def evaluate_terminal_closure(
     branch_protection = _default_branch_protection_state(root, policy)
 
     checks = {
-        "product_status": snapshot.get("status") == product_policy.get("require_status", "pass"),
-        "product_terminal": snapshot.get("terminal") is True,
+        "product_repository_readiness": product_repository.get("status") == "pass",
         "external_closure": not external_gaps,
         "complexity_no_regression": complexity.get("status") == "pass",
         "artifact_governance": artifacts.get("status") == "pass",
@@ -457,9 +544,13 @@ def evaluate_terminal_closure(
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
+    operational_open = [
+        row for row in operational_gaps if str(row.get("status", "open")) != "closed"
+    ]
     return {
-        "schema_version": 1,
-        "contract": "knowledge-hub-terminal-closure-v1",
+        "schema_version": 2,
+        "contract": str(policy.get("contract", "knowledge-hub-github-terminal-closure-v2")),
+        "closure_scope": str(policy.get("closure_scope", "github-repository")),
         "generated_at": utc_timestamp(),
         "status": "pass" if terminal else "needs-review",
         "terminal": terminal,
@@ -469,11 +560,19 @@ def evaluate_terminal_closure(
             "snapshot": snapshot_name,
             "status": snapshot.get("status", ""),
             "terminal": bool(snapshot.get("terminal", False)),
+            "repository_readiness": product_repository,
         },
         "external_closure": {
             "status": "pass" if not external_gaps else "needs-review",
             "open_count": len(external_gaps),
             "open_gaps": external_gaps,
+        },
+        "operational_qualification": {
+            "blocking": False,
+            "status": "pass" if not operational_open else "needs-review",
+            "open_count": len(operational_open),
+            "open_gaps": operational_open,
+            "all_gaps": operational_gaps,
         },
         "artifact_terminal_forms": terminal_forms,
         "bounded_legacy": legacy,
