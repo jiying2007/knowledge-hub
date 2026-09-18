@@ -39,12 +39,28 @@ jobs:
 
       - name: Capture health and review risk
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p .cache/knowledge-hub/ai-maintenance
+          set +e
           rtk bash tools/knowledge-health-summary.sh --json \
             > .cache/knowledge-hub/ai-maintenance/health.json
+          health_rc=$?
           rtk bash tools/knowledge-review-after.sh --window-days 30 --json \
             > .cache/knowledge-hub/ai-maintenance/review-after.json
+          review_rc=$?
+          set -e
+          printf '%s\n' "${health_rc}" > .cache/knowledge-hub/ai-maintenance/health-exit-code.txt
+          printf '%s\n' "${review_rc}" > .cache/knowledge-hub/ai-maintenance/review-exit-code.txt
+          [[ "${health_rc}" -eq 0 || "${health_rc}" -eq 1 ]] || exit "${health_rc}"
+          [[ "${review_rc}" -eq 0 || "${review_rc}" -eq 1 ]] || exit "${review_rc}"
+          test -s .cache/knowledge-hub/ai-maintenance/health.json
+          test -s .cache/knowledge-hub/ai-maintenance/review-after.json
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ("health.json", "review-after.json"):
+              json.loads((Path(".cache/knowledge-hub/ai-maintenance") / name).read_text(encoding="utf-8"))
+          PY
 
       - name: Capture data growth budget
         run: |
