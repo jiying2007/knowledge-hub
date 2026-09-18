@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-ai-first-operations-v1",
+  "default_mode": "autonomous-when-machine-verifiable",
+  "classes": {
+    "autonomous-read": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": ["search", "health", "discovery", "reconciliation", "drift detection", "freshness checks"]
+    },
+    "autonomous-proposal": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": true,
+      "may_write_canonical_candidate": true,
+      "direct_master_write": false,
+      "examples": ["machine-verifiable evidence binding proposal", "contract migration proposal", "stale tracker repair proposal"]
+    },
+    "autonomous-low-risk-ratchet": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": true,
+      "may_write_canonical_candidate": true,
+      "direct_master_write": false,
+      "examples": ["repository visibility fact ratchet", "immutable provider identity ratchet", "machine-only status reconciliation"]
+    },
+    "human-authorization": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": ["owner decision", "active promotion", "semantic policy exception", "formal release approval", "rollback authorization"]
+    },
+    "real-world-evidence": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": ["device result", "production retrieval expectation", "real adoption feedback", "provider ACL transition"]
+    },
+    "external-administration": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": ["repository plan change", "branch protection administration", "organization permission change"]
+    }
+  },
+  "guardrails": {
+    "direct_master_write": false,
+    "automatic_merge_requires_protected_branch": true,
+    "owner_decision_may_be_inferred": false,
+    "synthetic_real_world_evidence_allowed": false,
+    "machine_ratchet_requires_exact_source": true,
+    "machine_ratchet_requires_deterministic_diff": true
+  }
+}
