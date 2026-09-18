@@ -11,12 +11,6 @@ script_repository_root = pathlib.Path(__file__).resolve().parents[3]
 if str(script_repository_root) not in sys.path:
     sys.path.insert(0, str(script_repository_root))
 
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
-from tools.codex_assets.knowledge_hub.review_risk import (
-    classify_review_risk,
-    load_review_risk_policy as load_shared_review_risk_policy,
-)
-
 parser = argparse.ArgumentParser(description="Print a report-only review_after stale and near-due report.")
 output_mode = parser.add_mutually_exclusive_group()
 output_mode.add_argument("--json", action="store_true")
@@ -54,6 +48,11 @@ source_window_end = today + dt.timedelta(days=args.source_window_days)
 errors = []
 
 def load_review_risk_policy():
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    from tools.codex_assets.knowledge_hub.review_risk import (
+        load_review_risk_policy as load_shared_review_risk_policy,
+    )
+
     try:
         return load_shared_review_risk_policy(root)
     except KnowledgeHubError as exc:
@@ -72,6 +71,8 @@ def load_review_risk_policy():
 review_risk_policy = load_review_risk_policy()
 
 def review_risk(path_value):
+    from tools.codex_assets.knowledge_hub.review_risk import classify_review_risk
+
     return classify_review_risk(review_risk_policy, path_value)
 
 def user_path_prefixes():
