@@ -137,8 +137,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          title="chore(hosting): ratchet verified private boundary"
+          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
+          if [[ -n "${existing}" ]]; then
+            echo "number=${existing}" >> "${GITHUB_OUTPUT}"
+            echo "existing governed ratchet PR already owns this canonical transition"
+            exit 0
+          fi
           short="${GITHUB_SHA:0:12}"
-          branch="automation/hosting-private-${short}"
+          branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"
           cp .cache/knowledge-hub/hosting-reconcile/candidate-registry.json registry/knowledge-platform-p5-p10.json
           cat .cache/knowledge-hub/hosting-reconcile/durable-record.json >> registry/durable-evidence-ledger.jsonl
           git diff --check
@@ -146,20 +154,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "${branch}"
           git add registry/knowledge-platform-p5-p10.json registry/durable-evidence-ledger.jsonl
-          git commit -m "chore(hosting): ratchet verified private boundary"
+          git commit -m "${title}"
           remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote}" "HEAD:refs/heads/${branch}"
-          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${branch}" --state open --json number --jq '.[0].number // empty')"
-          if [[ -n "${existing}" ]]; then
-            echo "number=${existing}" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
           set +e
           url="$(gh pr create \
             --repo "${GITHUB_REPOSITORY}" \
             --base master \
             --head "${branch}" \
-            --title "chore(hosting): ratchet verified private boundary" \
+            --title "${title}" \
             --body "Machine-generated low-risk ratchet from authoritative GitHub repository metadata. It closes only repository-private-boundary, appends a bounded durable evidence identity, does not infer owner approval, and does not modify product/operational evidence.")"
           rc=$?
           set -e
