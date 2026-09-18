@@ -30,3 +30,10 @@ def test_ai_maintenance_routes_only_critical_items_to_human():
     assert "git push" not in text
     assert "gh pr merge" not in text
     assert "knowledge-promote" not in text
+
+
+def test_ai_maintenance_closes_stale_critical_issue_after_recovery():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Close stale critical maintenance issue when recovered" in text
+    assert "gh issue close" in text
+    assert "no longer requires a critical human decision" in text
