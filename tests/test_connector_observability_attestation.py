@@ -182,6 +182,32 @@ def test_lane_health_and_slo_detect_degradation():
     assert set(slo["failures"]) == {"p95-latency", "error-rate"}
 
 
+def test_quality_attestation_allows_repository_terminal_with_product_needs_review():
+    statement = quality_attestation(
+        subject_name="knowledge-hub/master",
+        subject_sha256="4" * 64,
+        source_commit="deadbeef",
+        evidence_artifact_sha256="5" * 64,
+        engineering_status="success",
+        compliance_status="success",
+        restore_status="success",
+        product_gate_status="needs-review",
+        terminal_closure_status="pass",
+        terminal_closure_terminal=True,
+        terminal_closure_sha256="6" * 64,
+        terminal_closure_blockers=[],
+    )
+
+    verdict = verify_quality_attestation(
+        statement,
+        expected_subject_sha256="4" * 64,
+    )
+
+    assert verdict["status"] == "pass"
+    assert statement["predicate"]["quality_gates"]["product_gate"] == "needs-review"
+    assert statement["predicate"]["terminal_closure"]["terminal"] is True
+
+
 def test_quality_attestation_binds_terminal_evidence():
     statement = quality_attestation(
         subject_name="knowledge-hub/master",
