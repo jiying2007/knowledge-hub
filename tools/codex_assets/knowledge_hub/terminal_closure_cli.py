@@ -35,6 +35,7 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
     legacy = payload.get("bounded_legacy", {})
     branch_gc = payload.get("branch_gc", {})
     hosting = payload.get("hosting_posture", {})
+    mcp = payload.get("mcp_conformance", {})
     product = payload.get("product", {})
     return {
         "schema_version": 2,
@@ -75,6 +76,14 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "hosting_fact_drift_count": len(hosting.get("fact_drift", []))
         if isinstance(hosting, Mapping) and isinstance(hosting.get("fact_drift", []), list)
         else 0,
+        "mcp_conformance_status": str(mcp.get("status", "blocked"))
+        if isinstance(mcp, Mapping)
+        else "blocked",
+        "mcp_conformance_revision_matches": bool(
+            mcp.get("revision_matches_current_run", False)
+        )
+        if isinstance(mcp, Mapping)
+        else False,
     }
 
 def _write_output(root: pathlib.Path, relative: str, payload: Mapping[str, Any]) -> None:
