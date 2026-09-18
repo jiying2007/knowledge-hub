@@ -1,4 +1,4 @@
-"""CLI for the Knowledge Hub terminal closure contract."""
+"""CLI for the Knowledge Hub GitHub repository closure contract."""
 
 from __future__ import annotations
 
@@ -31,17 +31,32 @@ def _parser() -> argparse.ArgumentParser:
 
 def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
     external = payload.get("external_closure", {})
+    operational = payload.get("operational_qualification", {})
     legacy = payload.get("bounded_legacy", {})
     branch_gc = payload.get("branch_gc", {})
+    product = payload.get("product", {})
     return {
-        "schema_version": 1,
-        "projection": "knowledge-hub-terminal-closure-summary-v1",
+        "schema_version": 2,
+        "projection": "knowledge-hub-github-terminal-closure-summary-v2",
+        "closure_scope": str(payload.get("closure_scope", "github-repository")),
         "status": payload.get("status", "blocked"),
         "terminal": bool(payload.get("terminal", False)),
         "blockers": list(payload.get("blockers", [])),
         "external_open_count": int(external.get("open_count", 0) or 0)
         if isinstance(external, Mapping)
         else 0,
+        "operational_open_count": int(operational.get("open_count", 0) or 0)
+        if isinstance(operational, Mapping)
+        else 0,
+        "operational_blocking": bool(operational.get("blocking", False))
+        if isinstance(operational, Mapping)
+        else False,
+        "product_status": str(product.get("status", ""))
+        if isinstance(product, Mapping)
+        else "",
+        "product_terminal": bool(product.get("terminal", False))
+        if isinstance(product, Mapping)
+        else False,
         "legacy_module_count": int(legacy.get("legacy_module_count", 0) or 0)
         if isinstance(legacy, Mapping)
         else 0,
@@ -54,7 +69,6 @@ def _summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         if isinstance(branch_gc, Mapping)
         else "open",
     }
-
 
 def _write_output(root: pathlib.Path, relative: str, payload: Mapping[str, Any]) -> None:
     path = resolve_inside(root, relative)
