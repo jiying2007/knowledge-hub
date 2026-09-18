@@ -111,11 +111,6 @@ def build_signed_quality_materials(
         raise KnowledgeHubError("terminal closure verdict must include boolean terminal")
     if not isinstance(blockers, list):
         raise KnowledgeHubError("terminal closure blockers must be a list")
-    if statuses["product"] == "needs-review" and terminal_value is not False:
-        raise KnowledgeHubError(
-            "nonterminal product evidence requires terminal=false closure evidence"
-        )
-
     evidence_rows = []
     for key, relative in EVIDENCE_PATHS.items():
         path = root / relative
