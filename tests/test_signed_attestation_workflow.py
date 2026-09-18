@@ -61,7 +61,8 @@ def test_signed_attestation_rebinds_hosting_terminal_and_oidc_to_source_revision
     text = WORKFLOW.read_text(encoding="utf-8")
     assert '--source-revision "${SOURCE_REVISION}"' in text
     assert 'KNOWLEDGE_SOURCE_REVISION="${SOURCE_REVISION}"' in text
-    assert '--source-digest "${SIGNER_WORKFLOW_REVISION}"' in text
+    assert '--signer-digest "${SIGNER_WORKFLOW_REVISION}"' in text
+    assert '--source-digest "${SIGNER_WORKFLOW_REVISION}"' not in text
     assert '--signer-source-revision "${SIGNER_WORKFLOW_REVISION}"' in text
     assert '--source-ref "${SOURCE_REF}"' in text
     assert "--deny-self-hosted-runners" in text
