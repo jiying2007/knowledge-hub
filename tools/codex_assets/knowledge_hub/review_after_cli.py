@@ -7,6 +7,15 @@ import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
+script_repository_root = pathlib.Path(__file__).resolve().parents[3]
+if str(script_repository_root) not in sys.path:
+    sys.path.insert(0, str(script_repository_root))
+
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.review_risk import (
+    classify_review_risk,
+    load_review_risk_policy as load_shared_review_risk_policy,
+)
 
 parser = argparse.ArgumentParser(description="Print a report-only review_after stale and near-due report.")
 output_mode = parser.add_mutually_exclusive_group()
@@ -45,11 +54,10 @@ source_window_end = today + dt.timedelta(days=args.source_window_days)
 errors = []
 
 def load_review_risk_policy():
-    path = root / "registry" / "review-risk-policy.json"
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        errors.append(f"cannot read registry/review-risk-policy.json: {exc}")
+        return load_shared_review_risk_policy(root)
+    except KnowledgeHubError as exc:
+        errors.append(str(exc))
         return {
             "default_class": "ordinary",
             "classes": {
@@ -60,33 +68,11 @@ def load_review_risk_policy():
             },
             "rules": [],
         }
-    if not isinstance(payload, dict):
-        errors.append("registry/review-risk-policy.json must be an object")
-        return {"default_class": "ordinary", "classes": {}, "rules": []}
-    return payload
 
 review_risk_policy = load_review_risk_policy()
 
 def review_risk(path_value):
-    path_text = str(path_value or "")
-    selected = str(review_risk_policy.get("default_class", "ordinary"))
-    for rule in review_risk_policy.get("rules", []):
-        if not isinstance(rule, dict):
-            continue
-        if rule.get("path") == path_text:
-            selected = str(rule.get("review_class", selected))
-            break
-        prefix = str(rule.get("path_prefix", ""))
-        if prefix and path_text.startswith(prefix):
-            selected = str(rule.get("review_class", selected))
-            break
-    classes = review_risk_policy.get("classes", {})
-    details = classes.get(selected, {}) if isinstance(classes, dict) else {}
-    return {
-        "review_class": selected,
-        "stale_severity": str(details.get("stale_severity", "warning")),
-        "ai_first_action": str(details.get("ai_first_action", "auto-triage")),
-    }
+    return classify_review_risk(review_risk_policy, path_value)
 
 def user_path_prefixes():
     prefixes = [str(pathlib.Path.home())]
