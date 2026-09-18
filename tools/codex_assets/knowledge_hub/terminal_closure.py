@@ -8,6 +8,7 @@ A green quality workflow never implies repository closure by itself.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import pathlib
@@ -495,6 +496,122 @@ def _default_branch_protection_state(
 
 
 
+
+def _mcp_conformance_state(
+    root: pathlib.Path, policy: Mapping[str, Any]
+) -> Dict[str, Any]:
+    config = policy.get("mcp_conformance", {})
+    if not isinstance(config, Mapping):
+        raise KnowledgeHubError("mcp_conformance terminal policy must be an object")
+    if not bool(config.get("required", False)):
+        return {"required": False, "status": "pass", "reason": ""}
+
+    evidence_path = str(config.get("evidence", "")).strip()
+    policy_path = str(config.get("policy", "")).strip()
+    if not evidence_path or not policy_path:
+        raise KnowledgeHubError("mcp_conformance terminal policy is incomplete")
+    try:
+        evidence = _load_object(root / evidence_path, "MCP conformance evidence")
+        conformance_policy = _load_object(root / policy_path, "MCP conformance policy")
+    except KnowledgeHubError:
+        return {
+            "required": True,
+            "status": "blocked",
+            "reason": "fresh-mcp-conformance-evidence-missing",
+            "snapshot": evidence_path,
+        }
+
+    revision_matches, repository_matches = _inventory_identity(config, evidence)
+    reasons: List[str] = []
+    if evidence.get("schema_version") != "knowledge-hub.mcp-conformance-evidence.v2":
+        reasons.append("mcp-evidence-schema-invalid")
+    if not revision_matches:
+        reasons.append("mcp-evidence-revision-mismatch")
+    if not repository_matches:
+        reasons.append("mcp-evidence-repository-mismatch")
+    if evidence.get("runner_environment") != "github-hosted":
+        reasons.append("mcp-hosted-runner-not-proven")
+    if int(evidence.get("github_run_id", 0) or 0) < 1:
+        reasons.append("mcp-github-run-id-missing")
+    if int(evidence.get("github_run_attempt", 0) or 0) < 1:
+        reasons.append("mcp-github-run-attempt-missing")
+    if evidence.get("profile_contract_passed") is not True:
+        reasons.append("mcp-profile-contract-not-passing")
+    if evidence.get("product_resource_read_smoke_passed") is not True:
+        reasons.append("mcp-product-resource-smoke-not-passing")
+    if evidence.get("expected_failure_baseline_used") is not False:
+        reasons.append("mcp-expected-failure-baseline-forbidden")
+
+    expected_scenarios = conformance_policy.get("hosted_official_scenarios", [])
+    observed_scenarios = evidence.get("hosted_official_scenarios", [])
+    if not isinstance(expected_scenarios, list) or observed_scenarios != expected_scenarios:
+        reasons.append("mcp-scenario-set-drift")
+
+    expected_runner = conformance_policy.get("runner", {})
+    observed_runner = evidence.get("runner", {})
+    if not isinstance(expected_runner, Mapping) or not isinstance(observed_runner, Mapping):
+        reasons.append("mcp-runner-contract-invalid")
+    else:
+        if str(observed_runner.get("package", "")) != str(expected_runner.get("package", "")):
+            reasons.append("mcp-runner-package-drift")
+        if str(observed_runner.get("version", "")) != str(expected_runner.get("version", "")):
+            reasons.append("mcp-runner-version-drift")
+        if not str(observed_runner.get("integrity", "")).strip():
+            reasons.append("mcp-runner-integrity-missing")
+
+    scenario_rows = evidence.get("scenarios", [])
+    if not isinstance(scenario_rows, list):
+        reasons.append("mcp-scenario-rows-invalid")
+        scenario_rows = []
+    scenario_names = [
+        str(row.get("scenario", ""))
+        for row in scenario_rows
+        if isinstance(row, Mapping)
+    ]
+    if scenario_names != expected_scenarios:
+        reasons.append("mcp-scenario-row-order-drift")
+    for row in scenario_rows:
+        if not isinstance(row, Mapping):
+            reasons.append("mcp-scenario-row-invalid")
+            continue
+        if row.get("profile_applicability_passed") is not True:
+            reasons.append("mcp-scenario-applicability-failed")
+        if int(row.get("applicable_failure_count", -1)) != 0:
+            reasons.append("mcp-applicable-failure-present")
+
+    expected_digest = str(evidence.get("result_sha256", ""))
+    digest_payload = dict(evidence)
+    digest_payload.pop("result_sha256", None)
+    actual_digest = hashlib.sha256(
+        json.dumps(
+            digest_payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    if expected_digest != actual_digest:
+        reasons.append("mcp-result-digest-mismatch")
+
+    reasons = list(dict.fromkeys(reasons))
+    return {
+        "required": True,
+        "status": "pass" if not reasons else "blocked",
+        "reason": reasons[0] if reasons else "",
+        "reason_codes": reasons,
+        "repository": str(evidence.get("repository", "")),
+        "repository_matches_current_run": repository_matches,
+        "source_revision": str(evidence.get("source_revision", "")),
+        "revision_matches_current_run": revision_matches,
+        "runner_environment": str(evidence.get("runner_environment", "")),
+        "github_run_id": int(evidence.get("github_run_id", 0) or 0),
+        "github_run_attempt": int(evidence.get("github_run_attempt", 0) or 0),
+        "profile_contract_passed": evidence.get("profile_contract_passed") is True,
+        "result_sha256": expected_digest,
+        "snapshot": evidence_path,
+    }
+
+
 def _hosting_posture_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str, Any]:
     config = policy.get("hosting_posture", {})
     if not isinstance(config, Mapping):
@@ -646,6 +763,7 @@ def evaluate_terminal_closure(
     branch_gc = _branch_gc_state(root, policy)
     branch_protection = _default_branch_protection_state(root, policy)
     hosting_posture = _hosting_posture_state(root, policy)
+    mcp_conformance = _mcp_conformance_state(root, policy)
 
     checks = {
         "product_repository_readiness": product_repository.get("status") == "pass",
@@ -656,6 +774,7 @@ def evaluate_terminal_closure(
         "branch_gc": branch_gc.get("status") == "pass",
         "default_branch_protection": branch_protection.get("status") == "pass",
         "hosting_posture": hosting_posture.get("status") == "pass",
+        "mcp_conformance": mcp_conformance.get("status") == "pass",
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
@@ -694,4 +813,5 @@ def evaluate_terminal_closure(
         "branch_gc": branch_gc,
         "default_branch_protection": branch_protection,
         "hosting_posture": hosting_posture,
+        "mcp_conformance": mcp_conformance,
     }
