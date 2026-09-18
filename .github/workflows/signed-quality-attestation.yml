@@ -54,6 +54,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: rtk python3 -m tools.codex_assets.knowledge_hub.remote_branch_inventory_cli --repository "${GITHUB_REPOSITORY}" --source-revision "${GITHUB_SHA}"
+      - name: Capture fresh hosting posture
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: rtk python3 -m tools.codex_assets.knowledge_hub.hosting_posture_cli --repository "${GITHUB_REPOSITORY}" --source-revision "${GITHUB_SHA}"
       - name: Capture actual GitHub repository closure verdict
         shell: bash
         run: |
@@ -118,6 +122,7 @@ jobs:
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
             .cache/knowledge-hub/remote-branch-inventory.json
+            .cache/knowledge-hub/hosting-posture.json
             .cache/knowledge-hub/terminal-closure.json
             .tmp/engineering/knowledge-hub.cdx.json
           if-no-files-found: error
