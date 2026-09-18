@@ -54,3 +54,9 @@ def test_hosting_reconcile_cleans_unowned_branch_when_pr_creation_fails():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "deleting the unowned automation branch" in text
     assert 'git push "${remote}" --delete "${branch}" || true' in text
+
+
+def test_hosting_reconcile_uses_runtime_not_dev_dependency_surface():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "requirements-runtime.lock" in text
+    assert "requirements-dev.lock" not in text
