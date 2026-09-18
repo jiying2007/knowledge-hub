@@ -35,3 +35,10 @@ def test_ai_provider_discovery_only_requests_human_attention_after_review_bundle
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "needs-governed-authorization" in text
     assert "AI evidence binding: governed authorization pending" in text
+
+
+def test_ai_provider_discovery_closes_stale_authorization_issue():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Close stale authorization issue when fresh state no longer needs it" in text
+    assert "gh issue close" in text
+    assert "the previous authorization packet is stale" in text
