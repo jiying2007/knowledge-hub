@@ -174,6 +174,7 @@ def test_hosted_verification_must_match_signed_local_materials(monkeypatch, tmp_
         source_revision="d" * 40,
         source_ref="refs/heads/master",
         signer_workflow="jiying2007/knowledge-hub/.github/workflows/signed-quality-attestation.yml",
+        signer_source_revision="f" * 40,
         bundle_path=bundle,
         attestation_id="1234",
         attestation_url="https://github.com/jiying2007/knowledge-hub/attestations/1234",
@@ -182,6 +183,7 @@ def test_hosted_verification_must_match_signed_local_materials(monkeypatch, tmp_
     assert hosted["manifest_sha256"] == receipt["manifest_sha256"]
     assert hosted["sigstore_identity_verified"] is True
     assert hosted["private_key_used"] is False
+    assert hosted["signer_source_revision"] == "f" * 40
 
 
 def test_hosted_verification_rejects_predicate_drift(monkeypatch, tmp_path):
@@ -218,6 +220,7 @@ def test_hosted_verification_rejects_predicate_drift(monkeypatch, tmp_path):
             source_revision="e" * 40,
             source_ref="refs/heads/master",
             signer_workflow="jiying2007/knowledge-hub/.github/workflows/signed-quality-attestation.yml",
+            signer_source_revision="f" * 40,
             bundle_path=bundle,
             attestation_id="1234",
             attestation_url="https://github.com/jiying2007/knowledge-hub/attestations/1234",
