@@ -568,3 +568,21 @@ def test_terminal_closure_blocks_if_private_boundary_regresses_after_canonical_c
     assert report["hosting_posture"]["status"] == "needs-review"
     assert report["hosting_posture"]["reason"] == "repository-private-boundary-not-observed"
     assert "hosting_posture" in report["blockers"]
+
+
+def test_terminal_closure_prefers_explicit_workflow_source_identity(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    monkeypatch.setenv("GITHUB_SHA", "b" * 40)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "wrong/repository")
+    monkeypatch.setenv("KNOWLEDGE_SOURCE_REVISION", "a" * 40)
+    monkeypatch.setenv("KNOWLEDGE_GITHUB_REPOSITORY", "example/knowledge-hub")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["branch_gc"]["revision_matches_current_run"] is True
+    assert report["branch_gc"]["repository_matches_current_run"] is True
+    assert report["hosting_posture"]["revision_matches_current_run"] is True
+    assert report["hosting_posture"]["repository_matches_current_run"] is True
