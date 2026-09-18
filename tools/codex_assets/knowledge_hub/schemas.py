@@ -186,6 +186,18 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
             "artifact-policy-v1",
             "registry/artifact-policy.json",
         ),
+        (
+            "ai-operations-policy-v1",
+            "registry/ai-operations-policy.json",
+        ),
+        (
+            "contract-compatibility-v1",
+            "registry/contract-compatibility.json",
+        ),
+        (
+            "review-risk-policy-v1",
+            "registry/review-risk-policy.json",
+        ),
     )
     for contract_id, relative in static_registry_contracts:
         path = root / relative
@@ -216,6 +228,12 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
         yield "authorization-v1", "registry/authorizations.jsonl:{}".format(index), row
     for index, row in enumerate(load_jsonl(root / "registry/lifecycle-events.jsonl"), 1):
         yield "lifecycle-event-v1", "registry/lifecycle-events.jsonl:{}".format(index), row
+    for index, row in enumerate(load_jsonl(root / "registry/durable-evidence-ledger.jsonl"), 1):
+        yield (
+            "durable-evidence-record-v1",
+            "registry/durable-evidence-ledger.jsonl:{}".format(index),
+            row,
+        )
     manifests = root / "artifacts/manifests"
     for path in sorted(manifests.rglob("*.jsonl")) if manifests.exists() else []:
         for index, row in enumerate(load_jsonl(path), 1):
