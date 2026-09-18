@@ -19,6 +19,7 @@ EVIDENCE_PATHS = {
     "restore": ".cache/knowledge-hub/restore-drill-head.json",
     "product": ".cache/knowledge-hub/final-gate-product-full.json",
     "terminal": ".cache/knowledge-hub/terminal-closure.json",
+    "hosting": ".cache/knowledge-hub/hosting-posture.json",
     "sbom": ".tmp/engineering/knowledge-hub.cdx.json",
 }
 MAX_BUNDLE_BYTES = 16 * 1024 * 1024
@@ -100,6 +101,7 @@ def build_signed_quality_materials(
         "compliance": _status(objects["compliance"], "compliance"),
         "restore": _status(objects["restore"], "restore"),
         "product": _product_status(objects["product"]),
+        "hosting": _status(objects["hosting"], "hosting"),
     }
     terminal = objects["terminal"]
     terminal_status = str(terminal.get("status", "")).strip()
