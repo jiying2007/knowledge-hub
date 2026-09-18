@@ -211,7 +211,6 @@ jobs:
         with:
           name: knowledge-hub-mcp-conformance
           path: |
-            registry/mcp-conformance-policy.json
             .cache/knowledge-hub/mcp-conformance/
             results/
           if-no-files-found: error
