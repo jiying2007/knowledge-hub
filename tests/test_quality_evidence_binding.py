@@ -81,7 +81,7 @@ def test_quality_evidence_binding_rejects_symlink(tmp_path):
     target.unlink()
     target.symlink_to(real)
 
-    with pytest.raises(KnowledgeHubError, match="unavailable"):
+    with pytest.raises(KnowledgeHubError, match="symlink"):
         build_quality_evidence_binding(
             tmp_path,
             source_revision="a" * 40,
