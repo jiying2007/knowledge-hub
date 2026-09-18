@@ -116,6 +116,17 @@ def _action(
         "escalation_class": escalation_class,
         "summary_zh": summary_zh,
         "automatic_execution_enabled": False,
+        "automation_eligible": execution_class in {
+            "machine-discovery",
+            "machine-after-prerequisite",
+        },
+        "execution_plane": (
+            "external-ai-automation"
+            if execution_class in {"machine-discovery", "machine-after-prerequisite"}
+            else "human-or-real-world-boundary"
+            if execution_class in HUMAN_EXECUTION_CLASSES
+            else "dependency"
+        ),
     }
 
 
@@ -180,7 +191,9 @@ def project_actions(row: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return actions
 
 
-def external_actions(external: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def external_actions(
+    external: Mapping[str, Any], terminal: Optional[Mapping[str, Any]] = None
+) -> List[Dict[str, Any]]:
     actions: List[Dict[str, Any]] = []
     for row in external.get("open_gaps", []):
         if not isinstance(row, Mapping):
@@ -192,6 +205,21 @@ def external_actions(external: Mapping[str, Any]) -> List[Dict[str, Any]]:
             gap_id,
             ("external-environment", "需要真实外部环境/事实证据；不能由本仓 CI 自动关闭。"),
         )
+        if gap_id == "repository-private-boundary":
+            hosting = (terminal or {}).get("hosting_posture", {})
+            drift = hosting.get("fact_drift", []) if isinstance(hosting, Mapping) else []
+            machine_ratchet = any(
+                isinstance(value, Mapping)
+                and value.get("id") == "repository-private-boundary"
+                and value.get("type") == "live-fact-ahead-of-canonical"
+                for value in drift
+            )
+            if machine_ratchet:
+                execution_class = "machine-after-prerequisite"
+                summary_zh = (
+                    "Fresh hosting evidence 已证明 repository private；由 AI 自动生成并推进"
+                    " deterministic private-boundary ratchet，不再要求人工重复执行 hosting 变更。"
+                )
         actions.append(
             _action(
                 action_id="external:{}".format(gap_id),
@@ -273,7 +301,7 @@ def build_action_queue(
             actions.extend(dict(value) for value in project_rows if isinstance(value, Mapping))
         else:
             actions.extend(project_actions(row))
-    actions.extend(external_actions(external))
+    actions.extend(external_actions(external, terminal))
     actions.extend(lifecycle_actions(lifecycle or {}))
     actions.extend(terminal_governance_actions(terminal or {}))
     actions.sort(key=_sort_key)
@@ -304,6 +332,8 @@ def build_action_queue(
         "machine_candidate_count": counts.get("machine-discovery", 0),
         "machine_blocked_count": counts.get("machine-after-prerequisite", 0)
         + counts.get("dependency-gate", 0),
+        "autonomous_candidate_count": counts.get("machine-discovery", 0)
+        + counts.get("machine-after-prerequisite", 0),
         "manual_action_count": sum(counts.get(name, 0) for name in HUMAN_EXECUTION_CLASSES),
         "human_project_count": len(human_project_ids),
         "human_project_ids": human_project_ids,
