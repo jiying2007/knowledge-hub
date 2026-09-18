@@ -6,6 +6,9 @@ import pytest
 from tools.codex_assets.knowledge_hub import signed_attestation
 from tools.codex_assets.knowledge_hub.attestation import PREDICATE_TYPE
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.quality_evidence_binding import (
+    build_quality_evidence_binding,
+)
 
 
 def _write(path: Path, value):
@@ -16,6 +19,7 @@ def _write(path: Path, value):
 def _evidence(
     root: Path,
     *,
+    source_revision="a" * 40,
     terminal_status="needs-review",
     terminal_value=False,
     terminal_blockers=None,
@@ -55,6 +59,8 @@ def _evidence(
         },
     )
     _write(root / ".tmp/engineering/knowledge-hub.cdx.json", {"bomFormat": "CycloneDX"})
+    binding = build_quality_evidence_binding(root, source_revision=source_revision)
+    _write(root / ".cache/knowledge-hub/quality-evidence-binding.json", binding)
 
 
 def test_signed_materials_bind_quality_sbom_and_actual_terminal_verdict(monkeypatch, tmp_path):
@@ -85,7 +91,7 @@ def test_signed_materials_bind_quality_sbom_and_actual_terminal_verdict(monkeypa
 
 def test_evidence_mutation_changes_manifest_identity(monkeypatch, tmp_path):
     monkeypatch.setattr(signed_attestation, "utc_timestamp", lambda: "2026-09-14T00:00:00Z")
-    _evidence(tmp_path)
+    _evidence(tmp_path, source_revision="b" * 40)
     first = signed_attestation.build_signed_quality_materials(
         tmp_path,
         source_revision="b" * 40,
@@ -102,7 +108,7 @@ def test_evidence_mutation_changes_manifest_identity(monkeypatch, tmp_path):
 
 
 def test_signed_materials_reject_invalid_terminal_verdict(tmp_path):
-    _evidence(tmp_path, terminal_status="closed")
+    _evidence(tmp_path, terminal_status="closed", source_revision="c" * 40)
     with pytest.raises(KnowledgeHubError, match="terminal closure verdict has invalid status"):
         signed_attestation.build_signed_quality_materials(
             tmp_path,
@@ -113,6 +119,7 @@ def test_signed_materials_reject_invalid_terminal_verdict(tmp_path):
 def test_signed_materials_allow_repository_terminal_with_nonterminal_product(tmp_path):
     _evidence(
         tmp_path,
+        source_revision="c" * 40,
         terminal_status="pass",
         terminal_value=True,
         terminal_blockers=[],
@@ -130,7 +137,7 @@ def test_signed_materials_allow_repository_terminal_with_nonterminal_product(tmp
 
 
 def test_signed_materials_reject_failed_product_evidence(tmp_path):
-    _evidence(tmp_path, product_status="needs-fix")
+    _evidence(tmp_path, product_status="needs-fix", source_revision="c" * 40)
     with pytest.raises(KnowledgeHubError, match="product evidence has invalid status"):
         signed_attestation.build_signed_quality_materials(
             tmp_path,
@@ -140,7 +147,7 @@ def test_signed_materials_reject_failed_product_evidence(tmp_path):
 
 def test_hosted_verification_must_match_signed_local_materials(monkeypatch, tmp_path):
     monkeypatch.setattr(signed_attestation, "utc_timestamp", lambda: "2026-09-14T00:00:00Z")
-    _evidence(tmp_path)
+    _evidence(tmp_path, source_revision="d" * 40)
     receipt = signed_attestation.build_signed_quality_materials(
         tmp_path,
         source_revision="d" * 40,
@@ -182,7 +189,7 @@ def test_hosted_verification_must_match_signed_local_materials(monkeypatch, tmp_
 
 def test_hosted_verification_rejects_predicate_drift(monkeypatch, tmp_path):
     monkeypatch.setattr(signed_attestation, "utc_timestamp", lambda: "2026-09-14T00:00:00Z")
-    _evidence(tmp_path)
+    _evidence(tmp_path, source_revision="e" * 40)
     signed_attestation.build_signed_quality_materials(tmp_path, source_revision="e" * 40)
     statement = json.loads(
         (tmp_path / ".cache/knowledge-hub/signed-attestation/quality-statement.json").read_text(
