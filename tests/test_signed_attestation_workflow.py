@@ -37,6 +37,8 @@ def test_signed_attestation_reuses_exact_quality_evidence_instead_of_recomputing
     assert "quality_evidence_binding_cli" in text
     assert "gh run download" in text
     assert "--name knowledge-hub-quality-evidence" in text
+    assert "--name knowledge-hub-mcp-conformance" in text
+    assert "mcp-conformance/evidence.json" in text
     assert "quality-source-run.json" in text
     assert '"head_branch": "master"' in text
     assert '"event": "push"' in text
