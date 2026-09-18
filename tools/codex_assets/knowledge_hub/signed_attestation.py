@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping
 
 from .attestation import PREDICATE_TYPE, quality_attestation, statement_digest, verify_quality_attestation
 from .common import KnowledgeHubError, utc_timestamp
+from .quality_evidence_binding import verify_quality_evidence_binding
 
 SOURCE_RE = re.compile(r"^[0-9a-f]{40}$")
 DEFAULT_OUTPUT = ".cache/knowledge-hub/signed-attestation"
@@ -18,6 +19,7 @@ EVIDENCE_PATHS = {
     "compliance": ".cache/knowledge-hub/compliance-eval.json",
     "restore": ".cache/knowledge-hub/restore-drill-head.json",
     "product": ".cache/knowledge-hub/final-gate-product-full.json",
+    "quality_binding": ".cache/knowledge-hub/quality-evidence-binding.json",
     "terminal": ".cache/knowledge-hub/terminal-closure.json",
     "hosting": ".cache/knowledge-hub/hosting-posture.json",
     "sbom": ".tmp/engineering/knowledge-hub.cdx.json",
@@ -95,6 +97,12 @@ def build_signed_quality_materials(
     sbom_path = root / EVIDENCE_PATHS["sbom"]
     if not sbom_path.is_file() or sbom_path.is_symlink():
         raise KnowledgeHubError("sbom evidence is unavailable")
+
+    verify_quality_evidence_binding(
+        root,
+        objects["quality_binding"],
+        source_revision=source_revision,
+    )
 
     statuses = {
         "engineering": _status(objects["engineering"], "engineering"),
