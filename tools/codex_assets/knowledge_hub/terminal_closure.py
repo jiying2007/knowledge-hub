@@ -488,6 +488,100 @@ def _default_branch_protection_state(
     }
 
 
+
+def _hosting_posture_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str, Any]:
+    config = policy.get("hosting_posture", {})
+    if not isinstance(config, Mapping):
+        raise KnowledgeHubError("hosting_posture terminal policy must be an object")
+    if not bool(config.get("required", False)):
+        return {"required": False, "status": "pass", "fact_drift": []}
+    evidence_path = str(config.get("evidence", "")).strip()
+    if not evidence_path:
+        raise KnowledgeHubError("hosting_posture evidence path is missing")
+    try:
+        evidence = _load_object(root / evidence_path, "hosting posture evidence")
+    except KnowledgeHubError:
+        return {
+            "required": True,
+            "status": "blocked",
+            "reason": "fresh-hosting-posture-missing",
+            "fact_drift": [],
+            "snapshot": evidence_path,
+        }
+    revision_matches, repository_matches = _inventory_identity(config, evidence)
+    rules = policy.get("rules", {})
+    expected_branch = (
+        str(rules.get("default_branch", "master")).strip()
+        if isinstance(rules, Mapping)
+        else "master"
+    )
+    private = evidence.get("repository_private") is True
+    visibility = str(evidence.get("repository_visibility", ""))
+    actual_branch = str(evidence.get("default_branch", ""))
+    status = "pass"
+    reason = ""
+    if evidence.get("status") != "pass":
+        status = "blocked"
+        reason = "hosting-posture-capture-not-passing"
+    elif not revision_matches:
+        status = "blocked"
+        reason = "hosting-posture-revision-mismatch"
+    elif not repository_matches:
+        status = "blocked"
+        reason = "hosting-posture-repository-mismatch"
+    elif not private or visibility != "private":
+        status = "needs-review"
+        reason = "repository-private-boundary-not-observed"
+    elif actual_branch != expected_branch:
+        status = "blocked"
+        reason = "hosting-posture-default-branch-mismatch"
+
+    drift: List[Dict[str, Any]] = []
+    external = policy.get("external_closure", {})
+    source = str(external.get("source", "")).strip() if isinstance(external, Mapping) else ""
+    if source:
+        platform = _load_object(root / source, "external closure registry")
+        rows = platform.get("external_closure_gaps", [])
+        if isinstance(rows, list):
+            matches = [
+                row for row in rows
+                if isinstance(row, Mapping) and row.get("id") == "repository-private-boundary"
+            ]
+            if len(matches) == 1:
+                canonical_status = str(matches[0].get("status", "open"))
+                if private and canonical_status != "closed":
+                    drift.append({
+                        "id": "repository-private-boundary",
+                        "type": "live-fact-ahead-of-canonical",
+                        "live_private": True,
+                        "canonical_status": canonical_status,
+                        "recommended_action": "machine-ratchet-candidate",
+                    })
+                elif (not private) and canonical_status == "closed":
+                    drift.append({
+                        "id": "repository-private-boundary",
+                        "type": "hosting-regression",
+                        "live_private": False,
+                        "canonical_status": canonical_status,
+                        "recommended_action": "external-administration",
+                    })
+    return {
+        "required": True,
+        "status": status,
+        "reason": reason,
+        "repository": str(evidence.get("repository", "")),
+        "repository_matches_current_run": repository_matches,
+        "source_revision": str(evidence.get("source_revision", "")),
+        "revision_matches_current_run": revision_matches,
+        "repository_private": private,
+        "repository_visibility": visibility,
+        "default_branch": actual_branch,
+        "default_branch_protected": evidence.get("default_branch_protected") is True,
+        "fact_drift": drift,
+        "snapshot": evidence_path,
+    }
+
+
 def evaluate_terminal_closure(
     root: pathlib.Path,
     *,
@@ -545,6 +639,7 @@ def evaluate_terminal_closure(
     )
     branch_gc = _branch_gc_state(root, policy)
     branch_protection = _default_branch_protection_state(root, policy)
+    hosting_posture = _hosting_posture_state(root, policy)
 
     checks = {
         "product_repository_readiness": product_repository.get("status") == "pass",
@@ -554,6 +649,7 @@ def evaluate_terminal_closure(
         "bounded_legacy": legacy.get("status") == "pass",
         "branch_gc": branch_gc.get("status") == "pass",
         "default_branch_protection": branch_protection.get("status") == "pass",
+        "hosting_posture": hosting_posture.get("status") == "pass",
     }
     blockers = [name for name, passed in checks.items() if not passed]
     terminal = not blockers
@@ -591,4 +687,5 @@ def evaluate_terminal_closure(
         "bounded_legacy": legacy,
         "branch_gc": branch_gc,
         "default_branch_protection": branch_protection,
+        "hosting_posture": hosting_posture,
     }
