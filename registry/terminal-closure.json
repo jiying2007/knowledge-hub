@@ -16,7 +16,6 @@
     "source": "registry/knowledge-platform-p5-p10.json",
     "required_gap_ids": [
       "repository-private-boundary",
-      "mcp-official-conformance",
       "attestation-signing-identity"
     ],
     "observational_gap_ids": [
