@@ -28,6 +28,7 @@ def test_signed_attestation_runs_only_after_quality_or_manual_master_dispatch():
     assert "workflow_run.conclusion == 'success'" in condition
     assert "workflow_run.event == 'push'" in condition
     assert "workflow_run.head_branch == 'master'" in condition
+    assert "github.workflow_sha == github.event.workflow_run.head_sha" in condition
     assert "github.ref == 'refs/heads/master'" in condition
 
 
