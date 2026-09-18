@@ -18,11 +18,15 @@ def _workflow():
     return payload
 
 
-def test_quality_runs_for_pushes_and_pull_requests():
+def test_quality_runs_for_master_pushes_and_pull_requests_without_duplicate_branch_pushes():
     payload = _workflow()
     triggers = payload.get("on")
     assert isinstance(triggers, dict)
-    assert "push" in triggers
+    push = triggers.get("push")
+    assert isinstance(push, dict)
+    assert push.get("branches") == ["master"]
+    assert "paths" not in push
+    assert "paths-ignore" not in push
     assert "pull_request" in triggers
 
 
