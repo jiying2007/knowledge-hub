@@ -1,0 +1,203 @@
+name: hosting-posture-reconcile
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: hosting-posture-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    name: Reconcile machine-verifiable hosting facts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+
+      - name: Capture authoritative repository metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/hosting-reconcile
+          gh api "repos/${GITHUB_REPOSITORY}" > .cache/knowledge-hub/hosting-reconcile/repository-metadata.json
+
+      - name: Decide reconciliation action
+        id: decide
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          meta = json.loads(Path(".cache/knowledge-hub/hosting-reconcile/repository-metadata.json").read_text())
+          registry = json.loads(Path("registry/knowledge-platform-p5-p10.json").read_text())
+          gaps = {row.get("id"): row for row in registry.get("external_closure_gaps", [])}
+          gap = gaps.get("repository-private-boundary", {})
+          private = meta.get("private") is True and meta.get("visibility") == "private"
+          status = str(gap.get("status", "open"))
+          action = "noop"
+          if private and status != "closed":
+              action = "ratchet-private"
+          elif (not private) and status == "closed":
+              action = "hosting-regression"
+          Path(".cache/knowledge-hub/hosting-reconcile/action.txt").write_text(action + "\n")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write("action={}\n".format(action))
+          PY
+
+      - name: Build deterministic private-boundary candidate
+        if: steps.decide.outputs.action == 'ratchet-private'
+        run: |
+          set -euo pipefail
+          rtk python3 -m tools.codex_assets.knowledge_hub.repository_private_ratchet_cli \
+            --repository-metadata .cache/knowledge-hub/hosting-reconcile/repository-metadata.json \
+            --expected-repository "${GITHUB_REPOSITORY}" \
+            --source-revision "${GITHUB_SHA}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --candidate-output .cache/knowledge-hub/hosting-reconcile/candidate-registry.json \
+            --proposal-output .cache/knowledge-hub/hosting-reconcile/ratchet-proposal.json
+
+      - name: Prepare durable evidence record
+        if: steps.decide.outputs.action == 'ratchet-private'
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import datetime as dt
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          meta_path = Path(".cache/knowledge-hub/hosting-reconcile/repository-metadata.json")
+          proposal_path = Path(".cache/knowledge-hub/hosting-reconcile/ratchet-proposal.json")
+          proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+          run_url = "https://github.com/{}/actions/runs/{}".format(
+              os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_RUN_ID"]
+          )
+          record = {
+              "schema_version": 1,
+              "event_id": "hosting-private-{}-{}".format(
+                  os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"]
+              ),
+              "event_type": "hosting-posture-ratchet",
+              "source_revision": os.environ["GITHUB_SHA"],
+              "observed_at": dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+              "evidence_refs": [
+                  "https://github.com/{}".format(os.environ["GITHUB_REPOSITORY"]),
+                  run_url,
+              ],
+              "digests": {
+                  "repository_metadata": "sha256:" + hashlib.sha256(meta_path.read_bytes()).hexdigest(),
+                  "candidate_registry": "sha256:" + str(proposal["candidate_registry_sha256"]),
+              },
+              "expires_at": None,
+              "notes": "Machine-verifiable GitHub private hosting fact; no owner decision inferred.",
+          }
+          Path(".cache/knowledge-hub/hosting-reconcile/durable-record.json").write_text(
+              json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Create governed reconciliation branch and PR
+        if: steps.decide.outputs.action == 'ratchet-private'
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          short="${GITHUB_SHA:0:12}"
+          branch="automation/hosting-private-${short}"
+          cp .cache/knowledge-hub/hosting-reconcile/candidate-registry.json registry/knowledge-platform-p5-p10.json
+          cat .cache/knowledge-hub/hosting-reconcile/durable-record.json >> registry/durable-evidence-ledger.jsonl
+          git diff --check
+          git config user.name "knowledge-hub-automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add registry/knowledge-platform-p5-p10.json registry/durable-evidence-ledger.jsonl
+          git commit -m "chore(hosting): ratchet verified private boundary"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${remote}" "HEAD:refs/heads/${branch}"
+          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${branch}" --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "${existing}" ]]; then
+            echo "number=${existing}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          set +e
+          url="$(gh pr create \
+            --repo "${GITHUB_REPOSITORY}" \
+            --base master \
+            --head "${branch}" \
+            --title "chore(hosting): ratchet verified private boundary" \
+            --body "Machine-generated low-risk ratchet from authoritative GitHub repository metadata. It closes only repository-private-boundary, appends a bounded durable evidence identity, does not infer owner approval, and does not modify product/operational evidence.")"
+          rc=$?
+          set -e
+          if [[ "${rc}" -ne 0 ]]; then
+            echo "GitHub settings prevented automatic PR creation; candidate branch and artifact are retained." >&2
+            exit 0
+          fi
+          number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
+          echo "number=${number}" >> "${GITHUB_OUTPUT}"
+
+      - name: Close stale private-boundary tracker after canonical ratchet
+        if: steps.decide.outputs.action == 'noop'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          private="$(jq -r '.private == true and .visibility == "private"' .cache/knowledge-hub/hosting-reconcile/repository-metadata.json)"
+          status="$(jq -r '.external_closure_gaps[] | select(.id=="repository-private-boundary") | .status' registry/knowledge-platform-p5-p10.json)"
+          if [[ "${private}" == "true" && "${status}" == "closed" ]]; then
+            state="$(gh issue view 18 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state}" == "OPEN" ]]; then
+              gh issue close 18 --repo "${GITHUB_REPOSITORY}" --comment "Canonical registry and live GitHub metadata now both confirm the private boundary. Closed by the AI-first hosting reconciliation workflow."
+            fi
+          fi
+
+      - name: Surface hosting regression
+        if: steps.decide.outputs.action == 'hosting-regression'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue comment 18 --repo "${GITHUB_REPOSITORY}" --body "ALERT: canonical registry says repository-private-boundary is closed, but current GitHub repository metadata is not private. Terminal hosting-posture checks will fail closed."
+
+      - name: Upload reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-hosting-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/hosting-reconcile/
+          if-no-files-found: error
+          retention-days: 90
