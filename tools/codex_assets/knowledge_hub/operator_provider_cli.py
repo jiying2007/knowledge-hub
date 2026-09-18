@@ -144,18 +144,7 @@ def main(argv: Sequence[str] = ()) -> int:
         )
         if args.auto_review_unique:
             payload = build_unique_review_bundle(root, proposal_payload)
-        elif args.auto_review_unique:
-        print("status: {}".format(payload["status"]))
-        print("read_only: true")
-        print("selection_is_authorization: false")
-        print("canonical_write_performed: false")
-        print("automatic_binding_enabled: false")
-        print("automatic_execution_enabled: false")
-        print("selected_proposal_count: {}".format(payload["selected_proposal_count"]))
-        print("ambiguous_target_count: {}".format(payload["ambiguous_target_count"]))
-        for reason in payload.get("reason_codes", []):
-            print("reason: {}".format(reason))
-    elif args.validate_binding_authorization:
+        elif args.validate_binding_authorization:
             authorization = _load_authorization(
                 root, args.validate_binding_authorization
             )
@@ -178,6 +167,17 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.auto_review_unique:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("selection_is_authorization: false")
+        print("canonical_write_performed: false")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print("selected_proposal_count: {}".format(payload["selected_proposal_count"]))
+        print("ambiguous_target_count: {}".format(payload["ambiguous_target_count"]))
+        for reason in payload.get("reason_codes", []):
+            print("reason: {}".format(reason))
     elif args.validate_binding_authorization:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
