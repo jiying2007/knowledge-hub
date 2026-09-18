@@ -121,3 +121,98 @@ jobs:
             .cache/knowledge-hub/quality-evidence-binding.json
           if-no-files-found: error
           retention-days: 30
+
+
+  mcp-conformance:
+    name: Official MCP 2026 native profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+      - name: Verify pinned upstream runner exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/mcp-conformance
+          runner="@modelcontextprotocol/conformance@0.2.0-alpha.10"
+          actual="$(npm view "$runner" version --json | tr -d '\\"[:space:]')"
+          test "$actual" = "0.2.0-alpha.10"
+          printf '%s\n' "$actual" > .cache/knowledge-hub/mcp-conformance/runner-version.txt
+          npm view "$runner" dist.integrity --json | tr -d '\\"[:space:]' \
+            > .cache/knowledge-hub/mcp-conformance/runner-integrity.txt
+          node --version > .cache/knowledge-hub/mcp-conformance/node-version.txt
+          npm --version > .cache/knowledge-hub/mcp-conformance/npm-version.txt
+      - name: Start local-only Knowledge Hub MCP server
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache=.cache/knowledge-hub/mcp-conformance
+          mkdir -p "$cache"
+          rtk python3 -m tools.codex_assets.knowledge_hub.mcp_http_server \
+            --host 127.0.0.1 --port 3000 \
+            > "$cache/server.log" 2>&1 &
+          echo "$!" > "$cache/server.pid"
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl --fail --silent --show-error \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json, text/event-stream' \
+              -H 'MCP-Protocol-Version: 2026-07-28' \
+              -H 'Mcp-Method: server/discover' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+              http://127.0.0.1:3000/mcp \
+              > "$cache/discover.json"; then
+              ready=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [[ "$ready" -ne 1 ]]; then
+            cat "$cache/server.log"
+            exit 1
+          fi
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            -H 'MCP-Protocol-Version: 2026-07-28' \
+            -H 'Mcp-Method: resources/read' \
+            -H 'Mcp-Name: knowledge://health' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"knowledge://health","_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+            http://127.0.0.1:3000/mcp \
+            > "$cache/product-resource-read.json"
+      - name: Run pinned official native-profile scenarios
+        shell: bash
+        run: bash tools/ci/run-mcp-conformance.sh
+      - name: Stop local MCP server
+        if: always()
+        shell: bash
+        run: |
+          pid_file=.cache/knowledge-hub/mcp-conformance/server.pid
+          if [[ -f "$pid_file" ]]; then
+            kill "$(cat "$pid_file")" 2>/dev/null || true
+          fi
+      - name: Upload official conformance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-mcp-conformance
+          path: |
+            registry/mcp-conformance-policy.json
+            .cache/knowledge-hub/mcp-conformance/
+            results/
+          if-no-files-found: error
+          retention-days: 90
