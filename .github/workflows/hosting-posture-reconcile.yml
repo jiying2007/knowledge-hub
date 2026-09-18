@@ -167,7 +167,8 @@ jobs:
           rc=$?
           set -e
           if [[ "${rc}" -ne 0 ]]; then
-            echo "GitHub settings prevented automatic PR creation; candidate branch and artifact are retained." >&2
+            echo "GitHub settings prevented automatic PR creation; deleting the unowned automation branch and retaining the local candidate artifact." >&2
+            git push "${remote}" --delete "${branch}" || true
             exit 0
           fi
           number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
