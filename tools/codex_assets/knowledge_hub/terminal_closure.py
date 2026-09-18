@@ -190,6 +190,7 @@ def _product_repository_state(
         ),
     }
 
+
 def _module_debt_limits(modules: Mapping[str, Any]) -> Dict[str, int]:
     baseline = int(modules.get("baseline_count", 0) or 0)
     current = int(modules.get("current_upper_bound_count", baseline) or 0)
