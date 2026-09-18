@@ -1,11 +1,6 @@
 name: hosting-posture-reconcile
 
 on:
-  workflow_run:
-    workflows:
-      - quality
-    types:
-      - completed
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
@@ -25,22 +20,18 @@ jobs:
     name: Reconcile machine-verifiable hosting facts
     permissions:
       contents: write
-      actions: read
+      actions: write
       pull-requests: write
       issues: write
     if: >-
       ${{
-        (github.event_name == 'workflow_run' &&
-         github.event.workflow_run.conclusion == 'success' &&
-         github.event.workflow_run.event == 'push' &&
-         github.event.workflow_run.head_branch == 'master') ||
         github.event_name == 'schedule' ||
         (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      SOURCE_REVISION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+      SOURCE_REVISION: ${{ github.sha }}
     steps:
       - name: Checkout exact master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -65,20 +56,15 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TRIGGER_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || '' }}
         run: |
           set -euo pipefail
           mkdir -p .cache/knowledge-hub/hosting-reconcile
-          if [[ -n "${TRIGGER_RUN_ID}" ]]; then
-            run_id="${TRIGGER_RUN_ID}"
-          else
-            run_id="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
-                --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
-              | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
-            )"
-          fi
+          run_id="$(
+            gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
+              --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
+            | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
+          )"
           if [[ ! "${run_id}" =~ ^[0-9]+$ ]]; then
             echo "No successful aggregate Quality run is bound to SOURCE_REVISION=${SOURCE_REVISION}" >&2
             exit 1
@@ -124,6 +110,23 @@ jobs:
           mkdir -p .cache/knowledge-hub/hosting-reconcile
           gh api "repos/${GITHUB_REPOSITORY}" > .cache/knowledge-hub/hosting-reconcile/repository-metadata.json
 
+      - name: Capture current branch and hosting posture
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          KNOWLEDGE_SOURCE_REVISION="${SOURCE_REVISION}" \
+          rtk python3 -m tools.codex_assets.knowledge_hub.remote_branch_inventory_cli \
+            --repository "${GITHUB_REPOSITORY}" \
+            --source-revision "${SOURCE_REVISION}" \
+            --output .cache/knowledge-hub/hosting-reconcile/remote-branch-inventory.json
+          KNOWLEDGE_SOURCE_REVISION="${SOURCE_REVISION}" \
+          rtk python3 -m tools.codex_assets.knowledge_hub.hosting_posture_cli \
+            --repository "${GITHUB_REPOSITORY}" \
+            --source-revision "${SOURCE_REVISION}" \
+            --branch-inventory .cache/knowledge-hub/hosting-reconcile/remote-branch-inventory.json \
+            --output .cache/knowledge-hub/hosting-reconcile/hosting-posture.json
+
       - name: Decide reconciliation action
         id: decide
         run: |
@@ -145,8 +148,24 @@ jobs:
           elif (not private) and status == "closed":
               action = "hosting-regression"
           Path(".cache/knowledge-hub/hosting-reconcile/action.txt").write_text(action + "\n")
+          hosting = json.loads(
+              Path(".cache/knowledge-hub/hosting-reconcile/hosting-posture.json").read_text(
+                  encoding="utf-8"
+              )
+          )
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
               handle.write("action={}\n".format(action))
+              handle.write("private={}\n".format(str(private).lower()))
+              handle.write(
+                  "canonical_private_closed={}\n".format(
+                      str(status == "closed").lower()
+                  )
+              )
+              handle.write(
+                  "protected={}\n".format(
+                      str(hosting.get("default_branch_protected") is True).lower()
+                  )
+              )
           PY
 
       - name: Build deterministic private-boundary candidate
@@ -270,6 +289,38 @@ jobs:
         run: |
           set -euo pipefail
           gh issue comment 18 --repo "${GITHUB_REPOSITORY}" --body "ALERT: canonical registry says repository-private-boundary is closed, but current GitHub repository metadata is not private. Terminal hosting-posture checks will fail closed."
+
+      - name: Request one fresh Signed verification after protection recovery
+        if: >-
+          ${{
+            steps.decide.outputs.action == 'noop' &&
+            steps.decide.outputs.private == 'true' &&
+            steps.decide.outputs.canonical_private_closed == 'true' &&
+            steps.decide.outputs.protected == 'true'
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          issue_state="$(gh issue view 95 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+          if [[ "${issue_state}" != "OPEN" ]]; then
+            echo "branch-protection tracker is already closed; no Signed refresh needed"
+            exit 0
+          fi
+          active="$(
+            gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/signed-quality-attestation.yml/runs?branch=master&per_page=20" \
+              --jq '.workflow_runs[] | select((.status == "queued" or .status == "in_progress" or .status == "waiting") and .head_sha == env.SOURCE_REVISION) | .id' \
+            | head -n 1
+          )"
+          if [[ -n "${active}" ]]; then
+            echo "fresh Signed verification already active for current master: ${active}"
+            exit 0
+          fi
+          gh workflow run signed-quality-attestation.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref master
+          echo "requested one fresh Signed verification for protected current master"
 
       - name: Upload reconciliation evidence
         if: always()
