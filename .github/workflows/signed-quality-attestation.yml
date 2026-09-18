@@ -200,7 +200,7 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --predicate-type https://knowledge-hub.local/attestation/quality/v1 \
             --signer-workflow "${signer}" \
-            --source-digest "${SIGNER_WORKFLOW_REVISION}" \
+            --signer-digest "${SIGNER_WORKFLOW_REVISION}" \
             --source-ref "${SOURCE_REF}" \
             --deny-self-hosted-runners \
             --format json \
