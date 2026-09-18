@@ -104,6 +104,9 @@ def build_signed_quality_materials(
         source_revision=source_revision,
     )
 
+    if str(objects["hosting"].get("source_revision", "")).lower() != source_revision:
+        raise KnowledgeHubError("hosting posture source revision mismatch")
+
     statuses = {
         "engineering": _status(objects["engineering"], "engineering"),
         "compliance": _status(objects["compliance"], "compliance"),
