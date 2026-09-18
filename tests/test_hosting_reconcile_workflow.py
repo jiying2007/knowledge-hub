@@ -27,7 +27,7 @@ def test_hosting_reconcile_creates_governed_pr_not_direct_master_write():
     assert "repository_private_ratchet_cli" in text
     assert "automation/hosting-private-" in text
     assert "gh pr create" in text
-    assert 'HEAD:refs/heads/codex/ai-first-long-term-assets-v1' in text
+    assert 'HEAD:refs/heads/${branch}' in text
     assert "HEAD:refs/heads/master" not in text
     assert "gh pr merge" not in text
     assert "synthetic" not in text.lower()
