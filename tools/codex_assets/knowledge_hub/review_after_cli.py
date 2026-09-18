@@ -193,7 +193,7 @@ for source in sources:
         "days_until_review": days,
         "final_disposition": source.get("final_disposition", ""),
         "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {source_window_end.isoformat()}",
-        "suggested_action_zh": "人工复核 source 覆盖、check/no-check、owner 和 final_disposition 是否仍有效。",
+        "suggested_action_zh": "AI 自动复核 source 覆盖、check/no-check、引用可达性和 final_disposition；仅 authority/retirement 语义冲突升级 owner。",
     }
     if review_date < today:
         stale_sources.append(detail)
@@ -258,12 +258,12 @@ def group_item_rows(rows, field, missing_value=""):
             entry["latest_review_after"] = review_after
     for key, entry in grouped.items():
         if field == "owner":
-            entry["suggested_action_zh"] = "按 owner 分派人工复核；只确认 current validity、证据和下一次 review_after，不自动改状态。"
+            entry["suggested_action_zh"] = "AI 先生成 owner 聚合复核 packet；只有 current validity 的语义签收才分派给 owner。"
         elif field == "source_id":
             if key == "<missing-source-id>":
-                entry["suggested_action_zh"] = "这些条目缺少 source_id 绑定；只作为人工补强提示，不由工具自动补写。"
+                entry["suggested_action_zh"] = "AI 先自动发现可证明的 source_id 候选并生成 proposal；无唯一候选时再进入治理复核。"
             else:
-                entry["suggested_action_zh"] = "按 source_id 复核迁移来源、validation_refs 和 source coverage 是否仍有效。"
+                entry["suggested_action_zh"] = "按 source_id 由 AI 自动复核迁移来源、validation_refs 和 source coverage；不改变 owner 语义决定。"
         elif field == "status":
             if key == "archived":
                 entry["suggested_action_zh"] = "复核 archive-only 边界和证据，不把历史材料提升为 active fact。"
@@ -368,7 +368,7 @@ else:
     print(f"- open owner gates: {len(open_owner_gates)}")
     print(f"- missing source_id items: {output['counts']['missing_source_id_count']}")
     print()
-    print("## 人工复核分组")
+    print("## AI-first 复核分组")
     for title, key in [
         ("按 owner", "by_owner"),
         ("按 source_id", "by_source_id"),
