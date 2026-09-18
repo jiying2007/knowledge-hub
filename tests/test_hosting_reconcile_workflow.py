@@ -12,13 +12,41 @@ def _workflow():
     return payload
 
 
-def test_hosting_reconcile_only_runs_from_trusted_master_or_schedule():
+def test_hosting_reconcile_waits_for_successful_master_quality_or_trusted_maintenance():
     payload = _workflow()
     triggers = payload["on"]
-    assert set(triggers) == {"push", "schedule", "workflow_dispatch"}
-    assert triggers["push"]["branches"] == ["master"]
-    assert "pull_request" not in triggers
+    assert set(triggers) == {
+        "workflow_run",
+        "schedule",
+        "workflow_dispatch",
+        "pull_request",
+    }
+    assert triggers["workflow_run"]["workflows"] == ["quality"]
+    assert triggers["workflow_run"]["types"] == ["completed"]
+    assert triggers["pull_request"]["types"] == ["closed"]
     assert "pull_request_target" not in triggers
+
+    reconcile = payload["jobs"]["reconcile"]
+    condition = reconcile["if"]
+    assert "workflow_run.conclusion == 'success'" in condition
+    assert "workflow_run.event == 'push'" in condition
+    assert "workflow_run.head_branch == 'master'" in condition
+    assert "github.ref == 'refs/heads/master'" in condition
+    assert reconcile["env"]["SOURCE_REVISION"] == (
+        "${{ github.event_name == 'workflow_run' && "
+        "github.event.workflow_run.head_sha || github.sha }}"
+    )
+
+
+def test_hosting_reconcile_revalidates_exact_aggregate_quality_identity():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Verify source has successful aggregate Quality" in text
+    assert "actions/workflows/quality.yml/runs?branch=master&status=success" in text
+    assert '"head_sha": os.environ["SOURCE_REVISION"]' in text
+    assert '"head_branch": "master"' in text
+    assert '"event": "push"' in text
+    assert '"conclusion": "success"' in text
+    assert '".github/workflows/quality.yml"' in text
 
 
 def test_hosting_reconcile_creates_governed_pr_not_direct_master_write():
@@ -33,18 +61,25 @@ def test_hosting_reconcile_creates_governed_pr_not_direct_master_write():
     assert "synthetic" not in text.lower()
 
 
-def test_hosting_reconcile_permissions_are_bounded_to_required_control_plane():
+def test_hosting_reconcile_permissions_are_job_scoped():
     payload = _workflow()
-    assert payload["permissions"] == {
+    assert payload["permissions"] == {"contents": "read"}
+    reconcile = payload["jobs"]["reconcile"]
+    assert reconcile["permissions"] == {
         "contents": "write",
+        "actions": "read",
         "pull-requests": "write",
         "issues": "write",
     }
+    gc = payload["jobs"]["automation-branch-gc"]
+    assert gc["permissions"] == {"contents": "write"}
 
 
 def test_hosting_reconcile_deduplicates_open_ratchet_pr_before_push():
     text = WORKFLOW.read_text(encoding="utf-8")
-    existing_index = text.index("existing governed ratchet PR already owns this canonical transition")
+    existing_index = text.index(
+        "existing governed ratchet PR already owns this canonical transition"
+    )
     push_index = text.index('git push "${remote}" "HEAD:refs/heads/${branch}"')
     assert existing_index < push_index
     assert 'branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"' in text
@@ -54,6 +89,18 @@ def test_hosting_reconcile_cleans_unowned_branch_when_pr_creation_fails():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "deleting the unowned automation branch" in text
     assert 'git push "${remote}" --delete "${branch}" || true' in text
+
+
+def test_hosting_reconcile_retires_closed_automation_pr_branches_only():
+    payload = _workflow()
+    gc = payload["jobs"]["automation-branch-gc"]
+    condition = gc["if"]
+    assert "github.event_name == 'pull_request'" in condition
+    assert "github.event.pull_request.head.repo.full_name == github.repository" in condition
+    assert "startsWith(github.event.pull_request.head.ref, 'automation/')" in condition
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "^automation/[A-Za-z0-9._/-]+$" in text
+    assert "--method DELETE" in text
 
 
 def test_hosting_reconcile_uses_runtime_not_dev_dependency_surface():
