@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/durable-evidence-record.schema.json",
+  "title": "Knowledge Hub durable evidence ledger record",
+  "type": "object",
+  "required": ["schema_version", "event_id", "event_type", "source_revision", "observed_at", "evidence_refs", "digests"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "event_type": {"enum": ["hosting-posture-ratchet", "terminal-closure", "release-qualification", "contract-migration"]},
+    "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "observed_at": {"type": "string", "minLength": 10},
+    "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "digests": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    },
+    "expires_at": {"type": ["string", "null"]},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}
