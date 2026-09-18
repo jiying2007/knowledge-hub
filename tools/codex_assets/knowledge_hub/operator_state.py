@@ -83,6 +83,7 @@ def _terminal_state(root: pathlib.Path) -> Dict[str, Any]:
         "blockers": list(payload.get("blockers", [])),
         "branch_gc": payload.get("branch_gc", {}),
         "default_branch_protection": payload.get("default_branch_protection", {}),
+        "hosting_posture": payload.get("hosting_posture", {}),
     }
 
 
