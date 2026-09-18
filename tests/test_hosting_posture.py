@@ -90,3 +90,16 @@ def test_hosting_posture_rejects_default_branch_drift(monkeypatch, tmp_path):
             repository="example/knowledge-hub",
             source_revision="a" * 40,
         )
+
+
+def test_hosting_posture_rejects_branch_inventory_path_escape(tmp_path):
+    outside = tmp_path.parent / "outside.json"
+    outside.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(KnowledgeHubError):
+        hosting_posture.evaluate_hosting_posture(
+            tmp_path,
+            repository="example/knowledge-hub",
+            source_revision="a" * 40,
+            branch_inventory="../outside.json",
+        )
