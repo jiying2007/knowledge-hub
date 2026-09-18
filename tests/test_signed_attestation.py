@@ -51,7 +51,7 @@ def _evidence(
         {
             "status": "pass",
             "repository": "example/knowledge-hub",
-            "source_revision": "a" * 40,
+            "source_revision": source_revision,
             "repository_private": True,
             "repository_visibility": "private",
             "default_branch": "master",
@@ -89,22 +89,19 @@ def test_signed_materials_bind_quality_sbom_and_actual_terminal_verdict(monkeypa
     ]
 
 
-def test_evidence_mutation_changes_manifest_identity(monkeypatch, tmp_path):
+def test_evidence_mutation_after_quality_binding_is_rejected(monkeypatch, tmp_path):
     monkeypatch.setattr(signed_attestation, "utc_timestamp", lambda: "2026-09-14T00:00:00Z")
     _evidence(tmp_path, source_revision="b" * 40)
-    first = signed_attestation.build_signed_quality_materials(
-        tmp_path,
-        source_revision="b" * 40,
-    )["manifest_sha256"]
     _write(
         tmp_path / ".cache/knowledge-hub/compliance-eval.json",
         {"status": "pass", "case_count": 53},
     )
-    second = signed_attestation.build_signed_quality_materials(
-        tmp_path,
-        source_revision="b" * 40,
-    )["manifest_sha256"]
-    assert first != second
+
+    with pytest.raises(KnowledgeHubError, match="digest/size mismatch"):
+        signed_attestation.build_signed_quality_materials(
+            tmp_path,
+            source_revision="b" * 40,
+        )
 
 
 def test_signed_materials_reject_invalid_terminal_verdict(tmp_path):
@@ -224,4 +221,18 @@ def test_hosted_verification_rejects_predicate_drift(monkeypatch, tmp_path):
             bundle_path=bundle,
             attestation_id="1234",
             attestation_url="https://github.com/jiying2007/knowledge-hub/attestations/1234",
+        )
+
+
+def test_signed_materials_reject_hosting_revision_drift(tmp_path):
+    _evidence(tmp_path, source_revision="f" * 40)
+    hosting = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    payload = json.loads(hosting.read_text(encoding="utf-8"))
+    payload["source_revision"] = "e" * 40
+    _write(hosting, payload)
+
+    with pytest.raises(KnowledgeHubError, match="hosting posture source revision mismatch"):
+        signed_attestation.build_signed_quality_materials(
+            tmp_path,
+            source_revision="f" * 40,
         )
