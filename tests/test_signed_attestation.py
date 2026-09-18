@@ -42,6 +42,18 @@ def _evidence(
             "blockers": terminal_blockers,
         },
     )
+    _write(
+        root / ".cache/knowledge-hub/hosting-posture.json",
+        {
+            "status": "pass",
+            "repository": "example/knowledge-hub",
+            "source_revision": "a" * 40,
+            "repository_private": True,
+            "repository_visibility": "private",
+            "default_branch": "master",
+            "default_branch_protected": False,
+        },
+    )
     _write(root / ".tmp/engineering/knowledge-hub.cdx.json", {"bomFormat": "CycloneDX"})
 
 
