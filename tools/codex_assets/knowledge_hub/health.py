@@ -18,6 +18,7 @@ from .common import (
 )
 from .product_gate import product_snapshot_path, run_product_gate
 from .runtime_maintenance import plan_runtime_maintenance
+from .review_risk import classify_review_risk, load_review_risk_policy
 from .store import incomplete_transactions
 
 
@@ -98,12 +99,30 @@ def _review_queue(root: pathlib.Path) -> Dict[str, Any]:
 
 def _review_after(items: List[Dict[str, Any]], root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
     stale_items = 0
+    by_class: Dict[str, int] = {}
+    by_severity: Dict[str, int] = {}
+    try:
+        risk_policy = load_review_risk_policy(root)
+        risk_policy_status = "pass"
+        risk_policy_error = ""
+    except KnowledgeHubError as exc:
+        risk_policy = {"default_class": "ordinary", "classes": {}, "rules": []}
+        risk_policy_status = "needs-fix"
+        risk_policy_error = str(exc)
     for item in items:
+        stale = False
         try:
-            if dt.date.fromisoformat(str(item.get("review_after", ""))) < as_of:
-                stale_items += 1
+            stale = dt.date.fromisoformat(str(item.get("review_after", ""))) < as_of
         except ValueError:
-            stale_items += 1
+            stale = True
+        if not stale:
+            continue
+        stale_items += 1
+        risk = classify_review_risk(risk_policy, item.get("path", ""))
+        review_class = risk["review_class"]
+        severity = risk["stale_severity"]
+        by_class[review_class] = by_class.get(review_class, 0) + 1
+        by_severity[severity] = by_severity.get(severity, 0) + 1
     sources = list((load_json(root / "registry/sources.json", {}) or {}).get("sources", []))
     stale_sources = 0
     for source in sources:
@@ -115,6 +134,13 @@ def _review_after(items: List[Dict[str, Any]], root: pathlib.Path, as_of: dt.dat
     return {
         "stale_item_count": stale_items,
         "stale_source_count": stale_sources,
+        "by_review_class": dict(sorted(by_class.items())),
+        "by_stale_severity": dict(sorted(by_severity.items())),
+        "security_critical_stale_count": by_class.get("security-critical", 0),
+        "governance_critical_stale_count": by_class.get("governance-critical", 0),
+        "risk_policy_status": risk_policy_status,
+        "risk_policy_error": risk_policy_error,
+        "ai_first_default": True,
         "near_due_command": "rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json --as-of {}".format(
             as_of.isoformat()
         ),
@@ -443,6 +469,7 @@ def health_summary(
         or body_coverage["missing_registry_count"]
         or review_queue["status"] != "pass"
         or review_queue["active_or_promotion_blocker_count"]
+        or review_after.get("risk_policy_status") == "needs-fix"
         or incomplete
     ):
         control_plane_status = "needs-fix"
