@@ -14,7 +14,7 @@ visibility: team-internal
 status: active
 owner: leiwenjun
 review_after: '2026-09-16'
-review_status: active-control-plane-accepted
+review_status: ai-update-pending-exact-review
 promotion: none
 aliases:
 - Knowledge Hub long-term maintenance plan
