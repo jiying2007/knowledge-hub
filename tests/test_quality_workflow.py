@@ -7,6 +7,7 @@ WORKFLOW = Path(".github/workflows/quality.yml")
 REQUIRED_QUALITY_EVIDENCE = (
     ".tmp/engineering/knowledge-hub.cdx.json",
     ".cache/knowledge-hub/engineering-quality.json",
+    ".cache/knowledge-hub/compliance-eval.json",
     ".cache/knowledge-hub/restore-drill-head.json",
     ".cache/knowledge-hub/final-gate-product-full.json",
 )
@@ -96,3 +97,13 @@ def test_quality_pr_uses_minimum_runtime_and_engineering_boundaries_while_master
     )
     assert "if" not in engineering
     assert engineering["steps"]
+
+
+def test_quality_publishes_compliance_for_signed_reuse():
+    payload = _workflow()
+    steps = payload["jobs"]["engineering"]["steps"]
+    compliance = next(
+        step for step in steps if step.get("name") == "Run deterministic compliance verdict matrix"
+    )
+    assert "tee .cache/knowledge-hub/compliance-eval.json" in compliance["run"]
+    assert ".cache/knowledge-hub/compliance-eval.json" in REQUIRED_QUALITY_EVIDENCE
