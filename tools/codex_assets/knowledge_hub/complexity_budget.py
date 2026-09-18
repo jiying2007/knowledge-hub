@@ -137,6 +137,52 @@ def _evaluate_python(
     return module_rows, regressions, legacy_attention
 
 
+
+def _evaluate_data_growth(
+    root: pathlib.Path, policy: Mapping[str, Any]
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    growth = policy.get("data_growth", {}) if isinstance(policy, Mapping) else {}
+    if not isinstance(growth, Mapping):
+        return [], [{"type": "data-growth-policy-invalid"}]
+    tracked = growth.get("tracked_paths", {})
+    if not tracked:
+        return [], []
+    if not isinstance(tracked, Mapping):
+        return [], [{"type": "data-growth-policy-invalid"}]
+    rows: List[Dict[str, Any]] = []
+    regressions: List[Dict[str, Any]] = []
+    for relative, raw_limits in sorted(tracked.items()):
+        if not isinstance(raw_limits, Mapping):
+            regressions.append({"type": "data-growth-policy-invalid", "path": str(relative)})
+            continue
+        segment_at = int(raw_limits.get("segment_at_bytes", 0) or 0)
+        hard_max = int(raw_limits.get("hard_max_bytes", 0) or 0)
+        if segment_at < 1 or hard_max < segment_at:
+            regressions.append({"type": "data-growth-policy-invalid", "path": str(relative)})
+            continue
+        path = root / str(relative)
+        size = path.stat().st_size if path.exists() and path.is_file() else 0
+        state = "hard-cap-exceeded" if size > hard_max else (
+            "segment-candidate" if size >= segment_at else "within-budget"
+        )
+        row = {
+            "path": str(relative),
+            "bytes": size,
+            "segment_at_bytes": segment_at,
+            "hard_max_bytes": hard_max,
+            "state": state,
+        }
+        rows.append(row)
+        if size > hard_max:
+            regressions.append({
+                "type": "data-growth-hard-cap",
+                "path": str(relative),
+                "actual": size,
+                "limit": hard_max,
+            })
+    return rows, regressions
+
+
 def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
     policy = _load_policy(root)
     python_policy = policy.get("python", {}) if isinstance(policy, Mapping) else {}
@@ -152,6 +198,8 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         function_limit=function_limit,
         legacy_caps=legacy_caps,
     )
+    data_growth, growth_regressions = _evaluate_data_growth(root, policy)
+    regressions.extend(growth_regressions)
     oversized_modules = [
         {
             "path": str(row.get("path", "")),
@@ -193,5 +241,9 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         "legacy_attention": legacy_attention,
         "module_count": len(module_rows),
         "modules": module_rows,
+        "data_growth": data_growth,
+        "data_growth_attention_count": sum(
+            1 for row in data_growth if row.get("state") == "segment-candidate"
+        ),
         "errors": errors,
     }
