@@ -168,11 +168,16 @@ def _product_repository_state(
     axes_ready = all(status == "pass" for status in axis_statuses.values())
 
     require_hard_checks = bool(policy.get("require_all_hard_checks", False))
-    hard_checks = snapshot.get("hard_checks", {})
+    platform_status = snapshot.get("platform_status", {})
+    hard_checks = (
+        platform_status.get("hard_checks", {})
+        if isinstance(platform_status, Mapping)
+        else {}
+    )
     failed_hard_checks: List[str] = []
     if require_hard_checks:
         if not isinstance(hard_checks, Mapping) or not hard_checks:
-            failed_hard_checks = ["hard-checks-missing"]
+            failed_hard_checks = ["platform-status-hard-checks-missing"]
         else:
             failed_hard_checks = sorted(
                 str(name) for name, passed in hard_checks.items() if passed is not True
@@ -184,6 +189,7 @@ def _product_repository_state(
         "required_maturity_axes": axis_statuses,
         "all_required_axes_pass": axes_ready,
         "all_hard_checks_required": require_hard_checks,
+        "hard_check_source": "platform_status.hard_checks",
         "all_hard_checks_pass": hard_checks_ready,
         "failed_hard_checks": failed_hard_checks,
         "overall_product_status": str(snapshot.get("status", "")),
