@@ -1,15 +1,21 @@
 name: hosting-posture-reconcile
 
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows:
+      - quality
+    types:
+      - completed
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
+  pull_request:
+    types:
+      - closed
 
 permissions:
   contents: write
+  actions: read
   pull-requests: write
   issues: write
 
@@ -20,13 +26,24 @@ concurrency:
 jobs:
   reconcile:
     name: Reconcile machine-verifiable hosting facts
+    if: >-
+      ${{
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'master') ||
+        github.event_name == 'schedule' ||
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SOURCE_REVISION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Checkout exact master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.SOURCE_REVISION }}
           persist-credentials: false
 
       - name: Set up governed Python
@@ -41,6 +58,61 @@ jobs:
 
       - name: Install hash-locked runtime dependencies
         run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Verify source has successful aggregate Quality
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || '' }}
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/hosting-reconcile
+          if [[ -n "${TRIGGER_RUN_ID}" ]]; then
+            run_id="${TRIGGER_RUN_ID}"
+          else
+            run_id="$(
+              gh api --method GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
+                --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
+              | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
+            )"
+          fi
+          if [[ ! "${run_id}" =~ ^[0-9]+$ ]]; then
+            echo "No successful aggregate Quality run is bound to SOURCE_REVISION=${SOURCE_REVISION}" >&2
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" \
+            > .cache/knowledge-hub/hosting-reconcile/quality-source-run.json
+          QUALITY_RUN_ID="${run_id}" rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          run = json.loads(
+              Path(".cache/knowledge-hub/hosting-reconcile/quality-source-run.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          expected = {
+              "id": int(os.environ["QUALITY_RUN_ID"]),
+              "head_sha": os.environ["SOURCE_REVISION"],
+              "head_branch": "master",
+              "event": "push",
+              "status": "completed",
+              "conclusion": "success",
+              "path": ".github/workflows/quality.yml",
+          }
+          for field, value in expected.items():
+              if run.get(field) != value:
+                  raise SystemExit(
+                      "Quality source mismatch {} expected={!r} observed={!r}".format(
+                          field, value, run.get(field)
+                      )
+                  )
+          repository = run.get("repository") or {}
+          if repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
+              raise SystemExit("Quality repository identity mismatch")
+          PY
 
       - name: Capture authoritative repository metadata
         env:
@@ -82,7 +154,7 @@ jobs:
           rtk python3 -m tools.codex_assets.knowledge_hub.repository_private_ratchet_cli \
             --repository-metadata .cache/knowledge-hub/hosting-reconcile/repository-metadata.json \
             --expected-repository "${GITHUB_REPOSITORY}" \
-            --source-revision "${GITHUB_SHA}" \
+            --source-revision "${SOURCE_REVISION}" \
             --run-id "${GITHUB_RUN_ID}" \
             --run-attempt "${GITHUB_RUN_ATTEMPT}" \
             --candidate-output .cache/knowledge-hub/hosting-reconcile/candidate-registry.json \
@@ -111,7 +183,7 @@ jobs:
                   os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"]
               ),
               "event_type": "hosting-posture-ratchet",
-              "source_revision": os.environ["GITHUB_SHA"],
+              "source_revision": os.environ["SOURCE_REVISION"],
               "observed_at": dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
               "evidence_refs": [
                   "https://github.com/{}".format(os.environ["GITHUB_REPOSITORY"]),
@@ -145,7 +217,7 @@ jobs:
             echo "existing governed ratchet PR already owns this canonical transition"
             exit 0
           fi
-          short="${GITHUB_SHA:0:12}"
+          short="${SOURCE_REVISION:0:12}"
           branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"
           cp .cache/knowledge-hub/hosting-reconcile/candidate-registry.json registry/knowledge-platform-p5-p10.json
           cat .cache/knowledge-hub/hosting-reconcile/durable-record.json >> registry/durable-evidence-ledger.jsonl
@@ -205,3 +277,31 @@ jobs:
           path: .cache/knowledge-hub/hosting-reconcile/
           if-no-files-found: error
           retention-days: 90
+
+
+  automation-branch-gc:
+    name: Retire closed automation PR branch
+    if: >-
+      ${{
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'automation/')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete closed same-repository automation branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${HEAD_REF}" =~ ^automation/[A-Za-z0-9._/-]+$ ]]; then
+            echo "automation branch name failed the bounded ref grammar" >&2
+            exit 1
+          fi
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${HEAD_REF}" >/dev/null 2>&1; then
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${HEAD_REF}"
+          else
+            echo "automation branch already absent; nothing to retire"
+          fi
