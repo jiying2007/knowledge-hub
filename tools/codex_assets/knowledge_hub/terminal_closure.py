@@ -140,6 +140,12 @@ def _external_gap_state(
     return unresolved, observational
 
 
+def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Compatibility view for existing Operator projections: blocking gaps only."""
+    unresolved, _ = _external_gap_state(root, policy)
+    return unresolved
+
+
 def _product_repository_state(
     snapshot: Mapping[str, Any], policy: Mapping[str, Any]
 ) -> Dict[str, Any]:
