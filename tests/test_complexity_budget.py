@@ -274,3 +274,54 @@ def test_check_split_eliminates_repository_oversized_module_debt():
     assert report["oversized_module_count"] == 0
     assert report["regressions"] == []
     assert not check_paths & oversized_paths
+
+
+def test_complexity_budget_reports_data_growth_segment_candidate(tmp_path):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    (package / "small.py").write_text("x = 1\n", encoding="utf-8")
+    _write_budget_policy(tmp_path)
+    policy_path = tmp_path / "registry/engineering-budgets.json"
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    ledger = tmp_path / "registry/events.jsonl"
+    ledger.write_text("x" * 10, encoding="utf-8")
+    policy["data_growth"] = {
+        "tracked_paths": {
+            "registry/events.jsonl": {
+                "segment_at_bytes": 8,
+                "hard_max_bytes": 16,
+            }
+        }
+    }
+    policy_path.write_text(json.dumps(policy), encoding="utf-8")
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "pass"
+    assert report["data_growth_attention_count"] == 1
+    assert report["data_growth"][0]["state"] == "segment-candidate"
+
+
+def test_complexity_budget_fails_data_growth_hard_cap(tmp_path):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    (package / "small.py").write_text("x = 1\n", encoding="utf-8")
+    _write_budget_policy(tmp_path)
+    policy_path = tmp_path / "registry/engineering-budgets.json"
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    ledger = tmp_path / "registry/events.jsonl"
+    ledger.write_text("x" * 17, encoding="utf-8")
+    policy["data_growth"] = {
+        "tracked_paths": {
+            "registry/events.jsonl": {
+                "segment_at_bytes": 8,
+                "hard_max_bytes": 16,
+            }
+        }
+    }
+    policy_path.write_text(json.dumps(policy), encoding="utf-8")
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "fail"
+    assert any(row["type"] == "data-growth-hard-cap" for row in report["regressions"])
