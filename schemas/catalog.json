@@ -253,6 +253,13 @@
       "applies_to": "registry/durable-evidence-ledger.jsonl#each-line",
       "authority": "durable-evidence-ledger",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "quality-evidence-binding-v1",
+      "schema": "schemas/quality-evidence-binding.schema.json",
+      "applies_to": ".cache/knowledge-hub/quality-evidence-binding.json",
+      "authority": "derived-exact-source-quality-evidence-binding",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
