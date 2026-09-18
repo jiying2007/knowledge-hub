@@ -10,7 +10,12 @@ from .operator_actions import HUMAN_EXECUTION_CLASSES, build_action_queue, proje
 from .operator_binding_lifecycle import build_binding_lifecycle_projection
 from .operator_discovery import build_discovery_projection
 from .product_gate_support import _project_readiness
-from .terminal_closure import DEFAULT_POLICY, _external_gaps, _load_object, evaluate_terminal_closure
+from .terminal_closure import (
+    DEFAULT_POLICY,
+    _external_gap_state,
+    _load_object,
+    evaluate_terminal_closure,
+)
 
 
 def _status_summary(root: pathlib.Path) -> Dict[str, Any]:
@@ -35,20 +40,33 @@ def _status_summary(root: pathlib.Path) -> Dict[str, Any]:
 def _external_state(root: pathlib.Path) -> Dict[str, Any]:
     try:
         policy = _load_object(root / DEFAULT_POLICY, "terminal closure policy")
-        gaps = _external_gaps(root, policy)
+        blocking_gaps, operational_gaps = _external_gap_state(root, policy)
     except KnowledgeHubError as exc:
         return {
             "status": "unavailable",
             "open_count": 0,
+            "blocking_open_count": 0,
+            "operational_open_count": 0,
             "open_gaps": [],
+            "blocking_gaps": [],
+            "operational_gaps": [],
             "error": str(exc),
         }
+    operational_open = [
+        row
+        for row in operational_gaps
+        if str(row.get("status", "open")) != "closed"
+    ]
+    combined = [*blocking_gaps, *operational_open]
     return {
-        "status": "pass" if not gaps else "needs-review",
-        "open_count": len(gaps),
-        "open_gaps": gaps,
+        "status": "pass" if not combined else "needs-review",
+        "open_count": len(combined),
+        "blocking_open_count": len(blocking_gaps),
+        "operational_open_count": len(operational_open),
+        "open_gaps": combined,
+        "blocking_gaps": blocking_gaps,
+        "operational_gaps": operational_open,
     }
-
 
 def _terminal_state(root: pathlib.Path) -> Dict[str, Any]:
     try:
