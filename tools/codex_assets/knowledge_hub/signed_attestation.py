@@ -20,6 +20,7 @@ EVIDENCE_PATHS = {
     "restore": ".cache/knowledge-hub/restore-drill-head.json",
     "product": ".cache/knowledge-hub/final-gate-product-full.json",
     "quality_binding": ".cache/knowledge-hub/quality-evidence-binding.json",
+    "mcp": ".cache/knowledge-hub/mcp-conformance/evidence.json",
     "terminal": ".cache/knowledge-hub/terminal-closure.json",
     "hosting": ".cache/knowledge-hub/hosting-posture.json",
     "sbom": ".tmp/engineering/knowledge-hub.cdx.json",
