@@ -39,6 +39,12 @@ def _policy(default_branch_protection_required=False):
             "require_current_github_sha_when_available": True,
             "require_current_github_repository_when_available": True,
         },
+        "hosting_posture": {
+            "required": True,
+            "evidence": ".cache/knowledge-hub/hosting-posture.json",
+            "require_current_github_sha_when_available": True,
+            "require_current_github_repository_when_available": True,
+        },
         "rules": {
             "default_branch": "master",
             "default_branch_protection_required": default_branch_protection_required,
@@ -150,6 +156,18 @@ def _write_common_ready_state(
                     "owner": "runtime-owner",
                 },
             ]
+        },
+    )
+    _write_json(
+        tmp_path / ".cache/knowledge-hub/hosting-posture.json",
+        {
+            "status": "pass",
+            "repository": "example/knowledge-hub",
+            "source_revision": "a" * 40,
+            "repository_private": True,
+            "repository_visibility": "private",
+            "default_branch": "master",
+            "default_branch_protected": protected,
         },
     )
     _write_json(
@@ -513,3 +531,40 @@ def test_terminal_closure_rejects_protection_evidence_from_another_repository(
     )
     assert report["default_branch_protection"]["repository_matches_current_run"] is False
     assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_reports_live_private_fact_ahead_of_canonical(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="open")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "pass"
+    assert report["hosting_posture"]["fact_drift"] == [
+        {
+            "id": "repository-private-boundary",
+            "type": "live-fact-ahead-of-canonical",
+            "live_private": True,
+            "canonical_status": "open",
+            "recommended_action": "machine-ratchet-candidate",
+        }
+    ]
+    assert "external_closure" in report["blockers"]
+
+
+def test_terminal_closure_blocks_if_private_boundary_regresses_after_canonical_close(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="closed")
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["repository_private"] = False
+    posture["repository_visibility"] = "public"
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "needs-review"
+    assert report["hosting_posture"]["reason"] == "repository-private-boundary-not-observed"
+    assert "hosting_posture" in report["blockers"]
