@@ -44,6 +44,50 @@ source_window_end = today + dt.timedelta(days=args.source_window_days)
 
 errors = []
 
+def load_review_risk_policy():
+    path = root / "registry" / "review-risk-policy.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        errors.append(f"cannot read registry/review-risk-policy.json: {exc}")
+        return {
+            "default_class": "ordinary",
+            "classes": {
+                "ordinary": {
+                    "stale_severity": "warning",
+                    "ai_first_action": "auto-triage",
+                }
+            },
+            "rules": [],
+        }
+    if not isinstance(payload, dict):
+        errors.append("registry/review-risk-policy.json must be an object")
+        return {"default_class": "ordinary", "classes": {}, "rules": []}
+    return payload
+
+review_risk_policy = load_review_risk_policy()
+
+def review_risk(path_value):
+    path_text = str(path_value or "")
+    selected = str(review_risk_policy.get("default_class", "ordinary"))
+    for rule in review_risk_policy.get("rules", []):
+        if not isinstance(rule, dict):
+            continue
+        if rule.get("path") == path_text:
+            selected = str(rule.get("review_class", selected))
+            break
+        prefix = str(rule.get("path_prefix", ""))
+        if prefix and path_text.startswith(prefix):
+            selected = str(rule.get("review_class", selected))
+            break
+    classes = review_risk_policy.get("classes", {})
+    details = classes.get(selected, {}) if isinstance(classes, dict) else {}
+    return {
+        "review_class": selected,
+        "stale_severity": str(details.get("stale_severity", "warning")),
+        "ai_first_action": str(details.get("ai_first_action", "auto-triage")),
+    }
+
 def user_path_prefixes():
     prefixes = [str(pathlib.Path.home())]
     user_name = os.environ.get("USER", "")
@@ -118,6 +162,7 @@ for item in items:
     source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
     source_id = str(source.get("source_id", ""))
     days = (review_date - today).days
+    risk = review_risk(item.get("path", ""))
     detail = {
         "row_type": "stale_item" if review_date < today else "near_due_item",
         "entity_type": "item",
@@ -130,8 +175,13 @@ for item in items:
         "path": item.get("path", ""),
         "review_after": review_date.isoformat(),
         "days_until_review": days,
+        **risk,
         "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {item_window_end.isoformat()}",
-        "suggested_action_zh": "人工复核 archive-only 边界、owner、source 和 validation_refs 是否仍有效。" if item.get("status") == "archived" else "人工复核 owner、source、validation_refs 和 status 是否仍有效。",
+        "suggested_action_zh": (
+            "AI 自动生成复核 packet 和差异摘要；仅在需要 owner/语义决定时升级人工。"
+            if risk["ai_first_action"] != "human-review-required"
+            else "关键治理条目：AI 先生成复核 packet，最终语义签收保留人工。"
+        ),
     }
     if review_date < today:
         stale_items.append(detail)
@@ -234,7 +284,9 @@ def group_item_rows(rows, field, missing_value=""):
             else:
                 entry["suggested_action_zh"] = "复核 reviewing 条目的 owner、适用范围、证据和下一次 review_after。"
         elif field == "domain":
-            entry["suggested_action_zh"] = "按 domain 分派维护；项目域不得自动提升到团队标准。"
+            entry["suggested_action_zh"] = "按 domain 自动聚合维护候选；项目域不得自动提升到团队标准。"
+        elif field == "review_class":
+            entry["suggested_action_zh"] = "按风险等级自动 triage；关键治理只把最终语义签收升级给人。"
         entry["item_ids"] = sorted(entry["item_ids"])
     return dict(sorted(grouped.items(), key=lambda kv: (-kv[1]["count"], kv[0])))
 
@@ -244,7 +296,8 @@ groups = {
     "by_status": group_item_rows(item_review_rows, "status", "<missing-status>"),
     "by_domain": group_item_rows(item_review_rows, "domain", "<missing-domain>"),
     "by_source_id": group_item_rows(item_review_rows, "source_id", "<missing-source-id>"),
-    "notes_zh": "分组只用于人工复核分派，不自动修改 review_after、status、source_id 或 owner。",
+    "by_review_class": group_item_rows(item_review_rows, "review_class", "ordinary"),
+    "notes_zh": "默认由 AI 自动 triage/生成复核 packet；只有 owner/语义签收和 security-critical 最终决定保留人工。",
 }
 
 status = "fail" if errors else "report-only"
@@ -276,10 +329,10 @@ output = {
     "groups": groups,
     "rows": detail_rows,
     "errors": errors,
-    "limitations_zh": "review_after 报告只用于人工维护排期，不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
+    "limitations_zh": "review_after 默认由 AI 自动 triage 和生成复核 packet；不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
     "must_not": [
         "不得自动修改 review_after",
-        "不得把 near-due warning 当作 blocking error",
+        "不得把 ordinary near-due warning 当作 blocking error",
         "不得关闭 owner gate",
         "不得生成 owner decision",
         "不得写 memory",
@@ -335,6 +388,7 @@ else:
         ("按 source_id", "by_source_id"),
         ("按 status", "by_status"),
         ("按 domain", "by_domain"),
+        ("按风险", "by_review_class"),
     ]:
         print()
         print(f"### {title}")
