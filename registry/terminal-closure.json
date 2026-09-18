@@ -59,5 +59,12 @@
     "evidence": ".cache/knowledge-hub/hosting-posture.json",
     "require_current_github_sha_when_available": true,
     "require_current_github_repository_when_available": true
+  },
+  "mcp_conformance": {
+    "required": true,
+    "evidence": ".cache/knowledge-hub/mcp-conformance/evidence.json",
+    "policy": "registry/mcp-conformance-policy.json",
+    "require_current_github_sha_when_available": true,
+    "require_current_github_repository_when_available": true
   }
 }
