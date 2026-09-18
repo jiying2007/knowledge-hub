@@ -11,15 +11,20 @@ def _write_json(path: Path, value):
 
 def _policy(default_branch_protection_required=False):
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "contract": "knowledge-hub-github-terminal-closure-v2",
+        "closure_scope": "github-repository",
         "product_gate": {
             "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
-            "require_status": "pass",
-            "require_terminal": True,
+            "required_maturity_axes": ["platform", "delivery"],
+            "require_all_hard_checks": True,
+            "overall_product_status_informational": True,
+            "overall_product_terminal_informational": True,
         },
         "external_closure": {
             "source": "registry/knowledge-platform-p5-p10.json",
             "required_gap_ids": ["repository-private-boundary"],
+            "observational_gap_ids": ["production-retrieval-eval"],
             "require_evidence_refs_on_close": True,
         },
         "bounded_legacy": {
@@ -135,25 +140,81 @@ def _write_common_ready_state(
         row["evidence_refs"] = ["artifact://repository-posture/example.json"]
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
-        {"external_closure_gaps": [row]},
+        {
+            "external_closure_gaps": [
+                row,
+                {
+                    "id": "production-retrieval-eval",
+                    "required": False,
+                    "status": "open",
+                    "owner": "runtime-owner",
+                },
+            ]
+        },
     )
     _write_json(
         tmp_path / ".cache/knowledge-hub/final-gate-product-full.json",
-        {"status": "pass", "terminal": True},
+        {
+            "status": "needs-review",
+            "terminal": False,
+            "maturity_axes": {
+                "platform": {"status": "pass"},
+                "delivery": {"status": "pass"},
+                "project_evidence": {"status": "needs-review"},
+                "adoption": {"status": "needs-review"},
+            },
+            "hard_checks": {
+                "knowledge_check": True,
+                "engineering_quality": True,
+                "full_regression": True,
+                "restore_drill": True,
+            },
+        },
     )
 
 
-def test_terminal_closure_passes_only_when_all_axes_close(monkeypatch, tmp_path):
+def test_github_terminal_ignores_open_operational_production_observation(
+    monkeypatch, tmp_path
+):
     _stub_hygiene(monkeypatch)
     _write_common_ready_state(tmp_path)
 
     report = terminal_closure.evaluate_terminal_closure(tmp_path)
 
+    assert report["schema_version"] == 2
+    assert report["contract"] == "knowledge-hub-github-terminal-closure-v2"
+    assert report["closure_scope"] == "github-repository"
     assert report["status"] == "pass"
     assert report["terminal"] is True
     assert report["blockers"] == []
+    assert report["product"]["status"] == "needs-review"
+    assert report["product"]["terminal"] is False
+    assert report["product"]["repository_readiness"]["status"] == "pass"
+    assert report["operational_qualification"]["status"] == "needs-review"
+    assert report["operational_qualification"]["blocking"] is False
+    assert report["operational_qualification"]["open_count"] == 1
+    assert report["operational_qualification"]["open_gaps"][0]["id"] == (
+        "production-retrieval-eval"
+    )
     assert report["bounded_legacy"]["legacy_module_count"] == 11
     assert report["bounded_legacy"]["legacy_attention_count"] == 11
+
+
+def test_github_terminal_blocks_when_required_product_repository_axis_fails(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    snapshot_path = tmp_path / ".cache/knowledge-hub/final-gate-product-full.json"
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    snapshot["maturity_axes"]["delivery"]["status"] = "needs-review"
+    _write_json(snapshot_path, snapshot)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["product"]["repository_readiness"]["status"] == "needs-review"
+    assert "product_repository_readiness" in report["blockers"]
 
 
 def test_terminal_closure_passes_branch_protection_axis_when_protected(
