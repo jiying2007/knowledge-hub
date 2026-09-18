@@ -127,7 +127,12 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --name knowledge-hub-quality-evidence \
             --dir .
+          gh run download "${QUALITY_RUN_ID}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name knowledge-hub-mcp-conformance \
+            --dir .
           test -s .cache/knowledge-hub/quality-evidence-binding.json
+          test -s .cache/knowledge-hub/mcp-conformance/evidence.json
 
       - name: Verify exact-SHA Quality evidence binding
         run: |
@@ -227,6 +232,7 @@ jobs:
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
             .cache/knowledge-hub/quality-evidence-binding.json
+            .cache/knowledge-hub/mcp-conformance/
             .cache/knowledge-hub/remote-branch-inventory.json
             .cache/knowledge-hub/hosting-posture.json
             .cache/knowledge-hub/terminal-closure.json
