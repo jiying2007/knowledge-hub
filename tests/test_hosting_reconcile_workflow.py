@@ -12,33 +12,24 @@ def _workflow():
     return payload
 
 
-def test_hosting_reconcile_waits_for_successful_master_quality_or_trusted_maintenance():
+def test_hosting_reconcile_is_low_frequency_and_pr_close_only_for_gc():
     payload = _workflow()
     triggers = payload["on"]
-    assert set(triggers) == {
-        "workflow_run",
-        "schedule",
-        "workflow_dispatch",
-        "pull_request",
-    }
-    assert triggers["workflow_run"]["workflows"] == ["quality"]
-    assert triggers["workflow_run"]["types"] == ["completed"]
+    assert set(triggers) == {"schedule", "workflow_dispatch", "pull_request"}
     assert triggers["pull_request"]["types"] == ["closed"]
+    assert "push" not in triggers
+    assert "workflow_run" not in triggers
     assert "pull_request_target" not in triggers
 
     reconcile = payload["jobs"]["reconcile"]
     condition = reconcile["if"]
-    assert "workflow_run.conclusion == 'success'" in condition
-    assert "workflow_run.event == 'push'" in condition
-    assert "workflow_run.head_branch == 'master'" in condition
+    assert "github.event_name == 'schedule'" in condition
+    assert "github.event_name == 'workflow_dispatch'" in condition
     assert "github.ref == 'refs/heads/master'" in condition
-    assert reconcile["env"]["SOURCE_REVISION"] == (
-        "${{ github.event_name == 'workflow_run' && "
-        "github.event.workflow_run.head_sha || github.sha }}"
-    )
+    assert reconcile["env"]["SOURCE_REVISION"] == "${{ github.sha }}"
 
 
-def test_hosting_reconcile_revalidates_exact_aggregate_quality_identity():
+def test_hosting_reconcile_revalidates_current_master_aggregate_quality():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "Verify source has successful aggregate Quality" in text
     assert "actions/workflows/quality.yml/runs?branch=master&status=success" in text
@@ -67,7 +58,7 @@ def test_hosting_reconcile_permissions_are_job_scoped():
     reconcile = payload["jobs"]["reconcile"]
     assert reconcile["permissions"] == {
         "contents": "write",
-        "actions": "read",
+        "actions": "write",
         "pull-requests": "write",
         "issues": "write",
     }
@@ -101,6 +92,20 @@ def test_hosting_reconcile_retires_closed_automation_pr_branches_only():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "^automation/[A-Za-z0-9._/-]+$" in text
     assert "--method DELETE" in text
+
+
+def test_hosting_reconcile_captures_fresh_posture_and_dispatches_one_signed_refresh():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "remote_branch_inventory_cli" in text
+    assert "hosting_posture_cli" in text
+    assert "default_branch_protected" in text
+    assert "Request one fresh Signed verification after protection recovery" in text
+    assert "steps.decide.outputs.protected == 'true'" in text
+    assert "steps.decide.outputs.canonical_private_closed == 'true'" in text
+    assert "signed-quality-attestation.yml/runs?branch=master&per_page=20" in text
+    assert 'awk -v sha="${SOURCE_REVISION}"' in text
+    assert "gh workflow run signed-quality-attestation.yml" in text
+    assert "--ref master" in text
 
 
 def test_hosting_reconcile_uses_runtime_not_dev_dependency_surface():
