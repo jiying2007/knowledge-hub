@@ -258,3 +258,31 @@ def test_http_surface_is_loopback_and_rejects_write_methods(tmp_path: pathlib.Pa
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+def test_live_private_fact_routes_stale_canonical_gap_to_machine_ratchet():
+    queue = operator_actions.build_action_queue(
+        [],
+        {
+            "open_gaps": [
+                {"id": "repository-private-boundary", "owner": "repository-admin"}
+            ]
+        },
+        terminal={
+            "hosting_posture": {
+                "status": "pass",
+                "fact_drift": [
+                    {
+                        "id": "repository-private-boundary",
+                        "type": "live-fact-ahead-of-canonical",
+                    }
+                ],
+            }
+        },
+    )
+
+    action = next(row for row in queue["actions"] if row["field"] == "repository-private-boundary")
+    assert action["execution_class"] == "machine-after-prerequisite"
+    assert action["automation_eligible"] is True
+    assert action["automatic_execution_enabled"] is False
+    assert queue["autonomous_candidate_count"] == 1
