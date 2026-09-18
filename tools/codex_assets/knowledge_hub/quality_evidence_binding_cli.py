@@ -7,7 +7,7 @@ import json
 import pathlib
 from typing import Sequence
 
-from .common import KnowledgeHubError, repository_root
+from .common import KnowledgeHubError, repository_root, resolve_inside
 from .quality_evidence_binding import (
     DEFAULT_OUTPUT,
     build_quality_evidence_binding,
@@ -39,13 +39,7 @@ def main(argv: Sequence[str] = ()) -> int:
             )
             payload["binding_path"] = write_binding(root, args.binding, payload)
         else:
-            binding_path = (root / args.binding).resolve()
-            try:
-                binding_path.relative_to(root)
-            except ValueError as exc:
-                raise KnowledgeHubError(
-                    "quality evidence binding path escapes repository"
-                ) from exc
+            binding_path = resolve_inside(root, args.binding)
             payload = verify_quality_evidence_binding(
                 root,
                 load_binding(binding_path),
