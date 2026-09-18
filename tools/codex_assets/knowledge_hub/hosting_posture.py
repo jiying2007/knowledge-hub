@@ -70,7 +70,8 @@ def evaluate_hosting_posture(
         raise KnowledgeHubError("repository must use owner/name form")
     if not _REVISION_PATTERN.fullmatch(source_revision):
         raise KnowledgeHubError("source revision must be a lowercase 40-character git SHA")
-    inventory = _load_object(root / branch_inventory, "remote branch inventory")
+    inventory_path = resolve_inside(root, branch_inventory)
+    inventory = _load_object(inventory_path, "remote branch inventory")
     if inventory.get("repository") != repository:
         raise KnowledgeHubError("branch inventory repository identity mismatch")
     if inventory.get("source_revision") != source_revision:
