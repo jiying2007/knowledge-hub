@@ -1,22 +1,29 @@
 {
-  "schema_version": 1,
-  "contract": "knowledge-hub-terminal-closure-v1",
+  "schema_version": 2,
+  "contract": "knowledge-hub-github-terminal-closure-v2",
   "status": "open",
   "product_gate": {
     "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
-    "require_status": "pass",
-    "require_terminal": true
+    "required_maturity_axes": [
+      "platform",
+      "delivery"
+    ],
+    "require_all_hard_checks": true,
+    "overall_product_status_informational": true,
+    "overall_product_terminal_informational": true
   },
   "external_closure": {
     "source": "registry/knowledge-platform-p5-p10.json",
     "required_gap_ids": [
       "repository-private-boundary",
       "mcp-official-conformance",
+      "attestation-signing-identity"
+    ],
+    "observational_gap_ids": [
       "connector-provider-pilot",
       "production-retrieval-eval",
       "memory-lifecycle-pilot",
-      "real-adoption-evidence",
-      "attestation-signing-identity"
+      "real-adoption-evidence"
     ],
     "require_evidence_refs_on_close": true,
     "synthetic_evidence_may_close": false
@@ -42,6 +49,9 @@
     "default_branch": "master",
     "default_branch_protection_required": true,
     "owner_or_external_evidence_must_not_be_fabricated": true,
-    "duplicate_closure_status_sources_forbidden": true
-  }
+    "duplicate_closure_status_sources_forbidden": true,
+    "production_observation_may_block_github_terminal": false,
+    "operational_qualification_reported_separately": true
+  },
+  "closure_scope": "github-repository"
 }
