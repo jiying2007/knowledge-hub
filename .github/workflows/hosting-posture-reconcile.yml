@@ -14,10 +14,7 @@ on:
       - closed
 
 permissions:
-  contents: write
-  actions: read
-  pull-requests: write
-  issues: write
+  contents: read
 
 concurrency:
   group: hosting-posture-reconcile
@@ -26,6 +23,11 @@ concurrency:
 jobs:
   reconcile:
     name: Reconcile machine-verifiable hosting facts
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: write
+      issues: write
     if: >-
       ${{
         (github.event_name == 'workflow_run' &&
@@ -281,6 +283,8 @@ jobs:
 
   automation-branch-gc:
     name: Retire closed automation PR branch
+    permissions:
+      contents: write
     if: >-
       ${{
         github.event_name == 'pull_request' &&
