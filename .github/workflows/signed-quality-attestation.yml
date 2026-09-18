@@ -34,6 +34,7 @@ jobs:
     env:
       SOURCE_REVISION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
       SOURCE_REF: refs/heads/master
+      SIGNER_WORKFLOW_REVISION: ${{ github.workflow_sha }}
       KNOWLEDGE_GITHUB_REPOSITORY: ${{ github.repository }}
 
     steps:
@@ -199,7 +200,7 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --predicate-type https://knowledge-hub.local/attestation/quality/v1 \
             --signer-workflow "${signer}" \
-            --source-digest "${SOURCE_REVISION}" \
+            --source-digest "${SIGNER_WORKFLOW_REVISION}" \
             --source-ref "${SOURCE_REF}" \
             --deny-self-hosted-runners \
             --format json \
@@ -208,6 +209,7 @@ jobs:
             --source-revision "${SOURCE_REVISION}" \
             --source-ref "${SOURCE_REF}" \
             --signer-workflow "${signer}" \
+            --signer-source-revision "${SIGNER_WORKFLOW_REVISION}" \
             --verification .cache/knowledge-hub/signed-attestation/github-verification.json \
             --bundle "${BUNDLE_PATH}" \
             --attestation-id "${ATTESTATION_ID}" \
