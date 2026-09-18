@@ -48,3 +48,9 @@ def test_hosting_reconcile_deduplicates_open_ratchet_pr_before_push():
     push_index = text.index('git push "${remote}" "HEAD:refs/heads/${branch}"')
     assert existing_index < push_index
     assert 'branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"' in text
+
+
+def test_hosting_reconcile_cleans_unowned_branch_when_pr_creation_fails():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "deleting the unowned automation branch" in text
+    assert 'git push "${remote}" --delete "${branch}" || true' in text
