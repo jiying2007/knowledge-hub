@@ -40,3 +40,11 @@ def test_hosting_reconcile_permissions_are_bounded_to_required_control_plane():
         "pull-requests": "write",
         "issues": "write",
     }
+
+
+def test_hosting_reconcile_deduplicates_open_ratchet_pr_before_push():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    existing_index = text.index("existing governed ratchet PR already owns this canonical transition")
+    push_index = text.index('git push "${remote}" "HEAD:refs/heads/${branch}"')
+    assert existing_index < push_index
+    assert 'branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"' in text
