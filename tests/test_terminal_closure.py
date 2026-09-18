@@ -163,11 +163,14 @@ def _write_common_ready_state(
                 "project_evidence": {"status": "needs-review"},
                 "adoption": {"status": "needs-review"},
             },
-            "hard_checks": {
-                "knowledge_check": True,
-                "engineering_quality": True,
-                "full_regression": True,
-                "restore_drill": True,
+            "platform_status": {
+                "status": "pass",
+                "hard_checks": {
+                    "knowledge_check": True,
+                    "engineering_quality": True,
+                    "full_regression": True,
+                    "restore_drill": True,
+                },
             },
         },
     )
@@ -207,6 +210,40 @@ def test_github_terminal_ignores_open_operational_production_observation(
     assert summary["product_terminal"] is False
     assert summary["operational_open_count"] == 1
     assert summary["operational_blocking"] is False
+
+
+def test_github_terminal_uses_product_v5_platform_status_hard_checks(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+    readiness = report["product"]["repository_readiness"]
+
+    assert readiness["hard_check_source"] == "platform_status.hard_checks"
+    assert readiness["all_hard_checks_pass"] is True
+    assert readiness["failed_hard_checks"] == []
+
+
+def test_github_terminal_fails_closed_when_product_v5_platform_hard_checks_missing(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    snapshot_path = tmp_path / ".cache/knowledge-hub/final-gate-product-full.json"
+    snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    snapshot.pop("platform_status")
+    snapshot["hard_checks"] = {"legacy-top-level-shape": True}
+    _write_json(snapshot_path, snapshot)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+    readiness = report["product"]["repository_readiness"]
+
+    assert report["terminal"] is False
+    assert readiness["all_hard_checks_pass"] is False
+    assert readiness["failed_hard_checks"] == ["platform-status-hard-checks-missing"]
+    assert "product_repository_readiness" in report["blockers"]
 
 
 def test_github_terminal_blocks_when_required_product_repository_axis_fails(
