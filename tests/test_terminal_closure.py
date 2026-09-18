@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from tools.codex_assets.knowledge_hub import terminal_closure
+from tools.codex_assets.knowledge_hub import terminal_closure, terminal_closure_cli
 
 
 def _write_json(path: Path, value):
@@ -198,6 +198,15 @@ def test_github_terminal_ignores_open_operational_production_observation(
     )
     assert report["bounded_legacy"]["legacy_module_count"] == 11
     assert report["bounded_legacy"]["legacy_attention_count"] == 11
+
+    summary = terminal_closure_cli._summary(report)
+    assert summary["schema_version"] == 2
+    assert summary["projection"] == "knowledge-hub-github-terminal-closure-summary-v2"
+    assert summary["terminal"] is True
+    assert summary["product_status"] == "needs-review"
+    assert summary["product_terminal"] is False
+    assert summary["operational_open_count"] == 1
+    assert summary["operational_blocking"] is False
 
 
 def test_github_terminal_blocks_when_required_product_repository_axis_fails(
