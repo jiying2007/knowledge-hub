@@ -57,6 +57,7 @@ def test_signed_attestation_rebinds_hosting_terminal_and_oidc_to_source_revision
     assert job["permissions"]["id-token"] == "write"
     assert job["permissions"]["attestations"] == "write"
     assert job["permissions"]["artifact-metadata"] == "write"
+    assert job["permissions"]["issues"] == "write"
     assert job["env"]["SOURCE_REF"] == "refs/heads/master"
     assert job["env"]["SIGNER_WORKFLOW_REVISION"] == "${{ github.workflow_sha }}"
 
@@ -89,3 +90,25 @@ def test_signed_attestation_upload_retains_quality_binding_and_fresh_hosting_evi
     assert ".cache/knowledge-hub/hosting-posture.json" in paths
     assert ".cache/knowledge-hub/terminal-closure.json" in paths
     assert ".cache/knowledge-hub/signed-attestation/" in paths
+
+
+def test_signed_attestation_reconciles_hosting_trackers_only_after_verification():
+    payload = _workflow()
+    steps = payload["jobs"]["sign-and-verify"]["steps"]
+    verify_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Cryptographically verify signer identity and signed predicate"
+    )
+    reconcile_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name")
+        == "Reconcile hosting blocker trackers from fresh signed evidence"
+    )
+    assert verify_index < reconcile_index
+    run = steps[reconcile_index]["run"]
+    assert "gh issue close 100" in run
+    assert "default_branch_protection" in run
+    assert 'if [[ "${protection_status}" == "pass" ]]' in run
+    assert "gh issue close 95" in run
