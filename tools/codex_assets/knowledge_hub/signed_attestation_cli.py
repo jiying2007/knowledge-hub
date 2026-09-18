@@ -26,6 +26,7 @@ def _parser() -> argparse.ArgumentParser:
     verify.add_argument("--source-revision", required=True)
     verify.add_argument("--source-ref", required=True)
     verify.add_argument("--signer-workflow", required=True)
+    verify.add_argument("--signer-source-revision", required=True)
     verify.add_argument("--verification", required=True)
     verify.add_argument("--bundle", required=True)
     verify.add_argument("--attestation-id", required=True)
@@ -52,6 +53,7 @@ def main(argv: Sequence[str] = ()) -> int:
                 source_revision=args.source_revision,
                 source_ref=args.source_ref,
                 signer_workflow=args.signer_workflow,
+                signer_source_revision=args.signer_source_revision,
                 bundle_path=pathlib.Path(args.bundle),
                 attestation_id=args.attestation_id,
                 attestation_url=args.attestation_url,
