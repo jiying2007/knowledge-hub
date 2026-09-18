@@ -225,6 +225,34 @@
       "applies_to": "registry/items.jsonl#validation.evidence_contract",
       "authority": "registry",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "ai-operations-policy-v1",
+      "schema": "schemas/ai-operations-policy.schema.json",
+      "applies_to": "registry/ai-operations-policy.json",
+      "authority": "registry-ai-operations-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "contract-compatibility-v1",
+      "schema": "schemas/contract-compatibility.schema.json",
+      "applies_to": "registry/contract-compatibility.json",
+      "authority": "registry-contract-compatibility",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "review-risk-policy-v1",
+      "schema": "schemas/review-risk-policy.schema.json",
+      "applies_to": "registry/review-risk-policy.json",
+      "authority": "registry-review-risk-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "durable-evidence-record-v1",
+      "schema": "schemas/durable-evidence-record.schema.json",
+      "applies_to": "registry/durable-evidence-ledger.jsonl#each-line",
+      "authority": "durable-evidence-ledger",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
