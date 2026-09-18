@@ -29,6 +29,10 @@ def test_schema_catalog_resolves_all_contracts():
         "restore-drill-v4",
         "agent-compliance-eval-v2",
         "product-policy-v1",
+        "ai-operations-policy-v1",
+        "contract-compatibility-v1",
+        "review-risk-policy-v1",
+        "durable-evidence-record-v1",
     }.issubset({row["id"] for row in result["contracts"]})
     assert "retrieval-result-v3" in {row["id"] for row in result["contracts"]}
     contract_ids = {row["id"] for row in result["contracts"]}
@@ -282,3 +286,14 @@ def test_obsidian_view_schema_accepts_idempotent_apply():
         },
     )
     assert result["status"] == "pass"
+
+
+def test_ai_first_long_term_registry_contracts_are_valid():
+    root = repository_root()
+    for contract_id, relative in (
+        ("ai-operations-policy-v1", "registry/ai-operations-policy.json"),
+        ("contract-compatibility-v1", "registry/contract-compatibility.json"),
+        ("review-risk-policy-v1", "registry/review-risk-policy.json"),
+    ):
+        payload = load_json(root / relative, {})
+        assert validate_instance(root, contract_id, payload)["status"] == "pass"
