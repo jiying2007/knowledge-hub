@@ -11,11 +11,15 @@ domain: governance
 path: governance/product/current/readiness-model.md
 scope: team-general
 visibility: team-internal
-status: active
+status: reviewing
 owner: leiwenjun
-review_after: '2026-12-18'
-review_status: active-control-plane-accepted
+review_after: '2026-10-18'
+review_status: manual-entry-pending-review
 promotion: none
+generated_by_ai: true
+ai_role: drafted
+ai_model_or_tool: ChatGPT GPT-5.6 Sol
+ai_generated_at: '2026-09-18'
 aliases:
 - Knowledge Hub current readiness
 related:
