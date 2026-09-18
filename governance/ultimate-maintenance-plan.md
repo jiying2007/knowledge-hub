@@ -34,7 +34,7 @@ related:
 2. 所有知识都有 `id`、`owner`、`scope`、`status`、`source` 和 `review_after`。
 3. 项目、团队、个人、专利、Codex 会话、外部制品属于不同 domain。
 4. Git 默认只保存轻量文本、索引、规则和工具；大文件只保存 URI、size、hash 和摘要。唯一例外是 owner 批准、体量受控且纳入 `artifacts/vault/` 逐文件 size/hash 完整性门禁的不可变附件集。
-5. 自动化只能生成报告和候选；提升、删除、发布、写 memory 必须人工确认。
+5. 默认 AI-first：机器可验证、确定性、可回滚的维护可自动发现并生成 governed PR；owner 语义决定、active 提升、不可逆删除、正式发布/回滚和真实设备/生产/ACL 证据必须保留人工或真实环境边界。
 
 ## 权威等级
 
@@ -97,3 +97,13 @@ capture -> classify -> normalize -> review -> active/archive -> review cycle -> 
 - 默认不删除历史正文，先标记 `superseded` 或 `archived`。
 - 删除仅允许用于重复副本、缓存、大文件误入、明确废弃草稿。
 - 删除前必须确认没有 registry、source-policy、index、owner gate、authorization 或 manifest 仍把它作为当前入口。
+
+
+## 长期资产新增约束
+
+- Hosting posture 与 source revision 分开取证，解决 Git SHA 不变但 GitHub 配置变化的问题。
+- Actions artifact 可过期；长期只保留 bounded durable evidence identity/digest/attestation。
+- append-only ledger 达到 segment budget 后必须进入分片候选，禁止无限追加。
+- breaking contract 继续使用新 contract id，但跨仓升级必须有 compatibility declaration / migration manifest。
+- review_after 按 ordinary / governance-critical / security-critical 分级；普通维护优先由 AI 自动 triage。
+- 当前人读入口优先使用 `governance/product/current/readiness-model.md`，历史动态数字不继续堆入首屏。
