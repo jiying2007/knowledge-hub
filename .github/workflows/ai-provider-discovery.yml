@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: ai-provider-discovery
@@ -16,12 +15,25 @@ concurrency:
 jobs:
   discover:
     name: Build machine-only provider review bundle
+    if: >-
+      ${{
+        github.event_name == 'schedule' ||
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
+      }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SOURCE_REVISION: ${{ github.sha }}
     steps:
       - name: Checkout exact master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.SOURCE_REVISION }}
           persist-credentials: false
 
       - name: Set up governed Python
