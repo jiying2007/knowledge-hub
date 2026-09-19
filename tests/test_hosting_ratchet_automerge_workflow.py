@@ -69,3 +69,24 @@ def test_hosting_ratchet_automerge_uses_expected_head_squash_and_branch_gc():
     assert '-f merge_method="squash"' in text
     assert "--method DELETE" in text
     assert "git push" not in text
+
+
+def test_hosting_ratchet_automerge_matches_machine_policy_guardrails():
+    import json
+
+    policy = json.loads(
+        Path("registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    guardrails = policy["guardrails"]
+    assert guardrails["automatic_merge_requires_protected_branch"] is True
+    assert guardrails["automatic_merge_requires_exact_head_quality"] is True
+    assert guardrails["automatic_merge_requires_same_repository"] is True
+    assert guardrails["automatic_merge_requires_semantic_allowlist"] is True
+    assert guardrails["automatic_merge_executes_pr_code"] is False
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "workflow_run.conclusion == 'success'" in text
+    assert "workflow_run.head_repository.full_name == github.repository" in text
+    assert "master must be protected before autonomous ratchet merge" in text
+    assert "changed paths outside the bounded allowlist" in text
+    assert "actions/checkout" not in text
