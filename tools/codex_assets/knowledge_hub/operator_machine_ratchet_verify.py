@@ -410,4 +410,5 @@ def verify_machine_evidence_ratchet(
         "origin_run_attempt": run_attempt,
         "routing_status": routing.get("status", ""),
         "selected_proposal_count": manifest.get("selected_proposal_count", 0),
+        "candidate_sha256": manifest.get("candidate_sha256", ""),
     }
