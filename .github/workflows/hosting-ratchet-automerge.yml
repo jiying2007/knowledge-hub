@@ -46,6 +46,7 @@ jobs:
 
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRIGGER_RUN_ID}" > "${cache}/quality-run.json"
           gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=master&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}&per_page=10" > "${cache}/pulls.json"
+          gh api "repos/${GITHUB_REPOSITORY}" > "${cache}/repository-metadata.json"
           gh api "repos/${GITHUB_REPOSITORY}/branches/master" > "${cache}/master-branch.json"
           gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}" > "${cache}/head-commit.json"
 
@@ -57,6 +58,7 @@ jobs:
           cache = Path(".cache/knowledge-hub/hosting-ratchet-automerge")
           run = json.loads((cache / "quality-run.json").read_text(encoding="utf-8"))
           pulls = json.loads((cache / "pulls.json").read_text(encoding="utf-8"))
+          metadata = json.loads((cache / "repository-metadata.json").read_text(encoding="utf-8"))
           master = json.loads((cache / "master-branch.json").read_text(encoding="utf-8"))
           head_commit = json.loads((cache / "head-commit.json").read_text(encoding="utf-8"))
 
@@ -103,6 +105,11 @@ jobs:
           if (pull.get("base") or {}).get("ref") != "master":
               raise SystemExit("ratchet pull request base must be master")
 
+          if metadata.get("full_name") != repository:
+              raise SystemExit("live repository metadata identity mismatch")
+          if metadata.get("private") is not True or metadata.get("visibility") != "private":
+              raise SystemExit("live repository is not private at merge time")
+
           if master.get("protected") is not True:
               raise SystemExit("master must be protected before autonomous ratchet merge")
           master_sha = (master.get("commit") or {}).get("sha")
@@ -145,6 +152,7 @@ jobs:
           done
 
       - name: Prove ratchet delta is machine-only and bounded
+        id: prove
         env:
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
           MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
@@ -314,6 +322,53 @@ jobs:
           expected_candidate = "sha256:" + hashlib.sha256(head_registry_raw).hexdigest()
           if digests.get("candidate_registry") != expected_candidate:
               raise SystemExit("durable candidate digest does not match exact registry bytes")
+
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write("reconcile_run_id={}\n".format(run_id))
+              handle.write("reconcile_run_attempt={}\n".format(run_attempt))
+          PY
+
+      - name: Revalidate trusted reconciliation origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECONCILE_RUN_ID: ${{ steps.prove.outputs.reconcile_run_id }}
+          RECONCILE_RUN_ATTEMPT: ${{ steps.prove.outputs.reconcile_run_attempt }}
+          MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/hosting-ratchet-automerge"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RECONCILE_RUN_ID}" \
+            > "${cache}/reconcile-source-run.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          run = json.loads(
+              Path(
+                  ".cache/knowledge-hub/hosting-ratchet-automerge/reconcile-source-run.json"
+              ).read_text(encoding="utf-8")
+          )
+          expected = {
+              "id": int(os.environ["RECONCILE_RUN_ID"]),
+              "run_attempt": int(os.environ["RECONCILE_RUN_ATTEMPT"]),
+              "name": "hosting-posture-reconcile",
+              "head_sha": os.environ["MASTER_SHA"],
+              "head_branch": "master",
+              "path": ".github/workflows/hosting-posture-reconcile.yml",
+          }
+          for field, value in expected.items():
+              if run.get(field) != value:
+                  raise SystemExit(
+                      "reconciliation origin mismatch {} expected={!r} observed={!r}".format(
+                          field, value, run.get(field)
+                      )
+                  )
+          if run.get("event") not in {"schedule", "workflow_dispatch"}:
+              raise SystemExit("reconciliation origin event is not trusted")
+          repository = run.get("repository") or {}
+          if repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
+              raise SystemExit("reconciliation origin repository identity mismatch")
           PY
 
       - name: Revalidate protected current master and merge exact head
