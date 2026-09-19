@@ -251,6 +251,51 @@ def _human_route(
     }
 
 
+def _terminal_result(
+    status: str,
+    reasons: Sequence[str],
+    *,
+    ambiguous: Sequence[Mapping[str, Any]] = (),
+) -> Dict[str, Any]:
+    result: Dict[str, Any] = {
+        "schema_version": 1,
+        "projection": PROJECTION,
+        "status": status,
+        "read_only": True,
+        "selection_is_authorization": False,
+        "canonical_write_performed": False,
+        "automatic_binding_enabled": False,
+        "automatic_execution_enabled": False,
+        "selected_proposal_count": 0,
+        "machine_ratchet_count": 0,
+        "human_authorization_count": 0,
+        "ambiguous_target_count": len(ambiguous),
+        "machine_route": {},
+        "human_route": {},
+        "reason_codes": list(reasons),
+    }
+    if ambiguous:
+        result["ambiguous_targets"] = [dict(row) for row in ambiguous]
+    return result
+
+
+def _route_status(
+    machine_rows: Sequence[Mapping[str, Any]],
+    human_rows: Sequence[Mapping[str, Any]],
+    machine: Mapping[str, Any],
+    human: Mapping[str, Any],
+) -> str:
+    if "blocked" in {machine.get("status"), human.get("status")}:
+        return "blocked"
+    if machine_rows and human_rows:
+        return "mixed-routing"
+    if machine_rows:
+        return "ready-for-machine-ratchet"
+    if human_rows:
+        return "needs-governed-authorization"
+    return "no-change"
+
+
 def build_unique_execution_routes(
     root: pathlib.Path, proposal: Mapping[str, Any]
 ) -> Dict[str, Any]:
@@ -258,65 +303,24 @@ def build_unique_execution_routes(
 
     reasons = _proposal_reasons(proposal)
     if reasons:
-        return {
-            "schema_version": 1,
-            "projection": PROJECTION,
-            "status": "blocked",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "machine_ratchet_count": 0,
-            "human_authorization_count": 0,
-            "ambiguous_target_count": 0,
-            "machine_route": {},
-            "human_route": {},
-            "reason_codes": reasons,
-        }
+        return _terminal_result("blocked", reasons)
 
     selected, ambiguous = _unique_rows(proposal)
     if ambiguous:
-        return {
-            "schema_version": 1,
-            "projection": PROJECTION,
-            "status": "ambiguous",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "machine_ratchet_count": 0,
-            "human_authorization_count": 0,
-            "ambiguous_target_count": len(ambiguous),
-            "ambiguous_targets": ambiguous,
-            "machine_route": {},
-            "human_route": {},
-            "reason_codes": ["ambiguous-proposal-target"],
-        }
+        return _terminal_result(
+            "ambiguous",
+            ["ambiguous-proposal-target"],
+            ambiguous=ambiguous,
+        )
 
     try:
         machine_fields, mutation_intent = _machine_policy(root)
     except KnowledgeHubError as exc:
-        return {
-            "schema_version": 1,
-            "projection": PROJECTION,
-            "status": "blocked",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "machine_ratchet_count": 0,
-            "human_authorization_count": 0,
-            "ambiguous_target_count": 0,
-            "machine_route": {},
-            "human_route": {},
-            "reason_codes": ["machine-policy-invalid: {}".format(exc)],
-        }
+        return _terminal_result(
+            "blocked",
+            ["machine-policy-invalid: {}".format(exc)],
+        )
+
     machine_rows = [
         row
         for row in selected
@@ -329,17 +333,7 @@ def build_unique_execution_routes(
     ]
     machine = _machine_route(root, proposal, machine_rows)
     human = _human_route(root, proposal, human_rows)
-    blocked = "blocked" in {machine.get("status"), human.get("status")}
-    if blocked:
-        status = "blocked"
-    elif machine_rows and human_rows:
-        status = "mixed-routing"
-    elif machine_rows:
-        status = "ready-for-machine-ratchet"
-    elif human_rows:
-        status = "needs-governed-authorization"
-    else:
-        status = "no-change"
+    status = _route_status(machine_rows, human_rows, machine, human)
     return {
         "schema_version": 1,
         "projection": PROJECTION,
@@ -355,5 +349,5 @@ def build_unique_execution_routes(
         "ambiguous_target_count": 0,
         "machine_route": machine,
         "human_route": human,
-        "reason_codes": ["subroute-blocked"] if blocked else [],
+        "reason_codes": ["subroute-blocked"] if status == "blocked" else [],
     }
