@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   candidate:
-    name: Verify private hosting and emit review candidate
+    name: Verify private hosting and emit reviewable machine candidate
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -40,7 +40,7 @@ jobs:
           mkdir -p .cache/knowledge-hub/repository-private-ratchet
           gh api "repos/${GITHUB_REPOSITORY}" > .cache/knowledge-hub/repository-private-ratchet/repository-metadata.json
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > .cache/knowledge-hub/repository-private-ratchet/source-run.json
-      - name: Build review-only private-boundary candidate
+      - name: Build non-canonical private-boundary candidate
         run: |
           set -euo pipefail
           observed_at="$(jq -er '.run_started_at // .created_at' .cache/knowledge-hub/repository-private-ratchet/source-run.json)"
@@ -57,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --exit-code -- registry/knowledge-platform-p5-p10.json
-      - name: Upload bounded review candidate
+      - name: Upload bounded machine-ratchet candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: knowledge-hub-repository-private-ratchet-${{ github.run_id }}-${{ github.run_attempt }}
