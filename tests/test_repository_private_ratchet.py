@@ -71,8 +71,10 @@ def test_private_hosting_closes_only_repository_boundary_in_candidate(tmp_path):
     assert gaps[GAP_ID]["status"] == "closed"
     assert gaps[GAP_ID]["evidence"]["private"] is True
     assert gaps["connector-provider-pilot"]["status"] == "open"
-    assert proposal["status"] == "ready-for-reviewed-ratchet"
-    assert proposal["review_required"] is True
+    assert proposal["projection"] == "knowledge-hub-repository-private-ratchet-proposal-v2"
+    assert proposal["status"] == "ready-for-machine-ratchet"
+    assert proposal["authorization_class"] == "autonomous-low-risk-ratchet"
+    assert proposal["review_required"] is False
     assert proposal["canonical_write_performed"] is False
     assert proposal["gap_id"] == GAP_ID
     assert proposal["generated_at"] == OBSERVED_AT
