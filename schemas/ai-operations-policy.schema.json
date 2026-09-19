@@ -132,7 +132,10 @@
         "machine_ratchet_may_change_owner",
         "machine_ratchet_may_change_status",
         "machine_ratchet_may_change_readiness",
-        "machine_ratchet_may_auto_promote_evidence_ready"
+        "machine_ratchet_may_auto_promote_evidence_ready",
+        "machine_ratchet_may_create_pr",
+        "machine_ratchet_direct_master_write",
+        "machine_ratchet_auto_merge_requires_protected_branch"
       ],
       "properties": {
         "machine_ratchet_fields": {
@@ -163,6 +166,15 @@
         },
         "machine_ratchet_may_auto_promote_evidence_ready": {
           "const": false
+        },
+        "machine_ratchet_may_create_pr": {
+          "const": true
+        },
+        "machine_ratchet_direct_master_write": {
+          "const": false
+        },
+        "machine_ratchet_auto_merge_requires_protected_branch": {
+          "const": true
         }
       },
       "additionalProperties": false
