@@ -14,6 +14,7 @@ from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_proposal import build_binding_proposal
 from .operator_binding_review_bundle import build_binding_review_bundle
 from .operator_auto_review import build_unique_review_bundle
+from .operator_auto_route import build_unique_execution_routes
 from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
 from .operator_state import build_operator_state
@@ -69,6 +70,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--auto-route-unique",
+        action="store_true",
+        help=(
+            "partition unambiguous P2.4 proposal targets into append-only machine-ratchet "
+            "and governed human-authorization routes; no canonical apply occurs"
+        ),
+    )
+    parser.add_argument(
         "--validate-binding-authorization",
         default="",
         metavar="JSON_FILE",
@@ -107,6 +116,13 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error("--plan-binding and --review-binding are mutually exclusive")
     if args.auto_review_unique and (args.plan_binding or args.review_binding):
         parser.error("--auto-review-unique cannot be combined with explicit binding selection")
+    if args.auto_route_unique and (
+        args.plan_binding or args.review_binding or args.auto_review_unique
+    ):
+        parser.error(
+            "--auto-route-unique cannot be combined with explicit binding selection "
+            "or --auto-review-unique"
+        )
     if args.validate_binding_authorization and not args.review_binding:
         parser.error("--validate-binding-authorization requires --review-binding")
     try:
@@ -123,12 +139,21 @@ def main(argv: Sequence[str] = ()) -> int:
         )
         selected_binding = args.review_binding or args.plan_binding
         needs_qualification = bool(
-            args.qualify or args.propose or selected_binding or args.auto_review_unique
+            args.qualify
+            or args.propose
+            or selected_binding
+            or args.auto_review_unique
+            or args.auto_route_unique
         )
         qualification_payload = (
             qualify_provider_projection(provider_payload) if needs_qualification else {}
         )
-        needs_proposal = bool(args.propose or selected_binding or args.auto_review_unique)
+        needs_proposal = bool(
+            args.propose
+            or selected_binding
+            or args.auto_review_unique
+            or args.auto_route_unique
+        )
         proposal_payload = (
             build_binding_proposal(root, qualification_payload) if needs_proposal else {}
         )
@@ -142,7 +167,9 @@ def main(argv: Sequence[str] = ()) -> int:
             if args.review_binding
             else {}
         )
-        if args.auto_review_unique:
+        if args.auto_route_unique:
+            payload = build_unique_execution_routes(root, proposal_payload)
+        elif args.auto_review_unique:
             payload = build_unique_review_bundle(root, proposal_payload)
         elif args.validate_binding_authorization:
             authorization = _load_authorization(
@@ -167,6 +194,30 @@ def main(argv: Sequence[str] = ()) -> int:
         parser.error(str(exc))
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
+    elif args.auto_route_unique:
+        print("status: {}".format(payload["status"]))
+        print("read_only: true")
+        print("selection_is_authorization: false")
+        print("canonical_write_performed: false")
+        print("automatic_binding_enabled: false")
+        print("automatic_execution_enabled: false")
+        print(
+            "machine_ratchet_count: {}".format(
+                payload["machine_ratchet_count"]
+            )
+        )
+        print(
+            "human_authorization_count: {}".format(
+                payload["human_authorization_count"]
+            )
+        )
+        print(
+            "ambiguous_target_count: {}".format(
+                payload["ambiguous_target_count"]
+            )
+        )
+        for reason in payload.get("reason_codes", []):
+            print("reason: {}".format(reason))
     elif args.auto_review_unique:
         print("status: {}".format(payload["status"]))
         print("read_only: true")
@@ -316,7 +367,9 @@ def main(argv: Sequence[str] = ()) -> int:
             )
     if provider_payload["error_count"] or payload.get("status") == "upstream-error":
         return 3
-    if (selected_binding or args.auto_review_unique) and payload.get("status") in {
+    if (
+        selected_binding or args.auto_review_unique or args.auto_route_unique
+    ) and payload.get("status") in {
         "blocked",
         "ambiguous",
     }:
