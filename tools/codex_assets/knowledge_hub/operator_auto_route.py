@@ -8,10 +8,12 @@ changes continue through the governed human authorization path.
 
 from __future__ import annotations
 
+import json
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, Set, Tuple
 
+from .common import KnowledgeHubError
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_review_bundle import build_binding_review_bundle
 
@@ -21,6 +23,43 @@ MACHINE_RATCHET_FIELDS = {
     "validation_refs",
     "artifact_refs",
 }
+POLICY_PATH = "registry/ai-operations-policy.json"
+
+
+
+
+
+def _machine_policy(root: pathlib.Path) -> Tuple[Set[str], str]:
+    path = root / POLICY_PATH
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError("AI operations policy is unavailable or invalid") from exc
+    if not isinstance(payload, Mapping):
+        raise KnowledgeHubError("AI operations policy must be an object")
+    boundary = payload.get("evidence_binding", {})
+    if not isinstance(boundary, Mapping):
+        raise KnowledgeHubError("AI evidence binding policy must be an object")
+    fields = boundary.get("machine_ratchet_fields", [])
+    if not isinstance(fields, list):
+        raise KnowledgeHubError("machine ratchet fields must be a list")
+    selected = {str(value) for value in fields if str(value)}
+    if selected != MACHINE_RATCHET_FIELDS:
+        raise KnowledgeHubError("machine ratchet field policy does not match the supported surface")
+    if boundary.get("human_authorization_fields") != ["release_ref"]:
+        raise KnowledgeHubError("release_ref must remain a human authorization field")
+    intent = str(boundary.get("machine_ratchet_mutation_intent", ""))
+    if intent != "append-reference":
+        raise KnowledgeHubError("machine ratchet mutation intent must be append-reference")
+    for key in (
+        "machine_ratchet_may_change_owner",
+        "machine_ratchet_may_change_status",
+        "machine_ratchet_may_change_readiness",
+        "machine_ratchet_may_auto_promote_evidence_ready",
+    ):
+        if boundary.get(key) is not False:
+            raise KnowledgeHubError("{} must remain false".format(key))
+    return selected, intent
 
 
 def _target_key(row: Mapping[str, Any]) -> Tuple[str, str]:
@@ -85,11 +124,15 @@ def _unique_rows(
     return selected, ambiguous
 
 
-def _machine_eligible(row: Mapping[str, Any]) -> bool:
+def _machine_eligible(
+    row: Mapping[str, Any],
+    machine_fields: Set[str],
+    mutation_intent: str,
+) -> bool:
     field = str(row.get("field", ""))
-    if field not in MACHINE_RATCHET_FIELDS:
+    if field not in machine_fields:
         return False
-    if row.get("mutation_intent") != "append-reference":
+    if row.get("mutation_intent") != mutation_intent:
         return False
     if str(row.get("provider", "")) != "github":
         return False
@@ -254,8 +297,36 @@ def build_unique_execution_routes(
             "reason_codes": ["ambiguous-proposal-target"],
         }
 
-    machine_rows = [row for row in selected if _machine_eligible(row)]
-    human_rows = [row for row in selected if not _machine_eligible(row)]
+    try:
+        machine_fields, mutation_intent = _machine_policy(root)
+    except KnowledgeHubError as exc:
+        return {
+            "schema_version": 1,
+            "projection": PROJECTION,
+            "status": "blocked",
+            "read_only": True,
+            "selection_is_authorization": False,
+            "canonical_write_performed": False,
+            "automatic_binding_enabled": False,
+            "automatic_execution_enabled": False,
+            "selected_proposal_count": 0,
+            "machine_ratchet_count": 0,
+            "human_authorization_count": 0,
+            "ambiguous_target_count": 0,
+            "machine_route": {},
+            "human_route": {},
+            "reason_codes": ["machine-policy-invalid: {}".format(exc)],
+        }
+    machine_rows = [
+        row
+        for row in selected
+        if _machine_eligible(row, machine_fields, mutation_intent)
+    ]
+    human_rows = [
+        row
+        for row in selected
+        if not _machine_eligible(row, machine_fields, mutation_intent)
+    ]
     machine = _machine_route(root, proposal, machine_rows)
     human = _human_route(root, proposal, human_rows)
     blocked = "blocked" in {machine.get("status"), human.get("status")}
