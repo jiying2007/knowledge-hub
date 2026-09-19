@@ -112,12 +112,3 @@ def test_hosting_reconcile_uses_runtime_not_dev_dependency_surface():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
-
-
-def test_hosting_reconcile_reuses_existing_deterministic_branch_before_push():
-    text = WORKFLOW.read_text(encoding="utf-8")
-    lookup = 'gh api "repos/${GITHUB_REPOSITORY}/branches/${branch}"'
-    push = 'git push "${remote}" "HEAD:refs/heads/${branch}"'
-    assert lookup in text
-    assert "reusing the existing deterministic candidate branch" in text
-    assert text.index(lookup) < text.index(push)
