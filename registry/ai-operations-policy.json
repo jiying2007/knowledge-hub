@@ -92,6 +92,7 @@
     "automatic_merge_requires_exact_head_quality": true,
     "automatic_merge_requires_same_repository": true,
     "automatic_merge_requires_semantic_allowlist": true,
-    "automatic_merge_executes_pr_code": false
+    "automatic_merge_executes_pr_code": false,
+    "automatic_merge_requires_trusted_origin_run": true
   }
 }
