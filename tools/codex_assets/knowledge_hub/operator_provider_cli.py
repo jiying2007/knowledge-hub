@@ -228,7 +228,7 @@ def main(argv: Sequence[str] = ()) -> int:
                 _write_noncanonical(
                     root,
                     args.machine_manifest_output,
-                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n",
+                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                 )
         elif args.auto_review_unique:
             payload = build_unique_review_bundle(root, proposal_payload)
