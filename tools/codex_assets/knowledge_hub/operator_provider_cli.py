@@ -8,7 +8,13 @@ import os
 import pathlib
 from typing import Mapping, Sequence
 
-from .common import KnowledgeHubError, repository_root
+from .common import (
+    KnowledgeHubError,
+    ensure_private_directory_tree,
+    ensure_private_file,
+    repository_root,
+    resolve_inside,
+)
 from .operator_binding_authorization import validate_binding_authorization
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_proposal import build_binding_proposal
@@ -17,6 +23,7 @@ from .operator_auto_review import build_unique_review_bundle
 from .operator_auto_route import build_unique_execution_routes
 from .operator_candidate_qualification import qualify_provider_projection
 from .operator_github_provider import execute_projection_queries
+from .operator_machine_ratchet import build_machine_ratchet_candidate
 from .operator_state import build_operator_state
 
 
@@ -78,6 +85,18 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--machine-candidate-output",
+        default="",
+        metavar="PATH",
+        help="write the non-canonical machine-ratchet candidate registry to PATH",
+    )
+    parser.add_argument(
+        "--machine-manifest-output",
+        default="",
+        metavar="PATH",
+        help="write the machine-ratchet proof manifest to PATH",
+    )
+    parser.add_argument(
         "--validate-binding-authorization",
         default="",
         metavar="JSON_FILE",
@@ -88,6 +107,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--json", action="store_true")
     return parser
+
+
+def _write_noncanonical(root: pathlib.Path, relative: str, content: str) -> None:
+    path = resolve_inside(root, relative)
+    canonical = resolve_inside(root, "registry/items.jsonl")
+    if path == canonical:
+        raise KnowledgeHubError("machine candidate output must not overwrite canonical registry")
+    ensure_private_directory_tree(root, path.parent)
+    path.write_text(content, encoding="utf-8")
+    ensure_private_file(path)
 
 
 def _token() -> str:
@@ -125,6 +154,17 @@ def main(argv: Sequence[str] = ()) -> int:
         )
     if args.validate_binding_authorization and not args.review_binding:
         parser.error("--validate-binding-authorization requires --review-binding")
+    machine_outputs = bool(
+        args.machine_candidate_output or args.machine_manifest_output
+    )
+    if machine_outputs and not (
+        args.machine_candidate_output and args.machine_manifest_output
+    ):
+        parser.error(
+            "--machine-candidate-output and --machine-manifest-output must be used together"
+        )
+    if machine_outputs and not args.auto_route_unique:
+        parser.error("machine candidate outputs require --auto-route-unique")
     try:
         root = repository_root(args.root)
         state = build_operator_state(root)
@@ -169,6 +209,27 @@ def main(argv: Sequence[str] = ()) -> int:
         )
         if args.auto_route_unique:
             payload = build_unique_execution_routes(root, proposal_payload)
+            if machine_outputs and int(payload.get("machine_ratchet_count", 0) or 0):
+                candidate, manifest = build_machine_ratchet_candidate(
+                    root,
+                    proposal_payload,
+                    payload,
+                )
+                if manifest.get("status") != "ready-for-machine-ratchet":
+                    raise KnowledgeHubError(
+                        "machine ratchet candidate is not ready: {}".format(
+                            ",".join(
+                                str(value)
+                                for value in manifest.get("reason_codes", [])
+                            )
+                        )
+                    )
+                _write_noncanonical(root, args.machine_candidate_output, candidate)
+                _write_noncanonical(
+                    root,
+                    args.machine_manifest_output,
+                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\\n",
+                )
         elif args.auto_review_unique:
             payload = build_unique_review_bundle(root, proposal_payload)
         elif args.validate_binding_authorization:
