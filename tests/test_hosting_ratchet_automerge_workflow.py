@@ -110,3 +110,10 @@ def test_hosting_ratchet_automerge_declares_actions_read_for_trigger_revalidatio
     assert job["permissions"]["actions"] == "read"
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'actions/runs/${TRIGGER_RUN_ID}' in text
+
+
+def test_hosting_ratchet_automerge_requires_deterministic_generator_branch_identity():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "^automation/hosting-private-[0-9a-f]{12}-[0-9]+$" in text
+    assert '"automation/hosting-private-{}-{}".format(' in text
+    assert "ratchet branch identity does not match trusted generator run" in text
