@@ -6,6 +6,8 @@ from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.maintenance_triage import (
     build_maintenance_triage,
 )
+from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 
 
 def _review():
@@ -128,4 +130,19 @@ def test_maintenance_and_private_ratchet_cores_are_in_mypy_surface():
     assert (
         '"tools/codex_assets/knowledge_hub/repository_private_ratchet.py"'
         in pyproject
+    )
+
+
+def test_maintenance_triage_outputs_match_catalog_contracts():
+    triage, packet = build_maintenance_triage(
+        _review(),
+        {"status": "pass"},
+        {"status": "pass"},
+    )
+
+    root = repository_root()
+    assert validate_instance(root, "maintenance-triage-v1", triage)["status"] == "pass"
+    assert (
+        validate_instance(root, "governance-review-packet-v1", packet)["status"]
+        == "pass"
     )
