@@ -90,3 +90,13 @@ def test_hosting_ratchet_automerge_matches_machine_policy_guardrails():
     assert "master must be protected before autonomous ratchet merge" in text
     assert "changed paths outside the bounded allowlist" in text
     assert "actions/checkout" not in text
+
+
+def test_hosting_ratchet_automerge_revalidates_live_private_and_trusted_origin():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "live repository is not private at merge time" in text
+    assert "Revalidate trusted reconciliation origin" in text
+    assert '"name": "hosting-posture-reconcile"' in text
+    assert '"path": ".github/workflows/hosting-posture-reconcile.yml"' in text
+    assert 'run.get("event") not in {"schedule", "workflow_dispatch"}' in text
+    assert "reconciliation origin repository identity mismatch" in text
