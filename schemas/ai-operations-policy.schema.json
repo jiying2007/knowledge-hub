@@ -8,7 +8,8 @@
     "model",
     "default_mode",
     "classes",
-    "guardrails"
+    "guardrails",
+    "evidence_binding"
   ],
   "properties": {
     "schema_version": {
@@ -118,6 +119,50 @@
         },
         "machine_ratchet_uses_trusted_run_timestamp": {
           "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_binding": {
+      "type": "object",
+      "required": [
+        "machine_ratchet_fields",
+        "human_authorization_fields",
+        "machine_ratchet_mutation_intent",
+        "machine_ratchet_may_change_owner",
+        "machine_ratchet_may_change_status",
+        "machine_ratchet_may_change_readiness",
+        "machine_ratchet_may_auto_promote_evidence_ready"
+      ],
+      "properties": {
+        "machine_ratchet_fields": {
+          "type": "array",
+          "const": [
+            "artifact_refs",
+            "source_refs",
+            "validation_refs"
+          ]
+        },
+        "human_authorization_fields": {
+          "type": "array",
+          "const": [
+            "release_ref"
+          ]
+        },
+        "machine_ratchet_mutation_intent": {
+          "const": "append-reference"
+        },
+        "machine_ratchet_may_change_owner": {
+          "const": false
+        },
+        "machine_ratchet_may_change_status": {
+          "const": false
+        },
+        "machine_ratchet_may_change_readiness": {
+          "const": false
+        },
+        "machine_ratchet_may_auto_promote_evidence_ready": {
+          "const": false
         }
       },
       "additionalProperties": false
