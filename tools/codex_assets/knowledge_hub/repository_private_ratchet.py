@@ -18,7 +18,7 @@ from typing import Any, Dict, Mapping, Tuple
 from .common import KnowledgeHubError, file_sha256, read_bytes_bounded
 
 GAP_ID = "repository-private-boundary"
-PROJECTION = "knowledge-hub-repository-private-ratchet-proposal-v1"
+PROJECTION = "knowledge-hub-repository-private-ratchet-proposal-v2"
 MAX_JSON_BYTES = 1024 * 1024
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -136,8 +136,9 @@ def build_repository_private_candidate(
     proposal = {
         "schema_version": 1,
         "projection": PROJECTION,
-        "status": "ready-for-reviewed-ratchet",
-        "review_required": True,
+        "status": "ready-for-machine-ratchet",
+        "authorization_class": "autonomous-low-risk-ratchet",
+        "review_required": False,
         "canonical_write_performed": False,
         "gap_id": GAP_ID,
         "repository": repo["full_name"],
