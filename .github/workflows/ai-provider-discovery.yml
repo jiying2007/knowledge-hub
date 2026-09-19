@@ -46,7 +46,10 @@ jobs:
           mkdir -p .cache/knowledge-hub/ai-provider-discovery
           set +e
           rtk python3 -m tools.codex_assets.knowledge_hub.operator_provider_cli \
-            --auto-route-unique --json \
+            --auto-route-unique \
+            --machine-candidate-output .cache/knowledge-hub/ai-provider-discovery/machine-candidate-items.jsonl \
+            --machine-manifest-output .cache/knowledge-hub/ai-provider-discovery/machine-candidate-manifest.json \
+            --json \
             > .cache/knowledge-hub/ai-provider-discovery/routing-bundle.json
           rc=$?
           set -e
@@ -122,7 +125,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "Machine-owned evidence routing requires no human authorization request."
-          echo "Machine-ratchet candidates remain non-canonical; ambiguous/blocked state retries from fresh canonical/provider state."
+          echo "Eligible machine-ratchet candidates are materialized only under .cache as reviewable artifacts; no canonical apply or PR occurs."
+          echo "Ambiguous/blocked state retries from fresh canonical/provider state."
 
       - name: Close stale authorization issue when fresh state no longer needs it
         if: steps.discover.outputs.human == '0'
