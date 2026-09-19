@@ -260,6 +260,20 @@
       "applies_to": ".cache/knowledge-hub/quality-evidence-binding.json",
       "authority": "derived-exact-source-quality-evidence-binding",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "maintenance-triage-v1",
+      "schema": "schemas/maintenance-triage.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/triage-receipt.json",
+      "authority": "derived-noncanonical-ai-maintenance-triage",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "governance-review-packet-v1",
+      "schema": "schemas/governance-review-packet.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/governance-review-packet.json",
+      "authority": "derived-noncanonical-governance-review-packet",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
