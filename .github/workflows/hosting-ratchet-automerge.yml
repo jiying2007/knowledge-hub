@@ -135,6 +135,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
           MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+          RECONCILE_OBSERVED_AT: ${{ steps.prove.outputs.reconcile_observed_at }}
         run: |
           set -euo pipefail
           cache=".cache/knowledge-hub/hosting-ratchet-automerge"
@@ -336,6 +337,7 @@ jobs:
           with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
               handle.write("reconcile_run_id={}\n".format(run_id))
               handle.write("reconcile_run_attempt={}\n".format(run_attempt))
+              handle.write("reconcile_observed_at={}\n".format(record["observed_at"]))
           PY
 
       - name: Revalidate trusted reconciliation origin
@@ -374,8 +376,11 @@ jobs:
                           field, value, run.get(field)
                       )
                   )
-          if run.get("event") not in {"schedule", "workflow_dispatch"}:
+          if run.get("event") not in {"workflow_run", "schedule", "workflow_dispatch"}:
               raise SystemExit("reconciliation origin event is not trusted")
+          observed_at = str(run.get("run_started_at") or run.get("created_at") or "")
+          if observed_at != os.environ["RECONCILE_OBSERVED_AT"]:
+              raise SystemExit("reconciliation origin timestamp mismatch")
           repository = run.get("repository") or {}
           if repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
               raise SystemExit("reconciliation origin repository identity mismatch")
