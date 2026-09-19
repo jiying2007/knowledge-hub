@@ -46,3 +46,18 @@ def test_ai_maintenance_accepts_health_status_exit_codes_for_analysis():
     assert "health-exit-code.txt" in text
     assert "review-exit-code.txt" in text
     assert "json.loads" in text
+
+
+def test_ai_maintenance_materializes_machine_owned_triage_outputs():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Materialize machine triage and governance review packet" in text
+    assert "build_maintenance_triage" in text
+    assert "triage-receipt.json" in text
+    assert "governance-review-packet.json" in text
+    assert '"machine_triage_receipt": "triage-receipt.json"' in text
+    assert (
+        '"governance_review_packet": "governance-review-packet.json"'
+        in text
+    )
+    assert "canonical_write_performed" in text
+    assert "git push" not in text
