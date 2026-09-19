@@ -74,7 +74,8 @@
         "automatic_merge_requires_exact_head_quality",
         "automatic_merge_requires_same_repository",
         "automatic_merge_requires_semantic_allowlist",
-        "automatic_merge_executes_pr_code"
+        "automatic_merge_executes_pr_code",
+        "automatic_merge_requires_trusted_origin_run"
       ],
       "properties": {
         "direct_master_write": {
@@ -106,6 +107,9 @@
         },
         "automatic_merge_executes_pr_code": {
           "const": false
+        },
+        "automatic_merge_requires_trusted_origin_run": {
+          "const": true
         }
       },
       "additionalProperties": false
