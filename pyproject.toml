@@ -102,6 +102,7 @@ files = [
     "tools/codex_assets/knowledge_hub/maintenance_triage.py",
     "tools/codex_assets/knowledge_hub/review_risk.py",
     "tools/codex_assets/knowledge_hub/operator_auto_review.py",
+    "tools/codex_assets/knowledge_hub/operator_auto_route.py",
     "tools/codex_assets/knowledge_hub/context.py",
     "tools/codex_assets/knowledge_hub/context_support.py",
     "tools/codex_assets/knowledge_hub/context_assembly.py",
