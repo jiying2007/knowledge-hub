@@ -164,4 +164,6 @@ def test_private_ratchet_workflow_anchors_time_to_github_run_metadata():
         assert ".run_started_at // .created_at" in text
         assert '--observed-at "${observed_at}"' in text
     assert "actions: read" in manual
+    assert "requirements-runtime.lock" in manual
+    assert "requirements-dev.lock" not in manual
     assert "dt.datetime.now" not in reconcile
