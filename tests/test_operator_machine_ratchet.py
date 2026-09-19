@@ -4,7 +4,8 @@ import hashlib
 import pathlib
 from unittest import mock
 
-from tools.codex_assets.knowledge_hub.common import encode_jsonl
+from tools.codex_assets.knowledge_hub.common import encode_jsonl, repository_root
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 from tools.codex_assets.knowledge_hub.operator_machine_ratchet import (
     build_machine_ratchet_candidate,
 )
@@ -92,6 +93,14 @@ def test_machine_ratchet_candidate_binds_exact_registry_bytes(tmp_path):
     assert manifest["registry_after_sha256"] == _sha(content.encode("utf-8"))
     assert manifest["candidate_sha256"] == manifest["registry_after_sha256"]
     assert manifest["selected_proposal_fingerprints"] == [FP]
+    assert (
+        validate_instance(
+            repository_root(),
+            "operator-machine-ratchet-candidate-v1",
+            manifest,
+        )["status"]
+        == "pass"
+    )
 
 
 def test_machine_ratchet_candidate_rejects_field_outside_machine_allowlist(tmp_path):
@@ -141,3 +150,11 @@ def test_machine_ratchet_candidate_rejects_stale_registry_precondition(tmp_path)
     assert content == ""
     assert manifest["status"] == "blocked"
     assert "machine-registry-before-sha256-mismatch" in manifest["reason_codes"]
+
+
+def test_machine_ratchet_builder_is_in_mypy_surface():
+    pyproject = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+    assert (
+        '"tools/codex_assets/knowledge_hub/operator_machine_ratchet.py"'
+        in pyproject
+    )
