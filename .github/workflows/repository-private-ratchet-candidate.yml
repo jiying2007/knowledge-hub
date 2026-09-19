@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: repository-private-ratchet-${{ github.ref }}
@@ -38,15 +39,18 @@ jobs:
           set -euo pipefail
           mkdir -p .cache/knowledge-hub/repository-private-ratchet
           gh api "repos/${GITHUB_REPOSITORY}" > .cache/knowledge-hub/repository-private-ratchet/repository-metadata.json
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > .cache/knowledge-hub/repository-private-ratchet/source-run.json
       - name: Build review-only private-boundary candidate
         run: |
           set -euo pipefail
+          observed_at="$(jq -er '.run_started_at // .created_at' .cache/knowledge-hub/repository-private-ratchet/source-run.json)"
           rtk python3 -m tools.codex_assets.knowledge_hub.repository_private_ratchet_cli \
             --repository-metadata .cache/knowledge-hub/repository-private-ratchet/repository-metadata.json \
             --expected-repository "${GITHUB_REPOSITORY}" \
             --source-revision "${GITHUB_SHA}" \
             --run-id "${GITHUB_RUN_ID}" \
             --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --observed-at "${observed_at}" \
             --candidate-output .cache/knowledge-hub/repository-private-ratchet/candidate-registry.json \
             --proposal-output .cache/knowledge-hub/repository-private-ratchet/ratchet-proposal.json
       - name: Prove canonical registry remains untouched
@@ -59,6 +63,7 @@ jobs:
           name: knowledge-hub-repository-private-ratchet-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             .cache/knowledge-hub/repository-private-ratchet/repository-metadata.json
+            .cache/knowledge-hub/repository-private-ratchet/source-run.json
             .cache/knowledge-hub/repository-private-ratchet/candidate-registry.json
             .cache/knowledge-hub/repository-private-ratchet/ratchet-proposal.json
           if-no-files-found: error
