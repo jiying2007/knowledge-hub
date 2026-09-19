@@ -12,13 +12,19 @@ def _workflow():
     return payload
 
 
-def test_hosting_reconcile_is_low_frequency_and_pr_close_only_for_gc():
+def test_hosting_reconcile_runs_after_trusted_master_quality_with_schedule_fallback():
     payload = _workflow()
     triggers = payload["on"]
-    assert set(triggers) == {"schedule", "workflow_dispatch", "pull_request"}
+    assert set(triggers) == {
+        "workflow_run",
+        "schedule",
+        "workflow_dispatch",
+        "pull_request",
+    }
+    assert triggers["workflow_run"]["workflows"] == ["quality"]
+    assert triggers["workflow_run"]["types"] == ["completed"]
     assert triggers["pull_request"]["types"] == ["closed"]
     assert "push" not in triggers
-    assert "workflow_run" not in triggers
     assert "pull_request_target" not in triggers
 
     reconcile = payload["jobs"]["reconcile"]
@@ -26,7 +32,15 @@ def test_hosting_reconcile_is_low_frequency_and_pr_close_only_for_gc():
     assert "github.event_name == 'schedule'" in condition
     assert "github.event_name == 'workflow_dispatch'" in condition
     assert "github.ref == 'refs/heads/master'" in condition
-    assert reconcile["env"]["SOURCE_REVISION"] == "${{ github.sha }}"
+    assert "github.event_name == 'workflow_run'" in condition
+    assert "workflow_run.conclusion == 'success'" in condition
+    assert "workflow_run.event == 'push'" in condition
+    assert "workflow_run.head_branch == 'master'" in condition
+    assert "github.workflow_sha == github.event.workflow_run.head_sha" in condition
+    assert reconcile["env"]["SOURCE_REVISION"] == (
+        "${{ github.event_name == 'workflow_run' && "
+        "github.event.workflow_run.head_sha || github.sha }}"
+    )
 
 
 def test_hosting_reconcile_revalidates_current_master_aggregate_quality():
