@@ -118,3 +118,14 @@ def test_maintenance_triage_rejects_unknown_review_class():
 
     with pytest.raises(KnowledgeHubError, match="unsupported review class"):
         build_maintenance_triage(review, {"status": "pass"}, {"status": "pass"})
+
+
+def test_maintenance_and_private_ratchet_cores_are_in_mypy_surface():
+    from pathlib import Path
+
+    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+    assert '"tools/codex_assets/knowledge_hub/maintenance_triage.py"' in pyproject
+    assert (
+        '"tools/codex_assets/knowledge_hub/repository_private_ratchet.py"'
+        in pyproject
+    )
