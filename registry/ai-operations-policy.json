@@ -96,5 +96,20 @@
     "automatic_merge_requires_trusted_origin_run": true,
     "automatic_merge_requires_generator_branch_identity": true,
     "machine_ratchet_uses_trusted_run_timestamp": true
+  },
+  "evidence_binding": {
+    "machine_ratchet_fields": [
+      "artifact_refs",
+      "source_refs",
+      "validation_refs"
+    ],
+    "human_authorization_fields": [
+      "release_ref"
+    ],
+    "machine_ratchet_mutation_intent": "append-reference",
+    "machine_ratchet_may_change_owner": false,
+    "machine_ratchet_may_change_status": false,
+    "machine_ratchet_may_change_readiness": false,
+    "machine_ratchet_may_auto_promote_evidence_ready": false
   }
 }
