@@ -113,3 +113,6 @@ def test_signed_attestation_reconciles_hosting_trackers_only_after_verification(
     assert "default_branch_protection" in run
     assert 'if [[ "${protection_status}" == "pass" ]]' in run
     assert "gh issue close 95" in run
+    assert "repository-private-boundary" in run
+    assert ".cache/knowledge-hub/hosting-posture.json" in run
+    assert "gh issue close 18" in run
