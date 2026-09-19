@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import pathlib
+from unittest import mock
+
+from tools.codex_assets.knowledge_hub.operator_auto_route import (
+    build_unique_execution_routes,
+)
+
+
+def _row(
+    *,
+    item_id="item-1",
+    field="source_refs",
+    fingerprint="sha256:" + "a" * 64,
+    provider_verified=True,
+):
+    kind_by_field = {
+        "source_refs": "github-source-revision",
+        "validation_refs": "github-workflow-run",
+        "artifact_refs": "github-actions-artifact",
+        "release_ref": "github-release",
+    }
+    kind = kind_by_field[field]
+    ref = {
+        "source_refs": "github://example/repo@" + "1" * 40,
+        "validation_refs": "github-actions://example/repo/runs/123",
+        "artifact_refs": "github-actions-artifact://example/repo/456",
+        "release_ref": "github-release://example/repo/789",
+    }[field]
+    return {
+        "project_id": "project-1",
+        "field": field,
+        "provider": "github",
+        "proposal_status": "ready-for-governed-review",
+        "proposal_ready_for_review": True,
+        "proposal_fingerprint": fingerprint,
+        "mutation_intent": (
+            "set-if-empty" if field == "release_ref" else "append-reference"
+        ),
+        "target": {
+            "registry_path": "registry/items.jsonl",
+            "item_id": item_id,
+            "project_id": "project-1",
+        },
+        "current_value": None if field == "release_ref" else [],
+        "proposed_reference": {"kind": kind, "ref": ref},
+        "candidate_snapshot": {
+            "provider": "github",
+            "provider_verified": provider_verified,
+            "candidate_only": True,
+            "eligible_for_binding": False,
+            "provenance": "github-read-only-api",
+            "kind": kind,
+            "ref": ref,
+        },
+        "status_mutation_planned": False,
+        "owner_mutation_planned": False,
+        "readiness_mutation_planned": False,
+    }
+
+
+def _proposal(rows):
+    return {
+        "projection": "knowledge-operator-binding-proposal-v1",
+        "read_only": True,
+        "canonical_write_performed": False,
+        "automatic_binding_enabled": False,
+        "proposal_only": True,
+        "blocked_conflict_count": 0,
+        "unmappable_count": 0,
+        "rows": rows,
+    }
+
+
+def _plan(selected):
+    return {
+        "status": "needs-governed-pr",
+        "planned_write_count": 1,
+        "status_mutation_planned": False,
+        "owner_mutation_planned": False,
+        "readiness_mutation_planned": False,
+        "selected_proposal_fingerprints": list(selected),
+    }
+
+
+def _plan_side_effect(_root, _proposal, selected):
+    return _plan(selected)
+
+
+def test_append_only_verified_evidence_routes_to_machine_ratchet(tmp_path):
+    for index, field in enumerate(
+        ("source_refs", "validation_refs", "artifact_refs"), 1
+    ):
+        row = _row(
+            field=field,
+            item_id="item-{}".format(index),
+            fingerprint="sha256:" + str(index) * 64,
+        )
+        with mock.patch(
+            "tools.codex_assets.knowledge_hub.operator_auto_route."
+            "build_binding_patch_plan",
+            side_effect=_plan_side_effect,
+        ), mock.patch(
+            "tools.codex_assets.knowledge_hub.operator_auto_route."
+            "build_binding_review_bundle"
+        ) as review:
+            result = build_unique_execution_routes(
+                pathlib.Path(tmp_path), _proposal([row])
+            )
+
+        assert result["status"] == "ready-for-machine-ratchet"
+        assert result["machine_ratchet_count"] == 1
+        assert result["human_authorization_count"] == 0
+        assert (
+            result["machine_route"]["authorization_class"]
+            == "autonomous-low-risk-ratchet"
+        )
+        assert result["machine_route"]["automatic_execution_enabled"] is False
+        review.assert_not_called()
+
+
+def test_release_ref_remains_human_authorization(tmp_path):
+    row = _row(field="release_ref")
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "needs-governed-authorization"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 1
+    assert result["human_route"]["authorization_class"] == "human-authorization"
+
+
+def test_mixed_unique_evidence_is_partitioned_without_cross_authorization(tmp_path):
+    machine = _row(
+        field="source_refs",
+        item_id="item-machine",
+        fingerprint="sha256:" + "a" * 64,
+    )
+    human = _row(
+        field="release_ref",
+        item_id="item-human",
+        fingerprint="sha256:" + "b" * 64,
+    )
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([machine, human])
+        )
+
+    assert result["status"] == "mixed-routing"
+    assert result["machine_ratchet_count"] == 1
+    assert result["human_authorization_count"] == 1
+    assert result["machine_route"]["selected_proposal_fingerprints"] == [
+        "sha256:" + "a" * 64
+    ]
+    assert result["human_route"]["selected_proposal_fingerprints"] == [
+        "sha256:" + "b" * 64
+    ]
+
+
+def test_unverified_append_only_candidate_falls_back_to_human(tmp_path):
+    row = _row(field="artifact_refs", provider_verified=False)
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "needs-governed-authorization"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 1
+
+
+def test_ambiguous_target_blocks_both_routes(tmp_path):
+    first = _row(fingerprint="sha256:" + "a" * 64)
+    second = _row(fingerprint="sha256:" + "b" * 64)
+    result = build_unique_execution_routes(
+        pathlib.Path(tmp_path), _proposal([first, second])
+    )
+
+    assert result["status"] == "ambiguous"
+    assert result["selected_proposal_count"] == 0
+    assert result["ambiguous_target_count"] == 1
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 0
+
+
+def test_machine_route_fails_closed_on_patch_plan_mutation_drift(tmp_path):
+    row = _row()
+    unsafe = _plan([row["proposal_fingerprint"]])
+    unsafe["readiness_mutation_planned"] = True
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        return_value=unsafe,
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "blocked"
+    assert result["machine_route"]["status"] == "blocked"
+    assert "machine-readiness-mutation-planned-invalid" in result[
+        "machine_route"
+    ]["reason_codes"]
