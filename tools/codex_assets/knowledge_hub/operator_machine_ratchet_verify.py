@@ -104,6 +104,23 @@ def _verify_reference_append(
     return True
 
 
+def _verify_head_contract_readiness(
+    item_id: str,
+    contract: Mapping[str, Any],
+) -> None:
+    evaluation = evaluate_evidence_contract(contract)
+    if evaluation.get("declared_status") != "pending":
+        raise KnowledgeHubError(
+            "{} machine ratchet changed declared readiness".format(item_id)
+        )
+    if evaluation.get("status") == "ready":
+        raise KnowledgeHubError(
+            "{} machine ratchet would auto-promote evidence readiness".format(
+                item_id
+            )
+        )
+
+
 def _verify_items(
     base_rows: Sequence[Mapping[str, Any]],
     head_rows: Sequence[Mapping[str, Any]],
@@ -167,17 +184,7 @@ def _verify_items(
             raise KnowledgeHubError(
                 "{} changed without an allowed evidence append".format(item_id)
             )
-        evaluation = evaluate_evidence_contract(head_contract)
-        if evaluation.get("declared_status") != "pending":
-            raise KnowledgeHubError(
-                "{} machine ratchet changed declared readiness".format(item_id)
-            )
-        if evaluation.get("status") == "ready":
-            raise KnowledgeHubError(
-                "{} machine ratchet would auto-promote evidence readiness".format(
-                    item_id
-                )
-            )
+        _verify_head_contract_readiness(item_id, head_contract)
         changed_items.append(item_id)
         changed_fields.extend(item_fields)
     if not changed_items:
