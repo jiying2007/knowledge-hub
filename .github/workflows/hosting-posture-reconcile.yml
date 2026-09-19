@@ -223,23 +223,43 @@ jobs:
           )
           PY
 
-      - name: Create governed reconciliation branch and PR
+      - name: Create or reuse governed reconciliation branch and PR
         if: steps.decide.outputs.action == 'ratchet-private'
         id: pr
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          short="${GITHUB_SHA:0:12}"
+          branch="automation/hosting-private-${short}"
           title="chore(hosting): ratchet verified private boundary"
-          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
-          if [[ -n "${existing}" ]]; then
-            echo "number=${existing}" >> "${GITHUB_OUTPUT}"
-            echo "existing governed ratchet PR already owns this canonical transition"
+          body="Machine-generated low-risk ratchet from authoritative GitHub repository metadata. It closes only repository-private-boundary, appends a bounded durable evidence identity, does not infer owner approval, and does not modify product/operational evidence."
+
+          existing_branch="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${branch}" --jq .name 2>/dev/null || true)"
+          if [[ -n "${existing_branch}" ]]; then
+            existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --head "${branch}" --state open --json number --jq '.[0].number // empty')"
+            if [[ -n "${existing}" ]]; then
+              echo "number=${existing}" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+            set +e
+            url="$(gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --base master \
+              --head "${branch}" \
+              --title "${title}" \
+              --body "${body}")"
+            rc=$?
+            set -e
+            if [[ "${rc}" -ne 0 ]]; then
+              echo "GitHub settings still prevent automatic PR creation; reusing the existing deterministic candidate branch without mutating it." >&2
+              exit 0
+            fi
+            number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
+            echo "number=${number}" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
-          short="${SOURCE_REVISION:0:12}"
-          branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"
+
           cp .cache/knowledge-hub/hosting-reconcile/candidate-registry.json registry/knowledge-platform-p5-p10.json
           cat .cache/knowledge-hub/hosting-reconcile/durable-record.json >> registry/durable-evidence-ledger.jsonl
           git diff --check
@@ -250,18 +270,18 @@ jobs:
           git commit -m "${title}"
           remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote}" "HEAD:refs/heads/${branch}"
+
           set +e
           url="$(gh pr create \
             --repo "${GITHUB_REPOSITORY}" \
             --base master \
             --head "${branch}" \
             --title "${title}" \
-            --body "Machine-generated low-risk ratchet from authoritative GitHub repository metadata. It closes only repository-private-boundary, appends a bounded durable evidence identity, does not infer owner approval, and does not modify product/operational evidence.")"
+            --body "${body}")"
           rc=$?
           set -e
           if [[ "${rc}" -ne 0 ]]; then
-            echo "GitHub settings prevented automatic PR creation; deleting the unowned automation branch and retaining the local candidate artifact." >&2
-            git push "${remote}" --delete "${branch}" || true
+            echo "GitHub settings prevented automatic PR creation; deterministic candidate branch is retained for a later retry." >&2
             exit 0
           fi
           number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
