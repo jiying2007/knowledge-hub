@@ -1,6 +1,11 @@
 name: hosting-posture-reconcile
 
 on:
+  workflow_run:
+    workflows:
+      - quality
+    types:
+      - completed
   schedule:
     - cron: "17 3 * * *"
   workflow_dispatch:
@@ -26,12 +31,17 @@ jobs:
     if: >-
       ${{
         github.event_name == 'schedule' ||
-        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') ||
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'master' &&
+         github.workflow_sha == github.event.workflow_run.head_sha)
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      SOURCE_REVISION: ${{ github.sha }}
+      SOURCE_REVISION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Checkout exact master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
