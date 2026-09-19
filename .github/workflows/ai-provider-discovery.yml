@@ -46,24 +46,26 @@ jobs:
           mkdir -p .cache/knowledge-hub/ai-provider-discovery
           set +e
           rtk python3 -m tools.codex_assets.knowledge_hub.operator_provider_cli \
-            --auto-review-unique --json \
-            > .cache/knowledge-hub/ai-provider-discovery/review-bundle.json
+            --auto-route-unique --json \
+            > .cache/knowledge-hub/ai-provider-discovery/routing-bundle.json
           rc=$?
           set -e
           echo "exit_code=${rc}" >> "${GITHUB_OUTPUT}"
-          test -s .cache/knowledge-hub/ai-provider-discovery/review-bundle.json
+          test -s .cache/knowledge-hub/ai-provider-discovery/routing-bundle.json
           rtk python3 - <<'PY'
           import json
           import os
           from pathlib import Path
 
           payload = json.loads(
-              Path(".cache/knowledge-hub/ai-provider-discovery/review-bundle.json").read_text(
+              Path(".cache/knowledge-hub/ai-provider-discovery/routing-bundle.json").read_text(
                   encoding="utf-8"
               )
           )
           allowed = {
+              "ready-for-machine-ratchet",
               "needs-governed-authorization",
+              "mixed-routing",
               "no-change",
               "ambiguous",
               "blocked",
@@ -78,35 +80,52 @@ jobs:
                       int(payload.get("selected_proposal_count", 0) or 0)
                   )
               )
+              handle.write(
+                  "machine={}\n".format(
+                      int(payload.get("machine_ratchet_count", 0) or 0)
+                  )
+              )
+              handle.write(
+                  "human={}\n".format(
+                      int(payload.get("human_authorization_count", 0) or 0)
+                  )
+              )
           PY
 
-      - name: Route only final authorization to a human
-        if: steps.discover.outputs.status == 'needs-governed-authorization'
+      - name: Route only semantic or release authorization to a human
+        if: steps.discover.outputs.human != '0'
         env:
           GH_TOKEN: ${{ github.token }}
           SELECTED: ${{ steps.discover.outputs.selected }}
+          HUMAN: ${{ steps.discover.outputs.human }}
+          MACHINE: ${{ steps.discover.outputs.machine }}
         run: |
           set -euo pipefail
           title="AI evidence binding: governed authorization pending"
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
             --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
-          body="AI discovery/qualification completed without canonical writes. ${SELECTED} unambiguous proposal target(s) reached the existing governed-authorization boundary. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; device/production/owner evidence was not fabricated."
+          body="AI discovery/qualification completed without canonical writes. ${MACHINE} append-only provider-verifiable target(s) are machine-ratchet candidates; ${HUMAN} target(s) still require governed human authorization. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; release/owner/device/production evidence was not fabricated."
           if [[ -n "${number}" ]]; then
             gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
           else
             gh issue create --repo "${GITHUB_REPOSITORY}" --title "${title}" --body "${body}"
           fi
 
-      - name: Keep ambiguous or blocked discovery machine-owned
-        if: steps.discover.outputs.status == 'ambiguous' || steps.discover.outputs.status == 'blocked'
+      - name: Keep machine, ambiguous, or blocked discovery machine-owned
+        if: >-
+          ${{
+            steps.discover.outputs.status == 'ready-for-machine-ratchet' ||
+            steps.discover.outputs.status == 'ambiguous' ||
+            steps.discover.outputs.status == 'blocked'
+          }}
         run: |
           set -euo pipefail
-          echo "Machine discovery remained ambiguous/blocked. No human authorization request was created."
-          echo "The next scheduled run will retry from fresh canonical/provider state."
+          echo "Machine-owned evidence routing requires no human authorization request."
+          echo "Machine-ratchet candidates remain non-canonical; ambiguous/blocked state retries from fresh canonical/provider state."
 
       - name: Close stale authorization issue when fresh state no longer needs it
-        if: steps.discover.outputs.status != 'needs-governed-authorization'
+        if: steps.discover.outputs.human == '0'
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_STATUS: ${{ steps.discover.outputs.status }}
