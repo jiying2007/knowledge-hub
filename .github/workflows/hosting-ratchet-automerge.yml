@@ -44,6 +44,10 @@ jobs:
           set -euo pipefail
           cache=".cache/knowledge-hub/hosting-ratchet-automerge"
           mkdir -p "${cache}"
+          if [[ ! "${HEAD_BRANCH}" =~ ^automation/hosting-private-[0-9a-f]{12}-[0-9]+$ ]]; then
+            echo "ratchet branch does not match the deterministic generator grammar" >&2
+            exit 1
+          fi
 
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRIGGER_RUN_ID}" > "${cache}/quality-run.json"
           gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=master&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}&per_page=10" > "${cache}/pulls.json"
@@ -306,6 +310,11 @@ jobs:
               raise SystemExit("durable evidence record type is invalid")
           if record.get("event_id") != "hosting-private-{}-{}".format(run_id, run_attempt):
               raise SystemExit("durable evidence event identity mismatch")
+          expected_branch = "automation/hosting-private-{}-{}".format(
+              master_sha[:12], run_id
+          )
+          if os.environ["HEAD_BRANCH"] != expected_branch:
+              raise SystemExit("ratchet branch identity does not match trusted generator run")
           if record.get("source_revision") != master_sha:
               raise SystemExit("durable evidence source revision mismatch")
           if record.get("evidence_refs") != refs:
