@@ -61,3 +61,11 @@ def test_ai_maintenance_materializes_machine_owned_triage_outputs():
     )
     assert "canonical_write_performed" in text
     assert "git push" not in text
+
+
+def test_ai_maintenance_exposes_policy_error_when_escalating():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert '"policy_error": policy_error' in text
+    assert 'handle.write("policy_error={}\\\\n"' in text or 'handle.write("policy_error={}\\n"' in text
+    assert "POLICY_ERROR" in text
+    assert "policy-error=${POLICY_ERROR}" in text
