@@ -36,6 +36,7 @@ def test_schema_catalog_resolves_all_contracts():
         "quality-evidence-binding-v1",
         "maintenance-triage-v1",
         "governance-review-packet-v1",
+        "operator-auto-route-v1",
     }.issubset({row["id"] for row in result["contracts"]})
     assert "retrieval-result-v3" in {row["id"] for row in result["contracts"]}
     contract_ids = {row["id"] for row in result["contracts"]}
