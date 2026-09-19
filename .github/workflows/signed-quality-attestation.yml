@@ -262,6 +262,44 @@ jobs:
             fi
           fi
 
+          private_boundary_state="$(
+            rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          hosting = json.loads(
+              Path(".cache/knowledge-hub/hosting-posture.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          terminal = json.loads(
+              Path(".cache/knowledge-hub/terminal-closure.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          live_private = (
+              hosting.get("repository_private") is True
+              and hosting.get("repository_visibility") == "private"
+          )
+          open_gaps = (
+              (terminal.get("external_closure") or {}).get("open_gaps") or []
+          )
+          canonical_private_open = any(
+              isinstance(row, dict)
+              and row.get("id") == "repository-private-boundary"
+              for row in open_gaps
+          )
+          print("ready" if live_private and not canonical_private_open else "blocked")
+          PY
+          )"
+          if [[ "${private_boundary_state}" == "ready" ]]; then
+            state18="$(gh issue view 18 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state18}" == "OPEN" ]]; then
+              gh issue close 18 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh exact-source Signed evidence confirms both the live private hosting fact and the canonical repository-private-boundary ratchet; the tracker is closed automatically."
+            fi
+          fi
+
       - name: Upload signed quality evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
