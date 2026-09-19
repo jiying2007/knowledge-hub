@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Any, Dict, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .common import bytes_sha256, encode_jsonl, file_sha256
 from .operator_auto_route import (
@@ -99,7 +99,7 @@ def _plan_reasons(
 def build_machine_ratchet_candidate(
     root: pathlib.Path,
     proposal: Mapping[str, Any],
-    route: Mapping[str, Any] | None = None,
+    route: Optional[Mapping[str, Any]] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     """Recompute and materialize the exact machine route without applying it."""
 
