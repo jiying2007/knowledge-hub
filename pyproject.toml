@@ -98,6 +98,8 @@ files = [
     "tools/codex_assets/knowledge_hub/remote_branch_inventory.py",
     "tools/codex_assets/knowledge_hub/hosting_posture.py",
     "tools/codex_assets/knowledge_hub/quality_evidence_binding.py",
+    "tools/codex_assets/knowledge_hub/repository_private_ratchet.py",
+    "tools/codex_assets/knowledge_hub/maintenance_triage.py",
     "tools/codex_assets/knowledge_hub/review_risk.py",
     "tools/codex_assets/knowledge_hub/operator_auto_review.py",
     "tools/codex_assets/knowledge_hub/context.py",
