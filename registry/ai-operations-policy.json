@@ -110,6 +110,9 @@
     "machine_ratchet_may_change_owner": false,
     "machine_ratchet_may_change_status": false,
     "machine_ratchet_may_change_readiness": false,
-    "machine_ratchet_may_auto_promote_evidence_ready": false
+    "machine_ratchet_may_auto_promote_evidence_ready": false,
+    "machine_ratchet_may_create_pr": true,
+    "machine_ratchet_direct_master_write": false,
+    "machine_ratchet_auto_merge_requires_protected_branch": true
   }
 }
