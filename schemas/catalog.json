@@ -281,6 +281,13 @@
       "applies_to": "operator_provider_cli --auto-route-unique --json",
       "authority": "derived-noncanonical-operator-evidence-routing",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-machine-ratchet-candidate-v1",
+      "schema": "schemas/operator-machine-ratchet-candidate.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-provider-discovery/machine-candidate-manifest.json",
+      "authority": "derived-noncanonical-operator-machine-ratchet-candidate",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
