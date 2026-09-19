@@ -76,7 +76,8 @@
         "automatic_merge_requires_semantic_allowlist",
         "automatic_merge_executes_pr_code",
         "automatic_merge_requires_trusted_origin_run",
-        "automatic_merge_requires_generator_branch_identity"
+        "automatic_merge_requires_generator_branch_identity",
+        "machine_ratchet_uses_trusted_run_timestamp"
       ],
       "properties": {
         "direct_master_write": {
@@ -113,6 +114,9 @@
           "const": true
         },
         "automatic_merge_requires_generator_branch_identity": {
+          "const": true
+        },
+        "machine_ratchet_uses_trusted_run_timestamp": {
           "const": true
         }
       },
