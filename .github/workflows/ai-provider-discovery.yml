@@ -107,6 +107,251 @@ jobs:
               )
           PY
 
+      - name: Prepare trusted machine-ratchet provenance
+        if: steps.discover.outputs.machine != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/ai-provider-discovery"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}" \
+            > "${cache}/source-run.json"
+          rtk python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          cache = Path(".cache/knowledge-hub/ai-provider-discovery")
+          run = json.loads((cache / "source-run.json").read_text(encoding="utf-8"))
+          route = json.loads((cache / "routing-bundle.json").read_text(encoding="utf-8"))
+          manifest = json.loads(
+              (cache / "machine-candidate-manifest.json").read_text(encoding="utf-8")
+          )
+          candidate = (cache / "machine-candidate-items.jsonl").read_bytes()
+
+          expected = {
+              "id": int(os.environ["GITHUB_RUN_ID"]),
+              "run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
+              "name": "ai-provider-discovery",
+              "path": ".github/workflows/ai-provider-discovery.yml",
+              "head_sha": os.environ["SOURCE_REVISION"],
+              "head_branch": "master",
+          }
+          for field, value in expected.items():
+              if run.get(field) != value:
+                  raise SystemExit(
+                      "provider origin mismatch {} expected={!r} observed={!r}".format(
+                          field, value, run.get(field)
+                      )
+                  )
+          if run.get("event") not in {"schedule", "workflow_dispatch"}:
+              raise SystemExit("provider origin event is not trusted")
+          repository = run.get("repository") or {}
+          if repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
+              raise SystemExit("provider origin repository identity mismatch")
+          if route.get("machine_ratchet_count", 0) < 1:
+              raise SystemExit("machine candidate requested without machine route")
+          if manifest.get("status") != "ready-for-machine-ratchet":
+              raise SystemExit("machine candidate manifest is not ready")
+          candidate_sha = hashlib.sha256(candidate).hexdigest()
+          if manifest.get("candidate_sha256") != candidate_sha:
+              raise SystemExit("machine candidate byte digest mismatch")
+
+          root = Path(".").resolve()
+          for contract_id, payload in (
+              ("operator-auto-route-v1", route),
+              ("operator-machine-ratchet-candidate-v1", manifest),
+          ):
+              result = validate_instance(root, contract_id, payload)
+              if result.get("status") != "pass":
+                  raise SystemExit(
+                      "{} validation failed: {}".format(
+                          contract_id, result.get("errors", [])
+                      )
+                  )
+
+          observed_at = str(run.get("run_started_at") or run.get("created_at") or "")
+          if not observed_at:
+              raise SystemExit("provider origin timestamp is missing")
+          run_url = "https://github.com/{}/actions/runs/{}".format(
+              os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_RUN_ID"]
+          )
+          digests = {}
+          for name, filename in (
+              ("routing_bundle", "routing-bundle.json"),
+              ("machine_candidate", "machine-candidate-items.jsonl"),
+              ("machine_manifest", "machine-candidate-manifest.json"),
+          ):
+              digests[name] = "sha256:" + hashlib.sha256(
+                  (cache / filename).read_bytes()
+              ).hexdigest()
+          record = {
+              "schema_version": 1,
+              "event_id": "evidence-binding-{}-{}".format(
+                  os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"]
+              ),
+              "event_type": "evidence-binding-ratchet",
+              "source_revision": os.environ["SOURCE_REVISION"],
+              "observed_at": observed_at,
+              "evidence_refs": [run_url],
+              "digests": digests,
+              "expires_at": None,
+              "notes": (
+                  "Machine-routed append-only provider evidence candidate; "
+                  "no owner/status/readiness/release authorization inferred."
+              ),
+          }
+          validation = validate_instance(
+              root, "durable-evidence-record-v1", record
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "durable evidence record validation failed: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
+          (cache / "durable-record.json").write_text(
+              json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Create governed machine evidence ratchet PR
+        if: steps.discover.outputs.machine != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/ai-provider-discovery"
+          candidate="${cache}/machine-candidate-items.jsonl"
+          manifest="${cache}/machine-candidate-manifest.json"
+          record="${cache}/durable-record.json"
+          test -s "${candidate}"
+          test -s "${manifest}"
+          test -s "${record}"
+
+          candidate_sha="$(jq -er '.candidate_sha256' "${manifest}")"
+          short_candidate="${candidate_sha:0:12}"
+          short_source="${SOURCE_REVISION:0:12}"
+          title="chore(evidence): ratchet machine refs ${short_candidate}"
+          branch="automation/evidence-bind-${short_source}-${GITHUB_RUN_ID}"
+          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" \
+            | head -n 1)"
+          if [[ -n "${existing}" ]]; then
+            echo "identical machine evidence ratchet PR already open: #${existing}"
+            exit 0
+          fi
+
+          cp "${candidate}" registry/items.jsonl
+          cat "${record}" >> registry/durable-evidence-ledger.jsonl
+          git diff --check
+          actual="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' registry/durable-evidence-ledger.jsonl registry/items.jsonl | sort)"
+          if [[ "${actual}" != "${expected}" ]]; then
+            echo "machine evidence ratchet changed paths outside the bounded allowlist" >&2
+            printf 'actual:\n%s\nexpected:\n%s\n' "${actual}" "${expected}" >&2
+            exit 1
+          fi
+
+          git config user.name "knowledge-hub-automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add registry/items.jsonl registry/durable-evidence-ledger.jsonl
+          git commit -m "${title}"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "${remote}" "HEAD:refs/heads/${branch}"
+
+          set +e
+          url="$(gh pr create \
+            --repo "${GITHUB_REPOSITORY}" \
+            --base master \
+            --head "${branch}" \
+            --title "${title}" \
+            --body "Machine-generated append-only evidence ratchet from trusted GitHub provider discovery. Origin: ${run_url}. It changes only provider-verifiable source/validation/artifact references plus one durable evidence identity; release/owner/status/readiness decisions remain outside this automation.")"
+          rc=$?
+          set -e
+          if [[ "${rc}" -ne 0 ]]; then
+            echo "PR creation failed; deleting unowned machine evidence branch" >&2
+            git push "${remote}" --delete "${branch}" || true
+            exit 1
+          fi
+          number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
+          echo "created machine evidence ratchet PR #${number}"
+
+          gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title,headRefName \
+            --jq '.[] | select(.headRefName | startswith("automation/evidence-bind-")) | [.number,.title,.headRefName] | @tsv' \
+            | while IFS=        if: steps.discover.outputs.human != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SELECTED: ${{ steps.discover.outputs.selected }}
+          HUMAN: ${{ steps.discover.outputs.human }}
+          MACHINE: ${{ steps.discover.outputs.machine }}
+        run: |
+          set -euo pipefail
+          title="AI evidence binding: governed authorization pending"
+          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
+          body="AI discovery/qualification completed without canonical writes. ${MACHINE} append-only provider-verifiable target(s) are machine-ratchet candidates; ${HUMAN} target(s) still require governed human authorization. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; release/owner/device/production evidence was not fabricated."
+          if [[ -n "${number}" ]]; then
+            gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+          else
+            gh issue create --repo "${GITHUB_REPOSITORY}" --title "${title}" --body "${body}"
+          fi
+
+      - name: Keep machine, ambiguous, or blocked discovery machine-owned
+        if: >-
+          ${{
+            steps.discover.outputs.status == 'ready-for-machine-ratchet' ||
+            steps.discover.outputs.status == 'ambiguous' ||
+            steps.discover.outputs.status == 'blocked'
+          }}
+        run: |
+          set -euo pipefail
+          echo "Machine-owned evidence routing requires no human authorization request."
+          echo "Eligible machine-ratchet candidates are materialized only under .cache as reviewable artifacts; no canonical apply or PR occurs."
+          echo "Ambiguous/blocked state retries from fresh canonical/provider state."
+
+      - name: Close stale authorization issue when fresh state no longer needs it
+        if: steps.discover.outputs.human == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_STATUS: ${{ steps.discover.outputs.status }}
+        run: |
+          set -euo pipefail
+          title="AI evidence binding: governed authorization pending"
+          number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
+          if [[ -n "${number}" ]]; then
+            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Fresh AI provider state is ${CURRENT_STATUS}; the previous authorization packet is stale and is closed automatically. A future fresh review bundle will reopen the human boundary if needed."
+          fi
+
+      - name: Upload bounded discovery evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-ai-provider-discovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/ai-provider-discovery/
+          if-no-files-found: error
+          retention-days: 30
+\t' read -r stale stale_title stale_head; do
+                if [[ "${stale}" == "${number}" ]]; then
+                  continue
+                fi
+                if [[ "${stale_title}" == chore\(evidence\):\ ratchet\ machine\ refs\ * ]]; then
+                  gh pr close "${stale}" --repo "${GITHUB_REPOSITORY}" \
+                    --comment "Superseded by fresh machine evidence ratchet #${number} from current canonical/provider state."
+                fi
+              done
+
       - name: Route only semantic or release authorization to a human
         if: steps.discover.outputs.human != '0'
         env:
