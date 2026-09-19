@@ -274,6 +274,13 @@
       "applies_to": ".cache/knowledge-hub/ai-maintenance/governance-review-packet.json",
       "authority": "derived-noncanonical-governance-review-packet",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-auto-route-v1",
+      "schema": "schemas/operator-auto-route.schema.json",
+      "applies_to": "operator_provider_cli --auto-route-unique --json",
+      "authority": "derived-noncanonical-operator-evidence-routing",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
