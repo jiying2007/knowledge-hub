@@ -1,11 +1,41 @@
 from __future__ import annotations
 
+import json
 import pathlib
 from unittest import mock
 
 from tools.codex_assets.knowledge_hub.operator_auto_route import (
     build_unique_execution_routes,
 )
+
+
+
+
+
+def _write_policy(root):
+    registry = pathlib.Path(root) / "registry"
+    registry.mkdir(parents=True, exist_ok=True)
+    (registry / "ai-operations-policy.json").write_text(
+        json.dumps(
+            {
+                "evidence_binding": {
+                    "machine_ratchet_fields": [
+                        "artifact_refs",
+                        "source_refs",
+                        "validation_refs",
+                    ],
+                    "human_authorization_fields": ["release_ref"],
+                    "machine_ratchet_mutation_intent": "append-reference",
+                    "machine_ratchet_may_change_owner": False,
+                    "machine_ratchet_may_change_status": False,
+                    "machine_ratchet_may_change_readiness": False,
+                    "machine_ratchet_may_auto_promote_evidence_ready": False,
+                }
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def _row(
@@ -92,6 +122,7 @@ def test_append_only_verified_evidence_routes_to_machine_ratchet(tmp_path):
     for index, field in enumerate(
         ("source_refs", "validation_refs", "artifact_refs"), 1
     ):
+        _write_policy(tmp_path)
         row = _row(
             field=field,
             item_id="item-{}".format(index),
@@ -121,6 +152,7 @@ def test_append_only_verified_evidence_routes_to_machine_ratchet(tmp_path):
 
 
 def test_release_ref_remains_human_authorization(tmp_path):
+    _write_policy(tmp_path)
     row = _row(field="release_ref")
     with mock.patch(
         "tools.codex_assets.knowledge_hub.operator_auto_route."
@@ -142,6 +174,7 @@ def test_release_ref_remains_human_authorization(tmp_path):
 
 
 def test_mixed_unique_evidence_is_partitioned_without_cross_authorization(tmp_path):
+    _write_policy(tmp_path)
     machine = _row(
         field="source_refs",
         item_id="item-machine",
@@ -177,6 +210,7 @@ def test_mixed_unique_evidence_is_partitioned_without_cross_authorization(tmp_pa
 
 
 def test_unverified_append_only_candidate_falls_back_to_human(tmp_path):
+    _write_policy(tmp_path)
     row = _row(field="artifact_refs", provider_verified=False)
     with mock.patch(
         "tools.codex_assets.knowledge_hub.operator_auto_route."
@@ -197,6 +231,7 @@ def test_unverified_append_only_candidate_falls_back_to_human(tmp_path):
 
 
 def test_ambiguous_target_blocks_both_routes(tmp_path):
+    _write_policy(tmp_path)
     first = _row(fingerprint="sha256:" + "a" * 64)
     second = _row(fingerprint="sha256:" + "b" * 64)
     result = build_unique_execution_routes(
@@ -211,6 +246,7 @@ def test_ambiguous_target_blocks_both_routes(tmp_path):
 
 
 def test_machine_route_fails_closed_on_patch_plan_mutation_drift(tmp_path):
+    _write_policy(tmp_path)
     row = _row()
     unsafe = _plan([row["proposal_fingerprint"]])
     unsafe["readiness_mutation_planned"] = True
@@ -228,3 +264,20 @@ def test_machine_route_fails_closed_on_patch_plan_mutation_drift(tmp_path):
     assert "machine-readiness-mutation-planned-invalid" in result[
         "machine_route"
     ]["reason_codes"]
+
+
+def test_machine_route_fails_closed_when_policy_expands_or_weakens(tmp_path):
+    _write_policy(tmp_path)
+    policy_path = tmp_path / "registry/ai-operations-policy.json"
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    policy["evidence_binding"]["machine_ratchet_fields"].append("release_ref")
+    policy_path.write_text(json.dumps(policy) + "\n", encoding="utf-8")
+
+    result = build_unique_execution_routes(
+        pathlib.Path(tmp_path), _proposal([_row()])
+    )
+
+    assert result["status"] == "blocked"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 0
+    assert result["reason_codes"][0].startswith("machine-policy-invalid:")
