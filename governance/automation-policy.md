@@ -18,8 +18,8 @@ governed branch / PR
 exact-head CI
         ↓
 merge
-        ├─ protected branch + required checks 已建立：可进一步启用受控 auto-merge
-        └─ protection 未建立：保留显式 merge 边界
+        ├─ protected branch + exact-head checks 已建立：仅受限 machine ratchet 可自动 merge
+        └─ protection 未建立：自动 merge fail-closed
 
 owner / semantic / release / device / production / ACL / repository administration
         ↓
@@ -65,7 +65,7 @@ AI 可以准备 packet、发现候选、校验证据和生成最小 PR，但不�
 7. 不直接写 `master`；
 8. exact-head CI 可重放。
 
-在默认分支仍未 protected 时，自动 merge 保持关闭。启用 protected branch + required checks 后，只有 `autonomous-low-risk-ratchet` 类 PR 才可考虑 auto-merge。
+在默认分支仍未 protected 时，自动 merge 保持关闭。启用 protected branch 后，只有 `autonomous-low-risk-ratchet` 类 PR 在 exact-head Quality 成功、same-repository、当前 master 未漂移、文件与语义 allowlist 全部通过时才允许自动 squash merge；该高权限 workflow 不 checkout 或执行 PR 代码。
 
 ## Operator UI 边界
 
