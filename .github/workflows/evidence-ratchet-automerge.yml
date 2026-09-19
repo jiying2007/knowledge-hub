@@ -63,10 +63,6 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=master&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}&per_page=10" \
             > "${cache}/pulls.json"
 
-          rtk_missing=0
-          if [[ -x tools/ci/rtk ]]; then
-            rtk_missing=0
-          fi
           python3 - <<'PY'
           import json
           import os
