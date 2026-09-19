@@ -61,6 +61,7 @@ def test_hosting_ratchet_automerge_uses_expected_head_squash_and_branch_gc():
     assert job["permissions"] == {
         "contents": "write",
         "pull-requests": "write",
+        "actions": "read",
     }
 
     text = WORKFLOW.read_text(encoding="utf-8")
@@ -101,3 +102,11 @@ def test_hosting_ratchet_automerge_revalidates_live_private_and_trusted_origin()
     assert '"path": ".github/workflows/hosting-posture-reconcile.yml"' in text
     assert 'run.get("event") not in {"schedule", "workflow_dispatch"}' in text
     assert "reconciliation origin repository identity mismatch" in text
+
+
+def test_hosting_ratchet_automerge_declares_actions_read_for_trigger_revalidation():
+    payload = _workflow()
+    job = payload["jobs"]["merge"]
+    assert job["permissions"]["actions"] == "read"
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'actions/runs/${TRIGGER_RUN_ID}' in text
