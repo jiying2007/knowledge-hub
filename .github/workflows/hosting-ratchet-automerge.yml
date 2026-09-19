@@ -347,7 +347,7 @@ jobs:
         run: |
           set -euo pipefail
           cache=".cache/knowledge-hub/hosting-ratchet-automerge"
-          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RECONCILE_RUN_ID}" \
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RECONCILE_RUN_ID}/attempts/${RECONCILE_RUN_ATTEMPT}" \
             > "${cache}/reconcile-source-run.json"
           python3 - <<'PY'
           import json
