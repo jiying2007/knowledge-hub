@@ -119,6 +119,7 @@ jobs:
           set -euo pipefail
           mkdir -p .cache/knowledge-hub/hosting-reconcile
           gh api "repos/${GITHUB_REPOSITORY}" > .cache/knowledge-hub/hosting-reconcile/repository-metadata.json
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > .cache/knowledge-hub/hosting-reconcile/reconcile-run.json
 
       - name: Capture current branch and hosting posture
         env:
@@ -182,12 +183,14 @@ jobs:
         if: steps.decide.outputs.action == 'ratchet-private'
         run: |
           set -euo pipefail
+          observed_at="$(jq -er '.run_started_at // .created_at' .cache/knowledge-hub/hosting-reconcile/reconcile-run.json)"
           rtk python3 -m tools.codex_assets.knowledge_hub.repository_private_ratchet_cli \
             --repository-metadata .cache/knowledge-hub/hosting-reconcile/repository-metadata.json \
             --expected-repository "${GITHUB_REPOSITORY}" \
             --source-revision "${SOURCE_REVISION}" \
             --run-id "${GITHUB_RUN_ID}" \
             --run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --observed-at "${observed_at}" \
             --candidate-output .cache/knowledge-hub/hosting-reconcile/candidate-registry.json \
             --proposal-output .cache/knowledge-hub/hosting-reconcile/ratchet-proposal.json
 
@@ -196,7 +199,6 @@ jobs:
         run: |
           set -euo pipefail
           rtk python3 - <<'PY'
-          import datetime as dt
           import hashlib
           import json
           import os
@@ -215,7 +217,7 @@ jobs:
               ),
               "event_type": "hosting-posture-ratchet",
               "source_revision": os.environ["SOURCE_REVISION"],
-              "observed_at": dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+              "observed_at": str(proposal["generated_at"]),
               "evidence_refs": [
                   "https://github.com/{}".format(os.environ["GITHUB_REPOSITORY"]),
                   run_url,
