@@ -77,6 +77,32 @@ jobs:
           )
           PY
 
+      - name: Materialize machine triage and governance review packet
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.maintenance_triage import (
+              build_maintenance_triage,
+          )
+
+          root = Path(".cache/knowledge-hub/ai-maintenance")
+          review = json.loads((root / "review-after.json").read_text(encoding="utf-8"))
+          growth = json.loads((root / "data-growth.json").read_text(encoding="utf-8"))
+          health = json.loads((root / "health.json").read_text(encoding="utf-8"))
+          triage, packet = build_maintenance_triage(review, growth, health)
+          (root / "triage-receipt.json").write_text(
+              json.dumps(triage, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          (root / "governance-review-packet.json").write_text(
+              json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
       - name: Build bounded AI maintenance decision
         id: decision
         run: |
@@ -91,25 +117,15 @@ jobs:
           growth = json.loads((root / "data-growth.json").read_text(encoding="utf-8"))
           health = json.loads((root / "health.json").read_text(encoding="utf-8"))
 
-          rows = [row for row in review.get("rows", []) if isinstance(row, dict)]
-          security_stale = sum(
-              1
-              for row in rows
-              if row.get("row_type") == "stale_item"
-              and row.get("review_class") == "security-critical"
+          triage = json.loads(
+              (root / "triage-receipt.json").read_text(encoding="utf-8")
           )
-          governance_stale = sum(
-              1
-              for row in rows
-              if row.get("row_type") == "stale_item"
-              and row.get("review_class") == "governance-critical"
+          packet = json.loads(
+              (root / "governance-review-packet.json").read_text(encoding="utf-8")
           )
-          ordinary_stale = sum(
-              1
-              for row in rows
-              if row.get("row_type") == "stale_item"
-              and row.get("review_class") == "ordinary"
-          )
+          security_stale = int((triage.get("security") or {}).get("count", 0) or 0)
+          governance_stale = int((triage.get("governance") or {}).get("count", 0) or 0)
+          ordinary_stale = int((triage.get("ordinary") or {}).get("count", 0) or 0)
           hard_cap = sum(
               1
               for row in growth.get("regressions", [])
@@ -130,6 +146,9 @@ jobs:
               ),
               "human_required": human_required,
               "ordinary_and_governance_routed_to_ai": True,
+              "machine_triage_receipt": "triage-receipt.json",
+              "governance_review_packet": "governance-review-packet.json",
+              "governance_review_packet_status": packet.get("status", "unknown"),
               "canonical_write_performed": False,
           }
           (root / "summary.json").write_text(
