@@ -117,3 +117,12 @@ def test_hosting_ratchet_automerge_requires_deterministic_generator_branch_ident
     assert "^automation/hosting-private-[0-9a-f]{12}-[0-9]+$" in text
     assert '"automation/hosting-private-{}-{}".format(' in text
     assert "ratchet branch identity does not match trusted generator run" in text
+
+
+def test_hosting_ratchet_automerge_revalidates_exact_reconcile_attempt():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert (
+        'actions/runs/${RECONCILE_RUN_ID}/attempts/${RECONCILE_RUN_ATTEMPT}'
+        in text
+    )
+    assert '"run_attempt": int(os.environ["RECONCILE_RUN_ATTEMPT"])' in text
