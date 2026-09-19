@@ -50,7 +50,11 @@ def test_ai_provider_discovery_closes_stale_authorization_issue():
 def test_ai_provider_discovery_keeps_machine_route_noncanonical():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "routing-bundle.json" in text
-    assert "machine-ratchet candidates remain non-canonical" in text
+    assert "--machine-candidate-output" in text
+    assert "machine-candidate-items.jsonl" in text
+    assert "--machine-manifest-output" in text
+    assert "machine-candidate-manifest.json" in text
+    assert "materialized only under .cache as reviewable artifacts" in text
     assert "operator_binding_governed_apply" not in text
     assert "git push" not in text
     assert "gh pr create" not in text
