@@ -295,6 +295,71 @@ jobs:
           )
           PY
 
+      - name: Route only semantic or release authorization to a human
+        if: steps.discover.outputs.human != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HUMAN: ${{ steps.discover.outputs.human }}
+          MACHINE: ${{ steps.discover.outputs.machine }}
+        run: |
+          set -euo pipefail
+          title="AI evidence binding: governed authorization pending"
+          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          number="$(
+            gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+              --json number,title \
+              --jq ".[] | select(.title == \"${title}\") | .number" \
+            | head -n 1
+          )"
+          body="AI discovery/qualification completed without direct canonical writes. ${MACHINE} append-only provider-verifiable target(s) were routed to a governed machine PR; ${HUMAN} target(s) still require governed human authorization. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; release/owner/device/production evidence was not fabricated."
+          if [[ -n "${number}" ]]; then
+            gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+          else
+            gh issue create --repo "${GITHUB_REPOSITORY}" \
+              --title "${title}" --body "${body}"
+          fi
+
+      - name: Keep machine, ambiguous or blocked discovery machine-owned
+        if: >-
+          ${{
+            steps.discover.outputs.status == 'ready-for-machine-ratchet' ||
+            steps.discover.outputs.status == 'ambiguous' ||
+            steps.discover.outputs.status == 'blocked'
+          }}
+        run: |
+          set -euo pipefail
+          echo "Machine-owned evidence routing requires no human authorization request."
+          echo "Eligible machine-ratchet candidates are represented by governed automation PRs, never direct master writes."
+          echo "Ambiguous/blocked state retries from fresh canonical/provider state."
+
+      - name: Close stale authorization issue when no human route remains
+        if: steps.discover.outputs.human == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_STATUS: ${{ steps.discover.outputs.status }}
+        run: |
+          set -euo pipefail
+          title="AI evidence binding: governed authorization pending"
+          number="$(
+            gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+              --json number,title \
+              --jq ".[] | select(.title == \"${title}\") | .number" \
+            | head -n 1
+          )"
+          if [[ -n "${number}" ]]; then
+            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Fresh AI provider routing is ${CURRENT_STATUS}; no human-authorization route remains. A future fresh bundle will reopen the boundary if needed."
+          fi
+
+      - name: Upload bounded discovery evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-ai-provider-discovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/ai-provider-discovery/
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Create governed machine evidence ratchet PR
         if: steps.discover.outputs.machine != '0'
         env:
@@ -385,70 +450,6 @@ jobs:
               --comment "Superseded by fresh machine evidence ratchet #${number} from current canonical/provider state."
           done
 
-      - name: Route only semantic or release authorization to a human
-        if: steps.discover.outputs.human != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HUMAN: ${{ steps.discover.outputs.human }}
-          MACHINE: ${{ steps.discover.outputs.machine }}
-        run: |
-          set -euo pipefail
-          title="AI evidence binding: governed authorization pending"
-          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          number="$(
-            gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-              --json number,title \
-              --jq ".[] | select(.title == \"${title}\") | .number" \
-            | head -n 1
-          )"
-          body="AI discovery/qualification completed without direct canonical writes. ${MACHINE} append-only provider-verifiable target(s) were routed to a governed machine PR; ${HUMAN} target(s) still require governed human authorization. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; release/owner/device/production evidence was not fabricated."
-          if [[ -n "${number}" ]]; then
-            gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
-          else
-            gh issue create --repo "${GITHUB_REPOSITORY}" \
-              --title "${title}" --body "${body}"
-          fi
-
-      - name: Keep machine, ambiguous or blocked discovery machine-owned
-        if: >-
-          ${{
-            steps.discover.outputs.status == 'ready-for-machine-ratchet' ||
-            steps.discover.outputs.status == 'ambiguous' ||
-            steps.discover.outputs.status == 'blocked'
-          }}
-        run: |
-          set -euo pipefail
-          echo "Machine-owned evidence routing requires no human authorization request."
-          echo "Eligible machine-ratchet candidates are represented by governed automation PRs, never direct master writes."
-          echo "Ambiguous/blocked state retries from fresh canonical/provider state."
-
-      - name: Close stale authorization issue when no human route remains
-        if: steps.discover.outputs.human == '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CURRENT_STATUS: ${{ steps.discover.outputs.status }}
-        run: |
-          set -euo pipefail
-          title="AI evidence binding: governed authorization pending"
-          number="$(
-            gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-              --json number,title \
-              --jq ".[] | select(.title == \"${title}\") | .number" \
-            | head -n 1
-          )"
-          if [[ -n "${number}" ]]; then
-            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
-              --comment "Fresh AI provider routing is ${CURRENT_STATUS}; no human-authorization route remains. A future fresh bundle will reopen the boundary if needed."
-          fi
-
-      - name: Upload bounded discovery evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: knowledge-hub-ai-provider-discovery-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .cache/knowledge-hub/ai-provider-discovery/
-          if-no-files-found: error
-          retention-days: 30
 
   automation-branch-gc:
     name: Retire closed machine evidence branch
