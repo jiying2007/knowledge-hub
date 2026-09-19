@@ -7,6 +7,8 @@ from unittest import mock
 from tools.codex_assets.knowledge_hub.operator_auto_route import (
     build_unique_execution_routes,
 )
+from tools.codex_assets.knowledge_hub.common import repository_root
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 
 
 
@@ -281,3 +283,30 @@ def test_machine_route_fails_closed_when_policy_expands_or_weakens(tmp_path):
     assert result["machine_ratchet_count"] == 0
     assert result["human_authorization_count"] == 0
     assert result["reason_codes"][0].startswith("machine-policy-invalid:")
+
+
+def test_machine_route_output_matches_catalog_contract(tmp_path):
+    _write_policy(tmp_path)
+    row = _row()
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert (
+        validate_instance(
+            repository_root(),
+            "operator-auto-route-v1",
+            result,
+        )["status"]
+        == "pass"
+    )
+
+
+def test_auto_router_is_in_mypy_surface():
+    pyproject = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+    assert '"tools/codex_assets/knowledge_hub/operator_auto_route.py"' in pyproject
