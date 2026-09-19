@@ -82,6 +82,7 @@ def test_hosting_ratchet_automerge_matches_machine_policy_guardrails():
     assert guardrails["automatic_merge_requires_exact_head_quality"] is True
     assert guardrails["automatic_merge_requires_same_repository"] is True
     assert guardrails["automatic_merge_requires_semantic_allowlist"] is True
+    assert guardrails["automatic_merge_requires_trusted_origin_run"] is True
     assert guardrails["automatic_merge_executes_pr_code"] is False
 
     text = WORKFLOW.read_text(encoding="utf-8")
