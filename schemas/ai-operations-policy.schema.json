@@ -3,38 +3,110 @@
   "$id": "https://knowledge-hub.local/schemas/ai-operations-policy.schema.json",
   "title": "Knowledge Hub AI-first operations policy",
   "type": "object",
-  "required": ["schema_version", "model", "default_mode", "classes", "guardrails"],
+  "required": [
+    "schema_version",
+    "model",
+    "default_mode",
+    "classes",
+    "guardrails"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "model": {"const": "knowledge-hub-ai-first-operations-v1"},
-    "default_mode": {"const": "autonomous-when-machine-verifiable"},
+    "schema_version": {
+      "const": 1
+    },
+    "model": {
+      "const": "knowledge-hub-ai-first-operations-v1"
+    },
+    "default_mode": {
+      "const": "autonomous-when-machine-verifiable"
+    },
     "classes": {
       "type": "object",
-      "required": ["autonomous-read", "autonomous-proposal", "autonomous-low-risk-ratchet", "human-authorization", "real-world-evidence", "external-administration"],
+      "required": [
+        "autonomous-read",
+        "autonomous-proposal",
+        "autonomous-low-risk-ratchet",
+        "human-authorization",
+        "real-world-evidence",
+        "external-administration"
+      ],
       "additionalProperties": {
         "type": "object",
-        "required": ["enabled", "human_required"],
+        "required": [
+          "enabled",
+          "human_required"
+        ],
         "properties": {
-          "enabled": {"type": "boolean"},
-          "human_required": {"type": "boolean"},
-          "may_create_pr": {"type": "boolean"},
-          "may_write_canonical_candidate": {"type": "boolean"},
-          "direct_master_write": {"type": "boolean"},
-          "examples": {"type": "array", "items": {"type": "string"}}
+          "enabled": {
+            "type": "boolean"
+          },
+          "human_required": {
+            "type": "boolean"
+          },
+          "may_create_pr": {
+            "type": "boolean"
+          },
+          "may_write_canonical_candidate": {
+            "type": "boolean"
+          },
+          "direct_master_write": {
+            "type": "boolean"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
         "additionalProperties": false
       }
     },
     "guardrails": {
       "type": "object",
-      "required": ["direct_master_write", "automatic_merge_requires_protected_branch", "owner_decision_may_be_inferred", "synthetic_real_world_evidence_allowed", "machine_ratchet_requires_exact_source", "machine_ratchet_requires_deterministic_diff"],
+      "required": [
+        "direct_master_write",
+        "automatic_merge_requires_protected_branch",
+        "owner_decision_may_be_inferred",
+        "synthetic_real_world_evidence_allowed",
+        "machine_ratchet_requires_exact_source",
+        "machine_ratchet_requires_deterministic_diff",
+        "automatic_merge_requires_exact_head_quality",
+        "automatic_merge_requires_same_repository",
+        "automatic_merge_requires_semantic_allowlist",
+        "automatic_merge_executes_pr_code"
+      ],
       "properties": {
-        "direct_master_write": {"const": false},
-        "automatic_merge_requires_protected_branch": {"const": true},
-        "owner_decision_may_be_inferred": {"const": false},
-        "synthetic_real_world_evidence_allowed": {"const": false},
-        "machine_ratchet_requires_exact_source": {"const": true},
-        "machine_ratchet_requires_deterministic_diff": {"const": true}
+        "direct_master_write": {
+          "const": false
+        },
+        "automatic_merge_requires_protected_branch": {
+          "const": true
+        },
+        "owner_decision_may_be_inferred": {
+          "const": false
+        },
+        "synthetic_real_world_evidence_allowed": {
+          "const": false
+        },
+        "machine_ratchet_requires_exact_source": {
+          "const": true
+        },
+        "machine_ratchet_requires_deterministic_diff": {
+          "const": true
+        },
+        "automatic_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "automatic_merge_requires_same_repository": {
+          "const": true
+        },
+        "automatic_merge_requires_semantic_allowlist": {
+          "const": true
+        },
+        "automatic_merge_executes_pr_code": {
+          "const": false
+        }
       },
       "additionalProperties": false
     }
