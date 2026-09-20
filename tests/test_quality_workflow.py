@@ -166,10 +166,12 @@ def test_quality_complexity_baseline_matches_engineering_budget_policy():
         Path("registry/engineering-budgets.json").read_text(encoding="utf-8")
     )
     baseline = policy["python"]["ci_baseline"]
-    assert baseline["required_in_github_actions"] is True
-    assert baseline["env"] == "KNOWLEDGE_COMPLEXITY_BASE_REF"
+    assert baseline["required_in_quality_engineering"] is True
+    assert baseline["base_ref_env"] == "KNOWLEDGE_COMPLEXITY_BASE_REF"
+    assert baseline["enforce_env"] == "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE"
     assert baseline["missing_or_invalid"] == "fail"
 
     engineering = _workflow()["jobs"]["engineering"]
-    assert baseline["env"] in engineering["env"]
+    assert baseline["base_ref_env"] in engineering["env"]
+    assert engineering["env"][baseline["enforce_env"]] == "true"
     assert engineering["steps"][0]["with"]["fetch-depth"] == "0"
