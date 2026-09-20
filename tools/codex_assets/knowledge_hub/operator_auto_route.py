@@ -180,21 +180,19 @@ def _canonical_context(
         contract = item.get("evidence_contract", {})
         if not isinstance(contract, Mapping):
             continue
+        source_values = contract.get("source_refs", [])
+        validation_values = contract.get("validation_refs", [])
+        if not isinstance(source_values, list):
+            source_values = []
+        if not isinstance(validation_values, list):
+            validation_values = []
         source_shas = {
-            sha
-            for sha in (
-                _source_sha(value)
-                for value in contract.get("source_refs", [])
-                if isinstance(contract.get("source_refs", []), list)
-            )
-            if sha
+            sha for sha in (_source_sha(value) for value in source_values) if sha
         }
         validation_ids = {
             run_id
             for run_id in (
-                _validation_run_id(value)
-                for value in contract.get("validation_refs", [])
-                if isinstance(contract.get("validation_refs", []), list)
+                _validation_run_id(value) for value in validation_values
             )
             if run_id
         }
