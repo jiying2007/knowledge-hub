@@ -241,6 +241,58 @@ def _verify_candidate_gap(
     return dict(evidence)
 
 
+def _verification_result(
+    *,
+    repository: str,
+    master_sha: str,
+    head_sha: str,
+    gap_id: str,
+    head_raw: bytes,
+    run_id: int,
+    run_attempt: int,
+    proposal: Mapping[str, Any],
+    evidence: Mapping[str, Any],
+) -> Dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "projection": (
+            "knowledge-hub-external-evidence-ratchet-verification-v1"
+        ),
+        "status": "pass",
+        "read_only": True,
+        "canonical_write_performed": False,
+        "repository": repository,
+        "master_sha": master_sha,
+        "head_sha": head_sha,
+        "gap_id": gap_id,
+        "candidate_registry_sha256": _sha256(head_raw),
+        "origin_run_id": run_id,
+        "origin_run_attempt": run_attempt,
+        "evidence_observed_at": proposal["generated_at"],
+        "root_source_repository": str(
+            evidence.get("root_source_repository", "")
+        ),
+        "root_source_run_id": int(
+            evidence.get("root_source_run_id", 0) or 0
+        ),
+        "root_source_run_attempt": int(
+            evidence.get("root_source_run_attempt", 0) or 0
+        ),
+        "root_source_run_head_sha": str(
+            evidence.get("root_source_run_head_sha", "")
+        ),
+        "root_source_workflow_path": str(
+            evidence.get("root_source_workflow_path", "")
+        ),
+        "root_source_artifact_id": int(
+            evidence.get("root_source_artifact_id", 0) or 0
+        ),
+        "root_source_artifact_digest": str(
+            evidence.get("root_source_artifact_digest", "")
+        ),
+    }
+
+
 def verify_external_evidence_ratchet(
     root: pathlib.Path,
     *,
@@ -297,39 +349,14 @@ def verify_external_evidence_ratchet(
         run_id=run_id,
         run_attempt=run_attempt,
     )
-    return {
-        "schema_version": 1,
-        "projection": "knowledge-hub-external-evidence-ratchet-verification-v1",
-        "status": "pass",
-        "read_only": True,
-        "canonical_write_performed": False,
-        "repository": repository,
-        "master_sha": master_sha,
-        "head_sha": head_sha,
-        "gap_id": gap_id,
-        "candidate_registry_sha256": _sha256(head_raw),
-        "origin_run_id": run_id,
-        "origin_run_attempt": run_attempt,
-        "evidence_observed_at": proposal["generated_at"],
-        "root_source_repository": str(
-            evidence.get("root_source_repository", "")
-        ),
-        "root_source_run_id": int(
-            evidence.get("root_source_run_id", 0) or 0
-        ),
-        "root_source_run_attempt": int(
-            evidence.get("root_source_run_attempt", 0) or 0
-        ),
-        "root_source_run_head_sha": str(
-            evidence.get("root_source_run_head_sha", "")
-        ),
-        "root_source_workflow_path": str(
-            evidence.get("root_source_workflow_path", "")
-        ),
-        "root_source_artifact_id": int(
-            evidence.get("root_source_artifact_id", 0) or 0
-        ),
-        "root_source_artifact_digest": str(
-            evidence.get("root_source_artifact_digest", "")
-        ),
-    }
+    return _verification_result(
+        repository=repository,
+        master_sha=master_sha,
+        head_sha=head_sha,
+        gap_id=gap_id,
+        head_raw=head_raw,
+        run_id=run_id,
+        run_attempt=run_attempt,
+        proposal=proposal,
+        evidence=evidence,
+    )
