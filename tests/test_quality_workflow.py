@@ -157,3 +157,19 @@ def test_quality_engineering_binds_complexity_to_explicit_git_baseline():
     assert checkout["with"]["ref"] == (
         "${{ github.event.pull_request.head.sha || github.sha }}"
     )
+
+
+def test_quality_complexity_baseline_matches_engineering_budget_policy():
+    import json
+
+    policy = json.loads(
+        Path("registry/engineering-budgets.json").read_text(encoding="utf-8")
+    )
+    baseline = policy["python"]["ci_baseline"]
+    assert baseline["required_in_github_actions"] is True
+    assert baseline["env"] == "KNOWLEDGE_COMPLEXITY_BASE_REF"
+    assert baseline["missing_or_invalid"] == "fail"
+
+    engineering = _workflow()["jobs"]["engineering"]
+    assert baseline["env"] in engineering["env"]
+    assert engineering["steps"][0]["with"]["fetch-depth"] == "0"
