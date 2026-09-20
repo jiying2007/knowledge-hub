@@ -37,11 +37,15 @@ def test_external_evidence_intake_auto_path_requires_exact_producer_identity():
     assert "automatic producer run must be master workflow_dispatch" in text
     assert "automatic intake requires exactly one strict producer artifact" in text
     assert "knowledge-hub-external-pilot-evidence-" in text
-    assert "connector-provider-pilot|production-retrieval-eval|memory-lifecycle-pilot" in text
+    assert (
+        "connector-provider-pilot|production-retrieval-eval|"
+        "memory-lifecycle-pilot|real-adoption-evidence"
+        in text
+    )
     assert 'evidence_file = "external-evidence.json"' in text
 
 
-def test_external_evidence_intake_manual_fallback_keeps_adoption_and_exact_selectors():
+def test_external_evidence_intake_manual_fallback_keeps_exact_selectors():
     payload = _workflow()
     inputs = payload["on"]["workflow_dispatch"]["inputs"]
     assert "real-adoption-evidence" in inputs["expected_gap"]["options"]
@@ -94,3 +98,9 @@ def test_external_evidence_cli_keeps_input_output_inside_repository_and_private(
         'parser.add_argument("--expected-gap", choices=sorted(SUPPORTED_GAPS), required=True)'
         in text
     )
+
+
+def test_external_evidence_intake_auto_path_supports_adoption():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "real-adoption-evidence" in text
+    assert "automatic intake requires exactly one strict producer artifact" in text
