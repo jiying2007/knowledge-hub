@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/security-change-review.schema.json",
+  "title": "Knowledge Hub security-critical PR change review",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "gate_pass",
+    "review_required",
+    "review_reason",
+    "read_only",
+    "canonical_write_performed",
+    "repository",
+    "pr_number",
+    "base_sha",
+    "head_sha",
+    "head_ref",
+    "author_login",
+    "same_repository",
+    "autonomous_ratchet",
+    "security_critical_file_count",
+    "security_critical_files",
+    "exact_head_approval_count",
+    "exact_head_approvals",
+    "packet_fingerprint"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "projection": {
+      "const": "knowledge-hub-security-change-review-v1"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "awaiting-human-review"
+      ]
+    },
+    "gate_pass": {
+      "type": "boolean"
+    },
+    "review_required": {
+      "type": "boolean"
+    },
+    "review_reason": {
+      "enum": [
+        "no-security-critical-change",
+        "dedicated-machine-ratchet-verifier",
+        "exact-head-human-approval",
+        "exact-head-human-approval-required"
+      ]
+    },
+    "read_only": {
+      "const": true
+    },
+    "canonical_write_performed": {
+      "const": false
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "pr_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "base_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "author_login": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "same_repository": {
+      "type": "boolean"
+    },
+    "autonomous_ratchet": {
+      "type": "boolean"
+    },
+    "security_critical_file_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "security_critical_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "status",
+          "additions",
+          "deletions",
+          "changes",
+          "blob_url",
+          "raw_url",
+          "sha"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "additions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deletions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "blob_url": {
+            "type": "string"
+          },
+          "raw_url": {
+            "type": "string"
+          },
+          "sha": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exact_head_approval_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exact_head_approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "login",
+          "user_type",
+          "state",
+          "commit_id",
+          "submitted_at",
+          "review_id"
+        ],
+        "properties": {
+          "login": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "user_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "state": {
+            "const": "APPROVED"
+          },
+          "commit_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "submitted_at": {
+            "type": "string"
+          },
+          "review_id": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "packet_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "pass"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "gate_pass": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "awaiting-human-review"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "gate_pass": {
+            "const": false
+          },
+          "review_required": {
+            "const": true
+          },
+          "security_critical_file_count": {
+            "minimum": 1
+          },
+          "exact_head_approval_count": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}
