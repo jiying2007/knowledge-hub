@@ -24,7 +24,10 @@
     "security_critical_files",
     "exact_head_approval_count",
     "exact_head_approvals",
-    "packet_fingerprint"
+    "packet_fingerprint",
+    "change_fingerprint",
+    "hash_bound_comment_approval_count",
+    "hash_bound_comment_approvals"
   ],
   "properties": {
     "schema_version": {
@@ -50,6 +53,7 @@
         "no-security-critical-change",
         "dedicated-machine-ratchet-verifier",
         "exact-head-human-approval",
+        "hash-bound-human-approval",
         "exact-head-human-approval-required"
       ]
     },
@@ -193,6 +197,54 @@
     "packet_fingerprint": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "change_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "hash_bound_comment_approval_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hash_bound_comment_approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "login",
+          "user_type",
+          "author_association",
+          "comment_id",
+          "created_at"
+        ],
+        "properties": {
+          "login": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "user_type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "author_association": {
+            "enum": [
+              "OWNER",
+              "MEMBER",
+              "COLLABORATOR"
+            ]
+          },
+          "comment_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "allOf": [
