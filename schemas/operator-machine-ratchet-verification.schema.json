@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/operator-machine-ratchet-verification.schema.json",
+  "title": "Knowledge Hub Operator machine ratchet verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "canonical_write_performed",
+    "repository",
+    "master_sha",
+    "head_sha",
+    "changed_item_count",
+    "changed_item_ids",
+    "changed_fields",
+    "origin_run_id",
+    "origin_run_attempt",
+    "routing_status",
+    "selected_proposal_count",
+    "candidate_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "projection": {"const": "knowledge-operator-machine-ratchet-verification-v1"},
+    "status": {"const": "pass"},
+    "read_only": {"const": true},
+    "canonical_write_performed": {"const": false},
+    "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "master_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "changed_item_count": {"type": "integer", "minimum": 1},
+    "changed_item_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "changed_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["artifact_refs", "source_refs", "validation_refs"]},
+      "uniqueItems": true
+    },
+    "origin_run_id": {"type": "integer", "minimum": 1},
+    "origin_run_attempt": {"type": "integer", "minimum": 1},
+    "routing_status": {"enum": ["ready-for-machine-ratchet", "mixed-routing"]},
+    "selected_proposal_count": {"type": "integer", "minimum": 1},
+    "candidate_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": false
+}
