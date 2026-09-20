@@ -417,96 +417,117 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
     }
 
 
-def evaluate_terminal_closure(
+def _artifact_terminal_forms_state(
     root: pathlib.Path,
-    *,
-    policy_path: str = DEFAULT_POLICY,
-    snapshot_path: str = "",
+    policy: Mapping[str, Any],
+    artifacts: Mapping[str, Any],
 ) -> Dict[str, Any]:
-    policy = _load_object(root / policy_path, "terminal closure policy")
-    product_policy = policy.get("product_gate", {})
-    if not isinstance(product_policy, Mapping):
-        raise KnowledgeHubError("product_gate terminal policy must be an object")
-    snapshot_name = snapshot_path or str(product_policy.get("snapshot", "")).strip()
-    if not snapshot_name:
-        raise KnowledgeHubError("terminal product snapshot path is missing")
-    snapshot = _load_object(root / snapshot_name, "product final gate snapshot")
-    product_repository = _product_repository_state(snapshot, product_policy)
-    external_gaps, operational_gaps = _external_gap_state(root, policy)
-    complexity = evaluate_complexity_budget(root)
-    artifacts = evaluate_artifact_governance(root)
-
-    bounded_policy = policy.get("bounded_legacy", {})
-    if not isinstance(bounded_policy, Mapping):
+    bounded = policy.get("bounded_legacy", {})
+    if not isinstance(bounded, Mapping):
         raise KnowledgeHubError("bounded_legacy policy must be an object")
     immutable_refs = artifacts.get("immutable_refs", {})
     if not isinstance(immutable_refs, Mapping):
         immutable_refs = {}
-    artifact_ref_count = int(immutable_refs.get("legacy_reference_count", 0) or 0)
-    if bool(bounded_policy.get("require_artifact_terminal_forms", False)):
-        registry_path = str(
-            bounded_policy.get(
-                "artifact_terminal_form_registry",
-                DEFAULT_ARTIFACT_TERMINAL_FORMS,
-            )
-        ).strip()
-        if not registry_path:
-            raise KnowledgeHubError("artifact terminal-form registry path is missing")
-        terminal_forms = evaluate_legacy_artifact_terminal_forms(
-            root,
-            registry_path=registry_path,
-        )
-    else:
-        terminal_forms = {
+    ref_count = int(
+        immutable_refs.get("legacy_reference_count", 0) or 0
+    )
+    if not bool(bounded.get("require_artifact_terminal_forms", False)):
+        return {
             "status": "not-required",
-            "legacy_reference_count": artifact_ref_count,
+            "legacy_reference_count": ref_count,
             "accepted_legacy_reference_count": 0,
             "unaccepted_legacy_reference_count": 0,
             "legacy_reference_set_sha256": "",
         }
-
-    legacy = _bounded_legacy_state(
+    registry_path = str(
+        bounded.get(
+            "artifact_terminal_form_registry",
+            DEFAULT_ARTIFACT_TERMINAL_FORMS,
+        )
+    ).strip()
+    if not registry_path:
+        raise KnowledgeHubError(
+            "artifact terminal-form registry path is missing"
+        )
+    return evaluate_legacy_artifact_terminal_forms(
         root,
-        policy,
-        complexity,
-        artifacts,
-        terminal_forms,
+        registry_path=registry_path,
     )
-    branch_gc = _branch_gc_state(root, policy)
-    branch_protection = _default_branch_protection_state(root, policy)
-    hosting_posture = _hosting_posture_state(root, policy)
-    mcp_conformance = _mcp_conformance_state(root, policy)
 
-    checks = {
-        "product_repository_readiness": product_repository.get("status") == "pass",
+
+def _terminal_checks(
+    *,
+    product_repository: Mapping[str, Any],
+    external_gaps: List[Dict[str, Any]],
+    complexity: Mapping[str, Any],
+    artifacts: Mapping[str, Any],
+    legacy: Mapping[str, Any],
+    branch_gc: Mapping[str, Any],
+    branch_protection: Mapping[str, Any],
+    hosting_posture: Mapping[str, Any],
+    mcp_conformance: Mapping[str, Any],
+) -> Dict[str, bool]:
+    return {
+        "product_repository_readiness": (
+            product_repository.get("status") == "pass"
+        ),
         "external_closure": not external_gaps,
         "complexity_no_regression": complexity.get("status") == "pass",
         "artifact_governance": artifacts.get("status") == "pass",
         "bounded_legacy": legacy.get("status") == "pass",
         "branch_gc": branch_gc.get("status") == "pass",
-        "default_branch_protection": branch_protection.get("status") == "pass",
+        "default_branch_protection": (
+            branch_protection.get("status") == "pass"
+        ),
         "hosting_posture": hosting_posture.get("status") == "pass",
         "mcp_conformance": mcp_conformance.get("status") == "pass",
     }
+
+
+def _terminal_result(
+    *,
+    policy: Mapping[str, Any],
+    snapshot_name: str,
+    snapshot: Mapping[str, Any],
+    product_repository: Mapping[str, Any],
+    external_gaps: List[Dict[str, Any]],
+    operational_gaps: List[Dict[str, Any]],
+    terminal_forms: Mapping[str, Any],
+    legacy: Mapping[str, Any],
+    branch_gc: Mapping[str, Any],
+    branch_protection: Mapping[str, Any],
+    hosting_posture: Mapping[str, Any],
+    mcp_conformance: Mapping[str, Any],
+    checks: Mapping[str, bool],
+) -> Dict[str, Any]:
     blockers = [name for name, passed in checks.items() if not passed]
-    terminal = not blockers
     operational_open = [
-        row for row in operational_gaps if str(row.get("status", "open")) != "closed"
+        row
+        for row in operational_gaps
+        if str(row.get("status", "open")) != "closed"
     ]
+    terminal = not blockers
     return {
         "schema_version": 2,
-        "contract": str(policy.get("contract", "knowledge-hub-github-terminal-closure-v2")),
-        "closure_scope": str(policy.get("closure_scope", "github-repository")),
+        "contract": str(
+            policy.get(
+                "contract",
+                "knowledge-hub-github-terminal-closure-v2",
+            )
+        ),
+        "closure_scope": str(
+            policy.get("closure_scope", "github-repository")
+        ),
         "generated_at": utc_timestamp(),
         "status": "pass" if terminal else "needs-review",
         "terminal": terminal,
-        "checks": checks,
+        "checks": dict(checks),
         "blockers": blockers,
         "product": {
             "snapshot": snapshot_name,
             "status": snapshot.get("status", ""),
             "terminal": bool(snapshot.get("terminal", False)),
-            "repository_readiness": product_repository,
+            "repository_readiness": dict(product_repository),
         },
         "external_closure": {
             "status": "pass" if not external_gaps else "needs-review",
@@ -520,10 +541,85 @@ def evaluate_terminal_closure(
             "open_gaps": operational_open,
             "all_gaps": operational_gaps,
         },
-        "artifact_terminal_forms": terminal_forms,
-        "bounded_legacy": legacy,
-        "branch_gc": branch_gc,
-        "default_branch_protection": branch_protection,
-        "hosting_posture": hosting_posture,
-        "mcp_conformance": mcp_conformance,
+        "artifact_terminal_forms": dict(terminal_forms),
+        "bounded_legacy": dict(legacy),
+        "branch_gc": dict(branch_gc),
+        "default_branch_protection": dict(branch_protection),
+        "hosting_posture": dict(hosting_posture),
+        "mcp_conformance": dict(mcp_conformance),
     }
+
+
+def evaluate_terminal_closure(
+    root: pathlib.Path,
+    *,
+    policy_path: str = DEFAULT_POLICY,
+    snapshot_path: str = "",
+) -> Dict[str, Any]:
+    policy = _load_object(root / policy_path, "terminal closure policy")
+    product_policy = policy.get("product_gate", {})
+    if not isinstance(product_policy, Mapping):
+        raise KnowledgeHubError(
+            "product_gate terminal policy must be an object"
+        )
+    snapshot_name = snapshot_path or str(
+        product_policy.get("snapshot", "")
+    ).strip()
+    if not snapshot_name:
+        raise KnowledgeHubError(
+            "terminal product snapshot path is missing"
+        )
+    snapshot = _load_object(
+        root / snapshot_name,
+        "product final gate snapshot",
+    )
+    product_repository = _product_repository_state(
+        snapshot,
+        product_policy,
+    )
+    external_gaps, operational_gaps = _external_gap_state(root, policy)
+    complexity = evaluate_complexity_budget(root)
+    artifacts = evaluate_artifact_governance(root)
+    terminal_forms = _artifact_terminal_forms_state(
+        root,
+        policy,
+        artifacts,
+    )
+    legacy = _bounded_legacy_state(
+        root,
+        policy,
+        complexity,
+        artifacts,
+        terminal_forms,
+    )
+    branch_gc = _branch_gc_state(root, policy)
+    branch_protection = _default_branch_protection_state(root, policy)
+    hosting_posture = _hosting_posture_state(root, policy)
+    mcp_conformance = _mcp_conformance_state(root, policy)
+    checks = _terminal_checks(
+        product_repository=product_repository,
+        external_gaps=external_gaps,
+        complexity=complexity,
+        artifacts=artifacts,
+        legacy=legacy,
+        branch_gc=branch_gc,
+        branch_protection=branch_protection,
+        hosting_posture=hosting_posture,
+        mcp_conformance=mcp_conformance,
+    )
+    return _terminal_result(
+        policy=policy,
+        snapshot_name=snapshot_name,
+        snapshot=snapshot,
+        product_repository=product_repository,
+        external_gaps=external_gaps,
+        operational_gaps=operational_gaps,
+        terminal_forms=terminal_forms,
+        legacy=legacy,
+        branch_gc=branch_gc,
+        branch_protection=branch_protection,
+        hosting_posture=hosting_posture,
+        mcp_conformance=mcp_conformance,
+        checks=checks,
+    )
+
