@@ -89,7 +89,7 @@ Provider evidence 进一步按字段拆分责任边界：
 - strict validator 只有在 synthetic/mock/local-only 全部明确为 false，且 gap-specific contract 全部通过时，才产生 `closure_ready=true`。
 - closure-ready intake 会自动进入 deterministic `external-evidence-ratchet` candidate；此时 canonical gap closure 属于 `autonomous-low-risk-ratchet`，不再要求人工重复确认同一机器事实。
 - canonical 变更只能通过 same-repository `automation/external-gap-*` PR，且只修改 `registry/knowledge-platform-p5-p10.json` 与追加一条 durable evidence record。
-- automation PR 显式触发 exact-head Quality；master protection 后续恢复时，daily requalify 会重新触发 fresh Quality，不把旧 success 当作新保护状态下的 merge 证据。
+- automation PR 显式触发 exact-head Quality；master protection 后续恢复时，由 `hosting-posture-reconcile` 统一对受限 `automation/evidence-bind-*` / `automation/external-gap-*` PR 重新触发 fresh Quality，不把旧 success 当作新保护状态下的 merge 证据，也不为每类 ratchet 保留独立 daily poll。
 - `external-ratchet-automerge` 只 checkout current master 的可信 verifier，并用 origin closure/intake/binding receipts 重放 `build_external_gap_ratchet_candidate()`；PR registry 必须与 trusted replay byte-for-byte 一致。
 - 只有 live repository 仍 private、`master protected=true`、same-repo/direct-child、two-file allowlist、origin run/attempt、durable digest 与 exact-head Quality 全部通过，才执行 expected-head squash merge。
 - #20 仅在 canonical `connector-provider-pilot=closed` 后自动关闭；#21 仅在 retrieval/memory/adoption 三个 canonical gap 全部 closed 后自动关闭。#74/#96 的 owner/project evidence 边界不会被该机器链关闭。
