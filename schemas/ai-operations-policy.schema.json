@@ -143,7 +143,8 @@
         "machine_validation_requires_source_revision_match",
         "machine_artifact_kinds",
         "machine_artifact_requires_validation_run_match",
-        "machine_artifact_requires_source_revision_match"
+        "machine_artifact_requires_source_revision_match",
+        "machine_artifact_requires_immutable_release"
       ],
       "properties": {
         "machine_ratchet_fields": {
@@ -202,13 +203,16 @@
         "machine_artifact_kinds": {
           "type": "array",
           "const": [
-            "github-actions-artifact"
+            "github-release-asset"
           ]
         },
         "machine_artifact_requires_validation_run_match": {
-          "const": true
+          "const": false
         },
         "machine_artifact_requires_source_revision_match": {
+          "const": true
+        },
+        "machine_artifact_requires_immutable_release": {
           "const": true
         }
       },
