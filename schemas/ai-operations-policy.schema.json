@@ -135,7 +135,11 @@
         "machine_ratchet_may_auto_promote_evidence_ready",
         "machine_ratchet_may_create_pr",
         "machine_ratchet_direct_master_write",
-        "machine_ratchet_auto_merge_requires_protected_branch"
+        "machine_ratchet_auto_merge_requires_protected_branch",
+        "machine_ratchet_auto_merge_requires_exact_head_quality",
+        "machine_ratchet_auto_merge_requires_same_repository",
+        "machine_ratchet_auto_merge_requires_origin_artifact_digest",
+        "machine_ratchet_auto_merge_executes_pr_code"
       ],
       "properties": {
         "machine_ratchet_fields": {
@@ -175,6 +179,18 @@
         },
         "machine_ratchet_auto_merge_requires_protected_branch": {
           "const": true
+        },
+        "machine_ratchet_auto_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_same_repository": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_origin_artifact_digest": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_executes_pr_code": {
+          "const": false
         }
       },
       "additionalProperties": false
