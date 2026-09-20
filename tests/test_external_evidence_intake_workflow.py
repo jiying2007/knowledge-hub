@@ -119,3 +119,10 @@ def test_external_evidence_intake_retains_source_attempt_and_workflow_identity()
     assert '"source_run_attempt": int(run.get("run_attempt", 0) or 0)' in text
     assert '"source_run_head_branch": str(run.get("head_branch") or "")' in text
     assert '"source_workflow_path": str(run.get("path") or "")' in text
+
+
+def test_external_evidence_intake_revalidates_producer_receipt_contract():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "external-pilot-evidence-producer-receipt-v1" in text
+    assert "producer receipt contract validation failed" in text
+    assert '"root_observation_provenance": root_provenance' in text
