@@ -354,3 +354,14 @@ def test_external_evidence_rejects_reversed_production_window(factory, section):
 
     with pytest.raises(KnowledgeHubError, match="window_end must not precede"):
         external_evidence.validate_external_evidence(payload)
+
+
+def test_connector_evidence_binds_adapter_commit_to_source_revision():
+    payload = _provider_evidence()
+    payload["provider"]["adapter_commit"] = "9" * 40
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="connector adapter commit must equal evidence source revision",
+    ):
+        external_evidence.validate_external_evidence(payload)
