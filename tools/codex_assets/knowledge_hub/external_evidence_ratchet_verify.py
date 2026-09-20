@@ -215,7 +215,7 @@ def _verify_candidate_gap(
     proposal: Mapping[str, Any],
     record: Mapping[str, Any],
     gap_id: str,
-) -> None:
+) -> Dict[str, Any]:
     gaps = [
         row
         for row in candidate.get("external_closure_gaps", [])
@@ -233,6 +233,12 @@ def _verify_candidate_gap(
         raise KnowledgeHubError(
             "durable observed_at differs from strict evidence time"
         )
+    evidence = gaps[0].get("evidence")
+    if not isinstance(evidence, Mapping):
+        raise KnowledgeHubError(
+            "replayed external candidate evidence is invalid"
+        )
+    return dict(evidence)
 
 
 def verify_external_evidence_ratchet(
@@ -276,7 +282,12 @@ def verify_external_evidence_ratchet(
         gap_id=gap_id,
         record=record,
     )
-    _verify_candidate_gap(candidate, proposal, record, gap_id)
+    evidence = _verify_candidate_gap(
+        candidate,
+        proposal,
+        record,
+        gap_id,
+    )
 
     origin_run, _ = _load_json(origin_run_path, "origin ratchet run")
     _verify_origin_run(
@@ -300,4 +311,25 @@ def verify_external_evidence_ratchet(
         "origin_run_id": run_id,
         "origin_run_attempt": run_attempt,
         "evidence_observed_at": proposal["generated_at"],
+        "root_source_repository": str(
+            evidence.get("root_source_repository", "")
+        ),
+        "root_source_run_id": int(
+            evidence.get("root_source_run_id", 0) or 0
+        ),
+        "root_source_run_attempt": int(
+            evidence.get("root_source_run_attempt", 0) or 0
+        ),
+        "root_source_run_head_sha": str(
+            evidence.get("root_source_run_head_sha", "")
+        ),
+        "root_source_workflow_path": str(
+            evidence.get("root_source_workflow_path", "")
+        ),
+        "root_source_artifact_id": int(
+            evidence.get("root_source_artifact_id", 0) or 0
+        ),
+        "root_source_artifact_digest": str(
+            evidence.get("root_source_artifact_digest", "")
+        ),
     }
