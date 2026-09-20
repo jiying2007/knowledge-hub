@@ -55,7 +55,7 @@ def test_ai_provider_discovery_write_permissions_are_job_scoped():
         "contents": "write",
         "pull-requests": "write",
         "issues": "write",
-        "actions": "read",
+        "actions": "write",
     }
     gc = payload["jobs"]["automation-branch-gc"]
     assert gc["permissions"] == {"contents": "write"}
@@ -205,5 +205,26 @@ def test_ai_provider_discovery_does_not_escalate_blocked_human_route():
     assert (
         "steps.discover.outputs.human_status == "
         "'needs-governed-authorization'"
+        in text
+    )
+
+
+def test_ai_provider_discovery_explicitly_dispatches_quality_for_token_created_pr():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "ensure_quality()" in text
+    assert "actions/workflows/quality.yml/runs?branch=${quality_branch}" in text
+    assert "gh workflow run quality.yml" in text
+    assert '--ref "${quality_branch}"' in text
+    assert "exact-head Quality already active/successful" in text
+    assert 'ensure_quality "${branch}" "$(git rev-parse HEAD)"' in text
+
+
+def test_ai_provider_discovery_requalifies_existing_unprotected_pr_without_churn():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "headRefName" in text
+    assert "headRefOid" in text
+    assert 'ensure_quality "${existing_branch}" "${existing_sha}"' in text
+    assert (
+        "identical machine evidence ratchet PR already open while master remains unprotected"
         in text
     )
