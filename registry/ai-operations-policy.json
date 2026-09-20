@@ -147,7 +147,14 @@
     "machine_ratchet_direct_master_write": false,
     "machine_ratchet_auto_merge_requires_protected_branch": true,
     "machine_ratchet_auto_merge_requires_exact_head_quality": true,
-    "machine_ratchet_auto_merge_executes_pr_code": false
+    "machine_ratchet_auto_merge_executes_pr_code": false,
+    "observation_source_requires_same_repository": true,
+    "observation_source_requires_master_branch": true,
+    "observation_source_allowed_events": [
+      "schedule",
+      "workflow_dispatch"
+    ],
+    "observation_source_requires_workflow_path": true
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
