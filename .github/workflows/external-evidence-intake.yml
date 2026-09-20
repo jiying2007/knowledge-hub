@@ -197,6 +197,7 @@ jobs:
               "schema_version": 1,
               "repository": repository,
               "source_run_id": run_id,
+              "source_run_attempt": int(run.get("run_attempt", 0) or 0),
               "source_run_head_sha": head_sha,
               "source_run_head_branch": str(run.get("head_branch") or ""),
               "source_run_event": str(run.get("event") or ""),
