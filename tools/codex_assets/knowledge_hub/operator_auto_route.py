@@ -62,6 +62,17 @@ def _machine_policy(root: pathlib.Path) -> Tuple[Set[str], str]:
     ):
         if boundary.get(key) is not False:
             raise KnowledgeHubError("{} must remain false".format(key))
+    for key in (
+        "machine_validation_requires_source_revision_match",
+        "machine_artifact_requires_validation_run_match",
+        "machine_artifact_requires_source_revision_match",
+    ):
+        if boundary.get(key) is not True:
+            raise KnowledgeHubError("{} must remain true".format(key))
+    if boundary.get("machine_artifact_kinds") != ["github-actions-artifact"]:
+        raise KnowledgeHubError(
+            "machine artifact kinds must remain github-actions-artifact only"
+        )
     return selected, intent
 
 
