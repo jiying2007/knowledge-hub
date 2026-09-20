@@ -140,6 +140,7 @@ case "$command_name" in
     case "$script" in
       tools/ci/bootstrap-path.sh|\
       tools/ci/python-runtime.sh|\
+      tools/ci/run-mcp-conformance.sh|\
       tools/knowledge-health-summary.sh|\
       tools/knowledge-new.sh|\
       tools/knowledge-search.sh|\

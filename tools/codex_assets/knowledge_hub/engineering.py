@@ -131,7 +131,15 @@ def _ci_contract(workflow_text: str) -> Dict[str, Any]:
             "pip_audit",
         )
     )
-    run_steps = re.findall(r"(?m)^\s*run:\s*(.+?)\s*$", workflow_text)
+    run_values = re.findall(r"(?m)^\s*run:\s*(.+?)\s*$", workflow_text)
+    # YAML block-scalar markers are syntax, not commands. The inline entrypoint
+    # contract applies only to scalar commands; multiline orchestration is
+    # covered by workflow-specific tests and the RTK calls it contains.
+    run_steps = [
+        value
+        for value in run_values
+        if value not in ("|", "|-", ">", ">-")
+    ]
     governed_run_steps = all(
         value.startswith("rtk ") or value.startswith("tools/ci/rtk ")
         for value in run_steps

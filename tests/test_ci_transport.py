@@ -62,6 +62,11 @@ def test_ci_transport_allows_governed_runtime_selector():
     assert result.stdout.strip() == "selector-ok"
 
 
+def test_ci_transport_registers_mcp_conformance_wrapper():
+    text = RTK.read_text(encoding="utf-8")
+    assert "tools/ci/run-mcp-conformance.sh" in text
+
+
 def test_ci_transport_rejects_unregistered_internal_ci_wrapper():
     result = _run("bash", "tools/ci/not-registered.sh", "--help")
 
