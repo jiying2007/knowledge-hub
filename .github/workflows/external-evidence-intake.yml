@@ -141,7 +141,7 @@ jobs:
                   raise SystemExit("automatic producer run must be master workflow_dispatch")
               pattern = re.compile(
                   r"^knowledge-hub-external-pilot-evidence-"
-                  r"(connector-provider-pilot|production-retrieval-eval|memory-lifecycle-pilot)-"
+                  r"(connector-provider-pilot|production-retrieval-eval|memory-lifecycle-pilot|real-adoption-evidence)-"
                   + str(run_id)
                   + r"-"
                   + str(int(run.get("run_attempt", 0) or 0))
