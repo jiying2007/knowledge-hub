@@ -154,3 +154,20 @@ def test_ai_provider_discovery_uses_runtime_dependency_surface():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
+
+
+def test_ai_provider_discovery_uploads_origin_artifact_before_creating_pr():
+    payload = _workflow()
+    steps = payload["jobs"]["discover"]["steps"]
+    upload_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Upload bounded discovery evidence"
+    )
+    pr_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Create governed machine evidence ratchet PR"
+    )
+    assert upload_index < pr_index
+    assert steps[upload_index]["if"] == "always()"
