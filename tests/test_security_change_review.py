@@ -223,6 +223,10 @@ def test_security_change_review_matches_machine_policy_and_schema():
     assert boundary["pr_author_self_approval_allowed"] is False
     assert boundary["candidate_local_authorization_ledger_trusted"] is False
     assert boundary["workflow_executes_pr_code"] is False
+    assert policy["guardrails"]["protected_branch_required_workflows"] == [
+        "quality",
+        "security-critical-change-review",
+    ]
     assert tuple(boundary["autonomous_ratchet_branch_prefixes"]) == (
         "automation/hosting-private-",
         "automation/evidence-bind-",
