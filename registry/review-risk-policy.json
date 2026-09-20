@@ -58,6 +58,10 @@
       "review_class": "security-critical"
     },
     {
+      "path": "schemas/security-change-review.schema.json",
+      "review_class": "security-critical"
+    },
+    {
       "path_prefix": ".github/workflows/",
       "review_class": "security-critical"
     },
