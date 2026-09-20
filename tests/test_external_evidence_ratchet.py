@@ -75,6 +75,7 @@ def _fixture(tmp_path: Path):
         "source_provenance": {
             "repository": "jiying2007/knowledge-hub",
             "source_run_id": 123,
+            "source_run_attempt": 1,
             "source_run_head_sha": SOURCE_SHA,
             "source_run_head_branch": "master",
             "source_run_event": "workflow_dispatch",
@@ -283,6 +284,26 @@ def test_ratchet_builder_rejects_untrusted_retained_source_provenance(tmp_path: 
     ).hexdigest()
     _write(paths[3], binding)
     with pytest.raises(KnowledgeHubError, match="event is not trusted"):
+        build_external_gap_ratchet_candidate(
+            registry_path=paths[0],
+            closure_receipt_path=paths[1],
+            intake_receipt_path=paths[2],
+            host_binding_path=paths[3],
+        )
+
+
+def test_ratchet_builder_requires_positive_source_run_attempt(tmp_path: Path):
+    paths = _fixture(tmp_path)
+    intake = json.loads(paths[2].read_text(encoding="utf-8"))
+    intake["source_provenance"]["source_run_attempt"] = 0
+    _write(paths[2], intake)
+    binding = json.loads(paths[3].read_text(encoding="utf-8"))
+    binding["intake_receipt_sha256"] = hashlib.sha256(
+        paths[2].read_bytes()
+    ).hexdigest()
+    _write(paths[3], binding)
+
+    with pytest.raises(KnowledgeHubError, match="source run attempt"):
         build_external_gap_ratchet_candidate(
             registry_path=paths[0],
             closure_receipt_path=paths[1],
