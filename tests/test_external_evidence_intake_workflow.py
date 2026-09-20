@@ -104,3 +104,11 @@ def test_external_evidence_intake_auto_path_supports_adoption():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "real-adoption-evidence" in text
     assert "automatic intake requires exactly one strict producer artifact" in text
+
+
+def test_external_evidence_manual_fallback_keeps_trusted_master_source_boundary():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "source workflow run must execute from master" in text
+    assert "manual intake source run event is not trusted" in text
+    assert '{"workflow_dispatch", "schedule"}' in text
+    assert "manual intake source workflow path is invalid" in text
