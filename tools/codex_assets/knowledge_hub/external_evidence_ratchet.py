@@ -251,6 +251,10 @@ def _validate_intake(
         intake.get("root_observation_provenance"),
         "root observation provenance",
     )
+    if root["repository"] != source["repository"]:
+        raise KnowledgeHubError(
+            "root observation repository differs from hosted source repository"
+        )
     if root["run_head"] != closure_context["source_revision"]:
         raise KnowledgeHubError(
             "root observation revision does not match strict evidence source revision"
@@ -380,6 +384,7 @@ def _build_candidate(
         "source_run_attempt": intake["source_run_attempt"],
         "source_artifact_id": intake["source_artifact_id"],
         "source_artifact_digest": intake["source_artifact_digest"],
+        "root_source_repository": intake["root_repository"],
         "root_source_run_head_sha": intake["root_source_run_head"],
         "root_source_run_id": intake["root_source_run_id"],
         "root_source_run_attempt": intake["root_source_run_attempt"],
