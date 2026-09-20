@@ -6,7 +6,7 @@ import ast
 import json
 import os
 import pathlib
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from .common import KnowledgeHubError, run_rtk
 
@@ -41,7 +41,7 @@ class _FunctionCollector(ast.NodeVisitor):
 
     def _visit_function(
         self,
-        node: ast.FunctionDef | ast.AsyncFunctionDef,
+        node: Union[ast.FunctionDef, ast.AsyncFunctionDef],
     ) -> None:
         end = int(getattr(node, "end_lineno", node.lineno))
         qualname = ".".join(self.stack + [node.name])
