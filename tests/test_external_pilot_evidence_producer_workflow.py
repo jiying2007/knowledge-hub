@@ -92,3 +92,23 @@ def test_external_pilot_producer_validates_producer_receipt_contract():
     text = _workflow()
     assert "external-pilot-evidence-producer-receipt-v1" in text
     assert "producer receipt contract validation failed" in text
+
+
+def test_external_pilot_producer_binds_code_to_workflow_sha():
+    text = _workflow()
+    assert 'PRODUCER_REVISION: ${{ github.workflow_sha }}' in text
+    assert 'ref: ${{ env.PRODUCER_REVISION }}' in text
+    assert "'producer_revision': os.environ['PRODUCER_REVISION']" in text
+    assert "'producer_revision': os.environ['GITHUB_SHA']" not in text
+    assert text.count(
+        "Checkout immutable producer revision"
+    ) == 1
+
+
+def test_external_pilot_producer_checkout_has_single_with_mapping():
+    text = _workflow()
+    block = text.split(
+        "- name: Checkout immutable producer revision",
+        1,
+    )[1].split("- name: Set up governed Python", 1)[0]
+    assert block.count("\n        with:\n") == 1
