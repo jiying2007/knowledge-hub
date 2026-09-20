@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/external-evidence-intake-host-binding.schema.json",
+  "title": "Knowledge Hub external evidence intake host binding",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "repository",
+    "workflow_path",
+    "intake_run_id",
+    "intake_run_attempt",
+    "intake_run_head_sha",
+    "artifact_id",
+    "artifact_name",
+    "artifact_digest",
+    "intake_receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "projection": {
+      "const": "knowledge-hub-external-evidence-intake-host-binding-v1"
+    },
+    "status": {
+      "const": "pass"
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "workflow_path": {
+      "const": ".github/workflows/external-evidence-intake.yml"
+    },
+    "intake_run_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "intake_run_attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "intake_run_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "artifact_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "artifact_name": {
+      "type": "string",
+      "pattern": "^knowledge-hub-external-evidence-[A-Za-z0-9._-]+$"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "intake_receipt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}
