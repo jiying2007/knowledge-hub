@@ -126,3 +126,24 @@ def test_external_evidence_intake_revalidates_producer_receipt_contract():
     assert "external-pilot-evidence-producer-receipt-v1" in text
     assert "producer receipt contract validation failed" in text
     assert '"root_observation_provenance": root_provenance' in text
+
+
+def test_external_evidence_manual_fallback_requires_registered_workflow():
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    external = policy["external_evidence"]
+    assert (
+        external["manual_intake_source_requires_registered_workflow"]
+        is True
+    )
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "observation_source_workflow_allowlist" in text
+    assert "manual intake observation workflow policy is invalid" in text
+    assert "manual intake source workflow is not registered for" in text
