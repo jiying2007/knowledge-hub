@@ -126,5 +126,25 @@
     "machine_artifact_requires_validation_run_match": false,
     "machine_artifact_requires_source_revision_match": true,
     "machine_artifact_requires_immutable_release": true
+  },
+  "external_evidence": {
+    "observation_generation_class": "real-world-evidence",
+    "validated_closure_class": "autonomous-low-risk-ratchet",
+    "supported_gaps": [
+      "connector-provider-pilot",
+      "production-retrieval-eval",
+      "memory-lifecycle-pilot",
+      "real-adoption-evidence"
+    ],
+    "strict_validator_required": true,
+    "same_repository_hosted_chain_required": true,
+    "synthetic_evidence_allowed": false,
+    "mock_evidence_allowed": false,
+    "local_only_evidence_allowed": false,
+    "machine_ratchet_may_create_pr": true,
+    "machine_ratchet_direct_master_write": false,
+    "machine_ratchet_auto_merge_requires_protected_branch": true,
+    "machine_ratchet_auto_merge_requires_exact_head_quality": true,
+    "machine_ratchet_auto_merge_executes_pr_code": false
   }
 }
