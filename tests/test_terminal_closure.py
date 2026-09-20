@@ -586,3 +586,32 @@ def test_terminal_closure_prefers_explicit_workflow_source_identity(
     assert report["branch_gc"]["repository_matches_current_run"] is True
     assert report["hosting_posture"]["revision_matches_current_run"] is True
     assert report["hosting_posture"]["repository_matches_current_run"] is True
+
+
+def test_terminal_closure_surfaces_rulesets_capability_without_weakening_gate(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=False,
+    )
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["rulesets_capability"] = {
+        "status": "plan-gated",
+        "reason": "private-repository-rulesets-require-upgrade-or-public",
+        "http_status": 403,
+        "ruleset_count": 0,
+    }
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["rulesets_capability"]["status"] == (
+        "plan-gated"
+    )
+    assert report["default_branch_protection"]["status"] == "needs-review"
+    assert report["terminal"] is False
+    assert "default_branch_protection" in report["blockers"]
