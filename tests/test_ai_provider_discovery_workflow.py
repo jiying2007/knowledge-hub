@@ -232,3 +232,19 @@ def test_ai_provider_discovery_requalifies_existing_unprotected_pr_without_churn
         "identical machine evidence ratchet PR already open while master remains unprotected"
         in text
     )
+
+
+def test_ai_provider_discovery_matches_machine_policy_quality_dispatch():
+    import json
+
+    policy = json.loads(
+        Path("registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    assert policy["guardrails"]["automation_pr_requires_explicit_quality_dispatch"] is True
+    boundary = policy["evidence_binding"]
+    assert boundary["machine_ratchet_may_create_pr"] is True
+    assert boundary["machine_ratchet_direct_master_write"] is False
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "gh workflow run quality.yml" in text
+    assert "HEAD:refs/heads/master" not in text
