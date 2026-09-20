@@ -5,7 +5,8 @@ import urllib.error
 import pytest
 
 from tools.codex_assets.knowledge_hub import hosting_posture
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 
 
 def _write_inventory(tmp_path, repository="example/knowledge-hub", revision=None):
@@ -178,3 +179,40 @@ def test_rulesets_capability_never_substitutes_for_branch_protection(
 
     assert report["rulesets_capability"]["status"] == "plan-gated"
     assert report["default_branch_protected"] is False
+
+
+def test_hosting_posture_matches_catalog_contract(monkeypatch, tmp_path):
+    _write_inventory(tmp_path)
+    monkeypatch.setattr(
+        hosting_posture,
+        "_request_repository_metadata",
+        lambda repository, token="": {
+            "full_name": repository,
+            "private": True,
+            "visibility": "private",
+            "default_branch": "master",
+        },
+    )
+
+    report = hosting_posture.evaluate_hosting_posture(
+        tmp_path,
+        repository="example/knowledge-hub",
+        source_revision="a" * 40,
+    )
+
+    result = validate_instance(
+        repository_root(),
+        "hosting-posture-v1",
+        report,
+    )
+    assert result["status"] == "pass", result["errors"]
+
+
+def test_hosting_posture_cli_validates_contract_before_write():
+    from pathlib import Path
+
+    text = (
+        Path("tools/codex_assets/knowledge_hub/hosting_posture_cli.py")
+    ).read_text(encoding="utf-8")
+    assert 'validate_instance(root, "hosting-posture-v1", payload)' in text
+    assert "hosting posture contract validation failed" in text
