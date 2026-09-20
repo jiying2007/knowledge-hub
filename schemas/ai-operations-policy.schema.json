@@ -139,7 +139,11 @@
         "machine_ratchet_auto_merge_requires_exact_head_quality",
         "machine_ratchet_auto_merge_requires_same_repository",
         "machine_ratchet_auto_merge_requires_origin_artifact_digest",
-        "machine_ratchet_auto_merge_executes_pr_code"
+        "machine_ratchet_auto_merge_executes_pr_code",
+        "machine_validation_requires_source_revision_match",
+        "machine_artifact_kinds",
+        "machine_artifact_requires_validation_run_match",
+        "machine_artifact_requires_source_revision_match"
       ],
       "properties": {
         "machine_ratchet_fields": {
@@ -191,6 +195,21 @@
         },
         "machine_ratchet_auto_merge_executes_pr_code": {
           "const": false
+        },
+        "machine_validation_requires_source_revision_match": {
+          "const": true
+        },
+        "machine_artifact_kinds": {
+          "type": "array",
+          "const": [
+            "github-actions-artifact"
+          ]
+        },
+        "machine_artifact_requires_validation_run_match": {
+          "const": true
+        },
+        "machine_artifact_requires_source_revision_match": {
+          "const": true
         }
       },
       "additionalProperties": false
