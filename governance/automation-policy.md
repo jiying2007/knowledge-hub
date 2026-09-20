@@ -89,6 +89,7 @@ Provider evidence 进一步按字段拆分责任边界：
 - 真实环境输入合同由 schema catalog 唯一声明：`connector-provider-observation-v1`、`production-retrieval-observation-v1`、`production-memory-observation-v1`、`production-adoption-observation-v1`；producer 输入先过 JSON Schema，再过 Python 跨字段严格 validator。外部系统无需读取实现代码猜测 payload。
 - strict producer 成功后，`external-evidence-intake` 可对 connector/retrieval/memory/adoption 四类 gap 自动从唯一 bounded artifact 推导 gap/run/artifact identity；manual master-only fallback 只保留给特殊非 producer 来源。
 - strict validator 只有在 synthetic/mock/local-only 全部明确为 false，且 gap-specific contract 全部通过时，才产生 `closure_ready=true`。
+- 所有 observation `observed_at` 必须是 UTC RFC3339；retrieval/memory/adoption 的 `window_end` 不得早于 `window_start`。validator receipt 的 `generated_at` 直接锚定 observation `observed_at`，同一输入重放不依赖 runner wall-clock。
 - closure-ready intake 会自动进入 deterministic `external-evidence-ratchet` candidate；此时 canonical gap closure 属于 `autonomous-low-risk-ratchet`，不再要求人工重复确认同一机器事实。
 - canonical 变更只能通过 same-repository `automation/external-gap-*` PR，且只修改 `registry/knowledge-platform-p5-p10.json` 与追加一条 durable evidence record。
 - automation PR 显式触发 exact-head Quality；master protection 后续恢复时，由 `hosting-posture-reconcile` 统一对受限 `automation/evidence-bind-*` / `automation/external-gap-*` PR 重新触发 fresh Quality，不把旧 success 当作新保护状态下的 merge 证据，也不为每类 ratchet 保留独立 daily poll。
