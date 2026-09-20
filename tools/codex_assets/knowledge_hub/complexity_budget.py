@@ -94,6 +94,22 @@ def _baseline_ref() -> str:
     return os.environ.get("KNOWLEDGE_COMPLEXITY_BASE_REF", "").strip()
 
 
+def _ci_baseline_required(policy: Mapping[str, Any]) -> bool:
+    python_policy = (
+        policy.get("python", {}) if isinstance(policy, Mapping) else {}
+    )
+    config = (
+        python_policy.get("ci_baseline", {})
+        if isinstance(python_policy, Mapping)
+        else {}
+    )
+    return bool(
+        os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+        and isinstance(config, Mapping)
+        and config.get("required_in_github_actions") is True
+    )
+
+
 def _git_ref_exists(root: pathlib.Path, ref: str) -> bool:
     if not ref or not (root / ".git").exists():
         return False
@@ -509,6 +525,8 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         policy
     )
     requested_baseline = _baseline_ref()
+    baseline_required = _ci_baseline_required(policy)
+    baseline_missing = bool(baseline_required and not requested_baseline)
     baseline_ref = requested_baseline
     baseline_error = bool(
         baseline_ref and not _git_ref_exists(root, baseline_ref)
@@ -523,6 +541,8 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         legacy_caps=legacy_caps,
         baseline_ref=baseline_ref,
     )
+    if baseline_missing:
+        regressions.append({"type": "complexity-baseline-missing"})
     if baseline_error:
         regressions.append(
             {
@@ -549,6 +569,7 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         "report_only_legacy": True,
         "policy": "registry/engineering-budgets.json",
         "baseline_ref": requested_baseline,
+        "baseline_required": baseline_required,
         "baseline_ref_resolved": bool(baseline_ref),
         "new_module_max_lines": module_limit,
         "new_function_max_lines": function_limit,
