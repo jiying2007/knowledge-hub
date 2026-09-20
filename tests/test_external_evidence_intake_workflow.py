@@ -112,3 +112,10 @@ def test_external_evidence_manual_fallback_keeps_trusted_master_source_boundary(
     assert "manual intake source run event is not trusted" in text
     assert '{"workflow_dispatch", "schedule"}' in text
     assert "manual intake source workflow path is invalid" in text
+
+
+def test_external_evidence_intake_retains_source_attempt_and_workflow_identity():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert '"source_run_attempt": int(run.get("run_attempt", 0) or 0)' in text
+    assert '"source_run_head_branch": str(run.get("head_branch") or "")' in text
+    assert '"source_workflow_path": str(run.get("path") or "")' in text
