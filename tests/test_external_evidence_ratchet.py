@@ -188,3 +188,21 @@ def test_external_ratchet_is_deterministic_for_same_hosted_evidence(tmp_path: Pa
         host_binding_path=paths[3],
     )
     assert first == second
+
+
+def test_external_ratchet_matches_ai_first_policy():
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    boundary = policy["external_evidence"]
+    assert boundary["observation_generation_class"] == "real-world-evidence"
+    assert boundary["validated_closure_class"] == "autonomous-low-risk-ratchet"
+    assert boundary["strict_validator_required"] is True
+    assert boundary["same_repository_hosted_chain_required"] is True
+    assert boundary["synthetic_evidence_allowed"] is False
+    assert boundary["mock_evidence_allowed"] is False
+    assert boundary["local_only_evidence_allowed"] is False
+    assert boundary["machine_ratchet_may_create_pr"] is True
+    assert boundary["machine_ratchet_direct_master_write"] is False
+    assert boundary["machine_ratchet_auto_merge_requires_protected_branch"] is True
