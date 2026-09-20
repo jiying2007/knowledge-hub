@@ -68,6 +68,17 @@ AI 可以准备 packet、发现候选、校验证据和生成最小 PR，但不�
 
 在默认分支仍未 protected 时，自动 merge 保持关闭。启用 protected branch 后，只有 `autonomous-low-risk-ratchet` 类 PR 在 exact-head Quality 成功、same-repository、当前 master 未漂移、文件与语义 allowlist 全部通过时才允许自动 squash merge；该高权限 workflow 不 checkout 或执行 PR 代码。
 
+### Security-critical PR change review
+
+Trust-root 文件变更采用 GitHub external review fact，而不是候选分支自写 authorization ledger：
+
+- `registry/review-risk-policy.json` 分类为 `security-critical` 的变更必须生成 deterministic `security-change-review-v1` packet，绑定 exact PR base/head、changed paths 与 GitHub review state。
+- 普通/人工 PR 只有在至少一个非 Bot、非 PR author 的 reviewer 对 **exact head SHA** 提交 `APPROVED` 后才通过；旧 commit approval、Bot approval、self approval 均不接受。
+- 候选 PR 内的 `registry/authorizations.jsonl` 不作为该 gate 的授权事实，避免候选代码自证批准。
+- 只有 same-repository、GitHub Actions bot 创建、branch prefix 属于 `automation/hosting-private-*` / `automation/evidence-bind-*` / `automation/external-gap-*` 的 machine ratchet 可以不要求人类 PR review；其 canonical merge 仍必须通过对应 dedicated trusted-master semantic verifier。
+- `security-critical-change-review` 只运行 default-branch trusted workflow，checkout PR base SHA；它通过 GitHub API 读取 head files/reviews，不 checkout 或执行 PR code，也没有 write permission。
+- 该 gate 本身、所有 workflow、authorization/review-risk/ratchet/verifier 等执行 trust root 同样分类为 `security-critical`，防止通过修改 verifier 绕过 verifier。
+
 ### Provider evidence machine ratchet
 
 Provider evidence 进一步按字段拆分责任边界：
