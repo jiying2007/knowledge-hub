@@ -84,7 +84,8 @@
         "machine_ratchet_uses_trusted_run_timestamp",
         "automation_pr_requires_explicit_quality_dispatch",
         "protection_recovery_requalification_owner",
-        "protection_recovery_duplicate_pollers_allowed"
+        "protection_recovery_duplicate_pollers_allowed",
+        "protected_branch_required_workflows"
       ],
       "properties": {
         "direct_master_write": {
@@ -134,6 +135,13 @@
         },
         "protection_recovery_duplicate_pollers_allowed": {
           "const": false
+        },
+        "protected_branch_required_workflows": {
+          "type": "array",
+          "const": [
+            "quality",
+            "security-critical-change-review"
+          ]
         }
       },
       "additionalProperties": false
