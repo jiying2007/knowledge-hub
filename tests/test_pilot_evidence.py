@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
 from tools.codex_assets.knowledge_hub.external_evidence import validate_external_evidence
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 from tools.codex_assets.knowledge_hub.pilot_evidence import (
     ADOPTION_SCHEMA,
     CONNECTOR_SCHEMA,
@@ -401,3 +402,41 @@ def test_adoption_dispatch_builder_requires_exact_gap():
             _adoption(),
             expected_gap="memory-lifecycle-pilot",
         )
+
+
+def test_real_observation_fixtures_match_catalog_contracts():
+    root = repository_root()
+    cases = (
+        ("connector-provider-observation-v1", _connector()),
+        ("production-retrieval-observation-v1", _retrieval()),
+        ("production-memory-observation-v1", _memory()),
+        ("production-adoption-observation-v1", _adoption()),
+    )
+    for contract_id, payload in cases:
+        result = validate_instance(root, contract_id, payload)
+        assert result["status"] == "pass", (contract_id, result["errors"])
+
+
+def test_real_observation_schema_rejects_prohibited_origin_before_projection():
+    root = repository_root()
+    payload = _adoption()
+    payload["origin"]["synthetic"] = True
+
+    result = validate_instance(
+        root,
+        "production-adoption-observation-v1",
+        payload,
+    )
+
+    assert result["status"] == "fail"
+    assert result["error_count"] > 0
+
+
+def test_pilot_cli_uses_catalog_schema_before_business_projection():
+    root = Path(__file__).resolve().parents[1]
+    text = (
+        root / "tools/codex_assets/knowledge_hub/pilot_evidence_cli.py"
+    ).read_text(encoding="utf-8")
+    assert "OBSERVATION_CONTRACTS" in text
+    assert "validate_instance(root, contract_id, observation)" in text
+    assert "pilot observation schema validation failed" in text
