@@ -166,7 +166,7 @@ def test_ratchet_workflow_automates_candidate_pr_without_direct_master_write():
     assert "workflow_run:" in workflow
     assert "external-evidence-intake" in workflow
     assert "workflow_dispatch:" in workflow
-    assert "schedule:" in workflow
+    assert "schedule:" not in workflow
     assert "pull_request:" in workflow
     assert "Create governed external evidence PR" in workflow
     assert "automation/external-gap-" in workflow
@@ -176,7 +176,7 @@ def test_ratchet_workflow_automates_candidate_pr_without_direct_master_write():
     assert "registry/knowledge-platform-p5-p10.json" in workflow
     assert "registry/durable-evidence-ledger.jsonl" in workflow
     assert "external evidence ratchet changed paths outside allowlist" in workflow
-    assert "Requalify external ratchets after protection recovery" in workflow
+    assert "Requalify external ratchets after protection recovery" not in workflow
     assert "Retire closed external ratchet branch" in workflow
     assert "requirements-runtime.lock" in workflow
     assert "requirements-dev.lock" not in workflow
@@ -238,21 +238,16 @@ def test_ratchet_workflow_uploads_origin_before_creating_pr():
     assert upload_index < pr_index
 
 
-def test_ratchet_workflow_daily_requalify_requires_real_protection():
+def test_ratchet_workflow_delegates_protection_requalification_to_hosting():
     root = Path(__file__).resolve().parents[1]
     text = (
         root / ".github/workflows/external-evidence-ratchet-candidate.yml"
     ).read_text(encoding="utf-8")
-    assert "master remains unprotected; no external ratchet requalification" in text
-    assert 'startsWith("automation/external-gap-")' in text
-    assert "gh workflow run quality.yml" in text
-
-
-def test_ratchet_requalification_ignores_historical_success_and_requires_fresh_trigger():
-    root = Path(__file__).resolve().parents[1]
-    text = (
-        root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    hosting = (
+        root / ".github/workflows/hosting-posture-reconcile.yml"
     ).read_text(encoding="utf-8")
-    assert '$4 == "success"' not in text
-    assert "exact-head Quality already active:" in text
-    assert "gh workflow run quality.yml" in text
+
+    assert "schedule:" not in text
+    assert "Requalify external ratchets after protection recovery" not in text
+    assert 'requalify_prefix "automation/external-gap-"' in hosting
+    assert "Requalify bounded automation PRs after protection recovery" in hosting
