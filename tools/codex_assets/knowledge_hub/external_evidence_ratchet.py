@@ -134,6 +134,29 @@ def _validate_intake(
     if _sha256(intake.get("receipt_sha256"), "intake closure receipt digest") != closure_context["closure_sha"]:
         raise KnowledgeHubError("intake receipt is not bound to the supplied closure receipt")
     provenance = _object(intake.get("source_provenance"), "source provenance")
+    if provenance.get("source_run_head_branch") != "master":
+        raise KnowledgeHubError(
+            "source provenance must originate from master"
+        )
+    if provenance.get("source_run_event") not in {
+        "workflow_dispatch",
+        "schedule",
+    }:
+        raise KnowledgeHubError(
+            "source provenance event is not trusted"
+        )
+    workflow_path = _text(
+        provenance.get("source_workflow_path"),
+        "source workflow path",
+        512,
+    )
+    if (
+        not workflow_path.startswith(".github/workflows/")
+        or not workflow_path.endswith(".yml")
+    ):
+        raise KnowledgeHubError(
+            "source provenance workflow path is invalid"
+        )
     artifact_digest = _text(provenance.get("artifact_digest"), "source artifact digest", 128)
     if not artifact_digest.startswith("sha256:"):
         raise KnowledgeHubError("source artifact digest must use sha256")
@@ -143,6 +166,9 @@ def _validate_intake(
         "repository": _text(provenance.get("repository"), "source repository", 512),
         "source_run_id": _positive_int(provenance.get("source_run_id"), "source run id"),
         "source_run_head": _git_sha(provenance.get("source_run_head_sha"), "source run head"),
+        "source_run_head_branch": "master",
+        "source_run_event": str(provenance.get("source_run_event")),
+        "source_workflow_path": workflow_path,
         "source_artifact_id": _positive_int(provenance.get("artifact_id"), "source artifact id"),
         "source_artifact_digest": artifact_digest,
         "intake_run_id": _positive_int(intake.get("intake_run_id"), "intake run id"),
