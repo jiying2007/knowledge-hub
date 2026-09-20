@@ -226,6 +226,20 @@ jobs:
           binding["intake_receipt_sha256"] = hashlib.sha256(
               intake.read_bytes()
           ).hexdigest()
+
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path(".").resolve(),
+              "external-evidence-intake-host-binding-v1",
+              binding,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "external intake host binding contract validation failed: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
           (root / "host-binding.json").write_text(
               json.dumps(binding, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
@@ -264,6 +278,17 @@ jobs:
               (cache / "candidate-registry.json").read_text(encoding="utf-8")
           )
           gap = os.environ["GAP"]
+          proposal_validation = validate_instance(
+              Path(".").resolve(),
+              "external-evidence-ratchet-proposal-v2",
+              proposal,
+          )
+          if proposal_validation.get("status") != "pass":
+              raise SystemExit(
+                  "external ratchet proposal contract validation failed: {}".format(
+                      proposal_validation.get("errors", [])
+                  )
+              )
           if proposal.get("status") != "ready-for-machine-ratchet":
               raise SystemExit("external ratchet proposal is not machine-ready")
           if proposal.get("authorization_class") != "autonomous-low-risk-ratchet":
