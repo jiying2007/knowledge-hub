@@ -165,6 +165,10 @@ def _validate_intake(
         "intake_sha": intake_sha,
         "repository": _text(provenance.get("repository"), "source repository", 512),
         "source_run_id": _positive_int(provenance.get("source_run_id"), "source run id"),
+        "source_run_attempt": _positive_int(
+            provenance.get("source_run_attempt"),
+            "source run attempt",
+        ),
         "source_run_head": _git_sha(provenance.get("source_run_head_sha"), "source run head"),
         "source_run_head_branch": "master",
         "source_run_event": str(provenance.get("source_run_event")),
@@ -266,6 +270,7 @@ def _build_candidate(
         "host_binding_sha256": binding["binding_sha"],
         "source_run_head_sha": intake["source_run_head"],
         "source_run_id": intake["source_run_id"],
+        "source_run_attempt": intake["source_run_attempt"],
         "source_artifact_id": intake["source_artifact_id"],
         "source_artifact_digest": intake["source_artifact_digest"],
         "intake_run_head_sha": binding["intake_run_head"],
