@@ -73,6 +73,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
           ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          EXPECTED_GAP: ${{ inputs.expected_gap }}
         run: |
           set -euo pipefail
           mkdir -p .cache/knowledge-hub/external-pilot-evidence
@@ -97,6 +98,27 @@ jobs:
           workflow_path = str(run.get('path') or '')
           if not workflow_path.startswith('.github/workflows/') or not workflow_path.endswith('.yml'):
               raise SystemExit('observation source workflow path is invalid')
+
+          policy = json.loads(
+              Path('registry/ai-operations-policy.json').read_text(
+                  encoding='utf-8'
+              )
+          )
+          external = policy.get('external_evidence') or {}
+          allowlists = external.get('observation_source_workflow_allowlist') or {}
+          gap = os.environ['EXPECTED_GAP']
+          allowed = allowlists.get(gap)
+          if not isinstance(allowed, list):
+              raise SystemExit(
+                  'observation source workflow registration policy is invalid'
+              )
+          if workflow_path not in allowed:
+              raise SystemExit(
+                  'observation source workflow is not registered for {}'.format(
+                      gap
+                  )
+              )
+
           head_sha = str(run.get('head_sha') or '').lower()
           if len(head_sha) != 40 or any(ch not in '0123456789abcdef' for ch in head_sha):
               raise SystemExit('observation source run must expose an exact git revision')
