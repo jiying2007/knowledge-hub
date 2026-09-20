@@ -156,7 +156,7 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 - `canonical_write_performed=false`；
 - `automatic_binding_enabled=false`。
 
-独立 `.github/workflows/ai-provider-discovery.yml` 可在受信 `master` 上定时执行 P2.2→P2.4，并对同一 canonical target field 只有唯一合格 proposal 的情况自动推进到 review bundle。这个“自动选择”仍明确 `selection_is_authorization=false`，不会 canonical apply；只有达到 `needs-governed-authorization` 才向人暴露一个授权队列。
+独立 `.github/workflows/ai-provider-discovery.yml` 可在受信 `master` 上执行 P2.2→P2.5，并把唯一候选进一步分成 machine route 与 human route。`source_refs` / `validation_refs` / `artifact_refs` 只有在 provider verified、append-only、不会改变 owner/status/readiness/evidence-ready 时才可形成 governed `automation/evidence-bind-*` PR；`release_ref` 继续进入 `human-authorization`。UI 本身仍不执行这些写动作，页面继续保持 GET-only。
 
 因此“发现候选”不等于“证据有效”，也不会改变 readiness。远端 provider 找不到现有 release 时，后续应升级到显式发布授权，而不是由 UI 自动创建 release。
 
