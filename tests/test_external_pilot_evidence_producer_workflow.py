@@ -86,3 +86,9 @@ def test_external_pilot_producer_retains_attempt_and_validates_root_provenance()
     assert "'source_run_attempt': int(run.get('run_attempt', 0) or 0)" in text
     assert "external-evidence-source-provenance-v1" in text
     assert "observation source provenance contract failed" in text
+
+
+def test_external_pilot_producer_validates_producer_receipt_contract():
+    text = _workflow()
+    assert "external-pilot-evidence-producer-receipt-v1" in text
+    assert "producer receipt contract validation failed" in text
