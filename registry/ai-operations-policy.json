@@ -176,7 +176,14 @@
     },
     "root_observation_provenance_required": true,
     "root_observation_revision_must_match_evidence_source_revision": true,
-    "producer_code_revision_source": "github-workflow-sha"
+    "producer_code_revision_source": "github-workflow-sha",
+    "observation_source_workflow_allowlist": {
+      "connector-provider-pilot": [],
+      "production-retrieval-eval": [],
+      "memory-lifecycle-pilot": [],
+      "real-adoption-evidence": []
+    },
+    "observation_source_requires_explicit_registration": true
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
