@@ -27,6 +27,7 @@ def test_evidence_ratchet_automerge_triggers_only_after_quality():
     condition = job["if"]
     assert "workflow_run.conclusion == 'success'" in condition
     assert "workflow_run.event == 'pull_request'" in condition
+    assert "workflow_run.event == 'workflow_dispatch'" in condition
     assert "workflow_run.head_repository.full_name == github.repository" in condition
     assert "automation/evidence-bind-" in condition
 
@@ -71,7 +72,7 @@ def test_evidence_ratchet_automerge_revalidates_exact_quality_identity():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert '"name": "quality"' in text
     assert '"path": ".github/workflows/quality.yml"' in text
-    assert '"event": "pull_request"' in text
+    assert 'run.get("event") not in {"pull_request", "workflow_dispatch"}' in text
     assert '"conclusion": "success"' in text
     assert '"head_sha": os.environ["HEAD_SHA"]' in text
     assert "trigger Quality head repository mismatch" in text
