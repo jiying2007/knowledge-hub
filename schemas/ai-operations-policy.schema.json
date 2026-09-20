@@ -254,7 +254,9 @@
         "observation_source_requires_workflow_path",
         "observation_contracts",
         "validator_receipt_timestamp_source",
-        "manual_intake_source_requires_trusted_master_run"
+        "manual_intake_source_requires_trusted_master_run",
+        "observation_timestamps_require_utc",
+        "production_windows_must_be_ordered"
       ],
       "properties": {
         "observation_generation_class": {
@@ -331,6 +333,12 @@
           "const": "observation-observed-at"
         },
         "manual_intake_source_requires_trusted_master_run": {
+          "const": true
+        },
+        "observation_timestamps_require_utc": {
+          "const": true
+        },
+        "production_windows_must_be_ordered": {
           "const": true
         }
       },
