@@ -52,3 +52,9 @@ def test_external_pilot_producer_cannot_mutate_canonical_registry():
     assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json" in text
     assert "canonical_write_performed': False" in text
     assert "registry/knowledge-platform-p5-p10.json" not in text.split("path: |", 1)[-1]
+
+
+def test_external_pilot_producer_uses_runtime_dependency_surface():
+    text = _workflow()
+    assert "requirements-runtime.lock" in text
+    assert "requirements-dev.lock" not in text
