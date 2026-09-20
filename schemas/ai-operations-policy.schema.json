@@ -256,7 +256,10 @@
         "validator_receipt_timestamp_source",
         "manual_intake_source_requires_trusted_master_run",
         "observation_timestamps_require_utc",
-        "production_windows_must_be_ordered"
+        "production_windows_must_be_ordered",
+        "trust_artifact_contracts",
+        "root_observation_provenance_required",
+        "root_observation_revision_must_match_evidence_source_revision"
       ],
       "properties": {
         "observation_generation_class": {
@@ -339,6 +342,24 @@
           "const": true
         },
         "production_windows_must_be_ordered": {
+          "const": true
+        },
+        "trust_artifact_contracts": {
+          "type": "object",
+          "const": {
+            "source_provenance": "external-evidence-source-provenance-v1",
+            "producer_receipt": "external-pilot-evidence-producer-receipt-v1",
+            "closure_receipt": "external-evidence-receipt-v1",
+            "intake_receipt": "external-evidence-intake-receipt-v1",
+            "host_binding": "external-evidence-intake-host-binding-v1",
+            "ratchet_proposal": "external-evidence-ratchet-proposal-v2",
+            "ratchet_verification": "external-evidence-ratchet-verification-v1"
+          }
+        },
+        "root_observation_provenance_required": {
+          "const": true
+        },
+        "root_observation_revision_must_match_evidence_source_revision": {
           "const": true
         }
       },
