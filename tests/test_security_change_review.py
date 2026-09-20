@@ -236,6 +236,24 @@ def test_security_change_review_matches_machine_policy_and_schema():
     assert boundary["pr_author_self_approval_allowed"] is False
     assert boundary["candidate_local_authorization_ledger_trusted"] is False
     assert boundary["workflow_executes_pr_code"] is False
+    assert (
+        boundary["autonomous_ratchet_exemption_requires_direct_child"]
+        is True
+    )
+    assert boundary["autonomous_ratchet_file_allowlists"] == {
+        "automation/hosting-private-": [
+            "registry/durable-evidence-ledger.jsonl",
+            "registry/knowledge-platform-p5-p10.json",
+        ],
+        "automation/evidence-bind-": [
+            "registry/durable-evidence-ledger.jsonl",
+            "registry/items.jsonl",
+        ],
+        "automation/external-gap-": [
+            "registry/durable-evidence-ledger.jsonl",
+            "registry/knowledge-platform-p5-p10.json",
+        ],
+    }
     assert policy["guardrails"]["protected_branch_required_workflows"] == [
         "quality",
         "security-critical-change-review",
