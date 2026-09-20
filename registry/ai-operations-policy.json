@@ -198,5 +198,21 @@
     "owner_gate_close_requires_zero_owner_boundary_pending": true,
     "qualification_close_requires_pass": true,
     "reopen_on_regression": true
+  },
+  "security_change_review": {
+    "enabled": true,
+    "authorization_source": "github-pr-review",
+    "exact_head_required": true,
+    "non_bot_reviewer_required": true,
+    "pr_author_self_approval_allowed": false,
+    "candidate_local_authorization_ledger_trusted": false,
+    "workflow_executes_pr_code": false,
+    "autonomous_ratchet_exemption_requires_same_repository": true,
+    "autonomous_ratchet_exemption_requires_github_actions_bot": true,
+    "autonomous_ratchet_branch_prefixes": [
+      "automation/hosting-private-",
+      "automation/evidence-bind-",
+      "automation/external-gap-"
+    ]
   }
 }
