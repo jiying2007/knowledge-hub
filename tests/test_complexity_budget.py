@@ -474,7 +474,7 @@ def test_complexity_budget_fails_closed_when_requested_baseline_is_unavailable(
     )
 
 
-def test_complexity_budget_github_actions_requires_explicit_baseline(
+def test_complexity_budget_engineering_mode_requires_explicit_baseline(
     tmp_path, monkeypatch
 ):
     package = tmp_path / "tools/codex_assets/knowledge_hub"
@@ -484,12 +484,13 @@ def test_complexity_budget_github_actions_requires_explicit_baseline(
     policy_path = tmp_path / "registry/engineering-budgets.json"
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
     policy["python"]["ci_baseline"] = {
-        "required_in_github_actions": True,
-        "env": "KNOWLEDGE_COMPLEXITY_BASE_REF",
+        "required_in_quality_engineering": True,
+        "base_ref_env": "KNOWLEDGE_COMPLEXITY_BASE_REF",
+        "enforce_env": "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE",
         "missing_or_invalid": "fail",
     }
     policy_path.write_text(json.dumps(policy), encoding="utf-8")
-    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE", "true")
     monkeypatch.delenv("KNOWLEDGE_COMPLEXITY_BASE_REF", raising=False)
 
     report = evaluate_complexity_budget(tmp_path)
