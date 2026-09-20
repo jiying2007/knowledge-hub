@@ -11,7 +11,8 @@
     "guardrails",
     "evidence_binding",
     "external_evidence",
-    "owner_qualification"
+    "owner_qualification",
+    "security_change_review"
   ],
   "properties": {
     "schema_version": {
@@ -470,6 +471,59 @@
         },
         "reopen_on_regression": {
           "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "security_change_review": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "authorization_source",
+        "exact_head_required",
+        "non_bot_reviewer_required",
+        "pr_author_self_approval_allowed",
+        "candidate_local_authorization_ledger_trusted",
+        "workflow_executes_pr_code",
+        "autonomous_ratchet_exemption_requires_same_repository",
+        "autonomous_ratchet_exemption_requires_github_actions_bot",
+        "autonomous_ratchet_branch_prefixes"
+      ],
+      "properties": {
+        "enabled": {
+          "const": true
+        },
+        "authorization_source": {
+          "const": "github-pr-review"
+        },
+        "exact_head_required": {
+          "const": true
+        },
+        "non_bot_reviewer_required": {
+          "const": true
+        },
+        "pr_author_self_approval_allowed": {
+          "const": false
+        },
+        "candidate_local_authorization_ledger_trusted": {
+          "const": false
+        },
+        "workflow_executes_pr_code": {
+          "const": false
+        },
+        "autonomous_ratchet_exemption_requires_same_repository": {
+          "const": true
+        },
+        "autonomous_ratchet_exemption_requires_github_actions_bot": {
+          "const": true
+        },
+        "autonomous_ratchet_branch_prefixes": {
+          "type": "array",
+          "const": [
+            "automation/hosting-private-",
+            "automation/evidence-bind-",
+            "automation/external-gap-"
+          ]
         }
       },
       "additionalProperties": false
