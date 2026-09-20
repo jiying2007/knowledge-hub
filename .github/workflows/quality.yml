@@ -74,6 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
+      KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE: "true"
       KNOWLEDGE_COMPLEXITY_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || 'origin/master' }}
     steps:
       - name: Checkout
