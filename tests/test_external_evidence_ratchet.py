@@ -141,6 +141,35 @@ def test_ratchet_builder_closes_only_requested_gap_as_machine_candidate(tmp_path
         gaps[GAP]["evidence"]["root_source_workflow_path"]
         == ".github/workflows/real-observation-source.yml"
     )
+    evidence = gaps[GAP]["evidence"]
+    assert evidence["source_run_attempt"] == 1
+    assert evidence["source_run_event"] == "workflow_dispatch"
+    assert (
+        evidence["source_workflow_path"]
+        == ".github/workflows/real-observation-source.yml"
+    )
+    assert evidence["source_artifact_name"] == "real-provider-evidence"
+    assert evidence["root_source_run_event"] == "workflow_dispatch"
+    assert evidence["root_source_artifact_name"] == "real-provider-evidence"
+    assert evidence["intake_run_attempt"] == 1
+    assert (
+        evidence["intake_workflow_path"]
+        == ".github/workflows/external-evidence-intake.yml"
+    )
+    assert (
+        evidence["intake_artifact_name"]
+        == "knowledge-hub-external-evidence-connector-provider-pilot-789-1"
+    )
+    assert "https://github.com/jiying2007/knowledge-hub/actions/runs/123" in (
+        gaps[GAP]["evidence_refs"]
+    )
+    assert (
+        "https://github.com/jiying2007/knowledge-hub/actions/runs/123/artifacts/456"
+        in gaps[GAP]["evidence_refs"]
+    )
+    assert len(gaps[GAP]["evidence_refs"]) == len(
+        set(gaps[GAP]["evidence_refs"])
+    )
     assert gaps["mcp-official-conformance"]["status"] == "closed"
     assert proposal["projection"] == "knowledge-hub-external-evidence-ratchet-proposal-v2"
     assert proposal["status"] == "ready-for-machine-ratchet"
@@ -457,3 +486,33 @@ def test_ratchet_builder_rejects_cross_repository_root_provenance(
             intake_receipt_path=paths[2],
             host_binding_path=paths[3],
         )
+
+
+def test_external_ratchet_hosted_refs_dedupe_manual_root_and_source(
+    tmp_path: Path,
+):
+    paths = _fixture(tmp_path)
+    intake = json.loads(paths[2].read_text(encoding="utf-8"))
+    intake["root_observation_provenance"] = dict(
+        intake["source_provenance"]
+    )
+    _write(paths[2], intake)
+    binding = json.loads(paths[3].read_text(encoding="utf-8"))
+    binding["intake_receipt_sha256"] = hashlib.sha256(
+        paths[2].read_bytes()
+    ).hexdigest()
+    _write(paths[3], binding)
+
+    candidate, _ = build_external_gap_ratchet_candidate(
+        registry_path=paths[0],
+        closure_receipt_path=paths[1],
+        intake_receipt_path=paths[2],
+        host_binding_path=paths[3],
+    )
+    gap = next(
+        row
+        for row in candidate["external_closure_gaps"]
+        if row["id"] == GAP
+    )
+
+    assert len(gap["evidence_refs"]) == len(set(gap["evidence_refs"]))
