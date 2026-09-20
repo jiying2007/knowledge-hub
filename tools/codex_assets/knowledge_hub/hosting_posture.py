@@ -58,6 +58,100 @@ def _request_repository_metadata(repository: str, token: str = "") -> Dict[str, 
     return dict(value)
 
 
+def _rulesets_capability(
+    repository: str,
+    token: str,
+) -> Dict[str, Any]:
+    if not token:
+        return {
+            "status": "not-probed",
+            "reason": "github-token-unavailable",
+            "http_status": 0,
+            "ruleset_count": 0,
+        }
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": "Bearer {}".format(token),
+        "User-Agent": "knowledge-hub-hosting-posture",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    request = urllib.request.Request(
+        "https://api.github.com/repos/{}/rulesets".format(repository),
+        headers=headers,
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=_TIMEOUT_SECONDS,
+        ) as response:  # nosec B310
+            raw = response.read(_MAX_BYTES + 1)
+            http_status = int(getattr(response, "status", 200) or 200)
+    except urllib.error.HTTPError as exc:
+        try:
+            raw = exc.read(_MAX_BYTES + 1)
+            payload = json.loads(raw.decode("utf-8"))
+            message = (
+                str(payload.get("message", ""))
+                if isinstance(payload, Mapping)
+                else ""
+            )
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            message = ""
+        if exc.code == 403 and "Upgrade to GitHub Pro" in message:
+            status = "plan-gated"
+            reason = "private-repository-rulesets-require-upgrade-or-public"
+        elif exc.code == 403:
+            status = "integration-forbidden"
+            reason = "rulesets-not-readable-by-current-token"
+        else:
+            status = "unavailable"
+            reason = "rulesets-api-http-error"
+        return {
+            "status": status,
+            "reason": reason,
+            "http_status": int(exc.code),
+            "ruleset_count": 0,
+            "message": message,
+        }
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return {
+            "status": "unavailable",
+            "reason": "rulesets-api-network-error",
+            "http_status": 0,
+            "ruleset_count": 0,
+        }
+    if len(raw) > _MAX_BYTES:
+        return {
+            "status": "unavailable",
+            "reason": "rulesets-response-exceeds-byte-budget",
+            "http_status": http_status,
+            "ruleset_count": 0,
+        }
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {
+            "status": "unavailable",
+            "reason": "rulesets-response-invalid",
+            "http_status": http_status,
+            "ruleset_count": 0,
+        }
+    if not isinstance(payload, list):
+        return {
+            "status": "unavailable",
+            "reason": "rulesets-response-not-list",
+            "http_status": http_status,
+            "ruleset_count": 0,
+        }
+    return {
+        "status": "available",
+        "reason": "",
+        "http_status": http_status,
+        "ruleset_count": len(payload),
+    }
+
+
 def evaluate_hosting_posture(
     root: pathlib.Path,
     *,
@@ -77,6 +171,7 @@ def evaluate_hosting_posture(
     if inventory.get("source_revision") != source_revision:
         raise KnowledgeHubError("branch inventory source revision mismatch")
     metadata = _request_repository_metadata(repository, token)
+    rulesets = _rulesets_capability(repository, token)
     if metadata.get("full_name") != repository:
         raise KnowledgeHubError("repository metadata identity mismatch")
     private_value = metadata.get("private")
@@ -100,6 +195,7 @@ def evaluate_hosting_posture(
         "default_branch_present": inventory.get("default_branch_present") is True,
         "default_branch_protection_observed": inventory.get("default_branch_protection_observed") is True,
         "default_branch_protected": inventory.get("default_branch_protected") is True,
+        "rulesets_capability": rulesets,
         "branch_inventory": branch_inventory,
         "canonical_write": False,
     }
