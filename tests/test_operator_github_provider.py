@@ -101,6 +101,7 @@ def test_artifact_discovery_ignores_expired_actions_artifacts() -> None:
                 {
                     "id": 3,
                     "tag_name": "v1.0.0",
+                    "immutable": True,
                     "draft": False,
                     "prerelease": False,
                     "assets": [
@@ -113,6 +114,9 @@ def test_artifact_discovery_ignores_expired_actions_artifacts() -> None:
                     ],
                 }
             ],
+            "/repos/example/tool/commits/v1.0.0": {
+                "sha": "a" * 40,
+            },
             "/repos/example/tool/actions/artifacts?per_page=20": {
                 "artifacts": [
                     {
@@ -144,6 +148,9 @@ def test_artifact_discovery_ignores_expired_actions_artifacts() -> None:
     assert "github-actions-artifact://example/tool/41" in refs
     assert "github-actions-artifact://example/tool/42" not in refs
     by_ref = {row["ref"]: row for row in result["candidates"]}
+    release_details = by_ref["github-release-asset://example/tool/31"]["details"]
+    assert release_details["release_immutable"] is True
+    assert release_details["release_tag_commit_sha"] == "a" * 40
     action_details = by_ref["github-actions-artifact://example/tool/41"]["details"]
     assert action_details["workflow_run_id"] == "10"
     assert action_details["workflow_run_head_sha"] == "a" * 40
