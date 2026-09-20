@@ -30,16 +30,9 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 
 `--propose` 会在同一次显式调用中执行 P2.2 → P2.3 → P2.4，但只输出 proposal；它不会修改 `registry/items.jsonl`、项目 readiness Markdown、owner、evidence contract status 或其它 canonical state。
 
-AI-first 唯一候选路径可以自动完成“选择但不授权”：当每个 canonical item + field 只有一个 `ready-for-governed-review` proposal、且没有 conflict/unmappable 时：
+显式人工审阅场景仍可使用 `--auto-review-unique` 生成 patch plan + review bundle；它只做“唯一候选选择”，固定 `selection_is_authorization=false`、`canonical_write_performed=false`，不作为 AI-first 默认执行入口。
 
-```bash
-tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
-  --root . --auto-review-unique --json
-```
-
-该入口在同一次 fresh provider projection 上生成 patch plan + review bundle，并固定 `selection_is_authorization=false`、`canonical_write_performed=false`。一旦同 target 有多个候选则返回 `ambiguous`，不替人猜选。
-
-AI-first 推荐入口进一步按责任边界拆分唯一候选：
+AI-first 默认入口按责任边界拆分唯一候选：
 
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
