@@ -126,3 +126,15 @@ def test_hosting_reconcile_uses_runtime_not_dev_dependency_surface():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
+
+
+def test_hosting_reconcile_explicitly_dispatches_quality_for_token_created_pr():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "ensure_quality()" in text
+    assert "actions/workflows/quality.yml/runs?branch=${quality_branch}" in text
+    assert "gh workflow run quality.yml" in text
+    assert '--ref "${quality_branch}"' in text
+    assert 'ensure_quality "${branch}" "$(git rev-parse HEAD)"' in text
+    assert "headRefName" in text
+    assert "headRefOid" in text
+    assert 'ensure_quality "${existing_branch}" "${existing_sha}"' in text
