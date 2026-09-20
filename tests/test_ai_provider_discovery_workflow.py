@@ -82,7 +82,11 @@ def test_ai_provider_discovery_routes_machine_and_human_evidence_separately():
     assert "ready-for-machine-ratchet" in text
     assert "needs-governed-authorization" in text
     assert "mixed-routing" in text
-    assert "steps.discover.outputs.human != '0'" in text
+    assert (
+        "steps.discover.outputs.human_status == "
+        "'needs-governed-authorization'"
+        in text
+    )
     assert "steps.discover.outputs.machine != '0'" in text
 
 
@@ -133,7 +137,11 @@ def test_ai_provider_discovery_routes_only_remaining_human_boundary_to_issue():
     assert "AI evidence binding: governed authorization pending" in text
     assert "release/owner/device/production evidence was not fabricated" in text
     assert "Close stale authorization issue when no human route remains" in text
-    assert "steps.discover.outputs.human == '0'" in text
+    assert (
+        "steps.discover.outputs.human_status != "
+        "'needs-governed-authorization'"
+        in text
+    )
     assert "gh issue close" in text
 
 
@@ -188,3 +196,14 @@ def test_ai_provider_discovery_closes_superseded_pr_only_after_fresh_pr_exists()
     create_index = text.index("gh pr create")
     supersede_index = text.index("Superseded by fresh machine evidence ratchet")
     assert create_index < supersede_index
+
+
+def test_ai_provider_discovery_does_not_escalate_blocked_human_route():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'handle.write("human_status={}\\n"' in text
+    assert 'handle.write("machine_status={}\\n"' in text
+    assert (
+        "steps.discover.outputs.human_status == "
+        "'needs-governed-authorization'"
+        in text
+    )
