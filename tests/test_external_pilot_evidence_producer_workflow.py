@@ -79,3 +79,10 @@ def test_external_pilot_producer_requires_trusted_master_observation_run():
     assert "observation source workflow path is invalid" in text
     assert "'source_run_head_branch':" in text
     assert "'source_workflow_path':" in text
+
+
+def test_external_pilot_producer_retains_attempt_and_validates_root_provenance():
+    text = _workflow()
+    assert "'source_run_attempt': int(run.get('run_attempt', 0) or 0)" in text
+    assert "external-evidence-source-provenance-v1" in text
+    assert "observation source provenance contract failed" in text
