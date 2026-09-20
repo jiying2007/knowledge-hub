@@ -47,11 +47,11 @@ def test_evidence_ratchet_automerge_never_executes_pr_code():
     steps = payload["jobs"]["merge"]["steps"]
     checkout = [step for step in steps if str(step.get("uses", "")).startswith("actions/checkout@")]
     assert len(checkout) == 1
-    assert checkout[0]["with"]["ref"] == "${{ steps.resolve.outputs.master_sha }}"
+    assert checkout[0]["with"]["ref"] == "${{ env.WORKFLOW_SHA }}"
     assert checkout[0]["with"]["persist-credentials"] == "false"
 
     text = WORKFLOW.read_text(encoding="utf-8")
-    assert "Checkout exact trusted master verifier" in text
+    assert "Checkout trusted workflow revision" in text
     assert "ref: ${{ env.HEAD_SHA }}" not in text
     assert "ref: ${{ github.event.workflow_run.head_sha }}" not in text
     assert "pull_request_target" not in text
@@ -146,3 +146,26 @@ def test_evidence_ratchet_automerge_retains_bounded_verification_metadata():
         == ".cache/knowledge-hub/evidence-ratchet-automerge/*.json"
     )
     assert "origin-artifact" not in upload["with"]["path"]
+
+
+def test_evidence_ratchet_automerge_resolves_identity_after_trusted_checkout():
+    payload = _workflow()
+    steps = payload["jobs"]["merge"]["steps"]
+    checkout_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Checkout trusted workflow revision"
+    )
+    resolve_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Resolve protected current master and exact PR"
+    )
+    fetch_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Fetch exact base and head canonical files"
+    )
+    assert checkout_index < resolve_index < fetch_index
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "trusted auto-merge workflow is not bound to current master" in text
