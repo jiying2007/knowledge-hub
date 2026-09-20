@@ -295,6 +295,13 @@
       "applies_to": ".cache/knowledge-hub/evidence-ratchet-automerge/verification.json",
       "authority": "derived-trusted-machine-ratchet-verification",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-ratchet-verification-v1",
+      "schema": "schemas/external-evidence-ratchet-verification.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet-automerge/verification.json",
+      "authority": "derived-trusted-external-ratchet-verification",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
