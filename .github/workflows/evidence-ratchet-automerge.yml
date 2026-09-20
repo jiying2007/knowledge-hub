@@ -37,6 +37,25 @@ jobs:
       WORKFLOW_SHA: ${{ github.workflow_sha }}
 
     steps:
+      - name: Checkout trusted workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.WORKFLOW_SHA }}
+          persist-credentials: false
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
       - name: Resolve protected current master and exact PR
         id: resolve
         env:
@@ -63,7 +82,7 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=master&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}&per_page=10" \
             > "${cache}/pulls.json"
 
-          python3 - <<'PY'
+          rtk python3 - <<'PY'
           import json
           import os
           from pathlib import Path
@@ -142,24 +161,6 @@ jobs:
               handle.write("master_sha={}\n".format(master_sha))
           PY
 
-      - name: Checkout exact trusted master verifier
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ steps.resolve.outputs.master_sha }}
-          persist-credentials: false
-
-      - name: Set up governed Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.14"
-          cache: pip
-          cache-dependency-path: requirements-runtime.lock
-
-      - name: Bootstrap governed CI transport
-        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
-
-      - name: Install hash-locked runtime dependencies
-        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
 
       - name: Fetch exact base and head canonical files
         id: origin
