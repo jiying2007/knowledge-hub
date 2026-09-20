@@ -231,6 +231,21 @@
     "authorization_mechanisms": [
       "exact-head-pr-review",
       "hash-bound-pr-comment"
-    ]
+    ],
+    "autonomous_ratchet_exemption_requires_direct_child": true,
+    "autonomous_ratchet_file_allowlists": {
+      "automation/hosting-private-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json"
+      ],
+      "automation/evidence-bind-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/items.jsonl"
+      ],
+      "automation/external-gap-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json"
+      ]
+    }
   }
 }
