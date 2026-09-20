@@ -88,6 +88,9 @@ Provider evidence 进一步按字段拆分责任边界：
 - `external-pilot-evidence-producer` 只把显式选择的真实 observation 投影成 strict evidence；它不修改 canonical state。
 - 真实环境输入合同由 schema catalog 唯一声明：`connector-provider-observation-v1`、`production-retrieval-observation-v1`、`production-memory-observation-v1`、`production-adoption-observation-v1`；producer 输入先过 JSON Schema，再过 Python 跨字段严格 validator。外部系统无需读取实现代码猜测 payload。
 - strict producer 成功后，`external-evidence-intake` 可对 connector/retrieval/memory/adoption 四类 gap 自动从唯一 bounded artifact 推导 gap/run/artifact identity；manual master-only fallback 只保留给特殊非 producer 来源。
+- external evidence trust chain 明确保留两层 provenance：`root_observation_provenance` 指向最初真实 observation source run/attempt/SHA/workflow/artifact；`source_provenance` 指向 intake 直接消费的 source（通常是 producer run）。自动 producer 路径必须用 `producer-receipt.json` 将两层绑定，manual fallback 则两者相同。
+- root observation 必须 same-repository、`master`、trusted event，且 root head SHA 必须等于 strict evidence `source_revision`；connector 的 `adapter_commit` 也必须等于该 source revision。
+- 跨 workflow trust artifact 全部采用 catalog contract：`external-evidence-source-provenance-v1`、`external-pilot-evidence-producer-receipt-v1`、`external-evidence-receipt-v1`、`external-evidence-intake-receipt-v1`、`external-evidence-intake-host-binding-v1`、`external-evidence-ratchet-proposal-v2`、`external-evidence-ratchet-verification-v1`；生成端与高权限 merge verifier 双重验证。
 - strict validator 只有在 synthetic/mock/local-only 全部明确为 false，且 gap-specific contract 全部通过时，才产生 `closure_ready=true`。
 - 所有 observation `observed_at` 必须是 UTC RFC3339；retrieval/memory/adoption 的 `window_end` 不得早于 `window_start`。validator receipt 的 `generated_at` 直接锚定 observation `observed_at`，同一输入重放不依赖 runner wall-clock。
 - closure-ready intake 会自动进入 deterministic `external-evidence-ratchet` candidate；此时 canonical gap closure 属于 `autonomous-low-risk-ratchet`，不再要求人工重复确认同一机器事实。
