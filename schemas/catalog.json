@@ -344,6 +344,41 @@
       "applies_to": ".cache/knowledge-hub/hosting-posture.json",
       "authority": "derived-fresh-github-hosting-posture",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-source-provenance-v1",
+      "schema": "schemas/external-evidence-source-provenance.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/source-provenance.json",
+      "authority": "derived-trusted-source-run-and-artifact-provenance",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-receipt-v1",
+      "schema": "schemas/external-evidence-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/closure-candidate-receipt.json",
+      "authority": "derived-strict-real-evidence-validation-receipt",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-intake-receipt-v1",
+      "schema": "schemas/external-evidence-intake-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/intake-receipt.json",
+      "authority": "derived-trusted-external-evidence-intake",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-intake-host-binding-v1",
+      "schema": "schemas/external-evidence-intake-host-binding.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet/host-binding.json",
+      "authority": "derived-trusted-intake-run-artifact-binding",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-ratchet-proposal-v2",
+      "schema": "schemas/external-evidence-ratchet-proposal.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet/ratchet-proposal.json",
+      "authority": "derived-noncanonical-external-evidence-ratchet-proposal",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
