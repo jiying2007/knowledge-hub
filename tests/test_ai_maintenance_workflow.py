@@ -104,3 +104,41 @@ def test_ai_maintenance_owner_tracker_close_conditions_are_bounded():
     assert 'OWNER_DECLARATION_PENDING}" == "0" && "${OWNER_BOUNDARY_PENDING}" == "0"' in text
     assert 'QUALIFICATION_PASS}" == "true"' in text
     assert "No project readiness, owner decision, or real-world evidence was synthesized." in text
+
+
+def test_ai_maintenance_issue_writes_are_bound_to_current_master():
+    payload = _workflow()
+    job = payload["jobs"]["sweep"]
+    condition = job["if"]
+    assert "github.event_name == 'schedule'" in condition
+    assert "github.event_name == 'workflow_dispatch'" in condition
+    assert "github.ref == 'refs/heads/master'" in condition
+    assert job["env"]["SOURCE_REVISION"] == "${{ github.sha }}"
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Verify current master identity" in text
+    assert 'ref: ${{ env.SOURCE_REVISION }}' in text
+    assert "maintenance source is stale relative to current master" in text
+
+
+def test_ai_maintenance_owner_tracker_reconciliation_matches_policy():
+    import json
+
+    policy = json.loads(
+        Path("registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    boundary = policy["owner_qualification"]
+    assert boundary["packet_generation_class"] == "autonomous-read"
+    assert boundary["owner_decision_generated"] is False
+    assert boundary["canonical_write_performed"] is False
+    assert boundary["tracker_reconciliation_enabled"] is True
+    assert boundary["owner_gate_tracker_issue"] == 74
+    assert boundary["qualification_tracker_issue"] == 96
+    assert boundary[
+        "owner_gate_close_requires_zero_owner_declaration_pending"
+    ] is True
+    assert boundary[
+        "owner_gate_close_requires_zero_owner_boundary_pending"
+    ] is True
+    assert boundary["qualification_close_requires_pass"] is True
+    assert boundary["reopen_on_regression"] is True
