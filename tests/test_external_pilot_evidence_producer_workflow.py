@@ -159,3 +159,13 @@ def test_external_observation_workflow_allowlist_is_explicit_and_gap_scoped():
         "real-adoption-evidence",
     }
     assert all(isinstance(value, list) for value in allowlist.values())
+
+
+def test_external_pilot_producer_enforces_real_observation_namespace():
+    text = _workflow()
+    assert "observation_source_workflow_prefix" in text
+    assert "observation source workflow namespace policy is invalid" in text
+    assert (
+        "observation source workflow is outside the real-observation namespace"
+        in text
+    )
