@@ -103,6 +103,67 @@ jobs:
           )
           PY
 
+      - name: Materialize owner qualification packet
+        id: owner_packet
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.common import repository_root
+          from tools.codex_assets.knowledge_hub.owner_qualification_packet import (
+              build_owner_qualification_packet,
+          )
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          root = repository_root()
+          packet = build_owner_qualification_packet(root)
+          validation = validate_instance(
+              root,
+              "owner-qualification-packet-v1",
+              packet,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "owner qualification packet failed schema: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
+          output = Path(
+              ".cache/knowledge-hub/ai-maintenance/owner-qualification-packet.json"
+          )
+          output.write_text(
+              json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write(
+                  "fingerprint={}\n".format(packet["packet_fingerprint"])
+              )
+              handle.write(
+                  "owner_declaration_pending={}\n".format(
+                      packet["owner_declaration_pending_count"]
+                  )
+              )
+              handle.write(
+                  "owner_boundary_pending={}\n".format(
+                      packet["owner_boundary_pending_count"]
+                  )
+              )
+              handle.write(
+                  "real_evidence_pending={}\n".format(
+                      packet["real_evidence_pending_project_count"]
+                  )
+              )
+              handle.write(
+                  "qualification_pass={}\n".format(
+                      str(packet["qualification_pass"]).lower()
+                  )
+              )
+          PY
+
       - name: Build bounded AI maintenance decision
         id: decision
         run: |
@@ -255,6 +316,77 @@ jobs:
               gh issue close 21 --repo "${GITHUB_REPOSITORY}" \
                 --comment "Canonical production retrieval, memory lifecycle, and real adoption gaps are all closed by strict real evidence; closing the stale operational qualification tracker automatically."
             fi
+          fi
+
+      - name: Reconcile owner and project qualification trackers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKET_FINGERPRINT: ${{ steps.owner_packet.outputs.fingerprint }}
+          OWNER_DECLARATION_PENDING: ${{ steps.owner_packet.outputs.owner_declaration_pending }}
+          OWNER_BOUNDARY_PENDING: ${{ steps.owner_packet.outputs.owner_boundary_pending }}
+          REAL_EVIDENCE_PENDING: ${{ steps.owner_packet.outputs.real_evidence_pending }}
+          QUALIFICATION_PASS: ${{ steps.owner_packet.outputs.qualification_pass }}
+        run: |
+          set -euo pipefail
+          packet=".cache/knowledge-hub/ai-maintenance/owner-qualification-packet.json"
+          test -s "${packet}"
+
+          owner_declarations="$(jq -r '.owner_declaration_projects | join(", ")' "${packet}")"
+          owner_boundaries="$(jq -r '.owner_boundary_projects | join(", ")' "${packet}")"
+          real_evidence="$(jq -r '.real_evidence_projects | join(", ")' "${packet}")"
+
+          issue_state() {
+            gh issue view "$1" --repo "${GITHUB_REPOSITORY}" --json state --jq .state
+          }
+
+          comment_once() {
+            local issue="$1"
+            local body="$2"
+            local seen
+            seen="$(
+              gh issue view "${issue}" --repo "${GITHUB_REPOSITORY}" \
+                --json comments \
+                --jq ".comments[] | select(.body | contains(\"${PACKET_FINGERPRINT}\")) | .url" \
+              | head -n 1
+            )"
+            if [[ -z "${seen}" ]]; then
+              gh issue comment "${issue}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+            fi
+          }
+
+          owner_gate_ready=false
+          if [[ "${OWNER_DECLARATION_PENDING}" == "0" && "${OWNER_BOUNDARY_PENDING}" == "0" ]]; then
+            owner_gate_ready=true
+          fi
+
+          state74="$(issue_state 74)"
+          if [[ "${owner_gate_ready}" == "true" ]]; then
+            if [[ "${state74}" == "OPEN" ]]; then
+              gh issue close 74 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh canonical owner qualification packet ${PACKET_FINGERPRINT} has zero owner-declaration and owner-boundary pending projects. Closing the stale owner gate tracker; no owner decision was generated by automation."
+            fi
+          else
+            if [[ "${state74}" == "CLOSED" ]]; then
+              gh issue reopen 74 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh canonical owner qualification regressed; reopening the owner gate tracker."
+            fi
+            body74="Fresh deterministic owner packet ${PACKET_FINGERPRINT}. owner_declaration_pending=${OWNER_DECLARATION_PENDING} [${owner_declarations}]; owner_boundary_pending=${OWNER_BOUNDARY_PENDING} [${owner_boundaries}]. This packet is read-only and does not infer or generate owner approval."
+            comment_once 74 "${body74}"
+          fi
+
+          state96="$(issue_state 96)"
+          if [[ "${QUALIFICATION_PASS}" == "true" ]]; then
+            if [[ "${state96}" == "OPEN" ]]; then
+              gh issue close 96 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh canonical owner/project qualification packet ${PACKET_FINGERPRINT} reports PASS. Closing the stale qualification tracker automatically."
+            fi
+          else
+            if [[ "${state96}" == "CLOSED" ]]; then
+              gh issue reopen 96 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Fresh canonical project qualification regressed; reopening the tracker."
+            fi
+            body96="Fresh deterministic qualification packet ${PACKET_FINGERPRINT}: owner declarations pending=${OWNER_DECLARATION_PENDING}; owner boundaries pending=${OWNER_BOUNDARY_PENDING}; real-evidence pending projects=${REAL_EVIDENCE_PENDING} [${real_evidence}]. No project readiness, owner decision, or real-world evidence was synthesized."
+            comment_once 96 "${body96}"
           fi
 
       - name: Upload bounded maintenance evidence
