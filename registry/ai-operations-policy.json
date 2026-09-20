@@ -184,7 +184,8 @@
       "real-adoption-evidence": []
     },
     "observation_source_requires_explicit_registration": true,
-    "manual_intake_source_requires_registered_workflow": true
+    "manual_intake_source_requires_registered_workflow": true,
+    "observation_source_workflow_prefix": ".github/workflows/real-observation-"
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
