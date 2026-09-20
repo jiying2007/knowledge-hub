@@ -7,6 +7,7 @@ static adapters, mocks, or synthetic samples as production/provider evidence.
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 import pathlib
@@ -60,6 +61,44 @@ def _text(value: Any, label: str, *, maximum: int = 4096) -> str:
     if not result or len(result) > maximum:
         raise KnowledgeHubError("{} must be non-empty and bounded".format(label))
     return result
+
+
+def _utc_datetime(value: Any, label: str) -> dt.datetime:
+    raw = _text(value, label, maximum=128)
+    try:
+        parsed = dt.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise KnowledgeHubError(
+            "{} must be a valid UTC timestamp".format(label)
+        ) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != dt.timedelta(0):
+        raise KnowledgeHubError("{} must be UTC".format(label))
+    return parsed
+
+
+def _utc_timestamp(value: Any, label: str) -> str:
+    raw = _text(value, label, maximum=128)
+    _utc_datetime(raw, label)
+    return raw
+
+
+def _utc_window(
+    row: Mapping[str, Any],
+    *,
+    prefix: str,
+) -> None:
+    start = _utc_datetime(
+        row.get("window_start", ""),
+        "{} window_start".format(prefix),
+    )
+    end = _utc_datetime(
+        row.get("window_end", ""),
+        "{} window_end".format(prefix),
+    )
+    if end < start:
+        raise KnowledgeHubError(
+            "{} window_end must not precede window_start".format(prefix)
+        )
 
 
 def _sha256(value: Any, label: str) -> str:
@@ -232,8 +271,7 @@ def _validate_retrieval(payload: Mapping[str, Any]) -> Dict[str, Any]:
         evaluation.get("evaluator_version", ""), "evaluator version", maximum=256
     )
     baseline = _text(evaluation.get("approved_baseline", ""), "approved baseline", maximum=256)
-    _text(evaluation.get("window_start", ""), "retrieval window_start", maximum=128)
-    _text(evaluation.get("window_end", ""), "retrieval window_end", maximum=128)
+    _utc_window(evaluation, prefix="retrieval")
 
     metrics = _object(evaluation.get("metrics"), "retrieval metrics")
     for key in ("recall", "mrr", "ndcg", "authority_recall"):
@@ -273,8 +311,7 @@ def _validate_memory(payload: Mapping[str, Any]) -> Dict[str, Any]:
     _real_origin(payload, expected_classification="real-production")
     pilot = _object(payload.get("pilot"), "memory pilot")
     _text(pilot.get("runtime_version", ""), "memory runtime version", maximum=256)
-    _text(pilot.get("window_start", ""), "memory window_start", maximum=128)
-    _text(pilot.get("window_end", ""), "memory window_end", maximum=128)
+    _utc_window(pilot, prefix="memory")
     cases = _object(pilot.get("cases"), "memory pilot cases")
 
     ttl = _case(cases, "ttl", origin="real-production")
@@ -312,8 +349,7 @@ def _validate_adoption(payload: Mapping[str, Any]) -> Dict[str, Any]:
     runtime_version = _text(
         adoption.get("runtime_version", ""), "adoption runtime version", maximum=256
     )
-    _text(adoption.get("window_start", ""), "adoption window_start", maximum=128)
-    _text(adoption.get("window_end", ""), "adoption window_end", maximum=128)
+    _utc_window(adoption, prefix="adoption")
     observation_days = _integer(adoption.get("observation_days"), "observation days")
     valid_calls = _integer(adoption.get("valid_real_calls"), "valid real calls")
     synthetic_calls = _integer(adoption.get("synthetic_calls"), "synthetic calls")
@@ -386,7 +422,7 @@ def validate_external_evidence(
     if expected_gap and gap_id != expected_gap:
         raise KnowledgeHubError("external evidence gap does not match expected gap")
     source_revision = _git_sha(value.get("source_revision", ""), "source revision")
-    observed_at = _text(value.get("observed_at", ""), "observed_at", maximum=128)
+    observed_at = _utc_timestamp(value.get("observed_at", ""), "observed_at")
     refs = _refs(value.get("evidence_source_refs"))
     summary = _VALIDATORS[gap_id](value)
     payload_sha = _sha256_bytes(_canonical_bytes(value))
