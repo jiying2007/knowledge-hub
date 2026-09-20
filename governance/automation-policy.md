@@ -85,6 +85,7 @@ Provider evidence 进一步按字段拆分责任边界：
 
 - observation/source artifact 必须来自真实 provider、真实生产评估、真实 memory lifecycle 或真实 adoption；不得由 AI 合成、mock、fixture、local-only 结果替代。
 - `external-pilot-evidence-producer` 只把显式选择的真实 observation 投影成 strict evidence；它不修改 canonical state。
+- 真实环境输入合同由 schema catalog 唯一声明：`connector-provider-observation-v1`、`production-retrieval-observation-v1`、`production-memory-observation-v1`、`production-adoption-observation-v1`；producer 输入先过 JSON Schema，再过 Python 跨字段严格 validator。外部系统无需读取实现代码猜测 payload。
 - strict producer 成功后，`external-evidence-intake` 可对 connector/retrieval/memory/adoption 四类 gap 自动从唯一 bounded artifact 推导 gap/run/artifact identity；manual master-only fallback 只保留给特殊非 producer 来源。
 - strict validator 只有在 synthetic/mock/local-only 全部明确为 false，且 gap-specific contract 全部通过时，才产生 `closure_ready=true`。
 - closure-ready intake 会自动进入 deterministic `external-evidence-ratchet` candidate；此时 canonical gap closure 属于 `autonomous-low-risk-ratchet`，不再要求人工重复确认同一机器事实。
