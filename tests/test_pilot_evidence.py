@@ -461,3 +461,17 @@ def test_pilot_cli_observation_contract_mapping_matches_machine_policy():
         external["validator_receipt_timestamp_source"]
         == "observation-observed-at"
     )
+
+
+def test_real_observation_schema_rejects_invalid_datetime():
+    payload = _retrieval()
+    payload["observed_at"] = "not-a-date-time"
+
+    result = validate_instance(
+        repository_root(),
+        "production-retrieval-observation-v1",
+        payload,
+    )
+
+    assert result["status"] == "fail"
+    assert result["error_count"] > 0
