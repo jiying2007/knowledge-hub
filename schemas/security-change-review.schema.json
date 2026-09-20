@@ -285,6 +285,9 @@
           },
           "exact_head_approval_count": {
             "const": 0
+          },
+          "hash_bound_comment_approval_count": {
+            "const": 0
           }
         }
       }
