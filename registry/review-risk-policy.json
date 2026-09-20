@@ -46,6 +46,18 @@
       "review_class": "security-critical"
     },
     {
+      "path": "schemas/review-risk-policy.schema.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "schemas/ai-operations-policy.schema.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/review-risk-policy.json",
+      "review_class": "security-critical"
+    },
+    {
       "path_prefix": "governance/",
       "review_class": "governance-critical"
     },
