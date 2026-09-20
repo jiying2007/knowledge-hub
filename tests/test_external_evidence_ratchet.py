@@ -207,6 +207,13 @@ def test_ratchet_workflow_automates_candidate_pr_without_direct_master_write():
     assert "requirements-runtime.lock" in workflow
     assert "requirements-dev.lock" not in workflow
     assert "ratchet candidate CLI must never write the canonical registry" in cli
+    for contract_id in (
+        "external-evidence-receipt-v1",
+        "external-evidence-intake-receipt-v1",
+        "external-evidence-intake-host-binding-v1",
+        "external-evidence-ratchet-proposal-v2",
+    ):
+        assert contract_id in cli
 
 
 def test_external_ratchet_is_deterministic_for_same_hosted_evidence(tmp_path: Path):
