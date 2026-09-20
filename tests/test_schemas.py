@@ -315,3 +315,30 @@ def test_ai_first_long_term_registry_contracts_are_valid():
     ):
         payload = load_json(root / relative, {})
         assert validate_instance(root, contract_id, payload)["status"] == "pass"
+
+
+def test_external_provenance_inline_schemas_match_canonical_contract():
+    root = repository_root()
+    provenance = load_json(
+        root / "schemas/external-evidence-source-provenance.schema.json",
+        {},
+    )
+    expected = {
+        "type": "object",
+        "required": provenance["required"],
+        "properties": provenance["properties"],
+        "additionalProperties": False,
+    }
+
+    intake = load_json(
+        root / "schemas/external-evidence-intake-receipt.schema.json",
+        {},
+    )
+    assert intake["properties"]["source_provenance"] == expected
+    assert intake["properties"]["root_observation_provenance"] == expected
+
+    producer = load_json(
+        root / "schemas/external-pilot-evidence-producer-receipt.schema.json",
+        {},
+    )
+    assert producer["properties"]["source_provenance"] == expected
