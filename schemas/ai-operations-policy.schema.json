@@ -502,7 +502,9 @@
         "hash_bound_comment_requires_exact_head_sha",
         "hash_bound_comment_allowed_associations",
         "hash_bound_comment_bot_allowed",
-        "authorization_mechanisms"
+        "authorization_mechanisms",
+        "autonomous_ratchet_exemption_requires_direct_child",
+        "autonomous_ratchet_file_allowlists"
       ],
       "properties": {
         "enabled": {
@@ -569,6 +571,26 @@
             "exact-head-pr-review",
             "hash-bound-pr-comment"
           ]
+        },
+        "autonomous_ratchet_exemption_requires_direct_child": {
+          "const": true
+        },
+        "autonomous_ratchet_file_allowlists": {
+          "type": "object",
+          "const": {
+            "automation/hosting-private-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/knowledge-platform-p5-p10.json"
+            ],
+            "automation/evidence-bind-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/items.jsonl"
+            ],
+            "automation/external-gap-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/knowledge-platform-p5-p10.json"
+            ]
+          }
         }
       },
       "additionalProperties": false
