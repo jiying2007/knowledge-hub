@@ -49,13 +49,27 @@ def _evidence(
     _write(
         root / ".cache/knowledge-hub/hosting-posture.json",
         {
+            "schema_version": "knowledge-hub.hosting-posture.v1",
             "status": "pass",
+            "generated_at": "2026-09-14T00:00:00Z",
             "repository": "example/knowledge-hub",
             "source_revision": source_revision,
             "repository_private": True,
             "repository_visibility": "private",
             "default_branch": "master",
+            "default_branch_present": True,
+            "default_branch_protection_observed": True,
             "default_branch_protected": False,
+            "rulesets_capability": {
+                "status": "not-probed",
+                "reason": "github-token-unavailable",
+                "http_status": 0,
+                "ruleset_count": 0,
+            },
+            "branch_inventory": (
+                ".cache/knowledge-hub/remote-branch-inventory.json"
+            ),
+            "canonical_write": False,
         },
     )
     _write(
@@ -242,6 +256,23 @@ def test_signed_materials_reject_hosting_revision_drift(tmp_path):
     _write(hosting, payload)
 
     with pytest.raises(KnowledgeHubError, match="hosting posture source revision mismatch"):
+        signed_attestation.build_signed_quality_materials(
+            tmp_path,
+            source_revision="f" * 40,
+        )
+
+
+def test_signed_materials_reject_invalid_hosting_posture_contract(tmp_path):
+    _evidence(tmp_path, source_revision="f" * 40)
+    hosting = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    payload = json.loads(hosting.read_text(encoding="utf-8"))
+    payload.pop("rulesets_capability")
+    _write(hosting, payload)
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="hosting posture contract validation failed",
+    ):
         signed_attestation.build_signed_quality_materials(
             tmp_path,
             source_revision="f" * 40,
