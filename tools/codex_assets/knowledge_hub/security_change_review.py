@@ -188,6 +188,51 @@ def _autonomous_ratchet(
     )
 
 
+def _change_basis(
+    *,
+    repository: str,
+    pr_number: int,
+    base_sha: str,
+    head_sha: str,
+    head_ref: str,
+    author_login: str,
+    same_repository: bool,
+    security: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "repository": repository,
+        "pr_number": int(pr_number),
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "head_ref": head_ref,
+        "author_login": author_login,
+        "same_repository": bool(same_repository),
+        "security_critical_files": list(security),
+    }
+
+
+def _review_verdict(
+    *,
+    security: Sequence[Mapping[str, Any]],
+    autonomous: bool,
+    approvals: Sequence[Mapping[str, Any]],
+    comment_approvals: Sequence[Mapping[str, Any]],
+) -> Tuple[str, bool, str]:
+    if not security:
+        return "pass", False, "no-security-critical-change"
+    if autonomous:
+        return "pass", False, "dedicated-machine-ratchet-verifier"
+    if approvals:
+        return "pass", True, "exact-head-human-approval"
+    if comment_approvals:
+        return "pass", True, "hash-bound-human-approval"
+    return (
+        "awaiting-human-review",
+        True,
+        "exact-head-human-approval-required",
+    )
+
+
 def build_security_change_review(
     *,
     repository: str,
@@ -203,16 +248,16 @@ def build_security_change_review(
     comments: Sequence[Mapping[str, Any]] = (),
 ) -> Dict[str, Any]:
     security = _security_files(files, review_risk_policy)
-    change_basis = {
-        "repository": repository,
-        "pr_number": int(pr_number),
-        "base_sha": base_sha,
-        "head_sha": head_sha,
-        "head_ref": head_ref,
-        "author_login": author_login,
-        "same_repository": bool(same_repository),
-        "security_critical_files": security,
-    }
+    change_basis = _change_basis(
+        repository=repository,
+        pr_number=pr_number,
+        base_sha=base_sha,
+        head_sha=head_sha,
+        head_ref=head_ref,
+        author_login=author_login,
+        same_repository=same_repository,
+        security=security,
+    )
     change_fingerprint = _fingerprint(change_basis)
     approvals = _exact_head_approvals(
         reviews,
@@ -229,26 +274,12 @@ def build_security_change_review(
         same_repository=same_repository,
         author_login=author_login,
     )
-    if not security:
-        status = "pass"
-        review_required = False
-        reason = "no-security-critical-change"
-    elif autonomous:
-        status = "pass"
-        review_required = False
-        reason = "dedicated-machine-ratchet-verifier"
-    elif approvals:
-        status = "pass"
-        review_required = True
-        reason = "exact-head-human-approval"
-    elif comment_approvals:
-        status = "pass"
-        review_required = True
-        reason = "hash-bound-human-approval"
-    else:
-        status = "awaiting-human-review"
-        review_required = True
-        reason = "exact-head-human-approval-required"
+    status, review_required, reason = _review_verdict(
+        security=security,
+        autonomous=autonomous,
+        approvals=approvals,
+        comment_approvals=comment_approvals,
+    )
 
     packet: Dict[str, Any] = {
         "schema_version": 1,
