@@ -20,7 +20,8 @@ jobs:
     if: >-
       ${{
         github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.event == 'pull_request' &&
+        (github.event.workflow_run.event == 'pull_request' ||
+         github.event.workflow_run.event == 'workflow_dispatch') &&
         github.event.workflow_run.head_repository.full_name == github.repository &&
         startsWith(github.event.workflow_run.head_branch, 'automation/hosting-private-')
       }}
@@ -75,7 +76,6 @@ jobs:
           expected_run = {
               "id": trigger_run_id,
               "name": "quality",
-              "event": "pull_request",
               "status": "completed",
               "conclusion": "success",
               "head_branch": head_branch,
@@ -89,6 +89,8 @@ jobs:
                           field, value, run.get(field)
                       )
                   )
+          if run.get("event") not in {"pull_request", "workflow_dispatch"}:
+              raise SystemExit("trigger Quality event is not trusted")
           run_repo = run.get("head_repository") or {}
           if run_repo.get("full_name") != repository:
               raise SystemExit("trigger Quality head repository is not the current repository")
