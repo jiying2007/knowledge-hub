@@ -250,7 +250,7 @@ def test_review_after_near_due_json_contract():
         and len(archived_rows) >= 1
         and all("source_status" in row for row in rows)
         and any("archive-only" in str(row.get("suggested_action_zh", "")) for row in archived_rows)
-        and "不得把 near-due warning 当作 blocking error" in parsed.get("must_not", []),
+        and "不得把 ordinary near-due warning 当作 blocking error" in parsed.get("must_not", []),
         "review-after-near-due-json-contract",
         "review_after helper reports 30-day near-due items without creating a blocking gate",
         {

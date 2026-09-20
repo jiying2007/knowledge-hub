@@ -714,6 +714,15 @@ def run_engineering_quality(
                 max_attempts=2,
                 retry_exit_codes=(1,),
             )
+        elif name == "coverage":
+            # Preserve pytest stdout on an ordinary test failure so the
+            # engineering snapshot identifies the exact Python 3.14 regression.
+            checks[name] = _run_quality_command(
+                root,
+                command,
+                timeout,
+                retry_exit_codes=(1,),
+            )
         else:
             checks[name] = _run_quality_command(root, command, timeout)
         if checks[name]["status"] != "pass" and name != "coverage_report":
