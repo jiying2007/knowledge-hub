@@ -148,3 +148,22 @@ def test_hosting_reconcile_centralizes_protection_recovery_requalification():
     assert 'requalify_prefix "automation/external-gap-"' in text
     assert "gh workflow run quality.yml" in text
     assert "exact-head Quality already active for #" in text
+
+
+def test_hosting_reconcile_matches_centralized_requalification_policy():
+    import json
+
+    policy = json.loads(
+        Path("registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    guardrails = policy["guardrails"]
+    assert (
+        guardrails["protection_recovery_requalification_owner"]
+        == "hosting-posture-reconcile"
+    )
+    assert guardrails["protection_recovery_duplicate_pollers_allowed"] is False
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Requalify bounded automation PRs after protection recovery" in text
+    assert 'requalify_prefix "automation/evidence-bind-"' in text
+    assert 'requalify_prefix "automation/external-gap-"' in text
