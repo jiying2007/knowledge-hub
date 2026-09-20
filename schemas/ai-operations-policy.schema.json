@@ -493,14 +493,15 @@
         "hash_bound_comment_requires_change_fingerprint",
         "hash_bound_comment_requires_exact_head_sha",
         "hash_bound_comment_allowed_associations",
-        "hash_bound_comment_bot_allowed"
+        "hash_bound_comment_bot_allowed",
+        "authorization_mechanisms"
       ],
       "properties": {
         "enabled": {
           "const": true
         },
         "authorization_source": {
-          "const": "github-pr-review"
+          "const": "github-external-review-facts"
         },
         "exact_head_required": {
           "const": true
@@ -553,6 +554,13 @@
         },
         "hash_bound_comment_bot_allowed": {
           "const": false
+        },
+        "authorization_mechanisms": {
+          "type": "array",
+          "const": [
+            "exact-head-pr-review",
+            "hash-bound-pr-comment"
+          ]
         }
       },
       "additionalProperties": false
