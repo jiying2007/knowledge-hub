@@ -81,7 +81,9 @@
         "automatic_merge_requires_trusted_origin_run",
         "automatic_merge_requires_generator_branch_identity",
         "machine_ratchet_uses_trusted_run_timestamp",
-        "automation_pr_requires_explicit_quality_dispatch"
+        "automation_pr_requires_explicit_quality_dispatch",
+        "protection_recovery_requalification_owner",
+        "protection_recovery_duplicate_pollers_allowed"
       ],
       "properties": {
         "direct_master_write": {
@@ -125,6 +127,12 @@
         },
         "automation_pr_requires_explicit_quality_dispatch": {
           "const": true
+        },
+        "protection_recovery_requalification_owner": {
+          "const": "hosting-posture-reconcile"
+        },
+        "protection_recovery_duplicate_pollers_allowed": {
+          "const": false
         }
       },
       "additionalProperties": false
