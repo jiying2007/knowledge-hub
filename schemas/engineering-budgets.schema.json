@@ -43,16 +43,20 @@
         "ci_baseline": {
           "type": "object",
           "required": [
-            "required_in_github_actions",
-            "env",
+            "required_in_quality_engineering",
+            "base_ref_env",
+            "enforce_env",
             "missing_or_invalid"
           ],
           "properties": {
-            "required_in_github_actions": {
+            "required_in_quality_engineering": {
               "const": true
             },
-            "env": {
+            "base_ref_env": {
               "const": "KNOWLEDGE_COMPLEXITY_BASE_REF"
+            },
+            "enforce_env": {
+              "const": "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE"
             },
             "missing_or_invalid": {
               "const": "fail"
