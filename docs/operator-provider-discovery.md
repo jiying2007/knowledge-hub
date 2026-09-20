@@ -48,7 +48,7 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 
 `--auto-route-unique` 本身仍是 read-only / non-canonical。它只把 proposal 分成：
 
-- `machine_route`：仅 `source_refs`、`validation_refs`、`artifact_refs`，要求 GitHub provider verified、候选唯一、`append-reference`、不改变 owner/status/readiness，且 patch plan 不会让 evidence contract 自动进入 ready；
+- `machine_route`：仅 `source_refs`、`validation_refs`、`artifact_refs`，要求 GitHub provider verified、候选唯一、`append-reference`、不改变 owner/status/readiness，且 patch plan 不会让 evidence contract 自动进入 ready；其中 validation 的 `head_sha` 必须匹配同 item 的 canonical/同批 source revision，artifact 目前只允许带 `workflow_run_id + head_sha` 的 `github-actions-artifact`，并同时匹配已验证 validation run 与 source revision；Release asset 暂不自动绑定；
 - `human_route`：`release_ref` 或任何不满足 machine proof 的候选，继续走现有 governed authorization。
 
 调用方可用 `--machine-candidate-output` + `--machine-manifest-output` 生成非 canonical candidate 与 proof manifest；CLI 明确拒绝把该输出直接指向 `registry/items.jsonl`。
@@ -91,7 +91,7 @@ P2.3 不执行新的网络请求，只消费 P2.2 provider execution projection�
 - 候选必须是 `provider_verified=true`、`candidate_only=true`、`eligible_for_binding=false`；
 - `source_refs` 必须是 exact GitHub source revision，并携带 repository、commit SHA、`exact_identity=true`；
 - `validation_refs` 必须是 successful workflow run，并携带 run id 与 exact head SHA；
-- `artifact_refs` 必须是未过期 Actions artifact 或非 draft/non-prerelease Release asset，并携带 digest 与 provider identity；
+- `artifact_refs` 的 governed-review floor 可接受未过期 Actions artifact 或非 draft/non-prerelease Release asset，并携带 digest 与 provider identity；machine-ratchet floor 更严格：当前只允许 Actions artifact，且要求其 GitHub `workflow_run.id/head_sha` 与同 item 的 validation/source identity 一致；
 - `release_ref` 只接受满足 immutable release policy 的 GitHub Release；普通 tag 不会通过 review floor。
 
 拒绝结果输出稳定的 `reason_codes`，例如 `artifact-digest-missing`、`validation-head-sha-missing`、`immutable-release-policy-not-met`。projection 最多资格化 400 个候选，超出时 `truncated=true`，不会静默无限扩张。
