@@ -213,6 +213,16 @@
       "automation/hosting-private-",
       "automation/evidence-bind-",
       "automation/external-gap-"
-    ]
+    ],
+    "hash_bound_comment_approval_allowed": true,
+    "hash_bound_comment_command": "SECURITY-CHANGE-APPROVE",
+    "hash_bound_comment_requires_change_fingerprint": true,
+    "hash_bound_comment_requires_exact_head_sha": true,
+    "hash_bound_comment_allowed_associations": [
+      "OWNER",
+      "MEMBER",
+      "COLLABORATOR"
+    ],
+    "hash_bound_comment_bot_allowed": false
   }
 }
