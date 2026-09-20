@@ -246,7 +246,7 @@ def test_final_gate_default_regression_path():
     )
     regression = payload.get("checks", {}).get("knowledge_regression", {})
     expect(
-        result["exit_code"] == 0
+        regression.get("exit_code") == 0
         and payload.get("final_profile") == "product"
         and payload.get("regression_suite") == "full"
         and regression.get("status") == "pass"
