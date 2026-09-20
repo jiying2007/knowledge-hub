@@ -629,3 +629,25 @@ def test_terminal_closure_surfaces_rulesets_capability_without_weakening_gate(
     assert report["default_branch_protection"]["status"] == "needs-review"
     assert report["terminal"] is False
     assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_rejects_invalid_hosting_posture_contract(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture.pop("rulesets_capability")
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["hosting_posture"]["status"] == "blocked"
+    assert (
+        report["hosting_posture"]["reason"]
+        == "hosting-posture-contract-invalid"
+    )
+    assert report["hosting_posture"]["contract_validation"]["status"] == "fail"
+    assert "hosting_posture" in report["blockers"]
