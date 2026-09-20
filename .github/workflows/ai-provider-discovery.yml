@@ -175,6 +175,18 @@ jobs:
                       int(payload.get("human_authorization_count", 0) or 0)
                   )
               )
+              human_route = payload.get("human_route") or {}
+              machine_route = payload.get("machine_route") or {}
+              handle.write(
+                  "human_status={}\n".format(
+                      str(human_route.get("status", "no-change"))
+                  )
+              )
+              handle.write(
+                  "machine_status={}\n".format(
+                      str(machine_route.get("status", "no-change"))
+                  )
+              )
           PY
 
       - name: Prepare trusted machine-ratchet provenance
@@ -296,7 +308,7 @@ jobs:
           PY
 
       - name: Route only semantic or release authorization to a human
-        if: steps.discover.outputs.human != '0'
+        if: steps.discover.outputs.human_status == 'needs-governed-authorization'
         env:
           GH_TOKEN: ${{ github.token }}
           HUMAN: ${{ steps.discover.outputs.human }}
@@ -333,7 +345,7 @@ jobs:
           echo "Ambiguous/blocked state retries from fresh canonical/provider state."
 
       - name: Close stale authorization issue when no human route remains
-        if: steps.discover.outputs.human == '0'
+        if: steps.discover.outputs.human_status != 'needs-governed-authorization'
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_STATUS: ${{ steps.discover.outputs.status }}
