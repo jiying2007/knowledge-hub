@@ -2,6 +2,11 @@
 
 核心 status bucket 由人工维护，并由 `knowledge-check` 做一致性门禁。
 
+- reviewing: `knowledge-hub-data-lifecycle-growth-v1`
+- reviewing: `knowledge-hub-hosting-posture-v1`
+- reviewing: `knowledge-hub-contract-evolution-v1`
+- reviewing: `knowledge-hub-current-readiness-model-v1`
+
 - reviewing: `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
 - reviewing: `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
 - reviewing: `pcr02-ds2-ai-shm-session-archive-20260710`

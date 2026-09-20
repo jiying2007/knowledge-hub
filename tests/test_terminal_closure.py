@@ -566,6 +566,27 @@ def test_terminal_closure_reports_live_private_fact_ahead_of_canonical(monkeypat
     assert "external_closure" in report["blockers"]
 
 
+def test_terminal_closure_allows_public_hosting_when_private_not_required(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="closed")
+    platform_path = tmp_path / "registry/knowledge-platform-p5-p10.json"
+    platform = json.loads(platform_path.read_text(encoding="utf-8"))
+    platform["repository_security_target"] = {"private_required": False}
+    _write_json(platform_path, platform)
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["repository_private"] = False
+    posture["repository_visibility"] = "public"
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "pass"
+    assert report["hosting_posture"]["fact_drift"] == []
+
+
 def test_terminal_closure_blocks_if_private_boundary_regresses_after_canonical_close(
     monkeypatch, tmp_path
 ):

@@ -2,6 +2,11 @@
 
 ## leiwenjun
 
+- `knowledge-hub-data-lifecycle-growth-v1`
+- `knowledge-hub-hosting-posture-v1`
+- `knowledge-hub-contract-evolution-v1`
+- `knowledge-hub-current-readiness-model-v1`
+
 - `codex-ai-agent-incentive-evidence-summary-20260828`
 - `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
 - `pcr02-prog-test-ao-ai-task-node-uaf-20260825`

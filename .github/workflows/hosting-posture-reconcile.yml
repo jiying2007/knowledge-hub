@@ -153,11 +153,9 @@ jobs:
           gap = gaps.get("repository-private-boundary", {})
           private = meta.get("private") is True and meta.get("visibility") == "private"
           status = str(gap.get("status", "open"))
+          # Visibility is observational for personal-account public hosting.
+          # Private-boundary ratchet code remains bounded legacy but is unreachable.
           action = "noop"
-          if private and status != "closed":
-              action = "ratchet-private"
-          elif (not private) and status == "closed":
-              action = "hosting-regression"
           Path(".cache/knowledge-hub/hosting-reconcile/action.txt").write_text(action + "\n")
           hosting = json.loads(
               Path(".cache/knowledge-hub/hosting-reconcile/hosting-posture.json").read_text(
@@ -262,8 +260,6 @@ jobs:
         if: >-
           ${{
             steps.decide.outputs.action == 'noop' &&
-            steps.decide.outputs.private == 'true' &&
-            steps.decide.outputs.canonical_private_closed == 'true' &&
             steps.decide.outputs.protected == 'true'
           }}
         env:
@@ -294,7 +290,6 @@ jobs:
       - name: Requalify bounded automation PRs after protection recovery
         if: >-
           ${{
-            steps.decide.outputs.private == 'true' &&
             steps.decide.outputs.protected == 'true'
           }}
         env:

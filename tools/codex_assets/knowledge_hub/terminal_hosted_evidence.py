@@ -342,11 +342,31 @@ def _mcp_result(
     }
 
 
+
+def _private_hosting_required(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> bool:
+    external = policy.get("external_closure", {})
+    source = (
+        str(external.get("source", "")).strip()
+        if isinstance(external, Mapping)
+        else ""
+    )
+    if not source:
+        return True
+    platform = _load_object(root / source, "external closure registry")
+    target = platform.get("repository_security_target", {})
+    if not isinstance(target, Mapping):
+        return True
+    return target.get("private_required") is not False
+
 def _hosting_status(
     evidence: Mapping[str, Any],
     revision_matches: bool,
     repository_matches: bool,
     expected_branch: str,
+    private_required: bool,
 ) -> Tuple[str, str]:
     if evidence.get("status") != "pass":
         return "blocked", "hosting-posture-capture-not-passing"
@@ -354,9 +374,13 @@ def _hosting_status(
         return "blocked", "hosting-posture-revision-mismatch"
     if not repository_matches:
         return "blocked", "hosting-posture-repository-mismatch"
-    private = evidence.get("repository_private") is True
+    private_value = evidence.get("repository_private")
     visibility = str(evidence.get("repository_visibility", ""))
-    if not private or visibility != "private":
+    if visibility not in ("private", "public"):
+        return "blocked", "repository-visibility-invalid"
+    if not isinstance(private_value, bool) or private_value != (visibility == "private"):
+        return "blocked", "repository-visibility-inconsistent"
+    if private_required and not private_value:
         return "needs-review", "repository-private-boundary-not-observed"
     if str(evidence.get("default_branch", "")) != expected_branch:
         return "blocked", "hosting-posture-default-branch-mismatch"
@@ -368,7 +392,10 @@ def _hosting_drift(
     policy: Mapping[str, Any],
     *,
     private: bool,
+    private_required: bool,
 ) -> List[Dict[str, Any]]:
+    if not private_required:
+        return []
     external = policy.get("external_closure", {})
     source = (
         str(external.get("source", "")).strip()
@@ -466,11 +493,13 @@ def _hosting_result(
         if isinstance(rules, Mapping)
         else "master"
     )
+    private_required = _private_hosting_required(root, policy)
     status, reason = _hosting_status(
         evidence,
         revision_matches,
         repository_matches,
         expected_branch,
+        private_required,
     )
     private = evidence.get("repository_private") is True
     return {
@@ -498,6 +527,7 @@ def _hosting_result(
             root,
             policy,
             private=private,
+            private_required=private_required,
         ),
         "snapshot": evidence_path,
     }

@@ -1,11 +1,13 @@
 ---
 title: Knowledge Hub current readiness model
-summary_zh: Knowledge Hub 当前状态的人读入口，只解释状态模型、权威来源和当前外部边界，不固化动态项目计数与历史性能快照。
+summary_zh: 作为 Knowledge Hub 当前状态的人读首屏，只解释 repository closure、product/operational qualification、AI-first 维护边界和机器权威入口，不固化动态项目计数与历史快照。
 tags:
 - knowledge-hub
 - readiness
 - current
-id: knowledge-hub-current-readiness-model
+- ai-first
+- human-facing
+id: knowledge-hub-current-readiness-model-v1
 kind: architecture
 domain: governance
 path: governance/product/current/readiness-model.md
@@ -45,7 +47,7 @@ related:
 
 ```text
 repository closure
-  ├─ private hosting
+  ├─ canonical repository identity + observed visibility
   ├─ protected default branch
   ├─ engineering / restore / attestation
   └─ branch GC
@@ -74,9 +76,9 @@ product / operational qualification
 
 ## 当前外部硬边界
 
-当前 repository 已观测为 private；canonical private-boundary 仍必须通过 governed ratchet 绑定 durable hosted evidence。
+当前采用个人账号 + public repository 的托管策略。repository visibility 继续被 fresh hosting evidence 记录，但不再作为 GitHub terminal closure 的隐私硬门槛。
 
-default branch protection 仍是独立 hosting requirement；如果当前 GitHub plan 不支持 private repository protection，应升级 hosting capability，而不是降低 terminal contract。
+default branch protection 仍是独立 hosting requirement；terminal contract 关注 canonical repository identity、fresh hosted posture、protected `master`、工程质量、恢复、签名与 branch GC，而不是强制 private。
 
 ## 详细证据
 

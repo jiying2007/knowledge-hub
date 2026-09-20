@@ -112,7 +112,7 @@
     }
   },
   "repository_security_target": {
-    "private_required": true,
+    "private_required": false,
     "protected_default_branch_required": true,
     "required_status_checks": [],
     "block_force_push": false,
@@ -185,11 +185,11 @@
     {
       "id": "repository-private-boundary",
       "owner": "repository-admin",
-      "required": true,
-      "status": "open",
-      "reason": "Canonical internal knowledge still requires a real hosting privacy boundary or an explicit public-engine/private-vault split.",
-      "github_terminal_blocking": true,
-      "qualification_scope": "github-repository"
+      "required": false,
+      "status": "not-required",
+      "reason": "Repository visibility is intentionally non-terminal for the personal-account deployment; public hosting is supported while canonical repository identity and protected master remain required.",
+      "github_terminal_blocking": false,
+      "qualification_scope": "hosting-observation"
     },
     {
       "id": "master-ruleset-enforcement",

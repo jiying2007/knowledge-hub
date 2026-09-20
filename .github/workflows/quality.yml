@@ -201,7 +201,7 @@ jobs:
             > "$cache/product-resource-read.json"
       - name: Run pinned official native-profile scenarios
         shell: bash
-        run: bash tools/ci/run-mcp-conformance.sh
+        run: rtk bash tools/ci/run-mcp-conformance.sh
       - name: Stop local MCP server
         if: always()
         shell: bash

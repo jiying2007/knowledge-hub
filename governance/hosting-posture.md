@@ -16,7 +16,8 @@ Signed/terminal 证据必须捕获当次 hosted posture，而不能只依赖仓�
 
 回答“GitHub repository 工程闭环是否成立”：
 
-- canonical repository 为 private；
+- canonical repository identity 与 fresh hosted metadata 一致；
+- repository visibility（public/private）被记录但不作为 terminal 隐私硬门槛；
 - default branch 为 `master`；
 - default branch protected；
 - source / CI / restore / attestation / branch GC 满足 terminal contract。
