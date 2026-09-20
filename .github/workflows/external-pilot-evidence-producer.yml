@@ -199,6 +199,19 @@ jobs:
               'producer_run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
               'producer_revision': os.environ['GITHUB_SHA'],
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path('.').resolve(),
+              'external-pilot-evidence-producer-receipt-v1',
+              receipt,
+          )
+          if validation.get('status') != 'pass':
+              raise SystemExit(
+                  'producer receipt contract validation failed: {}'.format(
+                      validation.get('errors', [])
+                  )
+              )
           (root / 'producer-receipt.json').write_text(
               json.dumps(receipt, sort_keys=True, separators=(',', ':')) + '\n',
               encoding='utf-8',
