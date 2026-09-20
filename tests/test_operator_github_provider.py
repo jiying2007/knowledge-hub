@@ -120,6 +120,11 @@ def test_artifact_discovery_ignores_expired_actions_artifacts() -> None:
                         "name": "signed",
                         "digest": "sha256:good",
                         "expired": False,
+                        "workflow_run": {
+                            "id": 10,
+                            "head_sha": "a" * 40,
+                            "head_branch": "main",
+                        },
                     },
                     {
                         "id": 42,
@@ -138,6 +143,11 @@ def test_artifact_discovery_ignores_expired_actions_artifacts() -> None:
     assert "github-release-asset://example/tool/31" in refs
     assert "github-actions-artifact://example/tool/41" in refs
     assert "github-actions-artifact://example/tool/42" not in refs
+    by_ref = {row["ref"]: row for row in result["candidates"]}
+    action_details = by_ref["github-actions-artifact://example/tool/41"]["details"]
+    assert action_details["workflow_run_id"] == "10"
+    assert action_details["workflow_run_head_sha"] == "a" * 40
+    assert action_details["workflow_run_head_branch"] == "main"
     assert all(row["eligible_for_binding"] is False for row in result["candidates"])
 
 
