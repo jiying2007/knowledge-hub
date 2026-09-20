@@ -1,6 +1,7 @@
 ---
 title: Hosting Posture 与 GitHub 闭环分层
-summary_zh: 将 Git source revision 与 GitHub hosting posture 分开取证，定义 repository-closure-baseline 和 production-hardened 两层目标，并要求 hosted fact drift 自动对账。
+summary_zh: 将 Git source revision 与 GitHub hosting posture 分开取证，定义 repository-closure-baseline 和 production-hardened 两层目标，并要求
+  hosted fact drift 自动对账。
 tags:
 - knowledge-hub
 - hosting-posture
