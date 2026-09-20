@@ -103,7 +103,7 @@ def _fixture(tmp_path: Path):
     return registry_path, closure_path, intake_path, binding_path
 
 
-def test_ratchet_builder_closes_only_requested_gap_and_requires_review(tmp_path: Path):
+def test_ratchet_builder_closes_only_requested_gap_as_machine_candidate(tmp_path: Path):
     paths = _fixture(tmp_path)
     candidate, proposal = build_external_gap_ratchet_candidate(
         registry_path=paths[0],
@@ -116,11 +116,14 @@ def test_ratchet_builder_closes_only_requested_gap_and_requires_review(tmp_path:
     assert gaps[GAP]["evidence"]["terminal_claimed"] is False
     assert gaps[GAP]["evidence"]["canonical_write_performed_by_evidence_chain"] is False
     assert gaps["mcp-official-conformance"]["status"] == "closed"
-    assert proposal["status"] == "ready-for-reviewed-ratchet"
-    assert proposal["review_required"] is True
+    assert proposal["projection"] == "knowledge-hub-external-evidence-ratchet-proposal-v2"
+    assert proposal["status"] == "ready-for-machine-ratchet"
+    assert proposal["authorization_class"] == "autonomous-low-risk-ratchet"
+    assert proposal["review_required"] is False
     assert proposal["canonical_write_performed"] is False
     assert len(proposal["expected_registry_sha256"]) == 64
     assert len(proposal["candidate_registry_sha256"]) == 64
+    assert proposal["generated_at"] == "2026-09-14T14:00:00Z"
 
 
 def test_ratchet_builder_rejects_receipt_substitution(tmp_path: Path):
@@ -168,3 +171,20 @@ def test_ratchet_workflow_is_manual_read_only_and_never_writes_canonical():
     assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json" in workflow
     assert "if-no-files-found: error" in workflow
     assert "ratchet candidate CLI must never write the canonical registry" in cli
+
+
+def test_external_ratchet_is_deterministic_for_same_hosted_evidence(tmp_path: Path):
+    paths = _fixture(tmp_path)
+    first = build_external_gap_ratchet_candidate(
+        registry_path=paths[0],
+        closure_receipt_path=paths[1],
+        intake_receipt_path=paths[2],
+        host_binding_path=paths[3],
+    )
+    second = build_external_gap_ratchet_candidate(
+        registry_path=paths[0],
+        closure_receipt_path=paths[1],
+        intake_receipt_path=paths[2],
+        host_binding_path=paths[3],
+    )
+    assert first == second
