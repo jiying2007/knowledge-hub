@@ -116,38 +116,25 @@ def _validate_closure(closure: Mapping[str, Any], closure_sha: str) -> Dict[str,
     }
 
 
-def _validate_intake(
-    intake: Mapping[str, Any], intake_sha: str, closure_context: Mapping[str, Any]
+def _validate_source_provenance(
+    value: Any,
+    label: str,
 ) -> Dict[str, Any]:
-    if intake.get("schema_version") != 1 or intake.get("projection") != INTAKE_PROJECTION:
-        raise KnowledgeHubError("intake receipt schema/projection is unsupported")
-    if intake.get("status") != "pass" or intake.get("closure_candidate_only") is not True:
-        raise KnowledgeHubError("intake receipt is not a passed closure candidate")
-    if intake.get("canonical_write_performed") is not False:
-        raise KnowledgeHubError("intake receipt must not report a canonical write")
-    if intake.get("gap_id") != closure_context["gap_id"]:
-        raise KnowledgeHubError("intake and closure gap ids differ")
-    if intake.get("source_revision") != closure_context["source_revision"]:
-        raise KnowledgeHubError("intake and closure source revisions differ")
-    if intake.get("evidence_payload_sha256") != closure_context["payload_sha"]:
-        raise KnowledgeHubError("intake and closure evidence digests differ")
-    if _sha256(intake.get("receipt_sha256"), "intake closure receipt digest") != closure_context["closure_sha"]:
-        raise KnowledgeHubError("intake receipt is not bound to the supplied closure receipt")
-    provenance = _object(intake.get("source_provenance"), "source provenance")
+    provenance = _object(value, label)
     if provenance.get("source_run_head_branch") != "master":
         raise KnowledgeHubError(
-            "source provenance must originate from master"
+            "{} must originate from master".format(label)
         )
     if provenance.get("source_run_event") not in {
         "workflow_dispatch",
         "schedule",
     }:
         raise KnowledgeHubError(
-            "source provenance event is not trusted"
+            "{} event is not trusted".format(label)
         )
     workflow_path = _text(
         provenance.get("source_workflow_path"),
-        "source workflow path",
+        "{} workflow path".format(label),
         512,
     )
     if (
@@ -155,30 +142,144 @@ def _validate_intake(
         or not workflow_path.endswith(".yml")
     ):
         raise KnowledgeHubError(
-            "source provenance workflow path is invalid"
+            "{} workflow path is invalid".format(label)
         )
-    artifact_digest = _text(provenance.get("artifact_digest"), "source artifact digest", 128)
+    artifact_digest = _text(
+        provenance.get("artifact_digest"),
+        "{} artifact digest".format(label),
+        128,
+    )
     if not artifact_digest.startswith("sha256:"):
-        raise KnowledgeHubError("source artifact digest must use sha256")
-    _sha256(artifact_digest.split(":", 1)[1], "source artifact digest")
+        raise KnowledgeHubError(
+            "{} artifact digest must use sha256".format(label)
+        )
+    _sha256(
+        artifact_digest.split(":", 1)[1],
+        "{} artifact digest".format(label),
+    )
     return {
-        "intake_sha": intake_sha,
-        "repository": _text(provenance.get("repository"), "source repository", 512),
-        "source_run_id": _positive_int(provenance.get("source_run_id"), "source run id"),
-        "source_run_attempt": _positive_int(
-            provenance.get("source_run_attempt"),
-            "source run attempt",
+        "repository": _text(
+            provenance.get("repository"),
+            "{} repository".format(label),
+            512,
         ),
-        "source_run_head": _git_sha(provenance.get("source_run_head_sha"), "source run head"),
-        "source_run_head_branch": "master",
-        "source_run_event": str(provenance.get("source_run_event")),
-        "source_workflow_path": workflow_path,
-        "source_artifact_id": _positive_int(provenance.get("artifact_id"), "source artifact id"),
-        "source_artifact_digest": artifact_digest,
-        "intake_run_id": _positive_int(intake.get("intake_run_id"), "intake run id"),
-        "intake_revision": _git_sha(intake.get("intake_revision"), "intake revision"),
+        "run_id": _positive_int(
+            provenance.get("source_run_id"),
+            "{} run id".format(label),
+        ),
+        "run_attempt": _positive_int(
+            provenance.get("source_run_attempt"),
+            "{} run attempt".format(label),
+        ),
+        "run_head": _git_sha(
+            provenance.get("source_run_head_sha"),
+            "{} run head".format(label),
+        ),
+        "run_event": str(provenance.get("source_run_event")),
+        "workflow_path": workflow_path,
+        "artifact_id": _positive_int(
+            provenance.get("artifact_id"),
+            "{} artifact id".format(label),
+        ),
+        "artifact_name": _text(
+            provenance.get("artifact_name"),
+            "{} artifact name".format(label),
+            512,
+        ),
+        "artifact_digest": artifact_digest,
     }
 
+
+def _validate_intake(
+    intake: Mapping[str, Any],
+    intake_sha: str,
+    closure_context: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if (
+        intake.get("schema_version") != 1
+        or intake.get("projection") != INTAKE_PROJECTION
+    ):
+        raise KnowledgeHubError(
+            "intake receipt schema/projection is unsupported"
+        )
+    if (
+        intake.get("status") != "pass"
+        or intake.get("closure_candidate_only") is not True
+    ):
+        raise KnowledgeHubError(
+            "intake receipt is not a passed closure candidate"
+        )
+    if intake.get("canonical_write_performed") is not False:
+        raise KnowledgeHubError(
+            "intake receipt must not report a canonical write"
+        )
+    if intake.get("gap_id") != closure_context["gap_id"]:
+        raise KnowledgeHubError("intake and closure gap ids differ")
+    if intake.get("source_revision") != closure_context["source_revision"]:
+        raise KnowledgeHubError(
+            "intake and closure source revisions differ"
+        )
+    if (
+        intake.get("evidence_payload_sha256")
+        != closure_context["payload_sha"]
+    ):
+        raise KnowledgeHubError(
+            "intake and closure evidence digests differ"
+        )
+    if (
+        _sha256(
+            intake.get("receipt_sha256"),
+            "intake closure receipt digest",
+        )
+        != closure_context["closure_sha"]
+    ):
+        raise KnowledgeHubError(
+            "intake receipt is not bound to the supplied closure receipt"
+        )
+
+    source = _validate_source_provenance(
+        intake.get("source_provenance"),
+        "source provenance",
+    )
+    root = _validate_source_provenance(
+        intake.get("root_observation_provenance"),
+        "root observation provenance",
+    )
+    if root["run_head"] != closure_context["source_revision"]:
+        raise KnowledgeHubError(
+            "root observation revision does not match strict evidence source revision"
+        )
+
+    return {
+        "intake_sha": intake_sha,
+        "repository": source["repository"],
+        "source_run_id": source["run_id"],
+        "source_run_attempt": source["run_attempt"],
+        "source_run_head": source["run_head"],
+        "source_run_head_branch": "master",
+        "source_run_event": source["run_event"],
+        "source_workflow_path": source["workflow_path"],
+        "source_artifact_id": source["artifact_id"],
+        "source_artifact_name": source["artifact_name"],
+        "source_artifact_digest": source["artifact_digest"],
+        "root_repository": root["repository"],
+        "root_source_run_id": root["run_id"],
+        "root_source_run_attempt": root["run_attempt"],
+        "root_source_run_head": root["run_head"],
+        "root_source_run_event": root["run_event"],
+        "root_source_workflow_path": root["workflow_path"],
+        "root_source_artifact_id": root["artifact_id"],
+        "root_source_artifact_name": root["artifact_name"],
+        "root_source_artifact_digest": root["artifact_digest"],
+        "intake_run_id": _positive_int(
+            intake.get("intake_run_id"),
+            "intake run id",
+        ),
+        "intake_revision": _git_sha(
+            intake.get("intake_revision"),
+            "intake revision",
+        ),
+    }
 
 def _validate_binding(
     binding: Mapping[str, Any], binding_sha: str, intake_context: Mapping[str, Any]
@@ -273,6 +374,12 @@ def _build_candidate(
         "source_run_attempt": intake["source_run_attempt"],
         "source_artifact_id": intake["source_artifact_id"],
         "source_artifact_digest": intake["source_artifact_digest"],
+        "root_source_run_head_sha": intake["root_source_run_head"],
+        "root_source_run_id": intake["root_source_run_id"],
+        "root_source_run_attempt": intake["root_source_run_attempt"],
+        "root_source_workflow_path": intake["root_source_workflow_path"],
+        "root_source_artifact_id": intake["root_source_artifact_id"],
+        "root_source_artifact_digest": intake["root_source_artifact_digest"],
         "intake_run_head_sha": binding["intake_run_head"],
         "intake_run_id": binding["intake_run_id"],
         "intake_artifact_id": binding["intake_artifact_id"],
