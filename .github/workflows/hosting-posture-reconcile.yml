@@ -305,122 +305,22 @@ jobs:
           requalify_prefix() {
             local prefix="$1"
             gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-              --json number,headRefName,headRefOid \
-              --jq ".[] | select(.headRefName | startswith(\"${prefix}\")) | [.number,.headRefName,.headRefOid] | @tsv" \
-              | while IFS=        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: knowledge-hub-hosting-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .cache/knowledge-hub/hosting-reconcile/
-          if-no-files-found: error
-          retention-days: 90
-
-      - name: Create governed reconciliation branch and PR
-        if: steps.decide.outputs.action == 'ratchet-private'
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          title="chore(hosting): ratchet verified private boundary"
-
-          ensure_quality() {
-            local quality_branch="$1"
-            local quality_sha="$2"
-            local active
-            active="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
-                --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
-              | awk -v sha="${quality_sha}" \
-                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
-            )"
-            if [[ -n "${active}" ]]; then
-              echo "exact-head Quality already active/successful for ${quality_branch}: ${active}"
-              return 0
-            fi
-            gh workflow run quality.yml \
-              --repo "${GITHUB_REPOSITORY}" \
-              --ref "${quality_branch}"
-            echo "dispatched exact-head Quality for ${quality_branch}@${quality_sha}"
-          }
-
-          existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
-          if [[ -n "${existing}" ]]; then
-            existing_branch="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefName --jq .headRefName)"
-            existing_sha="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefOid --jq .headRefOid)"
-            ensure_quality "${existing_branch}" "${existing_sha}"
-            echo "number=${existing}" >> "${GITHUB_OUTPUT}"
-            echo "existing governed ratchet PR already owns this canonical transition"
-            exit 0
-          fi
-          short="${SOURCE_REVISION:0:12}"
-          branch="automation/hosting-private-${short}-${GITHUB_RUN_ID}"
-          cp .cache/knowledge-hub/hosting-reconcile/candidate-registry.json registry/knowledge-platform-p5-p10.json
-          cat .cache/knowledge-hub/hosting-reconcile/durable-record.json >> registry/durable-evidence-ledger.jsonl
-          git diff --check
-          git config user.name "knowledge-hub-automation"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "${branch}"
-          git add registry/knowledge-platform-p5-p10.json registry/durable-evidence-ledger.jsonl
-          git commit -m "${title}"
-          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push "${remote}" "HEAD:refs/heads/${branch}"
-          set +e
-          url="$(gh pr create \
-            --repo "${GITHUB_REPOSITORY}" \
-            --base master \
-            --head "${branch}" \
-            --title "${title}" \
-            --body "Machine-generated low-risk ratchet from authoritative GitHub repository metadata. It closes only repository-private-boundary, appends a bounded durable evidence identity, does not infer owner approval, and does not modify product/operational evidence.")"
-          rc=$?
-          set -e
-          if [[ "${rc}" -ne 0 ]]; then
-            echo "GitHub settings prevented automatic PR creation; deleting the unowned automation branch and retaining the local candidate artifact." >&2
-            git push "${remote}" --delete "${branch}" || true
-            exit 0
-          fi
-          number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
-          echo "number=${number}" >> "${GITHUB_OUTPUT}"
-          ensure_quality "${branch}" "$(git rev-parse HEAD)"
-
-
-
-  automation-branch-gc:
-    name: Retire closed automation PR branch
-    permissions:
-      contents: write
-    if: >-
-      ${{
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        startsWith(github.event.pull_request.head.ref, 'automation/')
-      }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Delete closed same-repository automation branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          set -euo pipefail
-          if [[ ! "${HEAD_REF}" =~ ^automation/[A-Za-z0-9._/-]+$ ]]; then
-            echo "automation branch name failed the bounded ref grammar" >&2
-            exit 1
-          fi
-          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${HEAD_REF}" >/dev/null 2>&1; then
-            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${HEAD_REF}"
-          else
-            echo "automation branch already absent; nothing to retire"
-          fi
-\t' read -r number branch sha; do
+              --json number,headRefName,headRefOid,baseRefOid \
+              --jq ".[] | select(.headRefName | startswith(\"${prefix}\")) | @json" \
+              | while read -r row; do
+                  number="$(jq -r .number <<<"${row}")"
+                  branch_name="$(jq -r .headRefName <<<"${row}")"
+                  head_sha="$(jq -r .headRefOid <<<"${row}")"
+                  base_sha="$(jq -r .baseRefOid <<<"${row}")"
+                  if [[ "${base_sha}" != "${SOURCE_REVISION}" ]]; then
+                    echo "skip stale automation PR #${number}: base=${base_sha} current-master=${SOURCE_REVISION}"
+                    continue
+                  fi
                   active="$(
                     gh api --method GET \
-                      "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${branch}&per_page=20" \
+                      "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${branch_name}&per_page=20" \
                       --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
-                    | awk -v expected="${sha}" \
+                    | awk -v expected="${head_sha}" \
                         '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") {print $1; exit}'
                   )"
                   if [[ -n "${active}" ]]; then
@@ -429,14 +329,13 @@ jobs:
                   fi
                   gh workflow run quality.yml \
                     --repo "${GITHUB_REPOSITORY}" \
-                    --ref "${branch}"
-                  echo "requalified protected automation PR #${number} at ${sha}"
+                    --ref "${branch_name}"
+                  echo "requalified protected automation PR #${number} at ${head_sha}"
                 done
           }
 
           requalify_prefix "automation/evidence-bind-"
           requalify_prefix "automation/external-gap-"
-
       - name: Upload reconciliation evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
