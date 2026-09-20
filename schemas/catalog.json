@@ -337,6 +337,13 @@
       "applies_to": "external-pilot-evidence-producer input gap=real-adoption-evidence",
       "authority": "real-production-adoption-observation-input-contract",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "hosting-posture-v1",
+      "schema": "schemas/hosting-posture.schema.json",
+      "applies_to": ".cache/knowledge-hub/hosting-posture.json",
+      "authority": "derived-fresh-github-hosting-posture",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
