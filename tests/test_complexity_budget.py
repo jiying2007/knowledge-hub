@@ -325,3 +325,150 @@ def test_complexity_budget_fails_data_growth_hard_cap(tmp_path):
 
     assert report["status"] == "fail"
     assert any(row["type"] == "data-growth-hard-cap" for row in report["regressions"])
+
+
+def _commit_baseline(root):
+    subprocess.run(
+        ["git", "config", "user.email", "ci@example.invalid"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "CI"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "."],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "commit", "-qm", "baseline"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def test_complexity_budget_explicit_git_baseline_allows_unchanged_legacy(tmp_path, monkeypatch):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    (package / "legacy.py").write_text(
+        _long_function("legacy_function", body_lines=90),
+        encoding="utf-8",
+    )
+    _write_budget_policy(tmp_path, module_limit=200, function_limit=80)
+    subprocess.run(
+        ["git", "init", "-q"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    baseline = _commit_baseline(tmp_path)
+    monkeypatch.setenv("KNOWLEDGE_COMPLEXITY_BASE_REF", baseline)
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "pass"
+    assert report["baseline_ref"] == baseline
+    assert report["baseline_ref_resolved"] is True
+    assert report["regressions"] == []
+
+
+def test_complexity_budget_explicit_git_baseline_fails_new_and_legacy_growth(
+    tmp_path, monkeypatch
+):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    legacy = package / "legacy.py"
+    legacy.write_text(
+        _long_function("legacy_function", body_lines=90),
+        encoding="utf-8",
+    )
+    _write_budget_policy(tmp_path, module_limit=200, function_limit=80)
+    subprocess.run(
+        ["git", "init", "-q"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    baseline = _commit_baseline(tmp_path)
+
+    legacy.write_text(
+        _long_function("legacy_function", body_lines=95),
+        encoding="utf-8",
+    )
+    (package / "new_module.py").write_text(
+        _long_function("new_function", body_lines=90),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("KNOWLEDGE_COMPLEXITY_BASE_REF", baseline)
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "fail"
+    assert any(
+        row["type"] == "legacy-function-growth"
+        and row["path"].endswith("legacy.py")
+        and row["function"] == "legacy_function"
+        for row in report["regressions"]
+    )
+    assert any(
+        row["type"] == "new-function-size"
+        and row["path"].endswith("new_module.py")
+        and row["function"] == "new_function"
+        for row in report["regressions"]
+    )
+
+
+def test_complexity_budget_fails_closed_when_requested_baseline_is_unavailable(
+    tmp_path, monkeypatch
+):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    (package / "small.py").write_text("x = 1\n", encoding="utf-8")
+    _write_budget_policy(tmp_path)
+    subprocess.run(
+        ["git", "init", "-q"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    monkeypatch.setenv("KNOWLEDGE_COMPLEXITY_BASE_REF", "missing-baseline")
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["baseline_ref"] == "missing-baseline"
+    assert report["baseline_ref_resolved"] is False
+    assert any(
+        row["type"] == "complexity-baseline-unavailable"
+        for row in report["regressions"]
+    )
