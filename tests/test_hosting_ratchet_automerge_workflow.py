@@ -23,6 +23,7 @@ def test_hosting_ratchet_automerge_runs_only_after_successful_quality():
     condition = job["if"]
     assert "workflow_run.conclusion == 'success'" in condition
     assert "workflow_run.event == 'pull_request'" in condition
+    assert "workflow_run.event == 'workflow_dispatch'" in condition
     assert "workflow_run.head_repository.full_name == github.repository" in condition
     assert "automation/hosting-private-" in condition
 
@@ -139,3 +140,8 @@ def test_hosting_ratchet_automerge_binds_durable_time_to_exact_origin_attempt():
     assert "RECONCILE_OBSERVED_AT" in text
     assert 'run.get("run_started_at") or run.get("created_at")' in text
     assert "reconciliation origin timestamp mismatch" in text
+
+
+def test_hosting_ratchet_automerge_accepts_only_pr_or_explicit_quality_events():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'run.get("event") not in {"pull_request", "workflow_dispatch"}' in text
