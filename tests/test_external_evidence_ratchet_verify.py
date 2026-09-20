@@ -241,6 +241,16 @@ def test_external_ratchet_verifier_accepts_exact_replayed_chain(tmp_path):
     assert result["gap_id"] == GAP
     assert result["origin_run_id"] == RUN_ID
     assert result["origin_run_attempt"] == RUN_ATTEMPT
+    assert result["root_source_repository"] == REPOSITORY
+    assert result["root_source_run_id"] == 123
+    assert result["root_source_run_attempt"] == 1
+    assert result["root_source_run_head_sha"] == SOURCE
+    assert (
+        result["root_source_workflow_path"]
+        == ".github/workflows/real-observation-source.yml"
+    )
+    assert result["root_source_artifact_id"] == 456
+    assert result["root_source_artifact_digest"] == "sha256:" + "f" * 64
     assert (
         validate_instance(
             repository_root(),
