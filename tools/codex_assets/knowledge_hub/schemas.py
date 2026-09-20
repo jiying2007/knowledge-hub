@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import pathlib
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
@@ -9,6 +10,20 @@ from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
 
 from .common import KnowledgeHubError, load_json, load_jsonl, normalize_relpath
+
+
+_FORMAT_CHECKER = FormatChecker()
+
+
+@_FORMAT_CHECKER.checks("date-time", raises=(TypeError, ValueError))
+def _strict_rfc3339_datetime(value: object) -> bool:
+    if not isinstance(value, str):
+        return True
+    if "T" not in value:
+        return False
+    normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+    parsed = dt.datetime.fromisoformat(normalized)
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
 
 
 def _error_path(error: Any) -> str:
@@ -74,7 +89,7 @@ def _load_catalog_schemas(
 
 
 def _validate_payload(schema: Mapping[str, Any], payload: Any) -> List[Dict[str, str]]:
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    validator = Draft202012Validator(schema, format_checker=_FORMAT_CHECKER)
     return [
         {"path": _error_path(error), "message": error.message}
         for error in sorted(

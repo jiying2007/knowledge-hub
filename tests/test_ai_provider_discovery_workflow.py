@@ -204,8 +204,8 @@ def test_ai_provider_discovery_closes_superseded_pr_only_after_fresh_pr_exists()
 
 def test_ai_provider_discovery_does_not_escalate_blocked_human_route():
     text = WORKFLOW.read_text(encoding="utf-8")
-    assert 'handle.write("human_status={}\\n"' in text
-    assert 'handle.write("machine_status={}\\n"' in text
+    assert '"human_status={}\\n".format(' in text
+    assert '"machine_status={}\\n".format(' in text
     assert (
         "steps.discover.outputs.human_status == "
         "'needs-governed-authorization'"

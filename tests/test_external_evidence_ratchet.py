@@ -76,6 +76,7 @@ def _fixture(tmp_path: Path):
         "evidence_payload_sha256": PAYLOAD_SHA,
         "receipt_sha256": closure_sha,
         "source_provenance": {
+            "schema_version": 1,
             "repository": "jiying2007/knowledge-hub",
             "source_run_id": 123,
             "source_run_attempt": 1,
@@ -88,6 +89,7 @@ def _fixture(tmp_path: Path):
             "artifact_digest": "sha256:" + "d" * 64,
         },
         "root_observation_provenance": {
+            "schema_version": 1,
             "repository": "jiying2007/knowledge-hub",
             "source_run_id": 123,
             "source_run_attempt": 1,
@@ -377,7 +379,7 @@ def test_ratchet_builder_requires_positive_source_run_attempt(tmp_path: Path):
     ).hexdigest()
     _write(paths[3], binding)
 
-    with pytest.raises(KnowledgeHubError, match="source run attempt"):
+    with pytest.raises(KnowledgeHubError, match="source provenance run attempt"):
         build_external_gap_ratchet_candidate(
             registry_path=paths[0],
             closure_receipt_path=paths[1],

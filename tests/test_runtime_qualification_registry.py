@@ -34,7 +34,11 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         for gap_id, row in gaps.items()
         if row["required"] and row["status"] == "open"
     }
-    assert {"repository-private-boundary"} == required_open
+    assert required_open == set()
+    assert gaps["repository-private-boundary"]["required"] is False
+    assert gaps["repository-private-boundary"]["status"] == "not-required"
+    assert gaps["repository-private-boundary"]["github_terminal_blocking"] is False
+    assert payload["repository_security_target"]["private_required"] is False
     operational_open = {
         gap_id
         for gap_id, row in gaps.items()

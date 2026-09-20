@@ -1,7 +1,9 @@
 import json
+import shutil
 from pathlib import Path
 
 from tools.codex_assets.knowledge_hub import terminal_closure, terminal_closure_cli
+from tools.codex_assets.knowledge_hub.common import repository_root
 
 
 def _write_json(path: Path, value):
@@ -127,6 +129,11 @@ def _write_common_ready_state(
     protection_observed=True,
     default_branch_present=True,
 ):
+    shutil.copytree(
+        repository_root() / "schemas",
+        tmp_path / "schemas",
+        dirs_exist_ok=True,
+    )
     _write_json(
         tmp_path / "registry/terminal-closure.json",
         _policy(default_branch_protection_required),

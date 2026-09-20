@@ -6,7 +6,7 @@ import argparse
 import json
 import os
 import pathlib
-from typing import Any, Dict, Mapping, Sequence, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 from .common import (
     KnowledgeHubError,

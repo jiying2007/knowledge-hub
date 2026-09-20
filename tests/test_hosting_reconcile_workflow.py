@@ -115,7 +115,7 @@ def test_hosting_reconcile_captures_fresh_posture_and_dispatches_one_signed_refr
     assert "default_branch_protected" in text
     assert "Request one fresh Signed verification after protection recovery" in text
     assert "steps.decide.outputs.protected == 'true'" in text
-    assert "steps.decide.outputs.canonical_private_closed == 'true'" in text
+    assert "steps.decide.outputs.canonical_private_closed == 'true'" not in text
     assert "signed-quality-attestation.yml/runs?branch=master&per_page=20" in text
     assert 'awk -v sha="${SOURCE_REVISION}"' in text
     assert "gh workflow run signed-quality-attestation.yml" in text

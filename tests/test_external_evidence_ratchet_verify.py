@@ -102,6 +102,7 @@ def _fixture(tmp_path: Path):
         "evidence_payload_sha256": "e" * 64,
         "receipt_sha256": closure_sha,
         "source_provenance": {
+            "schema_version": 1,
             "repository": REPOSITORY,
             "source_run_id": 123,
             "source_run_attempt": 1,
@@ -114,6 +115,7 @@ def _fixture(tmp_path: Path):
             "artifact_digest": "sha256:" + "f" * 64,
         },
         "root_observation_provenance": {
+            "schema_version": 1,
             "repository": REPOSITORY,
             "source_run_id": 123,
             "source_run_attempt": 1,

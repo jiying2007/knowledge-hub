@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import pathlib
 from typing import Sequence
 
 from .common import KnowledgeHubError, repository_root, resolve_inside

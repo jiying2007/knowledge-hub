@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import pathlib
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, Mapping
 
 from .product_gate_support import _project_readiness
 

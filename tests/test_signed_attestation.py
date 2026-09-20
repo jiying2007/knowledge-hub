@@ -1,11 +1,12 @@
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 from tools.codex_assets.knowledge_hub import signed_attestation
 from tools.codex_assets.knowledge_hub.attestation import PREDICATE_TYPE
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
 from tools.codex_assets.knowledge_hub.quality_evidence_binding import (
     build_quality_evidence_binding,
 )
@@ -26,6 +27,11 @@ def _evidence(
     product_status="needs-review",
     product_terminal=False,
 ):
+    shutil.copytree(
+        repository_root() / "schemas",
+        root / "schemas",
+        dirs_exist_ok=True,
+    )
     _write(
         root / ".cache/knowledge-hub/engineering-quality.json",
         {"status": "pass", "candidate_integrity": {"status": "pass"}},
