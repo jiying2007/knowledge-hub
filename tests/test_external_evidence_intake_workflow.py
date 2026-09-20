@@ -147,3 +147,13 @@ def test_external_evidence_manual_fallback_requires_registered_workflow():
     assert "observation_source_workflow_allowlist" in text
     assert "manual intake observation workflow policy is invalid" in text
     assert "manual intake source workflow is not registered for" in text
+
+
+def test_external_evidence_manual_fallback_enforces_observation_namespace():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "observation_source_workflow_prefix" in text
+    assert "manual intake observation namespace policy is invalid" in text
+    assert (
+        "manual intake source workflow is outside the real-observation namespace"
+        in text
+    )
