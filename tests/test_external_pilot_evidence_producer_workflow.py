@@ -69,3 +69,13 @@ def test_external_pilot_producer_supports_all_operational_real_evidence_gaps():
         "real-adoption-evidence",
     ):
         assert gap in text
+
+
+def test_external_pilot_producer_requires_trusted_master_observation_run():
+    text = _workflow()
+    assert "observation source run must execute from master" in text
+    assert "observation source run event is not trusted" in text
+    assert "{'workflow_dispatch', 'schedule'}" in text
+    assert "observation source workflow path is invalid" in text
+    assert "'source_run_head_branch':" in text
+    assert "'source_workflow_path':" in text
