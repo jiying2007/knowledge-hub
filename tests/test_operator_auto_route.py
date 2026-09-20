@@ -32,6 +32,10 @@ def _write_policy(root):
                     "machine_ratchet_may_change_status": False,
                     "machine_ratchet_may_change_readiness": False,
                     "machine_ratchet_may_auto_promote_evidence_ready": False,
+                    "machine_validation_requires_source_revision_match": True,
+                    "machine_artifact_kinds": ["github-actions-artifact"],
+                    "machine_artifact_requires_validation_run_match": True,
+                    "machine_artifact_requires_source_revision_match": True,
                 }
             }
         )
