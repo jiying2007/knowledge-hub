@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Sequence, Set, Tuple
 
-from .common import KnowledgeHubError
+from .common import KnowledgeHubError, registry_items
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_review_bundle import build_binding_review_bundle
 
@@ -24,6 +25,8 @@ MACHINE_RATCHET_FIELDS = {
     "artifact_refs",
 }
 POLICY_PATH = "registry/ai-operations-policy.json"
+_GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_RUN_ID_RE = re.compile(r"^[0-9]+$")
 
 
 
@@ -124,10 +127,135 @@ def _unique_rows(
     return selected, ambiguous
 
 
+def _source_sha(value: object) -> str:
+    if not isinstance(value, Mapping):
+        return ""
+    if str(value.get("kind", "")) != "github-source-revision":
+        return ""
+    ref = str(value.get("ref", ""))
+    if "@" not in ref:
+        return ""
+    sha = ref.rsplit("@", 1)[1]
+    return sha if _GIT_SHA_RE.fullmatch(sha) else ""
+
+
+def _validation_run_id(value: object) -> str:
+    if not isinstance(value, Mapping):
+        return ""
+    if str(value.get("kind", "")) != "github-workflow-run":
+        return ""
+    ref = str(value.get("ref", ""))
+    marker = "/runs/"
+    if marker not in ref:
+        return ""
+    run_id = ref.rsplit(marker, 1)[1]
+    return run_id if _RUN_ID_RE.fullmatch(run_id) else ""
+
+
+def _canonical_context(
+    root: pathlib.Path,
+    rows: Sequence[Mapping[str, Any]],
+) -> Dict[str, Dict[str, Set[str]]]:
+    item_ids = {
+        str(row.get("target", {}).get("item_id", ""))
+        for row in rows
+        if isinstance(row.get("target"), Mapping)
+    }
+    context: Dict[str, Dict[str, Set[str]]] = {}
+    for item in registry_items(root):
+        item_id = str(item.get("id", ""))
+        if item_id not in item_ids:
+            continue
+        contract = item.get("evidence_contract", {})
+        if not isinstance(contract, Mapping):
+            continue
+        source_shas = {
+            sha
+            for sha in (
+                _source_sha(value)
+                for value in contract.get("source_refs", [])
+                if isinstance(contract.get("source_refs", []), list)
+            )
+            if sha
+        }
+        validation_ids = {
+            run_id
+            for run_id in (
+                _validation_run_id(value)
+                for value in contract.get("validation_refs", [])
+                if isinstance(contract.get("validation_refs", []), list)
+            )
+            if run_id
+        }
+        context[item_id] = {
+            "source_shas": source_shas,
+            "validation_run_ids": validation_ids,
+        }
+    for row in rows:
+        target = row.get("target", {})
+        if not isinstance(target, Mapping):
+            continue
+        item_id = str(target.get("item_id", ""))
+        values = context.setdefault(
+            item_id,
+            {"source_shas": set(), "validation_run_ids": set()},
+        )
+        if row.get("field") == "source_refs":
+            sha = _source_sha(row.get("proposed_reference"))
+            if sha:
+                values["source_shas"].add(sha)
+        elif row.get("field") == "validation_refs":
+            run_id = _validation_run_id(row.get("proposed_reference"))
+            if run_id:
+                values["validation_run_ids"].add(run_id)
+    return context
+
+
+def _version_coherent(
+    row: Mapping[str, Any],
+    context: Mapping[str, Mapping[str, Set[str]]],
+) -> bool:
+    target = row.get("target", {})
+    if not isinstance(target, Mapping):
+        return False
+    item_context = context.get(str(target.get("item_id", "")), {})
+    source_shas = item_context.get("source_shas", set())
+    validation_ids = item_context.get("validation_run_ids", set())
+    snapshot = row.get("candidate_snapshot", {})
+    if not isinstance(snapshot, Mapping):
+        return False
+    details = snapshot.get("details", {})
+    if not isinstance(details, Mapping):
+        return False
+    field = str(row.get("field", ""))
+    if field == "source_refs":
+        sha = _source_sha(row.get("proposed_reference"))
+        return bool(
+            sha
+            and snapshot.get("kind") == "github-source-revision"
+            and details.get("exact_identity") is True
+            and str(details.get("commit_sha", "")) == sha
+        )
+    if field == "validation_refs":
+        return bool(
+            snapshot.get("kind") == "github-workflow-run"
+            and str(details.get("head_sha", "")) in source_shas
+            and str(details.get("run_id", "")) in validation_ids
+        )
+    if field == "artifact_refs":
+        return bool(
+            snapshot.get("kind") == "github-actions-artifact"
+            and str(details.get("workflow_run_head_sha", "")) in source_shas
+            and str(details.get("workflow_run_id", "")) in validation_ids
+        )
+    return False
+
+
 def _machine_eligible(
     row: Mapping[str, Any],
     machine_fields: Set[str],
     mutation_intent: str,
+    context: Mapping[str, Mapping[str, Set[str]]],
 ) -> bool:
     field = str(row.get("field", ""))
     if field not in machine_fields:
@@ -162,7 +290,7 @@ def _machine_eligible(
     snapshot = row.get("candidate_snapshot", {})
     if not isinstance(snapshot, Mapping):
         return False
-    return all(
+    if not all(
         (
             snapshot.get("provider") == "github",
             snapshot.get("provider_verified") is True,
@@ -172,7 +300,9 @@ def _machine_eligible(
             str(snapshot.get("kind", "")) == str(proposed.get("kind", "")),
             str(snapshot.get("ref", "")) == str(proposed.get("ref", "")),
         )
-    )
+    ):
+        return False
+    return _version_coherent(row, context)
 
 
 def _fingerprints(rows: Sequence[Mapping[str, Any]]) -> List[str]:
@@ -321,15 +451,22 @@ def build_unique_execution_routes(
             ["machine-policy-invalid: {}".format(exc)],
         )
 
+    context = _canonical_context(root, selected)
     machine_rows = [
         row
         for row in selected
-        if _machine_eligible(row, machine_fields, mutation_intent)
+        if _machine_eligible(
+            row,
+            machine_fields,
+            mutation_intent,
+            context,
+        )
     ]
+    machine_fingerprints = set(_fingerprints(machine_rows))
     human_rows = [
         row
         for row in selected
-        if not _machine_eligible(row, machine_fields, mutation_intent)
+        if str(row.get("proposal_fingerprint", "")) not in machine_fingerprints
     ]
     machine = _machine_route(root, proposal, machine_rows)
     human = _human_route(root, proposal, human_rows)
