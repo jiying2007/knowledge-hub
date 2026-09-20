@@ -24,6 +24,9 @@ def _write(root: Path, allowlists, statuses=None):
             {
                 "external_evidence": {
                     "supported_gaps": list(GAPS),
+                    "observation_source_workflow_prefix": (
+                        ".github/workflows/real-observation-"
+                    ),
                     "observation_source_workflow_allowlist": allowlists,
                 }
             }
@@ -73,7 +76,7 @@ def test_observation_source_readiness_reports_unregistered_real_sources(tmp_path
 def test_observation_source_readiness_is_deterministic_and_tracker_scoped(tmp_path):
     allowlists = _empty_allowlists()
     allowlists["connector-provider-pilot"] = [
-        ".github/workflows/connector-real-observation.yml"
+        ".github/workflows/real-observation-connector.yml"
     ]
     _write(tmp_path, allowlists)
 
@@ -117,3 +120,17 @@ def test_observation_source_readiness_matches_catalog_contract(tmp_path):
     )
 
     assert result["status"] == "pass", result["errors"]
+
+
+def test_observation_source_readiness_rejects_wrong_workflow_namespace(tmp_path):
+    allowlists = _empty_allowlists()
+    allowlists["connector-provider-pilot"] = [
+        ".github/workflows/quality.yml"
+    ]
+    _write(tmp_path, allowlists)
+
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    import pytest
+
+    with pytest.raises(KnowledgeHubError, match="reserved namespace"):
+        build_observation_source_readiness(tmp_path)
