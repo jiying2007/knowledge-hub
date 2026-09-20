@@ -259,7 +259,8 @@
         "production_windows_must_be_ordered",
         "trust_artifact_contracts",
         "root_observation_provenance_required",
-        "root_observation_revision_must_match_evidence_source_revision"
+        "root_observation_revision_must_match_evidence_source_revision",
+        "producer_code_revision_source"
       ],
       "properties": {
         "observation_generation_class": {
@@ -361,6 +362,9 @@
         },
         "root_observation_revision_must_match_evidence_source_revision": {
           "const": true
+        },
+        "producer_code_revision_source": {
+          "const": "github-workflow-sha"
         }
       },
       "additionalProperties": false
