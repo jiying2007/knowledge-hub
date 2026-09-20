@@ -47,6 +47,11 @@ def build_observation_source_readiness(root: pathlib.Path) -> Dict[str, Any]:
         raise KnowledgeHubError("external_evidence policy must be an object")
     supported = external.get("supported_gaps", [])
     allowlists = external.get("observation_source_workflow_allowlist", {})
+    prefix = str(external.get("observation_source_workflow_prefix") or "")
+    if prefix != ".github/workflows/real-observation-":
+        raise KnowledgeHubError(
+            "observation source workflow namespace policy is invalid"
+        )
     if not isinstance(supported, list) or not isinstance(allowlists, Mapping):
         raise KnowledgeHubError("observation source registration policy is invalid")
     gap_ids = [str(value) for value in supported if str(value)]
@@ -68,6 +73,12 @@ def build_observation_source_readiness(root: pathlib.Path) -> Dict[str, Any]:
                 "observation source allowlist for {} must be a list".format(gap_id)
             )
         normalized = sorted({str(value) for value in workflows if str(value)})
+        if any(not value.startswith(prefix) for value in normalized):
+            raise KnowledgeHubError(
+                "observation source workflow for {} is outside the reserved namespace".format(
+                    gap_id
+                )
+            )
         if len(normalized) != len(workflows):
             raise KnowledgeHubError(
                 "observation source allowlist for {} must be unique/non-empty".format(
