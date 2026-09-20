@@ -60,10 +60,28 @@ def build_observation_source_readiness(root: pathlib.Path) -> Dict[str, Any]:
     if set(allowlists) != set(gap_ids):
         raise KnowledgeHubError("observation source allowlist must match supported gaps")
 
-    canonical = {}
-    for row in platform.get("external_closure_gaps", []):
-        if isinstance(row, Mapping) and row.get("id"):
-            canonical[str(row["id"])] = str(row.get("status", "open"))
+    canonical_rows = platform.get("external_closure_gaps", [])
+    if not isinstance(canonical_rows, list):
+        raise KnowledgeHubError("external_closure_gaps must be a list")
+    canonical: Dict[str, str] = {}
+    counts: Dict[str, int] = {}
+    for row in canonical_rows:
+        if not isinstance(row, Mapping) or not row.get("id"):
+            continue
+        gap_id = str(row["id"])
+        counts[gap_id] = counts.get(gap_id, 0) + 1
+        canonical[gap_id] = str(row.get("status", ""))
+    for gap_id in gap_ids:
+        if counts.get(gap_id, 0) != 1:
+            raise KnowledgeHubError(
+                "supported external gap {} must exist exactly once".format(
+                    gap_id
+                )
+            )
+        if canonical[gap_id] not in {"open", "closed"}:
+            raise KnowledgeHubError(
+                "supported external gap {} has invalid status".format(gap_id)
+            )
 
     rows = []
     for gap_id in gap_ids:
