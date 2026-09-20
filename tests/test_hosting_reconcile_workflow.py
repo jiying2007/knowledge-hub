@@ -167,3 +167,11 @@ def test_hosting_reconcile_matches_centralized_requalification_policy():
     assert "Requalify bounded automation PRs after protection recovery" in text
     assert 'requalify_prefix "automation/evidence-bind-"' in text
     assert 'requalify_prefix "automation/external-gap-"' in text
+
+
+def test_hosting_reconcile_skips_stale_base_during_requalification():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "baseRefOid" in text
+    assert 'base_sha="$(jq -r .baseRefOid' in text
+    assert 'if [[ "${base_sha}" != "${SOURCE_REVISION}" ]]' in text
+    assert "skip stale automation PR #" in text
