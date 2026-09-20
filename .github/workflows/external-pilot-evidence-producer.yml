@@ -49,11 +49,11 @@ jobs:
         with:
           python-version: "3.14"
           cache: pip
-          cache-dependency-path: requirements-dev.lock
+          cache-dependency-path: requirements-runtime.lock
       - name: Bootstrap governed CI transport
         run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
-      - name: Install hash-locked dependencies
-        run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
       - name: Validate producer selectors
         env:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
