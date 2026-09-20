@@ -161,13 +161,27 @@ def _write_common_ready_state(
     _write_json(
         tmp_path / ".cache/knowledge-hub/hosting-posture.json",
         {
+            "schema_version": "knowledge-hub.hosting-posture.v1",
             "status": "pass",
+            "generated_at": "2026-09-20T00:00:00Z",
             "repository": "example/knowledge-hub",
             "source_revision": "a" * 40,
             "repository_private": True,
             "repository_visibility": "private",
             "default_branch": "master",
+            "default_branch_present": default_branch_present,
+            "default_branch_protection_observed": protection_observed,
             "default_branch_protected": protected,
+            "rulesets_capability": {
+                "status": "not-probed",
+                "reason": "github-token-unavailable",
+                "http_status": 0,
+                "ruleset_count": 0,
+            },
+            "branch_inventory": (
+                ".cache/knowledge-hub/remote-branch-inventory.json"
+            ),
+            "canonical_write": False,
         },
     )
     _write_json(
