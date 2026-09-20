@@ -68,7 +68,12 @@ jobs:
           base = pull.get("base") or {}
           head = pull.get("head") or {}
           base_sha = str(base.get("sha") or "").lower()
+          base_ref = str(base.get("ref") or "")
           head_sha = str(head.get("sha") or "").lower()
+          if base_ref != "master":
+              raise SystemExit(
+                  "security change review only supports PRs targeting master"
+              )
           commit = json.loads(
               Path(
                   ".cache/knowledge-hub/security-change-review/"
