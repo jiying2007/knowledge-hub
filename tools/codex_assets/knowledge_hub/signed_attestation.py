@@ -11,6 +11,7 @@ from typing import Any, Dict, Mapping
 from .attestation import PREDICATE_TYPE, quality_attestation, statement_digest, verify_quality_attestation
 from .common import KnowledgeHubError, utc_timestamp
 from .quality_evidence_binding import verify_quality_evidence_binding
+from .schemas import validate_instance
 
 SOURCE_RE = re.compile(r"^[0-9a-f]{40}$")
 DEFAULT_OUTPUT = ".cache/knowledge-hub/signed-attestation"
@@ -85,6 +86,17 @@ def _quality_statuses(
         objects["quality_binding"],
         source_revision=source_revision,
     )
+    hosting_contract = validate_instance(
+        root,
+        "hosting-posture-v1",
+        objects["hosting"],
+    )
+    if hosting_contract.get("status") != "pass":
+        raise KnowledgeHubError(
+            "hosting posture contract validation failed: {}".format(
+                hosting_contract.get("errors", [])
+            )
+        )
     if (
         str(objects["hosting"].get("source_revision", "")).lower()
         != source_revision
