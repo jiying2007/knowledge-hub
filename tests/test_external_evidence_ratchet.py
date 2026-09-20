@@ -242,6 +242,22 @@ def test_external_ratchet_matches_ai_first_policy():
     assert boundary["machine_ratchet_may_create_pr"] is True
     assert boundary["machine_ratchet_direct_master_write"] is False
     assert boundary["machine_ratchet_auto_merge_requires_protected_branch"] is True
+    assert boundary["root_observation_provenance_required"] is True
+    assert (
+        boundary[
+            "root_observation_revision_must_match_evidence_source_revision"
+        ]
+        is True
+    )
+    assert boundary["trust_artifact_contracts"] == {
+        "source_provenance": "external-evidence-source-provenance-v1",
+        "producer_receipt": "external-pilot-evidence-producer-receipt-v1",
+        "closure_receipt": "external-evidence-receipt-v1",
+        "intake_receipt": "external-evidence-intake-receipt-v1",
+        "host_binding": "external-evidence-intake-host-binding-v1",
+        "ratchet_proposal": "external-evidence-ratchet-proposal-v2",
+        "ratchet_verification": "external-evidence-ratchet-verification-v1",
+    }
 
 
 def test_ratchet_workflow_uploads_origin_before_creating_pr():
