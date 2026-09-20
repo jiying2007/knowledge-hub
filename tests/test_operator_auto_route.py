@@ -33,9 +33,10 @@ def _write_policy(root):
                     "machine_ratchet_may_change_readiness": False,
                     "machine_ratchet_may_auto_promote_evidence_ready": False,
                     "machine_validation_requires_source_revision_match": True,
-                    "machine_artifact_kinds": ["github-actions-artifact"],
-                    "machine_artifact_requires_validation_run_match": True,
+                    "machine_artifact_kinds": ["github-release-asset"],
+                    "machine_artifact_requires_validation_run_match": False,
                     "machine_artifact_requires_source_revision_match": True,
+                    "machine_artifact_requires_immutable_release": True,
                 }
             }
         )
@@ -81,14 +82,14 @@ def _row(
     kind_by_field = {
         "source_refs": "github-source-revision",
         "validation_refs": "github-workflow-run",
-        "artifact_refs": "github-actions-artifact",
+        "artifact_refs": "github-release-asset",
         "release_ref": "github-release",
     }
     kind = kind_by_field[field]
     ref = {
         "source_refs": "github://example/repo@" + "1" * 40,
         "validation_refs": "github-actions://example/repo/runs/123",
-        "artifact_refs": "github-actions-artifact://example/repo/456",
+        "artifact_refs": "github-release-asset://example/repo/456",
         "release_ref": "github-release://example/repo/789",
     }[field]
     return {
@@ -122,8 +123,10 @@ def _row(
                 "commit_sha": "1" * 40 if field == "source_refs" else "",
                 "run_id": "123" if field == "validation_refs" else "",
                 "head_sha": "1" * 40 if field == "validation_refs" else "",
-                "workflow_run_id": "123" if field == "artifact_refs" else "",
-                "workflow_run_head_sha": (
+                "release_immutable": field == "artifact_refs",
+                "release_draft": False,
+                "release_prerelease": False,
+                "release_tag_commit_sha": (
                     "1" * 40 if field == "artifact_refs" else ""
                 ),
             },
@@ -376,21 +379,44 @@ def test_validation_from_different_source_revision_falls_back_to_human(tmp_path)
     assert result["human_authorization_count"] == 1
 
 
-def test_release_asset_artifact_without_workflow_revision_stays_human(tmp_path):
+def test_actions_artifact_stays_human_even_when_provider_verified(tmp_path):
     _write_policy(tmp_path)
     row = _row(field="artifact_refs")
     row["proposed_reference"] = {
-        "kind": "github-release-asset",
-        "ref": "github-release-asset://example/repo/456",
+        "kind": "github-actions-artifact",
+        "ref": "github-actions-artifact://example/repo/456",
     }
-    row["candidate_snapshot"]["kind"] = "github-release-asset"
+    row["candidate_snapshot"]["kind"] = "github-actions-artifact"
     row["candidate_snapshot"]["ref"] = row["proposed_reference"]["ref"]
     row["candidate_snapshot"]["details"] = {
-        "asset_id": "456",
+        "artifact_id": "456",
         "digest": "sha256:" + "d" * 64,
-        "release_id": "789",
-        "tag_name": "v1.0.0",
+        "workflow_run_id": "123",
+        "workflow_run_head_sha": "1" * 40,
+        "expired": False,
     }
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "needs-governed-authorization"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 1
+
+
+def test_immutable_release_asset_from_different_source_stays_human(tmp_path):
+    _write_policy(tmp_path)
+    row = _row(field="artifact_refs")
+    row["candidate_snapshot"]["details"]["release_tag_commit_sha"] = "9" * 40
     with mock.patch(
         "tools.codex_assets.knowledge_hub.operator_auto_route."
         "build_binding_patch_plan",
