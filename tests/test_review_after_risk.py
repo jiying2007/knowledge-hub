@@ -90,3 +90,23 @@ def test_ai_operations_policy_is_security_critical():
     assert result["review_class"] == "security-critical"
     assert result["stale_severity"] == "blocked"
     assert result["ai_first_action"] == "human-review-required"
+
+
+@pytest.mark.parametrize(
+    "path_value",
+    [
+        "registry/ai-operations-policy.json",
+        "registry/review-risk-policy.json",
+        "schemas/ai-operations-policy.schema.json",
+        "schemas/review-risk-policy.schema.json",
+    ],
+)
+def test_trust_root_policies_are_security_critical(path_value):
+    root = Path(__file__).resolve().parents[1]
+    policy = load_review_risk_policy(root)
+
+    result = classify_review_risk(policy, path_value)
+
+    assert result["review_class"] == "security-critical"
+    assert result["stale_severity"] == "blocked"
+    assert result["ai_first_action"] == "human-review-required"
