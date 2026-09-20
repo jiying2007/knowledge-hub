@@ -181,6 +181,9 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
         artifact_id = str(artifact.get("id", ""))
         if not artifact_id:
             continue
+        workflow_run = artifact.get("workflow_run", {})
+        if not isinstance(workflow_run, Mapping):
+            workflow_run = {}
         result.append(
             _candidate(
                 "github-actions-artifact",
@@ -192,6 +195,13 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
                     "created_at": str(artifact.get("created_at", "")),
                     "expires_at": str(artifact.get("expires_at", "")),
                     "expired": False,
+                    "workflow_run_id": str(workflow_run.get("id", "")),
+                    "workflow_run_head_sha": str(
+                        workflow_run.get("head_sha", "")
+                    ),
+                    "workflow_run_head_branch": str(
+                        workflow_run.get("head_branch", "")
+                    ),
                 },
             )
         )
