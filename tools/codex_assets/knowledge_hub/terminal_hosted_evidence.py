@@ -9,6 +9,7 @@ import pathlib
 from typing import Any, Dict, List, Mapping, Tuple
 
 from .common import KnowledgeHubError
+from .schemas import validate_instance
 
 
 def _load_object(path: pathlib.Path, label: str) -> Dict[str, Any]:
@@ -432,6 +433,16 @@ def hosting_posture_state(
             "required": True,
             "status": "blocked",
             "reason": "fresh-hosting-posture-missing",
+            "fact_drift": [],
+            "snapshot": evidence_path,
+        }
+    contract = validate_instance(root, "hosting-posture-v1", evidence)
+    if contract.get("status") != "pass":
+        return {
+            "required": True,
+            "status": "blocked",
+            "reason": "hosting-posture-contract-invalid",
+            "contract_validation": contract,
             "fact_drift": [],
             "snapshot": evidence_path,
         }
