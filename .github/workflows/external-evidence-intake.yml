@@ -176,6 +176,27 @@ jobs:
               artifact_name = os.environ["MANUAL_ARTIFACT_NAME"]
               gap = os.environ["MANUAL_EXPECTED_GAP"]
               evidence_file = os.environ["MANUAL_EVIDENCE_FILE"]
+
+              policy = json.loads(
+                  Path("registry/ai-operations-policy.json").read_text(
+                      encoding="utf-8"
+                  )
+              )
+              external = policy.get("external_evidence") or {}
+              allowlists = (
+                  external.get("observation_source_workflow_allowlist") or {}
+              )
+              allowed = allowlists.get(gap)
+              if not isinstance(allowed, list):
+                  raise SystemExit(
+                      "manual intake observation workflow policy is invalid"
+                  )
+              if workflow_path not in allowed:
+                  raise SystemExit(
+                      "manual intake source workflow is not registered for {}".format(
+                          gap
+                      )
+                  )
               if not re.fullmatch(r"[A-Za-z0-9._-]+", artifact_name):
                   raise SystemExit("artifact_name contains unsupported characters")
               if not re.fullmatch(r"[A-Za-z0-9._-]+\.json", evidence_file):
