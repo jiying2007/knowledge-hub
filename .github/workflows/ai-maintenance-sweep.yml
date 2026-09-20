@@ -16,13 +16,35 @@ concurrency:
 jobs:
   sweep:
     name: AI-first health, review and growth sweep
+    if: >-
+      ${{
+        github.event_name == 'schedule' ||
+        (github.event_name == 'workflow_dispatch' &&
+         github.ref == 'refs/heads/master')
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SOURCE_REVISION: ${{ github.sha }}
     steps:
       - name: Checkout exact master
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.SOURCE_REVISION }}
           persist-credentials: false
+
+      - name: Verify current master identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          live="$(
+            gh api "repos/${GITHUB_REPOSITORY}/branches/master" --jq .commit.sha
+          )"
+          if [[ "${live}" != "${SOURCE_REVISION}" ]]; then
+            echo "maintenance source is stale relative to current master" >&2
+            exit 1
+          fi
 
       - name: Set up governed Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
