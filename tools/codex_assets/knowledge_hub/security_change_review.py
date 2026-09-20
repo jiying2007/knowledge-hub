@@ -265,6 +265,55 @@ def _review_verdict(
     )
 
 
+def _packet(
+    *,
+    repository: str,
+    pr_number: int,
+    base_sha: str,
+    head_sha: str,
+    head_ref: str,
+    author_login: str,
+    same_repository: bool,
+    head_is_direct_child_of_base: bool,
+    autonomous: bool,
+    change_fingerprint: str,
+    security: Sequence[Mapping[str, Any]],
+    approvals: Sequence[Mapping[str, Any]],
+    comment_approvals: Sequence[Mapping[str, Any]],
+    status: str,
+    review_required: bool,
+    reason: str,
+) -> Dict[str, Any]:
+    packet: Dict[str, Any] = {
+        "schema_version": 1,
+        "projection": PROJECTION,
+        "status": status,
+        "gate_pass": status == "pass",
+        "review_required": review_required,
+        "review_reason": reason,
+        "read_only": True,
+        "canonical_write_performed": False,
+        "repository": repository,
+        "pr_number": int(pr_number),
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "head_ref": head_ref,
+        "author_login": author_login,
+        "same_repository": bool(same_repository),
+        "head_is_direct_child_of_base": bool(head_is_direct_child_of_base),
+        "autonomous_ratchet": autonomous,
+        "change_fingerprint": change_fingerprint,
+        "security_critical_file_count": len(security),
+        "security_critical_files": list(security),
+        "exact_head_approval_count": len(approvals),
+        "exact_head_approvals": list(approvals),
+        "hash_bound_comment_approval_count": len(comment_approvals),
+        "hash_bound_comment_approvals": list(comment_approvals),
+    }
+    packet["packet_fingerprint"] = _fingerprint(packet)
+    return packet
+
+
 def build_security_change_review(
     *,
     repository: str,
@@ -316,33 +365,21 @@ def build_security_change_review(
         comment_approvals=comment_approvals,
     )
 
-    packet: Dict[str, Any] = {
-        "schema_version": 1,
-        "projection": PROJECTION,
-        "status": status,
-        "gate_pass": status == "pass",
-        "review_required": review_required,
-        "review_reason": reason,
-        "read_only": True,
-        "canonical_write_performed": False,
-        "repository": repository,
-        "pr_number": int(pr_number),
-        "base_sha": base_sha,
-        "head_sha": head_sha,
-        "head_ref": head_ref,
-        "author_login": author_login,
-        "same_repository": bool(same_repository),
-        "head_is_direct_child_of_base": bool(
-            head_is_direct_child_of_base
-        ),
-        "autonomous_ratchet": autonomous,
-        "change_fingerprint": change_fingerprint,
-        "security_critical_file_count": len(security),
-        "security_critical_files": security,
-        "exact_head_approval_count": len(approvals),
-        "exact_head_approvals": approvals,
-        "hash_bound_comment_approval_count": len(comment_approvals),
-        "hash_bound_comment_approvals": comment_approvals,
-    }
-    packet["packet_fingerprint"] = _fingerprint(packet)
-    return packet
+    return _packet(
+        repository=repository,
+        pr_number=pr_number,
+        base_sha=base_sha,
+        head_sha=head_sha,
+        head_ref=head_ref,
+        author_login=author_login,
+        same_repository=same_repository,
+        head_is_direct_child_of_base=head_is_direct_child_of_base,
+        autonomous=autonomous,
+        change_fingerprint=change_fingerprint,
+        security=security,
+        approvals=approvals,
+        comment_approvals=comment_approvals,
+        status=status,
+        review_required=review_required,
+        reason=reason,
+    )
