@@ -425,3 +425,28 @@ def test_ratchet_builder_rejects_root_revision_drift(tmp_path: Path):
             intake_receipt_path=paths[2],
             host_binding_path=paths[3],
         )
+
+
+def test_ratchet_builder_rejects_cross_repository_root_provenance(
+    tmp_path: Path,
+):
+    paths = _fixture(tmp_path)
+    intake = json.loads(paths[2].read_text(encoding="utf-8"))
+    intake["root_observation_provenance"]["repository"] = "other/repository"
+    _write(paths[2], intake)
+    binding = json.loads(paths[3].read_text(encoding="utf-8"))
+    binding["intake_receipt_sha256"] = hashlib.sha256(
+        paths[2].read_bytes()
+    ).hexdigest()
+    _write(paths[3], binding)
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="root observation repository differs",
+    ):
+        build_external_gap_ratchet_candidate(
+            registry_path=paths[0],
+            closure_receipt_path=paths[1],
+            intake_receipt_path=paths[2],
+            host_binding_path=paths[3],
+        )
