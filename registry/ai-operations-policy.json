@@ -164,7 +164,18 @@
     "validator_receipt_timestamp_source": "observation-observed-at",
     "manual_intake_source_requires_trusted_master_run": true,
     "observation_timestamps_require_utc": true,
-    "production_windows_must_be_ordered": true
+    "production_windows_must_be_ordered": true,
+    "trust_artifact_contracts": {
+      "source_provenance": "external-evidence-source-provenance-v1",
+      "producer_receipt": "external-pilot-evidence-producer-receipt-v1",
+      "closure_receipt": "external-evidence-receipt-v1",
+      "intake_receipt": "external-evidence-intake-receipt-v1",
+      "host_binding": "external-evidence-intake-host-binding-v1",
+      "ratchet_proposal": "external-evidence-ratchet-proposal-v2",
+      "ratchet_verification": "external-evidence-ratchet-verification-v1"
+    },
+    "root_observation_provenance_required": true,
+    "root_observation_revision_must_match_evidence_source_revision": true
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
