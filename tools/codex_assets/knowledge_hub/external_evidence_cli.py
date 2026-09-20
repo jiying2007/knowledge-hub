@@ -14,6 +14,7 @@ from .common import (
     resolve_inside,
 )
 from .external_evidence import SUPPORTED_GAPS, load_and_validate_external_evidence
+from .schemas import validate_instance
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -35,6 +36,17 @@ def main(argv: Sequence[str] = ()) -> int:
             input_path,
             expected_gap=args.expected_gap,
         )
+        validation = validate_instance(
+            root,
+            "external-evidence-receipt-v1",
+            receipt,
+        )
+        if validation.get("status") != "pass":
+            raise KnowledgeHubError(
+                "external evidence receipt contract validation failed: {}".format(
+                    validation.get("errors", [])
+                )
+            )
         if args.output:
             output = resolve_inside(root, args.output)
             ensure_private_directory_tree(root, output.parent)
