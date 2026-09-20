@@ -183,6 +183,17 @@ jobs:
                   )
               )
               external = policy.get("external_evidence") or {}
+              prefix = str(
+                  external.get("observation_source_workflow_prefix") or ""
+              )
+              if prefix != ".github/workflows/real-observation-":
+                  raise SystemExit(
+                      "manual intake observation namespace policy is invalid"
+                  )
+              if not workflow_path.startswith(prefix):
+                  raise SystemExit(
+                      "manual intake source workflow is outside the real-observation namespace"
+                  )
               allowlists = (
                   external.get("observation_source_workflow_allowlist") or {}
               )
