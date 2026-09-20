@@ -21,7 +21,8 @@
       "required": [
         "new_module_max_lines",
         "new_function_max_lines",
-        "legacy_module_line_caps"
+        "legacy_module_line_caps",
+        "ci_baseline"
       ],
       "properties": {
         "new_module_max_lines": {
@@ -38,6 +39,26 @@
             "type": "integer",
             "minimum": 1
           }
+        },
+        "ci_baseline": {
+          "type": "object",
+          "required": [
+            "required_in_github_actions",
+            "env",
+            "missing_or_invalid"
+          ],
+          "properties": {
+            "required_in_github_actions": {
+              "const": true
+            },
+            "env": {
+              "const": "KNOWLEDGE_COMPLEXITY_BASE_REF"
+            },
+            "missing_or_invalid": {
+              "const": "fail"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
