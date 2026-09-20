@@ -9,6 +9,7 @@ from typing import Sequence
 
 from .common import KnowledgeHubError, repository_root
 from .hosting_posture import evaluate_hosting_posture, write_hosting_posture
+from .schemas import validate_instance
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -33,6 +34,13 @@ def main(argv: Sequence[str] = ()) -> int:
             branch_inventory=args.branch_inventory,
             token=os.environ.get("GITHUB_TOKEN", ""),
         )
+        validation = validate_instance(root, "hosting-posture-v1", payload)
+        if validation.get("status") != "pass":
+            raise KnowledgeHubError(
+                "hosting posture contract validation failed: {}".format(
+                    validation.get("errors", [])
+                )
+            )
         payload["snapshot"] = write_hosting_posture(root, args.output, payload)
     except KnowledgeHubError as exc:
         parser.error(str(exc))
