@@ -111,9 +111,9 @@ jobs:
               raise SystemExit('observation artifact must expose a sha256 digest')
           bounded = {
               'schema_version': 1,
-              'projection': 'knowledge-hub-external-pilot-observation-source-v1',
               'repository': expected_repo,
               'source_run_id': int(run['id']),
+              'source_run_attempt': int(run.get('run_attempt', 0) or 0),
               'source_run_head_sha': head_sha,
               'source_run_event': str(run.get('event') or ''),
               'source_run_head_branch': str(run.get('head_branch') or ''),
@@ -122,6 +122,19 @@ jobs:
               'artifact_name': str(artifact['name']),
               'artifact_digest': digest,
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path('.').resolve(),
+              'external-evidence-source-provenance-v1',
+              bounded,
+          )
+          if validation.get('status') != 'pass':
+              raise SystemExit(
+                  'observation source provenance contract failed: {}'.format(
+                      validation.get('errors', [])
+                  )
+              )
           (root / 'source-provenance.json').write_text(
               json.dumps(bounded, sort_keys=True, separators=(',', ':')) + '\n',
               encoding='utf-8',
