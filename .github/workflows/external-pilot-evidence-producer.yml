@@ -105,6 +105,17 @@ jobs:
               )
           )
           external = policy.get('external_evidence') or {}
+          prefix = str(
+              external.get('observation_source_workflow_prefix') or ''
+          )
+          if prefix != '.github/workflows/real-observation-':
+              raise SystemExit(
+                  'observation source workflow namespace policy is invalid'
+              )
+          if not workflow_path.startswith(prefix):
+              raise SystemExit(
+                  'observation source workflow is outside the real-observation namespace'
+              )
           allowlists = external.get('observation_source_workflow_allowlist') or {}
           gap = os.environ['EXPECTED_GAP']
           allowed = allowlists.get(gap)
