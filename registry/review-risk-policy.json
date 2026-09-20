@@ -58,6 +58,78 @@
       "review_class": "security-critical"
     },
     {
+      "path_prefix": ".github/workflows/",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/authorizations.jsonl",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "schemas/authorization.schema.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/authorization.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/review_attestation.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/review_risk.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/security_change_review.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/schemas.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/hosting_posture.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/terminal_closure.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/terminal_hosted_evidence.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/repository_private_ratchet.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/operator_auto_route.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/operator_machine_ratchet.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/operator_machine_ratchet_verify.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/external_evidence.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/external_evidence_ratchet.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/external_evidence_ratchet_verify.py",
+      "review_class": "security-critical"
+    },
+    {
       "path_prefix": "governance/",
       "review_class": "governance-critical"
     },
