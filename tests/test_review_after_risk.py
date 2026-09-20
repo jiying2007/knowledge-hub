@@ -99,6 +99,7 @@ def test_ai_operations_policy_is_security_critical():
         "registry/review-risk-policy.json",
         "schemas/ai-operations-policy.schema.json",
         "schemas/review-risk-policy.schema.json",
+        "schemas/security-change-review.schema.json",
     ],
 )
 def test_trust_root_policies_are_security_critical(path_value):
