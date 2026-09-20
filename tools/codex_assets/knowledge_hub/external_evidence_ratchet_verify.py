@@ -165,6 +165,18 @@ def _replay_candidate(
     gap_id: str,
     record: Mapping[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any], bytes]:
+    origin_proposal, proposal_raw = _load_json(proposal_path, "origin proposal")
+    binding, binding_raw = _load_json(host_binding_path, "host binding")
+    closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
+    intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
+    _validate_origin_contracts(
+        root,
+        closure=closure,
+        intake=intake,
+        binding=binding,
+        proposal=origin_proposal,
+    )
+
     candidate, proposal = build_external_gap_ratchet_candidate(
         registry_path=base_registry_path,
         closure_receipt_path=closure_receipt_path,
@@ -179,26 +191,14 @@ def _replay_candidate(
         raise KnowledgeHubError(
             "replayed external proposal unexpectedly requires review"
         )
+    if origin_proposal != proposal:
+        raise KnowledgeHubError("origin proposal does not equal trusted replay")
 
     head_raw = head_registry_path.read_bytes()
     if head_raw != _expected_candidate_bytes(candidate):
         raise KnowledgeHubError(
             "PR registry bytes do not equal replayed external candidate"
         )
-
-    origin_proposal, proposal_raw = _load_json(proposal_path, "origin proposal")
-    binding, binding_raw = _load_json(host_binding_path, "host binding")
-    closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
-    intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
-    _validate_origin_contracts(
-        root,
-        closure=closure,
-        intake=intake,
-        binding=binding,
-        proposal=origin_proposal,
-    )
-    if origin_proposal != proposal:
-        raise KnowledgeHubError("origin proposal does not equal trusted replay")
     _verify_digests(
         record,
         head_registry_raw=head_raw,
