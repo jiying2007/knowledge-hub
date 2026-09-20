@@ -171,3 +171,13 @@ def test_ai_provider_discovery_uploads_origin_artifact_before_creating_pr():
     )
     assert upload_index < pr_index
     assert steps[upload_index]["if"] == "always()"
+
+
+def test_ai_provider_discovery_self_heals_pre_protection_open_pr():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "identical machine evidence ratchet PR already open while master remains unprotected" in text
+    assert "Master protection is now active" in text
+    assert "fresh trusted-origin PR" in text
+    protected_index = text.index("identical machine evidence ratchet PR already open while master remains unprotected")
+    create_index = text.index("gh pr create")
+    assert protected_index < create_index
