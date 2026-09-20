@@ -190,11 +190,10 @@ def _validate_source_provenance(
     }
 
 
-def _validate_intake(
+def _validate_intake_links(
     intake: Mapping[str, Any],
-    intake_sha: str,
     closure_context: Mapping[str, Any],
-) -> Dict[str, Any]:
+) -> None:
     if (
         intake.get("schema_version") != 1
         or intake.get("projection") != INTAKE_PROJECTION
@@ -237,6 +236,13 @@ def _validate_intake(
             "intake receipt is not bound to the supplied closure receipt"
         )
 
+
+def _validate_intake(
+    intake: Mapping[str, Any],
+    intake_sha: str,
+    closure_context: Mapping[str, Any],
+) -> Dict[str, Any]:
+    _validate_intake_links(intake, closure_context)
     source = _validate_source_provenance(
         intake.get("source_provenance"),
         "source provenance",
