@@ -97,6 +97,12 @@ def _latest_reviews(
             "submitted_at": str(value.get("submitted_at", "")),
             "review_id": int(value.get("id", 0) or 0),
         }
+        if row["state"] not in {
+            "APPROVED",
+            "CHANGES_REQUESTED",
+            "DISMISSED",
+        }:
+            continue
         previous = latest.get(login)
         if previous is None or row["review_id"] >= previous["review_id"]:
             latest[login] = row
