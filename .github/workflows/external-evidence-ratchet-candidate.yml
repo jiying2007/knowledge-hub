@@ -393,10 +393,10 @@ jobs:
                 "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
                 --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
               | awk -v sha="${quality_sha}" \
-                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") {print $1; exit}'
             )"
             if [[ -n "${active}" ]]; then
-              echo "exact-head Quality already active/successful: ${active}"
+              echo "exact-head Quality already active: ${active}"
               return 0
             fi
             gh workflow run quality.yml \
@@ -499,7 +499,7 @@ jobs:
                     "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${branch}&per_page=20" \
                     --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
                   | awk -v expected="${sha}" \
-                      '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+                      '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") {print $1; exit}'
                 )"
                 if [[ -z "${active}" ]]; then
                   gh workflow run quality.yml --repo "${GITHUB_REPOSITORY}" --ref "${branch}"
