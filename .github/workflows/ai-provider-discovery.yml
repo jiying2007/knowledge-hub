@@ -396,8 +396,7 @@ jobs:
               echo "identical machine evidence ratchet PR already open while master remains unprotected: #${existing}"
               exit 0
             fi
-            gh pr close "${existing}" --repo "${GITHUB_REPOSITORY}" \
-              --comment "Master protection is now active. Closing this pre-protection machine ratchet so a fresh trusted-origin PR can rerun exact-head Quality and auto-merge verification."
+            echo "master protection is active; retaining #${existing} until the fresh trusted-origin PR is created successfully"
           fi
 
           cp "${candidate}" registry/items.jsonl
