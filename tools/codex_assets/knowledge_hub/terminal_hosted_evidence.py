@@ -478,6 +478,11 @@ def _hosting_result(
         "default_branch_protected": (
             evidence.get("default_branch_protected") is True
         ),
+        "rulesets_capability": (
+            dict(evidence.get("rulesets_capability", {}))
+            if isinstance(evidence.get("rulesets_capability"), Mapping)
+            else {}
+        ),
         "fact_drift": _hosting_drift(
             root,
             policy,
