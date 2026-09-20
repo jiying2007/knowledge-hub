@@ -36,6 +36,7 @@ human or real-world boundary
 - 基于精确 source revision 和 immutable provider identity 的候选生成。
 - 不覆盖已有语义、不改变 owner decision 的低风险 ratchet candidate。
 - 创建 governed branch / PR；不得直接写 `master`。
+- automation PR 使用仓库 `GITHUB_TOKEN` 创建时，不假设 PR/push 会递归触发 CI；创建/复用 PR 后必须显式确认 exact-head Quality 已 active/success，否则由受信 execution workflow 主动 `workflow_dispatch` Quality。
 - CI、恢复演练、SBOM、attestation、证据摘要和 bounded ledger 生成。
 
 ## 仍必须保留人工或真实环境
