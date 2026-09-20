@@ -58,69 +58,41 @@ def _request_repository_metadata(repository: str, token: str = "") -> Dict[str, 
     return dict(value)
 
 
-def _rulesets_capability(
-    repository: str,
-    token: str,
+def _rulesets_http_error(
+    exc: urllib.error.HTTPError,
 ) -> Dict[str, Any]:
-    if not token:
-        return {
-            "status": "not-probed",
-            "reason": "github-token-unavailable",
-            "http_status": 0,
-            "ruleset_count": 0,
-        }
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "Authorization": "Bearer {}".format(token),
-        "User-Agent": "knowledge-hub-hosting-posture",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    request = urllib.request.Request(
-        "https://api.github.com/repos/{}/rulesets".format(repository),
-        headers=headers,
-        method="GET",
-    )
     try:
-        with urllib.request.urlopen(
-            request,
-            timeout=_TIMEOUT_SECONDS,
-        ) as response:  # nosec B310
-            raw = response.read(_MAX_BYTES + 1)
-            http_status = int(getattr(response, "status", 200) or 200)
-    except urllib.error.HTTPError as exc:
-        try:
-            raw = exc.read(_MAX_BYTES + 1)
-            payload = json.loads(raw.decode("utf-8"))
-            message = (
-                str(payload.get("message", ""))
-                if isinstance(payload, Mapping)
-                else ""
-            )
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            message = ""
-        if exc.code == 403 and "Upgrade to GitHub Pro" in message:
-            status = "plan-gated"
-            reason = "private-repository-rulesets-require-upgrade-or-public"
-        elif exc.code == 403:
-            status = "integration-forbidden"
-            reason = "rulesets-not-readable-by-current-token"
-        else:
-            status = "unavailable"
-            reason = "rulesets-api-http-error"
-        return {
-            "status": status,
-            "reason": reason,
-            "http_status": int(exc.code),
-            "ruleset_count": 0,
-            "message": message,
-        }
-    except (urllib.error.URLError, TimeoutError, OSError):
-        return {
-            "status": "unavailable",
-            "reason": "rulesets-api-network-error",
-            "http_status": 0,
-            "ruleset_count": 0,
-        }
+        raw = exc.read(_MAX_BYTES + 1)
+        payload = json.loads(raw.decode("utf-8"))
+        message = (
+            str(payload.get("message", ""))
+            if isinstance(payload, Mapping)
+            else ""
+        )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        message = ""
+    if exc.code == 403 and "Upgrade to GitHub Pro" in message:
+        status = "plan-gated"
+        reason = "private-repository-rulesets-require-upgrade-or-public"
+    elif exc.code == 403:
+        status = "integration-forbidden"
+        reason = "rulesets-not-readable-by-current-token"
+    else:
+        status = "unavailable"
+        reason = "rulesets-api-http-error"
+    return {
+        "status": status,
+        "reason": reason,
+        "http_status": int(exc.code),
+        "ruleset_count": 0,
+        "message": message,
+    }
+
+
+def _rulesets_payload_result(
+    raw: bytes,
+    http_status: int,
+) -> Dict[str, Any]:
     if len(raw) > _MAX_BYTES:
         return {
             "status": "unavailable",
@@ -151,6 +123,46 @@ def _rulesets_capability(
         "ruleset_count": len(payload),
     }
 
+
+def _rulesets_capability(
+    repository: str,
+    token: str,
+) -> Dict[str, Any]:
+    if not token:
+        return {
+            "status": "not-probed",
+            "reason": "github-token-unavailable",
+            "http_status": 0,
+            "ruleset_count": 0,
+        }
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": "Bearer {}".format(token),
+        "User-Agent": "knowledge-hub-hosting-posture",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    request = urllib.request.Request(
+        "https://api.github.com/repos/{}/rulesets".format(repository),
+        headers=headers,
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=_TIMEOUT_SECONDS,
+        ) as response:  # nosec B310
+            raw = response.read(_MAX_BYTES + 1)
+            status = int(getattr(response, "status", 200) or 200)
+    except urllib.error.HTTPError as exc:
+        return _rulesets_http_error(exc)
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return {
+            "status": "unavailable",
+            "reason": "rulesets-api-network-error",
+            "http_status": 0,
+            "ruleset_count": 0,
+        }
+    return _rulesets_payload_result(raw, status)
 
 def evaluate_hosting_posture(
     root: pathlib.Path,
