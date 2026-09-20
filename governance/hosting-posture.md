@@ -43,6 +43,7 @@ Hosted workflow 应保存同一次观测中的：
 - visibility/private；
 - default branch；
 - default branch protection；
+- rulesets capability diagnosis（`available` / `plan-gated` / `integration-forbidden` / `unavailable`），仅用于解释平台能力，不替代 `protected=true`；
 - source revision；
 - observed_at；
 - workflow run identity。
