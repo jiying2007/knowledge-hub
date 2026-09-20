@@ -138,3 +138,13 @@ def test_hosting_reconcile_explicitly_dispatches_quality_for_token_created_pr():
     assert "headRefName" in text
     assert "headRefOid" in text
     assert 'ensure_quality "${existing_branch}" "${existing_sha}"' in text
+
+
+def test_hosting_reconcile_centralizes_protection_recovery_requalification():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Requalify bounded automation PRs after protection recovery" in text
+    assert "steps.decide.outputs.protected == 'true'" in text
+    assert 'requalify_prefix "automation/evidence-bind-"' in text
+    assert 'requalify_prefix "automation/external-gap-"' in text
+    assert "gh workflow run quality.yml" in text
+    assert "exact-head Quality already active for #" in text
