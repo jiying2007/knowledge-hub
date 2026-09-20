@@ -6,6 +6,7 @@ import pytest
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.external_evidence import validate_external_evidence
 from tools.codex_assets.knowledge_hub.pilot_evidence import (
+    ADOPTION_SCHEMA,
     CONNECTOR_SCHEMA,
     MEMORY_SCHEMA,
     RETRIEVAL_SCHEMA,
@@ -13,6 +14,7 @@ from tools.codex_assets.knowledge_hub.pilot_evidence import (
     build_memory_lifecycle_evidence,
     build_pilot_evidence,
     build_production_retrieval_evidence,
+    build_real_adoption_evidence,
 )
 
 SHA_A = "a" * 64
@@ -189,6 +191,50 @@ def _memory():
     return payload
 
 
+
+def _adoption():
+    payload = _base(
+        ADOPTION_SCHEMA,
+        "real-adoption-evidence",
+        "real-production",
+    )
+    payload["adoption"] = {
+        "runtime_version": "knowledge-runtime-v4",
+        "window_start": "2026-08-15T00:00:00Z",
+        "window_end": "2026-09-15T00:00:00Z",
+        "observation_days": 31,
+        "valid_real_calls": 72,
+        "synthetic_calls": 0,
+        "explicit_feedback_count": 14,
+        "call_ledger_sha256": SHA_B,
+        "call_ledger_receipt_sha256": SHA_C,
+        "feedback_sha256": SHA_D,
+        "feedback_receipt_sha256": SHA_A,
+        "slo": {
+            "status": "pass",
+            "receipt_sha256": SHA_B,
+            "p50_ms": 35.0,
+            "p95_ms": 120.0,
+            "error_rate": 0.01,
+            "retrieval_lane_health": "pass",
+        },
+        "traceability": {
+            "status": "pass",
+            "receipt_sha256": SHA_C,
+            "work_item_run_handoff_receipt_linked": True,
+        },
+        "privacy": {
+            "receipt_sha256": SHA_D,
+            "raw_query_stored": False,
+            "raw_task_stored": False,
+            "raw_prompt_stored": False,
+            "raw_content_stored": False,
+            "network_export_mode": "disabled",
+        },
+    }
+    return payload
+
+
 def test_connector_observation_projects_to_strict_external_evidence():
     payload = build_connector_provider_evidence(_connector())
     assert payload["gap_id"] == "connector-provider-pilot"
@@ -316,3 +362,42 @@ def test_pilot_cli_is_repository_bounded_and_never_writes_canonical():
     assert "runtime_receipt_sha256" in producer
     after = hashlib.sha256(registry_path.read_bytes()).hexdigest()
     assert after == before
+
+
+def test_adoption_observation_projects_to_strict_external_evidence():
+    payload = build_real_adoption_evidence(_adoption())
+    assert payload["gap_id"] == "real-adoption-evidence"
+    assert payload["adoption"]["valid_real_calls"] == 72
+    assert payload["adoption"]["explicit_feedback_count"] == 14
+    assert payload["adoption"]["synthetic_calls"] == 0
+    receipt = validate_external_evidence(
+        payload,
+        expected_gap="real-adoption-evidence",
+    )
+    assert receipt["closure_ready"] is True
+
+
+def test_adoption_rejects_underqualified_synthetic_or_privacy_unsafe_observation():
+    observation = _adoption()
+    observation["adoption"]["observation_days"] = 10
+    observation["adoption"]["valid_real_calls"] = 20
+    with pytest.raises(KnowledgeHubError, match="30 days or 50 valid real calls"):
+        build_real_adoption_evidence(observation)
+
+    observation = _adoption()
+    observation["adoption"]["synthetic_calls"] = 1
+    with pytest.raises(KnowledgeHubError, match="must not include synthetic calls"):
+        build_real_adoption_evidence(observation)
+
+    observation = _adoption()
+    observation["adoption"]["privacy"]["raw_prompt_stored"] = True
+    with pytest.raises(KnowledgeHubError, match="must be false"):
+        build_real_adoption_evidence(observation)
+
+
+def test_adoption_dispatch_builder_requires_exact_gap():
+    with pytest.raises(KnowledgeHubError, match="does not match expected gap"):
+        build_pilot_evidence(
+            _adoption(),
+            expected_gap="memory-lifecycle-pilot",
+        )
