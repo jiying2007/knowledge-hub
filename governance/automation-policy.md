@@ -94,6 +94,18 @@ Provider evidence 进一步按字段拆分责任边界：
 - 只有 live repository 仍 private、`master protected=true`、same-repo/direct-child、two-file allowlist、origin run/attempt、durable digest 与 exact-head Quality 全部通过，才执行 expected-head squash merge。
 - #20 仅在 canonical `connector-provider-pilot=closed` 后自动关闭；#21 仅在 retrieval/memory/adoption 三个 canonical gap 全部 closed 后自动关闭。#74/#96 的 owner/project evidence 边界不会被该机器链关闭。
 
+
+### Owner/project qualification packet
+
+Owner/project qualification 采用“机器聚合、真实 owner 决策”的边界：
+
+- daily maintenance 从 canonical Product readiness 生成 deterministic `owner-qualification-packet`，只汇总 owner declaration、owner boundary 和 real-evidence pending 项，不生成 owner decision，也不写 canonical state。
+- #74 只在 fresh current-master packet 中 `owner_declaration_pending=0` 且 `owner_boundary_pending=0` 时自动关闭；任一条件回归会自动 reopen。
+- #96 只在 fresh current-master packet 的完整 owner/project qualification 为 PASS 时自动关闭；资格回归会自动 reopen。
+- pending packet 按 fingerprint 去重写入 tracker，避免 daily sweep 重复刷屏。
+- maintenance workflow 只有 schedule 或 `master` manual dispatch 可以进入 issue-write job，并在执行前验证 source revision 仍是 live current master；旧分支/stale run 不得改变 tracker 状态。
+- 自动关闭 tracker 只表示 canonical 条件已满足，不代表 AI 代替 owner 签名，也不会制造 device/release/production evidence。
+
 ## Operator UI 边界
 
 Operator UI 继续保持 projection / diagnosis / routing 面：
