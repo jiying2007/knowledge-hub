@@ -52,6 +52,7 @@ durable identity
   run / attestation identity
   content digest
   signer workflow
+  root/immediate source provenance
   evidence refs
         ↓ retained in bounded ledger
 ```
@@ -63,6 +64,8 @@ durable identity
 只在有长期意义的事件记录 durable row：
 
 - hosting posture ratchet；
+- provider evidence binding ratchet；
+- strict real external evidence ratchet；
 - terminal closure；
 - release qualification；
 - breaking contract migration。
