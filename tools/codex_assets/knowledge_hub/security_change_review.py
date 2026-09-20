@@ -9,11 +9,21 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 from .common import KnowledgeHubError
 
 PROJECTION = "knowledge-hub-security-change-review-v1"
-AUTOMATION_PREFIXES = (
-    "automation/hosting-private-",
-    "automation/evidence-bind-",
-    "automation/external-gap-",
-)
+AUTOMATION_FILE_ALLOWLISTS = {
+    "automation/hosting-private-": (
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json",
+    ),
+    "automation/evidence-bind-": (
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/items.jsonl",
+    ),
+    "automation/external-gap-": (
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json",
+    ),
+}
+AUTOMATION_PREFIXES = tuple(AUTOMATION_FILE_ALLOWLISTS)
 BOT_LOGINS = {
     "github-actions[bot]",
     "github-actions",
@@ -180,12 +190,34 @@ def _autonomous_ratchet(
     head_ref: str,
     same_repository: bool,
     author_login: str,
+    head_is_direct_child_of_base: bool,
+    files: Sequence[Mapping[str, Any]],
 ) -> bool:
-    return bool(
-        same_repository
-        and author_login in BOT_LOGINS
-        and any(head_ref.startswith(prefix) for prefix in AUTOMATION_PREFIXES)
+    if (
+        not same_repository
+        or author_login not in BOT_LOGINS
+        or not head_is_direct_child_of_base
+    ):
+        return False
+    matched = next(
+        (
+            prefix
+            for prefix in AUTOMATION_PREFIXES
+            if head_ref.startswith(prefix)
+        ),
+        "",
     )
+    if not matched:
+        return False
+    observed = sorted(
+        {
+            str(row.get("filename", "")).strip()
+            for row in files
+            if str(row.get("filename", "")).strip()
+        }
+    )
+    expected = sorted(AUTOMATION_FILE_ALLOWLISTS[matched])
+    return observed == expected
 
 
 def _change_basis(
@@ -242,6 +274,7 @@ def build_security_change_review(
     head_ref: str,
     author_login: str,
     same_repository: bool,
+    head_is_direct_child_of_base: bool,
     files: Sequence[Mapping[str, Any]],
     reviews: Sequence[Mapping[str, Any]],
     review_risk_policy: Mapping[str, Any],
@@ -273,6 +306,8 @@ def build_security_change_review(
         head_ref=head_ref,
         same_repository=same_repository,
         author_login=author_login,
+        head_is_direct_child_of_base=head_is_direct_child_of_base,
+        files=files,
     )
     status, review_required, reason = _review_verdict(
         security=security,
@@ -297,6 +332,9 @@ def build_security_change_review(
         "head_ref": head_ref,
         "author_login": author_login,
         "same_repository": bool(same_repository),
+        "head_is_direct_child_of_base": bool(
+            head_is_direct_child_of_base
+        ),
         "autonomous_ratchet": autonomous,
         "change_fingerprint": change_fingerprint,
         "security_critical_file_count": len(security),
