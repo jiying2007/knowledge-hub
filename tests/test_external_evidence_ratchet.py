@@ -6,6 +6,7 @@ import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
 from tools.codex_assets.knowledge_hub.external_evidence import RECEIPT_SCHEMA
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 from tools.codex_assets.knowledge_hub.external_evidence_ratchet import (
     build_external_gap_ratchet_candidate,
 )
@@ -51,10 +52,12 @@ def _fixture(tmp_path: Path):
         "observed_at": "2026-09-14T14:00:00Z",
         "evidence_payload_sha256": PAYLOAD_SHA,
         "evidence_source_refs": ["run://provider/123", "artifact://provider/456"],
+        "summary": {},
         "synthetic_evidence_accepted": False,
         "mock_evidence_accepted": False,
         "local_only_evidence_accepted": False,
         "canonical_write_performed": False,
+        "generated_at": "2026-09-14T14:00:00Z",
     }
     registry_path = tmp_path / "registry.json"
     closure_path = tmp_path / "closure.json"
@@ -310,3 +313,57 @@ def test_ratchet_builder_requires_positive_source_run_attempt(tmp_path: Path):
             intake_receipt_path=paths[2],
             host_binding_path=paths[3],
         )
+
+
+def test_external_ratchet_intermediate_artifacts_match_catalog_contracts(
+    tmp_path: Path,
+):
+    paths = _fixture(tmp_path)
+    root = Path(__file__).resolve().parents[1]
+
+    closure = json.loads(paths[1].read_text(encoding="utf-8"))
+    intake = json.loads(paths[2].read_text(encoding="utf-8"))
+    binding = json.loads(paths[3].read_text(encoding="utf-8"))
+    candidate, proposal = build_external_gap_ratchet_candidate(
+        registry_path=paths[0],
+        closure_receipt_path=paths[1],
+        intake_receipt_path=paths[2],
+        host_binding_path=paths[3],
+    )
+
+    cases = (
+        (
+            "external-evidence-source-provenance-v1",
+            intake["source_provenance"],
+        ),
+        ("external-evidence-receipt-v1", closure),
+        ("external-evidence-intake-receipt-v1", intake),
+        ("external-evidence-intake-host-binding-v1", binding),
+        ("external-evidence-ratchet-proposal-v2", proposal),
+    )
+    for contract_id, payload in cases:
+        result = validate_instance(root, contract_id, payload)
+        assert result["status"] == "pass", (
+            contract_id,
+            result["errors"],
+        )
+    assert candidate["external_closure_gaps"][0]["status"] == "closed"
+
+
+def test_external_ratchet_workflow_validates_intermediate_contracts():
+    root = Path(__file__).resolve().parents[1]
+    intake_workflow = (
+        root / ".github/workflows/external-evidence-intake.yml"
+    ).read_text(encoding="utf-8")
+    ratchet_workflow = (
+        root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    ).read_text(encoding="utf-8")
+    cli = (
+        root / "tools/codex_assets/knowledge_hub/external_evidence_cli.py"
+    ).read_text(encoding="utf-8")
+
+    assert "external-evidence-source-provenance-v1" in intake_workflow
+    assert "external-evidence-intake-receipt-v1" in intake_workflow
+    assert "external-evidence-receipt-v1" in cli
+    assert "external-evidence-intake-host-binding-v1" in ratchet_workflow
+    assert "external-evidence-ratchet-proposal-v2" in ratchet_workflow
