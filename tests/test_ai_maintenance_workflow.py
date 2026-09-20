@@ -69,3 +69,21 @@ def test_ai_maintenance_exposes_policy_error_when_escalating():
     assert 'handle.write("policy_error={}\\\\n"' in text or 'handle.write("policy_error={}\\n"' in text
     assert "POLICY_ERROR" in text
     assert "policy-error=${POLICY_ERROR}" in text
+
+
+def test_ai_maintenance_reconciles_external_operational_trackers():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Reconcile operational qualification trackers" in text
+    assert "connector-provider-pilot" in text
+    assert "production-retrieval-eval" in text
+    assert "memory-lifecycle-pilot" in text
+    assert "real-adoption-evidence" in text
+    assert "gh issue close 20" in text
+    assert "gh issue close 21" in text
+    assert "operational-trackers.json" in text
+
+
+def test_ai_maintenance_does_not_close_owner_project_trackers():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "gh issue close 74" not in text
+    assert "gh issue close 96" not in text
