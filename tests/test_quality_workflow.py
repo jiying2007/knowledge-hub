@@ -136,3 +136,24 @@ def test_quality_manual_dispatch_is_available_for_trusted_automation_branches():
 
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "github.event.pull_request.head.sha || github.sha" in text
+
+
+def test_quality_engineering_binds_complexity_to_explicit_git_baseline():
+    payload = _workflow()
+    engineering = payload["jobs"]["engineering"]
+    assert engineering["env"]["KNOWLEDGE_COMPLEXITY_BASE_REF"] == (
+        "${{ github.event_name == 'pull_request' && "
+        "github.event.pull_request.base.sha || github.event_name == 'push' && "
+        "github.event.before || 'origin/master' }}"
+    )
+
+    checkout = next(
+        step
+        for step in engineering["steps"]
+        if step.get("name") == "Checkout"
+    )
+    assert checkout["with"]["fetch-depth"] == "0"
+    assert checkout["with"]["persist-credentials"] == "false"
+    assert checkout["with"]["ref"] == (
+        "${{ github.event.pull_request.head.sha || github.sha }}"
+    )
