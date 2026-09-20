@@ -40,9 +40,14 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      PRODUCER_REVISION: ${{ github.workflow_sha }}
     steps:
       - name: Checkout immutable producer revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.PRODUCER_REVISION }}
+          persist-credentials: false
         with:
           persist-credentials: false
       - name: Set up governed Python
@@ -197,7 +202,7 @@ jobs:
               'evidence_sha256': hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
               'producer_run_id': int(os.environ['GITHUB_RUN_ID']),
               'producer_run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
-              'producer_revision': os.environ['GITHUB_SHA'],
+              'producer_revision': os.environ['PRODUCER_REVISION'],
           }
           from tools.codex_assets.knowledge_hub.schemas import validate_instance
 
