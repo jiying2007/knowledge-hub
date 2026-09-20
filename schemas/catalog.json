@@ -379,6 +379,13 @@
       "applies_to": ".cache/knowledge-hub/external-ratchet/ratchet-proposal.json",
       "authority": "derived-noncanonical-external-evidence-ratchet-proposal",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-pilot-evidence-producer-receipt-v1",
+      "schema": "schemas/external-pilot-evidence-producer-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-pilot-evidence/producer-receipt.json",
+      "authority": "derived-trusted-observation-producer-receipt",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
