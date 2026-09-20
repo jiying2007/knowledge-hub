@@ -27,7 +27,8 @@
     "packet_fingerprint",
     "change_fingerprint",
     "hash_bound_comment_approval_count",
-    "hash_bound_comment_approvals"
+    "hash_bound_comment_approvals",
+    "head_is_direct_child_of_base"
   ],
   "properties": {
     "schema_version": {
@@ -245,6 +246,9 @@
         },
         "additionalProperties": false
       }
+    },
+    "head_is_direct_child_of_base": {
+      "type": "boolean"
     }
   },
   "allOf": [
