@@ -175,7 +175,8 @@
       "ratchet_verification": "external-evidence-ratchet-verification-v1"
     },
     "root_observation_provenance_required": true,
-    "root_observation_revision_must_match_evidence_source_revision": true
+    "root_observation_revision_must_match_evidence_source_revision": true,
+    "producer_code_revision_source": "github-workflow-sha"
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
