@@ -1,8 +1,8 @@
-"""Build a review-only canonical registry candidate from hosted external evidence receipts.
+"""Build a non-canonical machine-ratchet candidate from hosted real evidence.
 
-The builder deliberately never mutates the canonical registry. It accepts only a
-closure-ready validator receipt bound to a successful hosted intake artifact, then
-emits a complete candidate registry plus a bounded proposal for human/PR review.
+The builder never mutates the canonical registry. Real-world observation remains an
+external boundary; once strict validation and hosted provenance are satisfied, the
+canonical gap closure is a deterministic low-risk ratchet candidate.
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ import pathlib
 import re
 from typing import Any, Dict, List, Mapping, Tuple
 
-from .common import KnowledgeHubError, file_sha256, read_bytes_bounded, utc_timestamp
+from .common import KnowledgeHubError, file_sha256, read_bytes_bounded
 from .external_evidence import RECEIPT_SCHEMA, SUPPORTED_GAPS
 
 REGISTRY_SCHEMA = 2
 INTAKE_PROJECTION = "knowledge-hub-external-evidence-intake-v1"
 HOST_BINDING_PROJECTION = "knowledge-hub-external-evidence-intake-host-binding-v1"
-PROPOSAL_PROJECTION = "knowledge-hub-external-evidence-ratchet-proposal-v1"
+PROPOSAL_PROJECTION = "knowledge-hub-external-evidence-ratchet-proposal-v2"
 MAX_JSON_BYTES = 4 * 1024 * 1024
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -271,8 +271,9 @@ def build_external_gap_ratchet_candidate(
     proposal = {
         "schema_version": 1,
         "projection": PROPOSAL_PROJECTION,
-        "status": "ready-for-reviewed-ratchet",
-        "review_required": True,
+        "status": "ready-for-machine-ratchet",
+        "authorization_class": "autonomous-low-risk-ratchet",
+        "review_required": False,
         "canonical_write_performed": False,
         "gap_id": closure["gap_id"],
         "expected_registry_sha256": registry_sha,
@@ -282,6 +283,6 @@ def build_external_gap_ratchet_candidate(
         "host_binding_sha256": binding_sha,
         "source_revision": closure["source_revision"],
         "intake_revision": binding["intake_run_head"],
-        "generated_at": utc_timestamp(),
+        "generated_at": closure["observed_at"],
     }
     return candidate, proposal
