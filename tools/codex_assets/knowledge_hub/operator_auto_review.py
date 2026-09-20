@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_review_bundle import build_binding_review_bundle
+
+PROJECTION = "knowledge-operator-auto-review-v1"
 
 
 def _target_key(row: Mapping[str, Any]) -> Tuple[str, str]:
@@ -22,22 +24,49 @@ def _target_key(row: Mapping[str, Any]) -> Tuple[str, str]:
     return str(target.get("item_id", "")), str(row.get("field", ""))
 
 
-def build_unique_review_bundle(
-    root: pathlib.Path, proposal: Mapping[str, Any]
+def _result(
+    status: str,
+    *,
+    selected: Sequence[str] = (),
+    ambiguous: Sequence[Mapping[str, Any]] = (),
+    reasons: Sequence[str] = (),
+    patch_plan: Mapping[str, Any] | None = None,
+    review_bundle: Mapping[str, Any] | None = None,
 ) -> Dict[str, Any]:
-    """Advance only uniquely determined proposal targets to a review bundle."""
+    payload: Dict[str, Any] = {
+        "schema_version": 1,
+        "projection": PROJECTION,
+        "status": status,
+        "read_only": True,
+        "selection_is_authorization": False,
+        "canonical_write_performed": False,
+        "automatic_binding_enabled": False,
+        "automatic_execution_enabled": False,
+        "selected_proposal_count": len(selected),
+        "ambiguous_target_count": len(ambiguous),
+        "selected_proposal_fingerprints": list(selected),
+        "reason_codes": list(dict.fromkeys(str(value) for value in reasons)),
+        "review_bundle": dict(review_bundle or {}),
+    }
+    if ambiguous:
+        payload["ambiguous_targets"] = [dict(row) for row in ambiguous]
+    if patch_plan is not None:
+        payload["patch_plan"] = dict(patch_plan)
+    return payload
 
+
+def _proposal_reasons(proposal: Mapping[str, Any]) -> Tuple[List[str], List[Any]]:
     reasons: List[str] = []
-    if proposal.get("projection") != "knowledge-operator-binding-proposal-v1":
-        reasons.append("proposal-projection-invalid")
-    if proposal.get("read_only") is not True:
-        reasons.append("proposal-read-only-invalid")
-    if proposal.get("canonical_write_performed") is not False:
-        reasons.append("proposal-canonical-write-state-invalid")
-    if proposal.get("automatic_binding_enabled") is not False:
-        reasons.append("proposal-automatic-binding-state-invalid")
-    if proposal.get("proposal_only") is not True:
-        reasons.append("proposal-only-state-invalid")
+    expected = {
+        "projection": "knowledge-operator-binding-proposal-v1",
+        "read_only": True,
+        "canonical_write_performed": False,
+        "automatic_binding_enabled": False,
+        "proposal_only": True,
+    }
+    for key, value in expected.items():
+        if proposal.get(key) != value:
+            reasons.append("proposal-{}-invalid".format(key.replace("_", "-")))
     if int(proposal.get("blocked_conflict_count", 0) or 0) != 0:
         reasons.append("proposal-conflicts-present")
     if int(proposal.get("unmappable_count", 0) or 0) != 0:
@@ -46,23 +75,12 @@ def build_unique_review_bundle(
     if not isinstance(rows, list):
         reasons.append("proposal-rows-invalid")
         rows = []
-    if reasons:
-        return {
-            "schema_version": 1,
-            "projection": "knowledge-operator-auto-review-v1",
-            "status": "blocked",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "ambiguous_target_count": 0,
-            "selected_proposal_fingerprints": [],
-            "reason_codes": list(dict.fromkeys(reasons)),
-            "review_bundle": {},
-        }
+    return reasons, rows
 
+
+def _select_unique(
+    rows: Sequence[Any],
+) -> Tuple[List[str], List[Dict[str, Any]]]:
     grouped: Dict[Tuple[str, str], List[Mapping[str, Any]]] = defaultdict(list)
     for row in rows:
         if not isinstance(row, Mapping):
@@ -72,9 +90,8 @@ def build_unique_review_bundle(
         if row.get("proposal_ready_for_review") is not True:
             continue
         key = _target_key(row)
-        if not all(key):
-            continue
-        grouped[key].append(row)
+        if all(key):
+            grouped[key].append(row)
 
     selected: List[str] = []
     ambiguous: List[Dict[str, Any]] = []
@@ -91,77 +108,50 @@ def build_unique_review_bundle(
         fingerprint = str(candidates[0].get("proposal_fingerprint", ""))
         if fingerprint:
             selected.append(fingerprint)
+    return selected, ambiguous
 
-    if ambiguous:
-        return {
-            "schema_version": 1,
-            "projection": "knowledge-operator-auto-review-v1",
-            "status": "ambiguous",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "ambiguous_target_count": len(ambiguous),
-            "ambiguous_targets": ambiguous,
-            "selected_proposal_fingerprints": [],
-            "reason_codes": ["ambiguous-proposal-target"],
-            "review_bundle": {},
-        }
-    if not selected:
-        return {
-            "schema_version": 1,
-            "projection": "knowledge-operator-auto-review-v1",
-            "status": "no-change",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": 0,
-            "ambiguous_target_count": 0,
-            "selected_proposal_fingerprints": [],
-            "reason_codes": [],
-            "review_bundle": {},
-        }
 
+def _review_result(
+    root: pathlib.Path,
+    proposal: Mapping[str, Any],
+    selected: Sequence[str],
+) -> Dict[str, Any]:
     plan = build_binding_patch_plan(root, proposal, selected)
     if plan.get("status") != "needs-governed-pr":
-        return {
-            "schema_version": 1,
-            "projection": "knowledge-operator-auto-review-v1",
-            "status": "blocked",
-            "read_only": True,
-            "selection_is_authorization": False,
-            "canonical_write_performed": False,
-            "automatic_binding_enabled": False,
-            "automatic_execution_enabled": False,
-            "selected_proposal_count": len(selected),
-            "ambiguous_target_count": 0,
-            "selected_proposal_fingerprints": selected,
-            "reason_codes": ["patch-plan-not-ready"],
-            "patch_plan": plan,
-            "review_bundle": {},
-        }
+        return _result(
+            "blocked",
+            selected=selected,
+            reasons=["patch-plan-not-ready"],
+            patch_plan=plan,
+        )
     bundle = build_binding_review_bundle(root, proposal, plan)
-    return {
-        "schema_version": 1,
-        "projection": "knowledge-operator-auto-review-v1",
-        "status": (
-            "needs-governed-authorization"
-            if bundle.get("status") == "needs-governed-authorization"
-            else "blocked"
-        ),
-        "read_only": True,
-        "selection_is_authorization": False,
-        "canonical_write_performed": False,
-        "automatic_binding_enabled": False,
-        "automatic_execution_enabled": False,
-        "selected_proposal_count": len(selected),
-        "ambiguous_target_count": 0,
-        "selected_proposal_fingerprints": selected,
-        "reason_codes": [] if bundle.get("status") == "needs-governed-authorization" else ["review-bundle-not-ready"],
-        "patch_plan": plan,
-        "review_bundle": bundle,
-    }
+    ready = bundle.get("status") == "needs-governed-authorization"
+    return _result(
+        "needs-governed-authorization" if ready else "blocked",
+        selected=selected,
+        reasons=[] if ready else ["review-bundle-not-ready"],
+        patch_plan=plan,
+        review_bundle=bundle,
+    )
+
+
+def build_unique_review_bundle(
+    root: pathlib.Path,
+    proposal: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Advance only uniquely determined proposal targets to a review bundle."""
+
+    reasons, rows = _proposal_reasons(proposal)
+    if reasons:
+        return _result("blocked", reasons=reasons)
+
+    selected, ambiguous = _select_unique(rows)
+    if ambiguous:
+        return _result(
+            "ambiguous",
+            ambiguous=ambiguous,
+            reasons=["ambiguous-proposal-target"],
+        )
+    if not selected:
+        return _result("no-change")
+    return _review_result(root, proposal, selected)
