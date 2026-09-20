@@ -301,6 +301,19 @@ jobs:
               master_sha=os.environ["MASTER_SHA"],
               head_sha=os.environ["HEAD_SHA"],
           )
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          contract = validate_instance(
+              Path(".").resolve(),
+              "operator-machine-ratchet-verification-v1",
+              result,
+          )
+          if contract.get("status") != "pass":
+              raise SystemExit(
+                  "machine ratchet verification contract failed: {}".format(
+                      contract.get("errors", [])
+                  )
+              )
           (cache / "verification.json").write_text(
               json.dumps(result, ensure_ascii=False, indent=2) + "\n",
               encoding="utf-8",
