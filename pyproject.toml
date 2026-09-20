@@ -108,6 +108,8 @@ files = [
     "tools/codex_assets/knowledge_hub/operator_machine_ratchet_verify.py",
     "tools/codex_assets/knowledge_hub/operator_provider_cli_support.py",
     "tools/codex_assets/knowledge_hub/operator_provider_cli.py",
+    "tools/codex_assets/knowledge_hub/pilot_evidence.py",
+    "tools/codex_assets/knowledge_hub/pilot_evidence_cli.py",
     "tools/codex_assets/knowledge_hub/external_evidence_ratchet_verify.py",
     "tools/codex_assets/knowledge_hub/owner_qualification_packet.py",
     "tools/codex_assets/knowledge_hub/context.py",
