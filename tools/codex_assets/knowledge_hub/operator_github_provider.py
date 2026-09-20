@@ -149,6 +149,23 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
     result: List[Dict[str, Any]] = []
     releases = transport("/repos/{}/releases?per_page=10".format(target), token)
     for release in _mapping_rows(releases):
+        tag_name = str(release.get("tag_name", ""))
+        immutable = release.get("immutable") is True
+        tag_commit_sha = ""
+        if (
+            tag_name
+            and immutable
+            and release.get("draft") is False
+            and release.get("prerelease") is False
+        ):
+            tag_commit = transport(
+                "/repos/{}/commits/{}".format(
+                    target, urllib.parse.quote(tag_name, safe="")
+                ),
+                token,
+            )
+            if isinstance(tag_commit, Mapping):
+                tag_commit_sha = str(tag_commit.get("sha", ""))
         for asset in _mapping_rows(release.get("assets", [])):
             asset_id = str(asset.get("id", ""))
             if not asset_id:
@@ -163,7 +180,9 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
                         "digest": str(asset.get("digest", "")),
                         "browser_download_url": str(asset.get("browser_download_url", "")),
                         "release_id": str(release.get("id", "")),
-                        "tag_name": str(release.get("tag_name", "")),
+                        "tag_name": tag_name,
+                        "release_immutable": immutable,
+                        "release_tag_commit_sha": tag_commit_sha,
                         "release_draft": bool(release.get("draft", False)),
                         "release_prerelease": bool(release.get("prerelease", False)),
                     },
