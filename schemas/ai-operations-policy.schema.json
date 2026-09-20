@@ -251,7 +251,9 @@
         "observation_source_requires_same_repository",
         "observation_source_requires_master_branch",
         "observation_source_allowed_events",
-        "observation_source_requires_workflow_path"
+        "observation_source_requires_workflow_path",
+        "observation_contracts",
+        "validator_receipt_timestamp_source"
       ],
       "properties": {
         "observation_generation_class": {
@@ -314,6 +316,18 @@
         },
         "observation_source_requires_workflow_path": {
           "const": true
+        },
+        "observation_contracts": {
+          "type": "object",
+          "const": {
+            "connector-provider-pilot": "connector-provider-observation-v1",
+            "production-retrieval-eval": "production-retrieval-observation-v1",
+            "memory-lifecycle-pilot": "production-memory-observation-v1",
+            "real-adoption-evidence": "production-adoption-observation-v1"
+          }
+        },
+        "validator_receipt_timestamp_source": {
+          "const": "observation-observed-at"
         }
       },
       "additionalProperties": false
