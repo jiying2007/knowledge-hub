@@ -39,61 +39,71 @@ def _load_object(path: pathlib.Path, label: str) -> Dict[str, Any]:
     return dict(value)
 
 
-def _external_gap_state(
-    root: pathlib.Path, policy: Mapping[str, Any]
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def _external_policy_config(
+    policy: Mapping[str, Any],
+) -> Tuple[str, List[str], List[str], bool]:
     external = policy.get("external_closure", {})
     if not isinstance(external, Mapping):
-        raise KnowledgeHubError("terminal external_closure policy must be an object")
+        raise KnowledgeHubError(
+            "terminal external_closure policy must be an object"
+        )
     source = str(external.get("source", "")).strip()
     required_ids = external.get("required_gap_ids", [])
     observational_ids = external.get("observational_gap_ids", [])
-    require_evidence_refs = bool(external.get("require_evidence_refs_on_close", False))
+    require_refs = bool(
+        external.get("require_evidence_refs_on_close", False)
+    )
     if (
         not source
         or not isinstance(required_ids, list)
         or not isinstance(observational_ids, list)
     ):
-        raise KnowledgeHubError("terminal external closure policy is incomplete")
-    policy_required_ids = sorted({str(value) for value in required_ids if str(value).strip()})
-    policy_observational_ids = sorted(
+        raise KnowledgeHubError(
+            "terminal external closure policy is incomplete"
+        )
+    required = sorted(
+        {str(value) for value in required_ids if str(value).strip()}
+    )
+    observational = sorted(
         {str(value) for value in observational_ids if str(value).strip()}
     )
-    if len(policy_required_ids) != len(required_ids):
-        raise KnowledgeHubError("terminal external required_gap_ids must be unique and non-empty")
-    if len(policy_observational_ids) != len(observational_ids):
+    if len(required) != len(required_ids):
+        raise KnowledgeHubError(
+            "terminal external required_gap_ids must be unique and non-empty"
+        )
+    if len(observational) != len(observational_ids):
         raise KnowledgeHubError(
             "terminal external observational_gap_ids must be unique and non-empty"
         )
-    if set(policy_required_ids) & set(policy_observational_ids):
-        raise KnowledgeHubError("terminal required and observational gap ids must not overlap")
+    if set(required) & set(observational):
+        raise KnowledgeHubError(
+            "terminal required and observational gap ids must not overlap"
+        )
+    return source, required, observational, require_refs
 
+
+def _external_rows_by_id(
+    root: pathlib.Path,
+    source: str,
+) -> Dict[str, Mapping[str, Any]]:
     platform = _load_object(root / source, "external closure registry")
     rows = platform.get("external_closure_gaps", [])
     if not isinstance(rows, list):
         raise KnowledgeHubError("external_closure_gaps must be a list")
-    by_id = {
+    return {
         str(row.get("id", "")): row
         for row in rows
         if isinstance(row, Mapping) and row.get("id")
     }
-    registry_required_ids = sorted(
-        gap_id for gap_id, row in by_id.items() if row.get("required") is True
-    )
-    unresolved: List[Dict[str, Any]] = []
-    if policy_required_ids != registry_required_ids:
-        unresolved.append(
-            {
-                "id": "terminal-policy-required-gap-drift",
-                "status": "blocked",
-                "owner": "terminal-policy",
-                "policy_required_gap_ids": policy_required_ids,
-                "registry_required_gap_ids": registry_required_ids,
-            }
-        )
 
+
+def _observational_gap_state(
+    gap_ids: List[str],
+    by_id: Mapping[str, Mapping[str, Any]],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    unresolved: List[Dict[str, Any]] = []
     observational: List[Dict[str, Any]] = []
-    for gap_id in policy_observational_ids:
+    for gap_id in gap_ids:
         row = by_id.get(gap_id)
         if row is None or row.get("required") is True:
             unresolved.append(
@@ -113,18 +123,32 @@ def _external_gap_state(
                 "github_terminal_blocking": False,
             }
         )
+    return unresolved, observational
 
-    for gap_id in policy_required_ids:
+
+def _required_gap_state(
+    gap_ids: List[str],
+    by_id: Mapping[str, Mapping[str, Any]],
+    *,
+    require_evidence_refs: bool,
+) -> List[Dict[str, Any]]:
+    unresolved: List[Dict[str, Any]] = []
+    for gap_id in gap_ids:
         row = by_id.get(gap_id)
         if row is None:
-            unresolved.append({"id": gap_id, "status": "missing", "owner": ""})
+            unresolved.append(
+                {"id": gap_id, "status": "missing", "owner": ""}
+            )
             continue
         status = str(row.get("status", "open"))
         evidence_refs = row.get("evidence_refs", [])
         valid_refs = (
             isinstance(evidence_refs, list)
             and bool(evidence_refs)
-            and all(isinstance(value, str) and value.strip() for value in evidence_refs)
+            and all(
+                isinstance(value, str) and value.strip()
+                for value in evidence_refs
+            )
         )
         if status != "closed":
             unresolved.append(
@@ -142,8 +166,46 @@ def _external_gap_state(
                     "owner": str(row.get("owner", "")),
                 }
             )
-    return unresolved, observational
+    return unresolved
 
+
+def _external_gap_state(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    source, required_ids, observational_ids, require_refs = (
+        _external_policy_config(policy)
+    )
+    by_id = _external_rows_by_id(root, source)
+    registry_required_ids = sorted(
+        gap_id
+        for gap_id, row in by_id.items()
+        if row.get("required") is True
+    )
+    unresolved: List[Dict[str, Any]] = []
+    if required_ids != registry_required_ids:
+        unresolved.append(
+            {
+                "id": "terminal-policy-required-gap-drift",
+                "status": "blocked",
+                "owner": "terminal-policy",
+                "policy_required_gap_ids": required_ids,
+                "registry_required_gap_ids": registry_required_ids,
+            }
+        )
+    observational_errors, observational = _observational_gap_state(
+        observational_ids,
+        by_id,
+    )
+    unresolved.extend(observational_errors)
+    unresolved.extend(
+        _required_gap_state(
+            required_ids,
+            by_id,
+            require_evidence_refs=require_refs,
+        )
+    )
+    return unresolved, observational
 
 def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[str, Any]]:
     """Compatibility view for existing Operator projections: blocking gaps only."""
