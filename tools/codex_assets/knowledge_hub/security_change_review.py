@@ -18,6 +18,11 @@ BOT_LOGINS = {
     "github-actions[bot]",
     "github-actions",
 }
+TRUSTED_COMMENT_ASSOCIATIONS = {
+    "OWNER",
+    "MEMBER",
+    "COLLABORATOR",
+}
 
 
 def _fingerprint(value: Mapping[str, Any]) -> str:
@@ -131,6 +136,45 @@ def _exact_head_approvals(
     return approvals
 
 
+def _comment_approvals(
+    comments: Iterable[Mapping[str, Any]],
+    *,
+    change_fingerprint: str,
+    head_sha: str,
+) -> List[Dict[str, Any]]:
+    expected = "SECURITY-CHANGE-APPROVE {} {}".format(
+        change_fingerprint,
+        head_sha,
+    )
+    approvals: List[Dict[str, Any]] = []
+    for value in comments:
+        user = value.get("user") or {}
+        if not isinstance(user, Mapping):
+            continue
+        login = str(user.get("login", "")).strip()
+        user_type = str(user.get("type", ""))
+        association = str(value.get("author_association", "")).upper()
+        if (
+            not login
+            or user_type == "Bot"
+            or login in BOT_LOGINS
+            or association not in TRUSTED_COMMENT_ASSOCIATIONS
+            or str(value.get("body", "")).strip() != expected
+        ):
+            continue
+        approvals.append(
+            {
+                "login": login,
+                "user_type": user_type,
+                "author_association": association,
+                "comment_id": int(value.get("id", 0) or 0),
+                "created_at": str(value.get("created_at", "")),
+            }
+        )
+    approvals.sort(key=lambda row: (row["login"], row["comment_id"]))
+    return approvals
+
+
 def _autonomous_ratchet(
     *,
     head_ref: str,
@@ -156,12 +200,29 @@ def build_security_change_review(
     files: Sequence[Mapping[str, Any]],
     reviews: Sequence[Mapping[str, Any]],
     review_risk_policy: Mapping[str, Any],
+    comments: Sequence[Mapping[str, Any]] = (),
 ) -> Dict[str, Any]:
     security = _security_files(files, review_risk_policy)
+    change_basis = {
+        "repository": repository,
+        "pr_number": int(pr_number),
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "head_ref": head_ref,
+        "author_login": author_login,
+        "same_repository": bool(same_repository),
+        "security_critical_files": security,
+    }
+    change_fingerprint = _fingerprint(change_basis)
     approvals = _exact_head_approvals(
         reviews,
         head_sha=head_sha,
         author_login=author_login,
+    )
+    comment_approvals = _comment_approvals(
+        comments,
+        change_fingerprint=change_fingerprint,
+        head_sha=head_sha,
     )
     autonomous = _autonomous_ratchet(
         head_ref=head_ref,
@@ -180,6 +241,10 @@ def build_security_change_review(
         status = "pass"
         review_required = True
         reason = "exact-head-human-approval"
+    elif comment_approvals:
+        status = "pass"
+        review_required = True
+        reason = "hash-bound-human-approval"
     else:
         status = "awaiting-human-review"
         review_required = True
@@ -202,10 +267,13 @@ def build_security_change_review(
         "author_login": author_login,
         "same_repository": bool(same_repository),
         "autonomous_ratchet": autonomous,
+        "change_fingerprint": change_fingerprint,
         "security_critical_file_count": len(security),
         "security_critical_files": security,
         "exact_head_approval_count": len(approvals),
         "exact_head_approvals": approvals,
+        "hash_bound_comment_approval_count": len(comment_approvals),
+        "hash_bound_comment_approvals": comment_approvals,
     }
     packet["packet_fingerprint"] = _fingerprint(packet)
     return packet
