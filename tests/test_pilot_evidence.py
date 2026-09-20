@@ -475,3 +475,39 @@ def test_real_observation_schema_rejects_invalid_datetime():
 
     assert result["status"] == "fail"
     assert result["error_count"] > 0
+
+
+def test_external_producer_receipt_matches_catalog_contract():
+    payload = {
+        "schema_version": 1,
+        "projection": "knowledge-hub-external-pilot-evidence-producer-v1",
+        "status": "pass",
+        "gap_id": "connector-provider-pilot",
+        "canonical_write_performed": False,
+        "raw_observation_uploaded": False,
+        "source_provenance": {
+            "schema_version": 1,
+            "repository": "jiying2007/knowledge-hub",
+            "source_run_id": 42,
+            "source_run_attempt": 1,
+            "source_run_head_sha": GIT_SHA,
+            "source_run_head_branch": "master",
+            "source_run_event": "workflow_dispatch",
+            "source_workflow_path": ".github/workflows/real-observation.yml",
+            "artifact_id": 77,
+            "artifact_name": "real-observation",
+            "artifact_digest": "sha256:" + SHA_A,
+        },
+        "evidence_sha256": SHA_B,
+        "producer_run_id": 88,
+        "producer_run_attempt": 1,
+        "producer_revision": GIT_SHA,
+    }
+
+    result = validate_instance(
+        repository_root(),
+        "external-pilot-evidence-producer-receipt-v1",
+        payload,
+    )
+
+    assert result["status"] == "pass", result["errors"]
