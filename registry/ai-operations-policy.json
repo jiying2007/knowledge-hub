@@ -117,6 +117,12 @@
     "machine_ratchet_auto_merge_requires_exact_head_quality": true,
     "machine_ratchet_auto_merge_requires_same_repository": true,
     "machine_ratchet_auto_merge_requires_origin_artifact_digest": true,
-    "machine_ratchet_auto_merge_executes_pr_code": false
+    "machine_ratchet_auto_merge_executes_pr_code": false,
+    "machine_validation_requires_source_revision_match": true,
+    "machine_artifact_kinds": [
+      "github-actions-artifact"
+    ],
+    "machine_artifact_requires_validation_run_match": true,
+    "machine_artifact_requires_source_revision_match": true
   }
 }
