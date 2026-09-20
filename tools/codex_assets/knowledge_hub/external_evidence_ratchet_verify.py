@@ -129,6 +129,80 @@ def _verify_digests(
         raise KnowledgeHubError("external durable digest set does not match origin receipts")
 
 
+def _replay_candidate(
+    *,
+    base_registry_path: pathlib.Path,
+    head_registry_path: pathlib.Path,
+    closure_receipt_path: pathlib.Path,
+    intake_receipt_path: pathlib.Path,
+    host_binding_path: pathlib.Path,
+    proposal_path: pathlib.Path,
+    gap_id: str,
+    record: Mapping[str, Any],
+) -> Tuple[Dict[str, Any], Dict[str, Any], bytes]:
+    candidate, proposal = build_external_gap_ratchet_candidate(
+        registry_path=base_registry_path,
+        closure_receipt_path=closure_receipt_path,
+        intake_receipt_path=intake_receipt_path,
+        host_binding_path=host_binding_path,
+    )
+    if proposal.get("gap_id") != gap_id:
+        raise KnowledgeHubError("durable event gap does not match replayed proposal")
+    if proposal.get("status") != "ready-for-machine-ratchet":
+        raise KnowledgeHubError("replayed external proposal is not machine-ready")
+    if proposal.get("review_required") is not False:
+        raise KnowledgeHubError(
+            "replayed external proposal unexpectedly requires review"
+        )
+
+    head_raw = head_registry_path.read_bytes()
+    if head_raw != _expected_candidate_bytes(candidate):
+        raise KnowledgeHubError(
+            "PR registry bytes do not equal replayed external candidate"
+        )
+
+    origin_proposal, proposal_raw = _load_json(proposal_path, "origin proposal")
+    if origin_proposal != proposal:
+        raise KnowledgeHubError("origin proposal does not equal trusted replay")
+    _binding, binding_raw = _load_json(host_binding_path, "host binding")
+    _closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
+    _intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
+    _verify_digests(
+        record,
+        head_registry_raw=head_raw,
+        proposal_raw=proposal_raw,
+        binding_raw=binding_raw,
+        closure_raw=closure_raw,
+        intake_raw=intake_raw,
+    )
+    return candidate, proposal, head_raw
+
+
+def _verify_candidate_gap(
+    candidate: Mapping[str, Any],
+    proposal: Mapping[str, Any],
+    record: Mapping[str, Any],
+    gap_id: str,
+) -> None:
+    gaps = [
+        row
+        for row in candidate.get("external_closure_gaps", [])
+        if isinstance(row, Mapping) and row.get("id") == gap_id
+    ]
+    if len(gaps) != 1 or gaps[0].get("status") != "closed":
+        raise KnowledgeHubError(
+            "replayed external candidate does not close selected gap"
+        )
+    if record.get("evidence_refs") != gaps[0].get("evidence_refs"):
+        raise KnowledgeHubError(
+            "durable evidence refs differ from canonical gap refs"
+        )
+    if record.get("observed_at") != proposal.get("generated_at"):
+        raise KnowledgeHubError(
+            "durable observed_at differs from strict evidence time"
+        )
+
+
 def verify_external_evidence_ratchet(
     root: pathlib.Path,
     *,
@@ -155,52 +229,21 @@ def verify_external_evidence_ratchet(
         root, base_ledger_path, head_ledger_path
     )
     if record.get("source_revision") != master_sha:
-        raise KnowledgeHubError("external durable source revision is not current master")
+        raise KnowledgeHubError(
+            "external durable source revision is not current master"
+        )
 
-    candidate, proposal = build_external_gap_ratchet_candidate(
-        registry_path=base_registry_path,
+    candidate, proposal, head_raw = _replay_candidate(
+        base_registry_path=base_registry_path,
+        head_registry_path=head_registry_path,
         closure_receipt_path=closure_receipt_path,
         intake_receipt_path=intake_receipt_path,
         host_binding_path=host_binding_path,
+        proposal_path=proposal_path,
+        gap_id=gap_id,
+        record=record,
     )
-    if proposal.get("gap_id") != gap_id:
-        raise KnowledgeHubError("durable event gap does not match replayed proposal")
-    if proposal.get("status") != "ready-for-machine-ratchet":
-        raise KnowledgeHubError("replayed external proposal is not machine-ready")
-    if proposal.get("review_required") is not False:
-        raise KnowledgeHubError("replayed external proposal unexpectedly requires review")
-
-    head_raw = head_registry_path.read_bytes()
-    candidate_raw = _expected_candidate_bytes(candidate)
-    if head_raw != candidate_raw:
-        raise KnowledgeHubError("PR registry bytes do not equal replayed external candidate")
-
-    origin_proposal, proposal_raw = _load_json(proposal_path, "origin proposal")
-    if origin_proposal != proposal:
-        raise KnowledgeHubError("origin proposal does not equal trusted replay")
-    _binding, binding_raw = _load_json(host_binding_path, "host binding")
-    _closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
-    _intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
-    _verify_digests(
-        record,
-        head_registry_raw=head_raw,
-        proposal_raw=proposal_raw,
-        binding_raw=binding_raw,
-        closure_raw=closure_raw,
-        intake_raw=intake_raw,
-    )
-
-    gaps = [
-        row
-        for row in candidate.get("external_closure_gaps", [])
-        if isinstance(row, Mapping) and row.get("id") == gap_id
-    ]
-    if len(gaps) != 1 or gaps[0].get("status") != "closed":
-        raise KnowledgeHubError("replayed external candidate does not close selected gap")
-    if record.get("evidence_refs") != gaps[0].get("evidence_refs"):
-        raise KnowledgeHubError("durable evidence refs differ from canonical gap refs")
-    if record.get("observed_at") != proposal.get("generated_at"):
-        raise KnowledgeHubError("durable observed_at differs from strict evidence time")
+    _verify_candidate_gap(candidate, proposal, record, gap_id)
 
     origin_run, _ = _load_json(origin_run_path, "origin ratchet run")
     _verify_origin_run(
