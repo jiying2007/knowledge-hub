@@ -47,6 +47,7 @@ def test_schema_catalog_resolves_all_contracts():
         "external-evidence-receipt-v1",
         "external-evidence-source-provenance-v1",
         "hosting-posture-v1",
+        "observation-source-readiness-v1",
         "production-adoption-observation-v1",
         "production-memory-observation-v1",
         "production-retrieval-observation-v1",
