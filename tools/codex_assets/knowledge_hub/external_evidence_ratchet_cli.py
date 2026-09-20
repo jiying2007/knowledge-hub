@@ -14,6 +14,7 @@ from .common import (
     resolve_inside,
 )
 from .external_evidence_ratchet import build_external_gap_ratchet_candidate
+from .schemas import validate_instance
 
 DEFAULT_REGISTRY = "registry/knowledge-platform-p5-p10.json"
 
@@ -40,6 +41,32 @@ def _write_json(root, relative: str, payload: Mapping[str, object]) -> None:
     ensure_private_file(path)
 
 
+def _validate_contract(
+    root,
+    path,
+    contract_id: str,
+) -> Mapping[str, object]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError(
+            "{} is unavailable or invalid".format(contract_id)
+        ) from exc
+    if not isinstance(payload, dict):
+        raise KnowledgeHubError(
+            "{} payload must be an object".format(contract_id)
+        )
+    validation = validate_instance(root, contract_id, payload)
+    if validation.get("status") != "pass":
+        raise KnowledgeHubError(
+            "{} validation failed: {}".format(
+                contract_id,
+                validation.get("errors", []),
+            )
+        )
+    return payload
+
+
 def main(argv: Sequence[str] = ()) -> int:
     parser = _parser()
     args = parser.parse_args(list(argv) if argv else None)
@@ -51,12 +78,38 @@ def main(argv: Sequence[str] = ()) -> int:
         host_binding = resolve_inside(root, args.host_binding)
         candidate_relative = args.candidate_registry
         proposal_relative = args.proposal
+        _validate_contract(
+            root,
+            closure_receipt,
+            "external-evidence-receipt-v1",
+        )
+        _validate_contract(
+            root,
+            intake_receipt,
+            "external-evidence-intake-receipt-v1",
+        )
+        _validate_contract(
+            root,
+            host_binding,
+            "external-evidence-intake-host-binding-v1",
+        )
         candidate, proposal = build_external_gap_ratchet_candidate(
             registry_path=registry,
             closure_receipt_path=closure_receipt,
             intake_receipt_path=intake_receipt,
             host_binding_path=host_binding,
         )
+        proposal_validation = validate_instance(
+            root,
+            "external-evidence-ratchet-proposal-v2",
+            proposal,
+        )
+        if proposal_validation.get("status") != "pass":
+            raise KnowledgeHubError(
+                "external-evidence-ratchet-proposal-v2 validation failed: {}".format(
+                    proposal_validation.get("errors", [])
+                )
+            )
         _write_json(root, candidate_relative, candidate)
         _write_json(root, proposal_relative, proposal)
     except (KnowledgeHubError, OSError, json.JSONDecodeError) as exc:
