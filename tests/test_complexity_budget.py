@@ -472,3 +472,33 @@ def test_complexity_budget_fails_closed_when_requested_baseline_is_unavailable(
         row["type"] == "complexity-baseline-unavailable"
         for row in report["regressions"]
     )
+
+
+def test_complexity_budget_github_actions_requires_explicit_baseline(
+    tmp_path, monkeypatch
+):
+    package = tmp_path / "tools/codex_assets/knowledge_hub"
+    package.mkdir(parents=True)
+    (package / "small.py").write_text("x = 1\n", encoding="utf-8")
+    _write_budget_policy(tmp_path)
+    policy_path = tmp_path / "registry/engineering-budgets.json"
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    policy["python"]["ci_baseline"] = {
+        "required_in_github_actions": True,
+        "env": "KNOWLEDGE_COMPLEXITY_BASE_REF",
+        "missing_or_invalid": "fail",
+    }
+    policy_path.write_text(json.dumps(policy), encoding="utf-8")
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv("KNOWLEDGE_COMPLEXITY_BASE_REF", raising=False)
+
+    report = evaluate_complexity_budget(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["baseline_required"] is True
+    assert report["baseline_ref"] == ""
+    assert report["baseline_ref_resolved"] is False
+    assert any(
+        row["type"] == "complexity-baseline-missing"
+        for row in report["regressions"]
+    )
