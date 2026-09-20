@@ -30,6 +30,7 @@ def test_quality_runs_for_master_pushes_and_pull_requests_without_duplicate_bran
     assert "paths" not in push
     assert "paths-ignore" not in push
     assert "pull_request" in triggers
+    assert "workflow_dispatch" in triggers
 
 
 def test_quality_preserves_every_master_revision():
@@ -125,3 +126,13 @@ def test_quality_builds_exact_source_binding_before_upload():
     )
     binding_index = steps.index(binding)
     assert binding_index < verify_index
+
+
+def test_quality_manual_dispatch_is_available_for_trusted_automation_branches():
+    payload = _workflow()
+    triggers = payload["on"]
+    assert "workflow_dispatch" in triggers
+    assert triggers["push"]["branches"] == ["master"]
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "github.event.pull_request.head.sha || github.sha" in text
