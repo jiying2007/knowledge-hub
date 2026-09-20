@@ -440,3 +440,24 @@ def test_pilot_cli_uses_catalog_schema_before_business_projection():
     assert "OBSERVATION_CONTRACTS" in text
     assert "validate_instance(root, contract_id, observation)" in text
     assert "pilot observation schema validation failed" in text
+
+
+def test_pilot_cli_observation_contract_mapping_matches_machine_policy():
+    import json
+
+    from tools.codex_assets.knowledge_hub.pilot_evidence_cli import (
+        OBSERVATION_CONTRACTS,
+    )
+
+    policy = json.loads(
+        (
+            repository_root()
+            / "registry/ai-operations-policy.json"
+        ).read_text(encoding="utf-8")
+    )
+    external = policy["external_evidence"]
+    assert OBSERVATION_CONTRACTS == external["observation_contracts"]
+    assert (
+        external["validator_receipt_timestamp_source"]
+        == "observation-observed-at"
+    )
