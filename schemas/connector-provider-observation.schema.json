@@ -27,7 +27,8 @@
     },
     "observed_at": {
       "type": "string",
-      "minLength": 10
+      "minLength": 10,
+      "format": "date-time"
     },
     "evidence_source_refs": {
       "type": "array",
@@ -171,7 +172,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "before_cursor_sha256": {
               "type": "string",
@@ -215,7 +217,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "before_acl_sha256": {
               "type": "string",
@@ -256,7 +259,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "object_id_sha256": {
               "type": "string",
@@ -302,7 +306,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "attempts": {
               "type": "integer",
@@ -356,7 +361,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "sample_count": {
               "type": "integer",
@@ -400,7 +406,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "before_checkpoint_sha256": {
               "type": "string",
@@ -450,7 +457,8 @@
             },
             "observed_at": {
               "type": "string",
-              "minLength": 10
+              "minLength": 10,
+              "format": "date-time"
             },
             "registry_before_sha256": {
               "type": "string",
