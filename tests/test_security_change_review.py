@@ -18,6 +18,10 @@ def _policy():
                 "review_class": "security-critical",
             },
             {
+                "path": "registry/knowledge-platform-p5-p10.json",
+                "review_class": "security-critical",
+            },
+            {
                 "path_prefix": "docs/",
                 "review_class": "governance-critical",
             },
@@ -81,6 +85,7 @@ def _build(files=None, reviews=None, **overrides):
         "head_ref": "feature/security-change",
         "author_login": "author",
         "same_repository": True,
+        "head_is_direct_child_of_base": True,
         "files": files if files is not None else [_file()],
         "reviews": reviews if reviews is not None else [],
         "review_risk_policy": _policy(),
@@ -154,6 +159,10 @@ def test_same_repo_github_actions_ratchet_uses_dedicated_verifier_boundary():
     packet = _build(
         head_ref="automation/external-gap-abc123def456-123",
         author_login="github-actions[bot]",
+        files=[
+            _file("registry/knowledge-platform-p5-p10.json"),
+            _file("registry/durable-evidence-ledger.jsonl"),
+        ],
         reviews=[],
     )
 
@@ -167,6 +176,10 @@ def test_user_cannot_spoof_machine_ratchet_with_branch_prefix():
     packet = _build(
         head_ref="automation/external-gap-abc123def456-123",
         author_login="author",
+        files=[
+            _file("registry/knowledge-platform-p5-p10.json"),
+            _file("registry/durable-evidence-ledger.jsonl"),
+        ],
         reviews=[],
     )
 
@@ -308,3 +321,33 @@ def test_hash_bound_comment_requires_trusted_human_association():
 
     assert packet["status"] == "awaiting-human-review"
     assert packet["hash_bound_comment_approval_count"] == 0
+
+
+def test_machine_ratchet_exemption_requires_direct_child():
+    packet = _build(
+        head_ref="automation/external-gap-abc123def456-123",
+        author_login="github-actions[bot]",
+        head_is_direct_child_of_base=False,
+        files=[
+            _file("registry/knowledge-platform-p5-p10.json"),
+            _file("registry/durable-evidence-ledger.jsonl"),
+        ],
+    )
+
+    assert packet["status"] == "awaiting-human-review"
+    assert packet["autonomous_ratchet"] is False
+
+
+def test_machine_ratchet_exemption_rejects_extra_changed_file():
+    packet = _build(
+        head_ref="automation/external-gap-abc123def456-123",
+        author_login="github-actions[bot]",
+        files=[
+            _file("registry/knowledge-platform-p5-p10.json"),
+            _file("registry/durable-evidence-ledger.jsonl"),
+            _file("SECURITY.md"),
+        ],
+    )
+
+    assert packet["status"] == "awaiting-human-review"
+    assert packet["autonomous_ratchet"] is False
