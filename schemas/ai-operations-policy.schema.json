@@ -262,7 +262,8 @@
         "root_observation_revision_must_match_evidence_source_revision",
         "producer_code_revision_source",
         "observation_source_workflow_allowlist",
-        "observation_source_requires_explicit_registration"
+        "observation_source_requires_explicit_registration",
+        "manual_intake_source_requires_registered_workflow"
       ],
       "properties": {
         "observation_generation_class": {
@@ -413,6 +414,9 @@
           "additionalProperties": false
         },
         "observation_source_requires_explicit_registration": {
+          "const": true
+        },
+        "manual_intake_source_requires_registered_workflow": {
           "const": true
         }
       },
