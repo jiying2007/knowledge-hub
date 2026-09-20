@@ -206,6 +206,19 @@ jobs:
               "artifact_name": str(artifact["name"]),
               "artifact_digest": digest,
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path(".").resolve(),
+              "external-evidence-source-provenance-v1",
+              bounded,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "source provenance contract validation failed: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
           (cache / "source-provenance.json").write_text(
               json.dumps(bounded, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
@@ -284,6 +297,19 @@ jobs:
               "intake_run_attempt": int(os.environ["GITHUB_RUN_ATTEMPT"]),
               "intake_revision": os.environ["INTAKE_REVISION"],
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path(".").resolve(),
+              "external-evidence-intake-receipt-v1",
+              envelope,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "external intake receipt contract validation failed: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
           (root / "intake-receipt.json").write_text(
               json.dumps(envelope, sort_keys=True, separators=(",", ":")) + "\n",
               encoding="utf-8",
