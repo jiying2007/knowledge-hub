@@ -55,6 +55,23 @@ def _review(
     }
 
 
+def _comment(
+    body,
+    *,
+    login="author",
+    association="OWNER",
+    user_type="User",
+    comment_id=100,
+):
+    return {
+        "id": comment_id,
+        "body": body,
+        "created_at": "2026-09-20T11:00:00Z",
+        "author_association": association,
+        "user": {"login": login, "type": user_type},
+    }
+
+
 def _build(files=None, reviews=None, **overrides):
     args = {
         "repository": "example/knowledge-hub",
@@ -225,3 +242,58 @@ def test_comment_only_review_does_not_invalidate_existing_approval():
 
     assert packet["status"] == "pass"
     assert packet["exact_head_approval_count"] == 1
+
+
+def test_hash_bound_owner_comment_passes_security_change_gate():
+    pending = _build()
+    body = "SECURITY-CHANGE-APPROVE {} {}".format(
+        pending["change_fingerprint"],
+        HEAD,
+    )
+    packet = _build(comments=[_comment(body)])
+
+    assert packet["status"] == "pass"
+    assert packet["gate_pass"] is True
+    assert packet["review_reason"] == "hash-bound-human-approval"
+    assert packet["hash_bound_comment_approval_count"] == 1
+    assert packet["hash_bound_comment_approvals"][0]["login"] == "author"
+
+
+def test_hash_bound_comment_rejects_wrong_fingerprint_or_head():
+    pending = _build()
+    wrong_fingerprint = "sha256:" + "0" * 64
+    wrong_head = "d" * 40
+
+    for body in (
+        "SECURITY-CHANGE-APPROVE {} {}".format(wrong_fingerprint, HEAD),
+        "SECURITY-CHANGE-APPROVE {} {}".format(
+            pending["change_fingerprint"],
+            wrong_head,
+        ),
+    ):
+        packet = _build(comments=[_comment(body)])
+        assert packet["status"] == "awaiting-human-review"
+        assert packet["hash_bound_comment_approval_count"] == 0
+
+
+def test_hash_bound_comment_requires_trusted_human_association():
+    pending = _build()
+    body = "SECURITY-CHANGE-APPROVE {} {}".format(
+        pending["change_fingerprint"],
+        HEAD,
+    )
+    packet = _build(
+        comments=[
+            _comment(body, login="outsider", association="NONE"),
+            _comment(
+                body,
+                login="github-actions[bot]",
+                association="OWNER",
+                user_type="Bot",
+                comment_id=101,
+            ),
+        ]
+    )
+
+    assert packet["status"] == "awaiting-human-review"
+    assert packet["hash_bound_comment_approval_count"] == 0
