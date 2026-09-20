@@ -40,6 +40,7 @@ def test_schema_catalog_resolves_all_contracts():
         "operator-machine-ratchet-candidate-v1",
         "operator-machine-ratchet-verification-v1",
         "external-evidence-ratchet-verification-v1",
+        "hosting-posture-v1",
         "production-adoption-observation-v1",
         "production-memory-observation-v1",
         "production-retrieval-observation-v1",
