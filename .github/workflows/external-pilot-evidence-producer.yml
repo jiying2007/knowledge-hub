@@ -87,6 +87,13 @@ jobs:
               raise SystemExit('observation source run must be completed/success')
           if (run.get('repository') or {}).get('full_name') != expected_repo:
               raise SystemExit('observation source run must belong to the current repository')
+          if run.get('head_branch') != 'master':
+              raise SystemExit('observation source run must execute from master')
+          if run.get('event') not in {'workflow_dispatch', 'schedule'}:
+              raise SystemExit('observation source run event is not trusted')
+          workflow_path = str(run.get('path') or '')
+          if not workflow_path.startswith('.github/workflows/') or not workflow_path.endswith('.yml'):
+              raise SystemExit('observation source workflow path is invalid')
           head_sha = str(run.get('head_sha') or '').lower()
           if len(head_sha) != 40 or any(ch not in '0123456789abcdef' for ch in head_sha):
               raise SystemExit('observation source run must expose an exact git revision')
@@ -109,6 +116,8 @@ jobs:
               'source_run_id': int(run['id']),
               'source_run_head_sha': head_sha,
               'source_run_event': str(run.get('event') or ''),
+              'source_run_head_branch': str(run.get('head_branch') or ''),
+              'source_workflow_path': workflow_path,
               'artifact_id': int(artifact['id']),
               'artifact_name': str(artifact['name']),
               'artifact_digest': digest,
