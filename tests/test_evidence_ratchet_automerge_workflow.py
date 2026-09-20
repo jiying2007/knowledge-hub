@@ -176,3 +176,25 @@ def test_evidence_ratchet_automerge_validates_verification_contract():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "operator-machine-ratchet-verification-v1" in text
     assert "machine ratchet verification contract failed" in text
+
+
+def test_evidence_ratchet_automerge_matches_machine_policy():
+    import json
+
+    policy = json.loads(
+        Path("registry/ai-operations-policy.json").read_text(encoding="utf-8")
+    )
+    boundary = policy["evidence_binding"]
+    assert boundary["machine_ratchet_auto_merge_requires_protected_branch"] is True
+    assert boundary["machine_ratchet_auto_merge_requires_exact_head_quality"] is True
+    assert boundary["machine_ratchet_auto_merge_requires_same_repository"] is True
+    assert boundary["machine_ratchet_auto_merge_requires_origin_artifact_digest"] is True
+    assert boundary["machine_ratchet_auto_merge_executes_pr_code"] is False
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "master must be protected before machine ratchet auto-merge" in text
+    assert "trigger Quality head repository mismatch" in text
+    assert "gh run download" in text
+    assert "origin artifact digest" in Path(
+        "governance/automation-policy.md"
+    ).read_text(encoding="utf-8").lower()
