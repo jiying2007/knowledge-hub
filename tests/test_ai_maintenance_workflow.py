@@ -83,7 +83,24 @@ def test_ai_maintenance_reconciles_external_operational_trackers():
     assert "operational-trackers.json" in text
 
 
-def test_ai_maintenance_does_not_close_owner_project_trackers():
+def test_ai_maintenance_reconciles_owner_trackers_without_generating_decisions():
     text = WORKFLOW.read_text(encoding="utf-8")
-    assert "gh issue close 74" not in text
-    assert "gh issue close 96" not in text
+    assert "Materialize owner qualification packet" in text
+    assert "build_owner_qualification_packet" in text
+    assert "owner-qualification-packet-v1" in text
+    assert "owner-qualification-packet.json" in text
+    assert "Reconcile owner and project qualification trackers" in text
+    assert "does not infer or generate owner approval" in text
+    assert "gh issue close 74" in text
+    assert "gh issue close 96" in text
+    assert "gh issue reopen 74" in text
+    assert "gh issue reopen 96" in text
+    assert "PACKET_FINGERPRINT" in text
+    assert "comment_once" in text
+
+
+def test_ai_maintenance_owner_tracker_close_conditions_are_bounded():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'OWNER_DECLARATION_PENDING}" == "0" && "${OWNER_BOUNDARY_PENDING}" == "0"' in text
+    assert 'QUALIFICATION_PASS}" == "true"' in text
+    assert "No project readiness, owner decision, or real-world evidence was synthesized." in text
