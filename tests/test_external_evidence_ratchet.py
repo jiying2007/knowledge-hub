@@ -246,3 +246,13 @@ def test_ratchet_workflow_daily_requalify_requires_real_protection():
     assert "master remains unprotected; no external ratchet requalification" in text
     assert 'startsWith("automation/external-gap-")' in text
     assert "gh workflow run quality.yml" in text
+
+
+def test_ratchet_requalification_ignores_historical_success_and_requires_fresh_trigger():
+    root = Path(__file__).resolve().parents[1]
+    text = (
+        root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    ).read_text(encoding="utf-8")
+    assert '$4 == "success"' not in text
+    assert "exact-head Quality already active:" in text
+    assert "gh workflow run quality.yml" in text
