@@ -126,3 +126,14 @@ def test_security_change_review_does_not_write_approval_comment():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "gh issue comment" not in text
     assert "gh pr review" not in text
+
+
+def test_security_change_review_resolves_direct_child_from_github_commit():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'commits/${head_sha}' in text
+    assert "head-commit.json" in text
+    assert "head_is_direct_child_of_base" in text
+    assert (
+        'os.environ["HEAD_IS_DIRECT_CHILD_OF_BASE"] == "true"'
+        in text
+    )
