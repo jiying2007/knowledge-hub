@@ -263,7 +263,8 @@
         "producer_code_revision_source",
         "observation_source_workflow_allowlist",
         "observation_source_requires_explicit_registration",
-        "manual_intake_source_requires_registered_workflow"
+        "manual_intake_source_requires_registered_workflow",
+        "observation_source_workflow_prefix"
       ],
       "properties": {
         "observation_generation_class": {
@@ -383,7 +384,7 @@
               "uniqueItems": true,
               "items": {
                 "type": "string",
-                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
               }
             },
             "production-retrieval-eval": {
@@ -391,7 +392,7 @@
               "uniqueItems": true,
               "items": {
                 "type": "string",
-                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
               }
             },
             "memory-lifecycle-pilot": {
@@ -399,7 +400,7 @@
               "uniqueItems": true,
               "items": {
                 "type": "string",
-                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
               }
             },
             "real-adoption-evidence": {
@@ -407,7 +408,7 @@
               "uniqueItems": true,
               "items": {
                 "type": "string",
-                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
               }
             }
           },
@@ -418,6 +419,9 @@
         },
         "manual_intake_source_requires_registered_workflow": {
           "const": true
+        },
+        "observation_source_workflow_prefix": {
+          "const": ".github/workflows/real-observation-"
         }
       },
       "additionalProperties": false
