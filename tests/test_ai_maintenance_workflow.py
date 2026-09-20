@@ -142,3 +142,24 @@ def test_ai_maintenance_owner_tracker_reconciliation_matches_policy():
     ] is True
     assert boundary["qualification_close_requires_pass"] is True
     assert boundary["reopen_on_regression"] is True
+
+
+def test_ai_maintenance_materializes_observation_source_readiness():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "Materialize observation source readiness" in text
+    assert "build_observation_source_readiness" in text
+    assert "observation-source-readiness-v1" in text
+    assert "observation-source-readiness.json" in text
+
+
+def test_ai_maintenance_operational_tracker_comments_are_scoped_and_non_evidence():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "connector_tracker_fingerprint" in text
+    assert "production_tracker_fingerprint" in text
+    assert "comment_once 20" in text
+    assert "comment_once 21" in text
+    assert "Registration is not evidence" in text
+    assert "no production result was synthesized" in text
+    assert "no production/adoption result was synthesized" in text
+    assert "gh issue reopen 20" in text
+    assert "gh issue reopen 21" in text
