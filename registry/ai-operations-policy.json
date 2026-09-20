@@ -183,7 +183,8 @@
       "memory-lifecycle-pilot": [],
       "real-adoption-evidence": []
     },
-    "observation_source_requires_explicit_registration": true
+    "observation_source_requires_explicit_registration": true,
+    "manual_intake_source_requires_registered_workflow": true
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
