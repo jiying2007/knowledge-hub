@@ -137,3 +137,9 @@ def test_security_change_review_resolves_direct_child_from_github_commit():
         'os.environ["HEAD_IS_DIRECT_CHILD_OF_BASE"] == "true"'
         in text
     )
+
+
+def test_security_change_review_only_accepts_master_base():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert 'if base_ref != "master"' in text
+    assert "only supports PRs targeting master" in text
