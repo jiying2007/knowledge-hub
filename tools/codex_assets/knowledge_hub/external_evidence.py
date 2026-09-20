@@ -425,6 +425,13 @@ def validate_external_evidence(
     observed_at = _utc_timestamp(value.get("observed_at", ""), "observed_at")
     refs = _refs(value.get("evidence_source_refs"))
     summary = _VALIDATORS[gap_id](value)
+    if (
+        gap_id == "connector-provider-pilot"
+        and summary.get("adapter_commit") != source_revision
+    ):
+        raise KnowledgeHubError(
+            "connector adapter commit must equal evidence source revision"
+        )
     payload_sha = _sha256_bytes(_canonical_bytes(value))
     return {
         "schema_version": RECEIPT_SCHEMA,
