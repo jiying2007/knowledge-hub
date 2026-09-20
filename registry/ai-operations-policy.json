@@ -98,7 +98,11 @@
     "machine_ratchet_uses_trusted_run_timestamp": true,
     "automation_pr_requires_explicit_quality_dispatch": true,
     "protection_recovery_requalification_owner": "hosting-posture-reconcile",
-    "protection_recovery_duplicate_pollers_allowed": false
+    "protection_recovery_duplicate_pollers_allowed": false,
+    "protected_branch_required_workflows": [
+      "quality",
+      "security-critical-change-review"
+    ]
   },
   "evidence_binding": {
     "machine_ratchet_fields": [
