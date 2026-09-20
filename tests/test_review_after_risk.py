@@ -83,8 +83,8 @@ def test_ai_operations_policy_is_security_critical():
     policy = load_review_risk_policy(root)
 
     result = classify_review_risk(
-        "registry/ai-operations-policy.json",
         policy,
+        "registry/ai-operations-policy.json",
     )
 
     assert result["review_class"] == "security-critical"
