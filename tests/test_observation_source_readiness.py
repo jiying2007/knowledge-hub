@@ -134,3 +134,35 @@ def test_observation_source_readiness_rejects_wrong_workflow_namespace(tmp_path)
 
     with pytest.raises(KnowledgeHubError, match="reserved namespace"):
         build_observation_source_readiness(tmp_path)
+
+
+def test_observation_source_readiness_rejects_missing_supported_gap(tmp_path):
+    allowlists = _empty_allowlists()
+    _write(tmp_path, allowlists)
+    path = tmp_path / "registry/knowledge-platform-p5-p10.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["external_closure_gaps"] = payload["external_closure_gaps"][:-1]
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    import pytest
+
+    with pytest.raises(KnowledgeHubError, match="must exist exactly once"):
+        build_observation_source_readiness(tmp_path)
+
+
+def test_observation_source_readiness_rejects_duplicate_supported_gap(tmp_path):
+    allowlists = _empty_allowlists()
+    _write(tmp_path, allowlists)
+    path = tmp_path / "registry/knowledge-platform-p5-p10.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["external_closure_gaps"].append(
+        dict(payload["external_closure_gaps"][0])
+    )
+    path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    import pytest
+
+    with pytest.raises(KnowledgeHubError, match="must exist exactly once"):
+        build_observation_source_readiness(tmp_path)
