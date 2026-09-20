@@ -169,3 +169,9 @@ def test_evidence_ratchet_automerge_resolves_identity_after_trusted_checkout():
     assert checkout_index < resolve_index < fetch_index
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "trusted auto-merge workflow is not bound to current master" in text
+
+
+def test_evidence_ratchet_automerge_validates_verification_contract():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "operator-machine-ratchet-verification-v1" in text
+    assert "machine ratchet verification contract failed" in text
