@@ -71,7 +71,7 @@ AI 可以准备 packet、发现候选、校验证据和生成最小 PR，但不�
 
 Provider evidence 进一步按字段拆分责任边界：
 
-- `source_refs`、`validation_refs`、`artifact_refs`：仅当 GitHub provider identity 已验证、候选唯一、mutation 为 append-only、现有 canonical prefix 完整保留，且变更不会改变 owner/status/readiness/evidence-ready 时，可进入 `autonomous-low-risk-ratchet`。validation 必须与同 item source revision 同 SHA；artifact 当前只允许 `github-actions-artifact`，并要求 workflow-run id 与 validation、workflow-run head SHA 与 source revision 同时一致。
+- `source_refs`、`validation_refs`、`artifact_refs`：仅当 GitHub provider identity 已验证、候选唯一、mutation 为 append-only、现有 canonical prefix 完整保留，且变更不会改变 owner/status/readiness/evidence-ready 时，可进入 `autonomous-low-risk-ratchet`。validation 必须与同 item source revision 同 SHA；artifact 当前只允许 immutable `github-release-asset`，并要求 release tag 重新解析出的 exact commit SHA 与 source revision 一致。会过期的 Actions artifact 不进入长期 machine ratchet。
 - `release_ref`：继续属于 `human-authorization`，机器只发现和准备 packet，不自动绑定。
 - machine evidence candidate 先在非 canonical `.cache` 中 materialize，并绑定 registry before/after digest、proposal fingerprints 与 trusted provider run identity。
 - canonical 落地只能通过 same-repository `automation/evidence-bind-*` PR；不得直接写 `master`。
