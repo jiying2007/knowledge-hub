@@ -78,7 +78,8 @@
         "automatic_merge_executes_pr_code",
         "automatic_merge_requires_trusted_origin_run",
         "automatic_merge_requires_generator_branch_identity",
-        "machine_ratchet_uses_trusted_run_timestamp"
+        "machine_ratchet_uses_trusted_run_timestamp",
+        "automation_pr_requires_explicit_quality_dispatch"
       ],
       "properties": {
         "direct_master_write": {
@@ -118,6 +119,9 @@
           "const": true
         },
         "machine_ratchet_uses_trusted_run_timestamp": {
+          "const": true
+        },
+        "automation_pr_requires_explicit_quality_dispatch": {
           "const": true
         }
       },
