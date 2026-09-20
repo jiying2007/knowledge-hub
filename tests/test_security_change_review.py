@@ -177,3 +177,39 @@ def test_security_change_packet_is_deterministic_for_same_inputs():
 
     assert first == second
     assert first["packet_fingerprint"].startswith("sha256:")
+
+
+def test_security_change_review_matches_machine_policy_and_schema():
+    import json
+    from pathlib import Path
+
+    from tools.codex_assets.knowledge_hub.common import repository_root
+    from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+    root = repository_root()
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    boundary = policy["security_change_review"]
+    assert boundary["authorization_source"] == "github-pr-review"
+    assert boundary["exact_head_required"] is True
+    assert boundary["non_bot_reviewer_required"] is True
+    assert boundary["pr_author_self_approval_allowed"] is False
+    assert boundary["candidate_local_authorization_ledger_trusted"] is False
+    assert boundary["workflow_executes_pr_code"] is False
+    assert tuple(boundary["autonomous_ratchet_branch_prefixes"]) == (
+        "automation/hosting-private-",
+        "automation/evidence-bind-",
+        "automation/external-gap-",
+    )
+
+    packet = _build(reviews=[_review()])
+    result = validate_instance(root, "security-change-review-v1", packet)
+    assert result["status"] == "pass", result["errors"]
+
+    workflow = Path(
+        ".github/workflows/security-critical-change-review.yml"
+    ).read_text(encoding="utf-8")
+    assert "candidate_local_authorization_ledger_trusted" not in workflow
