@@ -112,3 +112,21 @@ def test_external_pilot_producer_checkout_has_single_with_mapping():
         1,
     )[1].split("- name: Set up governed Python", 1)[0]
     assert block.count("\n        with:\n") == 1
+
+
+def test_external_pilot_producer_revision_binding_matches_machine_policy():
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    external = policy["external_evidence"]
+    assert external["producer_code_revision_source"] == "github-workflow-sha"
+
+    text = _workflow()
+    assert 'PRODUCER_REVISION: ${{ github.workflow_sha }}' in text
+    assert 'ref: ${{ env.PRODUCER_REVISION }}' in text
+    assert "'producer_revision': os.environ['PRODUCER_REVISION']" in text
