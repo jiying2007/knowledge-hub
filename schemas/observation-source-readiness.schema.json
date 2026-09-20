@@ -14,7 +14,9 @@
     "unregistered_count",
     "registered_open_count",
     "rows",
-    "packet_fingerprint"
+    "packet_fingerprint",
+    "connector_tracker_fingerprint",
+    "production_tracker_fingerprint"
   ],
   "properties": {
     "schema_version": {
@@ -65,7 +67,8 @@
           "status",
           "registered_workflow_count",
           "registered_workflows",
-          "next_action"
+          "next_action",
+          "row_fingerprint"
         ],
         "properties": {
           "gap_id": {
@@ -105,10 +108,22 @@
               "produce-real-observation",
               "register-real-observation-workflow"
             ]
+          },
+          "row_fingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
           }
         },
         "additionalProperties": false
       }
+    },
+    "connector_tracker_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "production_tracker_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
   "additionalProperties": false
