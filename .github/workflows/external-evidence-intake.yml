@@ -125,6 +125,8 @@ jobs:
               raise SystemExit("source workflow run must be completed/success")
           if (run.get("repository") or {}).get("full_name") != repository:
               raise SystemExit("source workflow run must belong to the current repository")
+          if run.get("head_branch") != "master":
+              raise SystemExit("source workflow run must execute from master")
           head_sha = str(run.get("head_sha") or "").lower()
           if not re.fullmatch(r"[0-9a-f]{40}", head_sha):
               raise SystemExit("source workflow run must expose an exact git revision")
@@ -163,6 +165,14 @@ jobs:
               gap = match.group(1)
               evidence_file = "external-evidence.json"
           else:
+              if run.get("event") not in {"workflow_dispatch", "schedule"}:
+                  raise SystemExit("manual intake source run event is not trusted")
+              workflow_path = str(run.get("path") or "")
+              if (
+                  not workflow_path.startswith(".github/workflows/")
+                  or not workflow_path.endswith(".yml")
+              ):
+                  raise SystemExit("manual intake source workflow path is invalid")
               artifact_name = os.environ["MANUAL_ARTIFACT_NAME"]
               gap = os.environ["MANUAL_EXPECTED_GAP"]
               evidence_file = os.environ["MANUAL_EVIDENCE_FILE"]
