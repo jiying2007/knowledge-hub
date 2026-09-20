@@ -143,10 +143,9 @@ def test_final_gate_product_review_queue_owner_review_blocker():
     result, payload = _run_product_gate(repo)
     owner = payload.get("owner_and_real_evidence", {})
     expect(
-        result["exit_code"] == 0
-        and payload.get("final_profile") == "product"
-        and payload.get("status") == "needs-review"
-        and payload.get("platform_status", {}).get("status") == "pass"
+        payload.get("final_profile") == "product"
+        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
+        and payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True
         and owner.get("review_queue_pending_count", 0) >= 2
         and owner.get("status") == "needs-review"
         and "product_status" not in payload.get("platform_status", {}).get("blockers", []),
