@@ -129,3 +129,20 @@ def test_evidence_ratchet_automerge_uses_runtime_dependency_surface():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
+
+
+def test_evidence_ratchet_automerge_retains_bounded_verification_metadata():
+    payload = _workflow()
+    steps = payload["jobs"]["merge"]["steps"]
+    upload = next(
+        step
+        for step in steps
+        if step.get("name") == "Upload bounded auto-merge verification"
+    )
+    assert upload["if"] == "always()"
+    assert upload["with"]["retention-days"] == "90"
+    assert (
+        upload["with"]["path"]
+        == ".cache/knowledge-hub/evidence-ratchet-automerge/*.json"
+    )
+    assert "origin-artifact" not in upload["with"]["path"]
