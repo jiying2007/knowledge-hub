@@ -172,34 +172,18 @@ def validate_instance(
     }
 
 
-def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
-    static_registry_contracts = (
-        (
-            "command-surface-v1",
-            "registry/command-surface.json",
-        ),
-        (
-            "engineering-budgets-v1",
-            "registry/engineering-budgets.json",
-        ),
-        (
-            "artifact-policy-v1",
-            "registry/artifact-policy.json",
-        ),
-        (
-            "ai-operations-policy-v1",
-            "registry/ai-operations-policy.json",
-        ),
-        (
-            "contract-compatibility-v1",
-            "registry/contract-compatibility.json",
-        ),
-        (
-            "review-risk-policy-v1",
-            "registry/review-risk-policy.json",
-        ),
+def _static_registry_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
+    contracts = (
+        ("command-surface-v1", "registry/command-surface.json"),
+        ("engineering-budgets-v1", "registry/engineering-budgets.json"),
+        ("artifact-policy-v1", "registry/artifact-policy.json"),
+        ("ai-operations-policy-v1", "registry/ai-operations-policy.json"),
+        ("contract-compatibility-v1", "registry/contract-compatibility.json"),
+        ("review-risk-policy-v1", "registry/review-risk-policy.json"),
     )
-    for contract_id, relative in static_registry_contracts:
+    for contract_id, relative in contracts:
         path = root / relative
         if path.is_file():
             yield contract_id, relative, load_json(path, {})
@@ -210,32 +194,47 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
             "registry/body-coverage.json",
             load_json(body_coverage, {}),
         )
+
+
+def _registry_item_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
     for index, row in enumerate(load_jsonl(root / "registry/items.jsonl"), 1):
-        yield "registry-item-v1", "registry/items.jsonl:{}".format(index), row
+        source = "registry/items.jsonl:{}".format(index)
+        yield "registry-item-v1", source, row
         if row.get("agent_contract"):
             yield (
                 "agent-contract-v1",
-                "registry/items.jsonl:{}#agent_contract".format(index),
+                source + "#agent_contract",
                 row["agent_contract"],
             )
         if row.get("evidence_contract"):
             yield (
                 "project-evidence-contract-v1",
-                "registry/items.jsonl:{}#evidence_contract".format(index),
+                source + "#evidence_contract",
                 row["evidence_contract"],
             )
-    for index, row in enumerate(load_jsonl(root / "registry/authorizations.jsonl"), 1):
-        yield "authorization-v1", "registry/authorizations.jsonl:{}".format(index), row
-    for index, row in enumerate(load_jsonl(root / "registry/lifecycle-events.jsonl"), 1):
-        yield "lifecycle-event-v1", "registry/lifecycle-events.jsonl:{}".format(index), row
-    for index, row in enumerate(load_jsonl(root / "registry/durable-evidence-ledger.jsonl"), 1):
-        yield (
-            "durable-evidence-record-v1",
-            "registry/durable-evidence-ledger.jsonl:{}".format(index),
-            row,
-        )
+
+
+def _registry_jsonl_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
+    rows = (
+        ("authorization-v1", "registry/authorizations.jsonl"),
+        ("lifecycle-event-v1", "registry/lifecycle-events.jsonl"),
+        ("durable-evidence-record-v1", "registry/durable-evidence-ledger.jsonl"),
+    )
+    for contract_id, relative in rows:
+        for index, row in enumerate(load_jsonl(root / relative), 1):
+            yield contract_id, "{}:{}".format(relative, index), row
+
+
+def _manifest_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
     manifests = root / "artifacts/manifests"
-    for path in sorted(manifests.rglob("*.jsonl")) if manifests.exists() else []:
+    paths = sorted(manifests.rglob("*.jsonl")) if manifests.exists() else []
+    for path in paths:
         for index, row in enumerate(load_jsonl(path), 1):
             if (
                 row.get("schema_version")
@@ -246,24 +245,35 @@ def _static_instances(root: pathlib.Path) -> Iterable[Tuple[str, str, Any]]:
                     "{}:{}".format(path.relative_to(root), index),
                     row,
                 )
-    workspace_path = root / "local/workspaces.json"
-    if workspace_path.is_file():
-        yield "local-workspaces-v1", "local/workspaces.json", load_json(workspace_path, {})
-    proposal_policy = root / "registry/agent-review-policy.json"
-    if proposal_policy.is_file():
-        yield (
-            "agent-review-policy-v1",
-            "registry/agent-review-policy.json",
-            load_json(proposal_policy, {}),
-        )
-    product_policy = root / "registry/product-policy.json"
-    if product_policy.is_file():
-        yield (
-            "product-policy-v1",
-            "registry/product-policy.json",
-            load_json(product_policy, {}),
-        )
 
+
+def _optional_static_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
+    rows = (
+        ("local-workspaces-v1", "local/workspaces.json"),
+        ("agent-review-policy-v1", "registry/agent-review-policy.json"),
+        ("product-policy-v1", "registry/product-policy.json"),
+    )
+    for contract_id, relative in rows:
+        path = root / relative
+        if path.is_file():
+            yield contract_id, relative, load_json(path, {})
+
+
+def _static_instances(
+    root: pathlib.Path,
+) -> Iterable[Tuple[str, str, Any]]:
+    for row in _static_registry_instances(root):
+        yield row
+    for row in _registry_item_instances(root):
+        yield row
+    for row in _registry_jsonl_instances(root):
+        yield row
+    for row in _manifest_instances(root):
+        yield row
+    for row in _optional_static_instances(root):
+        yield row
 
 def validate_schema_catalog(root: pathlib.Path) -> Dict[str, Any]:
     catalog, schemas, validated, errors = _load_catalog_schemas(root)
