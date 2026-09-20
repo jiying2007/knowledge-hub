@@ -213,3 +213,15 @@ def test_security_change_review_matches_machine_policy_and_schema():
         ".github/workflows/security-critical-change-review.yml"
     ).read_text(encoding="utf-8")
     assert "candidate_local_authorization_ledger_trusted" not in workflow
+
+
+def test_comment_only_review_does_not_invalidate_existing_approval():
+    packet = _build(
+        reviews=[
+            _review(login="reviewer", state="APPROVED", review_id=1),
+            _review(login="reviewer", state="COMMENTED", review_id=2),
+        ]
+    )
+
+    assert packet["status"] == "pass"
+    assert packet["exact_head_approval_count"] == 1
