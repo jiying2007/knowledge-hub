@@ -186,6 +186,40 @@ jobs:
               )
           PY
 
+      - name: Materialize observation source readiness
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.common import repository_root
+          from tools.codex_assets.knowledge_hub.observation_source_readiness import (
+              build_observation_source_readiness,
+          )
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          root = repository_root()
+          report = build_observation_source_readiness(root)
+          validation = validate_instance(
+              root,
+              "observation-source-readiness-v1",
+              report,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "observation source readiness failed schema: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
+          Path(
+              ".cache/knowledge-hub/ai-maintenance/observation-source-readiness.json"
+          ).write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
       - name: Build bounded AI maintenance decision
         id: decision
         run: |
@@ -294,50 +328,115 @@ jobs:
                   encoding="utf-8"
               )
           )
+          readiness = json.loads(
+              Path(
+                  ".cache/knowledge-hub/ai-maintenance/"
+                  "observation-source-readiness.json"
+              ).read_text(encoding="utf-8")
+          )
           gaps = {
               str(row.get("id", "")): str(row.get("status", ""))
               for row in registry.get("external_closure_gaps", [])
               if isinstance(row, dict)
           }
-          Path(".cache/knowledge-hub/ai-maintenance/operational-trackers.json").write_text(
-              json.dumps(
-                  {
-                      "connector_provider_pilot_closed": (
-                          gaps.get("connector-provider-pilot") == "closed"
-                      ),
-                      "production_bundle_closed": all(
-                          gaps.get(name) == "closed"
-                          for name in (
-                              "production-retrieval-eval",
-                              "memory-lifecycle-pilot",
-                              "real-adoption-evidence",
-                          )
-                      ),
-                  },
-                  sort_keys=True,
-              )
-              + "\n",
+          by_gap = {
+              str(row.get("gap_id", "")): row
+              for row in readiness.get("rows", [])
+              if isinstance(row, dict) and row.get("gap_id")
+          }
+          connector = by_gap.get("connector-provider-pilot", {})
+          production_ids = (
+              "production-retrieval-eval",
+              "memory-lifecycle-pilot",
+              "real-adoption-evidence",
+          )
+          production = [
+              by_gap.get(name, {"gap_id": name, "status": "missing"})
+              for name in production_ids
+          ]
+          payload = {
+              "connector_provider_pilot_closed": (
+                  gaps.get("connector-provider-pilot") == "closed"
+              ),
+              "production_bundle_closed": all(
+                  gaps.get(name) == "closed"
+                  for name in production_ids
+              ),
+              "connector_tracker_fingerprint": readiness[
+                  "connector_tracker_fingerprint"
+              ],
+              "production_tracker_fingerprint": readiness[
+                  "production_tracker_fingerprint"
+              ],
+              "connector_source": connector,
+              "production_sources": production,
+          }
+          Path(
+              ".cache/knowledge-hub/ai-maintenance/operational-trackers.json"
+          ).write_text(
+              json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n",
               encoding="utf-8",
           )
           PY
 
-          connector_closed="$(jq -r '.connector_provider_pilot_closed' .cache/knowledge-hub/ai-maintenance/operational-trackers.json)"
-          production_closed="$(jq -r '.production_bundle_closed' .cache/knowledge-hub/ai-maintenance/operational-trackers.json)"
+          state_of() {
+            gh issue view "$1" --repo "${GITHUB_REPOSITORY}" \
+              --json state --jq .state 2>/dev/null || true
+          }
 
+          comment_once() {
+            local issue="$1"
+            local fingerprint="$2"
+            local body="$3"
+            local seen
+            seen="$(
+              gh issue view "${issue}" --repo "${GITHUB_REPOSITORY}" \
+                --json comments \
+                --jq ".comments[] | select(.body | contains(\"${fingerprint}\")) | .url" \
+              | head -n 1
+            )"
+            if [[ -z "${seen}" ]]; then
+              gh issue comment "${issue}" --repo "${GITHUB_REPOSITORY}" \
+                --body "${body}"
+            fi
+          }
+
+          packet=".cache/knowledge-hub/ai-maintenance/operational-trackers.json"
+          connector_closed="$(jq -r '.connector_provider_pilot_closed' "${packet}")"
+          production_closed="$(jq -r '.production_bundle_closed' "${packet}")"
+
+          state20="$(state_of 20)"
           if [[ "${connector_closed}" == "true" ]]; then
-            state="$(gh issue view 20 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
-            if [[ "${state}" == "OPEN" ]]; then
+            if [[ "${state20}" == "OPEN" ]]; then
               gh issue close 20 --repo "${GITHUB_REPOSITORY}" \
                 --comment "Canonical connector-provider-pilot is closed by strict real external evidence; closing the stale operational qualification tracker automatically."
             fi
+          else
+            if [[ "${state20}" == "CLOSED" ]]; then
+              gh issue reopen 20 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Canonical connector-provider-pilot is still open; reopening the operational qualification tracker."
+            fi
+            fp20="$(jq -r '.connector_tracker_fingerprint' "${packet}")"
+            source20="$(jq -c '.connector_source | {status,next_action,registered_workflows}' "${packet}")"
+            body20="Observation-source readiness ${fp20}: connector-provider-pilot canonical gap is still open; source readiness=${source20}. Registration is not evidence and no production result was synthesized."
+            comment_once 20 "${fp20}" "${body20}"
           fi
 
+          state21="$(state_of 21)"
           if [[ "${production_closed}" == "true" ]]; then
-            state="$(gh issue view 21 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
-            if [[ "${state}" == "OPEN" ]]; then
+            if [[ "${state21}" == "OPEN" ]]; then
               gh issue close 21 --repo "${GITHUB_REPOSITORY}" \
                 --comment "Canonical production retrieval, memory lifecycle, and real adoption gaps are all closed by strict real evidence; closing the stale operational qualification tracker automatically."
             fi
+          else
+            if [[ "${state21}" == "CLOSED" ]]; then
+              gh issue reopen 21 --repo "${GITHUB_REPOSITORY}" \
+                --comment "At least one canonical production qualification gap is still open; reopening the operational qualification tracker."
+            fi
+            fp21="$(jq -r '.production_tracker_fingerprint' "${packet}")"
+            source21="$(jq -c '.production_sources | map({gap_id,status,next_action,registered_workflows})' "${packet}")"
+            body21="Observation-source readiness ${fp21}: production qualification remains open; source readiness=${source21}. Registration is not evidence and no production/adoption result was synthesized."
+            comment_once 21 "${fp21}" "${body21}"
           fi
 
       - name: Reconcile owner and project qualification trackers
