@@ -210,7 +210,14 @@ def test_security_change_review_matches_machine_policy_and_schema():
         )
     )
     boundary = policy["security_change_review"]
-    assert boundary["authorization_source"] == "github-pr-review"
+    assert (
+        boundary["authorization_source"]
+        == "github-external-review-facts"
+    )
+    assert boundary["authorization_mechanisms"] == [
+        "exact-head-pr-review",
+        "hash-bound-pr-comment",
+    ]
     assert boundary["exact_head_required"] is True
     assert boundary["non_bot_reviewer_required"] is True
     assert boundary["pr_author_self_approval_allowed"] is False
