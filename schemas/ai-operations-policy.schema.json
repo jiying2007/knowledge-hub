@@ -9,7 +9,8 @@
     "default_mode",
     "classes",
     "guardrails",
-    "evidence_binding"
+    "evidence_binding",
+    "external_evidence"
   ],
   "properties": {
     "schema_version": {
@@ -218,6 +219,72 @@
         },
         "machine_artifact_requires_immutable_release": {
           "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "external_evidence": {
+      "type": "object",
+      "required": [
+        "observation_generation_class",
+        "validated_closure_class",
+        "supported_gaps",
+        "strict_validator_required",
+        "same_repository_hosted_chain_required",
+        "synthetic_evidence_allowed",
+        "mock_evidence_allowed",
+        "local_only_evidence_allowed",
+        "machine_ratchet_may_create_pr",
+        "machine_ratchet_direct_master_write",
+        "machine_ratchet_auto_merge_requires_protected_branch",
+        "machine_ratchet_auto_merge_requires_exact_head_quality",
+        "machine_ratchet_auto_merge_executes_pr_code"
+      ],
+      "properties": {
+        "observation_generation_class": {
+          "const": "real-world-evidence"
+        },
+        "validated_closure_class": {
+          "const": "autonomous-low-risk-ratchet"
+        },
+        "supported_gaps": {
+          "type": "array",
+          "const": [
+            "connector-provider-pilot",
+            "production-retrieval-eval",
+            "memory-lifecycle-pilot",
+            "real-adoption-evidence"
+          ]
+        },
+        "strict_validator_required": {
+          "const": true
+        },
+        "same_repository_hosted_chain_required": {
+          "const": true
+        },
+        "synthetic_evidence_allowed": {
+          "const": false
+        },
+        "mock_evidence_allowed": {
+          "const": false
+        },
+        "local_only_evidence_allowed": {
+          "const": false
+        },
+        "machine_ratchet_may_create_pr": {
+          "const": true
+        },
+        "machine_ratchet_direct_master_write": {
+          "const": false
+        },
+        "machine_ratchet_auto_merge_requires_protected_branch": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_executes_pr_code": {
+          "const": false
         }
       },
       "additionalProperties": false
