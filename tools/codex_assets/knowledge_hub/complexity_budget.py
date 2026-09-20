@@ -90,11 +90,9 @@ def _function_lengths(path: pathlib.Path) -> List[Dict[str, Any]]:
     return _function_lengths_from_text(text)
 
 
-def _baseline_ref() -> str:
-    return os.environ.get("KNOWLEDGE_COMPLEXITY_BASE_REF", "").strip()
-
-
-def _ci_baseline_required(policy: Mapping[str, Any]) -> bool:
+def _ci_baseline_config(
+    policy: Mapping[str, Any],
+) -> Mapping[str, Any]:
     python_policy = (
         policy.get("python", {}) if isinstance(policy, Mapping) else {}
     )
@@ -103,10 +101,24 @@ def _ci_baseline_required(policy: Mapping[str, Any]) -> bool:
         if isinstance(python_policy, Mapping)
         else {}
     )
+    return config if isinstance(config, Mapping) else {}
+
+
+def _baseline_ref(policy: Mapping[str, Any]) -> str:
+    config = _ci_baseline_config(policy)
+    env_name = str(
+        config.get("base_ref_env", "KNOWLEDGE_COMPLEXITY_BASE_REF")
+    ).strip()
+    return os.environ.get(env_name, "").strip() if env_name else ""
+
+
+def _ci_baseline_required(policy: Mapping[str, Any]) -> bool:
+    config = _ci_baseline_config(policy)
+    enforce_env = str(config.get("enforce_env", "")).strip()
     return bool(
-        os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
-        and isinstance(config, Mapping)
-        and config.get("required_in_github_actions") is True
+        config.get("required_in_quality_engineering") is True
+        and enforce_env
+        and os.environ.get(enforce_env, "").lower() == "true"
     )
 
 
@@ -524,7 +536,7 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
     module_limit, function_limit, legacy_caps = _python_budget_settings(
         policy
     )
-    requested_baseline = _baseline_ref()
+    requested_baseline = _baseline_ref(policy)
     baseline_required = _ci_baseline_required(policy)
     baseline_missing = bool(baseline_required and not requested_baseline)
     baseline_ref = requested_baseline
