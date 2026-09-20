@@ -38,6 +38,33 @@ def _write_policy(root):
         + "\n",
         encoding="utf-8",
     )
+    (registry / "items.jsonl").write_text(
+        json.dumps(
+            {
+                "id": "item-1",
+                "project_id": "project-1",
+                "evidence_contract": {
+                    "status": "pending",
+                    "source_refs": [
+                        {
+                            "kind": "github-source-revision",
+                            "ref": "github://example/repo@" + "1" * 40,
+                        }
+                    ],
+                    "validation_refs": [
+                        {
+                            "kind": "github-workflow-run",
+                            "ref": "github-actions://example/repo/runs/123",
+                        }
+                    ],
+                    "artifact_refs": [],
+                    "release_ref": None,
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def _row(
@@ -85,6 +112,17 @@ def _row(
             "provenance": "github-read-only-api",
             "kind": kind,
             "ref": ref,
+            "details": {
+                "repository": "example/repo",
+                "exact_identity": field == "source_refs",
+                "commit_sha": "1" * 40 if field == "source_refs" else "",
+                "run_id": "123" if field == "validation_refs" else "",
+                "head_sha": "1" * 40 if field == "validation_refs" else "",
+                "workflow_run_id": "123" if field == "artifact_refs" else "",
+                "workflow_run_head_sha": (
+                    "1" * 40 if field == "artifact_refs" else ""
+                ),
+            },
         },
         "status_mutation_planned": False,
         "owner_mutation_planned": False,
@@ -127,7 +165,7 @@ def test_append_only_verified_evidence_routes_to_machine_ratchet(tmp_path):
         _write_policy(tmp_path)
         row = _row(
             field=field,
-            item_id="item-{}".format(index),
+            item_id="item-1",
             fingerprint="sha256:" + str(index) * 64,
         )
         with mock.patch(
@@ -310,3 +348,58 @@ def test_machine_route_output_matches_catalog_contract(tmp_path):
 def test_auto_router_is_in_mypy_surface():
     pyproject = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
     assert '"tools/codex_assets/knowledge_hub/operator_auto_route.py"' in pyproject
+
+
+def test_validation_from_different_source_revision_falls_back_to_human(tmp_path):
+    _write_policy(tmp_path)
+    row = _row(field="validation_refs")
+    row["candidate_snapshot"]["details"]["head_sha"] = "9" * 40
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "needs-governed-authorization"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 1
+
+
+def test_release_asset_artifact_without_workflow_revision_stays_human(tmp_path):
+    _write_policy(tmp_path)
+    row = _row(field="artifact_refs")
+    row["proposed_reference"] = {
+        "kind": "github-release-asset",
+        "ref": "github-release-asset://example/repo/456",
+    }
+    row["candidate_snapshot"]["kind"] = "github-release-asset"
+    row["candidate_snapshot"]["ref"] = row["proposed_reference"]["ref"]
+    row["candidate_snapshot"]["details"] = {
+        "asset_id": "456",
+        "digest": "sha256:" + "d" * 64,
+        "release_id": "789",
+        "tag_name": "v1.0.0",
+    }
+    with mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_patch_plan",
+        side_effect=_plan_side_effect,
+    ), mock.patch(
+        "tools.codex_assets.knowledge_hub.operator_auto_route."
+        "build_binding_review_bundle",
+        return_value={"status": "needs-governed-authorization"},
+    ):
+        result = build_unique_execution_routes(
+            pathlib.Path(tmp_path), _proposal([row])
+        )
+
+    assert result["status"] == "needs-governed-authorization"
+    assert result["machine_ratchet_count"] == 0
+    assert result["human_authorization_count"] == 1
