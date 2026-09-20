@@ -492,6 +492,29 @@ def _run_quality_command(
     }
 
 
+def _run_engineering_check(
+    root: pathlib.Path,
+    name: str,
+    command: Sequence[str],
+    timeout: int,
+) -> Dict[str, Any]:
+    if name == "full_regression":
+        return _run_quality_command(
+            root,
+            command,
+            timeout,
+            max_attempts=2,
+            retry_exit_codes=(1,),
+        )
+    retry_exit_codes = (1,) if name == "coverage" else ()
+    return _run_quality_command(
+        root,
+        command,
+        timeout,
+        retry_exit_codes=retry_exit_codes,
+    )
+
+
 def _coverage_recollection_commands(
     python: str,
 ) -> Sequence[Tuple[str, Sequence[str], int]]:
@@ -706,25 +729,12 @@ def run_engineering_quality(
     )
     quality_errors: List[str] = []
     for name, command, timeout in commands:
-        if name == "full_regression":
-            checks[name] = _run_quality_command(
-                root,
-                command,
-                timeout,
-                max_attempts=2,
-                retry_exit_codes=(1,),
-            )
-        elif name == "coverage":
-            # Preserve pytest stdout on an ordinary test failure so the
-            # engineering snapshot identifies the exact Python 3.14 regression.
-            checks[name] = _run_quality_command(
-                root,
-                command,
-                timeout,
-                retry_exit_codes=(1,),
-            )
-        else:
-            checks[name] = _run_quality_command(root, command, timeout)
+        checks[name] = _run_engineering_check(
+            root,
+            name,
+            command,
+            timeout,
+        )
         if checks[name]["status"] != "pass" and name != "coverage_report":
             quality_errors.append("{} failed".format(name))
     if checks.get("coverage_report", {}).get("status") != "pass":
