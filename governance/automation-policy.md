@@ -79,6 +79,21 @@ Provider evidence 进一步按字段拆分责任边界：
 - auto-merge 仅在真实 `master protected=true`、exact-head Quality SUCCESS、当前 master 未漂移、两文件 allowlist、append-only 语义 verifier、trusted origin run/attempt 和 origin artifact digest 全部重验通过后执行。
 - auto-merge verifier 只执行当前 master 的可信代码，不 checkout 或执行 PR 代码；原始 provider artifact 只短期保留，长期只保留 bounded durable evidence identity/digest。
 
+### Real external evidence ratchet
+
+真实外部证据采用“真实观测人工/环境边界，验证后的 canonical ratchet 自动化”：
+
+- observation/source artifact 必须来自真实 provider、真实生产评估、真实 memory lifecycle 或真实 adoption；不得由 AI 合成、mock、fixture、local-only 结果替代。
+- `external-pilot-evidence-producer` 只把显式选择的真实 observation 投影成 strict evidence；它不修改 canonical state。
+- strict producer 成功后，`external-evidence-intake` 可自动从唯一 bounded artifact 推导 gap/run/artifact identity；manual master-only fallback 仍保留给 adoption 或特殊来源。
+- strict validator 只有在 synthetic/mock/local-only 全部明确为 false，且 gap-specific contract 全部通过时，才产生 `closure_ready=true`。
+- closure-ready intake 会自动进入 deterministic `external-evidence-ratchet` candidate；此时 canonical gap closure 属于 `autonomous-low-risk-ratchet`，不再要求人工重复确认同一机器事实。
+- canonical 变更只能通过 same-repository `automation/external-gap-*` PR，且只修改 `registry/knowledge-platform-p5-p10.json` 与追加一条 durable evidence record。
+- automation PR 显式触发 exact-head Quality；master protection 后续恢复时，daily requalify 会重新触发 fresh Quality，不把旧 success 当作新保护状态下的 merge 证据。
+- `external-ratchet-automerge` 只 checkout current master 的可信 verifier，并用 origin closure/intake/binding receipts 重放 `build_external_gap_ratchet_candidate()`；PR registry 必须与 trusted replay byte-for-byte 一致。
+- 只有 live repository 仍 private、`master protected=true`、same-repo/direct-child、two-file allowlist、origin run/attempt、durable digest 与 exact-head Quality 全部通过，才执行 expected-head squash merge。
+- #20 仅在 canonical `connector-provider-pilot=closed` 后自动关闭；#21 仅在 retrieval/memory/adoption 三个 canonical gap 全部 closed 后自动关闭。#74/#96 的 owner/project evidence 边界不会被该机器链关闭。
+
 ## Operator UI 边界
 
 Operator UI 继续保持 projection / diagnosis / routing 面：
