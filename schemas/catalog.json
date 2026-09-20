@@ -386,6 +386,13 @@
       "applies_to": ".cache/knowledge-hub/external-pilot-evidence/producer-receipt.json",
       "authority": "derived-trusted-observation-producer-receipt",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "observation-source-readiness-v1",
+      "schema": "schemas/observation-source-readiness.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/observation-source-readiness.json",
+      "authority": "derived-real-observation-source-registration-readiness",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
