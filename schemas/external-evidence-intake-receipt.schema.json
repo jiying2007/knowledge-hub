@@ -14,6 +14,7 @@
     "evidence_payload_sha256",
     "receipt_sha256",
     "source_provenance",
+    "root_observation_provenance",
     "intake_run_id",
     "intake_run_attempt",
     "intake_revision"
@@ -129,6 +130,70 @@
     "intake_revision": {
       "type": "string",
       "pattern": "^[0-9a-f]{40}$"
+    },
+    "root_observation_provenance": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "repository",
+        "source_run_id",
+        "source_run_attempt",
+        "source_run_head_sha",
+        "source_run_head_branch",
+        "source_run_event",
+        "source_workflow_path",
+        "artifact_id",
+        "artifact_name",
+        "artifact_digest"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "source_run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_run_attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_run_head_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_run_head_branch": {
+          "const": "master"
+        },
+        "source_run_event": {
+          "enum": [
+            "schedule",
+            "workflow_dispatch"
+          ]
+        },
+        "source_workflow_path": {
+          "type": "string",
+          "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+        },
+        "artifact_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "artifact_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "artifact_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false
