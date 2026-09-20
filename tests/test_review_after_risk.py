@@ -110,3 +110,38 @@ def test_trust_root_policies_are_security_critical(path_value):
     assert result["review_class"] == "security-critical"
     assert result["stale_severity"] == "blocked"
     assert result["ai_first_action"] == "human-review-required"
+
+
+@pytest.mark.parametrize(
+    "path_value",
+    [
+        ".github/workflows/quality.yml",
+        ".github/workflows/security-critical-change-review.yml",
+        "registry/authorizations.jsonl",
+        "schemas/authorization.schema.json",
+        "tools/codex_assets/knowledge_hub/authorization.py",
+        "tools/codex_assets/knowledge_hub/review_attestation.py",
+        "tools/codex_assets/knowledge_hub/review_risk.py",
+        "tools/codex_assets/knowledge_hub/security_change_review.py",
+        "tools/codex_assets/knowledge_hub/schemas.py",
+        "tools/codex_assets/knowledge_hub/hosting_posture.py",
+        "tools/codex_assets/knowledge_hub/terminal_closure.py",
+        "tools/codex_assets/knowledge_hub/terminal_hosted_evidence.py",
+        "tools/codex_assets/knowledge_hub/repository_private_ratchet.py",
+        "tools/codex_assets/knowledge_hub/operator_auto_route.py",
+        "tools/codex_assets/knowledge_hub/operator_machine_ratchet.py",
+        "tools/codex_assets/knowledge_hub/operator_machine_ratchet_verify.py",
+        "tools/codex_assets/knowledge_hub/external_evidence.py",
+        "tools/codex_assets/knowledge_hub/external_evidence_ratchet.py",
+        "tools/codex_assets/knowledge_hub/external_evidence_ratchet_verify.py",
+    ],
+)
+def test_execution_trust_roots_are_security_critical(path_value):
+    root = Path(__file__).resolve().parents[1]
+    policy = load_review_risk_policy(root)
+
+    result = classify_review_risk(policy, path_value)
+
+    assert result["review_class"] == "security-critical"
+    assert result["stale_severity"] == "blocked"
+    assert result["ai_first_action"] == "human-review-required"
