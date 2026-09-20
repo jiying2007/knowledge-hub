@@ -146,5 +146,17 @@
     "machine_ratchet_auto_merge_requires_protected_branch": true,
     "machine_ratchet_auto_merge_requires_exact_head_quality": true,
     "machine_ratchet_auto_merge_executes_pr_code": false
+  },
+  "owner_qualification": {
+    "packet_generation_class": "autonomous-read",
+    "owner_decision_generated": false,
+    "canonical_write_performed": false,
+    "tracker_reconciliation_enabled": true,
+    "owner_gate_tracker_issue": 74,
+    "qualification_tracker_issue": 96,
+    "owner_gate_close_requires_zero_owner_declaration_pending": true,
+    "owner_gate_close_requires_zero_owner_boundary_pending": true,
+    "qualification_close_requires_pass": true,
+    "reopen_on_regression": true
   }
 }
