@@ -76,3 +76,17 @@ def test_review_after_risk_classifies_security_and_ordinary(tmp_path):
     assert by_id["security"]["stale_severity"] == "blocked"
     assert by_id["ordinary"]["review_class"] == "ordinary"
     assert payload["groups"]["by_review_class"]["security-critical"]["count"] == 1
+
+
+def test_ai_operations_policy_is_security_critical():
+    root = Path(__file__).resolve().parents[1]
+    policy = load_review_risk_policy(root)
+
+    result = classify_review_risk(
+        "registry/ai-operations-policy.json",
+        policy,
+    )
+
+    assert result["review_class"] == "security-critical"
+    assert result["stale_severity"] == "blocked"
+    assert result["ai_first_action"] == "human-review-required"
