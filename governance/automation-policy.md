@@ -86,6 +86,7 @@ Provider evidence 进一步按字段拆分责任边界：
 - observation/source artifact 必须来自真实 provider、真实生产评估、真实 memory lifecycle 或真实 adoption；不得由 AI 合成、mock、fixture、local-only 结果替代。
 - observation source run 还必须属于当前仓库、运行在 `master`，event 仅允许 `workflow_dispatch` / `schedule`，并记录 exact workflow path/head SHA；PR 分支、临时分支或无法识别 workflow path 的 artifact 不得进入真实证据链。
 - 仅满足 same-repo/master 仍不够：source workflow 必须显式注册在 `registry/ai-operations-policy.json#external_evidence.observation_source_workflow_allowlist` 对应 gap 下。当前列表为空表示尚未接入真实 observation producer，而不是让任意 master workflow 自报 `synthetic=false` 即获得生产证据资格。
+- 已注册 workflow 还必须位于保留命名空间 `.github/workflows/real-observation-*.yml`；Quality/intake/ratchet/maintenance 等控制面 workflow 即使被误写入 allowlist 也会在运行时 fail-closed。
 - `external-pilot-evidence-producer` 只把显式选择的真实 observation 投影成 strict evidence；它不修改 canonical state。
 - 真实环境输入合同由 schema catalog 唯一声明：`connector-provider-observation-v1`、`production-retrieval-observation-v1`、`production-memory-observation-v1`、`production-adoption-observation-v1`；producer 输入先过 JSON Schema，再过 Python 跨字段严格 validator。外部系统无需读取实现代码猜测 payload。
 - strict producer 成功后，`external-evidence-intake` 可对 connector/retrieval/memory/adoption 四类 gap 自动从唯一 bounded artifact 推导 gap/run/artifact identity；manual master-only fallback 只保留给特殊非 producer 来源。
