@@ -97,3 +97,9 @@ def test_security_change_review_retains_bounded_packet():
         upload["with"]["path"]
         == ".cache/knowledge-hub/security-change-review/packet.json"
     )
+
+
+def test_security_change_review_uses_compact_jsonl_from_github_api():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "--jq '.[] | @json'" in text
+    assert text.count("--jq '.[] | @json'") == 2
