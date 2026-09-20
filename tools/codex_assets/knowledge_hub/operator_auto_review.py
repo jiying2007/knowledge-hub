@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .operator_binding_patch_plan import build_binding_patch_plan
 from .operator_binding_review_bundle import build_binding_review_bundle
@@ -30,8 +30,8 @@ def _result(
     selected: Sequence[str] = (),
     ambiguous: Sequence[Mapping[str, Any]] = (),
     reasons: Sequence[str] = (),
-    patch_plan: Mapping[str, Any] | None = None,
-    review_bundle: Mapping[str, Any] | None = None,
+    patch_plan: Optional[Mapping[str, Any]] = None,
+    review_bundle: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "schema_version": 1,
@@ -57,16 +57,30 @@ def _result(
 
 def _proposal_reasons(proposal: Mapping[str, Any]) -> Tuple[List[str], List[Any]]:
     reasons: List[str] = []
-    expected = {
-        "projection": "knowledge-operator-binding-proposal-v1",
-        "read_only": True,
-        "canonical_write_performed": False,
-        "automatic_binding_enabled": False,
-        "proposal_only": True,
-    }
-    for key, value in expected.items():
-        if proposal.get(key) != value:
-            reasons.append("proposal-{}-invalid".format(key.replace("_", "-")))
+    checks = (
+        (
+            proposal.get("projection")
+            == "knowledge-operator-binding-proposal-v1",
+            "proposal-projection-invalid",
+        ),
+        (
+            proposal.get("read_only") is True,
+            "proposal-read-only-invalid",
+        ),
+        (
+            proposal.get("canonical_write_performed") is False,
+            "proposal-canonical-write-state-invalid",
+        ),
+        (
+            proposal.get("automatic_binding_enabled") is False,
+            "proposal-automatic-binding-state-invalid",
+        ),
+        (
+            proposal.get("proposal_only") is True,
+            "proposal-only-state-invalid",
+        ),
+    )
+    reasons.extend(reason for passed, reason in checks if not passed)
     if int(proposal.get("blocked_conflict_count", 0) or 0) != 0:
         reasons.append("proposal-conflicts-present")
     if int(proposal.get("unmappable_count", 0) or 0) != 0:
