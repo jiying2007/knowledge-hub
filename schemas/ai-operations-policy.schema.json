@@ -10,7 +10,8 @@
     "classes",
     "guardrails",
     "evidence_binding",
-    "external_evidence"
+    "external_evidence",
+    "owner_qualification"
   ],
   "properties": {
     "schema_version": {
@@ -285,6 +286,54 @@
         },
         "machine_ratchet_auto_merge_executes_pr_code": {
           "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "owner_qualification": {
+      "type": "object",
+      "required": [
+        "packet_generation_class",
+        "owner_decision_generated",
+        "canonical_write_performed",
+        "tracker_reconciliation_enabled",
+        "owner_gate_tracker_issue",
+        "qualification_tracker_issue",
+        "owner_gate_close_requires_zero_owner_declaration_pending",
+        "owner_gate_close_requires_zero_owner_boundary_pending",
+        "qualification_close_requires_pass",
+        "reopen_on_regression"
+      ],
+      "properties": {
+        "packet_generation_class": {
+          "const": "autonomous-read"
+        },
+        "owner_decision_generated": {
+          "const": false
+        },
+        "canonical_write_performed": {
+          "const": false
+        },
+        "tracker_reconciliation_enabled": {
+          "const": true
+        },
+        "owner_gate_tracker_issue": {
+          "const": 74
+        },
+        "qualification_tracker_issue": {
+          "const": 96
+        },
+        "owner_gate_close_requires_zero_owner_declaration_pending": {
+          "const": true
+        },
+        "owner_gate_close_requires_zero_owner_boundary_pending": {
+          "const": true
+        },
+        "qualification_close_requires_pass": {
+          "const": true
+        },
+        "reopen_on_regression": {
+          "const": true
         }
       },
       "additionalProperties": false
