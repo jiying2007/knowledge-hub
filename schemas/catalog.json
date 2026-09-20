@@ -288,6 +288,13 @@
       "applies_to": ".cache/knowledge-hub/ai-provider-discovery/machine-candidate-manifest.json",
       "authority": "derived-noncanonical-operator-machine-ratchet-candidate",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-machine-ratchet-verification-v1",
+      "schema": "schemas/operator-machine-ratchet-verification.schema.json",
+      "applies_to": ".cache/knowledge-hub/evidence-ratchet-automerge/verification.json",
+      "authority": "derived-trusted-machine-ratchet-verification",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
