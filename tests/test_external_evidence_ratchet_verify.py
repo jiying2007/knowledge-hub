@@ -82,10 +82,12 @@ def _fixture(tmp_path: Path):
         "observed_at": "2026-09-20T01:00:00Z",
         "evidence_payload_sha256": "e" * 64,
         "evidence_source_refs": ["run://provider/123"],
+        "summary": {},
         "synthetic_evidence_accepted": False,
         "mock_evidence_accepted": False,
         "local_only_evidence_accepted": False,
         "canonical_write_performed": False,
+        "generated_at": "2026-09-20T01:00:00Z",
     }
     closure_sha = _write_compact(closure, closure_value)
 
@@ -102,7 +104,11 @@ def _fixture(tmp_path: Path):
         "source_provenance": {
             "repository": REPOSITORY,
             "source_run_id": 123,
+            "source_run_attempt": 1,
             "source_run_head_sha": SOURCE,
+            "source_run_head_branch": "master",
+            "source_run_event": "workflow_dispatch",
+            "source_workflow_path": ".github/workflows/real-observation-source.yml",
             "artifact_id": 456,
             "artifact_name": "strict-provider-evidence",
             "artifact_digest": "sha256:" + "f" * 64,
@@ -268,3 +274,18 @@ def test_external_ratchet_verifier_is_in_mypy_surface():
         '"tools/codex_assets/knowledge_hub/external_evidence_ratchet_verify.py"'
         in text
     )
+
+
+def test_external_ratchet_verifier_rejects_retained_source_trust_tamper(
+    tmp_path,
+):
+    paths = _fixture(tmp_path)
+    intake = json.loads(paths["intake"].read_text(encoding="utf-8"))
+    intake["source_provenance"]["source_run_head_branch"] = "feature/untrusted"
+    _write_compact(paths["intake"], intake)
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="external-evidence-intake-receipt-v1 validation failed",
+    ):
+        _verify(paths)
