@@ -446,13 +446,11 @@ def _evaluate_data_growth(
     return rows, regressions
 
 
-def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
-    policy = _load_policy(root)
+def _python_budget_settings(
+    policy: Mapping[str, Any],
+) -> Tuple[int, int, Mapping[str, Any]]:
     python_policy = (
         policy.get("python", {}) if isinstance(policy, Mapping) else {}
-    )
-    command_policy = (
-        policy.get("commands", {}) if isinstance(policy, Mapping) else {}
     )
     module_limit = int(
         python_policy.get("new_module_max_lines", 800) or 800
@@ -463,7 +461,53 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
     legacy_caps = python_policy.get("legacy_module_line_caps", {})
     if not isinstance(legacy_caps, Mapping):
         legacy_caps = {}
+    return module_limit, function_limit, legacy_caps
 
+
+def _wrapper_budget(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> Tuple[int, int, List[Dict[str, Any]]]:
+    command_policy = (
+        policy.get("commands", {}) if isinstance(policy, Mapping) else {}
+    )
+    wrapper_count = len(list((root / "tools").glob("knowledge-*.sh")))
+    wrapper_baseline = int(
+        command_policy.get("wrapper_baseline", wrapper_count) or 0
+    )
+    regressions: List[Dict[str, Any]] = []
+    if wrapper_count > wrapper_baseline:
+        regressions.append(
+            {
+                "type": "wrapper-growth",
+                "actual": wrapper_count,
+                "limit": wrapper_baseline,
+            }
+        )
+    return wrapper_count, wrapper_baseline, regressions
+
+
+def _oversized_modules(
+    module_rows: List[Dict[str, Any]],
+    module_limit: int,
+) -> List[Dict[str, Any]]:
+    return [
+        {
+            "path": str(row.get("path", "")),
+            "lines": int(row.get("lines", 0) or 0),
+            "limit": module_limit,
+            "legacy_cap": row.get("legacy_cap"),
+        }
+        for row in module_rows
+        if int(row.get("lines", 0) or 0) > module_limit
+    ]
+
+
+def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
+    policy = _load_policy(root)
+    module_limit, function_limit, legacy_caps = _python_budget_settings(
+        policy
+    )
     requested_baseline = _baseline_ref()
     baseline_ref = requested_baseline
     baseline_error = bool(
@@ -486,32 +530,14 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
                 "ref": requested_baseline,
             }
         )
-
     data_growth, growth_regressions = _evaluate_data_growth(root, policy)
     regressions.extend(growth_regressions)
-    oversized_modules = [
-        {
-            "path": str(row.get("path", "")),
-            "lines": int(row.get("lines", 0) or 0),
-            "limit": module_limit,
-            "legacy_cap": row.get("legacy_cap"),
-        }
-        for row in module_rows
-        if int(row.get("lines", 0) or 0) > module_limit
-    ]
-
-    wrapper_count = len(list((root / "tools").glob("knowledge-*.sh")))
-    wrapper_baseline = int(
-        command_policy.get("wrapper_baseline", wrapper_count) or 0
+    wrapper_count, wrapper_baseline, wrapper_regressions = _wrapper_budget(
+        root,
+        policy,
     )
-    if wrapper_count > wrapper_baseline:
-        regressions.append(
-            {
-                "type": "wrapper-growth",
-                "actual": wrapper_count,
-                "limit": wrapper_baseline,
-            }
-        )
+    regressions.extend(wrapper_regressions)
+    oversized = _oversized_modules(module_rows, module_limit)
 
     errors = []
     if policy.get("schema_version") != 1:
@@ -530,8 +556,8 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         "wrapper_baseline": wrapper_baseline,
         "regression_count": len(regressions),
         "regressions": regressions,
-        "oversized_module_count": len(oversized_modules),
-        "oversized_modules": oversized_modules,
+        "oversized_module_count": len(oversized),
+        "oversized_modules": oversized,
         "legacy_attention_count": len(legacy_attention),
         "legacy_attention": legacy_attention,
         "module_count": len(module_rows),
@@ -544,3 +570,4 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         ),
         "errors": errors,
     }
+
