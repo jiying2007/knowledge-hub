@@ -329,3 +329,28 @@ def test_external_evidence_receipt_replay_is_byte_deterministic():
         json.dumps(first, ensure_ascii=False, sort_keys=True)
         == json.dumps(second, ensure_ascii=False, sort_keys=True)
     )
+
+
+def test_external_evidence_requires_utc_observed_at():
+    payload = _provider_evidence()
+    payload["observed_at"] = "2026-09-14T10:00:00+08:00"
+
+    with pytest.raises(KnowledgeHubError, match="must be UTC"):
+        external_evidence.validate_external_evidence(payload)
+
+
+@pytest.mark.parametrize(
+    ("factory", "section"),
+    [
+        (_retrieval_evidence, "evaluation"),
+        (_memory_evidence, "pilot"),
+        (_adoption_evidence, "adoption"),
+    ],
+)
+def test_external_evidence_rejects_reversed_production_window(factory, section):
+    payload = factory()
+    payload[section]["window_start"] = "2026-09-15T00:00:00Z"
+    payload[section]["window_end"] = "2026-09-14T00:00:00Z"
+
+    with pytest.raises(KnowledgeHubError, match="window_end must not precede"):
+        external_evidence.validate_external_evidence(payload)
