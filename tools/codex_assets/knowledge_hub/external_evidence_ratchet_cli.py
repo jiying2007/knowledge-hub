@@ -1,4 +1,4 @@
-"""Generate a review-only external evidence canonical ratchet candidate."""
+"""Generate a deterministic non-canonical external evidence machine-ratchet candidate."""
 
 from __future__ import annotations
 
