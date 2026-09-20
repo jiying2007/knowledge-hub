@@ -260,7 +260,9 @@
         "trust_artifact_contracts",
         "root_observation_provenance_required",
         "root_observation_revision_must_match_evidence_source_revision",
-        "producer_code_revision_source"
+        "producer_code_revision_source",
+        "observation_source_workflow_allowlist",
+        "observation_source_requires_explicit_registration"
       ],
       "properties": {
         "observation_generation_class": {
@@ -365,6 +367,53 @@
         },
         "producer_code_revision_source": {
           "const": "github-workflow-sha"
+        },
+        "observation_source_workflow_allowlist": {
+          "type": "object",
+          "required": [
+            "connector-provider-pilot",
+            "production-retrieval-eval",
+            "memory-lifecycle-pilot",
+            "real-adoption-evidence"
+          ],
+          "properties": {
+            "connector-provider-pilot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "production-retrieval-eval": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "memory-lifecycle-pilot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "real-adoption-evidence": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "observation_source_requires_explicit_registration": {
+          "const": true
         }
       },
       "additionalProperties": false
