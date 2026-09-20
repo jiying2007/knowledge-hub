@@ -58,3 +58,14 @@ def test_external_pilot_producer_uses_runtime_dependency_surface():
     text = _workflow()
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
+
+
+def test_external_pilot_producer_supports_all_operational_real_evidence_gaps():
+    text = _workflow()
+    for gap in (
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+    ):
+        assert gap in text
