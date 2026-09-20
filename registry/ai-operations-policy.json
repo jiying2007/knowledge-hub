@@ -201,7 +201,7 @@
   },
   "security_change_review": {
     "enabled": true,
-    "authorization_source": "github-pr-review",
+    "authorization_source": "github-external-review-facts",
     "exact_head_required": true,
     "non_bot_reviewer_required": true,
     "pr_author_self_approval_allowed": false,
@@ -223,6 +223,10 @@
       "MEMBER",
       "COLLABORATOR"
     ],
-    "hash_bound_comment_bot_allowed": false
+    "hash_bound_comment_bot_allowed": false,
+    "authorization_mechanisms": [
+      "exact-head-pr-review",
+      "hash-bound-pr-comment"
+    ]
   }
 }
