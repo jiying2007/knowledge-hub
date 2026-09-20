@@ -84,16 +84,16 @@ def build_observation_source_readiness(root: pathlib.Path) -> Dict[str, Any]:
         else:
             status = "unregistered"
             next_action = "register-real-observation-workflow"
-        rows.append(
-            {
-                "gap_id": gap_id,
-                "canonical_gap_status": gap_status,
-                "status": status,
-                "registered_workflow_count": len(normalized),
-                "registered_workflows": normalized,
-                "next_action": next_action,
-            }
-        )
+        row = {
+            "gap_id": gap_id,
+            "canonical_gap_status": gap_status,
+            "status": status,
+            "registered_workflow_count": len(normalized),
+            "registered_workflows": normalized,
+            "next_action": next_action,
+        }
+        row["row_fingerprint"] = _fingerprint(row)
+        rows.append(row)
 
     report = {
         "schema_version": 1,
@@ -119,5 +119,16 @@ def build_observation_source_readiness(root: pathlib.Path) -> Dict[str, Any]:
         ),
         "rows": rows,
     }
+    by_gap = {row["gap_id"]: row for row in rows}
+    connector = by_gap.get("connector-provider-pilot", {})
+    production = [
+        by_gap.get("production-retrieval-eval", {}),
+        by_gap.get("memory-lifecycle-pilot", {}),
+        by_gap.get("real-adoption-evidence", {}),
+    ]
+    report["connector_tracker_fingerprint"] = _fingerprint(connector)
+    report["production_tracker_fingerprint"] = _fingerprint(
+        {"rows": production}
+    )
     report["packet_fingerprint"] = _fingerprint(report)
     return report
