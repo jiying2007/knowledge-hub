@@ -154,7 +154,14 @@
       "schedule",
       "workflow_dispatch"
     ],
-    "observation_source_requires_workflow_path": true
+    "observation_source_requires_workflow_path": true,
+    "observation_contracts": {
+      "connector-provider-pilot": "connector-provider-observation-v1",
+      "production-retrieval-eval": "production-retrieval-observation-v1",
+      "memory-lifecycle-pilot": "production-memory-observation-v1",
+      "real-adoption-evidence": "production-adoption-observation-v1"
+    },
+    "validator_receipt_timestamp_source": "observation-observed-at"
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
