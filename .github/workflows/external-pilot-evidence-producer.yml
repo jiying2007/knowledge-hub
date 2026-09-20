@@ -11,6 +11,7 @@ on:
           - connector-provider-pilot
           - production-retrieval-eval
           - memory-lifecycle-pilot
+          - real-adoption-evidence
       source_run_id:
         description: Successful same-repository run containing the real observation artifact
         required: true
