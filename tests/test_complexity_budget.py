@@ -31,7 +31,10 @@ def _long_function(name="legacy_function", body_lines=90):
     )
 
 
-def test_complexity_budget_counts_all_oversized_modules_explicitly(tmp_path):
+def test_complexity_budget_counts_all_oversized_modules_explicitly(
+    tmp_path, monkeypatch
+):
+    monkeypatch.delenv("KNOWLEDGE_COMPLEXITY_BASE_REF", raising=False)
     package = tmp_path / "tools/codex_assets/knowledge_hub"
     package.mkdir(parents=True)
     (package / "capped.py").write_text("\n".join(["x = 1"] * 10) + "\n", encoding="utf-8")
@@ -59,7 +62,10 @@ def test_complexity_budget_counts_all_oversized_modules_explicitly(tmp_path):
     ]
 
 
-def test_complexity_budget_empty_git_index_is_zero_debt_baseline_snapshot(tmp_path):
+def test_complexity_budget_empty_git_index_is_zero_debt_baseline_snapshot(
+    tmp_path, monkeypatch
+):
+    monkeypatch.delenv("KNOWLEDGE_COMPLEXITY_BASE_REF", raising=False)
     package = tmp_path / "tools/codex_assets/knowledge_hub"
     package.mkdir(parents=True)
     (package / "existing.py").write_text(_long_function(), encoding="utf-8")
@@ -276,7 +282,10 @@ def test_check_split_eliminates_repository_oversized_module_debt():
     assert not check_paths & oversized_paths
 
 
-def test_complexity_budget_reports_data_growth_segment_candidate(tmp_path):
+def test_complexity_budget_reports_data_growth_segment_candidate(
+    tmp_path, monkeypatch
+):
+    monkeypatch.delenv("KNOWLEDGE_COMPLEXITY_BASE_REF", raising=False)
     package = tmp_path / "tools/codex_assets/knowledge_hub"
     package.mkdir(parents=True)
     (package / "small.py").write_text("x = 1\n", encoding="utf-8")
