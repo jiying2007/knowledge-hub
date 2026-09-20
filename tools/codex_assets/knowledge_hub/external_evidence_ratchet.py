@@ -317,9 +317,22 @@ def _validate_binding(
     _sha256(artifact_digest.split(":", 1)[1], "intake artifact digest")
     return {
         "binding_sha": binding_sha,
+        "intake_workflow_path": str(binding.get("workflow_path")),
         "intake_run_id": run_id,
+        "intake_run_attempt": _positive_int(
+            binding.get("intake_run_attempt"),
+            "intake run attempt",
+        ),
         "intake_run_head": run_head,
-        "intake_artifact_id": _positive_int(binding.get("artifact_id"), "intake artifact id"),
+        "intake_artifact_id": _positive_int(
+            binding.get("artifact_id"),
+            "intake artifact id",
+        ),
+        "intake_artifact_name": _text(
+            binding.get("artifact_name"),
+            "intake artifact name",
+            512,
+        ),
         "intake_artifact_digest": artifact_digest,
     }
 
@@ -341,18 +354,41 @@ def _find_open_gap(registry: Mapping[str, Any], gap_id: str) -> Dict[str, Any]:
     return gap
 
 
-def _hosted_refs(repository: str, intake: Mapping[str, Any], binding: Mapping[str, Any]) -> List[str]:
-    return [
-        "https://github.com/{}/actions/runs/{}".format(repository, intake["source_run_id"]),
-        "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
-            repository, intake["source_run_id"], intake["source_artifact_id"]
+def _hosted_refs(
+    repository: str,
+    intake: Mapping[str, Any],
+    binding: Mapping[str, Any],
+) -> List[str]:
+    identities = (
+        (
+            intake["root_source_run_id"],
+            intake["root_source_artifact_id"],
         ),
-        "https://github.com/{}/actions/runs/{}".format(repository, binding["intake_run_id"]),
-        "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
-            repository, binding["intake_run_id"], binding["intake_artifact_id"]
+        (
+            intake["source_run_id"],
+            intake["source_artifact_id"],
         ),
-    ]
-
+        (
+            binding["intake_run_id"],
+            binding["intake_artifact_id"],
+        ),
+    )
+    refs: List[str] = []
+    for run_id, artifact_id in identities:
+        refs.extend(
+            [
+                "https://github.com/{}/actions/runs/{}".format(
+                    repository,
+                    run_id,
+                ),
+                "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
+                    repository,
+                    run_id,
+                    artifact_id,
+                ),
+            ]
+        )
+    return _dedupe_refs(refs)
 
 def _build_candidate(
     registry: Mapping[str, Any], current_gap: Mapping[str, Any], closure: Mapping[str, Any],
@@ -380,20 +416,31 @@ def _build_candidate(
         "intake_receipt_sha256": intake["intake_sha"],
         "host_binding_sha256": binding["binding_sha"],
         "source_run_head_sha": intake["source_run_head"],
+        "source_run_head_branch": intake["source_run_head_branch"],
+        "source_run_event": intake["source_run_event"],
+        "source_workflow_path": intake["source_workflow_path"],
         "source_run_id": intake["source_run_id"],
         "source_run_attempt": intake["source_run_attempt"],
         "source_artifact_id": intake["source_artifact_id"],
+        "source_artifact_name": intake["source_artifact_name"],
         "source_artifact_digest": intake["source_artifact_digest"],
         "root_source_repository": intake["root_repository"],
         "root_source_run_head_sha": intake["root_source_run_head"],
+        "root_source_run_head_branch": "master",
+        "root_source_run_event": intake["root_source_run_event"],
+        "root_source_workflow_path": intake["root_source_workflow_path"],
         "root_source_run_id": intake["root_source_run_id"],
         "root_source_run_attempt": intake["root_source_run_attempt"],
-        "root_source_workflow_path": intake["root_source_workflow_path"],
         "root_source_artifact_id": intake["root_source_artifact_id"],
+        "root_source_artifact_name": intake["root_source_artifact_name"],
         "root_source_artifact_digest": intake["root_source_artifact_digest"],
+        "intake_workflow_path": binding["intake_workflow_path"],
         "intake_run_head_sha": binding["intake_run_head"],
+        "intake_run_head_branch": "master",
         "intake_run_id": binding["intake_run_id"],
+        "intake_run_attempt": binding["intake_run_attempt"],
         "intake_artifact_id": binding["intake_artifact_id"],
+        "intake_artifact_name": binding["intake_artifact_name"],
         "intake_artifact_digest": binding["intake_artifact_digest"],
         "synthetic_evidence_accepted": False,
         "mock_evidence_accepted": False,
