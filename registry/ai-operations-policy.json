@@ -120,9 +120,10 @@
     "machine_ratchet_auto_merge_executes_pr_code": false,
     "machine_validation_requires_source_revision_match": true,
     "machine_artifact_kinds": [
-      "github-actions-artifact"
+      "github-release-asset"
     ],
-    "machine_artifact_requires_validation_run_match": true,
-    "machine_artifact_requires_source_revision_match": true
+    "machine_artifact_requires_validation_run_match": false,
+    "machine_artifact_requires_source_revision_match": true,
+    "machine_artifact_requires_immutable_release": true
   }
 }
