@@ -52,6 +52,9 @@ jobs:
           mkdir -p "${cache}"
           gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
             > "${cache}/pull.json"
+          head_sha="$(jq -er '.head.sha' "${cache}/pull.json")"
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}" \
+            > "${cache}/head-commit.json"
           python3 - <<'PY'
           import json
           import os
@@ -66,6 +69,18 @@ jobs:
           head = pull.get("head") or {}
           base_sha = str(base.get("sha") or "").lower()
           head_sha = str(head.get("sha") or "").lower()
+          commit = json.loads(
+              Path(
+                  ".cache/knowledge-hub/security-change-review/"
+                  "head-commit.json"
+              ).read_text(encoding="utf-8")
+          )
+          parents = commit.get("parents") or []
+          direct_child = bool(
+              len(parents) == 1
+              and str((parents[0] or {}).get("sha") or "").lower()
+              == base_sha
+          )
           if len(base_sha) != 40 or len(head_sha) != 40:
               raise SystemExit("PR base/head SHA is unavailable")
           if pull.get("draft") is True:
@@ -76,6 +91,11 @@ jobs:
           ) as handle:
               handle.write("base_sha={}\n".format(base_sha))
               handle.write("head_sha={}\n".format(head_sha))
+              handle.write(
+                  "head_is_direct_child_of_base={}\n".format(
+                      str(direct_child).lower()
+                  )
+              )
               handle.write(
                   "head_ref={}\n".format(str(head.get("ref") or ""))
               )
@@ -141,6 +161,7 @@ jobs:
         env:
           BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
           HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          HEAD_IS_DIRECT_CHILD_OF_BASE: ${{ steps.resolve.outputs.head_is_direct_child_of_base }}
           HEAD_REF: ${{ steps.resolve.outputs.head_ref }}
           HEAD_REPOSITORY: ${{ steps.resolve.outputs.head_repository }}
           AUTHOR_LOGIN: ${{ steps.resolve.outputs.author_login }}
@@ -185,6 +206,9 @@ jobs:
               same_repository=(
                   os.environ["HEAD_REPOSITORY"]
                   == os.environ["GITHUB_REPOSITORY"]
+              ),
+              head_is_direct_child_of_base=(
+                  os.environ["HEAD_IS_DIRECT_CHILD_OF_BASE"] == "true"
               ),
               files=files,
               reviews=reviews,
