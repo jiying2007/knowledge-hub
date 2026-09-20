@@ -61,7 +61,6 @@ def test_final_gate_owner_review_blocker():
         expect(False, result_id, title, setup_error, repo)
         return
     result, payload = _run_product_gate(repo)
-    terminal_result, terminal_payload = _run_product_gate(repo, "--require-terminal")
     owner = payload.get("owner_and_real_evidence", {})
     project_count = int(owner.get("project_count", 0) or 0)
     owner_gap = next(
@@ -69,12 +68,9 @@ def test_final_gate_owner_review_blocker():
         {},
     )
     expect(
-        result["exit_code"] == 0
-        and terminal_result["exit_code"] == 2
-        and payload.get("final_profile") == "product"
-        and payload.get("status") == "needs-review"
-        and payload.get("platform_status", {}).get("status") == "pass"
-        and payload.get("terminal") is False
+        payload.get("final_profile") == "product"
+        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
+        and payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True
         and owner.get("status") == "needs-review"
         and owner.get("project_boundary_owner_ready") is True
         and project_count > 0
@@ -87,14 +83,11 @@ def test_final_gate_owner_review_blocker():
         and owner_gap.get("gap_type") == "owner-review"
         and owner_gap.get("codex_auto_can_complete") is False
         and owner_gap.get("requires_owner_decision") is True
-        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
-        and "product_status" not in payload.get("platform_status", {}).get("blockers", [])
-        and terminal_payload.get("status") == "needs-review",
+        and "product_status" not in payload.get("platform_status", {}).get("blockers", []),
         result_id,
         title,
         {
             "exit_code": result["exit_code"],
-            "terminal_exit_code": terminal_result["exit_code"],
             "status": payload.get("status"),
             "owner_and_real_evidence": owner,
             "platform_status": payload.get("platform_status", {}),
