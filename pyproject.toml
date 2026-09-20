@@ -95,6 +95,7 @@ files = [
     "tools/codex_assets/knowledge_hub/complexity_budget.py",
     "tools/codex_assets/knowledge_hub/regression_codegen.py",
     "tools/codex_assets/knowledge_hub/terminal_closure.py",
+    "tools/codex_assets/knowledge_hub/terminal_hosted_evidence.py",
     "tools/codex_assets/knowledge_hub/remote_branch_inventory.py",
     "tools/codex_assets/knowledge_hub/hosting_posture.py",
     "tools/codex_assets/knowledge_hub/quality_evidence_binding.py",
