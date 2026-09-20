@@ -6,7 +6,7 @@ import ast
 import json
 import os
 import pathlib
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union
 
 from .common import KnowledgeHubError, run_rtk
 
@@ -20,7 +20,7 @@ def _load_policy(root: pathlib.Path) -> Mapping[str, Any]:
     return payload if isinstance(payload, Mapping) else {}
 
 
-def _tracked_files(root: pathlib.Path) -> set[str]:
+def _tracked_files(root: pathlib.Path) -> Set[str]:
     if not (root / ".git").exists():
         return set()
     try:
@@ -338,7 +338,7 @@ def _evaluate_python(
     function_limit: int,
     legacy_caps: Mapping[str, Any],
     baseline_ref: str,
-) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
     git_index_available = (root / ".git").exists()
     tracked_files = _tracked_files(root)
     tracked_python = {
@@ -408,7 +408,7 @@ def _evaluate_python(
 def _evaluate_data_growth(
     root: pathlib.Path,
     policy: Mapping[str, Any],
-) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     growth = (
         policy.get("data_growth", {})
         if isinstance(policy, Mapping)
