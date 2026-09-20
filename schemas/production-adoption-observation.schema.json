@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/production-adoption-observation.schema.json",
+  "title": "Knowledge Hub real adoption observation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gap_id",
+    "source_revision",
+    "observed_at",
+    "evidence_source_refs",
+    "origin",
+    "adoption"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.production-adoption-observation.v1"
+    },
+    "gap_id": {
+      "const": "real-adoption-evidence"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "evidence_source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": [
+        "classification",
+        "environment_id_sha256",
+        "synthetic",
+        "mock",
+        "fixture",
+        "static_adapter",
+        "local_only"
+      ],
+      "properties": {
+        "classification": {
+          "const": "real-production"
+        },
+        "environment_id_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "synthetic": {
+          "const": false
+        },
+        "mock": {
+          "const": false
+        },
+        "fixture": {
+          "const": false
+        },
+        "static_adapter": {
+          "const": false
+        },
+        "local_only": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "adoption": {
+      "type": "object",
+      "required": [
+        "runtime_version",
+        "window_start",
+        "window_end",
+        "observation_days",
+        "valid_real_calls",
+        "synthetic_calls",
+        "explicit_feedback_count",
+        "call_ledger_sha256",
+        "call_ledger_receipt_sha256",
+        "feedback_sha256",
+        "feedback_receipt_sha256",
+        "slo",
+        "traceability",
+        "privacy"
+      ],
+      "properties": {
+        "runtime_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "window_start": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "window_end": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "observation_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "valid_real_calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "synthetic_calls": {
+          "const": 0
+        },
+        "explicit_feedback_count": {
+          "type": "integer",
+          "minimum": 10
+        },
+        "call_ledger_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "call_ledger_receipt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "feedback_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "feedback_receipt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "slo": {
+          "type": "object",
+          "required": [
+            "status",
+            "receipt_sha256",
+            "p50_ms",
+            "p95_ms",
+            "error_rate",
+            "retrieval_lane_health"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "receipt_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "p50_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p95_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "error_rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "retrieval_lane_health": {
+              "const": "pass"
+            }
+          },
+          "additionalProperties": false
+        },
+        "traceability": {
+          "type": "object",
+          "required": [
+            "status",
+            "receipt_sha256",
+            "work_item_run_handoff_receipt_linked"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "receipt_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "work_item_run_handoff_receipt_linked": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "privacy": {
+          "type": "object",
+          "required": [
+            "receipt_sha256",
+            "raw_query_stored",
+            "raw_task_stored",
+            "raw_prompt_stored",
+            "raw_content_stored",
+            "network_export_mode"
+          ],
+          "properties": {
+            "receipt_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "raw_query_stored": {
+              "const": false
+            },
+            "raw_task_stored": {
+              "const": false
+            },
+            "raw_prompt_stored": {
+              "const": false
+            },
+            "raw_content_stored": {
+              "const": false
+            },
+            "network_export_mode": {
+              "enum": [
+                "disabled",
+                "explicitly-configured"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "observation_days": {
+              "minimum": 30
+            }
+          }
+        },
+        {
+          "properties": {
+            "valid_real_calls": {
+              "minimum": 50
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
