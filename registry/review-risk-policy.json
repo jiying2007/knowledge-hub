@@ -3,19 +3,59 @@
   "model": "knowledge-hub-review-risk-v1",
   "default_class": "ordinary",
   "classes": {
-    "ordinary": {"stale_severity": "warning", "ai_first_action": "auto-triage"},
-    "governance-critical": {"stale_severity": "needs-review", "ai_first_action": "auto-review-packet"},
-    "security-critical": {"stale_severity": "blocked", "ai_first_action": "human-review-required"}
+    "ordinary": {
+      "stale_severity": "warning",
+      "ai_first_action": "auto-triage"
+    },
+    "governance-critical": {
+      "stale_severity": "needs-review",
+      "ai_first_action": "auto-review-packet"
+    },
+    "security-critical": {
+      "stale_severity": "blocked",
+      "ai_first_action": "human-review-required"
+    }
   },
   "rules": [
-    {"path": "SECURITY.md", "review_class": "security-critical"},
-    {"path": "registry/terminal-closure.json", "review_class": "security-critical"},
-    {"path": "registry/knowledge-platform-p5-p10.json", "review_class": "security-critical"},
-    {"path": "registry/schema.md", "review_class": "security-critical"},
-    {"path": "schemas/catalog.json", "review_class": "security-critical"},
-    {"path": "governance/automation-policy.md", "review_class": "security-critical"},
-    {"path_prefix": "governance/", "review_class": "governance-critical"},
-    {"path_prefix": "schemas/", "review_class": "governance-critical"},
-    {"path_prefix": "registry/", "review_class": "governance-critical"}
+    {
+      "path": "SECURITY.md",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/terminal-closure.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/ai-operations-policy.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/knowledge-platform-p5-p10.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "registry/schema.md",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "schemas/catalog.json",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "governance/automation-policy.md",
+      "review_class": "security-critical"
+    },
+    {
+      "path_prefix": "governance/",
+      "review_class": "governance-critical"
+    },
+    {
+      "path_prefix": "schemas/",
+      "review_class": "governance-critical"
+    },
+    {
+      "path_prefix": "registry/",
+      "review_class": "governance-critical"
+    }
   ]
 }
