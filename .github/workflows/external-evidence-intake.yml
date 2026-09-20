@@ -289,6 +289,19 @@ jobs:
               producer = json.loads(
                   producer_path.read_text(encoding="utf-8")
               )
+              from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+              producer_validation = validate_instance(
+                  Path(".").resolve(),
+                  "external-pilot-evidence-producer-receipt-v1",
+                  producer,
+              )
+              if producer_validation.get("status") != "pass":
+                  raise SystemExit(
+                      "producer receipt contract validation failed: {}".format(
+                          producer_validation.get("errors", [])
+                      )
+                  )
               if (
                   producer.get("projection")
                   != "knowledge-hub-external-pilot-evidence-producer-v1"
