@@ -154,22 +154,32 @@ def test_ratchet_builder_rejects_non_open_or_prepopulated_gap(tmp_path: Path):
         )
 
 
-def test_ratchet_workflow_is_manual_read_only_and_never_writes_canonical():
+def test_ratchet_workflow_automates_candidate_pr_without_direct_master_write():
     root = Path(__file__).resolve().parents[1]
-    workflow = (root / ".github/workflows/external-evidence-ratchet-candidate.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow = (
+        root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    ).read_text(encoding="utf-8")
     cli = (
         root / "tools/codex_assets/knowledge_hub/external_evidence_ratchet_cli.py"
     ).read_text(encoding="utf-8")
+
+    assert "workflow_run:" in workflow
+    assert "external-evidence-intake" in workflow
     assert "workflow_dispatch:" in workflow
-    assert "github.ref == 'refs/heads/master'" in workflow
-    assert "actions: read" in workflow and "contents: read" in workflow
-    assert "contents: write" not in workflow and "pull-requests: write" not in workflow
-    assert "source run must be the external-evidence-intake workflow" in workflow
-    assert "intake workflow run must be completed/success" in workflow
-    assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json" in workflow
-    assert "if-no-files-found: error" in workflow
+    assert "schedule:" in workflow
+    assert "pull_request:" in workflow
+    assert "Create governed external evidence PR" in workflow
+    assert "automation/external-gap-" in workflow
+    assert "gh pr create" in workflow
+    assert "gh workflow run quality.yml" in workflow
+    assert "HEAD:refs/heads/master" not in workflow
+    assert "registry/knowledge-platform-p5-p10.json" in workflow
+    assert "registry/durable-evidence-ledger.jsonl" in workflow
+    assert "external evidence ratchet changed paths outside allowlist" in workflow
+    assert "Requalify external ratchets after protection recovery" in workflow
+    assert "Retire closed external ratchet branch" in workflow
+    assert "requirements-runtime.lock" in workflow
+    assert "requirements-dev.lock" not in workflow
     assert "ratchet candidate CLI must never write the canonical registry" in cli
 
 
@@ -206,3 +216,33 @@ def test_external_ratchet_matches_ai_first_policy():
     assert boundary["machine_ratchet_may_create_pr"] is True
     assert boundary["machine_ratchet_direct_master_write"] is False
     assert boundary["machine_ratchet_auto_merge_requires_protected_branch"] is True
+
+
+def test_ratchet_workflow_uploads_origin_before_creating_pr():
+    import yaml
+
+    root = Path(__file__).resolve().parents[1]
+    path = root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    payload = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    steps = payload["jobs"]["candidate"]["steps"]
+    upload_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Upload bounded ratchet origin"
+    )
+    pr_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Create governed external evidence PR"
+    )
+    assert upload_index < pr_index
+
+
+def test_ratchet_workflow_daily_requalify_requires_real_protection():
+    root = Path(__file__).resolve().parents[1]
+    text = (
+        root / ".github/workflows/external-evidence-ratchet-candidate.yml"
+    ).read_text(encoding="utf-8")
+    assert "master remains unprotected; no external ratchet requalification" in text
+    assert 'startsWith("automation/external-gap-")' in text
+    assert "gh workflow run quality.yml" in text
