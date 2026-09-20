@@ -38,7 +38,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-      actions: read
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -393,6 +393,27 @@ jobs:
           branch="automation/evidence-bind-${short_source}-${GITHUB_RUN_ID}"
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
+          ensure_quality() {
+            local quality_branch="$1"
+            local quality_sha="$2"
+            local active
+            active="$(
+              gh api --method GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
+                --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
+              | awk -v sha="${quality_sha}" \
+                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+            )"
+            if [[ -n "${active}" ]]; then
+              echo "exact-head Quality already active/successful for ${quality_branch}: ${active}"
+              return 0
+            fi
+            gh workflow run quality.yml \
+              --repo "${GITHUB_REPOSITORY}" \
+              --ref "${quality_branch}"
+            echo "dispatched exact-head Quality for ${quality_branch}@${quality_sha}"
+          }
+
           existing="$(
             gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
               --json number,title \
@@ -405,6 +426,9 @@ jobs:
                 --jq '.protected == true'
             )"
             if [[ "${protected}" != "true" ]]; then
+              existing_branch="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefName --jq .headRefName)"
+              existing_sha="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefOid --jq .headRefOid)"
+              ensure_quality "${existing_branch}" "${existing_sha}"
               echo "identical machine evidence ratchet PR already open while master remains unprotected: #${existing}"
               exit 0
             fi
@@ -456,6 +480,7 @@ jobs:
               --json number --jq .number
           )"
           echo "created machine evidence ratchet PR #${number}"
+          ensure_quality "${branch}" "$(git rev-parse HEAD)"
 
           for stale in $(
             gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
