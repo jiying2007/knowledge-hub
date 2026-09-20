@@ -197,6 +197,66 @@ jobs:
               --comment "Fresh AI maintenance sweep no longer requires a critical human decision; closing the stale queue item automatically."
           fi
 
+      - name: Reconcile operational qualification trackers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          registry = json.loads(
+              Path("registry/knowledge-platform-p5-p10.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          gaps = {
+              str(row.get("id", "")): str(row.get("status", ""))
+              for row in registry.get("external_closure_gaps", [])
+              if isinstance(row, dict)
+          }
+          Path(".cache/knowledge-hub/ai-maintenance/operational-trackers.json").write_text(
+              json.dumps(
+                  {
+                      "connector_provider_pilot_closed": (
+                          gaps.get("connector-provider-pilot") == "closed"
+                      ),
+                      "production_bundle_closed": all(
+                          gaps.get(name) == "closed"
+                          for name in (
+                              "production-retrieval-eval",
+                              "memory-lifecycle-pilot",
+                              "real-adoption-evidence",
+                          )
+                      ),
+                  },
+                  sort_keys=True,
+              )
+              + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+          connector_closed="$(jq -r '.connector_provider_pilot_closed' .cache/knowledge-hub/ai-maintenance/operational-trackers.json)"
+          production_closed="$(jq -r '.production_bundle_closed' .cache/knowledge-hub/ai-maintenance/operational-trackers.json)"
+
+          if [[ "${connector_closed}" == "true" ]]; then
+            state="$(gh issue view 20 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state}" == "OPEN" ]]; then
+              gh issue close 20 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Canonical connector-provider-pilot is closed by strict real external evidence; closing the stale operational qualification tracker automatically."
+            fi
+          fi
+
+          if [[ "${production_closed}" == "true" ]]; then
+            state="$(gh issue view 21 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state}" == "OPEN" ]]; then
+              gh issue close 21 --repo "${GITHUB_REPOSITORY}" \
+                --comment "Canonical production retrieval, memory lifecycle, and real adoption gaps are all closed by strict real evidence; closing the stale operational qualification tracker automatically."
+            fi
+          fi
+
       - name: Upload bounded maintenance evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
