@@ -64,14 +64,18 @@ def _machine_policy(root: pathlib.Path) -> Tuple[Set[str], str]:
             raise KnowledgeHubError("{} must remain false".format(key))
     for key in (
         "machine_validation_requires_source_revision_match",
-        "machine_artifact_requires_validation_run_match",
         "machine_artifact_requires_source_revision_match",
+        "machine_artifact_requires_immutable_release",
     ):
         if boundary.get(key) is not True:
             raise KnowledgeHubError("{} must remain true".format(key))
-    if boundary.get("machine_artifact_kinds") != ["github-actions-artifact"]:
+    if boundary.get("machine_artifact_requires_validation_run_match") is not False:
         raise KnowledgeHubError(
-            "machine artifact kinds must remain github-actions-artifact only"
+            "machine artifact validation-run matching must remain false"
+        )
+    if boundary.get("machine_artifact_kinds") != ["github-release-asset"]:
+        raise KnowledgeHubError(
+            "machine artifact kinds must remain github-release-asset only"
         )
     return selected, intent
 
@@ -253,9 +257,11 @@ def _version_coherent(
         )
     if field == "artifact_refs":
         return bool(
-            snapshot.get("kind") == "github-actions-artifact"
-            and str(details.get("workflow_run_head_sha", "")) in source_shas
-            and str(details.get("workflow_run_id", "")) in validation_ids
+            snapshot.get("kind") == "github-release-asset"
+            and details.get("release_immutable") is True
+            and details.get("release_draft") is False
+            and details.get("release_prerelease") is False
+            and str(details.get("release_tag_commit_sha", "")) in source_shas
         )
     return False
 
