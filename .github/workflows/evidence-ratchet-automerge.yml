@@ -20,7 +20,8 @@ jobs:
     if: >-
       ${{
         github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.event == 'pull_request' &&
+        (github.event.workflow_run.event == 'pull_request' ||
+         github.event.workflow_run.event == 'workflow_dispatch') &&
         github.event.workflow_run.head_repository.full_name == github.repository &&
         startsWith(github.event.workflow_run.head_branch, 'automation/evidence-bind-')
       }}
@@ -100,7 +101,6 @@ jobs:
               "id": int(os.environ["TRIGGER_RUN_ID"]),
               "name": "quality",
               "path": ".github/workflows/quality.yml",
-              "event": "pull_request",
               "status": "completed",
               "conclusion": "success",
               "head_branch": os.environ["HEAD_BRANCH"],
@@ -113,6 +113,8 @@ jobs:
                           field, value, run.get(field)
                       )
                   )
+          if run.get("event") not in {"pull_request", "workflow_dispatch"}:
+              raise SystemExit("trigger Quality event is not trusted")
           head_repository = run.get("head_repository") or {}
           if head_repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
               raise SystemExit("trigger Quality head repository mismatch")
