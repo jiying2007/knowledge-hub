@@ -162,7 +162,9 @@
       "real-adoption-evidence": "production-adoption-observation-v1"
     },
     "validator_receipt_timestamp_source": "observation-observed-at",
-    "manual_intake_source_requires_trusted_master_run": true
+    "manual_intake_source_requires_trusted_master_run": true,
+    "observation_timestamps_require_utc": true,
+    "production_windows_must_be_ordered": true
   },
   "owner_qualification": {
     "packet_generation_class": "autonomous-read",
