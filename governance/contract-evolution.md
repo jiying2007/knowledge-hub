@@ -1,3 +1,29 @@
+---
+title: Knowledge Hub Contract Evolution
+summary_zh: 保留 strict-current-contract 与无长期 runtime shim 原则，同时用 consumer compatibility declaration 和 migration manifest 管理跨仓 breaking contract 升级。
+tags:
+- knowledge-hub
+- contract
+- compatibility
+- migration
+- cross-repository
+id: knowledge-hub-contract-evolution-v1
+kind: standard
+domain: governance
+path: governance/contract-evolution.md
+scope: team-general
+visibility: team-internal
+status: reviewing
+owner: leiwenjun
+review_after: '2026-10-18'
+review_status: manual-entry-pending-review
+promotion: none
+aliases:
+- Knowledge Hub Contract Evolution
+related:
+- indexes/obsidian-home.md
+---
+
 # Contract Evolution
 
 ## 原则

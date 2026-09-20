@@ -32,15 +32,19 @@
 - [外部资料吸收规范](../../governance/external-source-absorption.md) · `active` · `knowledge-hub-external-source-absorption-rules`
 - [排障记录规范](../../governance/debug-record-rules.md) · `active` · `knowledge-hub-debug-record-rules`
 - [证据写法规范](../../governance/evidence-rules.md) · `active` · `knowledge-hub-evidence-rules`
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing` · `knowledge-hub-hosting-posture-v1`
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing` · `knowledge-hub-agent-runtime-contract-absorption-20260716`
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing` · `knowledge-hub-contract-evolution-v1`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing` · `knowledge-hub-obsidian-integration-20260713`
 - [Knowledge Hub P1-P3 全面优化落地收口归档 2026-07-31](../../governance/product/archive/2026-07-31-knowledge-hub-p1-p3-optimization-closeout.md) · `reviewing` · `knowledge-hub-p1-p3-optimization-closeout-20260731`
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing` · `knowledge-hub-current-readiness-model-v1`
 - [Knowledge Hub 产品成熟度全面实现审计 2026-07-13](../../artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md) · `reviewing` · `knowledge-hub-product-maturity-implementation-20260713`
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing` · `knowledge-hub-comprehensive-optimization-assessment-20260730`
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing` · `knowledge-hub-terminal-closure-validation-20260718`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing` · `knowledge-hub-readiness-validation-20260713`
 - [Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30](../../governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-validation-20260730`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
+- [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing` · `knowledge-hub-data-lifecycle-growth-v1`
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing` · `software-tool-artifact-restore-drill-20260716`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing` · `software-tool-evidence-audit-20260715`
 

@@ -1,3 +1,29 @@
+---
+title: Knowledge Hub 长期数据生命周期与增长策略
+summary_zh: 定义 Knowledge Hub append-only ledger 增长预算、分片终态、durable evidence 身份留存和恢复边界，避免长期资产因无限追加或短期 Actions artifact 过期而失去可维护性。
+tags:
+- knowledge-hub
+- data-lifecycle
+- growth-budget
+- durable-evidence
+- ai-first
+id: knowledge-hub-data-lifecycle-growth-v1
+kind: standard
+domain: governance
+path: governance/data-lifecycle-and-growth.md
+scope: team-general
+visibility: team-internal
+status: reviewing
+owner: leiwenjun
+review_after: '2026-10-18'
+review_status: manual-entry-pending-review
+promotion: none
+aliases:
+- Knowledge Hub 长期数据生命周期与增长策略
+related:
+- indexes/obsidian-home.md
+---
+
 # 长期数据生命周期与增长策略
 
 ## 目标
