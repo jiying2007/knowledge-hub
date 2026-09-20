@@ -13,7 +13,7 @@ import pathlib
 import re
 from typing import Any, Dict, List, Mapping, Sequence
 
-from .common import KnowledgeHubError, utc_timestamp
+from .common import KnowledgeHubError
 
 INPUT_SCHEMA = "knowledge-hub.external-evidence-input.v1"
 RECEIPT_SCHEMA = "knowledge-hub.external-evidence-receipt.v1"
@@ -404,7 +404,7 @@ def validate_external_evidence(
         "mock_evidence_accepted": False,
         "local_only_evidence_accepted": False,
         "canonical_write_performed": False,
-        "generated_at": utc_timestamp(),
+        "generated_at": observed_at,
     }
 
 
