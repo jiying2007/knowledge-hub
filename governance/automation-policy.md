@@ -73,7 +73,10 @@ AI 可以准备 packet、发现候选、校验证据和生成最小 PR，但不�
 Trust-root 文件变更采用 GitHub external review fact，而不是候选分支自写 authorization ledger：
 
 - `registry/review-risk-policy.json` 分类为 `security-critical` 的变更必须生成 deterministic `security-change-review-v1` packet，绑定 exact PR base/head、changed paths 与 GitHub review state。
-- 普通/人工 PR 只有在至少一个非 Bot、非 PR author 的 reviewer 对 **exact head SHA** 提交 `APPROVED` 后才通过；旧 commit approval、Bot approval、self approval 均不接受。
+- 普通/人工 PR 可通过两种 GitHub external review fact：
+  1. 至少一个非 Bot、非 PR author 的 reviewer 对 **exact head SHA** 提交 `APPROVED`；旧 commit approval、Bot approval、self approval 均不接受。
+  2. OWNER/MEMBER/COLLABORATOR 在 PR issue comment 中提交精确 `SECURITY-CHANGE-APPROVE <change_fingerprint> <head_sha>`；comment 必须逐字匹配 packet 与 exact head，编辑/删除该 comment 即撤销事实。
+- hash-bound comment 主要用于单人仓库/PR author 无法 GitHub self-approve 的场景；AI 只能生成 packet/token，不得自动替人发布批准 comment。
 - 候选 PR 内的 `registry/authorizations.jsonl` 不作为该 gate 的授权事实，避免候选代码自证批准。
 - 只有 same-repository、GitHub Actions bot 创建、branch prefix 属于 `automation/hosting-private-*` / `automation/evidence-bind-*` / `automation/external-gap-*` 的 machine ratchet 可以不要求人类 PR review；其 canonical merge 仍必须通过对应 dedicated trusted-master semantic verifier。
 - `security-critical-change-review` 只运行 default-branch trusted workflow，checkout PR base SHA；它通过 GitHub API 读取 head files/reviews，不 checkout 或执行 PR code，也没有 write permission。
