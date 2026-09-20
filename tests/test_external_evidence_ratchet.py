@@ -134,6 +134,13 @@ def test_ratchet_builder_closes_only_requested_gap_as_machine_candidate(tmp_path
     assert gaps[GAP]["status"] == "closed"
     assert gaps[GAP]["evidence"]["terminal_claimed"] is False
     assert gaps[GAP]["evidence"]["canonical_write_performed_by_evidence_chain"] is False
+    assert gaps[GAP]["evidence"]["root_source_run_id"] == 123
+    assert gaps[GAP]["evidence"]["root_source_run_attempt"] == 1
+    assert gaps[GAP]["evidence"]["root_source_run_head_sha"] == SOURCE_SHA
+    assert (
+        gaps[GAP]["evidence"]["root_source_workflow_path"]
+        == ".github/workflows/real-observation-source.yml"
+    )
     assert gaps["mcp-official-conformance"]["status"] == "closed"
     assert proposal["projection"] == "knowledge-hub-external-evidence-ratchet-proposal-v2"
     assert proposal["status"] == "ready-for-machine-ratchet"
@@ -379,3 +386,26 @@ def test_external_ratchet_workflow_validates_intermediate_contracts():
     assert "external-evidence-receipt-v1" in cli
     assert "external-evidence-intake-host-binding-v1" in ratchet_workflow
     assert "external-evidence-ratchet-proposal-v2" in ratchet_workflow
+
+
+def test_ratchet_builder_rejects_root_revision_drift(tmp_path: Path):
+    paths = _fixture(tmp_path)
+    intake = json.loads(paths[2].read_text(encoding="utf-8"))
+    intake["root_observation_provenance"]["source_run_head_sha"] = "9" * 40
+    _write(paths[2], intake)
+    binding = json.loads(paths[3].read_text(encoding="utf-8"))
+    binding["intake_receipt_sha256"] = hashlib.sha256(
+        paths[2].read_bytes()
+    ).hexdigest()
+    _write(paths[3], binding)
+
+    with pytest.raises(
+        KnowledgeHubError,
+        match="root observation revision does not match",
+    ):
+        build_external_gap_ratchet_candidate(
+            registry_path=paths[0],
+            closure_receipt_path=paths[1],
+            intake_receipt_path=paths[2],
+            host_binding_path=paths[3],
+        )
