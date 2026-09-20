@@ -6,8 +6,6 @@ on:
       - external-evidence-intake
     types:
       - completed
-  schedule:
-    - cron: "13 4 * * *"
   workflow_dispatch:
     inputs:
       intake_run_id:
@@ -469,43 +467,6 @@ jobs:
             gh pr close "${stale}" --repo "${GITHUB_REPOSITORY}" \
               --comment "Superseded by fresh strict external evidence ratchet #${number}."
           done
-
-  requalify-open-prs:
-    name: Requalify external ratchets after protection recovery
-    if: github.event_name == 'schedule'
-    permissions:
-      contents: read
-      pull-requests: read
-      actions: write
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Dispatch exact-head Quality for protected open ratchets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          protected="$(gh api "repos/${GITHUB_REPOSITORY}/branches/master" --jq '.protected == true')"
-          if [[ "${protected}" != "true" ]]; then
-            echo "master remains unprotected; no external ratchet requalification"
-            exit 0
-          fi
-          gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-            --json number,headRefName,headRefOid \
-            --jq '.[] | select(.headRefName | startswith("automation/external-gap-")) | [.number,.headRefName,.headRefOid] | @tsv' \
-            | while IFS=$'\t' read -r number branch sha; do
-                active="$(
-                  gh api --method GET \
-                    "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${branch}&per_page=20" \
-                    --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
-                  | awk -v expected="${sha}" \
-                      '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") {print $1; exit}'
-                )"
-                if [[ -z "${active}" ]]; then
-                  gh workflow run quality.yml --repo "${GITHUB_REPOSITORY}" --ref "${branch}"
-                  echo "requalified external ratchet #${number} at ${sha}"
-                fi
-              done
 
   automation-branch-gc:
     name: Retire closed external ratchet branch
