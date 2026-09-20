@@ -253,7 +253,8 @@
         "observation_source_allowed_events",
         "observation_source_requires_workflow_path",
         "observation_contracts",
-        "validator_receipt_timestamp_source"
+        "validator_receipt_timestamp_source",
+        "manual_intake_source_requires_trusted_master_run"
       ],
       "properties": {
         "observation_generation_class": {
@@ -328,6 +329,9 @@
         },
         "validator_receipt_timestamp_source": {
           "const": "observation-observed-at"
+        },
+        "manual_intake_source_requires_trusted_master_run": {
+          "const": true
         }
       },
       "additionalProperties": false
