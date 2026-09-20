@@ -487,7 +487,13 @@
         "workflow_executes_pr_code",
         "autonomous_ratchet_exemption_requires_same_repository",
         "autonomous_ratchet_exemption_requires_github_actions_bot",
-        "autonomous_ratchet_branch_prefixes"
+        "autonomous_ratchet_branch_prefixes",
+        "hash_bound_comment_approval_allowed",
+        "hash_bound_comment_command",
+        "hash_bound_comment_requires_change_fingerprint",
+        "hash_bound_comment_requires_exact_head_sha",
+        "hash_bound_comment_allowed_associations",
+        "hash_bound_comment_bot_allowed"
       ],
       "properties": {
         "enabled": {
@@ -524,6 +530,29 @@
             "automation/evidence-bind-",
             "automation/external-gap-"
           ]
+        },
+        "hash_bound_comment_approval_allowed": {
+          "const": true
+        },
+        "hash_bound_comment_command": {
+          "const": "SECURITY-CHANGE-APPROVE"
+        },
+        "hash_bound_comment_requires_change_fingerprint": {
+          "const": true
+        },
+        "hash_bound_comment_requires_exact_head_sha": {
+          "const": true
+        },
+        "hash_bound_comment_allowed_associations": {
+          "type": "array",
+          "const": [
+            "OWNER",
+            "MEMBER",
+            "COLLABORATOR"
+          ]
+        },
+        "hash_bound_comment_bot_allowed": {
+          "const": false
         }
       },
       "additionalProperties": false
