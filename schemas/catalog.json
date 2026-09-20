@@ -302,6 +302,13 @@
       "applies_to": ".cache/knowledge-hub/external-ratchet-automerge/verification.json",
       "authority": "derived-trusted-external-ratchet-verification",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "owner-qualification-packet-v1",
+      "schema": "schemas/owner-qualification-packet.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/owner-qualification-packet.json",
+      "authority": "derived-canonical-project-readiness-owner-handoff",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
