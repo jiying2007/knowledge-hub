@@ -468,8 +468,7 @@ def health_summary(
         registry["summary_gap_total"]
         or body_coverage["missing_registry_count"]
         or review_queue["status"] != "pass"
-        or review_queue["active_or_promotion_blocker_count"]
-        or review_after.get("risk_policy_status") == "needs-fix"
+        or review_queue["active_or_promotion_blocker_count"] or review_after.get("risk_policy_status") == "needs-fix"
         or incomplete
     ):
         control_plane_status = "needs-fix"
