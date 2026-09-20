@@ -309,6 +309,34 @@
       "applies_to": ".cache/knowledge-hub/ai-maintenance/owner-qualification-packet.json",
       "authority": "derived-canonical-project-readiness-owner-handoff",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "connector-provider-observation-v1",
+      "schema": "schemas/connector-provider-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=connector-provider-pilot",
+      "authority": "real-provider-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-retrieval-observation-v1",
+      "schema": "schemas/production-retrieval-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=production-retrieval-eval",
+      "authority": "real-production-retrieval-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-memory-observation-v1",
+      "schema": "schemas/production-memory-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=memory-lifecycle-pilot",
+      "authority": "real-production-memory-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-adoption-observation-v1",
+      "schema": "schemas/production-adoption-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=real-adoption-evidence",
+      "authority": "real-production-adoption-observation-input-contract",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
