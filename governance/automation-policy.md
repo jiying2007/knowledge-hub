@@ -67,6 +67,17 @@ AI 可以准备 packet、发现候选、校验证据和生成最小 PR，但不�
 
 在默认分支仍未 protected 时，自动 merge 保持关闭。启用 protected branch 后，只有 `autonomous-low-risk-ratchet` 类 PR 在 exact-head Quality 成功、same-repository、当前 master 未漂移、文件与语义 allowlist 全部通过时才允许自动 squash merge；该高权限 workflow 不 checkout 或执行 PR 代码。
 
+### Provider evidence machine ratchet
+
+Provider evidence 进一步按字段拆分责任边界：
+
+- `source_refs`、`validation_refs`、`artifact_refs`：仅当 GitHub provider identity 已验证、候选唯一、mutation 为 append-only、现有 canonical prefix 完整保留，且变更不会改变 owner/status/readiness/evidence-ready 时，可进入 `autonomous-low-risk-ratchet`。
+- `release_ref`：继续属于 `human-authorization`，机器只发现和准备 packet，不自动绑定。
+- machine evidence candidate 先在非 canonical `.cache` 中 materialize，并绑定 registry before/after digest、proposal fingerprints 与 trusted provider run identity。
+- canonical 落地只能通过 same-repository `automation/evidence-bind-*` PR；不得直接写 `master`。
+- auto-merge 仅在真实 `master protected=true`、exact-head Quality SUCCESS、当前 master 未漂移、两文件 allowlist、append-only 语义 verifier、trusted origin run/attempt 和 origin artifact digest 全部重验通过后执行。
+- auto-merge verifier 只执行当前 master 的可信代码，不 checkout 或执行 PR 代码；原始 provider artifact 只短期保留，长期只保留 bounded durable evidence identity/digest。
+
 ## Operator UI 边界
 
 Operator UI 继续保持 projection / diagnosis / routing 面：
