@@ -393,6 +393,13 @@
       "applies_to": ".cache/knowledge-hub/ai-maintenance/observation-source-readiness.json",
       "authority": "derived-real-observation-source-registration-readiness",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "security-change-review-v1",
+      "schema": "schemas/security-change-review.schema.json",
+      "applies_to": ".cache/knowledge-hub/security-change-review/packet.json",
+      "authority": "derived-trusted-github-pr-review-verdict",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {
