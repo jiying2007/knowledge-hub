@@ -196,8 +196,7 @@ def _adoption_evidence():
         (_adoption_evidence(), "real-adoption-evidence"),
     ],
 )
-def test_real_external_evidence_produces_bounded_closure_receipt(monkeypatch, payload, gap_id):
-    monkeypatch.setattr(external_evidence, "utc_timestamp", lambda: "2026-09-14T03:00:00Z")
+def test_real_external_evidence_produces_bounded_closure_receipt(payload, gap_id):
     receipt = external_evidence.validate_external_evidence(payload, expected_gap=gap_id)
     assert receipt["status"] == "pass"
     assert receipt["closure_ready"] is True
@@ -208,6 +207,7 @@ def test_real_external_evidence_produces_bounded_closure_receipt(monkeypatch, pa
     assert receipt["local_only_evidence_accepted"] is False
     assert receipt["canonical_write_performed"] is False
     assert len(receipt["evidence_payload_sha256"]) == 64
+    assert receipt["generated_at"] == payload["observed_at"]
 
 
 @pytest.mark.parametrize("flag", external_evidence.PROHIBITED_ORIGIN_FLAGS)
@@ -309,11 +309,23 @@ def test_file_loader_rejects_symlink_and_expected_gap_drift(tmp_path: Path):
         external_evidence.load_and_validate_external_evidence(symlink)
 
 
-def test_payload_digest_is_stable_for_equivalent_json(monkeypatch):
-    monkeypatch.setattr(external_evidence, "utc_timestamp", lambda: "2026-09-14T03:00:00Z")
+def test_payload_digest_and_receipt_are_stable_for_equivalent_json():
     first = _provider_evidence()
     second = copy.deepcopy(first)
     second["provider"] = dict(reversed(list(second["provider"].items())))
     first_receipt = external_evidence.validate_external_evidence(first)
     second_receipt = external_evidence.validate_external_evidence(second)
     assert first_receipt["evidence_payload_sha256"] == second_receipt["evidence_payload_sha256"]
+    assert first_receipt == second_receipt
+
+
+def test_external_evidence_receipt_replay_is_byte_deterministic():
+    payload = _provider_evidence()
+    first = external_evidence.validate_external_evidence(payload)
+    second = external_evidence.validate_external_evidence(copy.deepcopy(payload))
+
+    assert first == second
+    assert (
+        json.dumps(first, ensure_ascii=False, sort_keys=True)
+        == json.dumps(second, ensure_ascii=False, sort_keys=True)
+    )
