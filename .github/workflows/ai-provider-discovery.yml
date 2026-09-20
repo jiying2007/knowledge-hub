@@ -388,8 +388,16 @@ jobs:
             | head -n 1
           )"
           if [[ -n "${existing}" ]]; then
-            echo "identical machine evidence ratchet PR already open: #${existing}"
-            exit 0
+            protected="$(
+              gh api "repos/${GITHUB_REPOSITORY}/branches/master" \
+                --jq '.protected == true'
+            )"
+            if [[ "${protected}" != "true" ]]; then
+              echo "identical machine evidence ratchet PR already open while master remains unprotected: #${existing}"
+              exit 0
+            fi
+            gh pr close "${existing}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Master protection is now active. Closing this pre-protection machine ratchet so a fresh trusted-origin PR can rerun exact-head Quality and auto-merge verification."
           fi
 
           cp "${candidate}" registry/items.jsonl
