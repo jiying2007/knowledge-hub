@@ -7,7 +7,8 @@ from unittest import mock
 
 import pytest
 
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.schemas import validate_instance
 from tools.codex_assets.knowledge_hub.operator_machine_ratchet_verify import (
     verify_machine_evidence_ratchet,
 )
@@ -192,6 +193,14 @@ def test_machine_evidence_ratchet_verifier_accepts_exact_append_only_chain(tmp_p
     assert result["changed_fields"] == ["source_refs"]
     assert result["origin_run_id"] == RUN_ID
     assert result["origin_run_attempt"] == RUN_ATTEMPT
+    assert (
+        validate_instance(
+            repository_root(),
+            "operator-machine-ratchet-verification-v1",
+            result,
+        )["status"]
+        == "pass"
+    )
 
 
 def test_machine_evidence_ratchet_verifier_rejects_top_level_or_release_change(tmp_path):
