@@ -243,9 +243,34 @@ jobs:
         run: |
           set -euo pipefail
           title="chore(hosting): ratchet verified private boundary"
+
+          ensure_quality() {
+            local quality_branch="$1"
+            local quality_sha="$2"
+            local active
+            active="$(
+              gh api --method GET \
+                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
+                --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
+              | awk -v sha="${quality_sha}" \
+                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+            )"
+            if [[ -n "${active}" ]]; then
+              echo "exact-head Quality already active/successful for ${quality_branch}: ${active}"
+              return 0
+            fi
+            gh workflow run quality.yml \
+              --repo "${GITHUB_REPOSITORY}" \
+              --ref "${quality_branch}"
+            echo "dispatched exact-head Quality for ${quality_branch}@${quality_sha}"
+          }
+
           existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
             --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
           if [[ -n "${existing}" ]]; then
+            existing_branch="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefName --jq .headRefName)"
+            existing_sha="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefOid --jq .headRefOid)"
+            ensure_quality "${existing_branch}" "${existing_sha}"
             echo "number=${existing}" >> "${GITHUB_OUTPUT}"
             echo "existing governed ratchet PR already owns this canonical transition"
             exit 0
@@ -278,6 +303,7 @@ jobs:
           fi
           number="$(gh pr view "${url}" --repo "${GITHUB_REPOSITORY}" --json number --jq .number)"
           echo "number=${number}" >> "${GITHUB_OUTPUT}"
+          ensure_quality "${branch}" "$(git rev-parse HEAD)"
 
       - name: Close stale private-boundary tracker after canonical ratchet
         if: steps.decide.outputs.action == 'noop'
