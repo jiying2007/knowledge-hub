@@ -235,6 +235,71 @@ jobs:
           )
           PY
 
+      - name: Close stale private-boundary tracker after canonical ratchet
+        if: steps.decide.outputs.action == 'noop'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          private="$(jq -r '.private == true and .visibility == "private"' .cache/knowledge-hub/hosting-reconcile/repository-metadata.json)"
+          status="$(jq -r '.external_closure_gaps[] | select(.id=="repository-private-boundary") | .status' registry/knowledge-platform-p5-p10.json)"
+          if [[ "${private}" == "true" && "${status}" == "closed" ]]; then
+            state="$(gh issue view 18 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+            if [[ "${state}" == "OPEN" ]]; then
+              gh issue close 18 --repo "${GITHUB_REPOSITORY}" --comment "Canonical registry and live GitHub metadata now both confirm the private boundary. Closed by the AI-first hosting reconciliation workflow."
+            fi
+          fi
+
+      - name: Surface hosting regression
+        if: steps.decide.outputs.action == 'hosting-regression'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue comment 18 --repo "${GITHUB_REPOSITORY}" --body "ALERT: canonical registry says repository-private-boundary is closed, but current GitHub repository metadata is not private. Terminal hosting-posture checks will fail closed."
+
+      - name: Request one fresh Signed verification after protection recovery
+        if: >-
+          ${{
+            steps.decide.outputs.action == 'noop' &&
+            steps.decide.outputs.private == 'true' &&
+            steps.decide.outputs.canonical_private_closed == 'true' &&
+            steps.decide.outputs.protected == 'true'
+          }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          issue_state="$(gh issue view 95 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
+          if [[ "${issue_state}" != "OPEN" ]]; then
+            echo "branch-protection tracker is already closed; no Signed refresh needed"
+            exit 0
+          fi
+          active="$(
+            gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/signed-quality-attestation.yml/runs?branch=master&per_page=20" \
+              --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
+            | awk -v sha="${SOURCE_REVISION}" \
+                '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting") {print $1; exit}'
+          )"
+          if [[ -n "${active}" ]]; then
+            echo "fresh Signed verification already active for current master: ${active}"
+            exit 0
+          fi
+          gh workflow run signed-quality-attestation.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref master
+          echo "requested one fresh Signed verification for protected current master"
+
+      - name: Upload reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-hosting-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/hosting-reconcile/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Create governed reconciliation branch and PR
         if: steps.decide.outputs.action == 'ratchet-private'
         id: pr
@@ -305,70 +370,6 @@ jobs:
           echo "number=${number}" >> "${GITHUB_OUTPUT}"
           ensure_quality "${branch}" "$(git rev-parse HEAD)"
 
-      - name: Close stale private-boundary tracker after canonical ratchet
-        if: steps.decide.outputs.action == 'noop'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          private="$(jq -r '.private == true and .visibility == "private"' .cache/knowledge-hub/hosting-reconcile/repository-metadata.json)"
-          status="$(jq -r '.external_closure_gaps[] | select(.id=="repository-private-boundary") | .status' registry/knowledge-platform-p5-p10.json)"
-          if [[ "${private}" == "true" && "${status}" == "closed" ]]; then
-            state="$(gh issue view 18 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
-            if [[ "${state}" == "OPEN" ]]; then
-              gh issue close 18 --repo "${GITHUB_REPOSITORY}" --comment "Canonical registry and live GitHub metadata now both confirm the private boundary. Closed by the AI-first hosting reconciliation workflow."
-            fi
-          fi
-
-      - name: Surface hosting regression
-        if: steps.decide.outputs.action == 'hosting-regression'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh issue comment 18 --repo "${GITHUB_REPOSITORY}" --body "ALERT: canonical registry says repository-private-boundary is closed, but current GitHub repository metadata is not private. Terminal hosting-posture checks will fail closed."
-
-      - name: Request one fresh Signed verification after protection recovery
-        if: >-
-          ${{
-            steps.decide.outputs.action == 'noop' &&
-            steps.decide.outputs.private == 'true' &&
-            steps.decide.outputs.canonical_private_closed == 'true' &&
-            steps.decide.outputs.protected == 'true'
-          }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          issue_state="$(gh issue view 95 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
-          if [[ "${issue_state}" != "OPEN" ]]; then
-            echo "branch-protection tracker is already closed; no Signed refresh needed"
-            exit 0
-          fi
-          active="$(
-            gh api --method GET \
-              "repos/${GITHUB_REPOSITORY}/actions/workflows/signed-quality-attestation.yml/runs?branch=master&per_page=20" \
-              --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
-            | awk -v sha="${SOURCE_REVISION}" \
-                '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting") {print $1; exit}'
-          )"
-          if [[ -n "${active}" ]]; then
-            echo "fresh Signed verification already active for current master: ${active}"
-            exit 0
-          fi
-          gh workflow run signed-quality-attestation.yml \
-            --repo "${GITHUB_REPOSITORY}" \
-            --ref master
-          echo "requested one fresh Signed verification for protected current master"
-
-      - name: Upload reconciliation evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: knowledge-hub-hosting-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .cache/knowledge-hub/hosting-reconcile/
-          if-no-files-found: error
-          retention-days: 90
 
 
   automation-branch-gc:
