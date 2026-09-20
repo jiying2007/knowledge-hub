@@ -129,7 +129,32 @@ def _verify_digests(
         raise KnowledgeHubError("external durable digest set does not match origin receipts")
 
 
+def _validate_origin_contracts(
+    root: pathlib.Path,
+    *,
+    closure: Mapping[str, Any],
+    intake: Mapping[str, Any],
+    binding: Mapping[str, Any],
+    proposal: Mapping[str, Any],
+) -> None:
+    for contract_id, payload in (
+        ("external-evidence-receipt-v1", closure),
+        ("external-evidence-intake-receipt-v1", intake),
+        ("external-evidence-intake-host-binding-v1", binding),
+        ("external-evidence-ratchet-proposal-v2", proposal),
+    ):
+        result = validate_instance(root, contract_id, payload)
+        if result.get("status") != "pass":
+            raise KnowledgeHubError(
+                "{} validation failed: {}".format(
+                    contract_id,
+                    result.get("errors", []),
+                )
+            )
+
+
 def _replay_candidate(
+    root: pathlib.Path,
     *,
     base_registry_path: pathlib.Path,
     head_registry_path: pathlib.Path,
@@ -162,11 +187,18 @@ def _replay_candidate(
         )
 
     origin_proposal, proposal_raw = _load_json(proposal_path, "origin proposal")
+    binding, binding_raw = _load_json(host_binding_path, "host binding")
+    closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
+    intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
+    _validate_origin_contracts(
+        root,
+        closure=closure,
+        intake=intake,
+        binding=binding,
+        proposal=origin_proposal,
+    )
     if origin_proposal != proposal:
         raise KnowledgeHubError("origin proposal does not equal trusted replay")
-    _binding, binding_raw = _load_json(host_binding_path, "host binding")
-    _closure, closure_raw = _load_json(closure_receipt_path, "closure receipt")
-    _intake, intake_raw = _load_json(intake_receipt_path, "intake receipt")
     _verify_digests(
         record,
         head_registry_raw=head_raw,
@@ -234,6 +266,7 @@ def verify_external_evidence_ratchet(
         )
 
     candidate, proposal, head_raw = _replay_candidate(
+        root,
         base_registry_path=base_registry_path,
         head_registry_path=head_registry_path,
         closure_receipt_path=closure_receipt_path,
