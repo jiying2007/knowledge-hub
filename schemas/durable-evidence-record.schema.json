@@ -26,7 +26,8 @@
         "terminal-closure",
         "release-qualification",
         "contract-migration",
-        "evidence-binding-ratchet"
+        "evidence-binding-ratchet",
+        "external-evidence-ratchet"
       ]
     },
     "source_revision": {
