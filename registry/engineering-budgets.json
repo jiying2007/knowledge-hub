@@ -6,8 +6,9 @@
     "new_function_max_lines": 80,
     "legacy_module_line_caps": {},
     "ci_baseline": {
-      "required_in_github_actions": true,
-      "env": "KNOWLEDGE_COMPLEXITY_BASE_REF",
+      "required_in_quality_engineering": true,
+      "base_ref_env": "KNOWLEDGE_COMPLEXITY_BASE_REF",
+      "enforce_env": "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE",
       "missing_or_invalid": "fail"
     }
   },
