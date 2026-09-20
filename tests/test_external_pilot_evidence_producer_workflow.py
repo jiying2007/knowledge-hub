@@ -130,3 +130,32 @@ def test_external_pilot_producer_revision_binding_matches_machine_policy():
     assert 'PRODUCER_REVISION: ${{ github.workflow_sha }}' in text
     assert 'ref: ${{ env.PRODUCER_REVISION }}' in text
     assert "'producer_revision': os.environ['PRODUCER_REVISION']" in text
+
+
+def test_external_pilot_producer_requires_registered_source_workflow():
+    text = _workflow()
+    assert "observation_source_workflow_allowlist" in text
+    assert "observation source workflow registration policy is invalid" in text
+    assert "observation source workflow is not registered for" in text
+    assert "EXPECTED_GAP" in text
+
+
+def test_external_observation_workflow_allowlist_is_explicit_and_gap_scoped():
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    external = policy["external_evidence"]
+    assert external["observation_source_requires_explicit_registration"] is True
+    allowlist = external["observation_source_workflow_allowlist"]
+    assert set(allowlist) == {
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+    }
+    assert all(isinstance(value, list) for value in allowlist.values())
