@@ -30,7 +30,11 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default="")
     parser.add_argument("--input", required=True)
-    parser.add_argument("--expected-gap", required=True)
+    parser.add_argument(
+        "--expected-gap",
+        choices=sorted(OBSERVATION_CONTRACTS),
+        required=True,
+    )
     parser.add_argument("--output", required=True)
     return parser
 
