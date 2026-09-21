@@ -22,6 +22,7 @@ permissions:
   contents: read
   pull-requests: read
   issues: read
+  statuses: write
 
 concurrency:
   group: security-critical-change-review-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -270,6 +271,27 @@ jobs:
                   "submit exact PR comment: " + command
               )
           PY
+
+      - name: Publish exact-head security approval status
+        if: ${{ always() && steps.resolve.outputs.head_repository == github.repository && steps.resolve.outputs.head_sha != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          GATE_PASS: ${{ steps.packet.outputs.gate_pass }}
+        run: |
+          set -euo pipefail
+          state="failure"
+          description="Exact-head security approval is required"
+          if [[ "${GATE_PASS}" == "true" ]]; then
+            state="success"
+            description="Exact-head security approval verified"
+          fi
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${HEAD_SHA}" \
+            -f state="${state}" \
+            -f context="Security approval gate" \
+            -f description="${description}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Upload bounded security review evidence
         if: always()

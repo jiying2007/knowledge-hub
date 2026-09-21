@@ -79,8 +79,8 @@ Trust-root 文件变更采用 GitHub external review fact，而不是候选分�
 - hash-bound comment 主要用于单人仓库/PR author 无法 GitHub self-approve 的场景；AI 只能生成 packet/token，不得自动替人发布批准 comment。
 - 候选 PR 内的 `registry/authorizations.jsonl` 不作为该 gate 的授权事实，避免候选代码自证批准。
 - 只有 same-repository、GitHub Actions bot 创建、branch prefix 属于 `automation/hosting-private-*` / `automation/evidence-bind-*` / `automation/external-gap-*` 的 machine ratchet 可以不要求人类 PR review；其 canonical merge 仍必须通过对应 dedicated trusted-master semantic verifier。
-- `security-critical-change-review` 只运行 default-branch trusted workflow，checkout PR base SHA；它通过 GitHub API 读取 head files/reviews，不 checkout 或执行 PR code，也没有 write permission。
-- `master` protection 真正启用后，required workflows 至少必须包含 `quality` 与 `security-critical-change-review`；`protected=true` 但允许绕过任一 gate 不能视为完整治理目标。
+- `security-critical-change-review` 只运行 default-branch trusted workflow，checkout PR base SHA；它通过 GitHub API 读取 head files/reviews，不 checkout 或执行 PR code。唯一写权限是 `statuses: write`，仅用于把验证结果投影为 exact PR head 上的 `Security approval gate` commit status；不具备 contents / pull-requests / issues 写权限。
+- `master` protection 真正启用后，ruleset required status checks 至少必须包含稳定聚合 context `Quality gate` 与 exact-head 投影 context `Security approval gate`。`security-critical-change-review` 自身是 trusted-base evaluator：`pull_request_target` 的初始 job check 可能因“等待审批”失败，而后续 `issue_comment` 审批 run 绑定 default branch SHA，因此不能直接把 job 名 `Exact-head security-critical review` 配成 required context。`protected=true` 但允许绕过任一稳定 gate 不能视为完整治理目标。
 - 该 gate 本身、所有 workflow、authorization/review-risk/ratchet/verifier 等执行 trust root 同样分类为 `security-critical`，防止通过修改 verifier 绕过 verifier。
 
 ### Provider evidence machine ratchet

@@ -48,6 +48,7 @@ def test_security_change_review_is_read_only_and_never_executes_pr_code():
         "contents": "read",
         "pull-requests": "read",
         "issues": "read",
+        "statuses": "write",
     }
     job = payload["jobs"]["review"]
     steps = job["steps"]
@@ -99,6 +100,25 @@ def test_security_change_review_uses_runtime_dependency_surface():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "requirements-runtime.lock" in text
     assert "requirements-dev.lock" not in text
+
+
+def test_security_change_review_projects_gate_to_exact_head_status():
+    payload = _workflow()
+    status_step = next(
+        step
+        for step in payload["jobs"]["review"]["steps"]
+        if step.get("name") == "Publish exact-head security approval status"
+    )
+    assert "always()" in status_step["if"]
+    assert "steps.resolve.outputs.head_repository == github.repository" in status_step["if"]
+    assert status_step["env"]["HEAD_SHA"] == "${{ steps.resolve.outputs.head_sha }}"
+    assert status_step["env"]["GATE_PASS"] == "${{ steps.packet.outputs.gate_pass }}"
+    run = status_step["run"]
+    assert 'state="failure"' in run
+    assert 'state="success"' in run
+    assert 'statuses/${HEAD_SHA}' in run
+    assert '-f context="Security approval gate"' in run
+    assert 'target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"' in run
 
 
 def test_security_change_review_retains_bounded_packet():

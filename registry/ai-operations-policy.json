@@ -102,6 +102,10 @@
     "protected_branch_required_workflows": [
       "quality",
       "security-critical-change-review"
+    ],
+    "protected_branch_required_status_checks": [
+      "Quality gate",
+      "Security approval gate"
     ]
   },
   "evidence_binding": {
@@ -246,6 +250,14 @@
         "registry/durable-evidence-ledger.jsonl",
         "registry/knowledge-platform-p5-p10.json"
       ]
+    },
+    "status_projection": {
+      "context": "Security approval gate",
+      "target": "exact-pr-head",
+      "writer": "trusted-base-security-critical-change-review",
+      "success_requires_gate_pass": true,
+      "failure_on_missing_or_revoked_approval": true,
+      "same_repository_only": true
     }
   }
 }

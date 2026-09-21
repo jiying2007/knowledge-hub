@@ -85,7 +85,8 @@
         "automation_pr_requires_explicit_quality_dispatch",
         "protection_recovery_requalification_owner",
         "protection_recovery_duplicate_pollers_allowed",
-        "protected_branch_required_workflows"
+        "protected_branch_required_workflows",
+        "protected_branch_required_status_checks"
       ],
       "properties": {
         "direct_master_write": {
@@ -141,6 +142,13 @@
           "const": [
             "quality",
             "security-critical-change-review"
+          ]
+        },
+        "protected_branch_required_status_checks": {
+          "type": "array",
+          "const": [
+            "Quality gate",
+            "Security approval gate"
           ]
         }
       },
@@ -504,7 +512,8 @@
         "hash_bound_comment_bot_allowed",
         "authorization_mechanisms",
         "autonomous_ratchet_exemption_requires_direct_child",
-        "autonomous_ratchet_file_allowlists"
+        "autonomous_ratchet_file_allowlists",
+        "status_projection"
       ],
       "properties": {
         "enabled": {
@@ -590,6 +599,17 @@
               "registry/durable-evidence-ledger.jsonl",
               "registry/knowledge-platform-p5-p10.json"
             ]
+          }
+        },
+        "status_projection": {
+          "type": "object",
+          "const": {
+            "context": "Security approval gate",
+            "target": "exact-pr-head",
+            "writer": "trusted-base-security-critical-change-review",
+            "success_requires_gate_pass": true,
+            "failure_on_missing_or_revoked_approval": true,
+            "same_repository_only": true
           }
         }
       },
