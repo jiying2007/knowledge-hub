@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/operator-machine-ratchet-candidate.schema.json",
+  "title": "Knowledge Hub Operator machine ratchet candidate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "canonical_write_performed",
+    "automatic_execution_enabled",
+    "candidate_only",
+    "selected_proposal_count",
+    "selected_proposal_fingerprints",
+    "registry_path",
+    "registry_before_sha256",
+    "registry_after_sha256",
+    "candidate_sha256",
+    "rows",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "projection": {"const": "knowledge-operator-machine-ratchet-candidate-v1"},
+    "status": {"enum": ["ready-for-machine-ratchet", "blocked"]},
+    "read_only": {"const": true},
+    "canonical_write_performed": {"const": false},
+    "automatic_execution_enabled": {"const": false},
+    "candidate_only": {"const": true},
+    "authorization_class": {"const": "autonomous-low-risk-ratchet"},
+    "selected_proposal_count": {"type": "integer", "minimum": 0},
+    "selected_proposal_fingerprints": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+      "uniqueItems": true
+    },
+    "registry_path": {"const": "registry/items.jsonl"},
+    "registry_before_sha256": {
+      "type": "string",
+      "pattern": "^(?:|[0-9a-f]{64})$"
+    },
+    "registry_after_sha256": {
+      "type": "string",
+      "pattern": "^(?:|[0-9a-f]{64})$"
+    },
+    "candidate_sha256": {
+      "type": "string",
+      "pattern": "^(?:|[0-9a-f]{64})$"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "item_id",
+          "project_id",
+          "changed_fields",
+          "selected_proposal_fingerprints"
+        ],
+        "properties": {
+          "item_id": {"type": "string", "minLength": 1},
+          "project_id": {"type": "string"},
+          "item_path": {"type": "string"},
+          "registry_path": {"type": "string"},
+          "before_row_fingerprint": {"type": "string"},
+          "after_row_fingerprint": {"type": "string"},
+          "changed_fields": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": ["artifact_refs", "source_refs", "validation_refs"]
+            },
+            "uniqueItems": true
+          },
+          "selected_proposal_fingerprints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "reason_codes": {"type": "array", "items": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"const": "ready-for-machine-ratchet"}}
+      },
+      "then": {
+        "required": ["authorization_class"],
+        "properties": {
+          "selected_proposal_count": {"minimum": 1},
+          "registry_before_sha256": {"pattern": "^[0-9a-f]{64}$"},
+          "registry_after_sha256": {"pattern": "^[0-9a-f]{64}$"},
+          "candidate_sha256": {"pattern": "^[0-9a-f]{64}$"},
+          "rows": {"minItems": 1},
+          "reason_codes": {"maxItems": 0}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

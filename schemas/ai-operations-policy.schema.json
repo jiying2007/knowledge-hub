@@ -1,0 +1,600 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/ai-operations-policy.schema.json",
+  "title": "Knowledge Hub AI-first operations policy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "model",
+    "default_mode",
+    "classes",
+    "guardrails",
+    "evidence_binding",
+    "external_evidence",
+    "owner_qualification",
+    "security_change_review"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "model": {
+      "const": "knowledge-hub-ai-first-operations-v1"
+    },
+    "default_mode": {
+      "const": "autonomous-when-machine-verifiable"
+    },
+    "classes": {
+      "type": "object",
+      "required": [
+        "autonomous-read",
+        "autonomous-proposal",
+        "autonomous-low-risk-ratchet",
+        "human-authorization",
+        "real-world-evidence",
+        "external-administration"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "human_required"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "human_required": {
+            "type": "boolean"
+          },
+          "may_create_pr": {
+            "type": "boolean"
+          },
+          "may_write_canonical_candidate": {
+            "type": "boolean"
+          },
+          "direct_master_write": {
+            "type": "boolean"
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "required": [
+        "direct_master_write",
+        "automatic_merge_requires_protected_branch",
+        "owner_decision_may_be_inferred",
+        "synthetic_real_world_evidence_allowed",
+        "machine_ratchet_requires_exact_source",
+        "machine_ratchet_requires_deterministic_diff",
+        "automatic_merge_requires_exact_head_quality",
+        "automatic_merge_requires_same_repository",
+        "automatic_merge_requires_semantic_allowlist",
+        "automatic_merge_executes_pr_code",
+        "automatic_merge_requires_trusted_origin_run",
+        "automatic_merge_requires_generator_branch_identity",
+        "machine_ratchet_uses_trusted_run_timestamp",
+        "automation_pr_requires_explicit_quality_dispatch",
+        "protection_recovery_requalification_owner",
+        "protection_recovery_duplicate_pollers_allowed",
+        "protected_branch_required_workflows"
+      ],
+      "properties": {
+        "direct_master_write": {
+          "const": false
+        },
+        "automatic_merge_requires_protected_branch": {
+          "const": true
+        },
+        "owner_decision_may_be_inferred": {
+          "const": false
+        },
+        "synthetic_real_world_evidence_allowed": {
+          "const": false
+        },
+        "machine_ratchet_requires_exact_source": {
+          "const": true
+        },
+        "machine_ratchet_requires_deterministic_diff": {
+          "const": true
+        },
+        "automatic_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "automatic_merge_requires_same_repository": {
+          "const": true
+        },
+        "automatic_merge_requires_semantic_allowlist": {
+          "const": true
+        },
+        "automatic_merge_executes_pr_code": {
+          "const": false
+        },
+        "automatic_merge_requires_trusted_origin_run": {
+          "const": true
+        },
+        "automatic_merge_requires_generator_branch_identity": {
+          "const": true
+        },
+        "machine_ratchet_uses_trusted_run_timestamp": {
+          "const": true
+        },
+        "automation_pr_requires_explicit_quality_dispatch": {
+          "const": true
+        },
+        "protection_recovery_requalification_owner": {
+          "const": "hosting-posture-reconcile"
+        },
+        "protection_recovery_duplicate_pollers_allowed": {
+          "const": false
+        },
+        "protected_branch_required_workflows": {
+          "type": "array",
+          "const": [
+            "quality",
+            "security-critical-change-review"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_binding": {
+      "type": "object",
+      "required": [
+        "machine_ratchet_fields",
+        "human_authorization_fields",
+        "machine_ratchet_mutation_intent",
+        "machine_ratchet_may_change_owner",
+        "machine_ratchet_may_change_status",
+        "machine_ratchet_may_change_readiness",
+        "machine_ratchet_may_auto_promote_evidence_ready",
+        "machine_ratchet_may_create_pr",
+        "machine_ratchet_direct_master_write",
+        "machine_ratchet_auto_merge_requires_protected_branch",
+        "machine_ratchet_auto_merge_requires_exact_head_quality",
+        "machine_ratchet_auto_merge_requires_same_repository",
+        "machine_ratchet_auto_merge_requires_origin_artifact_digest",
+        "machine_ratchet_auto_merge_executes_pr_code",
+        "machine_validation_requires_source_revision_match",
+        "machine_artifact_kinds",
+        "machine_artifact_requires_validation_run_match",
+        "machine_artifact_requires_source_revision_match",
+        "machine_artifact_requires_immutable_release"
+      ],
+      "properties": {
+        "machine_ratchet_fields": {
+          "type": "array",
+          "const": [
+            "artifact_refs",
+            "source_refs",
+            "validation_refs"
+          ]
+        },
+        "human_authorization_fields": {
+          "type": "array",
+          "const": [
+            "release_ref"
+          ]
+        },
+        "machine_ratchet_mutation_intent": {
+          "const": "append-reference"
+        },
+        "machine_ratchet_may_change_owner": {
+          "const": false
+        },
+        "machine_ratchet_may_change_status": {
+          "const": false
+        },
+        "machine_ratchet_may_change_readiness": {
+          "const": false
+        },
+        "machine_ratchet_may_auto_promote_evidence_ready": {
+          "const": false
+        },
+        "machine_ratchet_may_create_pr": {
+          "const": true
+        },
+        "machine_ratchet_direct_master_write": {
+          "const": false
+        },
+        "machine_ratchet_auto_merge_requires_protected_branch": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_same_repository": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_origin_artifact_digest": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_executes_pr_code": {
+          "const": false
+        },
+        "machine_validation_requires_source_revision_match": {
+          "const": true
+        },
+        "machine_artifact_kinds": {
+          "type": "array",
+          "const": [
+            "github-release-asset"
+          ]
+        },
+        "machine_artifact_requires_validation_run_match": {
+          "const": false
+        },
+        "machine_artifact_requires_source_revision_match": {
+          "const": true
+        },
+        "machine_artifact_requires_immutable_release": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "external_evidence": {
+      "type": "object",
+      "required": [
+        "observation_generation_class",
+        "validated_closure_class",
+        "supported_gaps",
+        "strict_validator_required",
+        "same_repository_hosted_chain_required",
+        "synthetic_evidence_allowed",
+        "mock_evidence_allowed",
+        "local_only_evidence_allowed",
+        "machine_ratchet_may_create_pr",
+        "machine_ratchet_direct_master_write",
+        "machine_ratchet_auto_merge_requires_protected_branch",
+        "machine_ratchet_auto_merge_requires_exact_head_quality",
+        "machine_ratchet_auto_merge_executes_pr_code",
+        "observation_source_requires_same_repository",
+        "observation_source_requires_master_branch",
+        "observation_source_allowed_events",
+        "observation_source_requires_workflow_path",
+        "observation_contracts",
+        "validator_receipt_timestamp_source",
+        "manual_intake_source_requires_trusted_master_run",
+        "observation_timestamps_require_utc",
+        "production_windows_must_be_ordered",
+        "trust_artifact_contracts",
+        "root_observation_provenance_required",
+        "root_observation_revision_must_match_evidence_source_revision",
+        "producer_code_revision_source",
+        "observation_source_workflow_allowlist",
+        "observation_source_requires_explicit_registration",
+        "manual_intake_source_requires_registered_workflow",
+        "observation_source_workflow_prefix"
+      ],
+      "properties": {
+        "observation_generation_class": {
+          "const": "real-world-evidence"
+        },
+        "validated_closure_class": {
+          "const": "autonomous-low-risk-ratchet"
+        },
+        "supported_gaps": {
+          "type": "array",
+          "const": [
+            "connector-provider-pilot",
+            "production-retrieval-eval",
+            "memory-lifecycle-pilot",
+            "real-adoption-evidence"
+          ]
+        },
+        "strict_validator_required": {
+          "const": true
+        },
+        "same_repository_hosted_chain_required": {
+          "const": true
+        },
+        "synthetic_evidence_allowed": {
+          "const": false
+        },
+        "mock_evidence_allowed": {
+          "const": false
+        },
+        "local_only_evidence_allowed": {
+          "const": false
+        },
+        "machine_ratchet_may_create_pr": {
+          "const": true
+        },
+        "machine_ratchet_direct_master_write": {
+          "const": false
+        },
+        "machine_ratchet_auto_merge_requires_protected_branch": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_requires_exact_head_quality": {
+          "const": true
+        },
+        "machine_ratchet_auto_merge_executes_pr_code": {
+          "const": false
+        },
+        "observation_source_requires_same_repository": {
+          "const": true
+        },
+        "observation_source_requires_master_branch": {
+          "const": true
+        },
+        "observation_source_allowed_events": {
+          "type": "array",
+          "const": [
+            "schedule",
+            "workflow_dispatch"
+          ]
+        },
+        "observation_source_requires_workflow_path": {
+          "const": true
+        },
+        "observation_contracts": {
+          "type": "object",
+          "const": {
+            "connector-provider-pilot": "connector-provider-observation-v1",
+            "production-retrieval-eval": "production-retrieval-observation-v1",
+            "memory-lifecycle-pilot": "production-memory-observation-v1",
+            "real-adoption-evidence": "production-adoption-observation-v1"
+          }
+        },
+        "validator_receipt_timestamp_source": {
+          "const": "observation-observed-at"
+        },
+        "manual_intake_source_requires_trusted_master_run": {
+          "const": true
+        },
+        "observation_timestamps_require_utc": {
+          "const": true
+        },
+        "production_windows_must_be_ordered": {
+          "const": true
+        },
+        "trust_artifact_contracts": {
+          "type": "object",
+          "const": {
+            "source_provenance": "external-evidence-source-provenance-v1",
+            "producer_receipt": "external-pilot-evidence-producer-receipt-v1",
+            "closure_receipt": "external-evidence-receipt-v1",
+            "intake_receipt": "external-evidence-intake-receipt-v1",
+            "host_binding": "external-evidence-intake-host-binding-v1",
+            "ratchet_proposal": "external-evidence-ratchet-proposal-v2",
+            "ratchet_verification": "external-evidence-ratchet-verification-v1"
+          }
+        },
+        "root_observation_provenance_required": {
+          "const": true
+        },
+        "root_observation_revision_must_match_evidence_source_revision": {
+          "const": true
+        },
+        "producer_code_revision_source": {
+          "const": "github-workflow-sha"
+        },
+        "observation_source_workflow_allowlist": {
+          "type": "object",
+          "required": [
+            "connector-provider-pilot",
+            "production-retrieval-eval",
+            "memory-lifecycle-pilot",
+            "real-adoption-evidence"
+          ],
+          "properties": {
+            "connector-provider-pilot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "production-retrieval-eval": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "memory-lifecycle-pilot": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
+              }
+            },
+            "real-adoption-evidence": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.github/workflows/real-observation-[A-Za-z0-9._/-]+\\.yml$"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "observation_source_requires_explicit_registration": {
+          "const": true
+        },
+        "manual_intake_source_requires_registered_workflow": {
+          "const": true
+        },
+        "observation_source_workflow_prefix": {
+          "const": ".github/workflows/real-observation-"
+        }
+      },
+      "additionalProperties": false
+    },
+    "owner_qualification": {
+      "type": "object",
+      "required": [
+        "packet_generation_class",
+        "owner_decision_generated",
+        "canonical_write_performed",
+        "tracker_reconciliation_enabled",
+        "owner_gate_tracker_issue",
+        "qualification_tracker_issue",
+        "owner_gate_close_requires_zero_owner_declaration_pending",
+        "owner_gate_close_requires_zero_owner_boundary_pending",
+        "qualification_close_requires_pass",
+        "reopen_on_regression"
+      ],
+      "properties": {
+        "packet_generation_class": {
+          "const": "autonomous-read"
+        },
+        "owner_decision_generated": {
+          "const": false
+        },
+        "canonical_write_performed": {
+          "const": false
+        },
+        "tracker_reconciliation_enabled": {
+          "const": true
+        },
+        "owner_gate_tracker_issue": {
+          "const": 74
+        },
+        "qualification_tracker_issue": {
+          "const": 96
+        },
+        "owner_gate_close_requires_zero_owner_declaration_pending": {
+          "const": true
+        },
+        "owner_gate_close_requires_zero_owner_boundary_pending": {
+          "const": true
+        },
+        "qualification_close_requires_pass": {
+          "const": true
+        },
+        "reopen_on_regression": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "security_change_review": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "authorization_source",
+        "exact_head_required",
+        "non_bot_reviewer_required",
+        "pr_author_self_approval_allowed",
+        "candidate_local_authorization_ledger_trusted",
+        "workflow_executes_pr_code",
+        "autonomous_ratchet_exemption_requires_same_repository",
+        "autonomous_ratchet_exemption_requires_github_actions_bot",
+        "autonomous_ratchet_branch_prefixes",
+        "hash_bound_comment_approval_allowed",
+        "hash_bound_comment_command",
+        "hash_bound_comment_requires_change_fingerprint",
+        "hash_bound_comment_requires_exact_head_sha",
+        "hash_bound_comment_allowed_associations",
+        "hash_bound_comment_bot_allowed",
+        "authorization_mechanisms",
+        "autonomous_ratchet_exemption_requires_direct_child",
+        "autonomous_ratchet_file_allowlists"
+      ],
+      "properties": {
+        "enabled": {
+          "const": true
+        },
+        "authorization_source": {
+          "const": "github-external-review-facts"
+        },
+        "exact_head_required": {
+          "const": true
+        },
+        "non_bot_reviewer_required": {
+          "const": true
+        },
+        "pr_author_self_approval_allowed": {
+          "const": false
+        },
+        "candidate_local_authorization_ledger_trusted": {
+          "const": false
+        },
+        "workflow_executes_pr_code": {
+          "const": false
+        },
+        "autonomous_ratchet_exemption_requires_same_repository": {
+          "const": true
+        },
+        "autonomous_ratchet_exemption_requires_github_actions_bot": {
+          "const": true
+        },
+        "autonomous_ratchet_branch_prefixes": {
+          "type": "array",
+          "const": [
+            "automation/hosting-private-",
+            "automation/evidence-bind-",
+            "automation/external-gap-"
+          ]
+        },
+        "hash_bound_comment_approval_allowed": {
+          "const": true
+        },
+        "hash_bound_comment_command": {
+          "const": "SECURITY-CHANGE-APPROVE"
+        },
+        "hash_bound_comment_requires_change_fingerprint": {
+          "const": true
+        },
+        "hash_bound_comment_requires_exact_head_sha": {
+          "const": true
+        },
+        "hash_bound_comment_allowed_associations": {
+          "type": "array",
+          "const": [
+            "OWNER",
+            "MEMBER",
+            "COLLABORATOR"
+          ]
+        },
+        "hash_bound_comment_bot_allowed": {
+          "const": false
+        },
+        "authorization_mechanisms": {
+          "type": "array",
+          "const": [
+            "exact-head-pr-review",
+            "hash-bound-pr-comment"
+          ]
+        },
+        "autonomous_ratchet_exemption_requires_direct_child": {
+          "const": true
+        },
+        "autonomous_ratchet_file_allowlists": {
+          "type": "object",
+          "const": {
+            "automation/hosting-private-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/knowledge-platform-p5-p10.json"
+            ],
+            "automation/evidence-bind-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/items.jsonl"
+            ],
+            "automation/external-gap-": [
+              "registry/durable-evidence-ledger.jsonl",
+              "registry/knowledge-platform-p5-p10.json"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

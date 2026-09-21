@@ -7,6 +7,9 @@ import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
+script_repository_root = pathlib.Path(__file__).resolve().parents[3]
+if str(script_repository_root) not in sys.path:
+    sys.path.insert(0, str(script_repository_root))
 
 parser = argparse.ArgumentParser(description="Print a report-only review_after stale and near-due report.")
 output_mode = parser.add_mutually_exclusive_group()
@@ -43,6 +46,34 @@ item_window_end = today + dt.timedelta(days=args.window_days)
 source_window_end = today + dt.timedelta(days=args.source_window_days)
 
 errors = []
+
+def load_review_risk_policy():
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    from tools.codex_assets.knowledge_hub.review_risk import (
+        load_review_risk_policy as load_shared_review_risk_policy,
+    )
+
+    try:
+        return load_shared_review_risk_policy(root)
+    except KnowledgeHubError as exc:
+        errors.append(str(exc))
+        return {
+            "default_class": "ordinary",
+            "classes": {
+                "ordinary": {
+                    "stale_severity": "warning",
+                    "ai_first_action": "auto-triage",
+                }
+            },
+            "rules": [],
+        }
+
+review_risk_policy = load_review_risk_policy()
+
+def review_risk(path_value):
+    from tools.codex_assets.knowledge_hub.review_risk import classify_review_risk
+
+    return classify_review_risk(review_risk_policy, path_value)
 
 def user_path_prefixes():
     prefixes = [str(pathlib.Path.home())]
@@ -118,6 +149,7 @@ for item in items:
     source = item.get("source", {}) if isinstance(item.get("source", {}), dict) else {}
     source_id = str(source.get("source_id", ""))
     days = (review_date - today).days
+    risk = review_risk(item.get("path", ""))
     detail = {
         "row_type": "stale_item" if review_date < today else "near_due_item",
         "entity_type": "item",
@@ -130,8 +162,13 @@ for item in items:
         "path": item.get("path", ""),
         "review_after": review_date.isoformat(),
         "days_until_review": days,
+        **risk,
         "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {item_window_end.isoformat()}",
-        "suggested_action_zh": "人工复核 archive-only 边界、owner、source 和 validation_refs 是否仍有效。" if item.get("status") == "archived" else "人工复核 owner、source、validation_refs 和 status 是否仍有效。",
+        "suggested_action_zh": (
+            "AI 自动生成复核 packet 和差异摘要；仅在需要 owner/语义决定时升级人工。"
+            if risk["ai_first_action"] != "human-review-required"
+            else "关键治理条目：AI 先生成复核 packet，最终语义签收保留人工。"
+        ),
     }
     if review_date < today:
         stale_items.append(detail)
@@ -157,7 +194,7 @@ for source in sources:
         "days_until_review": days,
         "final_disposition": source.get("final_disposition", ""),
         "selection_reason": "review_after < as_of" if review_date < today else f"review_after <= {source_window_end.isoformat()}",
-        "suggested_action_zh": "人工复核 source 覆盖、check/no-check、owner 和 final_disposition 是否仍有效。",
+        "suggested_action_zh": "AI 自动复核 source 覆盖、check/no-check、引用可达性和 final_disposition；仅 authority/retirement 语义冲突升级 owner。",
     }
     if review_date < today:
         stale_sources.append(detail)
@@ -222,19 +259,21 @@ def group_item_rows(rows, field, missing_value=""):
             entry["latest_review_after"] = review_after
     for key, entry in grouped.items():
         if field == "owner":
-            entry["suggested_action_zh"] = "按 owner 分派人工复核；只确认 current validity、证据和下一次 review_after，不自动改状态。"
+            entry["suggested_action_zh"] = "AI 先生成 owner 聚合复核 packet；只有 current validity 的语义签收才分派给 owner。"
         elif field == "source_id":
             if key == "<missing-source-id>":
-                entry["suggested_action_zh"] = "这些条目缺少 source_id 绑定；只作为人工补强提示，不由工具自动补写。"
+                entry["suggested_action_zh"] = "AI 先自动发现可证明的 source_id 候选并生成 proposal；无唯一候选时再进入治理复核。"
             else:
-                entry["suggested_action_zh"] = "按 source_id 复核迁移来源、validation_refs 和 source coverage 是否仍有效。"
+                entry["suggested_action_zh"] = "按 source_id 由 AI 自动复核迁移来源、validation_refs 和 source coverage；不改变 owner 语义决定。"
         elif field == "status":
             if key == "archived":
                 entry["suggested_action_zh"] = "复核 archive-only 边界和证据，不把历史材料提升为 active fact。"
             else:
                 entry["suggested_action_zh"] = "复核 reviewing 条目的 owner、适用范围、证据和下一次 review_after。"
         elif field == "domain":
-            entry["suggested_action_zh"] = "按 domain 分派维护；项目域不得自动提升到团队标准。"
+            entry["suggested_action_zh"] = "按 domain 自动聚合维护候选；项目域不得自动提升到团队标准。"
+        elif field == "review_class":
+            entry["suggested_action_zh"] = "按风险等级自动 triage；关键治理只把最终语义签收升级给人。"
         entry["item_ids"] = sorted(entry["item_ids"])
     return dict(sorted(grouped.items(), key=lambda kv: (-kv[1]["count"], kv[0])))
 
@@ -244,7 +283,8 @@ groups = {
     "by_status": group_item_rows(item_review_rows, "status", "<missing-status>"),
     "by_domain": group_item_rows(item_review_rows, "domain", "<missing-domain>"),
     "by_source_id": group_item_rows(item_review_rows, "source_id", "<missing-source-id>"),
-    "notes_zh": "分组只用于人工复核分派，不自动修改 review_after、status、source_id 或 owner。",
+    "by_review_class": group_item_rows(item_review_rows, "review_class", "ordinary"),
+    "notes_zh": "默认由 AI 自动 triage/生成复核 packet；只有 owner/语义签收和 security-critical 最终决定保留人工。",
 }
 
 status = "fail" if errors else "report-only"
@@ -276,10 +316,10 @@ output = {
     "groups": groups,
     "rows": detail_rows,
     "errors": errors,
-    "limitations_zh": "review_after 报告只用于人工维护排期，不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
+    "limitations_zh": "review_after 默认由 AI 自动 triage 和生成复核 packet；不自动修改日期、不关闭 owner gate、不生成 owner decision、不改变 final gate 语义。",
     "must_not": [
         "不得自动修改 review_after",
-        "不得把 near-due warning 当作 blocking error",
+        "不得把 ordinary near-due warning 当作 blocking error",
         "不得关闭 owner gate",
         "不得生成 owner decision",
         "不得写 memory",
@@ -329,12 +369,13 @@ else:
     print(f"- open owner gates: {len(open_owner_gates)}")
     print(f"- missing source_id items: {output['counts']['missing_source_id_count']}")
     print()
-    print("## 人工复核分组")
+    print("## AI-first 复核分组")
     for title, key in [
         ("按 owner", "by_owner"),
         ("按 source_id", "by_source_id"),
         ("按 status", "by_status"),
         ("按 domain", "by_domain"),
+        ("按风险", "by_review_class"),
     ]:
         print()
         print(f"### {title}")

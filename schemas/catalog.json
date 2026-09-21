@@ -225,6 +225,181 @@
       "applies_to": "registry/items.jsonl#validation.evidence_contract",
       "authority": "registry",
       "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "ai-operations-policy-v1",
+      "schema": "schemas/ai-operations-policy.schema.json",
+      "applies_to": "registry/ai-operations-policy.json",
+      "authority": "registry-ai-operations-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "contract-compatibility-v1",
+      "schema": "schemas/contract-compatibility.schema.json",
+      "applies_to": "registry/contract-compatibility.json",
+      "authority": "registry-contract-compatibility",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "review-risk-policy-v1",
+      "schema": "schemas/review-risk-policy.schema.json",
+      "applies_to": "registry/review-risk-policy.json",
+      "authority": "registry-review-risk-policy",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "durable-evidence-record-v1",
+      "schema": "schemas/durable-evidence-record.schema.json",
+      "applies_to": "registry/durable-evidence-ledger.jsonl#each-line",
+      "authority": "durable-evidence-ledger",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "quality-evidence-binding-v1",
+      "schema": "schemas/quality-evidence-binding.schema.json",
+      "applies_to": ".cache/knowledge-hub/quality-evidence-binding.json",
+      "authority": "derived-exact-source-quality-evidence-binding",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "maintenance-triage-v1",
+      "schema": "schemas/maintenance-triage.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/triage-receipt.json",
+      "authority": "derived-noncanonical-ai-maintenance-triage",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "governance-review-packet-v1",
+      "schema": "schemas/governance-review-packet.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/governance-review-packet.json",
+      "authority": "derived-noncanonical-governance-review-packet",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-auto-route-v1",
+      "schema": "schemas/operator-auto-route.schema.json",
+      "applies_to": "operator_provider_cli --auto-route-unique --json",
+      "authority": "derived-noncanonical-operator-evidence-routing",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-machine-ratchet-candidate-v1",
+      "schema": "schemas/operator-machine-ratchet-candidate.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-provider-discovery/machine-candidate-manifest.json",
+      "authority": "derived-noncanonical-operator-machine-ratchet-candidate",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "operator-machine-ratchet-verification-v1",
+      "schema": "schemas/operator-machine-ratchet-verification.schema.json",
+      "applies_to": ".cache/knowledge-hub/evidence-ratchet-automerge/verification.json",
+      "authority": "derived-trusted-machine-ratchet-verification",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-ratchet-verification-v1",
+      "schema": "schemas/external-evidence-ratchet-verification.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet-automerge/verification.json",
+      "authority": "derived-trusted-external-ratchet-verification",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "owner-qualification-packet-v1",
+      "schema": "schemas/owner-qualification-packet.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/owner-qualification-packet.json",
+      "authority": "derived-canonical-project-readiness-owner-handoff",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "connector-provider-observation-v1",
+      "schema": "schemas/connector-provider-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=connector-provider-pilot",
+      "authority": "real-provider-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-retrieval-observation-v1",
+      "schema": "schemas/production-retrieval-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=production-retrieval-eval",
+      "authority": "real-production-retrieval-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-memory-observation-v1",
+      "schema": "schemas/production-memory-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=memory-lifecycle-pilot",
+      "authority": "real-production-memory-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "production-adoption-observation-v1",
+      "schema": "schemas/production-adoption-observation.schema.json",
+      "applies_to": "external-pilot-evidence-producer input gap=real-adoption-evidence",
+      "authority": "real-production-adoption-observation-input-contract",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "hosting-posture-v1",
+      "schema": "schemas/hosting-posture.schema.json",
+      "applies_to": ".cache/knowledge-hub/hosting-posture.json",
+      "authority": "derived-fresh-github-hosting-posture",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-source-provenance-v1",
+      "schema": "schemas/external-evidence-source-provenance.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/source-provenance.json",
+      "authority": "derived-trusted-source-run-and-artifact-provenance",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-receipt-v1",
+      "schema": "schemas/external-evidence-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/closure-candidate-receipt.json",
+      "authority": "derived-strict-real-evidence-validation-receipt",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-intake-receipt-v1",
+      "schema": "schemas/external-evidence-intake-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-evidence/intake-receipt.json",
+      "authority": "derived-trusted-external-evidence-intake",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-intake-host-binding-v1",
+      "schema": "schemas/external-evidence-intake-host-binding.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet/host-binding.json",
+      "authority": "derived-trusted-intake-run-artifact-binding",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-evidence-ratchet-proposal-v2",
+      "schema": "schemas/external-evidence-ratchet-proposal.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-ratchet/ratchet-proposal.json",
+      "authority": "derived-noncanonical-external-evidence-ratchet-proposal",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "external-pilot-evidence-producer-receipt-v1",
+      "schema": "schemas/external-pilot-evidence-producer-receipt.schema.json",
+      "applies_to": ".cache/knowledge-hub/external-pilot-evidence/producer-receipt.json",
+      "authority": "derived-trusted-observation-producer-receipt",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "observation-source-readiness-v1",
+      "schema": "schemas/observation-source-readiness.schema.json",
+      "applies_to": ".cache/knowledge-hub/ai-maintenance/observation-source-readiness.json",
+      "authority": "derived-real-observation-source-registration-readiness",
+      "change_policy": "strict-current-contract"
+    },
+    {
+      "id": "security-change-review-v1",
+      "schema": "schemas/security-change-review.schema.json",
+      "applies_to": ".cache/knowledge-hub/security-change-review/packet.json",
+      "authority": "derived-trusted-github-pr-review-verdict",
+      "change_policy": "strict-current-contract"
     }
   ],
   "authority_split": {

@@ -3,34 +3,125 @@
   "$id": "https://knowledge-hub.local/schemas/engineering-budgets.schema.json",
   "title": "Knowledge Hub engineering complexity budgets",
   "type": "object",
-  "required": ["schema_version", "policy", "python", "commands"],
+  "required": [
+    "schema_version",
+    "policy",
+    "python",
+    "commands"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "policy": {"const": "report-legacy-fail-new-regression"},
+    "schema_version": {
+      "const": 1
+    },
+    "policy": {
+      "const": "report-legacy-fail-new-regression"
+    },
     "python": {
       "type": "object",
       "required": [
         "new_module_max_lines",
         "new_function_max_lines",
-        "legacy_module_line_caps"
+        "legacy_module_line_caps",
+        "ci_baseline"
       ],
       "properties": {
-        "new_module_max_lines": {"type": "integer", "minimum": 100},
-        "new_function_max_lines": {"type": "integer", "minimum": 20},
+        "new_module_max_lines": {
+          "type": "integer",
+          "minimum": 100
+        },
+        "new_function_max_lines": {
+          "type": "integer",
+          "minimum": 20
+        },
         "legacy_module_line_caps": {
           "type": "object",
-          "additionalProperties": {"type": "integer", "minimum": 1}
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "ci_baseline": {
+          "type": "object",
+          "required": [
+            "required_in_quality_engineering",
+            "base_ref_env",
+            "enforce_env",
+            "missing_or_invalid"
+          ],
+          "properties": {
+            "required_in_quality_engineering": {
+              "const": true
+            },
+            "base_ref_env": {
+              "const": "KNOWLEDGE_COMPLEXITY_BASE_REF"
+            },
+            "enforce_env": {
+              "const": "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE"
+            },
+            "missing_or_invalid": {
+              "const": "fail"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
     },
     "commands": {
       "type": "object",
-      "required": ["wrapper_baseline", "daily_max", "readme_daily_max"],
+      "required": [
+        "wrapper_baseline",
+        "daily_max",
+        "readme_daily_max"
+      ],
       "properties": {
-        "wrapper_baseline": {"type": "integer", "minimum": 1},
-        "daily_max": {"const": 5},
-        "readme_daily_max": {"type": "integer", "minimum": 5, "maximum": 7}
+        "wrapper_baseline": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "daily_max": {
+          "const": 5
+        },
+        "readme_daily_max": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 7
+        }
+      },
+      "additionalProperties": false
+    },
+    "data_growth": {
+      "type": "object",
+      "required": [
+        "policy",
+        "tracked_paths"
+      ],
+      "properties": {
+        "policy": {
+          "const": "segment-before-hard-cap"
+        },
+        "tracked_paths": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "segment_at_bytes",
+              "hard_max_bytes"
+            ],
+            "properties": {
+              "segment_at_bytes": {
+                "type": "integer",
+                "minimum": 1024
+              },
+              "hard_max_bytes": {
+                "type": "integer",
+                "minimum": 1024
+              }
+            },
+            "additionalProperties": false
+          }
+        }
       },
       "additionalProperties": false
     }

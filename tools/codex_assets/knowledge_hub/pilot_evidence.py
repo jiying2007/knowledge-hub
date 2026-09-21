@@ -18,6 +18,7 @@ from .external_evidence import INPUT_SCHEMA, validate_external_evidence
 CONNECTOR_SCHEMA = "knowledge-hub.connector-provider-observation.v1"
 RETRIEVAL_SCHEMA = "knowledge-hub.production-retrieval-observation.v1"
 MEMORY_SCHEMA = "knowledge-hub.production-memory-observation.v1"
+ADOPTION_SCHEMA = "knowledge-hub.production-adoption-observation.v1"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 PROHIBITED_ORIGIN_FLAGS = (
@@ -32,6 +33,7 @@ SUPPORTED_GAPS = {
     "connector-provider-pilot",
     "production-retrieval-eval",
     "memory-lifecycle-pilot",
+    "real-adoption-evidence",
 }
 
 
@@ -464,6 +466,159 @@ def build_memory_lifecycle_evidence(observation: Mapping[str, Any]) -> Dict[str,
     return payload
 
 
+
+def _adoption_slo(value: Any) -> Dict[str, Any]:
+    slo = _object(value, "adoption SLO observation")
+    _sha256(slo.get("receipt_sha256"), "adoption SLO receipt")
+    if _text(slo.get("status"), "adoption SLO status", maximum=32) != "pass":
+        raise KnowledgeHubError("adoption SLO observation must pass")
+    p50_ms = _number(slo.get("p50_ms"), "adoption p50")
+    p95_ms = _number(slo.get("p95_ms"), "adoption p95")
+    if p95_ms < p50_ms:
+        raise KnowledgeHubError("adoption p95 must not be below p50")
+    error_rate = _number(slo.get("error_rate"), "adoption error rate")
+    if error_rate > 1.0:
+        raise KnowledgeHubError("adoption error rate must be in [0,1]")
+    if _text(
+        slo.get("retrieval_lane_health"),
+        "adoption retrieval lane health",
+        maximum=32,
+    ) != "pass":
+        raise KnowledgeHubError("adoption retrieval lane health must pass")
+    return {
+        "status": "pass",
+        "p50_ms": p50_ms,
+        "p95_ms": p95_ms,
+        "error_rate": error_rate,
+        "retrieval_lane_health": "pass",
+    }
+
+
+def _adoption_traceability(value: Any) -> Dict[str, Any]:
+    row = _object(value, "adoption traceability observation")
+    _sha256(row.get("receipt_sha256"), "adoption traceability receipt")
+    if _text(row.get("status"), "adoption traceability status", maximum=32) != "pass":
+        raise KnowledgeHubError("adoption traceability observation must pass")
+    _true(
+        row.get("work_item_run_handoff_receipt_linked"),
+        "cross-work trace linkage",
+    )
+    return {
+        "status": "pass",
+        "work_item_run_handoff_receipt_linked": True,
+    }
+
+
+def _adoption_privacy(value: Any) -> Dict[str, Any]:
+    row = _object(value, "adoption privacy observation")
+    _sha256(row.get("receipt_sha256"), "adoption privacy receipt")
+    result: Dict[str, Any] = {}
+    for key in (
+        "raw_query_stored",
+        "raw_task_stored",
+        "raw_prompt_stored",
+        "raw_content_stored",
+    ):
+        _false(row.get(key), "adoption privacy {}".format(key))
+        result[key] = False
+    mode = _text(
+        row.get("network_export_mode"),
+        "adoption network export mode",
+        maximum=64,
+    )
+    if mode not in {"disabled", "explicitly-configured"}:
+        raise KnowledgeHubError(
+            "adoption network export must be disabled or explicitly configured"
+        )
+    result["network_export_mode"] = mode
+    return result
+
+
+def _adoption_observation(value: Any) -> Dict[str, Any]:
+    adoption = _object(value, "adoption observation")
+    _sha256(adoption.get("call_ledger_receipt_sha256"), "adoption call ledger receipt")
+    _sha256(adoption.get("feedback_receipt_sha256"), "adoption feedback receipt")
+    observation_days = _integer(
+        adoption.get("observation_days"), "adoption observation days"
+    )
+    valid_calls = _integer(
+        adoption.get("valid_real_calls"), "adoption valid real calls"
+    )
+    synthetic_calls = _integer(
+        adoption.get("synthetic_calls"), "adoption synthetic calls"
+    )
+    feedback_count = _integer(
+        adoption.get("explicit_feedback_count"),
+        "adoption explicit feedback count",
+    )
+    if observation_days < 30 and valid_calls < 50:
+        raise KnowledgeHubError(
+            "adoption observation requires 30 days or 50 valid real calls"
+        )
+    if synthetic_calls != 0:
+        raise KnowledgeHubError(
+            "adoption observation must not include synthetic calls"
+        )
+    if feedback_count < 10:
+        raise KnowledgeHubError(
+            "adoption observation requires at least 10 explicit feedback items"
+        )
+    return {
+        "runtime_version": _text(
+            adoption.get("runtime_version"),
+            "adoption runtime version",
+            maximum=256,
+        ),
+        "window_start": _text(
+            adoption.get("window_start"),
+            "adoption window_start",
+            maximum=128,
+        ),
+        "window_end": _text(
+            adoption.get("window_end"),
+            "adoption window_end",
+            maximum=128,
+        ),
+        "observation_days": observation_days,
+        "valid_real_calls": valid_calls,
+        "synthetic_calls": synthetic_calls,
+        "explicit_feedback_count": feedback_count,
+        "call_ledger_sha256": _sha256(
+            adoption.get("call_ledger_sha256"), "adoption call ledger"
+        ),
+        "feedback_sha256": _sha256(
+            adoption.get("feedback_sha256"), "adoption feedback"
+        ),
+        "slo": _adoption_slo(adoption.get("slo")),
+        "traceability": _adoption_traceability(
+            adoption.get("traceability")
+        ),
+        "privacy": _adoption_privacy(adoption.get("privacy")),
+    }
+
+
+def build_real_adoption_evidence(
+    observation: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if observation.get("schema_version") != ADOPTION_SCHEMA:
+        raise KnowledgeHubError(
+            "adoption observation schema_version is unsupported"
+        )
+    payload = _base(
+        observation,
+        "real-adoption-evidence",
+        "real-production",
+    )
+    payload["adoption"] = _adoption_observation(
+        observation.get("adoption")
+    )
+    validate_external_evidence(
+        payload,
+        expected_gap="real-adoption-evidence",
+    )
+    return payload
+
+
 def build_pilot_evidence(observation: Mapping[str, Any], *, expected_gap: str = "") -> Dict[str, Any]:
     gap_id = _text(observation.get("gap_id"), "gap id", maximum=128)
     if expected_gap and gap_id != expected_gap:
@@ -474,6 +629,8 @@ def build_pilot_evidence(observation: Mapping[str, Any], *, expected_gap: str = 
         return build_production_retrieval_evidence(observation)
     if gap_id == "memory-lifecycle-pilot":
         return build_memory_lifecycle_evidence(observation)
+    if gap_id == "real-adoption-evidence":
+        return build_real_adoption_evidence(observation)
     raise KnowledgeHubError("pilot observation gap is unsupported")
 
 

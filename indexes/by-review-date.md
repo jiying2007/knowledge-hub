@@ -1,5 +1,10 @@
 # By Review Date
 
+- 2026-10-18: `knowledge-hub-data-lifecycle-growth-v1`
+- 2026-10-18: `knowledge-hub-hosting-posture-v1`
+- 2026-10-18: `knowledge-hub-contract-evolution-v1`
+- 2026-10-18: `knowledge-hub-current-readiness-model-v1`
+
 - 2026-11-26: `codex-ai-agent-incentive-evidence-summary-20260828`
 - 2026-11-23: `xcrz-sigmastar-demo-pcr02-aispeech-algorithm-source-analysis-20260823`
 - 2026-11-25: `pcr02-prog-test-ao-ai-task-node-uaf-20260825`

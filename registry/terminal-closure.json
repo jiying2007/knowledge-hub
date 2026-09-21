@@ -15,8 +15,6 @@
   "external_closure": {
     "source": "registry/knowledge-platform-p5-p10.json",
     "required_gap_ids": [
-      "repository-private-boundary",
-      "mcp-official-conformance",
       "attestation-signing-identity"
     ],
     "observational_gap_ids": [
@@ -53,5 +51,18 @@
     "production_observation_may_block_github_terminal": false,
     "operational_qualification_reported_separately": true
   },
-  "closure_scope": "github-repository"
+  "closure_scope": "github-repository",
+  "hosting_posture": {
+    "required": true,
+    "evidence": ".cache/knowledge-hub/hosting-posture.json",
+    "require_current_github_sha_when_available": true,
+    "require_current_github_repository_when_available": true
+  },
+  "mcp_conformance": {
+    "required": true,
+    "evidence": ".cache/knowledge-hub/mcp-conformance/evidence.json",
+    "policy": "registry/mcp-conformance-policy.json",
+    "require_current_github_sha_when_available": true,
+    "require_current_github_repository_when_available": true
+  }
 }

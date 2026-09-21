@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/operator-auto-route.schema.json",
+  "title": "Knowledge Hub Operator automatic evidence routing",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "selection_is_authorization",
+    "canonical_write_performed",
+    "automatic_binding_enabled",
+    "automatic_execution_enabled",
+    "selected_proposal_count",
+    "machine_ratchet_count",
+    "human_authorization_count",
+    "ambiguous_target_count",
+    "machine_route",
+    "human_route",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "projection": {"const": "knowledge-operator-auto-route-v1"},
+    "status": {
+      "enum": [
+        "ready-for-machine-ratchet",
+        "needs-governed-authorization",
+        "mixed-routing",
+        "no-change",
+        "ambiguous",
+        "blocked"
+      ]
+    },
+    "read_only": {"const": true},
+    "selection_is_authorization": {"const": false},
+    "canonical_write_performed": {"const": false},
+    "automatic_binding_enabled": {"const": false},
+    "automatic_execution_enabled": {"const": false},
+    "selected_proposal_count": {"type": "integer", "minimum": 0},
+    "machine_ratchet_count": {"type": "integer", "minimum": 0},
+    "human_authorization_count": {"type": "integer", "minimum": 0},
+    "ambiguous_target_count": {"type": "integer", "minimum": 0},
+    "ambiguous_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["item_id", "field", "candidate_count"],
+        "properties": {
+          "item_id": {"type": "string", "minLength": 1},
+          "field": {"type": "string", "minLength": 1},
+          "candidate_count": {"type": "integer", "minimum": 2}
+        },
+        "additionalProperties": false
+      }
+    },
+    "machine_route": {
+      "oneOf": [
+        {"type": "object", "maxProperties": 0},
+        {
+          "type": "object",
+          "required": ["status", "selected_proposal_count"],
+          "properties": {
+            "status": {"enum": ["no-change", "ready-for-machine-ratchet", "blocked"]},
+            "authorization_class": {"const": "autonomous-low-risk-ratchet"},
+            "canonical_write_performed": {"const": false},
+            "automatic_execution_enabled": {"const": false},
+            "selected_proposal_count": {"type": "integer", "minimum": 0},
+            "selected_proposal_fingerprints": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+              "uniqueItems": true
+            },
+            "allowed_fields": {
+              "type": "array",
+              "const": ["artifact_refs", "source_refs", "validation_refs"]
+            },
+            "patch_plan": {"type": "object"},
+            "reason_codes": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "human_route": {
+      "oneOf": [
+        {"type": "object", "maxProperties": 0},
+        {
+          "type": "object",
+          "required": ["status", "selected_proposal_count"],
+          "properties": {
+            "status": {"enum": ["no-change", "needs-governed-authorization", "blocked"]},
+            "authorization_class": {"const": "human-authorization"},
+            "canonical_write_performed": {"const": false},
+            "automatic_execution_enabled": {"const": false},
+            "selected_proposal_count": {"type": "integer", "minimum": 0},
+            "selected_proposal_fingerprints": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+              "uniqueItems": true
+            },
+            "patch_plan": {"type": "object"},
+            "review_bundle": {"type": "object"},
+            "reason_codes": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "reason_codes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

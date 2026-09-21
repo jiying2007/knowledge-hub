@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/external-evidence-receipt.schema.json",
+  "title": "Knowledge Hub strict external evidence receipt",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "closure_ready",
+    "gap_id",
+    "source_revision",
+    "observed_at",
+    "evidence_payload_sha256",
+    "evidence_source_refs",
+    "summary",
+    "synthetic_evidence_accepted",
+    "mock_evidence_accepted",
+    "local_only_evidence_accepted",
+    "canonical_write_performed",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.external-evidence-receipt.v1"
+    },
+    "status": {
+      "const": "pass"
+    },
+    "closure_ready": {
+      "const": true
+    },
+    "gap_id": {
+      "enum": [
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence"
+      ]
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evidence_payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence_source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "summary": {
+      "type": "object"
+    },
+    "synthetic_evidence_accepted": {
+      "const": false
+    },
+    "mock_evidence_accepted": {
+      "const": false
+    },
+    "local_only_evidence_accepted": {
+      "const": false
+    },
+    "canonical_write_performed": {
+      "const": false
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

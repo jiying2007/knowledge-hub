@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-contract-compatibility-v1",
+  "producer_policy": {
+    "runtime_shims_default": false,
+    "breaking_change_requires_new_contract": true,
+    "breaking_change_requires_migration_manifest": true,
+    "breaking_change_requires_consumer_evidence": true
+  },
+  "consumer_declarations": []
+}

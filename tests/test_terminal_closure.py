@@ -1,7 +1,9 @@
 import json
+import shutil
 from pathlib import Path
 
 from tools.codex_assets.knowledge_hub import terminal_closure, terminal_closure_cli
+from tools.codex_assets.knowledge_hub.common import repository_root
 
 
 def _write_json(path: Path, value):
@@ -36,6 +38,12 @@ def _policy(default_branch_protection_required=False):
             "required": True,
             "source": "registry/branch-lifecycle.json",
             "evidence": ".cache/knowledge-hub/remote-branch-inventory.json",
+            "require_current_github_sha_when_available": True,
+            "require_current_github_repository_when_available": True,
+        },
+        "hosting_posture": {
+            "required": True,
+            "evidence": ".cache/knowledge-hub/hosting-posture.json",
             "require_current_github_sha_when_available": True,
             "require_current_github_repository_when_available": True,
         },
@@ -121,6 +129,11 @@ def _write_common_ready_state(
     protection_observed=True,
     default_branch_present=True,
 ):
+    shutil.copytree(
+        repository_root() / "schemas",
+        tmp_path / "schemas",
+        dirs_exist_ok=True,
+    )
     _write_json(
         tmp_path / "registry/terminal-closure.json",
         _policy(default_branch_protection_required),
@@ -150,6 +163,32 @@ def _write_common_ready_state(
                     "owner": "runtime-owner",
                 },
             ]
+        },
+    )
+    _write_json(
+        tmp_path / ".cache/knowledge-hub/hosting-posture.json",
+        {
+            "schema_version": "knowledge-hub.hosting-posture.v1",
+            "status": "pass",
+            "generated_at": "2026-09-20T00:00:00Z",
+            "repository": "example/knowledge-hub",
+            "source_revision": "a" * 40,
+            "repository_private": True,
+            "repository_visibility": "private",
+            "default_branch": "master",
+            "default_branch_present": default_branch_present,
+            "default_branch_protection_observed": protection_observed,
+            "default_branch_protected": protected,
+            "rulesets_capability": {
+                "status": "not-probed",
+                "reason": "github-token-unavailable",
+                "http_status": 0,
+                "ruleset_count": 0,
+            },
+            "branch_inventory": (
+                ".cache/knowledge-hub/remote-branch-inventory.json"
+            ),
+            "canonical_write": False,
         },
     )
     _write_json(
@@ -513,3 +552,130 @@ def test_terminal_closure_rejects_protection_evidence_from_another_repository(
     )
     assert report["default_branch_protection"]["repository_matches_current_run"] is False
     assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_reports_live_private_fact_ahead_of_canonical(monkeypatch, tmp_path):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="open")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "pass"
+    assert report["hosting_posture"]["fact_drift"] == [
+        {
+            "id": "repository-private-boundary",
+            "type": "live-fact-ahead-of-canonical",
+            "live_private": True,
+            "canonical_status": "open",
+            "recommended_action": "machine-ratchet-candidate",
+        }
+    ]
+    assert "external_closure" in report["blockers"]
+
+
+def test_terminal_closure_allows_public_hosting_when_private_not_required(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="closed")
+    platform_path = tmp_path / "registry/knowledge-platform-p5-p10.json"
+    platform = json.loads(platform_path.read_text(encoding="utf-8"))
+    platform["repository_security_target"] = {"private_required": False}
+    _write_json(platform_path, platform)
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["repository_private"] = False
+    posture["repository_visibility"] = "public"
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "pass"
+    assert report["hosting_posture"]["fact_drift"] == []
+
+
+def test_terminal_closure_blocks_if_private_boundary_regresses_after_canonical_close(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path, external_status="closed")
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["repository_private"] = False
+    posture["repository_visibility"] = "public"
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["status"] == "needs-review"
+    assert report["hosting_posture"]["reason"] == "repository-private-boundary-not-observed"
+    assert "hosting_posture" in report["blockers"]
+
+
+def test_terminal_closure_prefers_explicit_workflow_source_identity(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    monkeypatch.setenv("GITHUB_SHA", "b" * 40)
+    monkeypatch.setenv("GITHUB_REPOSITORY", "wrong/repository")
+    monkeypatch.setenv("KNOWLEDGE_SOURCE_REVISION", "a" * 40)
+    monkeypatch.setenv("KNOWLEDGE_GITHUB_REPOSITORY", "example/knowledge-hub")
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["branch_gc"]["revision_matches_current_run"] is True
+    assert report["branch_gc"]["repository_matches_current_run"] is True
+    assert report["hosting_posture"]["revision_matches_current_run"] is True
+    assert report["hosting_posture"]["repository_matches_current_run"] is True
+
+
+def test_terminal_closure_surfaces_rulesets_capability_without_weakening_gate(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(
+        tmp_path,
+        default_branch_protection_required=True,
+        protected=False,
+    )
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["rulesets_capability"] = {
+        "status": "plan-gated",
+        "reason": "private-repository-rulesets-require-upgrade-or-public",
+        "http_status": 403,
+        "ruleset_count": 0,
+    }
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["hosting_posture"]["rulesets_capability"]["status"] == (
+        "plan-gated"
+    )
+    assert report["default_branch_protection"]["status"] == "needs-review"
+    assert report["terminal"] is False
+    assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_rejects_invalid_hosting_posture_contract(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture.pop("rulesets_capability")
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["hosting_posture"]["status"] == "blocked"
+    assert (
+        report["hosting_posture"]["reason"]
+        == "hosting-posture-contract-invalid"
+    )
+    assert report["hosting_posture"]["contract_validation"]["status"] == "fail"
+    assert "hosting_posture" in report["blockers"]

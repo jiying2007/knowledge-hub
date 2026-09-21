@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/production-memory-observation.schema.json",
+  "title": "Knowledge Hub production memory lifecycle observation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gap_id",
+    "source_revision",
+    "observed_at",
+    "evidence_source_refs",
+    "origin",
+    "pilot"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.production-memory-observation.v1"
+    },
+    "gap_id": {
+      "const": "memory-lifecycle-pilot"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 10,
+      "format": "date-time"
+    },
+    "evidence_source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": [
+        "classification",
+        "environment_id_sha256",
+        "synthetic",
+        "mock",
+        "fixture",
+        "static_adapter",
+        "local_only"
+      ],
+      "properties": {
+        "classification": {
+          "const": "real-production"
+        },
+        "environment_id_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "synthetic": {
+          "const": false
+        },
+        "mock": {
+          "const": false
+        },
+        "fixture": {
+          "const": false
+        },
+        "static_adapter": {
+          "const": false
+        },
+        "local_only": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "pilot": {
+      "type": "object",
+      "required": [
+        "runtime_version",
+        "window_start",
+        "window_end",
+        "result_sha256",
+        "cases"
+      ],
+      "properties": {
+        "runtime_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "window_start": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "format": "date-time"
+        },
+        "window_end": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "format": "date-time"
+        },
+        "result_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "cases": {
+          "type": "object",
+          "required": [
+            "ttl",
+            "forget",
+            "supersede",
+            "principal_isolation",
+            "agent_isolation",
+            "scope_isolation",
+            "scope_delete",
+            "durable_consolidation"
+          ],
+          "properties": {
+            "ttl": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "expiry_verified"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "expiry_verified": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "forget": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "deletion_verified"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "deletion_verified": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "supersede": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "old_state_hidden"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "old_state_hidden": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "principal_isolation": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "cross_boundary_leak_count"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cross_boundary_leak_count": {
+                  "const": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "agent_isolation": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "cross_boundary_leak_count"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cross_boundary_leak_count": {
+                  "const": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "scope_isolation": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "cross_boundary_leak_count"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cross_boundary_leak_count": {
+                  "const": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "scope_delete": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "deletion_verified"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "deletion_verified": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "durable_consolidation": {
+              "type": "object",
+              "required": [
+                "status",
+                "receipt_sha256",
+                "event_count",
+                "candidate_only",
+                "provenance_bound",
+                "owner_gate_observed",
+                "canonical_write_performed"
+              ],
+              "properties": {
+                "status": {
+                  "const": "pass"
+                },
+                "receipt_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "event_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "candidate_only": {
+                  "const": true
+                },
+                "provenance_bound": {
+                  "const": true
+                },
+                "owner_gate_observed": {
+                  "const": true
+                },
+                "canonical_write_performed": {
+                  "const": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -26,6 +26,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--run-id", required=True, type=int)
     parser.add_argument("--run-attempt", required=True, type=int)
+    parser.add_argument("--observed-at", required=True)
     parser.add_argument("--candidate-output", required=True)
     parser.add_argument("--proposal-output", required=True)
     return parser
@@ -53,6 +54,7 @@ def main(argv: Sequence[str] = ()) -> int:
             source_revision=args.source_revision,
             run_id=args.run_id,
             run_attempt=args.run_attempt,
+            observed_at=args.observed_at,
         )
         _write(root, args.candidate_output, candidate)
         _write(root, args.proposal_output, proposal)

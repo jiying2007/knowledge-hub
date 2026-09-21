@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/external-evidence-ratchet-verification.schema.json",
+  "title": "Knowledge Hub external evidence ratchet verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "canonical_write_performed",
+    "repository",
+    "master_sha",
+    "head_sha",
+    "gap_id",
+    "candidate_registry_sha256",
+    "origin_run_id",
+    "origin_run_attempt",
+    "evidence_observed_at",
+    "root_source_repository",
+    "root_source_run_id",
+    "root_source_run_attempt",
+    "root_source_run_head_sha",
+    "root_source_workflow_path",
+    "root_source_artifact_id",
+    "root_source_artifact_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "projection": {
+      "const": "knowledge-hub-external-evidence-ratchet-verification-v1"
+    },
+    "status": {
+      "const": "pass"
+    },
+    "read_only": {
+      "const": true
+    },
+    "canonical_write_performed": {
+      "const": false
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "master_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gap_id": {
+      "enum": [
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence"
+      ]
+    },
+    "candidate_registry_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "origin_run_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "origin_run_attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "evidence_observed_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "root_source_repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "root_source_run_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root_source_run_attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root_source_run_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "root_source_workflow_path": {
+      "type": "string",
+      "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+    },
+    "root_source_artifact_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root_source_artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

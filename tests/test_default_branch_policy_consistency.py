@@ -63,11 +63,13 @@ def test_operational_observation_gaps_do_not_block_github_terminal():
         "memory-lifecycle-pilot",
         "real-adoption-evidence",
     }
-    assert required_ids == {
-        "repository-private-boundary",
-        "mcp-official-conformance",
-        "attestation-signing-identity",
-    }
+    assert required_ids == {"attestation-signing-identity"}
+    assert rows["repository-private-boundary"]["required"] is False
+    assert rows["repository-private-boundary"]["github_terminal_blocking"] is False
+    assert rows["mcp-official-conformance"]["required"] is False
+    assert rows["mcp-official-conformance"]["github_terminal_blocking"] is False
+    assert rows["mcp-official-conformance"]["qualification_scope"] == "historical-capability"
+    assert terminal["mcp_conformance"]["required"] is True
     for gap_id in observational_ids:
         assert rows[gap_id]["required"] is False
         assert rows[gap_id]["github_terminal_blocking"] is False

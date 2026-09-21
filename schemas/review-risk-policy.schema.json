@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/review-risk-policy.schema.json",
+  "title": "Knowledge Hub review risk policy",
+  "type": "object",
+  "required": ["schema_version", "model", "default_class", "classes", "rules"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "model": {"const": "knowledge-hub-review-risk-v1"},
+    "default_class": {"enum": ["ordinary", "governance-critical", "security-critical"]},
+    "classes": {
+      "type": "object",
+      "required": ["ordinary", "governance-critical", "security-critical"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["stale_severity", "ai_first_action"],
+        "properties": {
+          "stale_severity": {"enum": ["warning", "needs-review", "blocked"]},
+          "ai_first_action": {"enum": ["auto-triage", "auto-review-packet", "human-review-required"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["review_class"],
+        "properties": {
+          "path": {"type": "string"},
+          "path_prefix": {"type": "string"},
+          "review_class": {"enum": ["ordinary", "governance-critical", "security-critical"]}
+        },
+        "oneOf": [{"required": ["path"]}, {"required": ["path_prefix"]}],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -85,6 +85,15 @@
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
 
+## knowledge-hub (14)
+
+- [Knowledge Hub root](../../README.md) · `active`
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
+- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
+
 ## x5 (12)
 
 - [X5 AI Toolchain V1.2.8 下载与完整性验证](../../projects/firmware-toolchains/validation/2026-08-05-x5-ai-toolchain-download.md) · `reviewing`
@@ -120,15 +129,6 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
-
-## knowledge-hub (10)
-
-- [Knowledge Hub root](../../README.md) · `active`
-- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
-- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
-- [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
-- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
-- [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing`
 
 ## hard-cut (9)
 
@@ -462,6 +462,11 @@
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
 
+## ai-first (2)
+
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
+- [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing`
+
 ## ai-provenance (2)
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
@@ -672,6 +677,11 @@
 - [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
 - [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
 
+## terminal-closure (2)
+
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
+
 ## thirdparty (2)
 
 - [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
@@ -869,6 +879,10 @@
 
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
 
+## compatibility (1)
+
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
+
 ## concurrency (1)
 
 - [PCR02 API消息队列并发创建导致Player/UART串消息验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md) · `reviewing`
@@ -876,6 +890,10 @@
 ## configurable-threshold (1)
 
 - [GD32L235 可配置充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md) · `reviewing`
+
+## contract (1)
+
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
 
 ## contract-audit (1)
 
@@ -897,9 +915,21 @@
 
 - [X5 SDK 下载说明（脱敏版）](../../domains/embedded/runbooks/x5-sdk-download.md) · `reviewing`
 
+## cross-repository (1)
+
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
+
 ## curl (1)
 
 - [PCR02 diag 大文件直链下载实现与构建边界验证](../../projects/pcr02-ssc305/validation/2026-08-06-diag-curl-large-download.md) · `reviewing`
+
+## current (1)
+
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
+
+## data-lifecycle (1)
+
+- [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing`
 
 ## debug (1)
 
@@ -940,6 +970,10 @@
 ## digital-worker (1)
 
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
+
+## durable-evidence (1)
+
+- [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing`
 
 ## dvr (1)
 
@@ -1005,9 +1039,17 @@
 
 - [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing`
 
+## github (1)
+
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+
 ## glossary (1)
 
 - [中文术语表规范](../../governance/glossary.md) · `active`
+
+## growth-budget (1)
+
+- [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing`
 
 ## h264 (1)
 
@@ -1045,6 +1087,10 @@
 
 - [PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选](../../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md) · `reviewing`
 
+## hosting-posture (1)
+
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+
 ## hot-switch (1)
 
 - [PCR02 ACTIVE_LOW_1 HOT切换实验决策](../../projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md) · `reviewing`
@@ -1052,6 +1098,10 @@
 ## hot-unplug (1)
 
 - [PCR02 DVR回放SD热拔插闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md) · `reviewing`
+
+## human-facing (1)
+
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
 
 ## human-review (1)
 
@@ -1116,6 +1166,10 @@
 ## mi_fb (1)
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
+
+## migration (1)
+
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
 
 ## mm32spin-validator (1)
 
@@ -1305,6 +1359,14 @@
 
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
 
+## readiness (1)
+
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
+
+## reconciliation (1)
+
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+
 ## release-candidate (1)
 
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing`
@@ -1436,10 +1498,6 @@
 ## templates (1)
 
 - [中文长期资产模板集](../../templates/README.md) · `active`
-
-## terminal-closure (1)
-
-- [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
 
 ## terminology (1)
 

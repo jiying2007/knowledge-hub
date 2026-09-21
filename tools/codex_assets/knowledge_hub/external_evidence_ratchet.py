@@ -1,8 +1,8 @@
-"""Build a review-only canonical registry candidate from hosted external evidence receipts.
+"""Build a non-canonical machine-ratchet candidate from hosted real evidence.
 
-The builder deliberately never mutates the canonical registry. It accepts only a
-closure-ready validator receipt bound to a successful hosted intake artifact, then
-emits a complete candidate registry plus a bounded proposal for human/PR review.
+The builder never mutates the canonical registry. Real-world observation remains an
+external boundary; once strict validation and hosted provenance are satisfied, the
+canonical gap closure is a deterministic low-risk ratchet candidate.
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ import pathlib
 import re
 from typing import Any, Dict, List, Mapping, Tuple
 
-from .common import KnowledgeHubError, file_sha256, read_bytes_bounded, utc_timestamp
+from .common import KnowledgeHubError, file_sha256, read_bytes_bounded
 from .external_evidence import RECEIPT_SCHEMA, SUPPORTED_GAPS
 
 REGISTRY_SCHEMA = 2
 INTAKE_PROJECTION = "knowledge-hub-external-evidence-intake-v1"
 HOST_BINDING_PROJECTION = "knowledge-hub-external-evidence-intake-host-binding-v1"
-PROPOSAL_PROJECTION = "knowledge-hub-external-evidence-ratchet-proposal-v1"
+PROPOSAL_PROJECTION = "knowledge-hub-external-evidence-ratchet-proposal-v2"
 MAX_JSON_BYTES = 4 * 1024 * 1024
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -116,39 +116,180 @@ def _validate_closure(closure: Mapping[str, Any], closure_sha: str) -> Dict[str,
     }
 
 
-def _validate_intake(
-    intake: Mapping[str, Any], intake_sha: str, closure_context: Mapping[str, Any]
+def _validate_source_provenance(
+    value: Any,
+    label: str,
 ) -> Dict[str, Any]:
-    if intake.get("schema_version") != 1 or intake.get("projection") != INTAKE_PROJECTION:
-        raise KnowledgeHubError("intake receipt schema/projection is unsupported")
-    if intake.get("status") != "pass" or intake.get("closure_candidate_only") is not True:
-        raise KnowledgeHubError("intake receipt is not a passed closure candidate")
+    provenance = _object(value, label)
+    if provenance.get("source_run_head_branch") != "master":
+        raise KnowledgeHubError(
+            "{} must originate from master".format(label)
+        )
+    if provenance.get("source_run_event") not in {
+        "workflow_dispatch",
+        "schedule",
+    }:
+        raise KnowledgeHubError(
+            "{} event is not trusted".format(label)
+        )
+    workflow_path = _text(
+        provenance.get("source_workflow_path"),
+        "{} workflow path".format(label),
+        512,
+    )
+    if (
+        not workflow_path.startswith(".github/workflows/")
+        or not workflow_path.endswith(".yml")
+    ):
+        raise KnowledgeHubError(
+            "{} workflow path is invalid".format(label)
+        )
+    artifact_digest = _text(
+        provenance.get("artifact_digest"),
+        "{} artifact digest".format(label),
+        128,
+    )
+    if not artifact_digest.startswith("sha256:"):
+        raise KnowledgeHubError(
+            "{} artifact digest must use sha256".format(label)
+        )
+    _sha256(
+        artifact_digest.split(":", 1)[1],
+        "{} artifact digest".format(label),
+    )
+    return {
+        "repository": _text(
+            provenance.get("repository"),
+            "{} repository".format(label),
+            512,
+        ),
+        "run_id": _positive_int(
+            provenance.get("source_run_id"),
+            "{} run id".format(label),
+        ),
+        "run_attempt": _positive_int(
+            provenance.get("source_run_attempt"),
+            "{} run attempt".format(label),
+        ),
+        "run_head": _git_sha(
+            provenance.get("source_run_head_sha"),
+            "{} run head".format(label),
+        ),
+        "run_event": str(provenance.get("source_run_event")),
+        "workflow_path": workflow_path,
+        "artifact_id": _positive_int(
+            provenance.get("artifact_id"),
+            "{} artifact id".format(label),
+        ),
+        "artifact_name": _text(
+            provenance.get("artifact_name"),
+            "{} artifact name".format(label),
+            512,
+        ),
+        "artifact_digest": artifact_digest,
+    }
+
+
+def _validate_intake_links(
+    intake: Mapping[str, Any],
+    closure_context: Mapping[str, Any],
+) -> None:
+    if (
+        intake.get("schema_version") != 1
+        or intake.get("projection") != INTAKE_PROJECTION
+    ):
+        raise KnowledgeHubError(
+            "intake receipt schema/projection is unsupported"
+        )
+    if (
+        intake.get("status") != "pass"
+        or intake.get("closure_candidate_only") is not True
+    ):
+        raise KnowledgeHubError(
+            "intake receipt is not a passed closure candidate"
+        )
     if intake.get("canonical_write_performed") is not False:
-        raise KnowledgeHubError("intake receipt must not report a canonical write")
+        raise KnowledgeHubError(
+            "intake receipt must not report a canonical write"
+        )
     if intake.get("gap_id") != closure_context["gap_id"]:
         raise KnowledgeHubError("intake and closure gap ids differ")
     if intake.get("source_revision") != closure_context["source_revision"]:
-        raise KnowledgeHubError("intake and closure source revisions differ")
-    if intake.get("evidence_payload_sha256") != closure_context["payload_sha"]:
-        raise KnowledgeHubError("intake and closure evidence digests differ")
-    if _sha256(intake.get("receipt_sha256"), "intake closure receipt digest") != closure_context["closure_sha"]:
-        raise KnowledgeHubError("intake receipt is not bound to the supplied closure receipt")
-    provenance = _object(intake.get("source_provenance"), "source provenance")
-    artifact_digest = _text(provenance.get("artifact_digest"), "source artifact digest", 128)
-    if not artifact_digest.startswith("sha256:"):
-        raise KnowledgeHubError("source artifact digest must use sha256")
-    _sha256(artifact_digest.split(":", 1)[1], "source artifact digest")
+        raise KnowledgeHubError(
+            "intake and closure source revisions differ"
+        )
+    if (
+        intake.get("evidence_payload_sha256")
+        != closure_context["payload_sha"]
+    ):
+        raise KnowledgeHubError(
+            "intake and closure evidence digests differ"
+        )
+    if (
+        _sha256(
+            intake.get("receipt_sha256"),
+            "intake closure receipt digest",
+        )
+        != closure_context["closure_sha"]
+    ):
+        raise KnowledgeHubError(
+            "intake receipt is not bound to the supplied closure receipt"
+        )
+
+
+def _validate_intake(
+    intake: Mapping[str, Any],
+    intake_sha: str,
+    closure_context: Mapping[str, Any],
+) -> Dict[str, Any]:
+    _validate_intake_links(intake, closure_context)
+    source = _validate_source_provenance(
+        intake.get("source_provenance"),
+        "source provenance",
+    )
+    root = _validate_source_provenance(
+        intake.get("root_observation_provenance"),
+        "root observation provenance",
+    )
+    if root["repository"] != source["repository"]:
+        raise KnowledgeHubError(
+            "root observation repository differs from hosted source repository"
+        )
+    if root["run_head"] != closure_context["source_revision"]:
+        raise KnowledgeHubError(
+            "root observation revision does not match strict evidence source revision"
+        )
+
     return {
         "intake_sha": intake_sha,
-        "repository": _text(provenance.get("repository"), "source repository", 512),
-        "source_run_id": _positive_int(provenance.get("source_run_id"), "source run id"),
-        "source_run_head": _git_sha(provenance.get("source_run_head_sha"), "source run head"),
-        "source_artifact_id": _positive_int(provenance.get("artifact_id"), "source artifact id"),
-        "source_artifact_digest": artifact_digest,
-        "intake_run_id": _positive_int(intake.get("intake_run_id"), "intake run id"),
-        "intake_revision": _git_sha(intake.get("intake_revision"), "intake revision"),
+        "repository": source["repository"],
+        "source_run_id": source["run_id"],
+        "source_run_attempt": source["run_attempt"],
+        "source_run_head": source["run_head"],
+        "source_run_head_branch": "master",
+        "source_run_event": source["run_event"],
+        "source_workflow_path": source["workflow_path"],
+        "source_artifact_id": source["artifact_id"],
+        "source_artifact_name": source["artifact_name"],
+        "source_artifact_digest": source["artifact_digest"],
+        "root_repository": root["repository"],
+        "root_source_run_id": root["run_id"],
+        "root_source_run_attempt": root["run_attempt"],
+        "root_source_run_head": root["run_head"],
+        "root_source_run_event": root["run_event"],
+        "root_source_workflow_path": root["workflow_path"],
+        "root_source_artifact_id": root["artifact_id"],
+        "root_source_artifact_name": root["artifact_name"],
+        "root_source_artifact_digest": root["artifact_digest"],
+        "intake_run_id": _positive_int(
+            intake.get("intake_run_id"),
+            "intake run id",
+        ),
+        "intake_revision": _git_sha(
+            intake.get("intake_revision"),
+            "intake revision",
+        ),
     }
-
 
 def _validate_binding(
     binding: Mapping[str, Any], binding_sha: str, intake_context: Mapping[str, Any]
@@ -176,9 +317,22 @@ def _validate_binding(
     _sha256(artifact_digest.split(":", 1)[1], "intake artifact digest")
     return {
         "binding_sha": binding_sha,
+        "intake_workflow_path": str(binding.get("workflow_path")),
         "intake_run_id": run_id,
+        "intake_run_attempt": _positive_int(
+            binding.get("intake_run_attempt"),
+            "intake run attempt",
+        ),
         "intake_run_head": run_head,
-        "intake_artifact_id": _positive_int(binding.get("artifact_id"), "intake artifact id"),
+        "intake_artifact_id": _positive_int(
+            binding.get("artifact_id"),
+            "intake artifact id",
+        ),
+        "intake_artifact_name": _text(
+            binding.get("artifact_name"),
+            "intake artifact name",
+            512,
+        ),
         "intake_artifact_digest": artifact_digest,
     }
 
@@ -200,18 +354,41 @@ def _find_open_gap(registry: Mapping[str, Any], gap_id: str) -> Dict[str, Any]:
     return gap
 
 
-def _hosted_refs(repository: str, intake: Mapping[str, Any], binding: Mapping[str, Any]) -> List[str]:
-    return [
-        "https://github.com/{}/actions/runs/{}".format(repository, intake["source_run_id"]),
-        "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
-            repository, intake["source_run_id"], intake["source_artifact_id"]
+def _hosted_refs(
+    repository: str,
+    intake: Mapping[str, Any],
+    binding: Mapping[str, Any],
+) -> List[str]:
+    identities = (
+        (
+            intake["root_source_run_id"],
+            intake["root_source_artifact_id"],
         ),
-        "https://github.com/{}/actions/runs/{}".format(repository, binding["intake_run_id"]),
-        "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
-            repository, binding["intake_run_id"], binding["intake_artifact_id"]
+        (
+            intake["source_run_id"],
+            intake["source_artifact_id"],
         ),
-    ]
-
+        (
+            binding["intake_run_id"],
+            binding["intake_artifact_id"],
+        ),
+    )
+    refs: List[str] = []
+    for run_id, artifact_id in identities:
+        refs.extend(
+            [
+                "https://github.com/{}/actions/runs/{}".format(
+                    repository,
+                    run_id,
+                ),
+                "https://github.com/{}/actions/runs/{}/artifacts/{}".format(
+                    repository,
+                    run_id,
+                    artifact_id,
+                ),
+            ]
+        )
+    return _dedupe_refs(refs)
 
 def _build_candidate(
     registry: Mapping[str, Any], current_gap: Mapping[str, Any], closure: Mapping[str, Any],
@@ -239,12 +416,31 @@ def _build_candidate(
         "intake_receipt_sha256": intake["intake_sha"],
         "host_binding_sha256": binding["binding_sha"],
         "source_run_head_sha": intake["source_run_head"],
+        "source_run_head_branch": intake["source_run_head_branch"],
+        "source_run_event": intake["source_run_event"],
+        "source_workflow_path": intake["source_workflow_path"],
         "source_run_id": intake["source_run_id"],
+        "source_run_attempt": intake["source_run_attempt"],
         "source_artifact_id": intake["source_artifact_id"],
+        "source_artifact_name": intake["source_artifact_name"],
         "source_artifact_digest": intake["source_artifact_digest"],
+        "root_source_repository": intake["root_repository"],
+        "root_source_run_head_sha": intake["root_source_run_head"],
+        "root_source_run_head_branch": "master",
+        "root_source_run_event": intake["root_source_run_event"],
+        "root_source_workflow_path": intake["root_source_workflow_path"],
+        "root_source_run_id": intake["root_source_run_id"],
+        "root_source_run_attempt": intake["root_source_run_attempt"],
+        "root_source_artifact_id": intake["root_source_artifact_id"],
+        "root_source_artifact_name": intake["root_source_artifact_name"],
+        "root_source_artifact_digest": intake["root_source_artifact_digest"],
+        "intake_workflow_path": binding["intake_workflow_path"],
         "intake_run_head_sha": binding["intake_run_head"],
+        "intake_run_head_branch": "master",
         "intake_run_id": binding["intake_run_id"],
+        "intake_run_attempt": binding["intake_run_attempt"],
         "intake_artifact_id": binding["intake_artifact_id"],
+        "intake_artifact_name": binding["intake_artifact_name"],
         "intake_artifact_digest": binding["intake_artifact_digest"],
         "synthetic_evidence_accepted": False,
         "mock_evidence_accepted": False,
@@ -271,8 +467,9 @@ def build_external_gap_ratchet_candidate(
     proposal = {
         "schema_version": 1,
         "projection": PROPOSAL_PROJECTION,
-        "status": "ready-for-reviewed-ratchet",
-        "review_required": True,
+        "status": "ready-for-machine-ratchet",
+        "authorization_class": "autonomous-low-risk-ratchet",
+        "review_required": False,
         "canonical_write_performed": False,
         "gap_id": closure["gap_id"],
         "expected_registry_sha256": registry_sha,
@@ -282,6 +479,6 @@ def build_external_gap_ratchet_candidate(
         "host_binding_sha256": binding_sha,
         "source_revision": closure["source_revision"],
         "intake_revision": binding["intake_run_head"],
-        "generated_at": utc_timestamp(),
+        "generated_at": closure["observed_at"],
     }
     return candidate, proposal

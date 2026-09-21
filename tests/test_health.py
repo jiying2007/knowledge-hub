@@ -169,3 +169,45 @@ def test_health_summary_prefers_full_snapshot_and_refreshes_quick_in_auto_mode(
     assert payload["product_maturity"]["snapshot_suite"] == "full"
     assert payload["product_maturity"]["full_regression_evidence"] is True
     assert "--regression-suite full" in payload["final_gate"]["command"]
+
+
+def test_health_review_after_reports_ai_first_risk_classes(tmp_path):
+    registry = tmp_path / "registry"
+    registry.mkdir()
+    (registry / "sources.json").write_text('{"sources": []}\n', encoding="utf-8")
+    (registry / "review-risk-policy.json").write_text(
+        json.dumps(
+            {
+                "default_class": "ordinary",
+                "classes": {
+                    "ordinary": {
+                        "stale_severity": "warning",
+                        "ai_first_action": "auto-triage",
+                    },
+                    "security-critical": {
+                        "stale_severity": "blocked",
+                        "ai_first_action": "human-review-required",
+                    },
+                },
+                "rules": [
+                    {"path": "SECURITY.md", "review_class": "security-critical"}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    items = [
+        {"path": "SECURITY.md", "review_after": "2026-09-01"},
+        {"path": "notes/a.md", "review_after": "2026-09-01"},
+    ]
+
+    payload = health._review_after(items, tmp_path, dt.date(2026, 9, 18))
+
+    assert payload["stale_item_count"] == 2
+    assert payload["security_critical_stale_count"] == 1
+    assert payload["by_review_class"] == {
+        "ordinary": 1,
+        "security-critical": 1,
+    }
+    assert payload["risk_policy_status"] == "pass"
+    assert payload["ai_first_default"] is True

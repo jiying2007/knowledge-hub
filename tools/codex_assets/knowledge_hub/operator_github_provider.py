@@ -145,10 +145,38 @@ def _workflow_candidates(target: str, token: str, transport: Transport) -> List[
     return result
 
 
+def _release_tag_commit_sha(
+    target: str,
+    release: Mapping[str, Any],
+    token: str,
+    transport: Transport,
+) -> str:
+    tag_name = str(release.get("tag_name", ""))
+    if not (
+        tag_name
+        and release.get("immutable") is True
+        and release.get("draft") is False
+        and release.get("prerelease") is False
+    ):
+        return ""
+    value = transport(
+        "/repos/{}/commits/{}".format(
+            target, urllib.parse.quote(tag_name, safe="")
+        ),
+        token,
+    )
+    return str(value.get("sha", "")) if isinstance(value, Mapping) else ""
+
+
 def _artifact_candidates(target: str, token: str, transport: Transport) -> List[Dict[str, Any]]:
     result: List[Dict[str, Any]] = []
     releases = transport("/repos/{}/releases?per_page=10".format(target), token)
     for release in _mapping_rows(releases):
+        tag_name = str(release.get("tag_name", ""))
+        immutable = release.get("immutable") is True
+        tag_commit_sha = _release_tag_commit_sha(
+            target, release, token, transport
+        )
         for asset in _mapping_rows(release.get("assets", [])):
             asset_id = str(asset.get("id", ""))
             if not asset_id:
@@ -163,7 +191,9 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
                         "digest": str(asset.get("digest", "")),
                         "browser_download_url": str(asset.get("browser_download_url", "")),
                         "release_id": str(release.get("id", "")),
-                        "tag_name": str(release.get("tag_name", "")),
+                        "tag_name": tag_name,
+                        "release_immutable": immutable,
+                        "release_tag_commit_sha": tag_commit_sha,
                         "release_draft": bool(release.get("draft", False)),
                         "release_prerelease": bool(release.get("prerelease", False)),
                     },
@@ -181,6 +211,9 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
         artifact_id = str(artifact.get("id", ""))
         if not artifact_id:
             continue
+        workflow_run = artifact.get("workflow_run", {})
+        if not isinstance(workflow_run, Mapping):
+            workflow_run = {}
         result.append(
             _candidate(
                 "github-actions-artifact",
@@ -192,6 +225,13 @@ def _artifact_candidates(target: str, token: str, transport: Transport) -> List[
                     "created_at": str(artifact.get("created_at", "")),
                     "expires_at": str(artifact.get("expires_at", "")),
                     "expired": False,
+                    "workflow_run_id": str(workflow_run.get("id", "")),
+                    "workflow_run_head_sha": str(
+                        workflow_run.get("head_sha", "")
+                    ),
+                    "workflow_run_head_branch": str(
+                        workflow_run.get("head_branch", "")
+                    ),
                 },
             )
         )

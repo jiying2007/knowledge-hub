@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/observation-source-readiness.schema.json",
+  "title": "Knowledge Hub real observation source readiness",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "canonical_write_performed",
+    "owner_decision_generated",
+    "gap_count",
+    "unregistered_count",
+    "registered_open_count",
+    "rows",
+    "packet_fingerprint",
+    "connector_tracker_fingerprint",
+    "production_tracker_fingerprint"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "projection": {
+      "const": "knowledge-hub-observation-source-readiness-v1"
+    },
+    "status": {
+      "enum": [
+        "needs-registration",
+        "ready-for-observation",
+        "closed"
+      ]
+    },
+    "read_only": {
+      "const": true
+    },
+    "canonical_write_performed": {
+      "const": false
+    },
+    "owner_decision_generated": {
+      "const": false
+    },
+    "gap_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unregistered_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "registered_open_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "packet_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gap_id",
+          "canonical_gap_status",
+          "status",
+          "registered_workflow_count",
+          "registered_workflows",
+          "next_action",
+          "row_fingerprint"
+        ],
+        "properties": {
+          "gap_id": {
+            "enum": [
+              "connector-provider-pilot",
+              "production-retrieval-eval",
+              "memory-lifecycle-pilot",
+              "real-adoption-evidence"
+            ]
+          },
+          "canonical_gap_status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "closed",
+              "registered",
+              "unregistered"
+            ]
+          },
+          "registered_workflow_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "registered_workflows": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^\\.github/workflows/[A-Za-z0-9._/-]+\\.yml$"
+            }
+          },
+          "next_action": {
+            "enum": [
+              "none",
+              "produce-real-observation",
+              "register-real-observation-workflow"
+            ]
+          },
+          "row_fingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "connector_tracker_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "production_tracker_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

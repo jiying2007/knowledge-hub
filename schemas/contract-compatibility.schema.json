@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/contract-compatibility.schema.json",
+  "title": "Knowledge Hub cross-repository contract compatibility registry",
+  "type": "object",
+  "required": ["schema_version", "model", "producer_policy", "consumer_declarations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "model": {"const": "knowledge-hub-contract-compatibility-v1"},
+    "producer_policy": {
+      "type": "object",
+      "required": ["runtime_shims_default", "breaking_change_requires_new_contract", "breaking_change_requires_migration_manifest", "breaking_change_requires_consumer_evidence"],
+      "properties": {
+        "runtime_shims_default": {"const": false},
+        "breaking_change_requires_new_contract": {"const": true},
+        "breaking_change_requires_migration_manifest": {"const": true},
+        "breaking_change_requires_consumer_evidence": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "consumer_declarations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["consumer_id", "repository_ref", "contract_id", "minimum_version", "maximum_version", "status", "evidence_refs"],
+        "properties": {
+          "consumer_id": {"type": "string", "minLength": 1},
+          "repository_ref": {"type": "string", "minLength": 1},
+          "contract_id": {"type": "string", "minLength": 1},
+          "minimum_version": {"type": "integer", "minimum": 1},
+          "maximum_version": {"type": "integer", "minimum": 1},
+          "status": {"enum": ["declared", "verified", "needs-refresh", "retired"]},
+          "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

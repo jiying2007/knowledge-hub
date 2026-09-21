@@ -2,7 +2,10 @@ name: quality
 
 on:
   push:
+    branches:
+      - master
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9"]
+        python-version: ${{ fromJSON(github.event_name == 'push' && '["3.8","3.9"]' || '["3.8"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ${{ fromJSON(github.event_name == 'push' && '["3.10","3.11","3.12","3.13","3.14"]' || '["3.10"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -70,11 +73,15 @@ jobs:
     name: Engineering and supply chain
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE: "true"
+      KNOWLEDGE_COMPLEXITY_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || 'origin/master' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -89,14 +96,22 @@ jobs:
       - name: Run full engineering gate
         run: rtk python3 -m tools.codex_assets.knowledge_hub.engineering_cli --mode full --json
       - name: Run deterministic compliance verdict matrix
-        run: rtk bash tools/knowledge-compliance-eval.sh --root tests/fixtures/agent_compliance_root --cases tests/fixtures/agent_compliance_cases.jsonl --minimum-cases 50 --require-verdict-coverage --json
+        run: |
+          mkdir -p .cache/knowledge-hub
+          rtk bash tools/knowledge-compliance-eval.sh \
+            --root tests/fixtures/agent_compliance_root \
+            --cases tests/fixtures/agent_compliance_cases.jsonl \
+            --minimum-cases 50 --require-verdict-coverage --json \
+            | tee .cache/knowledge-hub/compliance-eval.json
       - name: Verify remote checkout in an offsite runner
         run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --json
       - name: Assess product readiness (non-terminal)
         run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
+      - name: Build exact quality evidence binding
+        run: rtk python3 -m tools.codex_assets.knowledge_hub.quality_evidence_binding_cli build --source-revision "${{ github.event.pull_request.head.sha || github.sha }}" --json
       - name: Verify required quality evidence
         if: always()
-        run: rtk python3 -c 'from pathlib import Path; required=(".tmp/engineering/knowledge-hub.cdx.json",".cache/knowledge-hub/engineering-quality.json",".cache/knowledge-hub/restore-drill-head.json",".cache/knowledge-hub/final-gate-product-full.json"); missing=[path for path in required if not Path(path).is_file() or Path(path).stat().st_size == 0]; assert not missing, "missing-or-empty-quality-evidence={}".format(",".join(missing))'
+        run: rtk python3 -c 'from pathlib import Path; required=(".tmp/engineering/knowledge-hub.cdx.json",".cache/knowledge-hub/engineering-quality.json",".cache/knowledge-hub/compliance-eval.json",".cache/knowledge-hub/restore-drill-head.json",".cache/knowledge-hub/final-gate-product-full.json",".cache/knowledge-hub/quality-evidence-binding.json"); missing=[path for path in required if not Path(path).is_file() or Path(path).stat().st_size == 0]; assert not missing, "missing-or-empty-quality-evidence={}".format(",".join(missing))'
       - name: Upload quality evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -105,7 +120,103 @@ jobs:
           path: |
             .tmp/engineering/knowledge-hub.cdx.json
             .cache/knowledge-hub/engineering-quality.json
+            .cache/knowledge-hub/compliance-eval.json
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
+            .cache/knowledge-hub/quality-evidence-binding.json
           if-no-files-found: error
           retention-days: 30
+
+
+  mcp-conformance:
+    name: Official MCP 2026 native profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+      - name: Verify pinned upstream runner exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/mcp-conformance
+          runner="@modelcontextprotocol/conformance@0.2.0-alpha.10"
+          actual="$(npm view "$runner" version --json | tr -d '\\"[:space:]')"
+          test "$actual" = "0.2.0-alpha.10"
+          printf '%s\n' "$actual" > .cache/knowledge-hub/mcp-conformance/runner-version.txt
+          npm view "$runner" dist.integrity --json | tr -d '\\"[:space:]' \
+            > .cache/knowledge-hub/mcp-conformance/runner-integrity.txt
+          node --version > .cache/knowledge-hub/mcp-conformance/node-version.txt
+          npm --version > .cache/knowledge-hub/mcp-conformance/npm-version.txt
+      - name: Start local-only Knowledge Hub MCP server
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache=.cache/knowledge-hub/mcp-conformance
+          mkdir -p "$cache"
+          rtk python3 -m tools.codex_assets.knowledge_hub.mcp_http_server \
+            --host 127.0.0.1 --port 3000 \
+            > "$cache/server.log" 2>&1 &
+          echo "$!" > "$cache/server.pid"
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl --fail --silent --show-error \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json, text/event-stream' \
+              -H 'MCP-Protocol-Version: 2026-07-28' \
+              -H 'Mcp-Method: server/discover' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+              http://127.0.0.1:3000/mcp \
+              > "$cache/discover.json"; then
+              ready=1
+              break
+            fi
+            sleep 0.25
+          done
+          if [[ "$ready" -ne 1 ]]; then
+            cat "$cache/server.log"
+            exit 1
+          fi
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            -H 'MCP-Protocol-Version: 2026-07-28' \
+            -H 'Mcp-Method: resources/read' \
+            -H 'Mcp-Name: knowledge://health' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"knowledge://health","_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"knowledge-hub-ci","version":"1.0"}}}}' \
+            http://127.0.0.1:3000/mcp \
+            > "$cache/product-resource-read.json"
+      - name: Run pinned official native-profile scenarios
+        shell: bash
+        run: rtk bash tools/ci/run-mcp-conformance.sh
+      - name: Stop local MCP server
+        if: always()
+        shell: bash
+        run: |
+          pid_file=.cache/knowledge-hub/mcp-conformance/server.pid
+          if [[ -f "$pid_file" ]]; then
+            kill "$(cat "$pid_file")" 2>/dev/null || true
+          fi
+      - name: Upload official conformance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-mcp-conformance
+          path: |
+            .cache/knowledge-hub/mcp-conformance/
+            results/
+          if-no-files-found: error
+          retention-days: 90

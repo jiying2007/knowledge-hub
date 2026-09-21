@@ -312,3 +312,31 @@ def test_remote_branch_inventory_rejects_invalid_convergence_budget(tmp_path):
             source_revision="3" * 40,
             convergence_delay_seconds=-1,
         )
+
+
+def test_remote_branch_inventory_detects_automation_branch_residue(monkeypatch, tmp_path):
+    _write_lifecycle(tmp_path)
+    monkeypatch.setattr(
+        remote_branch_inventory,
+        "fetch_remote_branch_records",
+        lambda repository, token="": _records(
+            "master",
+            "automation/hosting-private-deadbeef-123",
+            protected=True,
+        ),
+    )
+
+    report = remote_branch_inventory.evaluate_remote_branch_inventory(
+        tmp_path,
+        repository="example/knowledge-hub",
+        source_revision="7" * 40,
+        convergence_attempts=1,
+    )
+
+    assert report["status"] == "needs-review"
+    assert report["implementation_branches"] == [
+        "automation/hosting-private-deadbeef-123"
+    ]
+    assert report["unexpected_implementation_branches"] == [
+        "automation/hosting-private-deadbeef-123"
+    ]

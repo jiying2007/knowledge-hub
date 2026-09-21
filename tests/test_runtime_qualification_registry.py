@@ -34,7 +34,11 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         for gap_id, row in gaps.items()
         if row["required"] and row["status"] == "open"
     }
-    assert {"repository-private-boundary"} == required_open
+    assert required_open == set()
+    assert gaps["repository-private-boundary"]["required"] is False
+    assert gaps["repository-private-boundary"]["status"] == "not-required"
+    assert gaps["repository-private-boundary"]["github_terminal_blocking"] is False
+    assert payload["repository_security_target"]["private_required"] is False
     operational_open = {
         gap_id
         for gap_id, row in gaps.items()
@@ -55,8 +59,10 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
         for gap_id in operational_open
     )
     mcp_gap = gaps["mcp-official-conformance"]
-    assert mcp_gap["required"] is True
+    assert mcp_gap["required"] is False
     assert mcp_gap["status"] == "closed"
+    assert mcp_gap["github_terminal_blocking"] is False
+    assert mcp_gap["qualification_scope"] == "historical-capability"
     assert mcp_gap["evidence_refs"]
     evidence = mcp_gap["evidence"]
     assert evidence["source_revision"] == "73d050aae8adae51092c2ac580094d506ae066ac"

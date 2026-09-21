@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/production-retrieval-observation.schema.json",
+  "title": "Knowledge Hub production retrieval observation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gap_id",
+    "source_revision",
+    "observed_at",
+    "evidence_source_refs",
+    "origin",
+    "evaluation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.production-retrieval-observation.v1"
+    },
+    "gap_id": {
+      "const": "production-retrieval-eval"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 10,
+      "format": "date-time"
+    },
+    "evidence_source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": [
+        "classification",
+        "environment_id_sha256",
+        "synthetic",
+        "mock",
+        "fixture",
+        "static_adapter",
+        "local_only"
+      ],
+      "properties": {
+        "classification": {
+          "const": "real-production"
+        },
+        "environment_id_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "synthetic": {
+          "const": false
+        },
+        "mock": {
+          "const": false
+        },
+        "fixture": {
+          "const": false
+        },
+        "static_adapter": {
+          "const": false
+        },
+        "local_only": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "evaluation": {
+      "type": "object",
+      "required": [
+        "raw_query_stored_in_evidence",
+        "case_count",
+        "production_derived_case_count",
+        "synthetic_case_count",
+        "dataset_sha256",
+        "dataset_receipt_sha256",
+        "evaluation_run_receipt_sha256",
+        "evaluator_version",
+        "approved_baseline",
+        "window_start",
+        "window_end",
+        "metrics",
+        "comparison"
+      ],
+      "properties": {
+        "raw_query_stored_in_evidence": {
+          "const": false
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 200
+        },
+        "production_derived_case_count": {
+          "type": "integer",
+          "minimum": 200
+        },
+        "synthetic_case_count": {
+          "const": 0
+        },
+        "dataset_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "dataset_receipt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evaluation_run_receipt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evaluator_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "approved_baseline": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "window_start": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "format": "date-time"
+        },
+        "window_end": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "format": "date-time"
+        },
+        "metrics": {
+          "type": "object",
+          "required": [
+            "recall",
+            "mrr",
+            "ndcg",
+            "authority_recall",
+            "forbidden_hit_rate",
+            "p50_ms",
+            "p95_ms"
+          ],
+          "properties": {
+            "recall": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "mrr": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "ndcg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "authority_recall": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "forbidden_hit_rate": {
+              "const": 0
+            },
+            "p50_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p95_ms": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "comparison": {
+          "type": "object",
+          "required": [
+            "status",
+            "new_critical_failures",
+            "result_sha256"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "new_critical_failures": {
+              "const": 0
+            },
+            "result_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

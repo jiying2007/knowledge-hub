@@ -10,6 +10,8 @@ from typing import Any, Dict, Mapping
 
 from .attestation import PREDICATE_TYPE, quality_attestation, statement_digest, verify_quality_attestation
 from .common import KnowledgeHubError, utc_timestamp
+from .quality_evidence_binding import verify_quality_evidence_binding
+from .schemas import validate_instance
 
 SOURCE_RE = re.compile(r"^[0-9a-f]{40}$")
 DEFAULT_OUTPUT = ".cache/knowledge-hub/signed-attestation"
@@ -18,7 +20,10 @@ EVIDENCE_PATHS = {
     "compliance": ".cache/knowledge-hub/compliance-eval.json",
     "restore": ".cache/knowledge-hub/restore-drill-head.json",
     "product": ".cache/knowledge-hub/final-gate-product-full.json",
+    "quality_binding": ".cache/knowledge-hub/quality-evidence-binding.json",
+    "mcp": ".cache/knowledge-hub/mcp-conformance/evidence.json",
     "terminal": ".cache/knowledge-hub/terminal-closure.json",
+    "hosting": ".cache/knowledge-hub/hosting-posture.json",
     "sbom": ".tmp/engineering/knowledge-hub.cdx.json",
 }
 MAX_BUNDLE_BYTES = 16 * 1024 * 1024
@@ -71,6 +76,65 @@ def _product_status(payload: Mapping[str, Any]) -> str:
     return status
 
 
+def _quality_statuses(
+    root: pathlib.Path,
+    objects: Mapping[str, Mapping[str, Any]],
+    source_revision: str,
+) -> Dict[str, str]:
+    verify_quality_evidence_binding(
+        root,
+        objects["quality_binding"],
+        source_revision=source_revision,
+    )
+    hosting_contract = validate_instance(
+        root,
+        "hosting-posture-v1",
+        objects["hosting"],
+    )
+    if hosting_contract.get("status") != "pass":
+        raise KnowledgeHubError(
+            "hosting posture contract validation failed: {}".format(
+                hosting_contract.get("errors", [])
+            )
+        )
+    if (
+        str(objects["hosting"].get("source_revision", "")).lower()
+        != source_revision
+    ):
+        raise KnowledgeHubError("hosting posture source revision mismatch")
+    return {
+        "engineering": _status(objects["engineering"], "engineering"),
+        "compliance": _status(objects["compliance"], "compliance"),
+        "restore": _status(objects["restore"], "restore"),
+        "product": _product_status(objects["product"]),
+        "hosting": _status(objects["hosting"], "hosting"),
+    }
+
+
+def _signer_revision(value: str) -> str:
+    revision = str(value).lower()
+    if not SOURCE_RE.fullmatch(revision):
+        raise KnowledgeHubError(
+            "signer source revision must be a lowercase 40-character git SHA"
+        )
+    return revision
+
+
+def _retain_bundle(
+    output: pathlib.Path,
+    bundle_path: pathlib.Path,
+) -> pathlib.Path:
+    if not bundle_path.is_file() or bundle_path.is_symlink():
+        raise KnowledgeHubError("signed attestation bundle is unavailable")
+    if bundle_path.stat().st_size > MAX_BUNDLE_BYTES:
+        raise KnowledgeHubError(
+            "signed attestation bundle exceeds byte budget"
+        )
+    retained = output / "sigstore-bundle.json"
+    retained.write_bytes(bundle_path.read_bytes())
+    return retained
+
+
 def build_signed_quality_materials(
     root: pathlib.Path,
     *,
@@ -95,12 +159,7 @@ def build_signed_quality_materials(
     if not sbom_path.is_file() or sbom_path.is_symlink():
         raise KnowledgeHubError("sbom evidence is unavailable")
 
-    statuses = {
-        "engineering": _status(objects["engineering"], "engineering"),
-        "compliance": _status(objects["compliance"], "compliance"),
-        "restore": _status(objects["restore"], "restore"),
-        "product": _product_status(objects["product"]),
-    }
+    statuses = _quality_statuses(root, objects, source_revision)
     terminal = objects["terminal"]
     terminal_status = str(terminal.get("status", "")).strip()
     terminal_value = terminal.get("terminal")
@@ -183,11 +242,13 @@ def verify_hosted_attestation(
     source_revision: str,
     source_ref: str,
     signer_workflow: str,
+    signer_source_revision: str,
     bundle_path: pathlib.Path,
     attestation_id: str,
     attestation_url: str,
     output_relative: str = DEFAULT_OUTPUT,
 ) -> Dict[str, Any]:
+    signer_revision = _signer_revision(signer_source_revision)
     root = pathlib.Path(root).resolve()
     output = root / output_relative
     materials = _load_object(output / "materials-receipt.json", "materials receipt")
@@ -234,18 +295,14 @@ def verify_hosted_attestation(
         break
     if matched is None:
         raise KnowledgeHubError("verified hosted attestation does not match local quality materials")
-    if not bundle_path.is_file() or bundle_path.is_symlink():
-        raise KnowledgeHubError("signed attestation bundle is unavailable")
-    if bundle_path.stat().st_size > MAX_BUNDLE_BYTES:
-        raise KnowledgeHubError("signed attestation bundle exceeds byte budget")
-    retained_bundle = output / "sigstore-bundle.json"
-    retained_bundle.write_bytes(bundle_path.read_bytes())
+    retained_bundle = _retain_bundle(output, bundle_path)
     receipt = {
         "schema_version": "knowledge-hub.hosted-signed-attestation.v1",
         "status": "pass",
         "source_revision": source_revision,
         "source_ref": source_ref,
         "signer_workflow": signer_workflow,
+        "signer_source_revision": signer_revision,
         "predicate_type": PREDICATE_TYPE,
         "manifest_sha256": expected_manifest,
         "sbom_sha256": expected_sbom,

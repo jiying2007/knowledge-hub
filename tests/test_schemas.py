@@ -29,6 +29,30 @@ def test_schema_catalog_resolves_all_contracts():
         "restore-drill-v4",
         "agent-compliance-eval-v2",
         "product-policy-v1",
+        "ai-operations-policy-v1",
+        "contract-compatibility-v1",
+        "review-risk-policy-v1",
+        "durable-evidence-record-v1",
+        "quality-evidence-binding-v1",
+        "maintenance-triage-v1",
+        "governance-review-packet-v1",
+        "operator-auto-route-v1",
+        "operator-machine-ratchet-candidate-v1",
+        "operator-machine-ratchet-verification-v1",
+        "external-evidence-ratchet-verification-v1",
+        "external-pilot-evidence-producer-receipt-v1",
+        "external-evidence-ratchet-proposal-v2",
+        "external-evidence-intake-host-binding-v1",
+        "external-evidence-intake-receipt-v1",
+        "external-evidence-receipt-v1",
+        "external-evidence-source-provenance-v1",
+        "hosting-posture-v1",
+        "security-change-review-v1",
+        "observation-source-readiness-v1",
+        "production-adoption-observation-v1",
+        "production-memory-observation-v1",
+        "production-retrieval-observation-v1",
+        "connector-provider-observation-v1",
     }.issubset({row["id"] for row in result["contracts"]})
     assert "retrieval-result-v3" in {row["id"] for row in result["contracts"]}
     contract_ids = {row["id"] for row in result["contracts"]}
@@ -282,3 +306,41 @@ def test_obsidian_view_schema_accepts_idempotent_apply():
         },
     )
     assert result["status"] == "pass"
+
+
+def test_ai_first_long_term_registry_contracts_are_valid():
+    root = repository_root()
+    for contract_id, relative in (
+        ("ai-operations-policy-v1", "registry/ai-operations-policy.json"),
+        ("contract-compatibility-v1", "registry/contract-compatibility.json"),
+        ("review-risk-policy-v1", "registry/review-risk-policy.json"),
+    ):
+        payload = load_json(root / relative, {})
+        assert validate_instance(root, contract_id, payload)["status"] == "pass"
+
+
+def test_external_provenance_inline_schemas_match_canonical_contract():
+    root = repository_root()
+    provenance = load_json(
+        root / "schemas/external-evidence-source-provenance.schema.json",
+        {},
+    )
+    expected = {
+        "type": "object",
+        "required": provenance["required"],
+        "properties": provenance["properties"],
+        "additionalProperties": False,
+    }
+
+    intake = load_json(
+        root / "schemas/external-evidence-intake-receipt.schema.json",
+        {},
+    )
+    assert intake["properties"]["source_provenance"] == expected
+    assert intake["properties"]["root_observation_provenance"] == expected
+
+    producer = load_json(
+        root / "schemas/external-pilot-evidence-producer-receipt.schema.json",
+        {},
+    )
+    assert producer["properties"]["source_provenance"] == expected

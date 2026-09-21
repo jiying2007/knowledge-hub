@@ -1,6 +1,6 @@
 # Operator Provider Discovery
 
-Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller 执行层。它只执行 Discovery Executor 已生成的 GitHub read-only query，不改变 canonical readiness，也不自动绑定 evidence。
+Operator Provider Discovery 是 P2.1 Discovery Queue 的受控 provider/caller 执行层。Provider query/qualification/proposal 本身保持 read-only；AI-first execution plane 可以把唯一、强验证、append-only 的机器证据候选 materialize 为 governed PR，但不会直接写 `master`、不会改变 canonical readiness，也不会把机器选择解释为 owner 授权。
 
 ## 使用
 
@@ -30,7 +30,23 @@ tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider
 
 `--propose` 会在同一次显式调用中执行 P2.2 → P2.3 → P2.4，但只输出 proposal；它不会修改 `registry/items.jsonl`、项目 readiness Markdown、owner、evidence contract status 或其它 canonical state。
 
-P2.5 在已经看到并明确选择某条 proposal fingerprint 后，生成 exact patch plan：
+显式人工审阅场景仍可使用 `--auto-review-unique` 生成 patch plan + review bundle；它只做“唯一候选选择”，固定 `selection_is_authorization=false`、`canonical_write_performed=false`，不作为 AI-first 默认执行入口。
+
+AI-first 默认入口按责任边界拆分唯一候选：
+
+```bash
+tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
+  --root . --auto-route-unique --json
+```
+
+`--auto-route-unique` 本身仍是 read-only / non-canonical。它只把 proposal 分成：
+
+- `machine_route`：仅 `source_refs`、`validation_refs`、`artifact_refs`，要求 GitHub provider verified、候选唯一、`append-reference`、不改变 owner/status/readiness，且 patch plan 不会让 evidence contract 自动进入 ready；其中 validation 的 `head_sha` 必须匹配同 item 的 canonical/同批 source revision；artifact 的 machine floor 当前只允许 immutable、非 draft/non-prerelease 的 `github-release-asset`，provider 会把 release tag 重新解析为 exact commit SHA，且该 SHA 必须匹配 source revision。会过期的 Actions artifact 继续可发现/可审阅，但不进入长期 machine ratchet；
+- `human_route`：`release_ref` 或任何不满足 machine proof 的候选，继续走现有 governed authorization。
+
+调用方可用 `--machine-candidate-output` + `--machine-manifest-output` 生成非 canonical candidate 与 proof manifest；CLI 明确拒绝把该输出直接指向 `registry/items.jsonl`。
+
+P2.5 在已经看到并明确选择某条 proposal fingerprint 后，仍可生成 exact patch plan：
 
 ```bash
 tools/ci/python-runtime.sh -m tools.codex_assets.knowledge_hub.operator_provider_cli \
@@ -68,7 +84,7 @@ P2.3 不执行新的网络请求，只消费 P2.2 provider execution projection�
 - 候选必须是 `provider_verified=true`、`candidate_only=true`、`eligible_for_binding=false`；
 - `source_refs` 必须是 exact GitHub source revision，并携带 repository、commit SHA、`exact_identity=true`；
 - `validation_refs` 必须是 successful workflow run，并携带 run id 与 exact head SHA；
-- `artifact_refs` 必须是未过期 Actions artifact 或非 draft/non-prerelease Release asset，并携带 digest 与 provider identity；
+- `artifact_refs` 的 governed-review floor 可接受未过期 Actions artifact 或非 draft/non-prerelease Release asset，并携带 digest 与 provider identity；machine-ratchet floor 更严格：当前只允许 immutable GitHub Release asset，并要求 release tag 解析出的 exact commit SHA 与同 item source revision 一致；Actions artifact 即使 provider verified 也保留在 human route，避免把会过期的制品自动写入长期 canonical evidence；
 - `release_ref` 只接受满足 immutable release policy 的 GitHub Release；普通 tag 不会通过 review floor。
 
 拒绝结果输出稳定的 `reason_codes`，例如 `artifact-digest-missing`、`validation-head-sha-missing`、`immutable-release-policy-not-met`。projection 最多资格化 400 个候选，超出时 `truncated=true`，不会静默无限扩张。
@@ -138,7 +154,7 @@ P2.5 始终声明：
 - `status_mutation_planned=false`、`owner_mutation_planned=false`、`readiness_mutation_planned=false`；
 - `requires_governed_pr=true`。
 
-因此 P2.5 的输出只是**可重复核对的 governed PR patch plan**。后续真正 canonical write 必须是单独阶段，要求重新核 optimistic SHA256、明确治理授权、生成真实 diff，并再次执行完整 evidence/readiness/terminal gates；P2.5 自身不会调用 `RepositoryTransaction.apply()`。
+因此 P2.5 的输出只是**可重复核对的 governed PR patch plan**。后续 canonical write 仍属于独立 execution plane：`release_ref` 等语义/单值变更必须经过现有显式治理授权；机器策略白名单内的 append-only `source_refs` / `validation_refs` / `artifact_refs` 可形成 `autonomous-low-risk-ratchet` PR，但必须重新核 optimistic SHA256、provider/origin identity、真实 diff、exact-head Quality 和 protected-master merge gate。P2.5 自身不会调用 `RepositoryTransaction.apply()`。
 
 ## Fail-closed 边界
 
@@ -159,3 +175,27 @@ Provider result 始终声明：
 ## 与 Operator UI 的关系
 
 Operator UI 仍保持本地 loopback GET-only，也不会因为打开页面而发起 provider 网络请求。P2.1 负责生成可审计 query plan；P2.2 内部 module CLI 显式执行 GitHub provider query；P2.3 只把结果资格化为 governed-review candidates；P2.4 只生成 proposal-only governed binding projection；P2.5 只为显式选择的 proposal 生成 governed patch plan。任何 canonical evidence 写入仍必须经过后续独立 governed PR 与现有 evidence contract/readiness/terminal gates。
+
+
+## 定时 AI execution
+
+`.github/workflows/ai-provider-discovery.yml` 只接受三类受信触发：
+
+- current-master Quality SUCCESS 的 `workflow_run`，用于立即推进；
+- daily schedule，作为无人值守 fallback；
+- `master` 上的 manual dispatch，用于显式重放。
+
+它不接受 PR 代码作为执行输入，并先重新确认 exact `SOURCE_REVISION` 已有 successful master Quality。随后：
+
+1. 自动执行 bounded GitHub provider discovery / qualification / proposal；
+2. 用 `--auto-route-unique` 分离 machine route 与 human route；
+3. machine route 生成 `.cache` candidate + manifest，并绑定 exact provider workflow run/attempt、origin artifact digest 与 durable evidence identity；
+4. 只允许创建 same-repository `automation/evidence-bind-*` governed PR；PR 只修改 `registry/items.jsonl` 和追加一条 `registry/durable-evidence-ledger.jsonl`；
+5. `release_ref` 或其它 human route 才创建/更新单一授权 Issue；
+6. ambiguous/blocked 继续机器刷新，不用猜测填充；
+7. PR exact-head Quality SUCCESS 后，独立 `evidence-ratchet-automerge.yml` 只 checkout current master 的可信 verifier，重新验证两文件 allowlist、append-only 三字段语义、no readiness promotion、origin run/attempt 和 origin artifact digests；
+8. 只有真实 `master protected=true` 且 current master/head 未漂移时才 expected-head squash merge；否则 PR 保持 open，绝不 direct-to-master；
+9. protection 后续恢复时，daily provider fallback 会把 pre-protection 相同 candidate PR 刷成 fresh trusted-origin PR，从而重新触发 Quality → verifier → auto-merge；
+10. closed/merged `automation/evidence-bind-*` branch 自动 GC。
+
+因此大部分“找证据 → 验证 → 形成最小 canonical PR → exact-head CI → 受保护自动合并”的机器可证链不再要求人工逐项操作；owner/release/device/production/ACL/外部 administration 仍保持真实人工或真实环境边界。

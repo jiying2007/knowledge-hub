@@ -11,6 +11,7 @@ from tools.codex_assets.knowledge_hub.repository_private_ratchet import (
 
 
 REVISION = "a" * 40
+OBSERVED_AT = "2026-09-19T15:00:00Z"
 
 
 def _write(path, value):
@@ -60,6 +61,7 @@ def _build(tmp_path, *, metadata=None, registry=None):
         source_revision=REVISION,
         run_id=123,
         run_attempt=1,
+        observed_at=OBSERVED_AT,
     )
 
 
@@ -69,10 +71,13 @@ def test_private_hosting_closes_only_repository_boundary_in_candidate(tmp_path):
     assert gaps[GAP_ID]["status"] == "closed"
     assert gaps[GAP_ID]["evidence"]["private"] is True
     assert gaps["connector-provider-pilot"]["status"] == "open"
-    assert proposal["status"] == "ready-for-reviewed-ratchet"
-    assert proposal["review_required"] is True
+    assert proposal["projection"] == "knowledge-hub-repository-private-ratchet-proposal-v2"
+    assert proposal["status"] == "ready-for-machine-ratchet"
+    assert proposal["authorization_class"] == "autonomous-low-risk-ratchet"
+    assert proposal["review_required"] is False
     assert proposal["canonical_write_performed"] is False
     assert proposal["gap_id"] == GAP_ID
+    assert proposal["generated_at"] == OBSERVED_AT
 
 
 def test_public_repository_fails_closed(tmp_path):
@@ -114,3 +119,51 @@ def test_workflow_is_manual_read_only_and_canonical_no_write():
     assert 'gh api "repos/${GITHUB_REPOSITORY}"' in workflow
     assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json" in workflow
     assert "repository privacy ratchet must never write the canonical registry" in cli
+
+
+def test_private_ratchet_is_byte_deterministic_for_same_anchored_inputs(tmp_path):
+    candidate1, proposal1 = _build(tmp_path)
+    candidate2, proposal2 = _build(tmp_path)
+
+    assert candidate1 == candidate2
+    assert proposal1 == proposal2
+    assert json.dumps(candidate1, sort_keys=True) == json.dumps(candidate2, sort_keys=True)
+    assert json.dumps(proposal1, sort_keys=True) == json.dumps(proposal2, sort_keys=True)
+
+
+def test_private_ratchet_rejects_non_utc_or_invalid_observed_at(tmp_path):
+    registry_path = tmp_path / "registry.json"
+    metadata_path = tmp_path / "metadata.json"
+    _write(registry_path, _registry())
+    _write(metadata_path, _metadata())
+
+    for observed_at in ("", "not-a-time", "2026-09-19T15:00:00+08:00"):
+        with pytest.raises(KnowledgeHubError, match="observed_at"):
+            build_repository_private_candidate(
+                registry_path=registry_path,
+                repository_metadata_path=metadata_path,
+                expected_repository="jiying2007/knowledge-hub",
+                source_revision=REVISION,
+                run_id=123,
+                run_attempt=1,
+                observed_at=observed_at,
+            )
+
+
+def test_private_ratchet_workflow_anchors_time_to_github_run_metadata():
+    root = Path(__file__).resolve().parents[1]
+    manual = (
+        root / ".github/workflows/repository-private-ratchet-candidate.yml"
+    ).read_text(encoding="utf-8")
+    reconcile = (
+        root / ".github/workflows/hosting-posture-reconcile.yml"
+    ).read_text(encoding="utf-8")
+
+    for text in (manual, reconcile):
+        assert "actions/runs/${GITHUB_RUN_ID}" in text
+        assert ".run_started_at // .created_at" in text
+        assert '--observed-at "${observed_at}"' in text
+    assert "actions: read" in manual
+    assert "requirements-runtime.lock" in manual
+    assert "requirements-dev.lock" not in manual
+    assert "dt.datetime.now" not in reconcile

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/hosting-posture.schema.json",
+  "title": "Knowledge Hub hosted repository posture",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "generated_at",
+    "repository",
+    "source_revision",
+    "repository_private",
+    "repository_visibility",
+    "default_branch",
+    "default_branch_present",
+    "default_branch_protection_observed",
+    "default_branch_protected",
+    "rulesets_capability",
+    "branch_inventory",
+    "canonical_write"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.hosting-posture.v1"
+    },
+    "status": {
+      "const": "pass"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "repository_private": {
+      "type": "boolean"
+    },
+    "repository_visibility": {
+      "enum": [
+        "private",
+        "public",
+        "internal"
+      ]
+    },
+    "default_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "default_branch_present": {
+      "type": "boolean"
+    },
+    "default_branch_protection_observed": {
+      "type": "boolean"
+    },
+    "default_branch_protected": {
+      "type": "boolean"
+    },
+    "rulesets_capability": {
+      "type": "object",
+      "required": [
+        "status",
+        "reason",
+        "http_status",
+        "ruleset_count"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not-probed",
+            "available",
+            "plan-gated",
+            "integration-forbidden",
+            "unavailable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 599
+        },
+        "ruleset_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branch_inventory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_write": {
+      "const": false
+    }
+  },
+  "additionalProperties": false
+}

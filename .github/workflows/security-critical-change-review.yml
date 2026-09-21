@@ -1,0 +1,280 @@
+name: security-critical-change-review
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+  issue_comment:
+    types:
+      - created
+      - edited
+      - deleted
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: security-critical-change-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Exact-head security-critical review
+    if: >-
+      ${{
+        github.event_name != 'issue_comment' ||
+        github.event.issue.pull_request != null
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+      WORKFLOW_SHA: ${{ github.workflow_sha }}
+
+    steps:
+      - name: Resolve exact PR identity
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/security-change-review"
+          mkdir -p "${cache}"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            > "${cache}/pull.json"
+          head_sha="$(jq -er '.head.sha' "${cache}/pull.json")"
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${head_sha}" \
+            > "${cache}/head-commit.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          pull = json.loads(
+              Path(
+                  ".cache/knowledge-hub/security-change-review/pull.json"
+              ).read_text(encoding="utf-8")
+          )
+          base = pull.get("base") or {}
+          head = pull.get("head") or {}
+          base_sha = str(base.get("sha") or "").lower()
+          base_ref = str(base.get("ref") or "")
+          head_sha = str(head.get("sha") or "").lower()
+          if base_ref != "master":
+              raise SystemExit(
+                  "security change review only supports PRs targeting master"
+              )
+          commit = json.loads(
+              Path(
+                  ".cache/knowledge-hub/security-change-review/"
+                  "head-commit.json"
+              ).read_text(encoding="utf-8")
+          )
+          parents = commit.get("parents") or []
+          direct_child = bool(
+              len(parents) == 1
+              and str((parents[0] or {}).get("sha") or "").lower()
+              == base_sha
+          )
+          if len(base_sha) != 40 or len(head_sha) != 40:
+              raise SystemExit("PR base/head SHA is unavailable")
+          if pull.get("draft") is True:
+              raise SystemExit("security review is not evaluated for draft PRs")
+          with Path(os.environ["GITHUB_OUTPUT"]).open(
+              "a",
+              encoding="utf-8",
+          ) as handle:
+              handle.write("base_sha={}\n".format(base_sha))
+              handle.write("head_sha={}\n".format(head_sha))
+              handle.write(
+                  "head_is_direct_child_of_base={}\n".format(
+                      str(direct_child).lower()
+                  )
+              )
+              handle.write(
+                  "head_ref={}\n".format(str(head.get("ref") or ""))
+              )
+              handle.write(
+                  "head_repository={}\n".format(
+                      str((head.get("repo") or {}).get("full_name") or "")
+                  )
+              )
+              handle.write(
+                  "author_login={}\n".format(
+                      str((pull.get("user") or {}).get("login") or "")
+                  )
+              )
+          PY
+
+      - name: Checkout exact trusted base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.resolve.outputs.base_sha }}
+          persist-credentials: false
+
+      - name: Verify workflow is bound to PR base
+        env:
+          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+          if [[ "${WORKFLOW_SHA}" != "${BASE_SHA}" ]]; then
+            echo "security review workflow is not bound to the exact PR base" >&2
+            exit 1
+          fi
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Fetch exact PR files, reviews and approval comments
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/security-change-review"
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" \
+            --jq '.[] | @json' > "${cache}/files.jsonl"
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews?per_page=100" \
+            --jq '.[] | @json' > "${cache}/reviews.jsonl"
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments?per_page=100" \
+            --jq '.[] | @json' > "${cache}/comments.jsonl"
+
+      - name: Build and validate exact-head security review packet
+        id: packet
+        env:
+          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
+          HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          HEAD_IS_DIRECT_CHILD_OF_BASE: ${{ steps.resolve.outputs.head_is_direct_child_of_base }}
+          HEAD_REF: ${{ steps.resolve.outputs.head_ref }}
+          HEAD_REPOSITORY: ${{ steps.resolve.outputs.head_repository }}
+          AUTHOR_LOGIN: ${{ steps.resolve.outputs.author_login }}
+        run: |
+          set -euo pipefail
+          rtk python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.common import repository_root
+          from tools.codex_assets.knowledge_hub.security_change_review import (
+              build_security_change_review,
+          )
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          root = repository_root()
+          cache = Path(".cache/knowledge-hub/security-change-review")
+
+          def load_jsonl(path):
+              rows = []
+              for line in path.read_text(encoding="utf-8").splitlines():
+                  if line.strip():
+                      rows.append(json.loads(line))
+              return rows
+
+          files = load_jsonl(cache / "files.jsonl")
+          reviews = load_jsonl(cache / "reviews.jsonl")
+          comments = load_jsonl(cache / "comments.jsonl")
+          policy = json.loads(
+              (root / "registry/review-risk-policy.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          packet = build_security_change_review(
+              repository=os.environ["GITHUB_REPOSITORY"],
+              pr_number=int(os.environ["PR_NUMBER"]),
+              base_sha=os.environ["BASE_SHA"],
+              head_sha=os.environ["HEAD_SHA"],
+              head_ref=os.environ["HEAD_REF"],
+              author_login=os.environ["AUTHOR_LOGIN"],
+              same_repository=(
+                  os.environ["HEAD_REPOSITORY"]
+                  == os.environ["GITHUB_REPOSITORY"]
+              ),
+              head_is_direct_child_of_base=(
+                  os.environ["HEAD_IS_DIRECT_CHILD_OF_BASE"] == "true"
+              ),
+              files=files,
+              reviews=reviews,
+              comments=comments,
+              review_risk_policy=policy,
+          )
+          validation = validate_instance(
+              root,
+              "security-change-review-v1",
+              packet,
+          )
+          if validation.get("status") != "pass":
+              raise SystemExit(
+                  "security change review contract failed: {}".format(
+                      validation.get("errors", [])
+                  )
+              )
+          (cache / "packet.json").write_text(
+              json.dumps(packet, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          with Path(os.environ["GITHUB_OUTPUT"]).open(
+              "a",
+              encoding="utf-8",
+          ) as handle:
+              handle.write(
+                  "gate_pass={}\n".format(
+                      str(packet["gate_pass"]).lower()
+                  )
+              )
+              handle.write(
+                  "security_count={}\n".format(
+                      packet["security_critical_file_count"]
+                  )
+              )
+              handle.write(
+                  "change_fingerprint={}\n".format(
+                      packet["change_fingerprint"]
+                  )
+              )
+              handle.write(
+                  "packet_fingerprint={}\n".format(
+                      packet["packet_fingerprint"]
+                  )
+              )
+          if packet["gate_pass"] is not True:
+              command = "SECURITY-CHANGE-APPROVE {} {}".format(
+                  packet["change_fingerprint"],
+                  packet["head_sha"],
+              )
+              raise SystemExit(
+                  "security-critical human approval required; "
+                  "submit exact PR comment: " + command
+              )
+          PY
+
+      - name: Upload bounded security review evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-security-change-review-${{ env.PR_NUMBER }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/security-change-review/packet.json
+          if-no-files-found: error
+          retention-days: 90

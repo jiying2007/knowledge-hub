@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "model": "knowledge-hub-ai-first-operations-v1",
+  "default_mode": "autonomous-when-machine-verifiable",
+  "classes": {
+    "autonomous-read": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": [
+        "search",
+        "health",
+        "discovery",
+        "reconciliation",
+        "drift detection",
+        "freshness checks"
+      ]
+    },
+    "autonomous-proposal": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": true,
+      "may_write_canonical_candidate": true,
+      "direct_master_write": false,
+      "examples": [
+        "machine-verifiable evidence binding proposal",
+        "contract migration proposal",
+        "stale tracker repair proposal"
+      ]
+    },
+    "autonomous-low-risk-ratchet": {
+      "enabled": true,
+      "human_required": false,
+      "may_create_pr": true,
+      "may_write_canonical_candidate": true,
+      "direct_master_write": false,
+      "examples": [
+        "repository visibility fact ratchet",
+        "immutable provider identity ratchet",
+        "machine-only status reconciliation"
+      ]
+    },
+    "human-authorization": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": [
+        "owner decision",
+        "active promotion",
+        "semantic policy exception",
+        "formal release approval",
+        "rollback authorization"
+      ]
+    },
+    "real-world-evidence": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": [
+        "device result",
+        "production retrieval expectation",
+        "real adoption feedback",
+        "provider ACL transition"
+      ]
+    },
+    "external-administration": {
+      "enabled": true,
+      "human_required": true,
+      "may_create_pr": false,
+      "may_write_canonical_candidate": false,
+      "direct_master_write": false,
+      "examples": [
+        "repository plan change",
+        "branch protection administration",
+        "organization permission change"
+      ]
+    }
+  },
+  "guardrails": {
+    "direct_master_write": false,
+    "automatic_merge_requires_protected_branch": true,
+    "owner_decision_may_be_inferred": false,
+    "synthetic_real_world_evidence_allowed": false,
+    "machine_ratchet_requires_exact_source": true,
+    "machine_ratchet_requires_deterministic_diff": true,
+    "automatic_merge_requires_exact_head_quality": true,
+    "automatic_merge_requires_same_repository": true,
+    "automatic_merge_requires_semantic_allowlist": true,
+    "automatic_merge_executes_pr_code": false,
+    "automatic_merge_requires_trusted_origin_run": true,
+    "automatic_merge_requires_generator_branch_identity": true,
+    "machine_ratchet_uses_trusted_run_timestamp": true,
+    "automation_pr_requires_explicit_quality_dispatch": true,
+    "protection_recovery_requalification_owner": "hosting-posture-reconcile",
+    "protection_recovery_duplicate_pollers_allowed": false,
+    "protected_branch_required_workflows": [
+      "quality",
+      "security-critical-change-review"
+    ]
+  },
+  "evidence_binding": {
+    "machine_ratchet_fields": [
+      "artifact_refs",
+      "source_refs",
+      "validation_refs"
+    ],
+    "human_authorization_fields": [
+      "release_ref"
+    ],
+    "machine_ratchet_mutation_intent": "append-reference",
+    "machine_ratchet_may_change_owner": false,
+    "machine_ratchet_may_change_status": false,
+    "machine_ratchet_may_change_readiness": false,
+    "machine_ratchet_may_auto_promote_evidence_ready": false,
+    "machine_ratchet_may_create_pr": true,
+    "machine_ratchet_direct_master_write": false,
+    "machine_ratchet_auto_merge_requires_protected_branch": true,
+    "machine_ratchet_auto_merge_requires_exact_head_quality": true,
+    "machine_ratchet_auto_merge_requires_same_repository": true,
+    "machine_ratchet_auto_merge_requires_origin_artifact_digest": true,
+    "machine_ratchet_auto_merge_executes_pr_code": false,
+    "machine_validation_requires_source_revision_match": true,
+    "machine_artifact_kinds": [
+      "github-release-asset"
+    ],
+    "machine_artifact_requires_validation_run_match": false,
+    "machine_artifact_requires_source_revision_match": true,
+    "machine_artifact_requires_immutable_release": true
+  },
+  "external_evidence": {
+    "observation_generation_class": "real-world-evidence",
+    "validated_closure_class": "autonomous-low-risk-ratchet",
+    "supported_gaps": [
+      "connector-provider-pilot",
+      "production-retrieval-eval",
+      "memory-lifecycle-pilot",
+      "real-adoption-evidence"
+    ],
+    "strict_validator_required": true,
+    "same_repository_hosted_chain_required": true,
+    "synthetic_evidence_allowed": false,
+    "mock_evidence_allowed": false,
+    "local_only_evidence_allowed": false,
+    "machine_ratchet_may_create_pr": true,
+    "machine_ratchet_direct_master_write": false,
+    "machine_ratchet_auto_merge_requires_protected_branch": true,
+    "machine_ratchet_auto_merge_requires_exact_head_quality": true,
+    "machine_ratchet_auto_merge_executes_pr_code": false,
+    "observation_source_requires_same_repository": true,
+    "observation_source_requires_master_branch": true,
+    "observation_source_allowed_events": [
+      "schedule",
+      "workflow_dispatch"
+    ],
+    "observation_source_requires_workflow_path": true,
+    "observation_contracts": {
+      "connector-provider-pilot": "connector-provider-observation-v1",
+      "production-retrieval-eval": "production-retrieval-observation-v1",
+      "memory-lifecycle-pilot": "production-memory-observation-v1",
+      "real-adoption-evidence": "production-adoption-observation-v1"
+    },
+    "validator_receipt_timestamp_source": "observation-observed-at",
+    "manual_intake_source_requires_trusted_master_run": true,
+    "observation_timestamps_require_utc": true,
+    "production_windows_must_be_ordered": true,
+    "trust_artifact_contracts": {
+      "source_provenance": "external-evidence-source-provenance-v1",
+      "producer_receipt": "external-pilot-evidence-producer-receipt-v1",
+      "closure_receipt": "external-evidence-receipt-v1",
+      "intake_receipt": "external-evidence-intake-receipt-v1",
+      "host_binding": "external-evidence-intake-host-binding-v1",
+      "ratchet_proposal": "external-evidence-ratchet-proposal-v2",
+      "ratchet_verification": "external-evidence-ratchet-verification-v1"
+    },
+    "root_observation_provenance_required": true,
+    "root_observation_revision_must_match_evidence_source_revision": true,
+    "producer_code_revision_source": "github-workflow-sha",
+    "observation_source_workflow_allowlist": {
+      "connector-provider-pilot": [],
+      "production-retrieval-eval": [],
+      "memory-lifecycle-pilot": [],
+      "real-adoption-evidence": []
+    },
+    "observation_source_requires_explicit_registration": true,
+    "manual_intake_source_requires_registered_workflow": true,
+    "observation_source_workflow_prefix": ".github/workflows/real-observation-"
+  },
+  "owner_qualification": {
+    "packet_generation_class": "autonomous-read",
+    "owner_decision_generated": false,
+    "canonical_write_performed": false,
+    "tracker_reconciliation_enabled": true,
+    "owner_gate_tracker_issue": 74,
+    "qualification_tracker_issue": 96,
+    "owner_gate_close_requires_zero_owner_declaration_pending": true,
+    "owner_gate_close_requires_zero_owner_boundary_pending": true,
+    "qualification_close_requires_pass": true,
+    "reopen_on_regression": true
+  },
+  "security_change_review": {
+    "enabled": true,
+    "authorization_source": "github-external-review-facts",
+    "exact_head_required": true,
+    "non_bot_reviewer_required": true,
+    "pr_author_self_approval_allowed": false,
+    "candidate_local_authorization_ledger_trusted": false,
+    "workflow_executes_pr_code": false,
+    "autonomous_ratchet_exemption_requires_same_repository": true,
+    "autonomous_ratchet_exemption_requires_github_actions_bot": true,
+    "autonomous_ratchet_branch_prefixes": [
+      "automation/hosting-private-",
+      "automation/evidence-bind-",
+      "automation/external-gap-"
+    ],
+    "hash_bound_comment_approval_allowed": true,
+    "hash_bound_comment_command": "SECURITY-CHANGE-APPROVE",
+    "hash_bound_comment_requires_change_fingerprint": true,
+    "hash_bound_comment_requires_exact_head_sha": true,
+    "hash_bound_comment_allowed_associations": [
+      "OWNER",
+      "MEMBER",
+      "COLLABORATOR"
+    ],
+    "hash_bound_comment_bot_allowed": false,
+    "authorization_mechanisms": [
+      "exact-head-pr-review",
+      "hash-bound-pr-comment"
+    ],
+    "autonomous_ratchet_exemption_requires_direct_child": true,
+    "autonomous_ratchet_file_allowlists": {
+      "automation/hosting-private-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json"
+      ],
+      "automation/evidence-bind-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/items.jsonl"
+      ],
+      "automation/external-gap-": [
+        "registry/durable-evidence-ledger.jsonl",
+        "registry/knowledge-platform-p5-p10.json"
+      ]
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/owner-qualification-packet.schema.json",
+  "title": "Knowledge Hub owner qualification packet",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "projection",
+    "status",
+    "read_only",
+    "canonical_write_performed",
+    "owner_decision_generated",
+    "qualification_pass",
+    "summary",
+    "owner_declaration_pending_count",
+    "owner_declaration_projects",
+    "owner_boundary_pending_count",
+    "owner_boundary_projects",
+    "real_evidence_pending_project_count",
+    "real_evidence_projects",
+    "rows",
+    "packet_fingerprint"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "projection": {"const": "knowledge-hub-owner-qualification-packet-v1"},
+    "status": {"enum": ["pass", "needs-review"]},
+    "read_only": {"const": true},
+    "canonical_write_performed": {"const": false},
+    "owner_decision_generated": {"const": false},
+    "qualification_pass": {"type": "boolean"},
+    "summary": {
+      "type": "object",
+      "required": [
+        "project_count",
+        "structural_ready_count",
+        "source_mapping_ready_count",
+        "owner_boundary_ready_count",
+        "evidence_field_complete_count",
+        "evidence_ready_count",
+        "route_matrix_failure_count"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "owner_declaration_pending_count": {"type": "integer", "minimum": 0},
+    "owner_declaration_projects": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "owner_boundary_pending_count": {"type": "integer", "minimum": 0},
+    "owner_boundary_projects": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "real_evidence_pending_project_count": {"type": "integer", "minimum": 0},
+    "real_evidence_projects": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "name",
+          "evidence_profile",
+          "evidence_status",
+          "evidence_field_status",
+          "owner_boundary_status",
+          "decision_owner_status",
+          "owner_ref_status",
+          "source_mapping_ready",
+          "missing_fields",
+          "invalid_fields",
+          "owner_declaration_pending",
+          "owner_boundary_pending",
+          "real_evidence_missing_fields",
+          "real_evidence_invalid_fields",
+          "real_evidence_pending"
+        ],
+        "properties": {
+          "project_id": {"type": "string", "minLength": 1},
+          "name": {"type": "string"},
+          "evidence_profile": {"type": "string"},
+          "evidence_status": {"type": "string"},
+          "evidence_field_status": {"type": "string"},
+          "owner_boundary_status": {"type": "string"},
+          "decision_owner_status": {"type": "string"},
+          "owner_ref_status": {"type": "string"},
+          "source_mapping_ready": {"type": "boolean"},
+          "missing_fields": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "invalid_fields": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "owner_declaration_pending": {"type": "boolean"},
+          "owner_boundary_pending": {"type": "boolean"},
+          "real_evidence_missing_fields": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "real_evidence_invalid_fields": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "real_evidence_pending": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "packet_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

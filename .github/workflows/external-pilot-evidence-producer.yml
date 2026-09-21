@@ -11,6 +11,7 @@ on:
           - connector-provider-pilot
           - production-retrieval-eval
           - memory-lifecycle-pilot
+          - real-adoption-evidence
       source_run_id:
         description: Successful same-repository run containing the real observation artifact
         required: true
@@ -39,21 +40,24 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      PRODUCER_REVISION: ${{ github.workflow_sha }}
     steps:
       - name: Checkout immutable producer revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.PRODUCER_REVISION }}
           persist-credentials: false
       - name: Set up governed Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
           cache: pip
-          cache-dependency-path: requirements-dev.lock
+          cache-dependency-path: requirements-runtime.lock
       - name: Bootstrap governed CI transport
         run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
-      - name: Install hash-locked dependencies
-        run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
       - name: Validate producer selectors
         env:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
@@ -69,6 +73,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
           ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          EXPECTED_GAP: ${{ inputs.expected_gap }}
         run: |
           set -euo pipefail
           mkdir -p .cache/knowledge-hub/external-pilot-evidence
@@ -86,6 +91,45 @@ jobs:
               raise SystemExit('observation source run must be completed/success')
           if (run.get('repository') or {}).get('full_name') != expected_repo:
               raise SystemExit('observation source run must belong to the current repository')
+          if run.get('head_branch') != 'master':
+              raise SystemExit('observation source run must execute from master')
+          if run.get('event') not in {'workflow_dispatch', 'schedule'}:
+              raise SystemExit('observation source run event is not trusted')
+          workflow_path = str(run.get('path') or '')
+          if not workflow_path.startswith('.github/workflows/') or not workflow_path.endswith('.yml'):
+              raise SystemExit('observation source workflow path is invalid')
+
+          policy = json.loads(
+              Path('registry/ai-operations-policy.json').read_text(
+                  encoding='utf-8'
+              )
+          )
+          external = policy.get('external_evidence') or {}
+          prefix = str(
+              external.get('observation_source_workflow_prefix') or ''
+          )
+          if prefix != '.github/workflows/real-observation-':
+              raise SystemExit(
+                  'observation source workflow namespace policy is invalid'
+              )
+          if not workflow_path.startswith(prefix):
+              raise SystemExit(
+                  'observation source workflow is outside the real-observation namespace'
+              )
+          allowlists = external.get('observation_source_workflow_allowlist') or {}
+          gap = os.environ['EXPECTED_GAP']
+          allowed = allowlists.get(gap)
+          if not isinstance(allowed, list):
+              raise SystemExit(
+                  'observation source workflow registration policy is invalid'
+              )
+          if workflow_path not in allowed:
+              raise SystemExit(
+                  'observation source workflow is not registered for {}'.format(
+                      gap
+                  )
+              )
+
           head_sha = str(run.get('head_sha') or '').lower()
           if len(head_sha) != 40 or any(ch not in '0123456789abcdef' for ch in head_sha):
               raise SystemExit('observation source run must expose an exact git revision')
@@ -103,15 +147,30 @@ jobs:
               raise SystemExit('observation artifact must expose a sha256 digest')
           bounded = {
               'schema_version': 1,
-              'projection': 'knowledge-hub-external-pilot-observation-source-v1',
               'repository': expected_repo,
               'source_run_id': int(run['id']),
+              'source_run_attempt': int(run.get('run_attempt', 0) or 0),
               'source_run_head_sha': head_sha,
               'source_run_event': str(run.get('event') or ''),
+              'source_run_head_branch': str(run.get('head_branch') or ''),
+              'source_workflow_path': workflow_path,
               'artifact_id': int(artifact['id']),
               'artifact_name': str(artifact['name']),
               'artifact_digest': digest,
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path('.').resolve(),
+              'external-evidence-source-provenance-v1',
+              bounded,
+          )
+          if validation.get('status') != 'pass':
+              raise SystemExit(
+                  'observation source provenance contract failed: {}'.format(
+                      validation.get('errors', [])
+                  )
+              )
           (root / 'source-provenance.json').write_text(
               json.dumps(bounded, sort_keys=True, separators=(',', ':')) + '\n',
               encoding='utf-8',
@@ -174,8 +233,21 @@ jobs:
               'evidence_sha256': hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
               'producer_run_id': int(os.environ['GITHUB_RUN_ID']),
               'producer_run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
-              'producer_revision': os.environ['GITHUB_SHA'],
+              'producer_revision': os.environ['PRODUCER_REVISION'],
           }
+          from tools.codex_assets.knowledge_hub.schemas import validate_instance
+
+          validation = validate_instance(
+              Path('.').resolve(),
+              'external-pilot-evidence-producer-receipt-v1',
+              receipt,
+          )
+          if validation.get('status') != 'pass':
+              raise SystemExit(
+                  'producer receipt contract validation failed: {}'.format(
+                      validation.get('errors', [])
+                  )
+              )
           (root / 'producer-receipt.json').write_text(
               json.dumps(receipt, sort_keys=True, separators=(',', ':')) + '\n',
               encoding='utf-8',

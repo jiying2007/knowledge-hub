@@ -1,0 +1,485 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/connector-provider-observation.schema.json",
+  "title": "Knowledge Hub real connector provider observation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gap_id",
+    "source_revision",
+    "observed_at",
+    "evidence_source_refs",
+    "origin",
+    "observation_ledger_sha256",
+    "provider",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "knowledge-hub.connector-provider-observation.v1"
+    },
+    "gap_id": {
+      "const": "connector-provider-pilot"
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 10,
+      "format": "date-time"
+    },
+    "evidence_source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": [
+        "classification",
+        "environment_id_sha256",
+        "synthetic",
+        "mock",
+        "fixture",
+        "static_adapter",
+        "local_only"
+      ],
+      "properties": {
+        "classification": {
+          "const": "real-provider"
+        },
+        "environment_id_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "synthetic": {
+          "const": false
+        },
+        "mock": {
+          "const": false
+        },
+        "fixture": {
+          "const": false
+        },
+        "static_adapter": {
+          "const": false
+        },
+        "local_only": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "observation_ledger_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "provider": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "adapter_commit",
+        "account_id_sha256",
+        "transport",
+        "network_observed"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "github",
+            "feishu",
+            "tapd",
+            "ci",
+            "google-drive"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "adapter_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "account_id_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "transport": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "not": {
+            "enum": [
+              "static",
+              "mock",
+              "fixture",
+              "local"
+            ]
+          }
+        },
+        "network_observed": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "object",
+      "required": [
+        "incremental_checkpoint",
+        "acl_change",
+        "tombstone",
+        "retry_backoff",
+        "freshness",
+        "quarantine",
+        "stays_at_source"
+      ],
+      "properties": {
+        "incremental_checkpoint": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "before_cursor_sha256",
+            "after_cursor_sha256",
+            "checkpoint_advanced",
+            "idempotent_replay"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "before_cursor_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "after_cursor_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "checkpoint_advanced": {
+              "const": true
+            },
+            "idempotent_replay": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "acl_change": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "before_acl_sha256",
+            "after_acl_sha256",
+            "propagated"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "before_acl_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "after_acl_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "propagated": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "tombstone": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "object_id_sha256",
+            "delete_acknowledged",
+            "post_delete_status_code"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "object_id_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "delete_acknowledged": {
+              "const": true
+            },
+            "post_delete_status_code": {
+              "enum": [
+                404,
+                410
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "retry_backoff": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "attempts",
+            "first_status_code",
+            "recovery_status_code",
+            "backoff_seconds",
+            "backoff_observed",
+            "provider_response_observed"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "attempts": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "first_status_code": {
+              "type": "integer",
+              "minimum": 400,
+              "maximum": 599
+            },
+            "recovery_status_code": {
+              "type": "integer",
+              "minimum": 200,
+              "maximum": 299
+            },
+            "backoff_seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "backoff_observed": {
+              "const": true
+            },
+            "provider_response_observed": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "freshness": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "sample_count",
+            "slo_seconds",
+            "p95_seconds"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "slo_seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "p95_seconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "quarantine": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "before_checkpoint_sha256",
+            "after_checkpoint_sha256",
+            "case_id_sha256",
+            "runtime_receipt_sha256",
+            "dead_letter_or_quarantine_observed"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "before_checkpoint_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "after_checkpoint_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "case_id_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "runtime_receipt_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "dead_letter_or_quarantine_observed": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "stays_at_source": {
+          "type": "object",
+          "required": [
+            "status",
+            "provider_request_sha256",
+            "provider_response_sha256",
+            "observed_at",
+            "registry_before_sha256",
+            "registry_after_sha256",
+            "canonical_write_performed",
+            "auto_promotion"
+          ],
+          "properties": {
+            "status": {
+              "const": "pass"
+            },
+            "provider_request_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provider_response_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "observed_at": {
+              "type": "string",
+              "minLength": 10,
+              "format": "date-time"
+            },
+            "registry_before_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "registry_after_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "canonical_write_performed": {
+              "const": false
+            },
+            "auto_promotion": {
+              "const": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

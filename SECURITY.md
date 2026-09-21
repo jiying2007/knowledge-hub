@@ -21,5 +21,7 @@ repository owner's private security-reporting channel when available.
 - High-risk write/promotion/merge/release capabilities remain fail-closed.
 - Local ledgers and telemetry use private directories/files and reject symlinks.
 - Raw queries/prompts/tasks are not persisted by P9 observability.
-- Repository privacy and default-branch rulesets are mandatory deployment controls
-  for any instance containing non-public engineering knowledge.
+- Repository privacy is mandatory for any instance containing non-public engineering knowledge.
+- Repository closure baseline requires a protected default branch; the stronger production-hardened
+  profile additionally expects PR/status-check/conversation/force-push/deletion controls when the
+  selected GitHub plan supports them. Never weaken the baseline merely to obtain terminal=true.

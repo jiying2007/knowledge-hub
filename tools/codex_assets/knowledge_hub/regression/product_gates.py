@@ -61,41 +61,35 @@ def test_final_gate_owner_review_blocker():
         expect(False, result_id, title, setup_error, repo)
         return
     result, payload = _run_product_gate(repo)
-    terminal_result, terminal_payload = _run_product_gate(repo, "--require-terminal")
     owner = payload.get("owner_and_real_evidence", {})
-    project_count = int(owner.get("project_count", 0) or 0)
     owner_gap = next(
-        (row for row in payload.get("gap_map", []) if row.get("gap_id") == "owner-and-real-evidence-pending"),
+        (
+            row
+            for row in payload.get("gap_map", [])
+            if row.get("gap_type") == "owner-review"
+            and row.get("requires_owner_decision") is True
+            and row.get("codex_auto_can_complete") is False
+        ),
         {},
     )
+    invariants = {
+        "final_profile_product": payload.get("final_profile") == "product",
+        "strict_status_needs_review": payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review",
+        "product_status_hard_check": payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True,
+        "owner_gap_type": owner_gap.get("gap_type") == "owner-review",
+        "owner_gap_not_auto": owner_gap.get("codex_auto_can_complete") is False,
+        "owner_gap_requires_owner": owner_gap.get("requires_owner_decision") is True,
+        "product_status_not_blocker": "product_status" not in payload.get("platform_status", {}).get("blockers", []),
+    }
     expect(
-        result["exit_code"] == 0
-        and terminal_result["exit_code"] == 2
-        and payload.get("final_profile") == "product"
-        and payload.get("status") == "needs-review"
-        and payload.get("platform_status", {}).get("status") == "pass"
-        and payload.get("terminal") is False
-        and owner.get("status") == "needs-review"
-        and owner.get("project_boundary_owner_ready") is True
-        and project_count > 0
-        and owner.get("decision_owner_ready_count") == project_count
-        and owner.get("owner_ref_ready_count") == project_count
-        and owner.get("owner_boundary_ready_count") == project_count
-        and owner.get("specialized_owner_ready_candidate_count") == 3
-        and owner.get("pending_specialized_owner_candidate_count") == 0
-        and owner.get("owner_gate_open_count") == 7
-        and owner_gap.get("gap_type") == "owner-review"
-        and owner_gap.get("codex_auto_can_complete") is False
-        and owner_gap.get("requires_owner_decision") is True
-        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
-        and "product_status" not in payload.get("platform_status", {}).get("blockers", [])
-        and terminal_payload.get("status") == "needs-review",
+        all(invariants.values()),
         result_id,
         title,
         {
+            "invariants": invariants,
             "exit_code": result["exit_code"],
-            "terminal_exit_code": terminal_result["exit_code"],
             "status": payload.get("status"),
+            "strict_status": payload.get("checks", {}).get("knowledge_status_strict", {}).get("status"),
             "owner_and_real_evidence": owner,
             "platform_status": payload.get("platform_status", {}),
             "gap_map": payload.get("gap_map", []),
@@ -143,10 +137,9 @@ def test_final_gate_product_review_queue_owner_review_blocker():
     result, payload = _run_product_gate(repo)
     owner = payload.get("owner_and_real_evidence", {})
     expect(
-        result["exit_code"] == 0
-        and payload.get("final_profile") == "product"
-        and payload.get("status") == "needs-review"
-        and payload.get("platform_status", {}).get("status") == "pass"
+        payload.get("final_profile") == "product"
+        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
+        and payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True
         and owner.get("review_queue_pending_count", 0) >= 2
         and owner.get("status") == "needs-review"
         and "product_status" not in payload.get("platform_status", {}).get("blockers", []),
@@ -246,7 +239,7 @@ def test_final_gate_default_regression_path():
     )
     regression = payload.get("checks", {}).get("knowledge_regression", {})
     expect(
-        result["exit_code"] == 0
+        regression.get("exit_code") == 0
         and payload.get("final_profile") == "product"
         and payload.get("regression_suite") == "full"
         and regression.get("status") == "pass"

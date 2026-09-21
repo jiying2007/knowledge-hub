@@ -20,6 +20,11 @@ from .artifact_terminal_forms import (
 )
 from .common import KnowledgeHubError, utc_timestamp
 from .complexity_budget import evaluate_complexity_budget
+from .terminal_hosted_evidence import (
+    default_branch_protection_state as _default_branch_protection_state,
+    hosting_posture_state as _hosting_posture_state,
+    mcp_conformance_state as _mcp_conformance_state,
+)
 
 DEFAULT_POLICY = "registry/terminal-closure.json"
 
@@ -34,61 +39,71 @@ def _load_object(path: pathlib.Path, label: str) -> Dict[str, Any]:
     return dict(value)
 
 
-def _external_gap_state(
-    root: pathlib.Path, policy: Mapping[str, Any]
-) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def _external_policy_config(
+    policy: Mapping[str, Any],
+) -> Tuple[str, List[str], List[str], bool]:
     external = policy.get("external_closure", {})
     if not isinstance(external, Mapping):
-        raise KnowledgeHubError("terminal external_closure policy must be an object")
+        raise KnowledgeHubError(
+            "terminal external_closure policy must be an object"
+        )
     source = str(external.get("source", "")).strip()
     required_ids = external.get("required_gap_ids", [])
     observational_ids = external.get("observational_gap_ids", [])
-    require_evidence_refs = bool(external.get("require_evidence_refs_on_close", False))
+    require_refs = bool(
+        external.get("require_evidence_refs_on_close", False)
+    )
     if (
         not source
         or not isinstance(required_ids, list)
         or not isinstance(observational_ids, list)
     ):
-        raise KnowledgeHubError("terminal external closure policy is incomplete")
-    policy_required_ids = sorted({str(value) for value in required_ids if str(value).strip()})
-    policy_observational_ids = sorted(
+        raise KnowledgeHubError(
+            "terminal external closure policy is incomplete"
+        )
+    required = sorted(
+        {str(value) for value in required_ids if str(value).strip()}
+    )
+    observational = sorted(
         {str(value) for value in observational_ids if str(value).strip()}
     )
-    if len(policy_required_ids) != len(required_ids):
-        raise KnowledgeHubError("terminal external required_gap_ids must be unique and non-empty")
-    if len(policy_observational_ids) != len(observational_ids):
+    if len(required) != len(required_ids):
+        raise KnowledgeHubError(
+            "terminal external required_gap_ids must be unique and non-empty"
+        )
+    if len(observational) != len(observational_ids):
         raise KnowledgeHubError(
             "terminal external observational_gap_ids must be unique and non-empty"
         )
-    if set(policy_required_ids) & set(policy_observational_ids):
-        raise KnowledgeHubError("terminal required and observational gap ids must not overlap")
+    if set(required) & set(observational):
+        raise KnowledgeHubError(
+            "terminal required and observational gap ids must not overlap"
+        )
+    return source, required, observational, require_refs
 
+
+def _external_rows_by_id(
+    root: pathlib.Path,
+    source: str,
+) -> Dict[str, Mapping[str, Any]]:
     platform = _load_object(root / source, "external closure registry")
     rows = platform.get("external_closure_gaps", [])
     if not isinstance(rows, list):
         raise KnowledgeHubError("external_closure_gaps must be a list")
-    by_id = {
+    return {
         str(row.get("id", "")): row
         for row in rows
         if isinstance(row, Mapping) and row.get("id")
     }
-    registry_required_ids = sorted(
-        gap_id for gap_id, row in by_id.items() if row.get("required") is True
-    )
-    unresolved: List[Dict[str, Any]] = []
-    if policy_required_ids != registry_required_ids:
-        unresolved.append(
-            {
-                "id": "terminal-policy-required-gap-drift",
-                "status": "blocked",
-                "owner": "terminal-policy",
-                "policy_required_gap_ids": policy_required_ids,
-                "registry_required_gap_ids": registry_required_ids,
-            }
-        )
 
+
+def _observational_gap_state(
+    gap_ids: List[str],
+    by_id: Mapping[str, Mapping[str, Any]],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    unresolved: List[Dict[str, Any]] = []
     observational: List[Dict[str, Any]] = []
-    for gap_id in policy_observational_ids:
+    for gap_id in gap_ids:
         row = by_id.get(gap_id)
         if row is None or row.get("required") is True:
             unresolved.append(
@@ -108,18 +123,32 @@ def _external_gap_state(
                 "github_terminal_blocking": False,
             }
         )
+    return unresolved, observational
 
-    for gap_id in policy_required_ids:
+
+def _required_gap_state(
+    gap_ids: List[str],
+    by_id: Mapping[str, Mapping[str, Any]],
+    *,
+    require_evidence_refs: bool,
+) -> List[Dict[str, Any]]:
+    unresolved: List[Dict[str, Any]] = []
+    for gap_id in gap_ids:
         row = by_id.get(gap_id)
         if row is None:
-            unresolved.append({"id": gap_id, "status": "missing", "owner": ""})
+            unresolved.append(
+                {"id": gap_id, "status": "missing", "owner": ""}
+            )
             continue
         status = str(row.get("status", "open"))
         evidence_refs = row.get("evidence_refs", [])
         valid_refs = (
             isinstance(evidence_refs, list)
             and bool(evidence_refs)
-            and all(isinstance(value, str) and value.strip() for value in evidence_refs)
+            and all(
+                isinstance(value, str) and value.strip()
+                for value in evidence_refs
+            )
         )
         if status != "closed":
             unresolved.append(
@@ -137,8 +166,46 @@ def _external_gap_state(
                     "owner": str(row.get("owner", "")),
                 }
             )
-    return unresolved, observational
+    return unresolved
 
+
+def _external_gap_state(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    source, required_ids, observational_ids, require_refs = (
+        _external_policy_config(policy)
+    )
+    by_id = _external_rows_by_id(root, source)
+    registry_required_ids = sorted(
+        gap_id
+        for gap_id, row in by_id.items()
+        if row.get("required") is True
+    )
+    unresolved: List[Dict[str, Any]] = []
+    if required_ids != registry_required_ids:
+        unresolved.append(
+            {
+                "id": "terminal-policy-required-gap-drift",
+                "status": "blocked",
+                "owner": "terminal-policy",
+                "policy_required_gap_ids": required_ids,
+                "registry_required_gap_ids": registry_required_ids,
+            }
+        )
+    observational_errors, observational = _observational_gap_state(
+        observational_ids,
+        by_id,
+    )
+    unresolved.extend(observational_errors)
+    unresolved.extend(
+        _required_gap_state(
+            required_ids,
+            by_id,
+            require_evidence_refs=require_refs,
+        )
+    )
+    return unresolved, observational
 
 def _external_gaps(root: pathlib.Path, policy: Mapping[str, Any]) -> List[Dict[str, Any]]:
     """Compatibility view for existing Operator projections: blocking gaps only."""
@@ -334,8 +401,14 @@ def _branch_candidates(lifecycle: Mapping[str, Any]) -> List[str]:
 def _inventory_identity(
     config: Mapping[str, Any], evidence: Mapping[str, Any]
 ) -> Tuple[bool, bool]:
-    current_sha = os.environ.get("GITHUB_SHA", "").strip()
-    current_repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+    current_sha = (
+        os.environ.get("KNOWLEDGE_SOURCE_REVISION", "").strip()
+        or os.environ.get("GITHUB_SHA", "").strip()
+    )
+    current_repository = (
+        os.environ.get("KNOWLEDGE_GITHUB_REPOSITORY", "").strip()
+        or os.environ.get("GITHUB_REPOSITORY", "").strip()
+    )
     revision_matches = True
     repository_matches = True
     if bool(config.get("require_current_github_sha_when_available", False)) and current_sha:
@@ -406,174 +479,117 @@ def _branch_gc_state(root: pathlib.Path, policy: Mapping[str, Any]) -> Dict[str,
     }
 
 
-def _default_branch_protection_state(
-    root: pathlib.Path, policy: Mapping[str, Any]
-) -> Dict[str, Any]:
-    rules = policy.get("rules", {})
-    if not isinstance(rules, Mapping):
-        raise KnowledgeHubError("terminal rules policy must be an object")
-    required = bool(rules.get("default_branch_protection_required", False))
-    branch = str(rules.get("default_branch", "master")).strip()
-    if not required:
-        return {
-            "required": False,
-            "status": "pass",
-            "branch": branch,
-            "owner": "repository-admin",
-            "reason": "",
-        }
-    if not branch:
-        raise KnowledgeHubError("terminal default branch name is missing")
-    config = policy.get("branch_gc", {})
-    if not isinstance(config, Mapping):
-        raise KnowledgeHubError("branch_gc terminal policy must be an object")
-    evidence_path = str(config.get("evidence", "")).strip()
-    if not evidence_path:
-        raise KnowledgeHubError("branch_gc evidence is missing")
-    try:
-        evidence = _load_object(root / evidence_path, "remote branch inventory")
-    except KnowledgeHubError:
-        return {
-            "required": True,
-            "status": "blocked",
-            "branch": branch,
-            "owner": "repository-admin",
-            "protected": False,
-            "protection_observed": False,
-            "reason": "fresh-remote-branch-inventory-missing",
-            "snapshot": evidence_path,
-        }
-    revision_matches, repository_matches = _inventory_identity(config, evidence)
-    snapshot_branch = str(evidence.get("default_branch", ""))
-    present = evidence.get("default_branch_present") is True
-    observed = evidence.get("default_branch_protection_observed") is True
-    protected = evidence.get("default_branch_protected") is True
-    status = "pass"
-    reason = ""
-    if evidence.get("status") == "blocked":
-        status = "blocked"
-        reason = "remote-branch-inventory-unavailable"
-    elif not revision_matches:
-        status = "blocked"
-        reason = "default-branch-protection-revision-mismatch"
-    elif not repository_matches:
-        status = "blocked"
-        reason = "default-branch-protection-repository-mismatch"
-    elif snapshot_branch != branch:
-        status = "blocked"
-        reason = "default-branch-identity-mismatch"
-    elif not present:
-        status = "blocked"
-        reason = "default-branch-missing"
-    elif not observed:
-        status = "blocked"
-        reason = "default-branch-protection-evidence-missing"
-    elif not protected:
-        status = "needs-review"
-        reason = "default-branch-unprotected"
-    return {
-        "required": True,
-        "status": status,
-        "branch": branch,
-        "owner": "repository-admin",
-        "repository": str(evidence.get("repository", "")),
-        "repository_matches_current_run": repository_matches,
-        "source_revision": str(evidence.get("source_revision", "")),
-        "revision_matches_current_run": revision_matches,
-        "present": present,
-        "protection_observed": observed,
-        "protected": protected,
-        "reason": reason,
-        "snapshot": evidence_path,
-    }
-
-
-def evaluate_terminal_closure(
+def _artifact_terminal_forms_state(
     root: pathlib.Path,
-    *,
-    policy_path: str = DEFAULT_POLICY,
-    snapshot_path: str = "",
+    policy: Mapping[str, Any],
+    artifacts: Mapping[str, Any],
 ) -> Dict[str, Any]:
-    policy = _load_object(root / policy_path, "terminal closure policy")
-    product_policy = policy.get("product_gate", {})
-    if not isinstance(product_policy, Mapping):
-        raise KnowledgeHubError("product_gate terminal policy must be an object")
-    snapshot_name = snapshot_path or str(product_policy.get("snapshot", "")).strip()
-    if not snapshot_name:
-        raise KnowledgeHubError("terminal product snapshot path is missing")
-    snapshot = _load_object(root / snapshot_name, "product final gate snapshot")
-    product_repository = _product_repository_state(snapshot, product_policy)
-    external_gaps, operational_gaps = _external_gap_state(root, policy)
-    complexity = evaluate_complexity_budget(root)
-    artifacts = evaluate_artifact_governance(root)
-
-    bounded_policy = policy.get("bounded_legacy", {})
-    if not isinstance(bounded_policy, Mapping):
+    bounded = policy.get("bounded_legacy", {})
+    if not isinstance(bounded, Mapping):
         raise KnowledgeHubError("bounded_legacy policy must be an object")
     immutable_refs = artifacts.get("immutable_refs", {})
     if not isinstance(immutable_refs, Mapping):
         immutable_refs = {}
-    artifact_ref_count = int(immutable_refs.get("legacy_reference_count", 0) or 0)
-    if bool(bounded_policy.get("require_artifact_terminal_forms", False)):
-        registry_path = str(
-            bounded_policy.get(
-                "artifact_terminal_form_registry",
-                DEFAULT_ARTIFACT_TERMINAL_FORMS,
-            )
-        ).strip()
-        if not registry_path:
-            raise KnowledgeHubError("artifact terminal-form registry path is missing")
-        terminal_forms = evaluate_legacy_artifact_terminal_forms(
-            root,
-            registry_path=registry_path,
-        )
-    else:
-        terminal_forms = {
+    ref_count = int(
+        immutable_refs.get("legacy_reference_count", 0) or 0
+    )
+    if not bool(bounded.get("require_artifact_terminal_forms", False)):
+        return {
             "status": "not-required",
-            "legacy_reference_count": artifact_ref_count,
+            "legacy_reference_count": ref_count,
             "accepted_legacy_reference_count": 0,
             "unaccepted_legacy_reference_count": 0,
             "legacy_reference_set_sha256": "",
         }
-
-    legacy = _bounded_legacy_state(
+    registry_path = str(
+        bounded.get(
+            "artifact_terminal_form_registry",
+            DEFAULT_ARTIFACT_TERMINAL_FORMS,
+        )
+    ).strip()
+    if not registry_path:
+        raise KnowledgeHubError(
+            "artifact terminal-form registry path is missing"
+        )
+    return evaluate_legacy_artifact_terminal_forms(
         root,
-        policy,
-        complexity,
-        artifacts,
-        terminal_forms,
+        registry_path=registry_path,
     )
-    branch_gc = _branch_gc_state(root, policy)
-    branch_protection = _default_branch_protection_state(root, policy)
 
-    checks = {
-        "product_repository_readiness": product_repository.get("status") == "pass",
+
+def _terminal_checks(
+    *,
+    product_repository: Mapping[str, Any],
+    external_gaps: List[Dict[str, Any]],
+    complexity: Mapping[str, Any],
+    artifacts: Mapping[str, Any],
+    legacy: Mapping[str, Any],
+    branch_gc: Mapping[str, Any],
+    branch_protection: Mapping[str, Any],
+    hosting_posture: Mapping[str, Any],
+    mcp_conformance: Mapping[str, Any],
+) -> Dict[str, bool]:
+    return {
+        "product_repository_readiness": (
+            product_repository.get("status") == "pass"
+        ),
         "external_closure": not external_gaps,
         "complexity_no_regression": complexity.get("status") == "pass",
         "artifact_governance": artifacts.get("status") == "pass",
         "bounded_legacy": legacy.get("status") == "pass",
         "branch_gc": branch_gc.get("status") == "pass",
-        "default_branch_protection": branch_protection.get("status") == "pass",
+        "default_branch_protection": (
+            branch_protection.get("status") == "pass"
+        ),
+        "hosting_posture": hosting_posture.get("status") == "pass",
+        "mcp_conformance": mcp_conformance.get("status") == "pass",
     }
+
+
+def _terminal_result(
+    *,
+    policy: Mapping[str, Any],
+    snapshot_name: str,
+    snapshot: Mapping[str, Any],
+    product_repository: Mapping[str, Any],
+    external_gaps: List[Dict[str, Any]],
+    operational_gaps: List[Dict[str, Any]],
+    terminal_forms: Mapping[str, Any],
+    legacy: Mapping[str, Any],
+    branch_gc: Mapping[str, Any],
+    branch_protection: Mapping[str, Any],
+    hosting_posture: Mapping[str, Any],
+    mcp_conformance: Mapping[str, Any],
+    checks: Mapping[str, bool],
+) -> Dict[str, Any]:
     blockers = [name for name, passed in checks.items() if not passed]
-    terminal = not blockers
     operational_open = [
-        row for row in operational_gaps if str(row.get("status", "open")) != "closed"
+        row
+        for row in operational_gaps
+        if str(row.get("status", "open")) != "closed"
     ]
+    terminal = not blockers
     return {
         "schema_version": 2,
-        "contract": str(policy.get("contract", "knowledge-hub-github-terminal-closure-v2")),
-        "closure_scope": str(policy.get("closure_scope", "github-repository")),
+        "contract": str(
+            policy.get(
+                "contract",
+                "knowledge-hub-github-terminal-closure-v2",
+            )
+        ),
+        "closure_scope": str(
+            policy.get("closure_scope", "github-repository")
+        ),
         "generated_at": utc_timestamp(),
         "status": "pass" if terminal else "needs-review",
         "terminal": terminal,
-        "checks": checks,
+        "checks": dict(checks),
         "blockers": blockers,
         "product": {
             "snapshot": snapshot_name,
             "status": snapshot.get("status", ""),
             "terminal": bool(snapshot.get("terminal", False)),
-            "repository_readiness": product_repository,
+            "repository_readiness": dict(product_repository),
         },
         "external_closure": {
             "status": "pass" if not external_gaps else "needs-review",
@@ -587,8 +603,85 @@ def evaluate_terminal_closure(
             "open_gaps": operational_open,
             "all_gaps": operational_gaps,
         },
-        "artifact_terminal_forms": terminal_forms,
-        "bounded_legacy": legacy,
-        "branch_gc": branch_gc,
-        "default_branch_protection": branch_protection,
+        "artifact_terminal_forms": dict(terminal_forms),
+        "bounded_legacy": dict(legacy),
+        "branch_gc": dict(branch_gc),
+        "default_branch_protection": dict(branch_protection),
+        "hosting_posture": dict(hosting_posture),
+        "mcp_conformance": dict(mcp_conformance),
     }
+
+
+def evaluate_terminal_closure(
+    root: pathlib.Path,
+    *,
+    policy_path: str = DEFAULT_POLICY,
+    snapshot_path: str = "",
+) -> Dict[str, Any]:
+    policy = _load_object(root / policy_path, "terminal closure policy")
+    product_policy = policy.get("product_gate", {})
+    if not isinstance(product_policy, Mapping):
+        raise KnowledgeHubError(
+            "product_gate terminal policy must be an object"
+        )
+    snapshot_name = snapshot_path or str(
+        product_policy.get("snapshot", "")
+    ).strip()
+    if not snapshot_name:
+        raise KnowledgeHubError(
+            "terminal product snapshot path is missing"
+        )
+    snapshot = _load_object(
+        root / snapshot_name,
+        "product final gate snapshot",
+    )
+    product_repository = _product_repository_state(
+        snapshot,
+        product_policy,
+    )
+    external_gaps, operational_gaps = _external_gap_state(root, policy)
+    complexity = evaluate_complexity_budget(root)
+    artifacts = evaluate_artifact_governance(root)
+    terminal_forms = _artifact_terminal_forms_state(
+        root,
+        policy,
+        artifacts,
+    )
+    legacy = _bounded_legacy_state(
+        root,
+        policy,
+        complexity,
+        artifacts,
+        terminal_forms,
+    )
+    branch_gc = _branch_gc_state(root, policy)
+    branch_protection = _default_branch_protection_state(root, policy)
+    hosting_posture = _hosting_posture_state(root, policy)
+    mcp_conformance = _mcp_conformance_state(root, policy)
+    checks = _terminal_checks(
+        product_repository=product_repository,
+        external_gaps=external_gaps,
+        complexity=complexity,
+        artifacts=artifacts,
+        legacy=legacy,
+        branch_gc=branch_gc,
+        branch_protection=branch_protection,
+        hosting_posture=hosting_posture,
+        mcp_conformance=mcp_conformance,
+    )
+    return _terminal_result(
+        policy=policy,
+        snapshot_name=snapshot_name,
+        snapshot=snapshot,
+        product_repository=product_repository,
+        external_gaps=external_gaps,
+        operational_gaps=operational_gaps,
+        terminal_forms=terminal_forms,
+        legacy=legacy,
+        branch_gc=branch_gc,
+        branch_protection=branch_protection,
+        hosting_posture=hosting_posture,
+        mcp_conformance=mcp_conformance,
+        checks=checks,
+    )
+

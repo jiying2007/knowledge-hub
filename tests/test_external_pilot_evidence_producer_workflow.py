@@ -52,3 +52,120 @@ def test_external_pilot_producer_cannot_mutate_canonical_registry():
     assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json" in text
     assert "canonical_write_performed': False" in text
     assert "registry/knowledge-platform-p5-p10.json" not in text.split("path: |", 1)[-1]
+
+
+def test_external_pilot_producer_uses_runtime_dependency_surface():
+    text = _workflow()
+    assert "requirements-runtime.lock" in text
+    assert "requirements-dev.lock" not in text
+
+
+def test_external_pilot_producer_supports_all_operational_real_evidence_gaps():
+    text = _workflow()
+    for gap in (
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+    ):
+        assert gap in text
+
+
+def test_external_pilot_producer_requires_trusted_master_observation_run():
+    text = _workflow()
+    assert "observation source run must execute from master" in text
+    assert "observation source run event is not trusted" in text
+    assert "{'workflow_dispatch', 'schedule'}" in text
+    assert "observation source workflow path is invalid" in text
+    assert "'source_run_head_branch':" in text
+    assert "'source_workflow_path':" in text
+
+
+def test_external_pilot_producer_retains_attempt_and_validates_root_provenance():
+    text = _workflow()
+    assert "'source_run_attempt': int(run.get('run_attempt', 0) or 0)" in text
+    assert "external-evidence-source-provenance-v1" in text
+    assert "observation source provenance contract failed" in text
+
+
+def test_external_pilot_producer_validates_producer_receipt_contract():
+    text = _workflow()
+    assert "external-pilot-evidence-producer-receipt-v1" in text
+    assert "producer receipt contract validation failed" in text
+
+
+def test_external_pilot_producer_binds_code_to_workflow_sha():
+    text = _workflow()
+    assert 'PRODUCER_REVISION: ${{ github.workflow_sha }}' in text
+    assert 'ref: ${{ env.PRODUCER_REVISION }}' in text
+    assert "'producer_revision': os.environ['PRODUCER_REVISION']" in text
+    assert "'producer_revision': os.environ['GITHUB_SHA']" not in text
+    assert text.count(
+        "Checkout immutable producer revision"
+    ) == 1
+
+
+def test_external_pilot_producer_checkout_has_single_with_mapping():
+    text = _workflow()
+    block = text.split(
+        "- name: Checkout immutable producer revision",
+        1,
+    )[1].split("- name: Set up governed Python", 1)[0]
+    assert block.count("\n        with:\n") == 1
+
+
+def test_external_pilot_producer_revision_binding_matches_machine_policy():
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    external = policy["external_evidence"]
+    assert external["producer_code_revision_source"] == "github-workflow-sha"
+
+    text = _workflow()
+    assert 'PRODUCER_REVISION: ${{ github.workflow_sha }}' in text
+    assert 'ref: ${{ env.PRODUCER_REVISION }}' in text
+    assert "'producer_revision': os.environ['PRODUCER_REVISION']" in text
+
+
+def test_external_pilot_producer_requires_registered_source_workflow():
+    text = _workflow()
+    assert "observation_source_workflow_allowlist" in text
+    assert "observation source workflow registration policy is invalid" in text
+    assert "observation source workflow is not registered for" in text
+    assert "EXPECTED_GAP" in text
+
+
+def test_external_observation_workflow_allowlist_is_explicit_and_gap_scoped():
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    policy = json.loads(
+        (root / "registry/ai-operations-policy.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    external = policy["external_evidence"]
+    assert external["observation_source_requires_explicit_registration"] is True
+    allowlist = external["observation_source_workflow_allowlist"]
+    assert set(allowlist) == {
+        "connector-provider-pilot",
+        "production-retrieval-eval",
+        "memory-lifecycle-pilot",
+        "real-adoption-evidence",
+    }
+    assert all(isinstance(value, list) for value in allowlist.values())
+
+
+def test_external_pilot_producer_enforces_real_observation_namespace():
+    text = _workflow()
+    assert "observation_source_workflow_prefix" in text
+    assert "observation source workflow namespace policy is invalid" in text
+    assert (
+        "observation source workflow is outside the real-observation namespace"
+        in text
+    )

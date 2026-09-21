@@ -1,0 +1,433 @@
+name: hosting-ratchet-automerge
+
+on:
+  workflow_run:
+    workflows:
+      - quality
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosting-ratchet-automerge-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge exact machine-only hosting ratchet
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        (github.event.workflow_run.event == 'pull_request' ||
+         github.event.workflow_run.event == 'workflow_dispatch') &&
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        startsWith(github.event.workflow_run.head_branch, 'automation/hosting-private-')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    env:
+      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+
+    steps:
+      - name: Resolve and validate exact ratchet PR
+        id: validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/hosting-ratchet-automerge"
+          mkdir -p "${cache}"
+          if [[ ! "${HEAD_BRANCH}" =~ ^automation/hosting-private-[0-9a-f]{12}-[0-9]+$ ]]; then
+            echo "ratchet branch does not match the deterministic generator grammar" >&2
+            exit 1
+          fi
+
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRIGGER_RUN_ID}" > "${cache}/quality-run.json"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=master&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}&per_page=10" > "${cache}/pulls.json"
+          gh api "repos/${GITHUB_REPOSITORY}" > "${cache}/repository-metadata.json"
+          gh api "repos/${GITHUB_REPOSITORY}/branches/master" > "${cache}/master-branch.json"
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}" > "${cache}/head-commit.json"
+
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          cache = Path(".cache/knowledge-hub/hosting-ratchet-automerge")
+          run = json.loads((cache / "quality-run.json").read_text(encoding="utf-8"))
+          pulls = json.loads((cache / "pulls.json").read_text(encoding="utf-8"))
+          metadata = json.loads((cache / "repository-metadata.json").read_text(encoding="utf-8"))
+          master = json.loads((cache / "master-branch.json").read_text(encoding="utf-8"))
+          head_commit = json.loads((cache / "head-commit.json").read_text(encoding="utf-8"))
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          head_branch = os.environ["HEAD_BRANCH"]
+          head_sha = os.environ["HEAD_SHA"]
+          trigger_run_id = int(os.environ["TRIGGER_RUN_ID"])
+
+          expected_run = {
+              "id": trigger_run_id,
+              "name": "quality",
+              "status": "completed",
+              "conclusion": "success",
+              "head_branch": head_branch,
+              "head_sha": head_sha,
+              "path": ".github/workflows/quality.yml",
+          }
+          for field, value in expected_run.items():
+              if run.get(field) != value:
+                  raise SystemExit(
+                      "trigger Quality identity mismatch {} expected={!r} observed={!r}".format(
+                          field, value, run.get(field)
+                      )
+                  )
+          if run.get("event") not in {"pull_request", "workflow_dispatch"}:
+              raise SystemExit("trigger Quality event is not trusted")
+          run_repo = run.get("head_repository") or {}
+          if run_repo.get("full_name") != repository:
+              raise SystemExit("trigger Quality head repository is not the current repository")
+
+          if not isinstance(pulls, list) or len(pulls) != 1:
+              raise SystemExit("expected exactly one open ratchet pull request")
+          pull = pulls[0]
+          expected_title = "chore(hosting): ratchet verified private boundary"
+          if pull.get("title") != expected_title:
+              raise SystemExit("ratchet pull request title mismatch")
+          if pull.get("draft") is True:
+              raise SystemExit("ratchet pull request must not be draft")
+          if (pull.get("head") or {}).get("ref") != head_branch:
+              raise SystemExit("ratchet pull request head ref mismatch")
+          if (pull.get("head") or {}).get("sha") != head_sha:
+              raise SystemExit("ratchet pull request head SHA mismatch")
+          if ((pull.get("head") or {}).get("repo") or {}).get("full_name") != repository:
+              raise SystemExit("ratchet pull request must be same-repository")
+          if (pull.get("base") or {}).get("ref") != "master":
+              raise SystemExit("ratchet pull request base must be master")
+
+          if metadata.get("full_name") != repository:
+              raise SystemExit("live repository metadata identity mismatch")
+          if metadata.get("private") is not True or metadata.get("visibility") != "private":
+              raise SystemExit("live repository is not private at merge time")
+
+          if master.get("protected") is not True:
+              raise SystemExit("master must be protected before autonomous ratchet merge")
+          master_sha = (master.get("commit") or {}).get("sha")
+          if not isinstance(master_sha, str) or len(master_sha) != 40:
+              raise SystemExit("current master SHA is unavailable")
+
+          parents = head_commit.get("parents") or []
+          if len(parents) != 1 or (parents[0] or {}).get("sha") != master_sha:
+              raise SystemExit("ratchet head must be a direct child of current master")
+
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write("pr_number={}\n".format(int(pull["number"])))
+              handle.write("master_sha={}\n".format(master_sha))
+          PY
+
+      - name: Fetch bounded canonical diff without executing PR code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+          RECONCILE_OBSERVED_AT: ${{ steps.prove.outputs.reconcile_observed_at }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/hosting-ratchet-automerge"
+
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" > "${cache}/pull.json"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" > "${cache}/files.json"
+
+          for spec in \
+            "base-registry.json:registry/knowledge-platform-p5-p10.json:${MASTER_SHA}" \
+            "head-registry.json:registry/knowledge-platform-p5-p10.json:${HEAD_SHA}" \
+            "base-ledger.jsonl:registry/durable-evidence-ledger.jsonl:${MASTER_SHA}" \
+            "head-ledger.jsonl:registry/durable-evidence-ledger.jsonl:${HEAD_SHA}"
+          do
+            output="${spec%%:*}"
+            rest="${spec#*:}"
+            path="${rest%%:*}"
+            ref="${rest##*:}"
+            gh api "repos/${GITHUB_REPOSITORY}/contents/${path}?ref=${ref}" --jq .content \
+              | tr -d '\n' | base64 --decode > "${cache}/${output}"
+          done
+
+      - name: Prove ratchet delta is machine-only and bounded
+        id: prove
+        env:
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          cache = Path(".cache/knowledge-hub/hosting-ratchet-automerge")
+          pull = json.loads((cache / "pull.json").read_text(encoding="utf-8"))
+          files = json.loads((cache / "files.json").read_text(encoding="utf-8"))
+          base_registry_raw = (cache / "base-registry.json").read_bytes()
+          head_registry_raw = (cache / "head-registry.json").read_bytes()
+          base_registry = json.loads(base_registry_raw.decode("utf-8"))
+          head_registry = json.loads(head_registry_raw.decode("utf-8"))
+          base_ledger = (cache / "base-ledger.jsonl").read_bytes()
+          head_ledger = (cache / "head-ledger.jsonl").read_bytes()
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          master_sha = os.environ["MASTER_SHA"]
+          head_sha = os.environ["HEAD_SHA"]
+          pr_number = int(os.environ["PR_NUMBER"])
+          repo_url = "https://github.com/{}".format(repository)
+
+          if pull.get("number") != pr_number:
+              raise SystemExit("pull request identity changed during validation")
+          if (pull.get("head") or {}).get("sha") != head_sha:
+              raise SystemExit("pull request head moved during validation")
+          if (pull.get("base") or {}).get("sha") != master_sha:
+              raise SystemExit("pull request base moved during validation")
+          if int(pull.get("changed_files", 0) or 0) != 2:
+              raise SystemExit("ratchet pull request must change exactly two files")
+
+          allowed_files = {
+              "registry/knowledge-platform-p5-p10.json",
+              "registry/durable-evidence-ledger.jsonl",
+          }
+          observed_files = {
+              str(row.get("filename", ""))
+              for row in files
+              if isinstance(row, dict)
+          }
+          if observed_files != allowed_files:
+              raise SystemExit("ratchet pull request changed paths outside the bounded allowlist")
+
+          def gap(payload):
+              rows = payload.get("external_closure_gaps")
+              if not isinstance(rows, list):
+                  raise SystemExit("external_closure_gaps must be a list")
+              matches = [
+                  row for row in rows
+                  if isinstance(row, dict)
+                  and row.get("id") == "repository-private-boundary"
+              ]
+              if len(matches) != 1:
+                  raise SystemExit("expected exactly one repository-private-boundary row")
+              return matches[0]
+
+          before = gap(base_registry)
+          after = gap(head_registry)
+          if before.get("required") is not True or before.get("status") != "open":
+              raise SystemExit("base private-boundary state must be required/open")
+          if before.get("evidence_refs") or before.get("evidence"):
+              raise SystemExit("base private-boundary state already contains closure evidence")
+          if after.get("status") != "closed":
+              raise SystemExit("candidate private-boundary state must be closed")
+          if after.get("reason") != "GitHub hosted metadata reports the canonical repository as private.":
+              raise SystemExit("candidate private-boundary reason is not canonical")
+
+          evidence = after.get("evidence")
+          refs = after.get("evidence_refs")
+          if not isinstance(evidence, dict) or not isinstance(refs, list) or len(refs) != 2:
+              raise SystemExit("candidate private-boundary evidence is incomplete")
+          expected_evidence_keys = {
+              "closure_scope",
+              "terminal_claimed",
+              "previous_open_reason",
+              "repository",
+              "visibility",
+              "private",
+              "source_revision",
+              "github_run_id",
+              "github_run_attempt",
+              "repository_metadata_sha256",
+              "canonical_write_performed_by_evidence_chain",
+          }
+          if set(evidence) != expected_evidence_keys:
+              raise SystemExit("candidate private-boundary evidence field set changed")
+          if evidence.get("closure_scope") != "repository-private-boundary-only":
+              raise SystemExit("candidate closure scope is invalid")
+          if evidence.get("terminal_claimed") is not False:
+              raise SystemExit("candidate must not claim repository terminal")
+          if evidence.get("previous_open_reason") != before.get("reason"):
+              raise SystemExit("candidate did not preserve the previous open reason")
+          if evidence.get("repository") != repository:
+              raise SystemExit("candidate repository identity mismatch")
+          if evidence.get("visibility") != "private" or evidence.get("private") is not True:
+              raise SystemExit("candidate private hosting fact is invalid")
+          if evidence.get("source_revision") != master_sha:
+              raise SystemExit("candidate source revision is not current master")
+          run_id = evidence.get("github_run_id")
+          run_attempt = evidence.get("github_run_attempt")
+          if not isinstance(run_id, int) or run_id < 1 or not isinstance(run_attempt, int) or run_attempt < 1:
+              raise SystemExit("candidate hosted run identity is invalid")
+          metadata_sha = str(evidence.get("repository_metadata_sha256", ""))
+          if not re.fullmatch(r"[0-9a-f]{64}", metadata_sha):
+              raise SystemExit("candidate repository metadata digest is invalid")
+          if evidence.get("canonical_write_performed_by_evidence_chain") is not False:
+              raise SystemExit("candidate evidence chain must remain noncanonical before merge")
+          expected_refs = [repo_url, "{}/actions/runs/{}".format(repo_url, run_id)]
+          if refs != expected_refs:
+              raise SystemExit("candidate evidence references are not exact")
+
+          normalized = copy.deepcopy(head_registry)
+          normalized_rows = normalized["external_closure_gaps"]
+          for index, row in enumerate(normalized_rows):
+              if isinstance(row, dict) and row.get("id") == "repository-private-boundary":
+                  normalized_rows[index] = copy.deepcopy(before)
+                  break
+          if normalized != base_registry:
+              raise SystemExit("candidate registry changed fields outside repository-private-boundary")
+
+          if not head_ledger.startswith(base_ledger):
+              raise SystemExit("durable evidence ledger does not preserve the exact base prefix")
+          if base_ledger and not base_ledger.endswith(b"\n"):
+              raise SystemExit("base durable evidence ledger is not valid JSONL")
+          tail = head_ledger[len(base_ledger):]
+          rows = [line for line in tail.decode("utf-8").splitlines() if line.strip()]
+          if len(rows) != 1:
+              raise SystemExit("ratchet must append exactly one durable evidence record")
+          record = json.loads(rows[0])
+          required_keys = {
+              "schema_version",
+              "event_id",
+              "event_type",
+              "source_revision",
+              "observed_at",
+              "evidence_refs",
+              "digests",
+          }
+          allowed_keys = required_keys | {"expires_at", "notes"}
+          if not required_keys.issubset(record) or not set(record).issubset(allowed_keys):
+              raise SystemExit("durable evidence record field set is invalid")
+          if record.get("schema_version") != 1 or record.get("event_type") != "hosting-posture-ratchet":
+              raise SystemExit("durable evidence record type is invalid")
+          if record.get("event_id") != "hosting-private-{}-{}".format(run_id, run_attempt):
+              raise SystemExit("durable evidence event identity mismatch")
+          expected_branch = "automation/hosting-private-{}-{}".format(
+              master_sha[:12], run_id
+          )
+          if os.environ["HEAD_BRANCH"] != expected_branch:
+              raise SystemExit("ratchet branch identity does not match trusted generator run")
+          if record.get("source_revision") != master_sha:
+              raise SystemExit("durable evidence source revision mismatch")
+          if record.get("evidence_refs") != refs:
+              raise SystemExit("durable evidence references do not match canonical evidence")
+          if record.get("expires_at") is not None:
+              raise SystemExit("hosting ratchet durable evidence must not expire")
+
+          digests = record.get("digests")
+          if not isinstance(digests, dict) or set(digests) != {
+              "repository_metadata", "candidate_registry"
+          }:
+              raise SystemExit("durable evidence digest set is invalid")
+          if digests.get("repository_metadata") != "sha256:" + metadata_sha:
+              raise SystemExit("durable metadata digest does not match canonical evidence")
+          expected_candidate = "sha256:" + hashlib.sha256(head_registry_raw).hexdigest()
+          if digests.get("candidate_registry") != expected_candidate:
+              raise SystemExit("durable candidate digest does not match exact registry bytes")
+
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write("reconcile_run_id={}\n".format(run_id))
+              handle.write("reconcile_run_attempt={}\n".format(run_attempt))
+              handle.write("reconcile_observed_at={}\n".format(record["observed_at"]))
+          PY
+
+      - name: Revalidate trusted reconciliation origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECONCILE_RUN_ID: ${{ steps.prove.outputs.reconcile_run_id }}
+          RECONCILE_RUN_ATTEMPT: ${{ steps.prove.outputs.reconcile_run_attempt }}
+          MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/hosting-ratchet-automerge"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RECONCILE_RUN_ID}/attempts/${RECONCILE_RUN_ATTEMPT}" \
+            > "${cache}/reconcile-source-run.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          run = json.loads(
+              Path(
+                  ".cache/knowledge-hub/hosting-ratchet-automerge/reconcile-source-run.json"
+              ).read_text(encoding="utf-8")
+          )
+          expected = {
+              "id": int(os.environ["RECONCILE_RUN_ID"]),
+              "run_attempt": int(os.environ["RECONCILE_RUN_ATTEMPT"]),
+              "name": "hosting-posture-reconcile",
+              "head_sha": os.environ["MASTER_SHA"],
+              "head_branch": "master",
+              "path": ".github/workflows/hosting-posture-reconcile.yml",
+          }
+          for field, value in expected.items():
+              if run.get(field) != value:
+                  raise SystemExit(
+                      "reconciliation origin mismatch {} expected={!r} observed={!r}".format(
+                          field, value, run.get(field)
+                      )
+                  )
+          if run.get("event") not in {"workflow_run", "schedule", "workflow_dispatch"}:
+              raise SystemExit("reconciliation origin event is not trusted")
+          observed_at = str(run.get("run_started_at") or run.get("created_at") or "")
+          if observed_at != os.environ["RECONCILE_OBSERVED_AT"]:
+              raise SystemExit("reconciliation origin timestamp mismatch")
+          repository = run.get("repository") or {}
+          if repository.get("full_name") != os.environ["GITHUB_REPOSITORY"]:
+              raise SystemExit("reconciliation origin repository identity mismatch")
+          PY
+
+      - name: Revalidate protected current master and merge exact head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+          MASTER_SHA: ${{ steps.validate.outputs.master_sha }}
+        run: |
+          set -euo pipefail
+          cache=".cache/knowledge-hub/hosting-ratchet-automerge"
+          gh api "repos/${GITHUB_REPOSITORY}/branches/master" > "${cache}/master-before-merge.json"
+          protected="$(jq -r '.protected == true' "${cache}/master-before-merge.json")"
+          current_master="$(jq -r '.commit.sha' "${cache}/master-before-merge.json")"
+          if [[ "${protected}" != "true" || "${current_master}" != "${MASTER_SHA}" ]]; then
+            echo "master protection or source revision changed after ratchet validation" >&2
+            exit 1
+          fi
+
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" > "${cache}/pull-before-merge.json"
+          current_head="$(jq -r '.head.sha' "${cache}/pull-before-merge.json")"
+          current_base="$(jq -r '.base.sha' "${cache}/pull-before-merge.json")"
+          if [[ "${current_head}" != "${HEAD_SHA}" || "${current_base}" != "${MASTER_SHA}" ]]; then
+            echo "ratchet pull request moved after validation" >&2
+            exit 1
+          fi
+
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/merge" \
+            -f sha="${HEAD_SHA}" \
+            -f merge_method="squash" \
+            > "${cache}/merge-result.json"
+          test "$(jq -r '.merged == true' "${cache}/merge-result.json")" = "true"
+
+      - name: Retire merged automation branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${HEAD_BRANCH}" =~ ^automation/hosting-private-[A-Za-z0-9._/-]+$ ]]; then
+            echo "merged ratchet branch failed the bounded ref grammar" >&2
+            exit 1
+          fi
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${HEAD_BRANCH}" >/dev/null 2>&1; then
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${HEAD_BRANCH}"
+          fi
