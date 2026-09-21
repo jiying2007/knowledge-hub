@@ -414,6 +414,58 @@ def _rulesets_capability(
         }
     return _rulesets_payload_result(raw, status)
 
+def _required_status_check_evidence(
+    repository: str,
+    default_branch: str,
+    token: str,
+    rulesets: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if not token:
+        return {"observed": False, "contexts": []}
+    branch_metadata = _request_default_branch_metadata(
+        repository,
+        default_branch,
+        token,
+    )
+    if str(branch_metadata.get("name") or "") != default_branch:
+        raise KnowledgeHubError("default branch metadata identity mismatch")
+    branch_checks = _branch_required_status_checks(branch_metadata)
+    ruleset_checks: Dict[str, Any] = {
+        "observed": False,
+        "contexts": [],
+    }
+    if rulesets.get("status") == "available":
+        ruleset_checks = _ruleset_required_status_checks(
+            repository,
+            default_branch,
+            token,
+        )
+    branch_contexts = branch_checks.get("contexts", [])
+    ruleset_contexts = ruleset_checks.get("contexts", [])
+    if not isinstance(branch_contexts, list):
+        raise KnowledgeHubError("branch required status checks are invalid")
+    if not isinstance(ruleset_contexts, list):
+        raise KnowledgeHubError("ruleset required status checks are invalid")
+    ruleset_observed = (
+        ruleset_checks.get("observed") is True
+        if rulesets.get("status") == "available"
+        else rulesets.get("status") == "plan-gated"
+    )
+    return {
+        "observed": (
+            branch_checks.get("observed") is True
+            and ruleset_observed
+        ),
+        "contexts": sorted(
+            {
+                value.strip()
+                for value in branch_contexts + ruleset_contexts
+                if isinstance(value, str) and value.strip()
+            }
+        ),
+    }
+
+
 def evaluate_hosting_posture(
     root: pathlib.Path,
     *,
@@ -445,44 +497,11 @@ def evaluate_hosting_posture(
         raise KnowledgeHubError("repository metadata hosting fields are incomplete")
     if str(inventory.get("default_branch") or "") != default_branch:
         raise KnowledgeHubError("branch inventory default branch does not match repository metadata")
-    branch_checks = {"observed": False, "contexts": []}
-    ruleset_checks = {"observed": False, "contexts": []}
-    if token:
-        branch_metadata = _request_default_branch_metadata(
-            repository,
-            default_branch,
-            token,
-        )
-        if str(branch_metadata.get("name") or "") != default_branch:
-            raise KnowledgeHubError("default branch metadata identity mismatch")
-        branch_checks = _branch_required_status_checks(branch_metadata)
-        if rulesets.get("status") == "available":
-            ruleset_checks = _ruleset_required_status_checks(
-                repository,
-                default_branch,
-                token,
-            )
-    branch_contexts = branch_checks.get("contexts", [])
-    ruleset_contexts = ruleset_checks.get("contexts", [])
-    if not isinstance(branch_contexts, list):
-        raise KnowledgeHubError("branch required status checks are invalid")
-    if not isinstance(ruleset_contexts, list):
-        raise KnowledgeHubError("ruleset required status checks are invalid")
-    ruleset_observed = (
-        ruleset_checks.get("observed") is True
-        if rulesets.get("status") == "available"
-        else rulesets.get("status") == "plan-gated"
-    )
-    checks_observed = (
-        branch_checks.get("observed") is True
-        and ruleset_observed
-    )
-    check_contexts = sorted(
-        {
-            value.strip()
-            for value in branch_contexts + ruleset_contexts
-            if isinstance(value, str) and value.strip()
-        }
+    required_checks = _required_status_check_evidence(
+        repository,
+        default_branch,
+        token,
+        rulesets,
     )
     return {
         "schema_version": "knowledge-hub.hosting-posture.v1",
@@ -496,8 +515,8 @@ def evaluate_hosting_posture(
         "default_branch_present": inventory.get("default_branch_present") is True,
         "default_branch_protection_observed": inventory.get("default_branch_protection_observed") is True,
         "default_branch_protected": inventory.get("default_branch_protected") is True,
-        "default_branch_required_status_checks_observed": checks_observed,
-        "default_branch_required_status_checks": check_contexts,
+        "default_branch_required_status_checks_observed": required_checks["observed"],
+        "default_branch_required_status_checks": required_checks["contexts"],
         "rulesets_capability": rulesets,
         "branch_inventory": branch_inventory,
         "canonical_write": False,
