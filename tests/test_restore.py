@@ -1,3 +1,5 @@
+import subprocess
+
 from tools.codex_assets.knowledge_hub import restore
 from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.schemas import validate_instance
@@ -160,6 +162,64 @@ def test_restore_rejects_unknown_source_mode(tmp_path):
         assert "candidate or head" in str(exc)
     else:
         raise AssertionError("unknown restore source mode was accepted")
+
+
+def test_restore_check_environment_rebinds_complexity_baseline_to_scratch_head(
+    tmp_path,
+):
+    (tmp_path / "tracked.txt").write_text("payload\n", encoding="utf-8")
+    subprocess.run(
+        ["git", "init", "-q"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "tracked.txt"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Knowledge Hub Restore Drill Test",
+            "-c",
+            "user.email=restore-test@localhost",
+            "commit",
+            "-qm",
+            "scratch",
+        ],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    ).stdout.strip()
+
+    env = restore._restore_check_environment(
+        tmp_path,
+        "/tmp/knowledge-hub-python",
+    )
+
+    assert env == {
+        "KNOWLEDGE_PYTHON_RUNTIME": "/tmp/knowledge-hub-python",
+        "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE": "true",
+        "KNOWLEDGE_COMPLEXITY_BASE_REF": head,
+    }
 
 
 def test_restore_runtime_preserves_virtualenv_symlink_path(tmp_path, monkeypatch):
