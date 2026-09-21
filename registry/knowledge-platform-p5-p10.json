@@ -114,7 +114,10 @@
   "repository_security_target": {
     "private_required": false,
     "protected_default_branch_required": true,
-    "required_status_checks": [],
+    "required_status_checks": [
+      "Quality gate",
+      "Exact-head security-critical review"
+    ],
     "block_force_push": false,
     "block_branch_deletion": false,
     "require_pull_request": false,
