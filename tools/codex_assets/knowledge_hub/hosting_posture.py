@@ -6,8 +6,9 @@ import json
 import pathlib
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, List, Mapping
 
 from .common import KnowledgeHubError, ensure_private_directory_tree, ensure_private_file, resolve_inside, utc_timestamp
 
@@ -56,6 +57,84 @@ def _request_repository_metadata(repository: str, token: str = "") -> Dict[str, 
     if not isinstance(value, Mapping):
         raise KnowledgeHubError("repository hosting posture response must be an object")
     return dict(value)
+
+
+def _request_default_branch_metadata(
+    repository: str,
+    branch: str,
+    token: str = "",
+) -> Dict[str, Any]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "knowledge-hub-hosting-posture",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if token:
+        headers["Authorization"] = "Bearer {}".format(token)
+    encoded = urllib.parse.quote(branch, safe="")
+    request = urllib.request.Request(
+        "https://api.github.com/repos/{}/branches/{}".format(
+            repository,
+            encoded,
+        ),
+        headers=headers,
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=_TIMEOUT_SECONDS,
+        ) as response:  # nosec B310
+            raw = response.read(_MAX_BYTES + 1)
+    except (
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+        TimeoutError,
+        OSError,
+    ) as exc:
+        raise KnowledgeHubError(
+            "default branch hosting posture request failed"
+        ) from exc
+    if len(raw) > _MAX_BYTES:
+        raise KnowledgeHubError(
+            "default branch hosting posture response exceeds byte budget"
+        )
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError(
+            "default branch hosting posture response is invalid"
+        ) from exc
+    if not isinstance(value, Mapping):
+        raise KnowledgeHubError(
+            "default branch hosting posture response must be an object"
+        )
+    return dict(value)
+
+
+def _branch_required_status_checks(
+    branch: Mapping[str, Any],
+) -> Dict[str, Any]:
+    protection = branch.get("protection")
+    if not isinstance(protection, Mapping):
+        return {"observed": False, "contexts": []}
+    required = protection.get("required_status_checks")
+    if not isinstance(required, Mapping):
+        return {"observed": False, "contexts": []}
+    contexts: List[str] = []
+    for value in required.get("contexts", []):
+        if isinstance(value, str) and value.strip():
+            contexts.append(value.strip())
+    for value in required.get("checks", []):
+        if not isinstance(value, Mapping):
+            continue
+        context = str(value.get("context", "")).strip()
+        if context:
+            contexts.append(context)
+    return {
+        "observed": True,
+        "contexts": sorted(set(contexts)),
+    }
 
 
 def _rulesets_http_error(
@@ -195,6 +274,16 @@ def evaluate_hosting_posture(
         raise KnowledgeHubError("repository metadata hosting fields are incomplete")
     if str(inventory.get("default_branch") or "") != default_branch:
         raise KnowledgeHubError("branch inventory default branch does not match repository metadata")
+    branch_checks = {"observed": False, "contexts": []}
+    if token:
+        branch_metadata = _request_default_branch_metadata(
+            repository,
+            default_branch,
+            token,
+        )
+        if str(branch_metadata.get("name") or "") != default_branch:
+            raise KnowledgeHubError("default branch metadata identity mismatch")
+        branch_checks = _branch_required_status_checks(branch_metadata)
     return {
         "schema_version": "knowledge-hub.hosting-posture.v1",
         "status": "pass",
@@ -207,6 +296,8 @@ def evaluate_hosting_posture(
         "default_branch_present": inventory.get("default_branch_present") is True,
         "default_branch_protection_observed": inventory.get("default_branch_protection_observed") is True,
         "default_branch_protected": inventory.get("default_branch_protected") is True,
+        "default_branch_required_status_checks_observed": branch_checks["observed"],
+        "default_branch_required_status_checks": branch_checks["contexts"],
         "rulesets_capability": rulesets,
         "branch_inventory": branch_inventory,
         "canonical_write": False,
