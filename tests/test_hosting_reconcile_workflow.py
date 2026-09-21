@@ -54,6 +54,13 @@ def test_hosting_reconcile_revalidates_current_master_aggregate_quality():
     assert '".github/workflows/quality.yml"' in text
 
 
+def test_hosting_reconcile_avoids_pipefail_early_close_selectors():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "{print $1; exit}" not in text
+    assert "| head -n 1" not in text
+    assert "found=1" in text
+
+
 def test_hosting_reconcile_creates_governed_pr_not_direct_master_write():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "persist-credentials: false" in text
