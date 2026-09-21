@@ -1,0 +1,1 @@
+Ephemeral governance probe. This branch is never merged. It exists only to verify that the trusted security workflow projects `Security approval gate` onto the exact PR head, then the closed automation branch is garbage-collected.
