@@ -66,6 +66,11 @@ def _evidence(
             "default_branch_present": True,
             "default_branch_protection_observed": True,
             "default_branch_protected": False,
+            "default_branch_required_status_checks_observed": True,
+            "default_branch_required_status_checks": [
+                "Quality gate",
+                "Exact-head security-critical review",
+            ],
             "rulesets_capability": {
                 "status": "not-probed",
                 "reason": "github-token-unavailable",
