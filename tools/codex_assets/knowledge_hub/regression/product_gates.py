@@ -63,7 +63,13 @@ def test_final_gate_owner_review_blocker():
     result, payload = _run_product_gate(repo)
     owner = payload.get("owner_and_real_evidence", {})
     owner_gap = next(
-        (row for row in payload.get("gap_map", []) if row.get("gap_id") == "owner-and-real-evidence-pending"),
+        (
+            row
+            for row in payload.get("gap_map", [])
+            if row.get("gap_type") == "owner-review"
+            and row.get("requires_owner_decision") is True
+            and row.get("codex_auto_can_complete") is False
+        ),
         {},
     )
     expect(
