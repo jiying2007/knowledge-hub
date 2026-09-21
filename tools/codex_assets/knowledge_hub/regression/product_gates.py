@@ -72,19 +72,24 @@ def test_final_gate_owner_review_blocker():
         ),
         {},
     )
+    invariants = {
+        "final_profile_product": payload.get("final_profile") == "product",
+        "strict_status_needs_review": payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review",
+        "product_status_hard_check": payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True,
+        "owner_gap_type": owner_gap.get("gap_type") == "owner-review",
+        "owner_gap_not_auto": owner_gap.get("codex_auto_can_complete") is False,
+        "owner_gap_requires_owner": owner_gap.get("requires_owner_decision") is True,
+        "product_status_not_blocker": "product_status" not in payload.get("platform_status", {}).get("blockers", []),
+    }
     expect(
-        payload.get("final_profile") == "product"
-        and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
-        and payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True
-        and owner_gap.get("gap_type") == "owner-review"
-        and owner_gap.get("codex_auto_can_complete") is False
-        and owner_gap.get("requires_owner_decision") is True
-        and "product_status" not in payload.get("platform_status", {}).get("blockers", []),
+        all(invariants.values()),
         result_id,
         title,
         {
+            "invariants": invariants,
             "exit_code": result["exit_code"],
             "status": payload.get("status"),
+            "strict_status": payload.get("checks", {}).get("knowledge_status_strict", {}).get("status"),
             "owner_and_real_evidence": owner,
             "platform_status": payload.get("platform_status", {}),
             "gap_map": payload.get("gap_map", []),
