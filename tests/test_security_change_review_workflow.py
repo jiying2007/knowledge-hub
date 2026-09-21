@@ -78,6 +78,13 @@ def test_security_change_review_binds_workflow_to_exact_pr_base():
 
 
 def test_security_change_review_fetches_exact_files_reviews_and_comments():
+    payload = _workflow()
+    fetch_step = next(
+        step
+        for step in payload["jobs"]["review"]["steps"]
+        if step.get("name") == "Fetch exact PR files, reviews and approval comments"
+    )
+    assert 'mkdir -p "${cache}"' in fetch_step["run"]
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'pulls/${PR_NUMBER}/files?per_page=100' in text
     assert 'pulls/${PR_NUMBER}/reviews?per_page=100' in text
