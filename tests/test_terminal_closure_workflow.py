@@ -33,6 +33,12 @@ def test_terminal_closure_reuses_exact_quality_and_mcp_artifacts():
     assert "knowledge-final-gate.sh --final-profile product" not in text
 
 
+def test_terminal_closure_avoids_pipefail_early_close_selector():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "{print $1; exit}" not in text
+    assert "found=1" in text
+
+
 def test_terminal_closure_refreshes_remote_hosting_before_enforcement():
     text = WORKFLOW.read_text(encoding="utf-8")
     remote_pos = text.index("remote_branch_inventory_cli")
