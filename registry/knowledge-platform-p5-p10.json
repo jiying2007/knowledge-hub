@@ -116,7 +116,7 @@
     "protected_default_branch_required": true,
     "required_status_checks": [
       "Quality gate",
-      "Exact-head security-critical review"
+      "Security approval gate"
     ],
     "block_force_push": false,
     "block_branch_deletion": false,
