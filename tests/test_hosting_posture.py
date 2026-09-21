@@ -225,6 +225,19 @@ def test_rulesets_capability_never_substitutes_for_branch_protection(
             "ruleset_count": 0,
         },
     )
+    monkeypatch.setattr(
+        hosting_posture,
+        "_request_default_branch_metadata",
+        lambda repository, branch, token="": {
+            "name": branch,
+            "protection": {
+                "required_status_checks": {
+                    "contexts": [],
+                    "checks": [],
+                }
+            },
+        },
+    )
 
     report = hosting_posture.evaluate_hosting_posture(
         tmp_path,
