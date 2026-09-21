@@ -24,6 +24,24 @@ def test_default_branch_protection_target_matches_terminal_policy():
     )
 
 
+def test_master_required_status_checks_match_governance_guardrails():
+    root = Path(__file__).resolve().parents[1]
+    platform = _load(root, "registry/knowledge-platform-p5-p10.json")
+    operations = _load(root, "registry/ai-operations-policy.json")
+
+    target = platform["repository_security_target"]
+    guardrails = operations["guardrails"]
+
+    assert target["required_status_checks"] == [
+        "Quality gate",
+        "Exact-head security-critical review",
+    ]
+    assert guardrails["protected_branch_required_workflows"] == [
+        "quality",
+        "security-critical-change-review",
+    ]
+
+
 def test_master_ruleset_row_is_not_a_duplicate_terminal_closure_source():
     root = Path(__file__).resolve().parents[1]
     terminal = _load(root, "registry/terminal-closure.json")
