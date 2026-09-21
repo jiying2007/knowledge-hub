@@ -73,7 +73,7 @@ jobs:
             gh api --method GET \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
               --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
-            | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
+            | awk -v sha="${SOURCE_REVISION}" '$2 == sha && !found {print $1; found=1}'
           )"
           if [[ ! "${run_id}" =~ ^[0-9]+$ ]]; then
             echo "No successful aggregate Quality run is bound to SOURCE_REVISION=${SOURCE_REVISION}" >&2
@@ -276,7 +276,7 @@ jobs:
               "repos/${GITHUB_REPOSITORY}/actions/workflows/signed-quality-attestation.yml/runs?branch=master&per_page=20" \
               --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
             | awk -v sha="${SOURCE_REVISION}" \
-                '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting") {print $1; exit}'
+                '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting") && !found {print $1; found=1}'
           )"
           if [[ -n "${active}" ]]; then
             echo "fresh Signed verification already active for current master: ${active}"
@@ -316,7 +316,7 @@ jobs:
                       "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${branch_name}&per_page=20" \
                       --jq '.workflow_runs[] | [.id, .head_sha, .status] | @tsv' \
                     | awk -v expected="${head_sha}" \
-                        '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") {print $1; exit}'
+                        '$2 == expected && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested") && !found {print $1; found=1}'
                   )"
                   if [[ -n "${active}" ]]; then
                     echo "exact-head Quality already active for #${number}: ${active}"
@@ -358,7 +358,7 @@ jobs:
                 "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
                 --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
               | awk -v sha="${quality_sha}" \
-                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") && !found {print $1; found=1}'
             )"
             if [[ -n "${active}" ]]; then
               echo "exact-head Quality already active/successful for ${quality_branch}: ${active}"
@@ -371,7 +371,7 @@ jobs:
           }
 
           existing="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
-            --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
+            --json number,title --jq "[.[] | select(.title == \"${title}\") | .number][0] // empty")"
           if [[ -n "${existing}" ]]; then
             existing_branch="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefName --jq .headRefName)"
             existing_sha="$(gh pr view "${existing}" --repo "${GITHUB_REPOSITORY}" --json headRefOid --jq .headRefOid)"
