@@ -84,6 +84,17 @@ def _restore_runtime() -> str:
     return str(runtime)
 
 
+def _restore_check_environment(
+    restored: pathlib.Path,
+    runtime_python: str,
+) -> Dict[str, str]:
+    return {
+        "KNOWLEDGE_PYTHON_RUNTIME": runtime_python,
+        "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE": "true",
+        "KNOWLEDGE_COMPLEXITY_BASE_REF": _head_revision(restored),
+    }
+
+
 def _execution_environment(
     source_mode: str,
     source_revision: str,
@@ -236,7 +247,6 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
         expected_repository=expected_repository,
     )
     runtime_python = _restore_runtime()
-    runtime_env = {"KNOWLEDGE_PYTHON_RUNTIME": runtime_python}
     checks: Dict[str, Any] = {}
     with tempfile.TemporaryDirectory(prefix="knowledge-hub-restore-") as directory:
         temporary_root = pathlib.Path(directory)
@@ -268,6 +278,7 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
             ],
             timeout=60,
         )
+        runtime_env = _restore_check_environment(restored, runtime_python)
         commands = {
             "dependency_imports": [
                 "bash",
