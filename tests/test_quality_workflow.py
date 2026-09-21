@@ -175,3 +175,20 @@ def test_quality_complexity_baseline_matches_engineering_budget_policy():
     assert baseline["base_ref_env"] in engineering["env"]
     assert engineering["env"][baseline["enforce_env"]] == "true"
     assert engineering["steps"][0]["with"]["fetch-depth"] == "0"
+
+def test_quality_exposes_stable_aggregate_gate_for_branch_ruleset():
+    jobs = _workflow()["jobs"]
+    gate = jobs["quality-gate"]
+
+    assert gate["name"] == "Quality gate"
+    assert gate["if"] == "${{ always() }}"
+    assert gate["needs"] == [
+        "system-runtime",
+        "compatibility",
+        "engineering",
+        "mcp-conformance",
+    ]
+    step = gate["steps"][0]
+    assert step["name"] == "Require all Quality jobs"
+    assert 'test "${result}" = "success"' in step["run"]
+

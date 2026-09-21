@@ -343,10 +343,10 @@ def _mcp_result(
 
 
 
-def _private_hosting_required(
+def _repository_security_target(
     root: pathlib.Path,
     policy: Mapping[str, Any],
-) -> bool:
+) -> Mapping[str, Any]:
     external = policy.get("external_closure", {})
     source = (
         str(external.get("source", "")).strip()
@@ -354,12 +354,35 @@ def _private_hosting_required(
         else ""
     )
     if not source:
-        return True
+        return {}
     platform = _load_object(root / source, "external closure registry")
     target = platform.get("repository_security_target", {})
-    if not isinstance(target, Mapping):
-        return True
+    return target if isinstance(target, Mapping) else {}
+
+
+def _private_hosting_required(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> bool:
+    target = _repository_security_target(root, policy)
     return target.get("private_required") is not False
+
+
+def _required_status_checks(
+    root: pathlib.Path,
+    policy: Mapping[str, Any],
+) -> List[str]:
+    target = _repository_security_target(root, policy)
+    rows = target.get("required_status_checks", [])
+    if not isinstance(rows, list):
+        return []
+    return sorted(
+        {
+            str(value).strip()
+            for value in rows
+            if isinstance(value, str) and str(value).strip()
+        }
+    )
 
 def _hosting_status(
     evidence: Mapping[str, Any],
@@ -367,6 +390,7 @@ def _hosting_status(
     repository_matches: bool,
     expected_branch: str,
     private_required: bool,
+    required_status_checks: List[str],
 ) -> Tuple[str, str]:
     if evidence.get("status") != "pass":
         return "blocked", "hosting-posture-capture-not-passing"
@@ -384,6 +408,20 @@ def _hosting_status(
         return "needs-review", "repository-private-boundary-not-observed"
     if str(evidence.get("default_branch", "")) != expected_branch:
         return "blocked", "hosting-posture-default-branch-mismatch"
+    observed = evidence.get("default_branch_required_status_checks")
+    if not isinstance(observed, list):
+        return "blocked", "required-status-checks-evidence-invalid"
+    observed_set = {
+        str(value).strip()
+        for value in observed
+        if isinstance(value, str) and str(value).strip()
+    }
+    if required_status_checks and evidence.get(
+        "default_branch_required_status_checks_observed"
+    ) is not True:
+        return "blocked", "required-status-checks-evidence-missing"
+    if any(value not in observed_set for value in required_status_checks):
+        return "needs-review", "required-status-checks-missing"
     return "pass", ""
 
 
@@ -494,12 +532,26 @@ def _hosting_result(
         else "master"
     )
     private_required = _private_hosting_required(root, policy)
+    required_status_checks = _required_status_checks(root, policy)
     status, reason = _hosting_status(
         evidence,
         revision_matches,
         repository_matches,
         expected_branch,
         private_required,
+        required_status_checks,
+    )
+    observed_status_checks = sorted(
+        {
+            str(value).strip()
+            for value in evidence.get(
+                "default_branch_required_status_checks", []
+            )
+            if isinstance(value, str) and str(value).strip()
+        }
+    )
+    missing_status_checks = sorted(
+        set(required_status_checks).difference(observed_status_checks)
     )
     private = evidence.get("repository_private") is True
     return {
@@ -517,6 +569,14 @@ def _hosting_result(
         "default_branch": str(evidence.get("default_branch", "")),
         "default_branch_protected": (
             evidence.get("default_branch_protected") is True
+        ),
+        "required_status_checks": required_status_checks,
+        "observed_status_checks": observed_status_checks,
+        "missing_status_checks": missing_status_checks,
+        "required_status_checks_observed": (
+            evidence.get(
+                "default_branch_required_status_checks_observed"
+            ) is True
         ),
         "rulesets_capability": (
             dict(evidence.get("rulesets_capability", {}))

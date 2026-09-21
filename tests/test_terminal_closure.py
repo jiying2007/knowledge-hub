@@ -154,6 +154,13 @@ def _write_common_ready_state(
     _write_json(
         tmp_path / "registry/knowledge-platform-p5-p10.json",
         {
+            "repository_security_target": {
+                "private_required": True,
+                "required_status_checks": [
+                    "Quality gate",
+                    "Exact-head security-critical review",
+                ],
+            },
             "external_closure_gaps": [
                 row,
                 {
@@ -179,6 +186,11 @@ def _write_common_ready_state(
             "default_branch_present": default_branch_present,
             "default_branch_protection_observed": protection_observed,
             "default_branch_protected": protected,
+            "default_branch_required_status_checks_observed": True,
+            "default_branch_required_status_checks": [
+                "Quality gate",
+                "Exact-head security-critical review",
+            ],
             "rulesets_capability": {
                 "status": "not-probed",
                 "reason": "github-token-unavailable",
@@ -657,6 +669,27 @@ def test_terminal_closure_surfaces_rulesets_capability_without_weakening_gate(
     assert report["default_branch_protection"]["status"] == "needs-review"
     assert report["terminal"] is False
     assert "default_branch_protection" in report["blockers"]
+
+
+def test_terminal_closure_blocks_when_required_master_check_is_missing(
+    monkeypatch, tmp_path
+):
+    _stub_hygiene(monkeypatch)
+    _write_common_ready_state(tmp_path)
+    posture_path = tmp_path / ".cache/knowledge-hub/hosting-posture.json"
+    posture = json.loads(posture_path.read_text(encoding="utf-8"))
+    posture["default_branch_required_status_checks"] = ["Quality gate"]
+    _write_json(posture_path, posture)
+
+    report = terminal_closure.evaluate_terminal_closure(tmp_path)
+
+    assert report["terminal"] is False
+    assert report["hosting_posture"]["status"] == "needs-review"
+    assert report["hosting_posture"]["reason"] == "required-status-checks-missing"
+    assert report["hosting_posture"]["missing_status_checks"] == [
+        "Exact-head security-critical review"
+    ]
+    assert "hosting_posture" in report["blockers"]
 
 
 def test_terminal_closure_rejects_invalid_hosting_posture_contract(

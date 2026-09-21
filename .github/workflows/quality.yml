@@ -220,3 +220,27 @@ jobs:
             results/
           if-no-files-found: error
           retention-days: 90
+
+  quality-gate:
+    name: Quality gate
+    if: ${{ always() }}
+    needs:
+      - system-runtime
+      - compatibility
+      - engineering
+      - mcp-conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require all Quality jobs
+        shell: bash
+        env:
+          SYSTEM_RUNTIME_RESULT: ${{ needs.system-runtime.result }}
+          COMPATIBILITY_RESULT: ${{ needs.compatibility.result }}
+          ENGINEERING_RESULT: ${{ needs.engineering.result }}
+          MCP_CONFORMANCE_RESULT: ${{ needs.mcp-conformance.result }}
+        run: |
+          set -euo pipefail
+          for result in             "${SYSTEM_RUNTIME_RESULT}"             "${COMPATIBILITY_RESULT}"             "${ENGINEERING_RESULT}"             "${MCP_CONFORMANCE_RESULT}"; do
+            test "${result}" = "success"
+          done
