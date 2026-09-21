@@ -34,11 +34,15 @@ def test_master_required_status_checks_match_governance_guardrails():
 
     assert target["required_status_checks"] == [
         "Quality gate",
-        "Exact-head security-critical review",
+        "Security approval gate",
     ]
     assert guardrails["protected_branch_required_workflows"] == [
         "quality",
         "security-critical-change-review",
+    ]
+    assert guardrails["protected_branch_required_status_checks"] == [
+        "Quality gate",
+        "Security approval gate",
     ]
 
 
