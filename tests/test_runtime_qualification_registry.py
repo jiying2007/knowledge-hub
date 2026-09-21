@@ -93,7 +93,10 @@ def test_p5_p10_registry_separates_qualified_code_from_open_adoption():
     assert gaps["master-ruleset-enforcement"]["status"] == "not-required"
     repository_target = payload["repository_security_target"]
     assert repository_target["protected_default_branch_required"] is True
-    assert repository_target["required_status_checks"] == []
+    assert repository_target["required_status_checks"] == [
+        "Quality gate",
+        "Exact-head security-critical review",
+    ]
     assert repository_target["block_force_push"] is False
     assert repository_target["block_branch_deletion"] is False
     assert repository_target["require_pull_request"] is False
