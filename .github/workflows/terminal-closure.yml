@@ -48,7 +48,7 @@ jobs:
             gh api --method GET \
               "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
               --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
-            | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
+            | awk -v sha="${SOURCE_REVISION}" '$2 == sha && !found {print $1; found=1}'
           )"
           if [[ ! "${run_id}" =~ ^[0-9]+$ ]]; then
             echo "No successful master Quality run is bound to SOURCE_REVISION=${SOURCE_REVISION}" >&2
