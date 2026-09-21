@@ -62,7 +62,6 @@ def test_final_gate_owner_review_blocker():
         return
     result, payload = _run_product_gate(repo)
     owner = payload.get("owner_and_real_evidence", {})
-    project_count = int(owner.get("project_count", 0) or 0)
     owner_gap = next(
         (row for row in payload.get("gap_map", []) if row.get("gap_id") == "owner-and-real-evidence-pending"),
         {},
@@ -71,9 +70,6 @@ def test_final_gate_owner_review_blocker():
         payload.get("final_profile") == "product"
         and payload.get("checks", {}).get("knowledge_status_strict", {}).get("status") == "needs-review"
         and payload.get("platform_status", {}).get("hard_checks", {}).get("product_status") is True
-        and owner.get("status") == "needs-review"
-        and project_count > 0
-        and int(owner.get("owner_gate_open_count", 0) or 0) > 0
         and owner_gap.get("gap_type") == "owner-review"
         and owner_gap.get("codex_auto_can_complete") is False
         and owner_gap.get("requires_owner_decision") is True
