@@ -462,14 +462,27 @@ def evaluate_hosting_posture(
                 default_branch,
                 token,
             )
+    branch_contexts = branch_checks.get("contexts", [])
+    ruleset_contexts = ruleset_checks.get("contexts", [])
+    if not isinstance(branch_contexts, list):
+        raise KnowledgeHubError("branch required status checks are invalid")
+    if not isinstance(ruleset_contexts, list):
+        raise KnowledgeHubError("ruleset required status checks are invalid")
     ruleset_observed = (
-        ruleset_checks["observed"]
+        ruleset_checks.get("observed") is True
         if rulesets.get("status") == "available"
         else rulesets.get("status") == "plan-gated"
     )
-    checks_observed = branch_checks["observed"] and ruleset_observed
+    checks_observed = (
+        branch_checks.get("observed") is True
+        and ruleset_observed
+    )
     check_contexts = sorted(
-        set(branch_checks["contexts"]).union(ruleset_checks["contexts"])
+        {
+            value.strip()
+            for value in branch_contexts + ruleset_contexts
+            if isinstance(value, str) and value.strip()
+        }
     )
     return {
         "schema_version": "knowledge-hub.hosting-posture.v1",
