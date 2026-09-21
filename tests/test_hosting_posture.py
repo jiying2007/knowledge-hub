@@ -88,11 +88,17 @@ def test_hosting_posture_captures_default_branch_required_status_checks(
             "protection": {
                 "required_status_checks": {
                     "contexts": ["Quality gate"],
-                    "checks": [
-                        {"context": "Exact-head security-critical review"}
-                    ],
+                    "checks": [],
                 }
             },
+        },
+    )
+    monkeypatch.setattr(
+        hosting_posture,
+        "_ruleset_required_status_checks",
+        lambda repository, branch, token: {
+            "observed": True,
+            "contexts": ["Security approval gate"],
         },
     )
 
@@ -105,9 +111,76 @@ def test_hosting_posture_captures_default_branch_required_status_checks(
 
     assert report["default_branch_required_status_checks_observed"] is True
     assert report["default_branch_required_status_checks"] == [
-        "Exact-head security-critical review",
         "Quality gate",
+        "Security approval gate",
     ]
+
+
+def test_ruleset_required_status_checks_reads_active_master_ruleset(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        hosting_posture,
+        "_request_rulesets_list",
+        lambda repository, token: [
+            {
+                "id": 23729229,
+                "target": "branch",
+                "enforcement": "active",
+            },
+            {
+                "id": 999,
+                "target": "branch",
+                "enforcement": "evaluate",
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        hosting_posture,
+        "_request_ruleset_detail",
+        lambda repository, ruleset_id, token: {
+            "id": ruleset_id,
+            "conditions": {
+                "ref_name": {
+                    "include": ["refs/heads/master"],
+                    "exclude": [],
+                }
+            },
+            "rules": [
+                {
+                    "type": "required_status_checks",
+                    "parameters": {
+                        "required_status_checks": [
+                            {"context": "Security approval gate"},
+                            {
+                                "context": "Security approval gate",
+                                "integration_id": 15368,
+                            },
+                            {"context": "Quality gate"},
+                            {
+                                "context": "Quality gate",
+                                "integration_id": 15368,
+                            },
+                        ]
+                    },
+                }
+            ],
+        },
+    )
+
+    result = hosting_posture._ruleset_required_status_checks(
+        "example/knowledge-hub",
+        "master",
+        "token",
+    )
+
+    assert result == {
+        "observed": True,
+        "contexts": [
+            "Quality gate",
+            "Security approval gate",
+        ],
+    }
 
 
 def test_hosting_posture_rejects_stale_branch_inventory(monkeypatch, tmp_path):

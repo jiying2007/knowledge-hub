@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import pathlib
 import re
@@ -137,6 +138,176 @@ def _branch_required_status_checks(
     }
 
 
+def _ruleset_headers(token: str) -> Dict[str, str]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "knowledge-hub-hosting-posture",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if token:
+        headers["Authorization"] = "Bearer {}".format(token)
+    return headers
+
+
+def _request_rulesets_list(
+    repository: str,
+    token: str,
+) -> List[Mapping[str, Any]]:
+    request = urllib.request.Request(
+        "https://api.github.com/repos/{}/rulesets?per_page=100".format(
+            repository
+        ),
+        headers=_ruleset_headers(token),
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=_TIMEOUT_SECONDS,
+        ) as response:  # nosec B310
+            raw = response.read(_MAX_BYTES + 1)
+    except (
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+        TimeoutError,
+        OSError,
+    ) as exc:
+        raise KnowledgeHubError("rulesets list request failed") from exc
+    if len(raw) > _MAX_BYTES:
+        raise KnowledgeHubError("rulesets list response exceeds byte budget")
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError("rulesets list response is invalid") from exc
+    if not isinstance(payload, list):
+        raise KnowledgeHubError("rulesets list response must be an array")
+    return [row for row in payload if isinstance(row, Mapping)]
+
+
+def _request_ruleset_detail(
+    repository: str,
+    ruleset_id: int,
+    token: str,
+) -> Mapping[str, Any]:
+    request = urllib.request.Request(
+        "https://api.github.com/repos/{}/rulesets/{}".format(
+            repository,
+            ruleset_id,
+        ),
+        headers=_ruleset_headers(token),
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=_TIMEOUT_SECONDS,
+        ) as response:  # nosec B310
+            raw = response.read(_MAX_BYTES + 1)
+    except (
+        urllib.error.HTTPError,
+        urllib.error.URLError,
+        TimeoutError,
+        OSError,
+    ) as exc:
+        raise KnowledgeHubError("ruleset detail request failed") from exc
+    if len(raw) > _MAX_BYTES:
+        raise KnowledgeHubError("ruleset detail response exceeds byte budget")
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KnowledgeHubError("ruleset detail response is invalid") from exc
+    if not isinstance(payload, Mapping):
+        raise KnowledgeHubError("ruleset detail response must be an object")
+    return payload
+
+
+def _ruleset_ref_matches(pattern: str, branch: str) -> bool:
+    ref = "refs/heads/{}".format(branch)
+    if pattern == "~ALL":
+        return True
+    if pattern == "~DEFAULT_BRANCH":
+        return True
+    return fnmatch.fnmatchcase(ref, pattern)
+
+
+def _ruleset_applies_to_branch(
+    ruleset: Mapping[str, Any],
+    branch: str,
+) -> bool:
+    conditions = ruleset.get("conditions")
+    if not isinstance(conditions, Mapping):
+        return False
+    ref_name = conditions.get("ref_name")
+    if not isinstance(ref_name, Mapping):
+        return False
+    includes = ref_name.get("include", [])
+    excludes = ref_name.get("exclude", [])
+    if not isinstance(includes, list) or not isinstance(excludes, list):
+        return False
+    included = any(
+        isinstance(value, str) and _ruleset_ref_matches(value, branch)
+        for value in includes
+    )
+    excluded = any(
+        isinstance(value, str) and _ruleset_ref_matches(value, branch)
+        for value in excludes
+    )
+    return included and not excluded
+
+
+def _ruleset_required_status_checks(
+    repository: str,
+    branch: str,
+    token: str,
+) -> Dict[str, Any]:
+    if not token:
+        return {"observed": False, "contexts": []}
+    try:
+        rows = _request_rulesets_list(repository, token)
+        contexts: List[str] = []
+        for row in rows:
+            if row.get("target") != "branch":
+                continue
+            if row.get("enforcement") != "active":
+                continue
+            ruleset_id = row.get("id")
+            if not isinstance(ruleset_id, int) or ruleset_id < 1:
+                return {"observed": False, "contexts": []}
+            detail = _request_ruleset_detail(
+                repository,
+                ruleset_id,
+                token,
+            )
+            if not _ruleset_applies_to_branch(detail, branch):
+                continue
+            rules = detail.get("rules", [])
+            if not isinstance(rules, list):
+                return {"observed": False, "contexts": []}
+            for rule in rules:
+                if not isinstance(rule, Mapping):
+                    continue
+                if rule.get("type") != "required_status_checks":
+                    continue
+                parameters = rule.get("parameters")
+                if not isinstance(parameters, Mapping):
+                    return {"observed": False, "contexts": []}
+                checks = parameters.get("required_status_checks", [])
+                if not isinstance(checks, list):
+                    return {"observed": False, "contexts": []}
+                for check in checks:
+                    if not isinstance(check, Mapping):
+                        continue
+                    context = str(check.get("context") or "").strip()
+                    if context:
+                        contexts.append(context)
+        return {
+            "observed": True,
+            "contexts": sorted(set(contexts)),
+        }
+    except KnowledgeHubError:
+        return {"observed": False, "contexts": []}
+
+
 def _rulesets_http_error(
     exc: urllib.error.HTTPError,
 ) -> Dict[str, Any]:
@@ -243,6 +414,58 @@ def _rulesets_capability(
         }
     return _rulesets_payload_result(raw, status)
 
+def _required_status_check_evidence(
+    repository: str,
+    default_branch: str,
+    token: str,
+    rulesets: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if not token:
+        return {"observed": False, "contexts": []}
+    branch_metadata = _request_default_branch_metadata(
+        repository,
+        default_branch,
+        token,
+    )
+    if str(branch_metadata.get("name") or "") != default_branch:
+        raise KnowledgeHubError("default branch metadata identity mismatch")
+    branch_checks = _branch_required_status_checks(branch_metadata)
+    ruleset_checks: Dict[str, Any] = {
+        "observed": False,
+        "contexts": [],
+    }
+    if rulesets.get("status") == "available":
+        ruleset_checks = _ruleset_required_status_checks(
+            repository,
+            default_branch,
+            token,
+        )
+    branch_contexts = branch_checks.get("contexts", [])
+    ruleset_contexts = ruleset_checks.get("contexts", [])
+    if not isinstance(branch_contexts, list):
+        raise KnowledgeHubError("branch required status checks are invalid")
+    if not isinstance(ruleset_contexts, list):
+        raise KnowledgeHubError("ruleset required status checks are invalid")
+    ruleset_observed = (
+        ruleset_checks.get("observed") is True
+        if rulesets.get("status") == "available"
+        else rulesets.get("status") == "plan-gated"
+    )
+    return {
+        "observed": (
+            branch_checks.get("observed") is True
+            and ruleset_observed
+        ),
+        "contexts": sorted(
+            {
+                value.strip()
+                for value in branch_contexts + ruleset_contexts
+                if isinstance(value, str) and value.strip()
+            }
+        ),
+    }
+
+
 def evaluate_hosting_posture(
     root: pathlib.Path,
     *,
@@ -274,16 +497,12 @@ def evaluate_hosting_posture(
         raise KnowledgeHubError("repository metadata hosting fields are incomplete")
     if str(inventory.get("default_branch") or "") != default_branch:
         raise KnowledgeHubError("branch inventory default branch does not match repository metadata")
-    branch_checks = {"observed": False, "contexts": []}
-    if token:
-        branch_metadata = _request_default_branch_metadata(
-            repository,
-            default_branch,
-            token,
-        )
-        if str(branch_metadata.get("name") or "") != default_branch:
-            raise KnowledgeHubError("default branch metadata identity mismatch")
-        branch_checks = _branch_required_status_checks(branch_metadata)
+    required_checks = _required_status_check_evidence(
+        repository,
+        default_branch,
+        token,
+        rulesets,
+    )
     return {
         "schema_version": "knowledge-hub.hosting-posture.v1",
         "status": "pass",
@@ -296,8 +515,8 @@ def evaluate_hosting_posture(
         "default_branch_present": inventory.get("default_branch_present") is True,
         "default_branch_protection_observed": inventory.get("default_branch_protection_observed") is True,
         "default_branch_protected": inventory.get("default_branch_protected") is True,
-        "default_branch_required_status_checks_observed": branch_checks["observed"],
-        "default_branch_required_status_checks": branch_checks["contexts"],
+        "default_branch_required_status_checks_observed": required_checks["observed"],
+        "default_branch_required_status_checks": required_checks["contexts"],
         "rulesets_capability": rulesets,
         "branch_inventory": branch_inventory,
         "canonical_write": False,
