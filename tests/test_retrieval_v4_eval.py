@@ -6,6 +6,7 @@ import pytest
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
 from tools.codex_assets.knowledge_hub.eval_v2 import (
     compare_baseline,
+    metric_summary,
     migrate_v1_cases,
     validate_case,
 )
@@ -184,13 +185,20 @@ def test_eval_v2_migration_and_baseline_regression_contract():
     assert migrated[0]["language"] == "mixed"
     assert migrated[0]["principal"]["principal_id"] == "eval-user"
 
+    baseline = metric_summary([
+        {"id": "critical-a", "passed": True, "criticality": "critical", "latency_ms": 100.0},
+    ])
     passed = compare_baseline(
-        {"pass_rate": 0.98, "p95_ms": 100.0},
-        {"pass_rate": 0.99, "p95_ms": 110.0, "critical_failure_ids": []},
+        baseline,
+        metric_summary([
+            {"id": "critical-a", "passed": True, "criticality": "critical", "latency_ms": 110.0},
+        ]),
     )
     failed = compare_baseline(
-        {"pass_rate": 0.98, "p95_ms": 100.0},
-        {"pass_rate": 0.90, "p95_ms": 150.0, "critical_failure_ids": ["critical-a"]},
+        baseline,
+        metric_summary([
+            {"id": "critical-a", "passed": False, "criticality": "critical", "latency_ms": 150.0},
+        ]),
     )
     assert passed["status"] == "pass"
     assert failed["status"] == "fail"
