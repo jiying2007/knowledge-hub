@@ -1,6 +1,8 @@
 """Native stateless MCP 2026-07-28 stdio adapter for Knowledge Hub.
 
 Only the native stateless profile is accepted; initialize/session compatibility is retired.
+Oversized input terminates stdio after one bounded error; it is never drained or
+reinterpreted as multiple requests. A client may reconnect with valid input.
 """
 
 from __future__ import annotations
@@ -25,11 +27,15 @@ def _error(request_id: Any, code: int, message: str, data=None):
 
 
 def _process(root, raw: str, agent_id: str):
-    if len(raw.encode("utf-8")) > MAX_LINE_BYTES:
+    try:
+        size = len(raw.encode("utf-8"))
+    except UnicodeError:
+        return _error(None, -32700, "request must be UTF-8")
+    if size > MAX_LINE_BYTES:
         return _error(None, -32600, "request exceeds byte budget")
     try:
         request = json.loads(raw)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, RecursionError):
         return _error(None, -32700, "parse error")
     if not isinstance(request, Mapping):
         return _error(None, -32600, "request must be an object")
@@ -41,6 +47,35 @@ def _process(root, raw: str, agent_id: str):
         return _error(request.get("id"), exc.code, str(exc), exc.data)
     except KnowledgeHubError as exc:
         return _error(request.get("id"), -32602, str(exc))
+
+
+def _serve(root, input_stream, output_stream, agent_id: str) -> int:
+    while True:
+        # Bound the read itself. Never use iterator/readline() without a size.
+        raw = input_stream.readline(MAX_LINE_BYTES + 1)
+        if not raw:
+            return 0
+        if isinstance(raw, str):
+            try:
+                raw = raw.encode("utf-8")
+            except UnicodeError:
+                response = _error(None, -32700, "request must be UTF-8")
+                print(json.dumps(response), file=output_stream, flush=True)
+                continue
+        if len(raw) > MAX_LINE_BYTES:
+            response = _error(None, -32600, "request exceeds byte budget")
+            print(json.dumps(response), file=output_stream, flush=True)
+            return 2
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeError:
+            response = _error(None, -32700, "request must be UTF-8")
+        else:
+            if not text.strip():
+                continue
+            response = _process(root, text, agent_id)
+        if response is not None:
+            print(json.dumps(response, ensure_ascii=False), file=output_stream, flush=True)
 
 
 def main(argv: Sequence[str] = ()) -> int:
@@ -58,12 +93,7 @@ def main(argv: Sequence[str] = ()) -> int:
         if response is not None:
             print(json.dumps(response, ensure_ascii=False))
         return 0
-    for raw in sys.stdin:
-        if raw.strip():
-            response = _process(root, raw, args.agent_id)
-            if response is not None:
-                print(json.dumps(response, ensure_ascii=False), flush=True)
-    return 0
+    return _serve(root, getattr(sys.stdin, "buffer", sys.stdin), sys.stdout, args.agent_id)
 
 
 if __name__ == "__main__":
