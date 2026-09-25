@@ -6,8 +6,9 @@ import pathlib
 import re
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
-from .common import KnowledgeHubError, registry_items
+from .common import KnowledgeHubError, registry_items, resolve_today
 from .model import guard_regex_safety_error
+from .retrieval_eligibility import serviceable_item
 from .search import SearchFilters, SearchIndex, search
 
 
@@ -107,14 +108,7 @@ def _constraint_domain_matches(
     )
 
 
-def build_evidence_pack(
-    root: pathlib.Path,
-    query: str,
-    *,
-    limit: int = 20,
-    filters: Optional[SearchFilters] = None,
-    scope_refs: Sequence[str] = (),
-) -> Dict[str, Any]:
+def _validate_evidence_request(limit: int, scope_refs: Sequence[str]) -> None:
     if not 1 <= limit <= EVIDENCE_PACK_MAX_LIMIT:
         raise KnowledgeHubError(
             "EvidencePack limit must be between 1 and {}".format(
@@ -122,6 +116,40 @@ def build_evidence_pack(
             )
         )
     _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
+
+
+def _record_nonserviceable(
+    target: List[Dict[str, str]],
+    item_id: str,
+    item: Mapping[str, Any],
+) -> None:
+    if len(target) >= 5:
+        return
+    status = str(item.get("status", ""))
+    target.append(
+        {
+            "id": item_id,
+            "status": status,
+            "reason": (
+                "non-serviceable-lifecycle"
+                if status in TERMINAL_STATUSES or status == "personal"
+                else "non-serviceable-corpus-or-time"
+            ),
+        }
+    )
+
+
+def build_evidence_pack(
+    root: pathlib.Path,
+    query: str,
+    *,
+    limit: int = 20,
+    filters: Optional[SearchFilters] = None,
+    scope_refs: Sequence[str] = (),
+    as_of: str = "",
+) -> Dict[str, Any]:
+    _validate_evidence_request(limit, scope_refs)
+    today, _ = resolve_today(as_of)
     filters = filters or SearchFilters()
     search_index = SearchIndex(root)
     search_payload = search(
@@ -177,12 +205,8 @@ def build_evidence_pack(
         item = by_id.get(item_id)
         if item is None:
             continue
-        status = str(item.get("status", ""))
-        if status in TERMINAL_STATUSES or status == "personal":
-            if len(lifecycle_excluded) < 5:
-                lifecycle_excluded.append(
-                    {"id": item_id, "status": status, "reason": "non-serviceable-lifecycle"}
-                )
+        if not serviceable_item(item, today):
+            _record_nonserviceable(lifecycle_excluded, item_id, item)
             continue
         row = _pack_item(item, result)
         selected_ids.add(item_id)
@@ -236,14 +260,16 @@ def build_evidence_pack(
                 }
             )
         if (
-            _is_active_authority(item)
+            serviceable_item(item, today)
+            and _is_active_authority(item)
             and contract.get("role") == "constraint"
             and _scope_matches(contract, scope_refs)
         ):
             _append_unique(pack["must"], _pack_item(item))
             selected_ids.add(str(item.get("id", "")))
         elif (
-            item.get("status") in PROVISIONAL_STATUSES
+            serviceable_item(item, today)
+            and item.get("status") in PROVISIONAL_STATUSES
             and contract.get("role") == "constraint"
             and _scope_matches(contract, scope_refs)
             and (

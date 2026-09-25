@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 from .common import KnowledgeHubError, registry_items, resolve_today
 from .retrieval_cache import DerivedCache, fingerprint
 from .retrieval_chunks import hierarchical_chunks
+from .retrieval_eligibility import serviceable_item
 from .runtime_p5_security import authorize_item, principal_context, trust_class
 from .runtime_v3_contracts import DEFAULT_AGENT, agent_profile
 from .search_core import search_tokens
@@ -39,15 +40,7 @@ def _date(value: Any, label: str) -> Optional[dt.date]:
 
 
 def _temporal_eligible(item: Mapping[str, Any], today: dt.date) -> bool:
-    valid_from = _date(item.get("valid_from"), "valid_from")
-    valid_to = _date(item.get("valid_to"), "valid_to")
-    if valid_from and valid_to and valid_from > valid_to:
-        raise KnowledgeHubError("valid_from must not exceed valid_to")
-    if valid_from and today < valid_from:
-        return False
-    if valid_to and today > valid_to:
-        return False
-    return str(item.get("status", "")) in {"active", "reviewing", "draft"}
+    return serviceable_item(item, today)
 
 
 def _feature_vector(text: str, dims: int = DEFAULT_DIMS) -> Tuple[float, ...]:

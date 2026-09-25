@@ -44,6 +44,7 @@ from .runtime_v3_governance import (
     steward_audit,
     trace_projection,
 )
+from .retrieval_eligibility import scope_matches, serviceable_item
 from .search import SearchFilters, SearchIndex, search, search_tokens
 
 MAX_QUERY_CHARS = 4096
@@ -86,29 +87,7 @@ def _date(value: Any, field: str) -> Optional[dt.date]:
 
 
 def _eligible(item: Mapping[str, Any], today: dt.date, scopes: Sequence[str]) -> bool:
-    if str(item.get("status", "")) not in SERVICEABLE:
-        return False
-    if str(item.get("visibility", "")) == "personal-local":
-        return False
-    valid_from = _date(item.get("valid_from"), "valid_from")
-    valid_to = _date(item.get("valid_to"), "valid_to")
-    if valid_from and valid_to and valid_from > valid_to:
-        raise KnowledgeHubError("valid_from must not exceed valid_to")
-    if valid_from and today < valid_from:
-        return False
-    if valid_to and today > valid_to:
-        return False
-    if not scopes:
-        return True
-    domain = str(item.get("domain", ""))
-    path = str(item.get("path", ""))
-    return any(
-        domain == scope
-        or domain.startswith(scope.rstrip("/") + "/")
-        or path.startswith(scope.rstrip("/") + "/")
-        for scope in scopes
-        if str(scope).strip()
-    )
+    return serviceable_item(item, today) and scope_matches(item, scopes)
 
 
 def _authority(item: Mapping[str, Any]) -> float:
@@ -380,6 +359,7 @@ def compile_context(
         limit=max(limit, 8),
         filters=SearchFilters(domains=agent_scopes),
         scope_refs=scopes,
+        as_of=as_of,
     )
     seeds = [str(row.get("id", "")) for row in result["results"][:5]]
     return {
@@ -429,6 +409,30 @@ def runtime_health(root: pathlib.Path) -> Dict[str, Any]:
     }
 
 
+def _dispatch_evidence_pack(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+    agent_id: str,
+) -> Dict[str, Any]:
+    require_capability(root, agent_id, "knowledge.evidence-pack")
+    profile = agent_profile(root, agent_id)
+    agent_scopes = _sequence(
+        profile.get("knowledge_scopes", []),
+        "agent knowledge_scopes",
+        maximum=64,
+    )
+    return build_evidence_pack(
+        root,
+        str(payload.get("query", "")),
+        limit=int(payload.get("limit", 20)),
+        filters=SearchFilters(domains=agent_scopes),
+        scope_refs=_sequence(
+            payload.get("scope_refs", []), "scope_refs", maximum=32
+        ),
+        as_of=str(payload.get("as_of", "")),
+    )
+
+
 def api_dispatch(
     root: pathlib.Path,
     operation: str,
@@ -472,20 +476,7 @@ def api_dispatch(
             as_of=str(payload.get("as_of", "")),
         )
     if op == "evidence-pack":
-        require_capability(root, agent_id, "knowledge.evidence-pack")
-        profile = agent_profile(root, agent_id)
-        agent_scopes = _sequence(
-            profile.get("knowledge_scopes", []),
-            "agent knowledge_scopes",
-            maximum=64,
-        )
-        return build_evidence_pack(
-            root,
-            str(payload.get("query", "")),
-            limit=int(payload.get("limit", 20)),
-            filters=SearchFilters(domains=agent_scopes),
-            scope_refs=_sequence(payload.get("scope_refs", []), "scope_refs", maximum=32),
-        )
+        return _dispatch_evidence_pack(root, payload, agent_id)
     if op == "action-check":
         require_capability(root, agent_id, "knowledge.action-check")
         return check_action(
@@ -594,6 +585,7 @@ def mcp_tools() -> List[Dict[str, Any]]:
                 {
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
                 },
                 ["query"],
             ),
@@ -610,6 +602,7 @@ def mcp_tools() -> List[Dict[str, Any]]:
                         "items": {"type": "string"},
                     },
                     "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
                 },
                 ["query"],
             ),
@@ -618,7 +611,13 @@ def mcp_tools() -> List[Dict[str, Any]]:
             "name": "knowledge_evidence_pack",
             "description": "Build authoritative/provisional EvidencePack.",
             "inputSchema": _mcp_schema(
-                {"query": {"type": "string"}}, ["query"]
+                {
+                    "query": {"type": "string"},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "scope_refs": {"type": "array", "items": {"type": "string"}},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+                },
+                ["query"],
             ),
         },
         {
