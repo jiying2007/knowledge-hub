@@ -108,18 +108,11 @@ def _split_body(item_id: str, body: str) -> List[Dict[str, Any]]:
     return builder.chunks
 
 
-def _line_number(body: str, position: int) -> int:
-    prefix = body[:position]
-    count = prefix.count("\n") + prefix.count("\r") - prefix.count("\r\n")
-    if position and body[position:position + 1] == "\n" and body[position - 1] == "\r":
-        count -= 1
-    return count + 1
-
-
 def _valid_chunks(value: Any, body: str, item_id: str, source_hash: str) -> bool:
     if not isinstance(value, list) or len(value) > MAX_CHUNKS_PER_ITEM:
         return False
     end = 0
+    breaks_before = 0
     for row in value:
         if not isinstance(row, dict):
             return False
@@ -137,8 +130,14 @@ def _valid_chunks(value: Any, body: str, item_id: str, source_hash: str) -> bool
         first, last = row.get("line_start"), row.get("line_end")
         if type(first) is not int or type(last) is not int or not 1 <= first <= last:
             return False
-        if first != _line_number(body, start) or last != _line_number(body, stop - 1):
+        # Count each span once, including CRLF pairs split at a chunk boundary.
+        crosses_crlf = bool(start and body[start - 1] == "\r" and text.startswith("\n"))
+        breaks = text.count("\n") + text.count("\r") - text.count("\r\n") - int(crosses_crlf)
+        expected_first = breaks_before + 1 - int(crosses_crlf)
+        expected_last = breaks_before + breaks + 1 - int(text.endswith(("\r", "\n")))
+        if first != expected_first or last != expected_last:
             return False
+        breaks_before += breaks
         if row.get("text") != text or row.get("item_id") != item_id:
             return False
         expected = _chunk_record(item_id, headings, text, first, last, start)
