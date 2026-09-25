@@ -6,8 +6,9 @@ import pathlib
 import re
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
-from .common import KnowledgeHubError, registry_items
+from .common import KnowledgeHubError, registry_items, resolve_today
 from .model import guard_regex_safety_error
+from .retrieval_eligibility import serviceable_item
 from .search import SearchFilters, SearchIndex, search
 
 
@@ -114,6 +115,7 @@ def build_evidence_pack(
     limit: int = 20,
     filters: Optional[SearchFilters] = None,
     scope_refs: Sequence[str] = (),
+    as_of: str = "",
 ) -> Dict[str, Any]:
     if not 1 <= limit <= EVIDENCE_PACK_MAX_LIMIT:
         raise KnowledgeHubError(
@@ -122,6 +124,7 @@ def build_evidence_pack(
             )
         )
     _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
+    today, _ = resolve_today(as_of)
     filters = filters or SearchFilters()
     search_index = SearchIndex(root)
     search_payload = search(
@@ -178,10 +181,18 @@ def build_evidence_pack(
         if item is None:
             continue
         status = str(item.get("status", ""))
-        if status in TERMINAL_STATUSES or status == "personal":
+        if not serviceable_item(item, today):
             if len(lifecycle_excluded) < 5:
                 lifecycle_excluded.append(
-                    {"id": item_id, "status": status, "reason": "non-serviceable-lifecycle"}
+                    {
+                        "id": item_id,
+                        "status": status,
+                        "reason": (
+                            "non-serviceable-lifecycle"
+                            if status in TERMINAL_STATUSES or status == "personal"
+                            else "non-serviceable-corpus-or-time"
+                        ),
+                    }
                 )
             continue
         row = _pack_item(item, result)
@@ -236,14 +247,16 @@ def build_evidence_pack(
                 }
             )
         if (
-            _is_active_authority(item)
+            serviceable_item(item, today)
+            and _is_active_authority(item)
             and contract.get("role") == "constraint"
             and _scope_matches(contract, scope_refs)
         ):
             _append_unique(pack["must"], _pack_item(item))
             selected_ids.add(str(item.get("id", "")))
         elif (
-            item.get("status") in PROVISIONAL_STATUSES
+            serviceable_item(item, today)
+            and item.get("status") in PROVISIONAL_STATUSES
             and contract.get("role") == "constraint"
             and _scope_matches(contract, scope_refs)
             and (
