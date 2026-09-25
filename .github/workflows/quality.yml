@@ -93,6 +93,11 @@ jobs:
         run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
       - name: Install hash-locked dependencies
         run: rtk python3 -m pip install --require-hashes -r requirements-dev.lock
+      - name: Freeze evidence evaluation date
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'KNOWLEDGE_CI_AS_OF=%s\n' "$(date -u +%F)" >> "$GITHUB_ENV"
       - name: Run full engineering gate
         run: rtk python3 -m tools.codex_assets.knowledge_hub.engineering_cli --mode full --json
       - name: Run deterministic compliance verdict matrix
@@ -104,9 +109,9 @@ jobs:
             --minimum-cases 50 --require-verdict-coverage --json \
             | tee .cache/knowledge-hub/compliance-eval.json
       - name: Verify remote checkout in an offsite runner
-        run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --json
+        run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --as-of "${KNOWLEDGE_CI_AS_OF:?}" --json
       - name: Assess product readiness (non-terminal)
-        run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --summary-json
+        run: rtk bash tools/knowledge-final-gate.sh --final-profile product --regression-suite full --reuse-engineering-evidence --as-of "${KNOWLEDGE_CI_AS_OF:?}" --summary-json
       - name: Build exact quality evidence binding
         run: rtk python3 -m tools.codex_assets.knowledge_hub.quality_evidence_binding_cli build --source-revision "${{ github.event.pull_request.head.sha || github.sha }}" --json
       - name: Verify required quality evidence
