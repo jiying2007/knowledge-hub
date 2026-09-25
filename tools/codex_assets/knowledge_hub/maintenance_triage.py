@@ -76,11 +76,11 @@ def _bounded_row(row: Mapping[str, Any], today: dt.date) -> Dict[str, Any]:
 def _stale_rows(review: Mapping[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     if review.get("status") not in ("pass", "report-only"):
         raise KnowledgeHubError("review report is incomplete or failed")
-    errors = review.get("errors", [])
+    errors = review.get("errors")
     if not isinstance(errors, list) or errors:
         raise KnowledgeHubError("review report contains errors")
     today = _date(review.get("today"), "review today")
-    rows = review.get("rows", [])
+    rows = review.get("rows")
     if not isinstance(rows, list) or len(rows) > MAX_REVIEW_ROWS:
         raise KnowledgeHubError("review rows must be a bounded list")
     grouped: Dict[str, List[Dict[str, Any]]] = {name: [] for name in sorted(_ALLOWED_CLASSES)}
