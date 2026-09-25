@@ -1,136 +1,99 @@
-"""Candidate-service and cross-runtime corpus parity regressions."""
+"""Shared governed retrieval-eligibility contract regressions."""
 
-import json
-import sqlite3
+import datetime as dt
 
 import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
-from tools.codex_assets.knowledge_hub import retrieval_candidates as candidates
 from tools.codex_assets.knowledge_hub import retrieval_v4 as rv4
 from tools.codex_assets.knowledge_hub import runtime_v3 as rv3
-from tools.codex_assets.knowledge_hub.search_core import SearchBoundaryError
+from tools.codex_assets.knowledge_hub.retrieval_eligibility import (
+    scope_matches, serviceable_item,
+)
 
-
-class FakeIndex:
-    CANDIDATE_LIMIT = 4096
-
-    def __init__(self, root):
-        self.root = root
-
-    def ensure(self):
-        return {"state": "warm", "fresh": True, "signature": "abc"}
-
-    def authority_candidates(self, query):
-        return [
-            {"item_json": json.dumps({"id": "allowed"})},
-            {"item_json": json.dumps({"id": "outside"})},
-        ]
-
-    def candidates(self, query, candidate_limit):
-        assert candidate_limit == candidates.MAX_LEXICAL_CANDIDATES
-        return [
-            {"item_json": json.dumps({"id": "allowed"})},
-            {"item_json": json.dumps({"id": "second"})},
-        ]
-
-
-def test_fts_candidate_service_never_widens_authorized_set(monkeypatch, tmp_path):
-    monkeypatch.setattr(candidates, "SearchIndex", FakeIndex)
-    selected, report = candidates.lexical_candidate_set(
-        tmp_path, "uart", {"allowed", "second"}
-    )
-    assert selected == {"allowed", "second"}
-    assert report["mode"] == "fts-index"
-    assert report["fallback"] is False
-    assert report["indexed_candidate_count"] == 4
-
-
-@pytest.mark.parametrize("error", [OSError("io"), sqlite3.Error("db"), KnowledgeHubError("index")])
-def test_normal_index_fault_falls_back_only_to_authorized_ids(monkeypatch, tmp_path, error):
-    class Broken(FakeIndex):
-        def ensure(self):
-            raise error
-    monkeypatch.setattr(candidates, "SearchIndex", Broken)
-    selected, report = candidates.lexical_candidate_set(tmp_path, "uart", {"a", "b"})
-    assert selected == {"a", "b"}
-    assert report["mode"] == "authorized-scan-fallback"
-    assert report["fallback"] is True
-
-
-def test_security_resource_boundary_does_not_degrade_to_scan(monkeypatch, tmp_path):
-    class Broken(FakeIndex):
-        def ensure(self):
-            raise SearchBoundaryError("budget")
-    monkeypatch.setattr(candidates, "SearchIndex", Broken)
-    with pytest.raises(SearchBoundaryError):
-        candidates.lexical_candidate_set(tmp_path, "uart", {"a"})
+TODAY = dt.date(2026, 9, 25)
 
 
 @pytest.mark.parametrize(
     "item, expected",
     [
         ({"path": "projects/a/current/x.md", "status": "active"}, True),
+        ({"path": "projects/a/current/x.md", "status": "reviewing"}, True),
+        ({"path": "projects/a/current/x.md", "status": "draft"}, True),
+        ({"path": "projects/a/current/x.md", "status": "archived"}, False),
         ({"path": "projects/a/current/x.md", "status": "active", "searchable": False}, False),
         ({"path": "registry/schema.md", "status": "active"}, False),
         ({"path": "registry/schema.md", "status": "active", "searchable": True}, True),
         ({"path": "notes/personal/x.md", "status": "active", "visibility": "personal-local"}, False),
+        ({"path": "projects/a/current/x.md", "status": "active", "valid_from": "2026-09-26"}, False),
+        ({"path": "projects/a/current/x.md", "status": "active", "valid_to": "2026-09-24"}, False),
     ],
 )
-def test_v4_and_runtime_share_default_corpus_eligibility(item, expected):
-    today = rv4.dt.date(2026, 9, 25)
-    assert rv4._temporal_eligible(item, today) is expected
-    assert rv3._eligible(item, today, ()) is expected
+def test_serviceable_contract(item, expected):
+    assert serviceable_item(item, TODAY) is expected
+    assert rv4._temporal_eligible(item, TODAY) is expected
+    assert rv3._eligible(item, TODAY, ()) is expected
 
 
-def test_feature_hash_path_skips_non_fts_body_reads(monkeypatch, tmp_path):
-    seen = []
-    def chunks(root, item, cache=None):
-        seen.append(item["id"])
-        return [{"text": "uart proof", "coverage_complete": True}]
-    monkeypatch.setattr(rv4, "hierarchical_chunks", chunks)
-    authorized = [
-        {"id": "hit", "status": "active"},
-        {"id": "miss", "status": "active"},
-    ]
-    rv4._score_lanes(
-        tmp_path, "uart", authorized, rv4.dt.date(2026, 9, 25), None,
-        lexical_candidate_ids={"hit"},
+def test_invalid_temporal_range_fails_every_surface():
+    item = {
+        "path": "projects/a/current/x.md", "status": "active",
+        "valid_from": "2026-09-26", "valid_to": "2026-09-24",
+    }
+    with pytest.raises(KnowledgeHubError, match="valid_from"):
+        serviceable_item(item, TODAY)
+    with pytest.raises(KnowledgeHubError, match="valid_from"):
+        rv4._temporal_eligible(item, TODAY)
+    with pytest.raises(KnowledgeHubError, match="valid_from"):
+        rv3._eligible(item, TODAY, ())
+
+
+@pytest.mark.parametrize(
+    "scopes, expected",
+    [
+        ((), True),
+        (("projects",), True),
+        (("projects/a",), True),
+        (("projects/a/current",), True),
+        (("projects/b",), False),
+        (("", "projects/b"), False),
+    ],
+)
+def test_scope_contract(scopes, expected):
+    item = {"domain": "projects/a", "path": "projects/a/current/x.md"}
+    assert scope_matches(item, scopes) is expected
+
+
+def test_scope_never_overrides_nonsearchable_lifecycle():
+    item = {
+        "domain": "projects/a", "path": "projects/a/current/x.md",
+        "status": "active", "searchable": False,
+    }
+    assert scope_matches(item, ("projects/a",)) is True
+    assert rv3._eligible(item, TODAY, ("projects/a",)) is False
+
+
+def test_acl_is_intentionally_not_part_of_shared_pre_acl_contract():
+    item = {
+        "domain": "projects/a", "path": "projects/a/current/x.md",
+        "status": "active", "acl": ["bob"],
+    }
+    assert serviceable_item(item, TODAY) is True
+    assert scope_matches(item, ("projects/a",)) is True
+
+
+def test_global_fts_rebuild_is_not_called_from_v4_request_path(monkeypatch, tmp_path):
+    # Regression for the rejected initial #117 approach: candidate discovery
+    # must not rebuild a global body index after principal ACL filtering.
+    class Forbidden:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("global FTS index must not be opened by v4")
+    import tools.codex_assets.knowledge_hub.search_index as search_index
+    monkeypatch.setattr(search_index, "SearchIndex", Forbidden)
+    monkeypatch.setattr(rv4, "registry_items", lambda root: [])
+    monkeypatch.setattr(rv4, "agent_profile", lambda root, agent: {"knowledge_scopes": []})
+    result = rv4.retrieve_v4(
+        tmp_path, "uart", {"principal_id": "alice", "groups": [], "organization_id": "eng"},
+        cache_enabled=False, as_of="2026-09-25",
     )
-    assert seen == ["hit"]
-
-
-def test_external_semantic_provider_keeps_independent_recall(monkeypatch, tmp_path):
-    seen = []
-    def chunks(root, item, cache=None):
-        seen.append(item["id"])
-        return [{"text": item["id"], "coverage_complete": True}]
-    monkeypatch.setattr(rv4, "hierarchical_chunks", chunks)
-    def embedding(text):
-        return [1.0, 0.0]
-    authorized = [
-        {"id": "fts-hit", "status": "active"},
-        {"id": "semantic-only", "status": "active"},
-    ]
-    _, lexical, dense, _, _, _ = rv4._score_lanes(
-        tmp_path, "query", authorized, rv4.dt.date(2026, 9, 25), embedding,
-        lexical_candidate_ids={"fts-hit"},
-    )
-    assert seen == ["fts-hit", "semantic-only"]
-    assert lexical["semantic-only"] == 0.0
-    assert dense["semantic-only"] > 0.0
-
-
-def test_empty_authorized_corpus_does_not_open_index(monkeypatch, tmp_path):
-    class ShouldNotConstruct:
-        def __init__(self, root):
-            raise AssertionError("index should not be opened")
-    monkeypatch.setattr(candidates, "SearchIndex", ShouldNotConstruct)
-    selected, report = candidates.lexical_candidate_set(tmp_path, "uart", set())
-    assert selected == set()
-    assert report["state"] == "empty-authorized-corpus"
-
-
-def test_allowed_id_input_is_fail_closed_when_not_a_set(tmp_path):
-    with pytest.raises(KnowledgeHubError, match="allowed_ids"):
-        candidates.lexical_candidate_set(tmp_path, "uart", ["a"])  # type: ignore[arg-type]
+    assert result["results"] == []
