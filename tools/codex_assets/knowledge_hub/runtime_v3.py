@@ -409,6 +409,30 @@ def runtime_health(root: pathlib.Path) -> Dict[str, Any]:
     }
 
 
+def _dispatch_evidence_pack(
+    root: pathlib.Path,
+    payload: Mapping[str, Any],
+    agent_id: str,
+) -> Dict[str, Any]:
+    require_capability(root, agent_id, "knowledge.evidence-pack")
+    profile = agent_profile(root, agent_id)
+    agent_scopes = _sequence(
+        profile.get("knowledge_scopes", []),
+        "agent knowledge_scopes",
+        maximum=64,
+    )
+    return build_evidence_pack(
+        root,
+        str(payload.get("query", "")),
+        limit=int(payload.get("limit", 20)),
+        filters=SearchFilters(domains=agent_scopes),
+        scope_refs=_sequence(
+            payload.get("scope_refs", []), "scope_refs", maximum=32
+        ),
+        as_of=str(payload.get("as_of", "")),
+    )
+
+
 def api_dispatch(
     root: pathlib.Path,
     operation: str,
@@ -452,21 +476,7 @@ def api_dispatch(
             as_of=str(payload.get("as_of", "")),
         )
     if op == "evidence-pack":
-        require_capability(root, agent_id, "knowledge.evidence-pack")
-        profile = agent_profile(root, agent_id)
-        agent_scopes = _sequence(
-            profile.get("knowledge_scopes", []),
-            "agent knowledge_scopes",
-            maximum=64,
-        )
-        return build_evidence_pack(
-            root,
-            str(payload.get("query", "")),
-            limit=int(payload.get("limit", 20)),
-            filters=SearchFilters(domains=agent_scopes),
-            scope_refs=_sequence(payload.get("scope_refs", []), "scope_refs", maximum=32),
-            as_of=str(payload.get("as_of", "")),
-        )
+        return _dispatch_evidence_pack(root, payload, agent_id)
     if op == "action-check":
         require_capability(root, agent_id, "knowledge.action-check")
         return check_action(
