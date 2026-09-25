@@ -152,10 +152,16 @@ class DerivedCache:
     ) -> Any:
         counters = self.stats["by_namespace"].setdefault(namespace, {"hits": 0, "misses": 0})
         value = self._read(namespace, key, revision)
-        if value is not None and valid(value):
-            self.stats["hits"] += 1
-            counters["hits"] += 1
-            return value
+        if value is not None:
+            try:
+                cache_valid = valid(value)
+            except (TypeError, ValueError, OverflowError, KeyError):
+                cache_valid = False
+            if cache_valid:
+                self.stats["hits"] += 1
+                counters["hits"] += 1
+                return value
+            self.stats["invalid_entries"] += 1
         self.stats["misses"] += 1
         counters["misses"] += 1
         value = build()  # Source/provider failures must propagate, never become cache fallback.
