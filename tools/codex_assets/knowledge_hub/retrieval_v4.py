@@ -180,7 +180,7 @@ def _dense_scores(
             if cache is not None and binding[0]:
                 vector = cache.resolve(
                     "vectors", fingerprint([binding[0], hashlib.sha256(text.encode("utf-8")).hexdigest()]),
-                    binding[0], lambda: _vector(text, embedding_fn),
+                    binding[0], lambda text=text: _vector(text, embedding_fn),
                     lambda value: _valid_vector(value, binding[1]),
                 )
             else:

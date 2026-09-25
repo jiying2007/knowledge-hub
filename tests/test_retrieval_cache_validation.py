@@ -11,8 +11,10 @@ from tools.codex_assets.knowledge_hub.retrieval_v4 import _valid_vector
 
 def test_huge_cached_integer_validation_recomputes_current_vector(tmp_path):
     with DerivedCache(tmp_path) as cache:
-        build = lambda: [1.0, 0.0]
-        valid = lambda value: _valid_vector(value, 2)
+        def build():
+            return [1.0, 0.0]
+        def valid(value):
+            return _valid_vector(value, 2)
         cache.resolve("vector", "key", "revision", build, valid)
         raw = json.dumps([10 ** 400, 0]).encode("utf-8")
         cache.connection.execute("update entries set payload=?,digest=?",
