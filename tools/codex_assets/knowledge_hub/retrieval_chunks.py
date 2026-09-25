@@ -6,13 +6,16 @@ import hashlib
 import io
 import pathlib
 import re
-from typing import Any, Dict, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .common import KnowledgeHubError, read_repository_bytes_bounded
+from .retrieval_cache import DerivedCache, fingerprint
 
 MAX_FILE_BYTES = 4 * 1024 * 1024
 MAX_CHUNKS_PER_ITEM = 128
 MAX_CHUNK_CHARS = 4000
+MAX_HEADING_CHARS = 160
+CHUNKER_REVISION = "lossless-spans-v3"
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 
@@ -80,7 +83,9 @@ def _split_body(item_id: str, body: str) -> List[Dict[str, Any]]:
                 break
             level = len(heading.group(1))
             builder.headings = [row for row in builder.headings if row[0] < level]
-            builder.headings.append((level, heading.group(2).strip()))
+            # This is a bounded display label, not the source span. The full
+            # heading remains in body text and is split without loss below.
+            builder.headings.append((level, heading.group(2).strip()[:MAX_HEADING_CHARS]))
         marker = FENCE_RE.match(line.rstrip("\r\n"))
         if marker:
             delimiter, tail = marker.groups()
@@ -98,12 +103,64 @@ def _split_body(item_id: str, body: str) -> List[Dict[str, Any]]:
             "source_content_sha256": source_hash, "source_char_count": len(body),
             "coverage_complete": complete,
             "next_char_offset": None if complete else builder.position,
-            "chunker_revision": "lossless-spans-v2",
+            "chunker_revision": CHUNKER_REVISION,
         })
     return builder.chunks
 
 
-def hierarchical_chunks(root: pathlib.Path, item: Mapping[str, Any]) -> List[Dict[str, Any]]:
+def _valid_chunks(value: Any, body: str, item_id: str, source_hash: str) -> bool:
+    if not isinstance(value, list) or len(value) > MAX_CHUNKS_PER_ITEM:
+        return False
+    end = 0
+    breaks_before = 0
+    for row in value:
+        if not isinstance(row, dict):
+            return False
+        start, stop = row.get("source_char_start"), row.get("source_char_end")
+        if type(start) is not int or type(stop) is not int or start != end:
+            return False
+        if not start < stop <= len(body) or stop - start > MAX_CHUNK_CHARS:
+            return False
+        text = body[start:stop]
+        headings = row.get("heading_path")
+        if not isinstance(headings, list) or not 1 <= len(headings) <= 6:
+            return False
+        if any(not isinstance(h, str) or len(h) > MAX_HEADING_CHARS for h in headings):
+            return False
+        first, last = row.get("line_start"), row.get("line_end")
+        if type(first) is not int or type(last) is not int or not 1 <= first <= last:
+            return False
+        # Count each span once, including CRLF pairs split at a chunk boundary.
+        crosses_crlf = bool(start and body[start - 1] == "\r" and text.startswith("\n"))
+        breaks = text.count("\n") + text.count("\r") - text.count("\r\n") - int(crosses_crlf)
+        expected_first = breaks_before + 1 - int(crosses_crlf)
+        expected_last = breaks_before + breaks + 1 - int(text.endswith(("\r", "\n")))
+        if first != expected_first or last != expected_last:
+            return False
+        breaks_before += breaks
+        if row.get("text") != text or row.get("item_id") != item_id:
+            return False
+        expected = _chunk_record(item_id, headings, text, first, last, start)
+        if any(row.get(key) != val for key, val in expected.items()):
+            return False
+        if row.get("source_content_sha256") != source_hash or row.get("source_char_count") != len(body):
+            return False
+        if row.get("chunker_revision") != CHUNKER_REVISION:
+            return False
+        end = stop
+    complete = end == len(body)
+    if not complete and len(value) != MAX_CHUNKS_PER_ITEM:
+        return False
+    return all(
+        row.get("coverage_complete") is complete
+        and row.get("next_char_offset") == (None if complete else end)
+        for row in value
+    )
+
+
+def hierarchical_chunks(
+    root: pathlib.Path, item: Mapping[str, Any], *, cache: Optional[DerivedCache] = None,
+) -> List[Dict[str, Any]]:
     relative = str(item.get("path", ""))
     source_kind = "body"
     if relative:
@@ -120,7 +177,17 @@ def hierarchical_chunks(root: pathlib.Path, item: Mapping[str, Any]) -> List[Dic
         ]).strip()
         if len(body.encode("utf-8")) > MAX_FILE_BYTES:
             raise KnowledgeHubError("retrieval metadata exceeds byte budget")
-    chunks = _split_body(str(item.get("id", "")), body)
+    item_id = str(item.get("id", ""))
+    source_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    if cache is None:
+        chunks = _split_body(item_id, body)
+    else:
+        revision = fingerprint([source_hash, CHUNKER_REVISION, MAX_CHUNKS_PER_ITEM, MAX_CHUNK_CHARS, MAX_HEADING_CHARS])
+        chunks = cache.resolve(
+            "chunks", fingerprint([item_id, relative, source_kind]), revision,
+            lambda: _split_body(item_id, body),
+            lambda value: _valid_chunks(value, body, item_id, source_hash),
+        )
     for chunk in chunks:
         chunk["source_kind"] = source_kind
         chunk["source_path"] = relative

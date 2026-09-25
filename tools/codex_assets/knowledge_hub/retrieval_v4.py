@@ -11,6 +11,7 @@ import re
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .common import KnowledgeHubError, registry_items, resolve_today
+from .retrieval_cache import DerivedCache, fingerprint
 from .retrieval_chunks import hierarchical_chunks
 from .runtime_p5_security import authorize_item, principal_context, trust_class
 from .runtime_v3_contracts import DEFAULT_AGENT, agent_profile
@@ -77,6 +78,33 @@ def _vector(text: str, embedding_fn: Optional[EmbeddingFn]) -> Tuple[float, ...]
     return tuple(value / norm for value in scaled) if norm else scaled
 
 
+def _embedding_binding(embedding_fn: Optional[EmbeddingFn], identity: Any) -> Tuple[str, int]:
+    if embedding_fn is None:
+        if identity is not None:
+            raise KnowledgeHubError("embedding identity requires an external provider")
+        return fingerprint(["feature-hash-v1", "search-tokens-v1", DEFAULT_DIMS]), DEFAULT_DIMS
+    if identity is None:
+        return "", 0  # An anonymous callable cannot be persistently identified.
+    if not isinstance(identity, Mapping):
+        raise KnowledgeHubError("embedding identity must be an object")
+    fields = ("provider", "model", "revision", "preprocessing")
+    if any(not isinstance(identity.get(k), str) or not identity[k].strip() or len(identity[k]) > 256 for k in fields):
+        raise KnowledgeHubError("embedding identity requires provider/model/revision/preprocessing")
+    dims = identity.get("dimensions")
+    if type(dims) is not int or not 1 <= dims <= MAX_EMBEDDING_DIMS:
+        raise KnowledgeHubError("embedding identity requires bounded dimensions")
+    return fingerprint(["normalized-vector-v1", [identity[k] for k in fields], dims]), dims
+
+
+def _valid_vector(value: Any, dims: int) -> bool:
+    if not isinstance(value, (list, tuple)) or len(value) != dims:
+        return False
+    if any(type(v) not in (int, float) or not math.isfinite(v) or abs(v) > 1 for v in value):
+        return False
+    norm = sum(v * v for v in value)
+    return norm == 0 or abs(norm - 1) < 1e-8
+
+
 def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
     if len(left) != len(right):
         raise KnowledgeHubError("embedding dimensions do not match")
@@ -133,18 +161,31 @@ def route_query(query: str) -> str:
 
 def _dense_scores(
     query: str, chunks_by_item: Mapping[str, Sequence[Mapping[str, Any]]],
-    embedding_fn: Optional[EmbeddingFn],
+    embedding_fn: Optional[EmbeddingFn], *, cache: Optional[DerivedCache] = None,
+    binding: Tuple[str, int] = ("", 0), query_vector: Optional[Sequence[float]] = None,
 ) -> Tuple[Dict[str, float], Dict[str, Dict[str, Any]]]:
     if not chunks_by_item:
         return {}, {}
-    query_vector = _vector(query, embedding_fn)
+    if query_vector is None:
+        query_vector = _vector(query, embedding_fn)
+    if binding[1] and len(query_vector) != binding[1]:
+        raise KnowledgeHubError("embedding identity dimensions do not match provider")
     scores: Dict[str, float] = {}
     best_chunks: Dict[str, Dict[str, Any]] = {}
     for item_id, chunks in chunks_by_item.items():
         best_score = 0.0
         best: Optional[Mapping[str, Any]] = None
         for chunk in chunks:
-            score = max(0.0, _cosine(query_vector, _vector(str(chunk["text"]), embedding_fn)))
+            text = str(chunk["text"])
+            if cache is not None and binding[0]:
+                vector = cache.resolve(
+                    "vectors", fingerprint([binding[0], hashlib.sha256(text.encode("utf-8")).hexdigest()]),
+                    binding[0], lambda text=text: _vector(text, embedding_fn),
+                    lambda value: _valid_vector(value, binding[1]),
+                )
+            else:
+                vector = _vector(text, embedding_fn)
+            score = max(0.0, _cosine(query_vector, vector))
             if score > best_score:
                 best_score, best = score, chunk
         scores[item_id] = best_score
@@ -189,36 +230,41 @@ def _authorized_items(
 
 def _score_lanes(
     root: pathlib.Path, query: str, authorized: Sequence[Mapping[str, Any]],
-    today: dt.date, embedding_fn: Optional[EmbeddingFn],
+    today: dt.date, embedding_fn: Optional[EmbeddingFn], *,
+    cache: Optional[DerivedCache] = None, binding: Tuple[str, int] = ("", 0),
 ) -> Tuple[
     Dict[str, List[Dict[str, Any]]], Dict[str, float], Dict[str, float],
     Dict[str, float], Dict[str, float], Dict[str, Dict[str, Any]],
 ]:
     chunks: Dict[str, List[Dict[str, Any]]] = {}
     lexical: Dict[str, float] = {}
+    dense: Dict[str, float] = {}
     best: Dict[str, Dict[str, Any]] = {}
     total_chars = total_chunks = 0
+    query_vector = None
     for item in authorized:
         item_id = str(item.get("id", ""))
         if not item_id or item_id in chunks:
             raise KnowledgeHubError("retrieval corpus must have unique non-empty item IDs")
-        item_chunks = hierarchical_chunks(root, item)
+        item_chunks = hierarchical_chunks(root, item, cache=cache)
         total_chars += sum(len(row["text"]) for row in item_chunks)
         total_chunks += len(item_chunks)
         if total_chars > MAX_CORPUS_CHARS or total_chunks > MAX_TOTAL_CHUNKS:
             raise KnowledgeHubError("retrieval corpus exceeds chunk/character budget")
-        chunks[item_id] = item_chunks
         lexical[item_id], best[item_id] = _lexical_lane(query, item, item_chunks)
-    # Hash collisions are not semantic evidence. Only a real provider may add
-    # independent semantic candidates; fallback can only refine lexical hits.
-    dense_input = {
-        item_id: rows for item_id, rows in chunks.items()
-        if embedding_fn is not None or lexical[item_id] > 0
-    }
-    dense, dense_best = _dense_scores(query, dense_input, embedding_fn)
-    for item_id, row in dense_best.items():
-        if embedding_fn is not None or not best.get(item_id):
-            best[item_id] = row
+        # Keep independent external semantic recall; feature hashes only refine
+        # lexical hits. Retain span metadata, not the entire corpus body.
+        if embedding_fn is not None or lexical[item_id] > 0:
+            if query_vector is None:
+                query_vector = _vector(query, embedding_fn)
+            item_scores, dense_best = _dense_scores(
+                query, {item_id: item_chunks}, embedding_fn, cache=cache,
+                binding=binding, query_vector=query_vector,
+            )
+            dense.update(item_scores)
+            if item_id in dense_best and (embedding_fn is not None or not best[item_id]):
+                best[item_id] = dense_best[item_id]
+        chunks[item_id] = [{k: v for k, v in row.items() if k != "text"} for row in item_chunks]
     authority = {str(item["id"]): _authority(item) for item in authorized}
     freshness = {str(item["id"]): _freshness(item, today) for item in authorized}
     return chunks, lexical, dense, authority, freshness, best
@@ -284,15 +330,22 @@ def retrieve_v4(
     root: pathlib.Path, query: str, principal: Mapping[str, Any], *,
     agent_id: str = DEFAULT_AGENT, limit: int = 10, as_of: str = "",
     embedding_fn: Optional[EmbeddingFn] = None, rerank_fn: Optional[RerankFn] = None,
+    embedding_identity: Optional[Mapping[str, Any]] = None, cache_enabled: bool = True,
 ) -> Dict[str, Any]:
     if not isinstance(query, str) or not query.strip() or len(query) > 4096:
         raise KnowledgeHubError("query must be non-empty and bounded")
     query = query.strip()
     if type(limit) is not int or not 1 <= limit <= 100:
         raise KnowledgeHubError("limit must be between 1 and 100")
+    if type(cache_enabled) is not bool:
+        raise KnowledgeHubError("cache_enabled must be a boolean")
+    binding = _embedding_binding(embedding_fn, embedding_identity)
     today, source = resolve_today(as_of)
     principal_value, authorized, denied, legacy = _authorized_items(root, principal, agent_id, today)
-    chunks, lexical, dense, authority, freshness, best = _score_lanes(root, query, authorized, today, embedding_fn)
+    with DerivedCache(root, enabled=cache_enabled and bool(authorized)) as cache:
+        chunks, lexical, dense, authority, freshness, best = _score_lanes(
+            root, query, authorized, today, embedding_fn, cache=cache, binding=binding,
+        )
     route = route_query(query)
     rows = _ranked_rows(query, route, authorized, lexical, dense, authority, freshness, best)
     selected = rows[: max(limit * 3, limit)]
@@ -310,6 +363,7 @@ def retrieve_v4(
         "principal_id": principal_value["principal_id"], "results": results,
         "authorized_item_count": len(authorized), "denied_item_count": denied, "legacy_acl_item_count": legacy,
         "retrieval_coverage": {"complete": not truncated, "truncated_item_count": truncated},
+        "derived_cache": dict(cache.stats, document_vector_cache_identified=bool(binding[0])),
         "lane_health": {
             "lexical_nonzero": sum(value > 0 for value in lexical.values()),
             "dense_nonzero": sum(value > 0 for value in dense.values()),
