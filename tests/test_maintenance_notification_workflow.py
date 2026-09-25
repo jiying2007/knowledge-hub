@@ -11,7 +11,7 @@ def _workflow_text():
 
 def _steps():
     payload = yaml.safe_load(_workflow_text())
-    return payload["jobs"]["maintenance"]["steps"]
+    return payload["jobs"]["sweep"]["steps"]
 
 
 def _step(name):
