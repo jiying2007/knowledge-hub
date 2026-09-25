@@ -108,6 +108,37 @@ def _constraint_domain_matches(
     )
 
 
+def _validate_evidence_request(limit: int, scope_refs: Sequence[str]) -> None:
+    if not 1 <= limit <= EVIDENCE_PACK_MAX_LIMIT:
+        raise KnowledgeHubError(
+            "EvidencePack limit must be between 1 and {}".format(
+                EVIDENCE_PACK_MAX_LIMIT
+            )
+        )
+    _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
+
+
+def _record_nonserviceable(
+    target: List[Dict[str, str]],
+    item_id: str,
+    item: Mapping[str, Any],
+) -> None:
+    if len(target) >= 5:
+        return
+    status = str(item.get("status", ""))
+    target.append(
+        {
+            "id": item_id,
+            "status": status,
+            "reason": (
+                "non-serviceable-lifecycle"
+                if status in TERMINAL_STATUSES or status == "personal"
+                else "non-serviceable-corpus-or-time"
+            ),
+        }
+    )
+
+
 def build_evidence_pack(
     root: pathlib.Path,
     query: str,
@@ -117,13 +148,7 @@ def build_evidence_pack(
     scope_refs: Sequence[str] = (),
     as_of: str = "",
 ) -> Dict[str, Any]:
-    if not 1 <= limit <= EVIDENCE_PACK_MAX_LIMIT:
-        raise KnowledgeHubError(
-            "EvidencePack limit must be between 1 and {}".format(
-                EVIDENCE_PACK_MAX_LIMIT
-            )
-        )
-    _validate_runtime_values("scope_refs", scope_refs, ACTION_MAX_SCOPE_CHARS)
+    _validate_evidence_request(limit, scope_refs)
     today, _ = resolve_today(as_of)
     filters = filters or SearchFilters()
     search_index = SearchIndex(root)
@@ -180,20 +205,8 @@ def build_evidence_pack(
         item = by_id.get(item_id)
         if item is None:
             continue
-        status = str(item.get("status", ""))
         if not serviceable_item(item, today):
-            if len(lifecycle_excluded) < 5:
-                lifecycle_excluded.append(
-                    {
-                        "id": item_id,
-                        "status": status,
-                        "reason": (
-                            "non-serviceable-lifecycle"
-                            if status in TERMINAL_STATUSES or status == "personal"
-                            else "non-serviceable-corpus-or-time"
-                        ),
-                    }
-                )
+            _record_nonserviceable(lifecycle_excluded, item_id, item)
             continue
         row = _pack_item(item, result)
         selected_ids.add(item_id)
