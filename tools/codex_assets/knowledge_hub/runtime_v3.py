@@ -44,7 +44,7 @@ from .runtime_v3_governance import (
     steward_audit,
     trace_projection,
 )
-from .search import SearchFilters, SearchIndex, search, search_tokens
+from .search import SearchFilters, SearchIndex, _item_is_default_searchable, search, search_tokens
 
 MAX_QUERY_CHARS = 4096
 MAX_RESULTS = 100
@@ -86,6 +86,8 @@ def _date(value: Any, field: str) -> Optional[dt.date]:
 
 
 def _eligible(item: Mapping[str, Any], today: dt.date, scopes: Sequence[str]) -> bool:
+    if not _item_is_default_searchable(item):
+        return False
     if str(item.get("status", "")) not in SERVICEABLE:
         return False
     if str(item.get("visibility", "")) == "personal-local":
