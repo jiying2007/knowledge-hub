@@ -11,6 +11,7 @@ import time
 import uuid
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 from .common import KnowledgeHubError, compact_json, ensure_private_directory, ensure_private_file, read_repository_bytes_bounded, utc_timestamp
+from .search_candidate_io import read_candidate_payloads
 from .search_core import (
     FULL_REBUILD_DEPENDENCIES,
     FileState,
@@ -408,7 +409,7 @@ class SearchIndex:
                     ("signature", signature),
                     ("updated_at", utc_timestamp()),
                     ("document_count", str(document_count)),
-                )
+                ),
             )
             connection.commit()
         except Exception:
@@ -514,7 +515,20 @@ class SearchIndex:
         query: str,
         candidate_limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        candidate_limit = candidate_limit or self.CANDIDATE_LIMIT
+        limit = self.CANDIDATE_LIMIT if candidate_limit is None else candidate_limit
+        return self._query_candidates(query, limit, authority_only=False)
+
+    def authority_candidates(
+        self,
+        query: str,
+        candidate_limit: int = SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+    ) -> List[Dict[str, Any]]:
+        """Preserve exact/current/active matches before the generic FTS cutoff."""
+        return self._query_candidates(query, candidate_limit, authority_only=True)
+
+    def _query_candidates(
+        self, query: str, candidate_limit: int, *, authority_only: bool,
+    ) -> List[Dict[str, Any]]:
         expanded_query = " ".join(
             variant
             for term in query_terms(query)
@@ -527,71 +541,9 @@ class SearchIndex:
         connection = sqlite3.connect(str(self.path))
         connection.row_factory = sqlite3.Row
         try:
-            try:
-                rows = connection.execute(
-                    """
-                    select d.*, bm25(documents_fts, 1.2, 1.1, 0.9, 0.8, 0.5, 0.25, 0.35) as fts_rank
-                    from documents_fts join documents d on d.id = documents_fts.rowid
-                    where documents_fts match ?
-                    order by fts_rank
-                    limit ?
-                    """,
-                    (expression, candidate_limit),
-                ).fetchall()
-            except sqlite3.Error:
-                rows = connection.execute("select d.*, 0.0 as fts_rank from documents d").fetchall()
-            return [dict(row) for row in rows]
-        finally:
-            connection.close()
-
-    def authority_candidates(
-        self,
-        query: str,
-        candidate_limit: int = SEARCH_AUTHORITY_CANDIDATE_LIMIT,
-    ) -> List[Dict[str, Any]]:
-        """Preserve exact/current/active matches before the generic FTS cutoff."""
-
-        expanded_query = " ".join(
-            variant
-            for term in query_terms(query)
-            for variant in _term_variants(term)
-        )
-        tokens = search_tokens(expanded_query, maximum=64)
-        if not tokens:
-            return []
-        expression = " OR ".join(
-            '"{}"'.format(value.replace('"', '""')) for value in tokens
-        )
-        normalized_query = query.strip().lower()
-        connection = sqlite3.connect(str(self.path))
-        connection.row_factory = sqlite3.Row
-        try:
-            rows = connection.execute(
-                """
-                select d.*, bm25(documents_fts, 1.2, 1.1, 0.9, 0.8, 0.5, 0.25, 0.35) as fts_rank
-                from documents_fts join documents d on d.id = documents_fts.rowid
-                where documents_fts match ?
-                  and (
-                    d.path = 'README.md'
-                    or d.path like 'projects/%/current/%'
-                    or d.item_json like '%\"status\":\"active\"%'
-                    or lower(documents_fts.title) = ?
-                    or lower(documents_fts.item_id) = ?
-                    or lower(d.path) = ?
-                  )
-                order by fts_rank
-                limit ?
-                """,
-                (
-                    expression,
-                    normalized_query,
-                    normalized_query,
-                    normalized_query,
-                    candidate_limit,
-                ),
-            ).fetchall()
-            return [dict(row) for row in rows]
-        except sqlite3.Error:
-            return []
+            return read_candidate_payloads(
+                connection, expression, candidate_limit,
+                normalized_query=query.strip().lower(), authority_only=authority_only,
+            )
         finally:
             connection.close()
