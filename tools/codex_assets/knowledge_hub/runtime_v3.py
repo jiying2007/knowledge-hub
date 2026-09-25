@@ -44,7 +44,8 @@ from .runtime_v3_governance import (
     steward_audit,
     trace_projection,
 )
-from .search import SearchFilters, SearchIndex, _item_is_default_searchable, search, search_tokens
+from .retrieval_eligibility import scope_matches, serviceable_item
+from .search import SearchFilters, SearchIndex, search, search_tokens
 
 MAX_QUERY_CHARS = 4096
 MAX_RESULTS = 100
@@ -86,31 +87,7 @@ def _date(value: Any, field: str) -> Optional[dt.date]:
 
 
 def _eligible(item: Mapping[str, Any], today: dt.date, scopes: Sequence[str]) -> bool:
-    if not _item_is_default_searchable(item):
-        return False
-    if str(item.get("status", "")) not in SERVICEABLE:
-        return False
-    if str(item.get("visibility", "")) == "personal-local":
-        return False
-    valid_from = _date(item.get("valid_from"), "valid_from")
-    valid_to = _date(item.get("valid_to"), "valid_to")
-    if valid_from and valid_to and valid_from > valid_to:
-        raise KnowledgeHubError("valid_from must not exceed valid_to")
-    if valid_from and today < valid_from:
-        return False
-    if valid_to and today > valid_to:
-        return False
-    if not scopes:
-        return True
-    domain = str(item.get("domain", ""))
-    path = str(item.get("path", ""))
-    return any(
-        domain == scope
-        or domain.startswith(scope.rstrip("/") + "/")
-        or path.startswith(scope.rstrip("/") + "/")
-        for scope in scopes
-        if str(scope).strip()
-    )
+    return serviceable_item(item, today) and scope_matches(item, scopes)
 
 
 def _authority(item: Mapping[str, Any]) -> float:
