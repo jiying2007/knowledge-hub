@@ -324,3 +324,59 @@ def test_action_check_fails_closed_for_unsafe_guard_regex(tmp_path):
     )
     assert result["verdict"] == "NEEDS_REVIEW"
     assert {row["reason"] for row in result["needs_review"]} == {"unsafe_guard_regex"}
+
+
+def test_evidence_pack_excludes_expired_active_evidence(tmp_path):
+    root = _root(tmp_path)
+    path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    expired = next(row for row in rows if row["id"] == "repo-fact")
+    expired["valid_to"] = "2026-09-20"
+    expired["summary_zh"] = "expired beacon proof"
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    pack = build_evidence_pack(root, "expired beacon proof", as_of="2026-09-25")
+
+    selected = {
+        row.get("id")
+        for lane in ("must", "should", "context", "provisional")
+        for row in pack[lane]
+    }
+    assert "repo-fact" not in selected
+    assert any(
+        row.get("id") == "repo-fact"
+        and row.get("reason") == "non-serviceable-corpus-or-time"
+        for row in pack["search_trace"]["lifecycle_excluded"]
+    )
+
+
+def test_evidence_pack_as_of_can_recover_then_valid_fact(tmp_path):
+    root = _root(tmp_path)
+    path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    fact = next(row for row in rows if row["id"] == "repo-fact")
+    fact["valid_to"] = "2026-09-20"
+    fact["summary_zh"] = "historical-valid beacon"
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    pack = build_evidence_pack(root, "historical-valid beacon", as_of="2026-09-19")
+    assert "repo-fact" in [row["id"] for row in pack["context"]]
+
+
+def test_expired_active_constraint_is_not_completeness_promoted(tmp_path):
+    root = _root(tmp_path)
+    path = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    rule = next(row for row in rows if row["id"] == "no-force-push")
+    rule["valid_to"] = "2026-09-20"
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+    pack = build_evidence_pack(
+        root, "push main", scope_refs=["repository:demo"], as_of="2026-09-25"
+    )
+    assert "no-force-push" not in [row["id"] for row in pack["must"]]
+
+
+def test_evidence_pack_rejects_invalid_as_of(tmp_path):
+    with pytest.raises(KnowledgeHubError, match="YYYY-MM-DD"):
+        build_evidence_pack(_root(tmp_path), "demo", as_of="not-a-date")
