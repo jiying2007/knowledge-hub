@@ -17,19 +17,6 @@ def _candidate_headers(
     connection: sqlite3.Connection, expression: str, limit: int,
     normalized_query: str, authority_only: bool,
 ) -> List[sqlite3.Row]:
-    condition = ""
-    parameters: List[Any] = [expression]
-    if authority_only:
-        condition = """and (
-            d.path = 'README.md'
-            or d.path like 'projects/%/current/%'
-            or d.item_json like '%"status":"active"%'
-            or lower(documents_fts.title) = ?
-            or lower(documents_fts.item_id) = ?
-            or lower(d.path) = ?
-        )"""
-        parameters.extend([normalized_query] * 3)
-    parameters.append(limit)
     sql = """select d.id,
         length(cast(d.body as blob)) as body_bytes,
         length(cast(d.doc_key as blob)) + length(cast(d.path as blob))
@@ -37,8 +24,18 @@ def _candidate_headers(
         + length(cast(d.item_json as blob)) + length(cast(d.indexed_title as blob)) as metadata_bytes,
         bm25(documents_fts, 1.2, 1.1, 0.9, 0.8, 0.5, 0.25, 0.35) as fts_rank
         from documents_fts join documents d on d.id = documents_fts.rowid
-        where documents_fts match ? {} order by fts_rank, d.id limit ?""".format(condition)
-    return connection.execute(sql, parameters).fetchall()
+        where documents_fts match ? and (
+            ? = 0
+            or d.path = 'README.md'
+            or d.path like 'projects/%/current/%'
+            or d.item_json like '%"status":"active"%'
+            or lower(documents_fts.title) = ?
+            or lower(documents_fts.item_id) = ?
+            or lower(d.path) = ?
+        ) order by fts_rank, d.id limit ?"""
+    return connection.execute(
+        sql, (expression, int(authority_only), normalized_query, normalized_query, normalized_query, limit),
+    ).fetchall()
 
 
 def _validate_headers(headers: List[sqlite3.Row], limit: int) -> None:
@@ -69,6 +66,8 @@ def read_candidate_payloads(
     """
     if type(candidate_limit) is not int or not 1 <= candidate_limit <= MAX_CANDIDATES:
         raise SearchBoundaryError("SQLite candidate limit must be between 1 and 4096")
+    if type(BODY_BATCH_SIZE) is not int or not 1 <= BODY_BATCH_SIZE <= 32:
+        raise SearchBoundaryError("SQLite body batch must be between 1 and 32")
     connection.execute("begin")
     headers = _candidate_headers(connection, expression, candidate_limit, normalized_query, authority_only)
     _validate_headers(headers, candidate_limit)
@@ -76,9 +75,14 @@ def read_candidate_payloads(
     for offset in range(0, len(headers), BODY_BATCH_SIZE):
         batch = headers[offset:offset + BODY_BATCH_SIZE]
         ids = [header["id"] for header in batch]
-        placeholders = ",".join("?" for _ in ids)
+        # Fixed SQL and a fixed placeholder count: NULL padding cannot match
+        # the non-null primary key, and no values become executable SQL text.
         rows = connection.execute(
-            "select * from documents where id in ({})".format(placeholders), ids,
+            """select * from documents where id in (
+                ?,?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?,
+                ?,?,?,?,?,?,?,?, ?,?,?,?,?,?,?,?
+            )""",
+            ids + [None] * (32 - len(ids)),
         ).fetchall()
         by_id = {row["id"]: dict(row) for row in rows}
         if len(by_id) != len(ids):
