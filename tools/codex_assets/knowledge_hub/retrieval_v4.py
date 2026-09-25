@@ -12,11 +12,11 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .common import KnowledgeHubError, registry_items, resolve_today
 from .retrieval_cache import DerivedCache, fingerprint
-from .retrieval_candidates import lexical_candidate_set
 from .retrieval_chunks import hierarchical_chunks
+from .retrieval_eligibility import serviceable_item
 from .runtime_p5_security import authorize_item, principal_context, trust_class
 from .runtime_v3_contracts import DEFAULT_AGENT, agent_profile
-from .search_core import _item_is_default_searchable, search_tokens
+from .search_core import search_tokens
 
 MAX_CORPUS_ITEMS = 5000
 MAX_CORPUS_CHARS = 32 * 1024 * 1024
@@ -40,17 +40,7 @@ def _date(value: Any, label: str) -> Optional[dt.date]:
 
 
 def _temporal_eligible(item: Mapping[str, Any], today: dt.date) -> bool:
-    if not _item_is_default_searchable(item):
-        return False
-    valid_from = _date(item.get("valid_from"), "valid_from")
-    valid_to = _date(item.get("valid_to"), "valid_to")
-    if valid_from and valid_to and valid_from > valid_to:
-        raise KnowledgeHubError("valid_from must not exceed valid_to")
-    if valid_from and today < valid_from:
-        return False
-    if valid_to and today > valid_to:
-        return False
-    return str(item.get("status", "")) in {"active", "reviewing", "draft"}
+    return serviceable_item(item, today)
 
 
 def _feature_vector(text: str, dims: int = DEFAULT_DIMS) -> Tuple[float, ...]:
@@ -235,7 +225,6 @@ def _score_lanes(
     root: pathlib.Path, query: str, authorized: Sequence[Mapping[str, Any]],
     today: dt.date, embedding_fn: Optional[EmbeddingFn], *,
     cache: Optional[DerivedCache] = None, binding: Tuple[str, int] = ("", 0),
-    lexical_candidate_ids: Optional[Set[str]] = None,
 ) -> Tuple[
     Dict[str, List[Dict[str, Any]]], Dict[str, float], Dict[str, float],
     Dict[str, float], Dict[str, float], Dict[str, Dict[str, Any]],
@@ -250,24 +239,12 @@ def _score_lanes(
         item_id = str(item.get("id", ""))
         if not item_id or item_id in chunks:
             raise KnowledgeHubError("retrieval corpus must have unique non-empty item IDs")
-        lexical_candidate = (
-            lexical_candidate_ids is None or item_id in lexical_candidate_ids
-        )
-        if embedding_fn is None and not lexical_candidate:
-            chunks[item_id] = []
-            lexical[item_id] = 0.0
-            dense[item_id] = 0.0
-            best[item_id] = {}
-            continue
         item_chunks = hierarchical_chunks(root, item, cache=cache)
         total_chars += sum(len(row["text"]) for row in item_chunks)
         total_chunks += len(item_chunks)
         if total_chars > MAX_CORPUS_CHARS or total_chunks > MAX_TOTAL_CHUNKS:
             raise KnowledgeHubError("retrieval corpus exceeds chunk/character budget")
-        if lexical_candidate:
-            lexical[item_id], best[item_id] = _lexical_lane(query, item, item_chunks)
-        else:
-            lexical[item_id], best[item_id] = 0.0, {}
+        lexical[item_id], best[item_id] = _lexical_lane(query, item, item_chunks)
         # Keep independent external semantic recall; feature hashes only refine
         # lexical hits. Retain span metadata, not the entire corpus body.
         if embedding_fn is not None or lexical[item_id] > 0:
@@ -358,15 +335,9 @@ def retrieve_v4(
     binding = _embedding_binding(embedding_fn, embedding_identity)
     today, source = resolve_today(as_of)
     principal_value, authorized, denied, legacy = _authorized_items(root, principal, agent_id, today)
-    lexical_ids, candidate_service = lexical_candidate_set(
-        root,
-        query,
-        {str(item.get("id", "")) for item in authorized if item.get("id")},
-    )
     with DerivedCache(root, enabled=cache_enabled and bool(authorized)) as cache:
         chunks, lexical, dense, authority, freshness, best = _score_lanes(
             root, query, authorized, today, embedding_fn, cache=cache, binding=binding,
-            lexical_candidate_ids=lexical_ids,
         )
     route = route_query(query)
     rows = _ranked_rows(query, route, authorized, lexical, dense, authority, freshness, best)
@@ -386,7 +357,6 @@ def retrieve_v4(
         "authorized_item_count": len(authorized), "denied_item_count": denied, "legacy_acl_item_count": legacy,
         "retrieval_coverage": {"complete": not truncated, "truncated_item_count": truncated},
         "derived_cache": dict(cache.stats, document_vector_cache_identified=bool(binding[0])),
-        "candidate_service": candidate_service,
         "lane_health": {
             "lexical_nonzero": sum(value > 0 for value in lexical.values()),
             "dense_nonzero": sum(value > 0 for value in dense.values()),
