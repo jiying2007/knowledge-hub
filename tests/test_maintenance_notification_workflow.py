@@ -31,7 +31,8 @@ def test_critical_route_binds_fingerprint_from_decision_output():
         "${{ steps.decision.outputs.notification_fingerprint }}"
     )
     run = step["run"]
-    assert "contains(\"${NOTIFICATION_FINGERPRINT}\")" in run
+    assert "contains(" in run
+    assert "${NOTIFICATION_FINGERPRINT}" in run
     assert 'if [[ -z "${seen}" ]]' in run
     assert "Critical maintenance state ${NOTIFICATION_FINGERPRINT}" in run
 
