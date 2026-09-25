@@ -359,6 +359,7 @@ def compile_context(
         limit=max(limit, 8),
         filters=SearchFilters(domains=agent_scopes),
         scope_refs=scopes,
+        as_of=as_of,
     )
     seeds = [str(row.get("id", "")) for row in result["results"][:5]]
     return {
@@ -464,6 +465,7 @@ def api_dispatch(
             limit=int(payload.get("limit", 20)),
             filters=SearchFilters(domains=agent_scopes),
             scope_refs=_sequence(payload.get("scope_refs", []), "scope_refs", maximum=32),
+            as_of=str(payload.get("as_of", "")),
         )
     if op == "action-check":
         require_capability(root, agent_id, "knowledge.action-check")
@@ -573,6 +575,7 @@ def mcp_tools() -> List[Dict[str, Any]]:
                 {
                     "query": {"type": "string"},
                     "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
                 },
                 ["query"],
             ),
@@ -589,6 +592,7 @@ def mcp_tools() -> List[Dict[str, Any]]:
                         "items": {"type": "string"},
                     },
                     "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
                 },
                 ["query"],
             ),
@@ -597,7 +601,13 @@ def mcp_tools() -> List[Dict[str, Any]]:
             "name": "knowledge_evidence_pack",
             "description": "Build authoritative/provisional EvidencePack.",
             "inputSchema": _mcp_schema(
-                {"query": {"type": "string"}}, ["query"]
+                {
+                    "query": {"type": "string"},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "scope_refs": {"type": "array", "items": {"type": "string"}},
+                    "as_of": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+                },
+                ["query"],
             ),
         },
         {
