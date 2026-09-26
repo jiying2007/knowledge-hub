@@ -229,6 +229,10 @@ jobs:
           import os
           from pathlib import Path
 
+          from tools.codex_assets.knowledge_hub.maintenance_notification import (
+              critical_notification_decision,
+          )
+
           root = Path(".cache/knowledge-hub/ai-maintenance")
           review = json.loads((root / "review-after.json").read_text(encoding="utf-8"))
           growth = json.loads((root / "data-growth.json").read_text(encoding="utf-8"))
@@ -240,16 +244,14 @@ jobs:
           packet = json.loads(
               (root / "governance-review-packet.json").read_text(encoding="utf-8")
           )
-          security_stale = int((triage.get("security") or {}).get("count", 0) or 0)
+          notification = critical_notification_decision(triage, growth, review)
+          security_stale = notification["security_critical_count"]
           governance_stale = int((triage.get("governance") or {}).get("count", 0) or 0)
           ordinary_stale = int((triage.get("ordinary") or {}).get("count", 0) or 0)
-          hard_cap = sum(
-              1
-              for row in growth.get("regressions", [])
-              if isinstance(row, dict) and row.get("type") == "data-growth-hard-cap"
-          )
-          policy_error = bool(review.get("errors")) or growth.get("status") == "fail"
-          human_required = bool(security_stale or hard_cap or policy_error)
+          hard_cap = notification["hard_cap_count"]
+          policy_error = notification["policy_error_count"] > 0
+          human_required = notification["human_required"]
+          notification_fingerprint = notification["notification_fingerprint"]
           summary = {
               "schema_version": 1,
               "projection": "knowledge-hub-ai-maintenance-v1",
@@ -263,6 +265,7 @@ jobs:
               ),
               "human_required": human_required,
               "policy_error": policy_error,
+              "notification_fingerprint": notification_fingerprint,
               "ordinary_and_governance_routed_to_ai": True,
               "machine_triage_receipt": "triage-receipt.json",
               "governance_review_packet": "governance-review-packet.json",
@@ -278,6 +281,7 @@ jobs:
               handle.write("security_stale={}\n".format(security_stale))
               handle.write("hard_cap={}\n".format(hard_cap))
               handle.write("policy_error={}\n".format(str(policy_error).lower()))
+              handle.write("notification_fingerprint={}\n".format(notification_fingerprint))
           PY
 
       - name: Route only critical maintenance to a human
@@ -287,15 +291,21 @@ jobs:
           SECURITY_STALE: ${{ steps.decision.outputs.security_stale }}
           HARD_CAP: ${{ steps.decision.outputs.hard_cap }}
           POLICY_ERROR: ${{ steps.decision.outputs.policy_error }}
+          NOTIFICATION_FINGERPRINT: ${{ steps.decision.outputs.notification_fingerprint }}
         run: |
           set -euo pipefail
           title="AI maintenance: critical human decision required"
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
             --json number,title --jq ".[] | select(.title == \"${title}\") | .number" | head -n 1)"
-          body="AI maintenance completed. security-critical stale=${SECURITY_STALE}, data-growth hard-cap=${HARD_CAP}, policy-error=${POLICY_ERROR}. Ordinary stale items have a machine triage receipt and governance-critical items have a bounded review packet. Review the bounded evidence artifact: ${run_url}."
+          body="Critical maintenance state ${NOTIFICATION_FINGERPRINT}. security-critical stale=${SECURITY_STALE}, data-growth hard-cap=${HARD_CAP}, policy-error=${POLICY_ERROR}. Ordinary stale items have a machine triage receipt and governance-critical items have a bounded review packet. Review the bounded evidence artifact: ${run_url}."
           if [[ -n "${number}" ]]; then
-            gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+            seen="$(
+              gh issue view "${number}" --repo "${GITHUB_REPOSITORY}" --json comments                 --jq ".comments[] | select(.body | contains(\"${NOTIFICATION_FINGERPRINT}\")) | .url"               | head -n 1
+            )"
+            if [[ -z "${seen}" ]]; then
+              gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+            fi
           else
             gh issue create --repo "${GITHUB_REPOSITORY}" --title "${title}" --body "${body}"
           fi
