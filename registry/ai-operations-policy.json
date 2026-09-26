@@ -186,10 +186,18 @@
     "root_observation_revision_must_match_evidence_source_revision": true,
     "producer_code_revision_source": "github-workflow-sha",
     "observation_source_workflow_allowlist": {
-      "connector-provider-pilot": [],
-      "production-retrieval-eval": [],
-      "memory-lifecycle-pilot": [],
-      "real-adoption-evidence": []
+      "connector-provider-pilot": [
+        ".github/workflows/real-observation-connector-provider.yml"
+      ],
+      "production-retrieval-eval": [
+        ".github/workflows/real-observation-production-retrieval.yml"
+      ],
+      "memory-lifecycle-pilot": [
+        ".github/workflows/real-observation-production-memory.yml"
+      ],
+      "real-adoption-evidence": [
+        ".github/workflows/real-observation-production-adoption.yml"
+      ]
     },
     "observation_source_requires_explicit_registration": true,
     "manual_intake_source_requires_registered_workflow": true,
