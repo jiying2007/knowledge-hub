@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rtk cp registry/items.jsonl /tmp/knowledge-hub-owner-decisions-baseline-items.jsonl
+          cp registry/items.jsonl /tmp/knowledge-hub-owner-decisions-baseline-items.jsonl
 
       - name: Register exact active-promotion execution authorization
         shell: bash
