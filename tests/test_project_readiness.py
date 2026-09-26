@@ -34,6 +34,15 @@ OWNER_ATTESTATION_REF = {
     "ref": "artifacts/manifests/knowledge-hub-terminal-owner-attestation-20260716.md",
 }
 
+EVIDENCE_READY_BATCH_A_PROJECTS = {
+    "agent-dev-kit",
+    "knowledge-hub",
+    "llm-tools",
+    "mm32spin-validator",
+    "ota-packager",
+    "sigmastar-flasher",
+}
+
 
 def test_all_registered_projects_have_one_reviewing_evidence_contract():
     root = repository_root()
@@ -56,11 +65,20 @@ def test_all_registered_projects_have_one_reviewing_evidence_contract():
                 project["id"] == "knowledge-hub" and slot == "validation"
             )
             assert slot == "validation"
-            assert item["evidence_contract"]["status"] == "pending"
-            if item["decision_owner"] == "unassigned":
-                assert item["evidence_contract"]["owner_ref"] is None
+            contract = item["evidence_contract"]
+            if project["id"] in EVIDENCE_READY_BATCH_A_PROJECTS:
+                assert contract["status"] == "ready"
+                owner_ref = contract["owner_ref"]
+                assert owner_ref["kind"] == "owner-evidence-ready-declaration"
+                assert owner_ref["reviewed_by"] == "jiying2007"
+                assert owner_ref["reviewed_at"] == "2026-09-26"
+                assert owner_ref["previous_owner_ref"] == OWNER_ATTESTATION_REF
             else:
-                assert item["evidence_contract"]["owner_ref"] == OWNER_ATTESTATION_REF
+                assert contract["status"] == "pending"
+                if item["decision_owner"] == "unassigned":
+                    assert contract["owner_ref"] is None
+                else:
+                    assert contract["owner_ref"] == OWNER_ATTESTATION_REF
             assert (root / path).is_file()
 
 
