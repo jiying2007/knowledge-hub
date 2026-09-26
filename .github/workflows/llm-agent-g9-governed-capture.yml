@@ -1,0 +1,199 @@
+name: llm-agent-g9-governed-capture
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  capture-reviewing:
+    if: >-
+      github.actor == 'jiying2007' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'capture/llm-agent-g9-reviewing' &&
+      github.event.pull_request.base.sha == 'd2e15c31a2562ce92cee99e4695dc7835062512d'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout exact Hub candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Checkout exact llm_agent source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: jiying2007/llm_agent
+          ref: 109949bf36001548d03a96732a8d6020395b518a
+          path: source-llm-agent
+          persist-credentials: false
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Enforce exact preparation scope
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output(
+              ['git','diff','--name-only','d2e15c31a2562ce92cee99e4695dc7835062512d','HEAD'],
+              text=True,
+          ).splitlines())
+          expected={'.github/workflows/llm-agent-g9-governed-capture.yml'}
+          assert changed == expected, (changed-expected, expected-changed)
+          PY
+
+      - name: Apply canonical reviewing capture transaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/g9-capture
+          candidate="$GITHUB_WORKSPACE/source-llm-agent/docs/knowledge-candidates/llm-agent-adk-target-architecture.md"
+          test -s "$candidate"
+          printf '%s  %s\n'             '3d56a96bba926f014fcf68de8bb880bdf2356d88651ca66a3964df41ac7fbd6d'             "$candidate" | sha256sum --check -
+
+          rtk bash tools/knowledge-capture.sh             --source "$candidate"             --kind architecture             --target projects/llm-agent/architecture/llm-agent-adk-target-architecture.md             --id llm-agent-adk-target-architecture             --title "llm_agent / agent-dev-kit 长期资产架构结论候选"             --domain projects/llm-agent             --owner leiwenjun             --status reviewing             --generated-by-ai             --ai-role summarized             --ai-model-or-tool ChatGPT             --source-type public-repository             --source-from https://github.com/jiying2007/llm_agent             --as-of 2026-09-26             --apply --json             > .cache/g9-capture/capture-apply.json
+
+          rtk bash tools/knowledge-status.sh             --as-of 2026-09-26             --summary-json --review-queue-limit 5             > .cache/g9-capture/status-after-capture.json
+
+          rtk bash tools/knowledge-check.sh             --dry-run --json --diagnostics             > .cache/g9-capture/knowledge-check.json
+
+          rtk python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          capture=json.loads(Path('.cache/g9-capture/capture-apply.json').read_text(encoding='utf-8'))
+          status=json.loads(Path('.cache/g9-capture/status-after-capture.json').read_text(encoding='utf-8'))
+          check=json.loads(Path('.cache/g9-capture/knowledge-check.json').read_text(encoding='utf-8'))
+          assert capture.get('status') == 'applied', capture
+          assert capture.get('action') == 'capture', capture
+          assert capture.get('id') == 'llm-agent-adk-target-architecture', capture
+          assert capture.get('created_status') == 'reviewing', capture
+          assert capture.get('active_promotion') is False, capture
+          assert (capture.get('transaction') or {}).get('rolled_back') is False, capture
+          assert isinstance(status, dict) and status, status
+          assert check.get('status') not in ('error','fail'), check
+
+          allowed={
+              'indexes/by-owner.md',
+              'indexes/by-project.md',
+              'indexes/by-review-date.md',
+              'indexes/by-status.md',
+              'indexes/by-topic.md',
+              'indexes/obsidian/catalog.md',
+              'indexes/obsidian/topics.md',
+              'projects/llm-agent/architecture/llm-agent-adk-target-architecture.md',
+              'registry/items.jsonl',
+              'registry/lifecycle-events.jsonl',
+          }
+          actual=set(
+              line[3:]
+              for line in subprocess.check_output(
+                  ['git','status','--porcelain=v1','--untracked-files=all'],
+                  text=True,
+              ).splitlines()
+              if line and not line[3:].startswith('.cache/')
+          )
+          workflow='.github/workflows/llm-agent-g9-governed-capture.yml'
+          assert actual == allowed, (actual-allowed, allowed-actual)
+          item=Path('projects/llm-agent/architecture/llm-agent-adk-target-architecture.md').read_text(encoding='utf-8')
+          assert 'status: reviewing' in item, item[:1000]
+          assert 'promotion: none' in item, item[:1000]
+          assert 'manual_validation_pending: true' in item, item[:1000]
+          assert 'review_status: manual-entry-pending-review' in item, item[:1000]
+
+          Path('.cache/g9-capture/assertions.json').write_text(
+              json.dumps({
+                  'schema':'llm-agent-g9-hub-capture-evidence/v1',
+                  'capture_status':'applied',
+                  'created_status':'reviewing',
+                  'active_promotion':False,
+                  'promotion':'none',
+                  'manual_validation_pending':True,
+                  'owner_review_recorded':False,
+                  'lifecycle_decision_recorded':False,
+                  'changed_paths':sorted(allowed),
+                  'remaining_blocker':'real-human-owner-lifecycle-decision',
+              },ensure_ascii=False,sort_keys=True,indent=2)+'\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Commit only canonical capture transaction
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          allowed=(
+            indexes/by-owner.md
+            indexes/by-project.md
+            indexes/by-review-date.md
+            indexes/by-status.md
+            indexes/by-topic.md
+            indexes/obsidian/catalog.md
+            indexes/obsidian/topics.md
+            projects/llm-agent/architecture/llm-agent-adk-target-architecture.md
+            registry/items.jsonl
+            registry/lifecycle-events.jsonl
+          )
+          git add -- "${allowed[@]}"
+          git rm .github/workflows/llm-agent-g9-governed-capture.yml
+
+          python3 - <<'PY'
+          import subprocess
+          actual=set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())
+          expected={
+              '.github/workflows/llm-agent-g9-governed-capture.yml',
+              'indexes/by-owner.md',
+              'indexes/by-project.md',
+              'indexes/by-review-date.md',
+              'indexes/by-status.md',
+              'indexes/by-topic.md',
+              'indexes/obsidian/catalog.md',
+              'indexes/obsidian/topics.md',
+              'projects/llm-agent/architecture/llm-agent-adk-target-architecture.md',
+              'registry/items.jsonl',
+              'registry/lifecycle-events.jsonl',
+          }
+          assert actual == expected, (actual-expected, expected-actual)
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(knowledge): capture llm_agent architecture candidate for owner review'
+
+          test "$(git ls-remote origin refs/heads/capture/llm-agent-g9-reviewing | cut -f1)" = "$EXPECTED_HEAD"
+          git push origin HEAD:refs/heads/capture/llm-agent-g9-reviewing
+
+      - name: Upload governed capture evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: llm-agent-g9-hub-capture
+          path: .cache/g9-capture/
+          if-no-files-found: error
+          retention-days: 30
