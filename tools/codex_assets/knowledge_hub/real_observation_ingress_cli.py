@@ -30,8 +30,9 @@ from .pilot_evidence import build_pilot_evidence
 from .schemas import validate_instance
 
 SECRET_ENV = "KNOWLEDGE_REAL_OBSERVATION_B64"
-MAX_ENCODED_BYTES = 128 * 1024
-MAX_DECODED_BYTES = 96 * 1024
+GITHUB_ACTIONS_SECRET_MAX_BYTES = 48 * 1024
+MAX_ENCODED_BYTES = GITHUB_ACTIONS_SECRET_MAX_BYTES
+MAX_DECODED_BYTES = (MAX_ENCODED_BYTES // 4) * 3
 GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CANONICAL_REGISTRY = "registry/knowledge-platform-p5-p10.json"
 
