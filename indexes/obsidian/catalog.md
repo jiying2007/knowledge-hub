@@ -134,6 +134,7 @@
 
 ## projects/llm-agent
 
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active` · `llm-agent-adk-target-architecture`
 - [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing` · `llm-agent-readiness-validation-20260713`
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing` · `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing` · `llm-agent-portable-full-gate-remediation-20260717`
@@ -141,7 +142,6 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing` · `llm-agent-exact-source-quick-gate-audit-20260715`
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing` · `llm-agent-spec-kit-reference-tracking-20260723`
 - [github/spec-kit正式登记验证](../../projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md) · `reviewing` · `llm-agent-spec-kit-reference-onboarding-validation-20260723`
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `reviewing` · `llm-agent-adk-target-architecture`
 - [llm_agent 与 agent-dev-kit 外部实践搜索及吸收候选](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-candidates.md) · `reviewing` · `llm-agent-external-practice-absorption-candidates-20260723`
 - [llm_agent 外部实践吸收落地](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md) · `reviewing` · `llm-agent-external-practice-absorption-20260723`
 - [微信公众号批量研究工作流与二十篇文章优化评估](../../projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md) · `reviewing` · `llm-agent-wechat-account-research-assessment-20260716`

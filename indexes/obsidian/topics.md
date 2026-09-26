@@ -24,12 +24,12 @@
 
 ## manual-validation-pending (50)
 
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
 ## no-active-promotion (42)
 
@@ -306,8 +306,8 @@
 
 ## capture (4)
 
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
 - [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `reviewing`
 - [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
 - [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
 
@@ -376,9 +376,9 @@
 
 ## architecture (3)
 
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing`
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `reviewing`
 
 ## boot-time (3)
 

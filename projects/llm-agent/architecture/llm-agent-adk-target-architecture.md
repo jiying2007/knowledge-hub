@@ -1,6 +1,12 @@
 ---
 source_repo: jiying2007/llm_agent
 source_scope: llm_agent-and-agent-dev-kit
+aliases:
+- llm_agent / agent-dev-kit 长期资产架构结论候选
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: llm-agent-adk-target-architecture
 title: llm_agent / agent-dev-kit 长期资产架构结论候选
 kind: architecture
@@ -8,28 +14,31 @@ domain: projects/llm-agent
 path: projects/llm-agent/architecture/llm-agent-adk-target-architecture.md
 scope: project-specific
 visibility: team-internal
-status: reviewing
+status: active
 owner: leiwenjun
 source:
   type: public-repository
   from: https://github.com/jiying2007/llm_agent
   source_sha256: 3d56a96bba926f014fcf68de8bb880bdf2356d88651ca66a3964df41ac7fbd6d
 review_after: '2026-12-25'
-review_status: manual-entry-pending-review
-content_review_status: pending
-evidence_validation_status: pending
+review_status: human-reviewed-active
+content_review_status: accepted
+evidence_validation_status: verified
 promotion: none
-promotion_decision: none; capture does not authorize active promotion or owner decision
+promotion_decision: 'Human owner/reviewer chose ACTIVATE in #125; exact SHA/token-bound decision recorded in issue comment
+  5847182575.'
 tags:
 - architecture
 - capture
 - manual-validation-pending
 validation_refs:
 - projects/llm-agent/architecture/llm-agent-adk-target-architecture.md
+- github-issue-125-comment-5847182575
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-evidence_strength: manual-entry-validation-pending
+evidence_strength: review-attestation-plus-validation-refs
 evidence_refs:
 - projects/llm-agent/architecture/llm-agent-adk-target-architecture.md
+- github-issue-125-comment-5847182575
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-09-26'
 updated_at: '2026-09-26'
@@ -37,18 +46,12 @@ generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: ChatGPT
 ai_generated_at: '2026-09-26'
-manual_validation_pending: true
+manual_validation_pending: false
 summary_zh: 本文件是供 Knowledge Hub **dry-run capture 与 owner review** 使用的脱敏候选，不是 Hub active 知识、产品发布证据、运行时资格或生命周期授权。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- llm_agent / agent-dev-kit 长期资产架构结论候选
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # llm_agent / agent-dev-kit 长期资产架构结论候选
