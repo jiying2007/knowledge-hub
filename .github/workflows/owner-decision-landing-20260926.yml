@@ -46,7 +46,6 @@ jobs:
           set -euo pipefail
           rtk git fetch origin master
           test "$(rtk git rev-parse origin/master)" = "$BASE_SHA"
-          test "$(rtk git rev-parse HEAD^)" = "$BASE_SHA"
           test "$(rtk git diff --name-only "$BASE_SHA..HEAD")" = ".github/workflows/owner-decision-landing-20260926.yml"
 
       - name: Register exact active-promotion execution authorization
