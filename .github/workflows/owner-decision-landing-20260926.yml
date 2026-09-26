@@ -30,12 +30,13 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-runtime.lock
 
-      - name: Bootstrap governed runtime
+      - name: Bootstrap governed CI transport
         shell: bash
-        run: |
-          set -euo pipefail
-          tools/ci/rtk bash tools/ci/bootstrap-path.sh
-          rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        shell: bash
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
 
       - name: Verify exact master baseline and bootstrap-only diff
         shell: bash
