@@ -446,6 +446,7 @@
 - `pcr02-export-readiness-compliance-gap-20260903`
 - `pcr02-dvr-ringframe-lease-closure-20260908`
 - `digital-worker-readiness-validation-20260713`
+- `llm-agent-adk-target-architecture`
 
 ## pcr02-registry-owner
 

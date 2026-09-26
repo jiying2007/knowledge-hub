@@ -743,3 +743,4 @@
 - reviewing: `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
 - reviewing: `pcr02-dvr-ringframe-lease-closure-20260908`
 - reviewing: `digital-worker-readiness-validation-20260713`
+- reviewing: `llm-agent-adk-target-architecture`
