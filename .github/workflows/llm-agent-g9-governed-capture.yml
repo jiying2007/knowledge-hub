@@ -32,7 +32,7 @@ jobs:
         with:
           repository: jiying2007/llm_agent
           ref: 109949bf36001548d03a96732a8d6020395b518a
-          path: source-llm-agent
+          path: .cache/g9-source-llm-agent
           persist-credentials: false
 
       - name: Set up governed Python
@@ -70,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .cache/g9-capture
-          candidate="$GITHUB_WORKSPACE/source-llm-agent/docs/knowledge-candidates/llm-agent-adk-target-architecture.md"
+          candidate="$GITHUB_WORKSPACE/.cache/g9-source-llm-agent/docs/knowledge-candidates/llm-agent-adk-target-architecture.md"
           test -s "$candidate"
           printf '%s  %s\n'             '3d56a96bba926f014fcf68de8bb880bdf2356d88651ca66a3964df41ac7fbd6d'             "$candidate" | sha256sum --check -
 
