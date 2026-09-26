@@ -208,3 +208,15 @@ def test_registered_workflows_are_dispatch_only_secret_bound_and_fail_closed():
         assert text.count("secrets.") == 1
         assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json registry/items.jsonl" in text
         assert "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" in text
+
+
+def test_ingress_budget_matches_github_actions_secret_limit():
+    assert ingress.GITHUB_ACTIONS_SECRET_MAX_BYTES == 48 * 1024
+    assert ingress.MAX_ENCODED_BYTES == ingress.GITHUB_ACTIONS_SECRET_MAX_BYTES
+    assert ingress.MAX_DECODED_BYTES == 36 * 1024
+
+
+def test_ingress_rejects_value_above_github_secret_budget():
+    oversized = "A" * (ingress.MAX_ENCODED_BYTES + 4)
+    with pytest.raises(KnowledgeHubError, match="encoded byte budget"):
+        ingress._decode_observation(oversized)
