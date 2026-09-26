@@ -1,0 +1,62 @@
+name: real-observation-connector-provider
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: connector-provider-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    name: Validate and publish real observation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_GAP: connector-provider-pilot
+      KNOWLEDGE_REAL_OBSERVATION_B64: ${{ secrets.KNOWLEDGE_REAL_OBSERVATION_CONNECTOR_B64 }}
+    steps:
+      - name: Checkout exact observation revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+      - name: Require master and configured real observation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/master" || { echo "real observation must run from master" >&2; exit 2; }
+          test -n "${KNOWLEDGE_REAL_OBSERVATION_B64:-}" || { echo "real observation secret is not configured" >&2; exit 2; }
+      - name: Validate and materialize bounded observation artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub/real-observation
+          rtk python3 -m tools.codex_assets.knowledge_hub.real_observation_ingress_cli \
+            --expected-gap "${EXPECTED_GAP}" \
+            --source-revision "${GITHUB_SHA}" \
+            --output .cache/knowledge-hub/real-observation/pilot-observation.json \
+            --receipt-output .cache/knowledge-hub/real-observation/ingress-receipt.json
+          git diff --exit-code -- registry/knowledge-platform-p5-p10.json registry/items.jsonl
+      - name: Upload bounded real observation
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: knowledge-hub-real-observation-connector-provider-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .cache/knowledge-hub/real-observation/pilot-observation.json
+            .cache/knowledge-hub/real-observation/ingress-receipt.json
+          if-no-files-found: error
+          retention-days: 90
