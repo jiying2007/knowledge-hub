@@ -16,7 +16,7 @@ scope: team-general
 visibility: team-internal
 status: active
 owner: leiwenjun
-review_after: '2026-09-18'
+review_after: '2026-12-18'
 review_status: human-reviewed-accepted
 promotion: none
 aliases:

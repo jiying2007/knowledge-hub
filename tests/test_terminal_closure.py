@@ -712,3 +712,10 @@ def test_terminal_closure_rejects_invalid_hosting_posture_contract(
     )
     assert report["hosting_posture"]["contract_validation"]["status"] == "fail"
     assert "hosting_posture" in report["blockers"]
+
+
+def test_canonical_terminal_policy_is_not_a_second_dynamic_status_source():
+    root = repository_root("")
+    policy = json.loads((root / "registry/terminal-closure.json").read_text(encoding="utf-8"))
+    assert "status" not in policy
+    assert policy["rules"]["duplicate_closure_status_sources_forbidden"] is True
