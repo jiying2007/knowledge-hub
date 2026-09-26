@@ -1,7 +1,6 @@
 {
   "schema_version": 2,
   "contract": "knowledge-hub-github-terminal-closure-v2",
-  "status": "open",
   "product_gate": {
     "snapshot": ".cache/knowledge-hub/final-gate-product-full.json",
     "required_maturity_axes": [
