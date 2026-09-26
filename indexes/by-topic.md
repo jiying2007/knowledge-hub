@@ -536,3 +536,4 @@
 - Sensor C++17规范与LLVM Tooling门禁归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-09-07-sensor-cpp17-standard-tooling-closure.md`; `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
 - PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md`; `pcr02-dvr-ringframe-lease-closure-20260908`
 - Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
+- llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`

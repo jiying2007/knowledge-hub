@@ -359,6 +359,7 @@
 - llm_agent 外部实践吸收落地: `projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md`; `llm-agent-external-practice-absorption-20260723`
 - github/spec-kit 长期跟踪决策: `projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md`; `llm-agent-spec-kit-reference-tracking-20260723`
 - github/spec-kit正式登记验证: `projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md`; `llm-agent-spec-kit-reference-onboarding-validation-20260723`
+- llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
 
 ## Agent Dev Kit
 

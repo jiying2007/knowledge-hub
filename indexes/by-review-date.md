@@ -557,3 +557,4 @@
 - 2026-12-07: `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
 - 2026-12-08: `pcr02-dvr-ringframe-lease-closure-20260908`
 - 2026-10-13: `digital-worker-readiness-validation-20260713`
+- 2026-12-25: `llm-agent-adk-target-architecture`
