@@ -1,0 +1,106 @@
+name: llm-agent-g9-handoff-evidence
+
+on:
+  pull_request:
+    types: [opened, reopened]
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    if: >-
+      github.actor == 'jiying2007' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'evidence/llm-agent-g9-handoff-dry-run' &&
+      github.event.pull_request.base.sha == 'd2e15c31a2562ce92cee99e4695dc7835062512d'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact Hub candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Checkout exact llm_agent source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: jiying2007/llm_agent
+          ref: 109949bf36001548d03a96732a8d6020395b518a
+          path: source-llm-agent
+          persist-credentials: false
+
+      - name: Set up governed Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: requirements-runtime.lock
+
+      - name: Bootstrap governed CI transport
+        run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
+
+      - name: Install hash-locked runtime dependencies
+        run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
+
+      - name: Execute canonical capture dry-run and status projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/g9-handoff
+          candidate="$GITHUB_WORKSPACE/source-llm-agent/docs/knowledge-candidates/llm-agent-adk-target-architecture.md"
+          test -s "$candidate"
+          sha256sum "$candidate" > .cache/g9-handoff/candidate.sha256
+          git -C source-llm-agent rev-parse HEAD > .cache/g9-handoff/source-revision.txt
+          git rev-parse HEAD > .cache/g9-handoff/hub-revision.txt
+
+          rtk bash tools/knowledge-capture.sh             --source "$candidate"             --kind architecture             --target projects/llm-agent/architecture/llm-agent-adk-target-architecture.md             --id llm-agent-adk-target-architecture             --title "llm_agent / agent-dev-kit 长期资产架构结论候选"             --domain projects/llm-agent             --owner leiwenjun             --status reviewing             --generated-by-ai             --ai-role summarized             --ai-model-or-tool ChatGPT             --source-type public-repository             --source-from https://github.com/jiying2007/llm_agent             --as-of 2026-09-26             --dry-run --json             > .cache/g9-handoff/capture.json
+
+          rtk bash tools/knowledge-status.sh             --as-of 2026-09-26             --summary-json --review-queue-limit 5             > .cache/g9-handoff/status.json
+
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+          capture=json.loads(Path('.cache/g9-handoff/capture.json').read_text(encoding='utf-8'))
+          status=json.loads(Path('.cache/g9-handoff/status.json').read_text(encoding='utf-8'))
+          if capture.get('dry_run') is not True:
+              raise SystemExit('capture did not remain dry-run')
+          if capture.get('active_promotion') is not False:
+              raise SystemExit('capture unexpectedly claimed active promotion')
+          transaction=capture.get('transaction') or {}
+          if transaction.get('read_only') is not True:
+              raise SystemExit('capture transaction is not read-only')
+          if capture.get('id') != 'llm-agent-adk-target-architecture':
+              raise SystemExit('capture id mismatch')
+          if capture.get('created_status') != 'reviewing':
+              raise SystemExit('capture did not target reviewing state')
+          if not isinstance(status, dict) or not status:
+              raise SystemExit('status projection is empty')
+          Path('.cache/g9-handoff/assertions.json').write_text(
+              json.dumps({
+                  'schema':'llm-agent-g9-hub-dry-run-evidence/v1',
+                  'capture_status':capture.get('status'),
+                  'capture_action':capture.get('action'),
+                  'capture_id':capture.get('id'),
+                  'capture_target':capture.get('target'),
+                  'created_status':capture.get('created_status'),
+                  'active_promotion':capture.get('active_promotion'),
+                  'transaction_read_only':transaction.get('read_only'),
+                  'status_projection_present':True,
+                  'owner_review_required':True,
+                  'promotion_authorized':False,
+              },ensure_ascii=False,sort_keys=True,indent=2)+'\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Upload G9 dry-run/status evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: llm-agent-g9-hub-dry-run
+          path: .cache/g9-handoff/
+          if-no-files-found: error
+          retention-days: 30
