@@ -286,16 +286,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rtk rm .github/workflows/owner-decision-landing-20260926.yml
+          rm -f .github/workflows/owner-decision-landing-20260926.yml
           rtk git config user.name "github-actions[bot]"
           rtk git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rtk git add -A
           if rtk git diff --cached --quiet; then
             echo "no canonical changes produced" >&2
             exit 1
-          fi
-          if rtk git diff --cached --name-only | rtk grep -Fx '.github/workflows/owner-decision-landing-20260926.yml'; then
-            :
           fi
           rtk git diff --cached --check
           rtk git commit -m "governance(owner): land #125 activation and Batch A readiness"
