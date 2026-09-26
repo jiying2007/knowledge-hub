@@ -48,13 +48,18 @@ jobs:
           test "$(rtk git rev-parse origin/master)" = "$BASE_SHA"
           test "$(rtk git diff --name-only "$BASE_SHA..HEAD")" = ".github/workflows/owner-decision-landing-20260926.yml"
 
+      - name: Snapshot exact Batch A bound material
+        shell: bash
+        run: |
+          set -euo pipefail
+          rtk cp registry/items.jsonl /tmp/knowledge-hub-owner-decisions-baseline-items.jsonl
+
       - name: Register exact active-promotion execution authorization
         shell: bash
         run: |
           set -euo pipefail
           rtk python3 - <<'PY'
           import pathlib
-          import subprocess
           from tools.codex_assets.knowledge_hub.common import encode_jsonl, load_jsonl
 
           path = pathlib.Path("registry/authorizations.jsonl")
@@ -166,10 +171,9 @@ jobs:
           if set(selected) != set(targets):
               raise SystemExit("validation item coverage mismatch: " + repr(sorted(selected)))
 
-          baseline_text = subprocess.check_output(
-              ["rtk", "git", "show", source_master_sha + ":registry/items.jsonl"],
-              text=True,
-          )
+          baseline_text = pathlib.Path(
+              "/tmp/knowledge-hub-owner-decisions-baseline-items.jsonl"
+          ).read_text(encoding="utf-8")
           baseline_items = [
               json.loads(line) for line in baseline_text.splitlines() if line.strip()
           ]
