@@ -54,6 +54,7 @@ jobs:
           set -euo pipefail
           rtk python3 - <<'PY'
           import pathlib
+          import subprocess
           from tools.codex_assets.knowledge_hub.common import encode_jsonl, load_jsonl
 
           path = pathlib.Path("registry/authorizations.jsonl")
@@ -117,7 +118,9 @@ jobs:
           from tools.codex_assets.knowledge_hub.owner_qualification_packet import build_owner_qualification_packet
 
           root = pathlib.Path(".").resolve()
-          expected_fingerprint = "sha256:db1f708ebed4a032d831ee4522edb5a66cd8e1f2072b11da114a64e3d214edae"
+          source_master_sha = "8d3053c2d60c1f3a980a114475f6f5422a84dbd4"
+          expected_full_packet_fingerprint = "sha256:97694cc1f25819335a6b68d6f1bfbdda1e868a9b44e022183fb0d5c1959a42f7"
+          expected_batch_fingerprint = "sha256:db1f708ebed4a032d831ee4522edb5a66cd8e1f2072b11da114a64e3d214edae"
           targets = [
               "agent-dev-kit",
               "knowledge-hub",
@@ -127,10 +130,10 @@ jobs:
               "sigmastar-flasher",
           ]
           packet = build_owner_qualification_packet(root)
-          if packet.get("packet_fingerprint") != expected_fingerprint:
+          if packet.get("packet_fingerprint") != expected_full_packet_fingerprint:
               raise SystemExit(
-                  "Batch A packet drifted: expected %s got %s"
-                  % (expected_fingerprint, packet.get("packet_fingerprint"))
+                  "full owner packet drifted: expected %s got %s"
+                  % (expected_full_packet_fingerprint, packet.get("packet_fingerprint"))
               )
           rows_by_project = {row["project_id"]: row for row in packet.get("rows", [])}
           for project_id in targets:
@@ -163,6 +166,31 @@ jobs:
           if set(selected) != set(targets):
               raise SystemExit("validation item coverage mismatch: " + repr(sorted(selected)))
 
+          baseline_text = subprocess.check_output(
+              ["rtk", "git", "show", source_master_sha + ":registry/items.jsonl"],
+              text=True,
+          )
+          baseline_items = [
+              json.loads(line) for line in baseline_text.splitlines() if line.strip()
+          ]
+          baseline_selected = {
+              str(item.get("project_id", "")): item
+              for item in baseline_items
+              if str(item.get("project_id", "")) in targets
+              and item.get("readiness_slot") == "validation"
+          }
+          if set(baseline_selected) != set(targets):
+              raise SystemExit("baseline Batch A validation coverage mismatch")
+          bound_fields = ("id", "decision_owner", "status", "evidence_contract")
+          for project_id in targets:
+              current = selected[project_id]
+              baseline = baseline_selected[project_id]
+              for field in bound_fields:
+                  if current.get(field) != baseline.get(field):
+                      raise SystemExit(
+                          "Batch A bound field drifted for %s.%s" % (project_id, field)
+                      )
+
           previous_owner_refs = {}
           for project_id in targets:
               item = selected[project_id]
@@ -178,7 +206,7 @@ jobs:
                   "kind": "owner-evidence-ready-declaration",
                   "ref": str(manifest_path) + "#" + project_id,
                   "decision_source": "https://github.com/jiying2007/knowledge-hub/issues/74#issuecomment-5847182834",
-                  "packet_fingerprint": expected_fingerprint,
+                  "packet_fingerprint": expected_batch_fingerprint,
                   "reviewed_by": "jiying2007",
                   "reviewed_at": "2026-09-26",
                   "previous_owner_ref": previous_owner_refs[project_id],
@@ -192,7 +220,9 @@ jobs:
               "- decision source: `https://github.com/jiying2007/knowledge-hub/issues/74#issuecomment-5847182834`",
               "- reviewer: `jiying2007`",
               "- reviewed_at: `2026-09-26`",
-              "- exact pre-decision packet: `%s`" % expected_fingerprint,
+              "- exact canonical owner packet: `%s`" % expected_full_packet_fingerprint,
+              "- exact Batch A decision fingerprint: `%s`" % expected_batch_fingerprint,
+              "- bound source master: `%s`" % source_master_sha,
               "- decision: accept Batch A current evidence contracts as `evidence-ready`",
               "- Batch B: not decided by this declaration",
               "- synthetic evidence / missing real evidence: not authorized",
@@ -228,7 +258,9 @@ jobs:
           )
           print(json.dumps({
               "status": "applied",
-              "pre_fingerprint": expected_fingerprint,
+              "pre_full_packet_fingerprint": expected_full_packet_fingerprint,
+              "batch_a_decision_fingerprint": expected_batch_fingerprint,
+              "bound_source_master": source_master_sha,
               "post_fingerprint": post.get("packet_fingerprint"),
               "batch_a_ready": targets,
               "remaining_owner_declaration_projects": post.get("owner_declaration_projects", []),
