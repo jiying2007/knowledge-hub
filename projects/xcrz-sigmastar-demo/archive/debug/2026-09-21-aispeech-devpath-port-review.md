@@ -51,7 +51,7 @@ terminology_status: pending-review
 - 已迁入 API 6 个文件、HDI 5 个文件、APP 3 个文件，并核对 AISpeech 47 个文件。共 61 个相关文件与候选一致（比较时统一CRLF/LF和末尾换行）。
 - 根 Makefile 补齐 API 公共头同步和产品直接构建依赖，其他已有音频构建增量保留。hdi/api/app/aispeech 公共头全量检查通过。
 - API全套Host测试通过，包含新speech_profile_test。API/APP静态及动态库构建通过；HDI的hdi_ai、hdi_ao、ssplat_file三个音频对象验证通过。
-- 三模块doctor/check通过。历史环境曾使用 `EMBEDDED_KNOWLEDGE_HOME`；此处仅保留 provenance，现行知识库路由以 `workspace://embedded-knowledge` 为准。
+- 三模块doctor/check通过。历史环境曾依赖已退役的知识库路径变量；此处仅保留 provenance，现行知识库路由以 `workspace://embedded-knowledge` 为准。
 - 第一次产品构建被旧ToF .d文件引用已删除头文件阻塞。备份137个生成物后重新生成HDI对象和API/APP库。
 - 第二次产品构建被期间新出现的ToF源文件修改阻塞：vl53l8x/vl53l8cx_api.c 新增78行、删除2行，引用未定义的VL53L8CX_GLARE_FILTER和Dev等标识。该文件不属于迁移补丁，未覆盖或修复；ToF两个未跟踪参考文件同样保留。
 - 开发路径本轮没有完成新的prog_pcr02链接，不复用隔离工作树成功结果作当前构建结论。原HDI库已从备份恢复，仍是旧制品，不是本轮验证的新库。
