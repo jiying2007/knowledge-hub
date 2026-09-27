@@ -72,6 +72,29 @@ def test_ai_provider_discovery_revalidates_exact_successful_master_quality():
     assert '".github/workflows/quality.yml"' in text
 
 
+def test_ai_provider_discovery_avoids_pipefail_sigpipe_selectors():
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "| awk" not in text
+    assert "| head -n 1" not in text
+    assert 'quality_runs="${cache}/quality-runs.json"' in text
+    assert (
+        '[.workflow_runs[] | select(.event == "push" and .head_sha == $sha)]'
+        '[0].id // empty'
+        in text
+    )
+    assert (
+        '[.workflow_runs[] | select(.head_sha == $sha and '
+        '(.status == "queued" or .status == "in_progress" '
+        'or .status == "waiting" or .status == "requested" '
+        'or .conclusion == "success"))][0].id // empty'
+        in text
+    )
+    assert (
+        '--jq "[.[] | select(.title == \\\"${title}\\\")][0].number // empty"'
+        in text
+    )
+
+
 def test_ai_provider_discovery_routes_machine_and_human_evidence_separately():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "--auto-route-unique" in text
