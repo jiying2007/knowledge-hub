@@ -43,6 +43,11 @@ EVIDENCE_READY_BATCH_A_PROJECTS = {
     "sigmastar-flasher",
 }
 
+BATCH_B_OWNER_BOUNDARY_PROJECTS = {"digital-worker", "x5-rdk"}
+BATCH_B_PACKET_FINGERPRINT = (
+    "sha256:dc489ba58eb9f8a1ff00773cc7cb601c281cada8cce2da0a2acab54f4863f1c1"
+)
+
 
 def test_all_registered_projects_have_one_reviewing_evidence_contract():
     root = repository_root()
@@ -77,6 +82,19 @@ def test_all_registered_projects_have_one_reviewing_evidence_contract():
                 assert contract["status"] == "pending"
                 if item["decision_owner"] == "unassigned":
                     assert contract["owner_ref"] is None
+                elif project["id"] in BATCH_B_OWNER_BOUNDARY_PROJECTS:
+                    owner_ref = contract["owner_ref"]
+                    assert item["decision_owner"] == "leiwenjun"
+                    assert owner_ref["kind"] == "owner-boundary-decision"
+                    assert owner_ref["ref"] == (
+                        "artifacts/manifests/"
+                        "knowledge-hub-owner-boundary-batch-b-20260927.md#"
+                        + project["id"]
+                    )
+                    assert owner_ref["packet_fingerprint"] == BATCH_B_PACKET_FINGERPRINT
+                    assert owner_ref["authorization_id"] == (
+                        "auth-20260927-batch-b-owner-boundary"
+                    )
                 else:
                     assert contract["owner_ref"] == OWNER_ATTESTATION_REF
             assert (root / path).is_file()
@@ -391,4 +409,3 @@ def test_existing_readiness_body_profile_drift_fails_closed():
         match="existing readiness evidence-profile statement drift: x5-rdk",
     ):
         validate_existing_validation_body(project, text)
-
