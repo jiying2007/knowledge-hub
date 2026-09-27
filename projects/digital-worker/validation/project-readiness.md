@@ -13,11 +13,11 @@ source:
   from: registry/projects.json + registry/repositories.json + existing registry items
   fact_scope: registered-metadata-and-existing-hub-evidence-only
 review_after: '2026-10-13'
-review_status: ai-generated-project-readiness-pending-owner-and-real-validation
+review_status: owner-boundary-accepted-real-validation-pending
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
-promotion_decision: none; structural readiness asset only, no active promotion or owner decision
+promotion_decision: none; owner boundary accepted, real evidence pending, no active promotion
 tags:
 - digital-worker
 - project-readiness
@@ -38,14 +38,14 @@ evidence_refs:
 - registry/projects.json
 - registry/repositories.json
 created_at: '2026-07-13'
-updated_at: '2026-07-13'
+updated_at: '2026-09-27'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-13'
 manual_validation_pending: true
-decision_owner: unassigned
-summary_zh: 记录 Digital Worker 的结构成熟度、本机 source 发现流程和真实 owner、工程/设备及发布验证待办；源码可定位不等于验证完成。
+decision_owner: leiwenjun
+summary_zh: 记录 Digital Worker 的结构成熟度；真实 owner 已确认 control-plane 边界，工程、制品、发布与回滚证据仍待验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
@@ -64,7 +64,7 @@ related:
 
 ## 结论
 
-结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，真实 owner、工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
+结构性工作台已建立；真实 owner `leiwenjun` 已确认 `control-plane / software-tool` 边界，工程、制品、发布和回滚证据仍待验证。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
 
 ## 自动结构检查
 
@@ -78,7 +78,7 @@ related:
 
 - [ ] Hub 结构验证：registry、route、正文镜像、链接和检索矩阵通过。
 - [ ] 来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。
-- [ ] 责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。
+- [x] 责任验证：真实 decision owner `leiwenjun` 已确认当前边界；记录见 `artifacts/manifests/knowledge-hub-owner-boundary-batch-b-20260927.md`，不代表 evidence-ready。
 - [ ] 工具验证：覆盖 CLI help、错误码、输入边界、制品 hash 和目标平台 smoke test。
 - [ ] 发布验证：覆盖可安装/可运行制品、版本信息、回滚和消费者兼容性。
 
@@ -86,7 +86,7 @@ related:
 
 | 字段 | 待填写 |
 |---|---|
-| decision owner | `unassigned` |
+| decision owner | `leiwenjun` |
 | source repo / commit / version | pending |
 | 执行环境与设备 | pending |
 | 命令与返回码 | pending |
