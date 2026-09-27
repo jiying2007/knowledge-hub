@@ -75,11 +75,14 @@ jobs:
           if [[ -n "${TRIGGER_RUN_ID}" ]]; then
             run_id="${TRIGGER_RUN_ID}"
           else
+            quality_runs="${cache}/quality-runs.json"
+            gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
+              > "${quality_runs}"
             run_id="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=master&status=success&per_page=50" \
-                --jq '.workflow_runs[] | select(.event == "push") | [.id, .head_sha] | @tsv' \
-              | awk -v sha="${SOURCE_REVISION}" '$2 == sha {print $1; exit}'
+              jq -r --arg sha "${SOURCE_REVISION}" \
+                '[.workflow_runs[] | select(.event == "push" and .head_sha == $sha)][0].id // empty' \
+                "${quality_runs}"
             )"
           fi
           if [[ ! "${run_id}" =~ ^[0-9]+$ ]]; then
@@ -320,8 +323,7 @@ jobs:
           number="$(
             gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
               --json number,title \
-              --jq ".[] | select(.title == \"${title}\") | .number" \
-            | head -n 1
+              --jq "[.[] | select(.title == \"${title}\")][0].number // empty"
           )"
           body="AI discovery/qualification completed without direct canonical writes. ${MACHINE} append-only provider-verifiable target(s) were routed to a governed machine PR; ${HUMAN} target(s) still require governed human authorization. Review the bounded workflow artifact: ${run_url}. Selection is explicitly not authorization; release/owner/device/production evidence was not fabricated."
           if [[ -n "${number}" ]]; then
@@ -355,8 +357,7 @@ jobs:
           number="$(
             gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
               --json number,title \
-              --jq ".[] | select(.title == \"${title}\") | .number" \
-            | head -n 1
+              --jq "[.[] | select(.title == \"${title}\")][0].number // empty"
           )"
           if [[ -n "${number}" ]]; then
             gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
@@ -397,12 +398,15 @@ jobs:
             local quality_branch="$1"
             local quality_sha="$2"
             local active
+            local quality_runs
+            quality_runs="${cache}/quality-runs.json"
+            gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
+              > "${quality_runs}"
             active="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/actions/workflows/quality.yml/runs?branch=${quality_branch}&per_page=20" \
-                --jq '.workflow_runs[] | [.id, .head_sha, .status, (.conclusion // "")] | @tsv' \
-              | awk -v sha="${quality_sha}" \
-                  '$2 == sha && ($3 == "queued" || $3 == "in_progress" || $3 == "waiting" || $3 == "requested" || $4 == "success") {print $1; exit}'
+              jq -r --arg sha "${quality_sha}" \
+                '[.workflow_runs[] | select(.head_sha == $sha and (.status == "queued" or .status == "in_progress" or .status == "waiting" or .status == "requested" or .conclusion == "success"))][0].id // empty' \
+                "${quality_runs}"
             )"
             if [[ -n "${active}" ]]; then
               echo "exact-head Quality already active/successful for ${quality_branch}: ${active}"
@@ -417,8 +421,7 @@ jobs:
           existing="$(
             gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
               --json number,title \
-              --jq ".[] | select(.title == \"${title}\") | .number" \
-            | head -n 1
+              --jq "[.[] | select(.title == \"${title}\")][0].number // empty"
           )"
           if [[ -n "${existing}" ]]; then
             protected="$(
