@@ -537,3 +537,44 @@
 - PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md`; `pcr02-dvr-ringframe-lease-closure-20260908`
 - Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
 - llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
+- PCR02 公开 WiFi 跨 API 安全类型契约验证: `projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-security-contract.md`; `pcr02-public-wifi-security-contract-20260914`
+- PCR02 公开 WiFi 凭据安全类型有界扫描验证: `projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md`; `pcr02-public-wifi-bounded-security-scan-20260914`
+- AISpeech AEC RES 24样本分层验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-aec-res-24-sample-split.md`; `pcr02-aispeech-aec-res-24-sample-split-20260915`
+- AISpeech AEC RES 失败样本鉴别器边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-aec-res-failure-discriminator-boundary.md`; `pcr02-aispeech-aec-res-failure-discriminator-20260915`
+- AISpeech 四轨 reference delay 置信度边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-reference-delay-confidence-boundary.md`; `pcr02-aispeech-reference-delay-confidence-20260915`
+- PCR02 公开 WiFi 扫描 teardown 状态机验证: `projects/xcrz-sigmastar-demo/validation/2026-09-15-public-wifi-scan-teardown.md`; `pcr02-public-wifi-scan-teardown-20260915`
+- AISpeech 双麦播放交互与通话审查: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dualmic-playback-review.md`; `pcr02-aispeech-dualmic-playback-review-20260920`
+- AISpeech NR 数值边界修复与声学门禁复核: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-nr-numeric-review.md`; `pcr02-aispeech-nr-numeric-review-20260920`
+- AISpeech 声学评分对齐修复与 DTD 释放候选否决: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-quality-timeline-review.md`; `pcr02-aispeech-quality-timeline-review-20260920`
+- AISpeech DTD 条件释放候选与 Host 构建隔离修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dtd-conditional-release-review.md`; `pcr02-aispeech-dtd-conditional-release-review-20260920`
+- AISpeech DTD 原始判决、保持和无效历史状态归因: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dtd-attribution-review.md`; `pcr02-aispeech-dtd-attribution-review-20260920`
+- AISpeech fileid 4 对齐对照与四轨评估器加固: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-file4-delay-review.md`; `pcr02-aispeech-file4-delay-review-20260921`
+- AISpeech 回声覆盖区间与非线性留出对照: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-echo-model-review.md`; `pcr02-aispeech-echo-model-review-20260921`
+- AISpeech 全链路源码审查与确定性修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-full-chain-review.md`; `pcr02-aispeech-full-chain-review-20260921`
+- AISpeech 产品 ABI 接入与构建阻断: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-product-abi-integration.md`; `pcr02-aispeech-product-abi-20260921`
+- AISpeech CALL VAD 状态导出及 HDI 接入: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-vad-contract.md`; `pcr02-aispeech-vad-contract-20260921`
+- AISpeech AGC 窗口优化验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-window-review.md`; `aispeech-agc-window-review-20260921`
+- AISpeech BF 数值与资源契约验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-bf-numeric-review.md`; `aispeech-bf-numeric-review-20260921`
+- AISpeech NR NN 过渡与弱语音观测: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-tail-transition-review.md`; `aispeech-tail-transition-review-20260921`
+- AISpeech AGC全零增益归因与候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-attribution-review.md`; `aispeech-agc-attribution-review-20260921`
+- AISpeech AGC起始恢复与微幅输入边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-onset-review.md`; `aispeech-agc-onset-review-20260921`
+- AISpeech AGC整链起始验证与候选拒绝: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-chain-onset-review.md`; `aispeech-agc-chain-onset-review-20260921`
+- AISpeech AGC低输入增益与VAD耦合候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-low-input-review.md`; `aispeech-agc-low-input-review-20260921`
+- AISpeech AGC联合指标与试听工件: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-joint-review.md`; `aispeech-agc-joint-review-20260921`
+- AISpeech样本18身份与电平核查: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-id18-identity-review.md`; `aispeech-id18-identity-review-20260921`
+- AISpeech AGC清晰度反馈与补偿边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-audibility-review.md`; `aispeech-agc-audibility-review-20260921`
+- AISpeech非AGC环节审查与下一阶段重点: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-next-stage-audit.md`; `aispeech-next-stage-audit-20260921`
+- AISpeech五方向全面推进与分层门禁: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-comprehensive-review.md`; `aispeech-comprehensive-review-20260921`
+- AISpeech ARM权重符号修复与板端恢复验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-board-sign-review.md`; `aispeech-board-sign-review-20260921`
+- AISpeech迁入新媒体主线与产品链接验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-mainline-integration-review.md`; `aispeech-mainline-integration-review-20260921`
+- 音频候选迁回开发路径与验证边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-devpath-port-review.md`; `aispeech-devpath-port-review-20260921`
+- 音频接口中立命名修正: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-review.md`; `audio-neutral-naming-review-20260921`
+- 音频中立命名最终修订：保留原构建配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-final.md`; `audio-neutral-naming-final-20260921`
+- 音频配置命名全面统一与验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-profile-naming-complete.md`; `audio-profile-naming-complete-20260921`
+- 音频场景采集第一阶段实现与验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-phase1-implementation.md`; `audio-test-phase1-implementation-20260921`
+- 音频采集工具实现审查与修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-review-fixes.md`; `audio-test-review-fixes-20260921`
+- 音频采集完整性与退出取消复审: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-capture-integrity-review.md`; `audio-test-capture-integrity-review-20260921`
+- 音频场景采集工具完整使用指南: `projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md`; `app-audio-test-usage-guide-20260922`
+- 音频采集首帧覆盖与备注输入治理: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-24-audio-capture-start-and-note-governance.md`; `audio-capture-start-and-note-governance-20260924`
+- 第二产品 MCU 研发基础设施建设计划: `projects/mcu/decisions/second-product-engineering-foundation-plan.md`; `mcu-second-product-engineering-foundation-plan-20260924`
+- ADK 与 Codex 四仓来源和运行资产门禁验证: `domains/codex/validation/adk-four-repo-source-live-2026-09-27.md`; `adk-four-repo-source-live-validation-20260927`

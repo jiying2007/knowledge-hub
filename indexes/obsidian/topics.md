@@ -4,16 +4,16 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (69)
+## validation (70)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
+- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
 - [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
-- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
-## pcr02 (56)
+## pcr02 (59)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
 - [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing`
@@ -22,14 +22,14 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (50)
+## manual-validation-pending (52)
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
+- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
 ## no-active-promotion (42)
 
@@ -193,6 +193,24 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing`
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing`
 
+## low-power (7)
+
+- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
+- [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing`
+- [PCR02 公开 WiFi 凭据安全类型有界扫描验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md) · `reviewing`
+- [PCR02 公开 WiFi 扫描 teardown 状态机验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-15-public-wifi-scan-teardown.md) · `reviewing`
+- [PCR02 原理图第二批静态优化决策](../../projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md) · `reviewing`
+- [PCR02 原理图首批系统优化落地](../../projects/pcr02-ssc305/decisions/pcr02-schematic-first-batch-optimization-20260802.md) · `reviewing`
+
+## capture (6)
+
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
+- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
+- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
+- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
+- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
+- [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing`
+
 ## cross-platform (6)
 
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
@@ -219,6 +237,15 @@
 - [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
 - [PCR02 release 暂时保留 NFS 客户端](../../projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md) · `reviewing`
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+
+## wifi (6)
+
+- [GD32L235 PB12 WL_GPIO4 WoWLAN 引脚契约候选](../../projects/gd32l235/current/pb12-wl-gpio4-contract.md) · `reviewing`
+- [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
+- [PCR02 公开 WiFi 凭据安全类型有界扫描验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md) · `reviewing`
+- [PCR02 公开 WiFi 扫描 teardown 状态机验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-15-public-wifi-scan-teardown.md) · `reviewing`
+- [PCR02 公开 WiFi 跨 API 安全类型契约验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-security-contract.md) · `reviewing`
+- [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
 
 ## agent-dev-kit (5)
 
@@ -252,14 +279,6 @@
 - [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
 - [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
 
-## low-power (5)
-
-- [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
-- [PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策](../../projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md) · `reviewing`
-- [PCR02 原理图第二批静态优化决策](../../projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md) · `reviewing`
-- [PCR02 原理图首批系统优化落地](../../projects/pcr02-ssc305/decisions/pcr02-schematic-first-batch-optimization-20260802.md) · `reviewing`
-- [PCR02 无接口驱动裁剪与 BLE-only 内核策略](../../projects/pcr02-ssc305/decisions/pcr02-unused-io-ble-kernel-policy-20260802.md) · `reviewing`
-
 ## maintenance (5)
 
 - [Knowledge Hub long-term maintenance plan](../../governance/ultimate-maintenance-plan.md) · `active`
@@ -275,6 +294,14 @@
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
+
+## runbook (5)
+
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing`
+- [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing`
+- [X5 SDK V1.1.2 源码构建与交接 Runbook](../../domains/embedded/runbooks/x5-sdk-v1.1.2-source-build.md) · `reviewing`
+- [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing`
 
 ## 1fps (4)
 
@@ -304,13 +331,6 @@
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
-## capture (4)
-
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
-- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
-- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
-- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
-
 ## exact-source (4)
 
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
@@ -338,13 +358,6 @@
 - [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing`
 - [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing`
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
-
-## runbook (4)
-
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
-- [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing`
-- [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing`
-- [X5 SDK V1.1.2 源码构建与交接 Runbook](../../domains/embedded/runbooks/x5-sdk-v1.1.2-source-build.md) · `reviewing`
 
 ## security (4)
 
@@ -398,6 +411,12 @@
 - [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 
+## contract (3)
+
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
+- [PCR02 公开 WiFi 凭据安全类型有界扫描验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md) · `reviewing`
+- [PCR02 公开 WiFi 跨 API 安全类型契约验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-security-contract.md) · `reviewing`
+
 ## decision (3)
 
 - [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
@@ -415,6 +434,12 @@
 - [中文可读性规范](../../governance/chinese-readability.md) · `active`
 - [中文长期资产模板集](../../templates/README.md) · `active`
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
+
+## mcu (3)
+
+- [MCU Firmware Group readiness validation](../../projects/mcu/validation/project-readiness.md) · `reviewing`
+- [MCU NAS 发布制品与契约验证 2026-07-15](../../projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md) · `reviewing`
+- [第二产品 MCU 研发基础设施建设计划](../../projects/mcu/decisions/second-product-engineering-foundation-plan.md) · `reviewing`
 
 ## motor (3)
 
@@ -451,12 +476,6 @@
 - [PCR02 AISpeech VAD 与 QIVW 短期优化落地验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md) · `reviewing`
 - [PCR02 QIVW VAD gate 显式参数化更正与验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md) · `reviewing`
 - [PCR02 遗留 QIVW 回调与 APP diag provider 优化验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md) · `reviewing`
-
-## wifi (3)
-
-- [GD32L235 PB12 WL_GPIO4 WoWLAN 引脚契约候选](../../projects/gd32l235/current/pb12-wl-gpio4-contract.md) · `reviewing`
-- [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
-- [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
 
 ## x86_64 (3)
 
@@ -574,11 +593,6 @@
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 - [X5 Integration P1 长期维护优化验证](../../projects/firmware-toolchains/validation/2026-08-06-x5-integration-p1-maintainability.md) · `reviewing`
 
-## mcu (2)
-
-- [MCU Firmware Group readiness validation](../../projects/mcu/validation/project-readiness.md) · `reviewing`
-- [MCU NAS 发布制品与契约验证 2026-07-15](../../projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md) · `reviewing`
-
 ## memory (2)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
@@ -678,6 +692,11 @@
 
 - [PCR02 Sensor 分层全面测试框架基线](../../projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md) · `reviewing`
 - [PCR02 Sensor 测试框架 v3 硬切换验证记录](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md) · `reviewing`
+
+## tcpka (2)
+
+- [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
+- [PCR02 公开 WiFi 跨 API 安全类型契约验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-security-contract.md) · `reviewing`
 
 ## terminal-closure (2)
 
@@ -893,10 +912,6 @@
 
 - [GD32L235 可配置充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md) · `reviewing`
 
-## contract (1)
-
-- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
-
 ## contract-audit (1)
 
 - [PCR02 Robot 子模块精确源码契约审计](../../projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md) · `reviewing`
@@ -988,6 +1003,10 @@
 ## embedded-knowledge (1)
 
 - [PCR02 SSC305 方法与工具来源吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
+
+## engineering-foundation (1)
+
+- [第二产品 MCU 研发基础设施建设计划](../../projects/mcu/decisions/second-product-engineering-foundation-plan.md) · `reviewing`
 
 ## engineering-quality (1)
 
@@ -1445,6 +1464,10 @@
 
 - [X5 SDK V1.1.2 GitLab 层级镜像验证](../../projects/firmware-toolchains/validation/2026-08-05-x5-v1.1.2-gitlab-mirror.md) · `reviewing`
 
+## second-product (1)
+
+- [第二产品 MCU 研发基础设施建设计划](../../projects/mcu/decisions/second-product-engineering-foundation-plan.md) · `reviewing`
+
 ## semaphore (1)
 
 - [PCR02 player 单调时钟与请求确认优化验证](../../projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md) · `reviewing`
@@ -1485,10 +1508,6 @@
 
 - [PCR02 customer UBI 启动优化复核决策候选](../../projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-review-20260804.md) · `reviewing`
 
-## tcpka (1)
-
-- [PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选](../../projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md) · `reviewing`
-
 ## team-distribution (1)
 
 - [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing`
@@ -1496,6 +1515,10 @@
 ## team-runbook (1)
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
+
+## teardown (1)
+
+- [PCR02 公开 WiFi 扫描 teardown 状态机验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-15-public-wifi-scan-teardown.md) · `reviewing`
 
 ## templates (1)
 
