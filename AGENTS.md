@@ -20,6 +20,8 @@ Knowledge Hub（`~/knowledge-hub`）是团队、项目、Codex 与个人知识�
 - 自动化默认 `report-only`。删除、发布、push/merge/rebase/tag、提升 active、owner decision、关闭 owner gate、写 memory、修改源项目或外部系统，必须有明确授权、证据、回滚和验证。
 - 不以本地 commit 代替 owner approval、promotion、source write、memory write 或远端发布授权；当前工作区上层规则禁止时不得自动 commit。
 - reviewing candidate 不是 active 事实；来源、owner、状态、review 周期未验证前不得声明 active。AI 受托 owner 操作必须记录授权和执行身份。
+- 本地低风险耐久结论已获 candidate-only 自动登记授权，通过 `~/codex/scripts/knowledge-provider.sh archive --project <明确路由> --source <脱敏结论文件> --kind <允许类型> --sanitized --apply` 生成 reviewing 候选；无需逐条重复询问。只有 `ARCHIVED`/`ALREADY_ARCHIVED` 且 `persisted=true` 可声明归档成功。策略由 `registry/provider-archive-policy.json` 控制；shadow 路由仍为 report-only。
+- 非平凡任务实施前自动执行 `execution-policy ensure`，使用实际请求临时文件、准确当前线程、实际模式与验收项登记并回读 intake；相同任务幂等，冲突先 replan。不得把 intake 登记当作完成或 final PASS。
 
 ## 3. 内容硬边界
 

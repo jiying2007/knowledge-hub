@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "enabled": true,
+  "mode": "candidate-only",
+  "owner_id": "leiwenjun",
+  "allowed_kinds": ["validation", "debug-record", "runbook", "audit", "codex-session", "project-archive", "external-source-note"],
+  "maximum_bytes": 131072,
+  "authorization_basis": "用户于 2026-10-05 明确要求全面优化落地、自动处理、减少人工干预；仅授权本地 reviewing 候选登记，不授权 active、owner decision、memory 或远端发布。"
+}
