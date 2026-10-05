@@ -90,6 +90,9 @@ def _capture_parser(subparsers: Any) -> None:
     _common_parser(parser)
     parser.add_argument("--source", default="")
     parser.add_argument("--kind", default="")
+    parser.add_argument("--provider-archive", action="store_true")
+    parser.add_argument("--project", default="")
+    parser.add_argument("--sanitized", action="store_true")
     parser.add_argument("--tool-asset-candidate", default="")
     parser.add_argument("--scan-tool-assets", action="store_true")
     parser.add_argument("--tool-asset-session-start", action="store_true")
@@ -151,9 +154,30 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _run_provider_archive(args: Any, parser: Any) -> int:
+    from .provider_archive import run as run_provider_archive
+
+    if (args.scan_tool_assets or args.tool_asset_session_start or args.tool_asset_session_close
+            or args.tool_asset_candidate or args.target != "inbox" or args.status != "reviewing"
+            or args.id or args.domain or args.scope or args.source_type or args.source_from):
+        parser.error("provider archive cannot combine with lifecycle or tool asset overrides")
+    return run_provider_archive(args)
+
+
+def _tool_validation(args: Any) -> Dict[str, str]:
+    return {
+        "unit_tests": args.unit_tests,
+        "cli_help": args.cli_help,
+        "dry_run": args.candidate_dry_run,
+        "non_repo_cwd": args.non_repo_cwd,
+    }
+
+
 def main(argv: Sequence[str] = ()) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
+    if args.command == "capture" and args.provider_archive:
+        return _run_provider_archive(args, parser)
     if args.apply and args.dry_run:
         parser.error("--apply and --dry-run are mutually exclusive")
     root = repository_root(args.root)
@@ -171,12 +195,7 @@ def main(argv: Sequence[str] = ()) -> int:
             )
             if session_mode_count > 1:
                 raise KnowledgeHubError("tool asset scan/start/close/import modes are mutually exclusive")
-            validation = {
-                "unit_tests": args.unit_tests,
-                "cli_help": args.cli_help,
-                "dry_run": args.candidate_dry_run,
-                "non_repo_cwd": args.non_repo_cwd,
-            }
+            validation = _tool_validation(args)
             if args.tool_asset_session_start:
                 if args.apply or args.hub_dry_run:
                     raise KnowledgeHubError("session start is local runtime state only and cannot apply or plan Hub import")

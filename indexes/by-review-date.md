@@ -599,3 +599,7 @@
 - 2026-12-23: `audio-capture-start-and-note-governance-20260924`
 - 2026-10-24: `mcu-second-product-engineering-foundation-plan-20260924`
 - 2026-10-04: `adk-four-repo-source-live-validation-20260927`
+- 2026-12-28: `pcr02-valgrind-debug-guide-20260929`
+- 2027-01-03: `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
+- 2027-01-03: `provider-llm-agent-85cdfb6aec9222231a5a7243`
+- 2027-01-03: `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
