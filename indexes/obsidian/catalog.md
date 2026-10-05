@@ -46,6 +46,7 @@
 - [Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30](../../governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-validation-20260730`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
 - [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing` · `knowledge-hub-data-lifecycle-growth-v1`
+- [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing` · `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing` · `software-tool-artifact-restore-drill-20260716`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing` · `software-tool-evidence-audit-20260715`
 
@@ -136,6 +137,7 @@
 ## projects/llm-agent
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active` · `llm-agent-adk-target-architecture`
+- [ADK 主分支同步与验证边界审查候选](../../projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md) · `reviewing` · `provider-llm-agent-85cdfb6aec9222231a5a7243`
 - [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing` · `llm-agent-readiness-validation-20260713`
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing` · `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing` · `llm-agent-portable-full-gate-remediation-20260717`
@@ -345,6 +347,7 @@
 - [PCR02 VENC main/sub 发布序号独立化记录](../../projects/xcrz-sigmastar-demo/archive/reports/2026-07-23-pcr02-venc-main-sub-sequence-isolation.md) · `reviewing` · `pcr02-venc-main-sub-sequence-isolation-20260723`
 - [PCR02 VI 1/30fps 同步抽象规范收敛验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md) · `reviewing` · `pcr02-vi-fps-sync-abstraction-closeout-20260728`
 - [PCR02 Valgrind OpenSSL ARMv7 计数器与 MI 设备门禁排障记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-valgrind-openssl-armv7-tick-mi-device-gate.md) · `reviewing` · `pcr02-valgrind-openssl-armv7-tick-mi-device-gate-20260812`
+- [PCR02 Valgrind 调试指导](../../projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md) · `reviewing` · `pcr02-valgrind-debug-guide-20260929`
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing` · `pcr02-video-audio-shm-usage-20260713`
 - [PCR02 WARM低帧率VIF sleep引发CMDQ异常](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md) · `reviewing` · `xcrz-pcr02-warm-vif-sleep-cmdq-debug-20260814`
 - [PCR02 WARM当前业务负载CMDQ异常V2](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md) · `reviewing` · `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
@@ -393,6 +396,7 @@
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing` · `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
 - [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing` · `pcr02-four-repo-ai-coding-team-knowledge-20260905`
 - [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing` · `module-ai-platform-boundary-20260906`
+- [本地 GROS 构建与制品交付审查验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md) · `reviewing` · `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
 - [音频中立命名最终修订：保留原构建配置](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-final.md) · `reviewing` · `audio-neutral-naming-final-20260921`
 - [音频候选迁回开发路径与验证边界](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-devpath-port-review.md) · `reviewing` · `aispeech-devpath-port-review-20260921`
 - [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing` · `app-audio-test-usage-guide-20260922`

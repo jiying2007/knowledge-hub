@@ -578,3 +578,7 @@
 - 音频采集首帧覆盖与备注输入治理: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-24-audio-capture-start-and-note-governance.md`; `audio-capture-start-and-note-governance-20260924`
 - 第二产品 MCU 研发基础设施建设计划: `projects/mcu/decisions/second-product-engineering-foundation-plan.md`; `mcu-second-product-engineering-foundation-plan-20260924`
 - ADK 与 Codex 四仓来源和运行资产门禁验证: `domains/codex/validation/adk-four-repo-source-live-2026-09-27.md`; `adk-four-repo-source-live-validation-20260927`
+- PCR02 Valgrind 调试指导: `projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md`; `pcr02-valgrind-debug-guide-20260929`
+- Provider 候选归档与 Runtime intake 自动化验证: `governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md`; `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
+- ADK 主分支同步与验证边界审查候选: `projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md`; `provider-llm-agent-85cdfb6aec9222231a5a7243`
+- 本地 GROS 构建与制品交付审查验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md`; `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`

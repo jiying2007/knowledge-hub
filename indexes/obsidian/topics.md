@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (70)
+## validation (72)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (52)
+## manual-validation-pending (53)
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
 - [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
@@ -175,6 +175,15 @@
 - [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
 - [app_sensor_test JSONL v4 与 HIL 证据闭环验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md) · `reviewing`
 
+## capture (7)
+
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
+- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
+- [PCR02 Valgrind 调试指导](../../projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md) · `reviewing`
+- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
+- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
+- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
+
 ## hal (7)
 
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
@@ -202,15 +211,6 @@
 - [PCR02 原理图第二批静态优化决策](../../projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md) · `reviewing`
 - [PCR02 原理图首批系统优化落地](../../projects/pcr02-ssc305/decisions/pcr02-schematic-first-batch-optimization-20260802.md) · `reviewing`
 
-## capture (6)
-
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
-- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
-- [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing`
-- [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
-- [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
-- [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing`
-
 ## cross-platform (6)
 
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
@@ -237,6 +237,15 @@
 - [PCR02 active 媒体 CPU 与 VENC 等待优化验证](../../projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md) · `reviewing`
 - [PCR02 release 暂时保留 NFS 客户端](../../projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md) · `reviewing`
 - [PCR02 项目组规范入口边界决策候选](../../projects/pcr02-ssc305/decisions/pcr02-canonical-hardcut-20260715.md) · `reviewing`
+
+## runbook (6)
+
+- [PCR02 Valgrind 调试指导](../../projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md) · `reviewing`
+- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
+- [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing`
+- [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing`
+- [X5 SDK V1.1.2 源码构建与交接 Runbook](../../domains/embedded/runbooks/x5-sdk-v1.1.2-source-build.md) · `reviewing`
+- [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing`
 
 ## wifi (6)
 
@@ -294,14 +303,6 @@
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
-
-## runbook (5)
-
-- [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing`
-- [X5 Android repo 引用治理与安全清理](../../projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md) · `reviewing`
-- [X5 GitLab CE 多仓分支保护降级方案](../../projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md) · `reviewing`
-- [X5 SDK V1.1.2 源码构建与交接 Runbook](../../domains/embedded/runbooks/x5-sdk-v1.1.2-source-build.md) · `reviewing`
-- [音频场景采集工具完整使用指南](../../projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md) · `reviewing`
 
 ## 1fps (4)
 
@@ -627,6 +628,11 @@
 
 - [PCR02 SSC305 方法与工具来源吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
+
+## provider-archive (2)
+
+- [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing`
+- [本地 GROS 构建与制品交付审查验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md) · `reviewing`
 
 ## qr-scan (2)
 

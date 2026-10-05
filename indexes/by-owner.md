@@ -457,6 +457,10 @@
 - `audio-capture-start-and-note-governance-20260924`
 - `mcu-second-product-engineering-foundation-plan-20260924`
 - `adk-four-repo-source-live-validation-20260927`
+- `pcr02-valgrind-debug-guide-20260929`
+- `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
+- `provider-llm-agent-85cdfb6aec9222231a5a7243`
+- `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
 
 ## pcr02-registry-owner
 

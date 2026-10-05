@@ -244,6 +244,8 @@
 - 音频采集完整性与退出取消复审: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-capture-integrity-review.md`; `audio-test-capture-integrity-review-20260921`
 - 音频场景采集工具完整使用指南: `projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md`; `app-audio-test-usage-guide-20260922`
 - 音频采集首帧覆盖与备注输入治理: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-24-audio-capture-start-and-note-governance.md`; `audio-capture-start-and-note-governance-20260924`
+- PCR02 Valgrind 调试指导: `projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md`; `pcr02-valgrind-debug-guide-20260929`
+- 本地 GROS 构建与制品交付审查验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md`; `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
 
 ## PCR02 SSC305 SDK
 
@@ -400,6 +402,7 @@
 - github/spec-kit 长期跟踪决策: `projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md`; `llm-agent-spec-kit-reference-tracking-20260723`
 - github/spec-kit正式登记验证: `projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md`; `llm-agent-spec-kit-reference-onboarding-validation-20260723`
 - llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
+- ADK 主分支同步与验证边界审查候选: `projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md`; `provider-llm-agent-85cdfb6aec9222231a5a7243`
 
 ## Agent Dev Kit
 
