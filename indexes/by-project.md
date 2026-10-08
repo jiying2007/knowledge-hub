@@ -403,6 +403,20 @@
 - github/spec-kit正式登记验证: `projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md`; `llm-agent-spec-kit-reference-onboarding-validation-20260723`
 - llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
 - ADK 主分支同步与验证边界审查候选: `projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md`; `provider-llm-agent-85cdfb6aec9222231a5a7243`
+- llm_agent / ADK 优化闭环候选: `projects/llm-agent/validation/provider-llm-agent-94244aa67d60c96f9375bcc7.md`; `provider-llm-agent-94244aa67d60c96f9375bcc7`
+- llm_agent / ADK 内外部审查与迭代记录: `projects/llm-agent/validation/provider-llm-agent-f703aef64b44092a82ffe439.md`; `provider-llm-agent-f703aef64b44092a82ffe439`
+- 合并与受管应用检查点（外部 CI 阻塞交接）: `projects/llm-agent/validation/provider-llm-agent-25d0ff0e4fc8c26e5698cdb2.md`; `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
+- ADK 7.14.1 来源升级与运行资产验证: `projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md`; `provider-llm-agent-63e87b8724e4e121da4d4896`
+- 7.14.1 多仓主分支合并与回读: `projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md`; `provider-llm-agent-8aba0675f67e3ceadf5d9eac`
+- ADK临时Git fixture加固收口: `projects/llm-agent/validation/provider-llm-agent-232c6f020366e6dfa82fba4f.md`; `provider-llm-agent-232c6f020366e6dfa82fba4f`
+- 7.14.2消费链与门禁加固最终回读: `projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md`; `provider-llm-agent-4699a5202fd8753d00f8eb44`
+- ADK与llm_agent信任边界及来源迭代审查候选: `projects/llm-agent/archive/provider-llm-agent-47752ebe98d16c6e9c2adfa0.md`; `provider-llm-agent-47752ebe98d16c6e9c2adfa0`
+- ADK 8.0.1 文件IO安全迭代与来源到运行资产验证: `projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md`; `provider-llm-agent-946122d739b2544d9d0b6975`
+- ADK8.0.2持久化、锁安全与实际运行资产验证: `projects/llm-agent/validation/provider-llm-agent-67eea36661773841b2559d61.md`; `provider-llm-agent-67eea36661773841b2559d61`
+- ADK8.0.3证据JSON与跨仓交付边界验证: `projects/llm-agent/validation/provider-llm-agent-189f00d88f7c213c70d4c4e2.md`; `provider-llm-agent-189f00d88f7c213c70d4c4e2`
+- ADK 8.0.4 与 llm_agent 归档资源治理迭代: `projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md`; `provider-llm-agent-1e0955b8405e311ca5dc1a58`
+- ADK8.0.5与Root参考内容身份闭环: `projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md`; `provider-llm-agent-1422b948993c2cee4b4e82d7`
+- 无模型验证方案及真实证据边界: `projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md`; `provider-llm-agent-8912fe6311526d7f75e9d50a`
 
 ## Agent Dev Kit
 
