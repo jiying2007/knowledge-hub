@@ -19,6 +19,7 @@ from .activity import (
     record_item,
 )
 from .common import KnowledgeHubError, repository_root, resolve_today, read_utf8_bounded
+from .private_io import PrivateWriteUncertain
 
 
 def _within(path: pathlib.Path, parent: pathlib.Path) -> bool:
@@ -66,6 +67,7 @@ def _report(args: argparse.Namespace, root: pathlib.Path) -> int:
         detail=args.detail,
         output_root=_output_root(root, args.output_dir),
         write=not args.stdout_only,
+        knowledge_as_of=args.knowledge_as_of,
     )
     if args.summary_json or args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=None if args.summary_json else 2))
@@ -111,6 +113,7 @@ def main(argv: Iterable[str] = ()) -> int:
     report.add_argument("--scope", choices=("personal", "project", "portfolio"), default="")
     report.add_argument("--detail", choices=("brief", "normal", "full"), default="normal")
     report.add_argument("--as-of", default="")
+    report.add_argument('--knowledge-as-of', default='', help='Timezone-aware observation cutoff for explicit fact revisions')
     report.add_argument("--start", default="")
     report.add_argument("--end", default="")
     report.add_argument("--subject-id", default="")
@@ -122,7 +125,11 @@ def main(argv: Iterable[str] = ()) -> int:
     report.add_argument("--summary-json", action="store_true")
 
     capture = subparsers.add_parser("capture")
-    capture.add_argument("--input", required=True)
+    capture.add_argument("--input", default='')
+    capture.add_argument('--reconcile-receipt', default='')
+    capture.add_argument('--receipt-date', default='')
+    capture.add_argument('--expected-content-sha256', default='')
+    capture.add_argument("--expected-sha256", default=None, help="Explicit receipt revision requires receipt_id and the prior hash")
     capture.add_argument("--apply", action="store_true")
     capture.add_argument("--json", action="store_true")
 
@@ -158,8 +165,15 @@ def main(argv: Iterable[str] = ()) -> int:
     root = repository_root(args.root)
     if args.command == "report":
         return _report(args, root)
+    if args.command == 'capture' and args.reconcile_receipt:
+        if args.apply:
+            raise KnowledgeHubError('reconciliation cannot apply')
+        from .provider_reconcile import reconcile_activity
+        payload = reconcile_activity(root, args.reconcile_receipt, args.receipt_date, args.expected_content_sha256)
+        print(json.dumps(payload, ensure_ascii=False))
+        return 0 if payload['status'] != 'CONFLICT' else 2
     if args.command == "capture":
-        payload = capture_activity(root, pathlib.Path(args.input).expanduser(), apply=args.apply)
+        payload = capture_activity(root, pathlib.Path(args.input).expanduser(), apply=args.apply, expected_sha256=args.expected_sha256)
         print(json.dumps(payload, ensure_ascii=False, indent=2 if args.json else None))
         return 0
     if args.command == "record":
@@ -196,5 +210,7 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (KnowledgeHubError, json.JSONDecodeError, OSError, ValueError) as exc:
-        print(json.dumps({"schema_version": 2, "status": "needs-fix", "error": str(exc)}, ensure_ascii=False))
+        print(json.dumps({"schema_version": 2, "status": "needs-recovery-review" if isinstance(exc, PrivateWriteUncertain) else "needs-fix",
+                          "applied": None if isinstance(exc, PrivateWriteUncertain) else False,
+                          "error": str(exc)}, ensure_ascii=False))
         raise SystemExit(1) from exc

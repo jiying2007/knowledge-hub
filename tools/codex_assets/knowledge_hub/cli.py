@@ -91,6 +91,13 @@ def _capture_parser(subparsers: Any) -> None:
     parser.add_argument("--source", default="")
     parser.add_argument("--kind", default="")
     parser.add_argument("--provider-archive", action="store_true")
+    parser.add_argument('--reconcile-operation', default='')
+    parser.add_argument('--expected-content-sha256', default='')
+    parser.add_argument("--governed-provider", action="store_true", help="Freeze Provider plan and enforce current-thread apply gate")
+    parser.add_argument('--reconcile-plan', default='')
+    parser.add_argument("--provider-operation", choices=("archive", "activity-capture"), default="archive")
+    parser.add_argument("--policy-root", default=str(pathlib.Path.home() / "codex"))
+    parser.add_argument("--provider-capabilities", action="store_true")
     parser.add_argument("--project", default="")
     parser.add_argument("--sanitized", action="store_true")
     parser.add_argument("--tool-asset-candidate", default="")
@@ -156,6 +163,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _run_provider_archive(args: Any, parser: Any) -> int:
     from .provider_archive import run as run_provider_archive
+    if args.provider_capabilities:
+        from .provider_capabilities import capabilities
+        print(json.dumps(capabilities(repository_root(args.root)), ensure_ascii=False))
+        return 0
 
     if (args.scan_tool_assets or args.tool_asset_session_start or args.tool_asset_session_close
             or args.tool_asset_candidate or args.target != "inbox" or args.status != "reviewing"
@@ -176,7 +187,20 @@ def _tool_validation(args: Any) -> Dict[str, str]:
 def main(argv: Sequence[str] = ()) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
-    if args.command == "capture" and args.provider_archive:
+    if args.command == "capture" and args.governed_provider:
+        from .governed_provider_cli import main as governed_main
+
+        if args.provider_archive or args.provider_capabilities or args.apply and args.dry_run:
+            parser.error("governed Provider cannot combine with another Provider mode or conflicting apply/dry-run")
+        forwarded = ["--root", args.root or str(repository_root()), "--policy-root", args.policy_root,
+                     "--operation", args.provider_operation, "--source", args.source,
+                     "--project", args.project, "--kind", args.kind or "validation"]
+        if args.apply:
+            forwarded.append("--apply")
+        if args.reconcile_plan:
+            forwarded += ['--reconcile-plan', args.reconcile_plan]
+        return governed_main(forwarded)
+    if args.command == "capture" and (args.provider_archive or args.provider_capabilities):
         return _run_provider_archive(args, parser)
     if args.apply and args.dry_run:
         parser.error("--apply and --dry-run are mutually exclusive")

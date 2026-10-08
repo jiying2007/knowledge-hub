@@ -1,17 +1,19 @@
 import json
+import shutil
 
 import pytest
 
 from tools.codex_assets.knowledge_hub import obsidian_view
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, repository_root, registry_items, resolve_inside
 from tools.codex_assets.knowledge_hub.obsidian_view import (
     build_obsidian_views,
     obsidian_runtime_acceptance,
 )
 
 
-def test_repository_obsidian_views_are_idempotent():
-    payload = build_obsidian_views(repository_root())
+def test_repository_obsidian_views_are_idempotent(tmp_path):
+    root = repository_root()
+    payload = build_obsidian_views(root)
     assert payload["status"] == "planned"
     assert payload["content_mirror_drift_count"] == 0
     assert payload["missing_file_count"] == 0
@@ -21,7 +23,20 @@ def test_repository_obsidian_views_are_idempotent():
     assert payload["obsidian_runtime_status"] == "not-validated"
     assert payload["moc_count"] == 4
 
-    applied = build_obsidian_views(repository_root(), apply=True)
+    # The real repository is read-only even for a no-change apply. Freeze only
+    # the declared registry/views/bodies into an owned fixture for writer tests.
+    fixture = tmp_path / 'hub'
+    for directory in ('registry', 'indexes'):
+        shutil.copytree(root / directory, fixture / directory)
+    for item in registry_items(root):
+        if not item.get('path'):
+            continue
+        source = resolve_inside(root, item['path'])
+        if source.is_file():
+            target = fixture / item['path']
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    applied = build_obsidian_views(fixture, apply=True)
     assert applied["status"] == "no-change"
     assert applied["transaction"]["changed_count"] == 0
 

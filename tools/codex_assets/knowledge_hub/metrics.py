@@ -13,6 +13,7 @@ from .common import (
 )
 from .artifact_governance import evaluate_artifact_governance
 from .lifecycle_metrics import lifecycle_operating_metrics
+from .metrics_windows import finish_metrics
 from .output_contract import status_contract
 from .retrieval_telemetry import (
     IMPLEMENTATION_GENERATION,
@@ -512,7 +513,7 @@ def local_metrics(
             ),
         },
     }
-    return payload
+    return finish_metrics(payload, search_rows, context_rows, feedback_rows, as_of or dt.date.today())
 
 
 def local_metrics_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
@@ -578,4 +579,5 @@ def local_metrics_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
             "automatic_delete": False,
         },
         "adoption": payload.get("adoption", {}),
+        "recent_health": payload.get("recent_health", {}),
     }

@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import contextlib
 import fcntl
+import json
 import os
 import pathlib
 import sqlite3
 import time
 import uuid
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Set
 from .common import KnowledgeHubError, compact_json, ensure_private_directory, ensure_private_file, read_repository_bytes_bounded, utc_timestamp
 from .search_candidate_io import read_candidate_payloads
+from .query_candidate_lanes import read_candidate_lanes
+from .query_concepts import ConceptQuery
 from .search_core import (
     FULL_REBUILD_DEPENDENCIES,
     FileState,
@@ -30,7 +33,6 @@ from .search_core import (
     _signature,
     _source_roots,
     _term_variants,
-    query_terms,
     search_tokens,
 )
 
@@ -48,13 +50,48 @@ class SearchIndex:
             TOKEN_CACHE_SCHEMA_VERSION
         )
         self._token_cache_stats: Dict[str, Any] = {}
+        self._concept_signature = ''
+        self._concept_vocabulary: Dict[str, int] = {}
+        self._concept_document_count = 0
+        self._concept_roles: Dict[str, Set[str]] = {}
+
+    def concept_query(self, query: str):
+        from .query_concepts import corpus_lexicon, extract_concepts, project_routes, MAX_METADATA_BYTES, MAX_ITEMS
+        from .query_topic_roles import scoped_topics
+        try:
+            routes = project_routes(self.root)
+            probe = extract_concepts(query, {}, 0, routes)
+        except KnowledgeHubError as error:
+            raise SearchBoundaryError(str(error)) from error
+        if not probe.enabled:
+            return probe
+        signature = self._current_signature()
+        if signature != self._concept_signature or not self._concept_signature:
+            with contextlib.closing(sqlite3.connect(str(self.path))) as connection:
+                headers = connection.execute('select count(*), sum(length(cast(item_json as blob))) from documents').fetchone()
+                if headers[0] > MAX_ITEMS or (headers[1] or 0) > MAX_METADATA_BYTES:
+                    raise SearchBoundaryError('concept metadata exceeds corpus budget')
+                try:
+                    items = [json.loads(row[0]) for row in connection.execute('select item_json from documents')]
+                except (ValueError, TypeError) as error:
+                    raise SearchBoundaryError('concept index metadata is invalid') from error
+            try:
+                self._concept_vocabulary, self._concept_document_count = corpus_lexicon(items)
+                self._concept_roles = scoped_topics(items)
+            except KnowledgeHubError as error:
+                raise SearchBoundaryError(str(error)) from error
+            self._concept_signature = signature
+        try:
+            return extract_concepts(query, self._concept_vocabulary, self._concept_document_count, routes, self._concept_roles)
+        except KnowledgeHubError as error:
+            raise SearchBoundaryError(str(error)) from error
 
     def _current_signature(self) -> str:
         if not self.path.exists():
             return ""
         try:
             ensure_private_file(self.path)
-            with sqlite3.connect(str(self.path)) as connection:
+            with contextlib.closing(sqlite3.connect(str(self.path))) as connection:
                 row = connection.execute("select value from meta where key='signature'").fetchone()
                 schema = connection.execute("select value from meta where key='schema_version'").fetchone()
             if not row or not schema or int(schema[0]) != INDEX_SCHEMA_VERSION:
@@ -206,7 +243,7 @@ class SearchIndex:
             return None
         try:
             ensure_private_file(self.path)
-            with sqlite3.connect(str(self.path)) as connection:
+            with contextlib.closing(sqlite3.connect(str(self.path))) as connection:
                 schema = connection.execute(
                     "select value from meta where key='schema_version'"
                 ).fetchone()
@@ -514,30 +551,27 @@ class SearchIndex:
         self,
         query: str,
         candidate_limit: Optional[int] = None,
+        concept_plan: Optional[ConceptQuery] = None,
     ) -> List[Dict[str, Any]]:
         limit = self.CANDIDATE_LIMIT if candidate_limit is None else candidate_limit
-        return self._query_candidates(query, limit, authority_only=False)
+        return self._query_candidates(query, limit, authority_only=False, concept_plan=concept_plan)
 
     def authority_candidates(
         self,
         query: str,
         candidate_limit: int = SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+        concept_plan: Optional[ConceptQuery] = None,
     ) -> List[Dict[str, Any]]:
         """Preserve exact/current/active matches before the generic FTS cutoff."""
-        return self._query_candidates(query, candidate_limit, authority_only=True)
+        return self._query_candidates(query, candidate_limit, authority_only=True, concept_plan=concept_plan)
 
     def _query_candidates(
         self, query: str, candidate_limit: int, *, authority_only: bool,
+        concept_plan: Optional[ConceptQuery] = None,
     ) -> List[Dict[str, Any]]:
-        expanded_query = " ".join(
-            variant
-            for term in query_terms(query)
-            for variant in _term_variants(term)
-        )
-        tokens = search_tokens(expanded_query, maximum=64)
-        if not tokens:
+        expression = self._candidate_expression(query, concept_plan)
+        if not expression:
             return []
-        expression = " OR ".join('"{}"'.format(value.replace('"', '""')) for value in tokens)
         connection = sqlite3.connect(str(self.path))
         connection.row_factory = sqlite3.Row
         try:
@@ -547,3 +581,32 @@ class SearchIndex:
             )
         finally:
             connection.close()
+
+    def candidate_lanes(self, query: str, candidate_limit: int, authority_limit: int,
+                        concept_plan: Optional[ConceptQuery] = None):
+        expression = self._candidate_expression(query, concept_plan)
+        if not expression:
+            return [], 0
+        with contextlib.closing(sqlite3.connect(str(self.path))) as connection:
+            connection.row_factory = sqlite3.Row
+            return read_candidate_lanes(connection, expression, query.strip().lower(),
+                                        candidate_limit, authority_limit)
+
+    def _candidate_expression(self, query: str, concept_plan: Optional[ConceptQuery]) -> str:
+        plan = concept_plan or self.concept_query(query)
+        expanded_query = " ".join(
+            variant
+            for term in plan.terms
+            for variant in _term_variants(term)
+        )
+        tokens = search_tokens(expanded_query, maximum=64)
+        if not tokens:
+            return ''
+        expression = " OR ".join('"{}"'.format(value.replace('"', '""')) for value in tokens)
+        anchors = [anchor for anchor in plan.anchors if anchor not in plan.project_anchors]
+        if plan.shared_policy_context and plan.shared_terms and plan.project_terms:
+            anchors = list(plan.global_anchors)
+        if (plan.enabled or plan.enforce_constraints) and anchors:
+            required = ' AND '.join('"{}"'.format(value.replace('"', '""')) for value in anchors)
+            expression = '(' + expression + ') AND (' + required + ')'
+        return expression

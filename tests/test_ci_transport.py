@@ -109,5 +109,5 @@ def test_ci_transport_skips_only_recursive_final_gate_pytest():
         extra_env={"KNOWLEDGE_FINAL_GATE_INNER_REGRESSION": "1"},
     )
 
-    assert result.returncode == 0, result.stderr
-    assert "nested final-gate pytest skipped" in result.stdout
+    assert result.returncode == 77, result.stderr
+    assert "delegated" in result.stdout and "no successful parent evidence" in result.stdout

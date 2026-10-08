@@ -15,6 +15,9 @@ from .retrieval import (
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="knowledge-retrieval-benchmark.sh", description="Run known-answer top-k retrieval evaluation.")
     parser.add_argument("--cases", default="", help="Optional cases JSON path.")
+    parser.add_argument("--holdout", action="store_true", help="Report frozen natural-query classes without changing default ranking.")
+    parser.add_argument('--diagnose', action='store_true', help='Development-only bounded query/token/rank diagnostics; requires --holdout')
+    parser.add_argument("--quality-gate", action="store_true", help="Return nonzero when measured holdout quality fails")
     parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--min-hit-rate", type=float, default=0.95)
     parser.add_argument("--min-mrr", type=float, default=0.85)
@@ -27,7 +30,20 @@ def main(argv=None) -> int:
     projection.add_argument("--json", action="store_true")
     projection.add_argument("--summary-json", action="store_true")
     args = parser.parse_args(argv)
+    if args.diagnose and not args.holdout:
+        parser.error('--diagnose requires --holdout')
     root = repository_root()
+    if args.holdout:
+        from .retrieval_holdout import evaluate_holdout, holdout_summary
+        path = pathlib.Path(args.cases).expanduser().resolve() if args.cases else root / "tests/fixtures/retrieval_holdout.json"
+        payload = evaluate_holdout(root, path, diagnose=args.diagnose, top_k=args.top_k, minimum_hit_rate=args.min_hit_rate,
+                                  minimum_mrr=args.min_mrr, minimum_ndcg_at_10=args.min_ndcg_at_10,
+                                  minimum_authority_recall_at_3=args.min_authority_recall_at_3,
+                                  maximum_p95_ms=args.max_p95_ms,
+                                  maximum_index_preparation_ms=args.max_index_preparation_ms,
+                                  maximum_concurrent_p95_ms=args.max_concurrent_p95_ms)
+        print(pretty_json(holdout_summary(payload) if args.summary_json else payload))
+        return 0 if not args.quality_gate or payload['status'] == 'pass' else 1
     cases = pathlib.Path(args.cases).expanduser().resolve() if args.cases else None
     payload = run_retrieval_benchmark_serialized(
         root,

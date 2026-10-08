@@ -89,6 +89,8 @@ def runtime_maintenance_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
                 "incomplete_transactions_pruned", False
             ),
         ),
+        "artifact_catalog":{key:payload.get('artifact_catalog', {}).get(key) for key in
+                            ('status', 'overflow', 'examined_count', 'file_count', 'total_bytes', 'categories')},
     }
 
 
@@ -384,6 +386,7 @@ def plan_runtime_maintenance(
         errors.extend(permission_errors)
     candidates.sort(key=lambda row: str(row["path"]))
     protected.sort(key=lambda row: str(row["path"]))
+    from .runtime_catalog import runtime_catalog
     return {
         "schema_version": 1,
         "action": "runtime-maintenance-plan",
@@ -412,6 +415,7 @@ def plan_runtime_maintenance(
         "protected": protected,
         "error_count": len(errors),
         "errors": errors,
+        "artifact_catalog":runtime_catalog(root, today),
     }
 
 

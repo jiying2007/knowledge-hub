@@ -191,6 +191,7 @@ def _static_registry_instances(
     root: pathlib.Path,
 ) -> Iterable[Tuple[str, str, Any]]:
     contracts = (
+        ("provider-archive-policy-v1", "registry/provider-archive-policy.json"),
         ("command-surface-v1", "registry/command-surface.json"),
         ("engineering-budgets-v1", "registry/engineering-budgets.json"),
         ("artifact-policy-v1", "registry/artifact-policy.json"),

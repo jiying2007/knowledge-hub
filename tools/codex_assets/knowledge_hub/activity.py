@@ -9,11 +9,12 @@ import os
 import pathlib
 import re
 import subprocess
-import tempfile
 from collections import Counter
 from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
-from .common import KnowledgeHubError, load_json, load_jsonl, pretty_json, read_utf8_bounded
+from .common import KnowledgeHubError, load_json, load_jsonl, pretty_json, read_utf8_bounded, file_sha256
+from .private_io import atomic_private_write
+from .activity_versions import version_fields, fact_sha256, resolve_facts
 from .security import scan_secret_text
 
 
@@ -109,7 +110,7 @@ def normalize_item(payload: Mapping[str, Any], *, source_kind: str, source_ref: 
     evidence = _safe_values(payload.get("evidence_refs"), hide_paths=True)
     if status == "done" and verification == "verified" and not evidence:
         raise KnowledgeHubError("verified done item requires evidence_refs")
-    return {
+    result = {
         "schema_version": ITEM_SCHEMA_VERSION,
         "kind": "work-activity-item",
         "item_id": item_id,
@@ -126,6 +127,8 @@ def normalize_item(payload: Mapping[str, Any], *, source_kind: str, source_ref: 
         "source": {"kind": source_kind, "ref": _safe(source_ref, 200)},
         "raw_content_stored": False,
     }
+    result.update(version_fields(payload))
+    return result
 
 
 def normalize_receipt(payload: Mapping[str, Any], *, source_ref: str) -> Dict[str, Any]:
@@ -173,12 +176,14 @@ def collect_work_items(
     *,
     subject_id: str = "",
     project_id: str = "",
+    knowledge_as_of: str = "",
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    selected: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+    selected: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = {}
     invalid_count = 0
     receipt_count = 0
     receipt_root = root / ".tmp/activity/receipts"
-    for path in _json_files(receipt_root):
+    receipt_paths = list(_json_files(receipt_root)) + list(_json_files(root / '.tmp/activity/receipt-history'))
+    for path in receipt_paths:
         try:
             payload = json.loads(read_utf8_bounded(path, 256 * 1024, "activity receipt"))
             if (
@@ -192,9 +197,8 @@ def collect_work_items(
             receipt_count += 1
             for raw in payload["work_items"][:30]:
                 item = normalize_item(raw, source_kind="session-wrap", source_ref=path.stem)
-                item_date = _date(item["activity_date"])
-                if item_date and start <= item_date <= end:
-                    selected[(item["subject_id"], item["project_id"], item["item_id"])] = item
+                key = (item['subject_id'], item['project_id'], item['item_id'])
+                selected.setdefault(key, []).append(item)
         except (KnowledgeHubError, json.JSONDecodeError, OSError):
             invalid_count += 1
     item_root = root / ".tmp/activity/items"
@@ -203,16 +207,20 @@ def collect_work_items(
         try:
             payload = json.loads(read_utf8_bounded(path, 128 * 1024, "work item"))
             item = normalize_item(payload, source_kind="explicit-item", source_ref=path.stem)
-            item_date = _date(item["activity_date"])
-            if item_date and start <= item_date <= end:
-                selected[(item["subject_id"], item["project_id"], item["item_id"])] = item
-                explicit_count += 1
+            key = (item['subject_id'], item['project_id'], item['item_id'])
+            selected.setdefault(key, []).append(item)
+            explicit_count += 1
         except (KnowledgeHubError, json.JSONDecodeError, OSError):
             invalid_count += 1
+    resolved, conflicts, undated = resolve_facts(selected, knowledge_as_of)
+    conflicts = [row for row in conflicts if any(start.isoformat() <= date <= end.isoformat() for date in row['activity_dates'])
+                 and (not subject_id or row['subject_id'] == subject_id)
+                 and (not project_id or row['project_id'] == project_id)]
     rows = [
         item
-        for item in selected.values()
-        if (not subject_id or item["subject_id"] == subject_id)
+        for item in resolved
+        if start.isoformat() <= item['activity_date'] <= end.isoformat()
+        and (not subject_id or item["subject_id"] == subject_id)
         and (not project_id or item["project_id"] == project_id)
     ]
     rows.sort(key=lambda row: (row["activity_date"], row["project_id"], row["item_id"]))
@@ -222,6 +230,10 @@ def collect_work_items(
         "invalid_count": invalid_count,
         "explicit_count": explicit_count,
         "receipt_count": receipt_count,
+        "conflict_count": len(conflicts),
+        "conflicts": conflicts[:MAX_ITEMS],
+        "knowledge_as_of": knowledge_as_of,
+        "undated_as_of_excluded": undated,
         # Legacy receipts stay outside the v2 trust boundary.  Count filenames
         # for diagnostics only; do not open or convert their content.
         "legacy_receipt_file_count": sum(1 for _ in _json_files(root / ".tmp/session-receipts")),
@@ -335,6 +347,7 @@ def build_facts(
     project_id: str,
     codex_root: pathlib.Path,
     detail: str,
+    knowledge_as_of: str = '',
 ) -> Dict[str, Any]:
     if scope not in VALID_SCOPES:
         raise KnowledgeHubError("scope must be personal, project or portfolio")
@@ -351,9 +364,13 @@ def build_facts(
         root, range_start, range_end,
         subject_id=effective_subject if scope == "personal" else "",
         project_id=project_id if scope == "project" else "",
+        knowledge_as_of=knowledge_as_of,
     )
     if item_coverage["invalid_count"]:
         warnings.append("部分 v2 活动事项或回执未通过 schema、周期或隐私门禁，已跳过。")
+    if item_coverage['conflict_count']:
+        status = 'needs-review'
+        warnings.append('活动事项存在未确定版本的冲突；冲突事项不计入完成数。')
     if scope == "personal":
         registry_rows: List[Dict[str, Any]] = []
         git_rows: List[Dict[str, Any]] = []
@@ -491,20 +508,7 @@ def render_markdown(facts: Mapping[str, Any]) -> str:
 
 
 def _atomic_write(path: pathlib.Path, content: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=".{}-".format(path.name), dir=str(path.parent))
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(content)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except Exception:
-        try:
-            os.unlink(temporary)
-        except OSError:
-            pass
-        raise
+    atomic_private_write(path, content)
 
 
 def report_stem(period: str, start: dt.date, end: dt.date) -> str:
@@ -530,10 +534,11 @@ def generate_report(
     detail: str,
     output_root: pathlib.Path,
     write: bool,
+    knowledge_as_of: str = '',
 ) -> Dict[str, Any]:
     facts = build_facts(
         root, period=period, scope=scope, as_of=as_of, start=start, end=end,
-        subject_id=subject_id, project_id=project_id, codex_root=codex_root, detail=detail,
+        subject_id=subject_id, project_id=project_id, codex_root=codex_root, detail=detail, knowledge_as_of=knowledge_as_of,
     )
     facts["generated_at"] = dt.datetime.now(tz=report_timezone()).isoformat(timespec="seconds")
     markdown = render_markdown(facts)
@@ -574,7 +579,7 @@ def capture_item(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -
     target = root / ".tmp/activity/items" / item["activity_date"] / "{}.json".format(item["item_id"])
     encoded = pretty_json(item) + "\n"
     if apply:
-        _atomic_write(target, encoded)
+        atomic_private_write(target, encoded, immutable=True)
     return {
         "schema_version": 2,
         "status": "pass",
@@ -587,16 +592,10 @@ def capture_item(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -
 
 
 def _receipt_id(input_path: pathlib.Path, encoded: str) -> str:
-    stem = input_path.stem
-    prefix = "activity-session-receipt-"
-    if stem.startswith(prefix):
-        stem = stem[len(prefix):]
-    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,159}", stem):
-        return stem
-    return "receipt-{}".format(hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16])
+    return "receipt-{}".format(hashlib.sha256(encoded.encode("utf-8")).hexdigest())
 
 
-def capture_receipt(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -> Dict[str, Any]:
+def capture_receipt(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool, expected_sha256=None) -> Dict[str, Any]:
     payload = json.loads(read_utf8_bounded(input_path, 256 * 1024, "activity receipt input"))
     if not isinstance(payload, dict):
         raise KnowledgeHubError("activity receipt input must be an object")
@@ -608,16 +607,33 @@ def capture_receipt(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool
     if any(item["subject_id"] != subject_id for item in receipt["work_items"]):
         raise KnowledgeHubError("receipt subject_id must match local activity configuration")
     encoded = pretty_json(receipt) + "\n"
-    receipt_id = _receipt_id(input_path, encoded)
+    receipt_id = payload.get("receipt_id") or payload.get("session_id") or _receipt_id(input_path, encoded)
+    if not isinstance(receipt_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,159}", receipt_id):
+        raise KnowledgeHubError("receipt identity must be an explicit safe identifier")
+    if expected_sha256 is not None and (not payload.get("receipt_id") or not re.fullmatch(r"[a-f0-9]{64}", expected_sha256)):
+        raise KnowledgeHubError("receipt revision requires receipt_id and valid expected_sha256")
     target = root / ".tmp/activity/receipts" / receipt["session_date"] / "{}.json".format(receipt_id)
+    digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+    actual = file_sha256(target) if target.exists() else ''
+    if expected_sha256 is not None and actual != expected_sha256:
+        raise KnowledgeHubError('receipt revision expected hash conflict')
+    if target.exists() and (expected_sha256 is None and hashlib.sha256(target.read_bytes()).hexdigest() != digest):
+        raise KnowledgeHubError("identity conflict: same receipt identity has different content")
     if apply:
-        _atomic_write(target, encoded)
+        if expected_sha256 is not None and actual and actual != digest:
+            previous = read_utf8_bounded(target, 256 * 1024, 'previous receipt')
+            if hashlib.sha256(previous.encode('utf-8')).hexdigest() != actual:
+                raise KnowledgeHubError('receipt changed before history capture')
+            history = root / '.tmp/activity/receipt-history' / receipt['session_date'] / (receipt_id + '-' + actual + '.json')
+            atomic_private_write(history, previous, immutable=True)
+        atomic_private_write(target, encoded, immutable=True, expected_sha256=expected_sha256)
     return {
         "schema_version": 2,
         "status": "pass",
         "kind": "activity-session-receipt",
         "applied": apply,
         "receipt_id": receipt_id,
+        "item_fingerprints": {item['item_id']:fact_sha256(item) for item in receipt['work_items']},
         "item_count": len(receipt["work_items"]),
         "target": str(target) if apply else "",
         "sha256": hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
@@ -625,12 +641,12 @@ def capture_receipt(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool
     }
 
 
-def capture_activity(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool) -> Dict[str, Any]:
+def capture_activity(root: pathlib.Path, input_path: pathlib.Path, *, apply: bool, expected_sha256=None) -> Dict[str, Any]:
     payload = json.loads(read_utf8_bounded(input_path, 256 * 1024, "activity input"))
     if not isinstance(payload, dict):
         raise KnowledgeHubError("activity input must be an object")
     if payload.get("kind") == "activity-session-receipt":
-        return capture_receipt(root, input_path, apply=apply)
+        return capture_receipt(root, input_path, apply=apply, expected_sha256=expected_sha256)
     return capture_item(root, input_path, apply=apply)
 
 
@@ -680,7 +696,7 @@ def record_item(
     target = root / ".tmp/activity/items" / item["activity_date"] / "{}.json".format(item["item_id"])
     encoded = pretty_json(item) + "\n"
     if apply:
-        _atomic_write(target, encoded)
+        atomic_private_write(target, encoded, immutable=True)
     return {
         "schema_version": 2,
         "status": "pass",

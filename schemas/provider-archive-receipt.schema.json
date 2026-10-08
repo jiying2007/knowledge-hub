@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/provider-archive-receipt-v1",
+  "title": "Provider archive verified receipt",
+  "type": "object",
+  "required": ["schema_version", "status", "persisted"],
+  "properties": {
+    "schema_version": {"const": "knowledge-provider.archive-receipt/v1"},
+    "status": {"enum": ["PLANNED", "ARCHIVED", "ALREADY_ARCHIVED", "BLOCKED"]},
+    "persisted": {"type": "boolean"},
+    "read_only": {"type": "boolean"},
+    "write_performed": {"type": "boolean"},
+    "content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "candidate_status": {"const": "reviewing"},
+    "promotion": {"const": "none"},
+    "active_promoted": {"const": false},
+    "owner_review_performed": {"const": false},
+    "operation_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "item_id": {"type": "string", "maxLength": 128},
+    "transaction_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$"},
+    "trace_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "target": {"type": "string", "maxLength": 512},
+    "reason_code": {"enum": ["policy-invalid", "route-invalid", "source-rejected", "conflict", "persistence-failed"]},
+    "reason": {"type": "string", "maxLength": 256}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"enum": ["PLANNED", "BLOCKED"]}}}, "then": {"properties": {"persisted": {"const": false}, "write_performed": {"const": false}}}},
+    {"if": {"properties": {"status": {"const": "ARCHIVED"}}}, "then": {"properties": {"read_only": {"const": false}, "write_performed": {"const": true}}}},
+    {"if": {"properties": {"status": {"const": "ALREADY_ARCHIVED"}}}, "then": {"properties": {"write_performed": {"const": false}}}},
+    {"if": {"properties": {"status": {"enum": ["ARCHIVED", "ALREADY_ARCHIVED"]}}}, "then": {"required": ["operation_id", "item_id", "target", "content_sha256", "source_sha256", "candidate_status", "write_performed", "promotion", "active_promoted", "owner_review_performed"], "properties": {"persisted": {"const": true}, "promotion": {"const": "none"}, "active_promoted": {"const": false}, "owner_review_performed": {"const": false}}}}
+  ]
+}

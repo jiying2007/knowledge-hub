@@ -83,7 +83,7 @@ def test_v2_item_requires_identity_privacy_and_verified_evidence():
         normalize_item(_item(raw_content_stored=True), source_kind="test", source_ref="case")
 
 
-def test_explicit_item_overrides_receipt_by_stable_identity(tmp_path):
+def test_unversioned_explicit_item_conflicts_with_receipt_by_stable_identity(tmp_path):
     root = _hub(tmp_path / "hub")
     receipt_dir = root / ".tmp/activity/receipts/2026-08-21"
     receipt_dir.mkdir(parents=True)
@@ -99,9 +99,9 @@ def test_explicit_item_overrides_receipt_by_stable_identity(tmp_path):
     item_dir.mkdir(parents=True)
     item_dir.joinpath("item-1.json").write_text(json.dumps(_item(title="显式事项标题")), encoding="utf-8")
     rows, coverage = collect_work_items(root, dt.date(2026, 8, 17), dt.date(2026, 8, 21), subject_id="developer-a")
-    assert len(rows) == 1
-    assert rows[0]["title"] == "显式事项标题"
-    assert rows[0]["source"]["kind"] == "explicit-item"
+    assert rows == []
+    assert coverage['conflict_count'] == 1
+    assert coverage['conflicts'][0]['item_id'] == 'item-1'
     assert coverage["receipt_count"] == 1
 
 
@@ -166,7 +166,8 @@ def test_capture_session_receipt_persists_under_hub_and_is_collectable(tmp_path)
     assert dry["target"] == ""
     applied = capture_activity(root, source, apply=True)
     target = pathlib.Path(applied["target"])
-    assert target == root / ".tmp/activity/receipts/2026-08-21/session-123.json"
+    assert target == root / ".tmp/activity/receipts/2026-08-21" / (applied["receipt_id"] + ".json")
+    assert applied["receipt_id"] == "receipt-" + applied["sha256"]
     assert target.is_file()
     rows, coverage = collect_work_items(
         root, dt.date(2026, 8, 21), dt.date(2026, 8, 21), subject_id="developer-a"

@@ -438,6 +438,8 @@ def test_review_after_as_of_deterministic():
             "past_status_exit": past_status["exit_code"],
             "future_status_exit": future_status["exit_code"],
             "final_gate_exit": final_result["exit_code"],
+            "final_gate_stdout_chars": len(final_result["stdout"]),
+            "final_gate_stderr_tail": [display_path(line) for line in final_result["stderr"][-4000:].splitlines()[-20:]],
             "past_check_today": parsed.get("past_check", {}).get("today"),
             "past_status_today": parsed.get("past_status", {}).get("today"),
             "past_status_final_gate_command": parsed.get("past_status", {}).get("final_gate_command"),

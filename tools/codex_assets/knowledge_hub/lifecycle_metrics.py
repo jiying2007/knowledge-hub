@@ -162,6 +162,13 @@ def lifecycle_operating_metrics(
             "to_archived_count": flow_counts.get("to_archived_count", 0),
             "to_rejected_count": flow_counts.get("to_rejected_count", 0),
             "to_superseded_count": flow_counts.get("to_superseded_count", 0),
+            "decision_count": sum(1 for row in events if row.get("before_status") == "reviewing"
+                                  and row.get("after_status") != "reviewing"
+                                  and window_start <= (_parse_date(row.get("executed_at")) or dt.date.min) <= as_of),
+            "net_queue_growth": flow_counts.get("to_reviewing_count", 0) - sum(
+                1 for row in events if row.get("before_status") == "reviewing"
+                and row.get("after_status") != "reviewing"
+                and window_start <= (_parse_date(row.get("executed_at")) or dt.date.min) <= as_of),
         },
         "decision_lead_time_days": {
             "sample_count": len(lead_times),

@@ -40,6 +40,15 @@ ignore = ["E501"]
 # value is only the static-analysis language floor accepted by the pinned mypy.
 python_version = "3.10"
 files = [
+    "tools/codex_assets/knowledge_hub/store.py",
+    "tools/codex_assets/knowledge_hub/provider_archive.py",
+    "tools/codex_assets/knowledge_hub/metrics_windows.py",
+    "tools/codex_assets/knowledge_hub/review_batches.py",
+    "tools/codex_assets/knowledge_hub/provider_capabilities.py",
+    "tools/codex_assets/knowledge_hub/candidate_duplicates.py",
+    "tools/codex_assets/knowledge_hub/natural_query.py",
+    "tools/codex_assets/knowledge_hub/retrieval_holdout.py",
+    "tools/codex_assets/knowledge_hub/archive_observability.py",
     "tools/codex_assets/knowledge_hub/activity.py",
     "tools/codex_assets/knowledge_hub/common.py",
     "tools/codex_assets/knowledge_hub/agent_runtime.py",

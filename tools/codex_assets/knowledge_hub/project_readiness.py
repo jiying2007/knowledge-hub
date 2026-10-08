@@ -31,7 +31,7 @@ from .project_readiness_validation import (
     validate_existing_validation_body,
     validation_expectations,
 )
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 MANAGED_START = "<!-- knowledge-hub-project-readiness:start -->"
@@ -472,6 +472,7 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
 
 
 def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+    inputs = snapshot_inputs(root)
     projects_doc = load_json(root / "registry/projects.json", {}) or {}
     projects = [dict(row) for row in projects_doc.get("projects", [])]
     if not projects:
@@ -688,7 +689,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         current_source_ids,
     )
     readiness_index = _readiness_index(projects, project_paths)
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     for path, content in rendered_docs.items():
         _add_text(transaction, root, path, content)
     for path, content in readme_updates.items():

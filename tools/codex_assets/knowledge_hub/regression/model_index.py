@@ -444,7 +444,7 @@ def test_source_coverage_date_filename_selection():
     index_result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-index-plan.sh", "--section", "source", "--json"])
     final_result = run_cmd(
         repo,
-        ["rtk", "bash", "tools/knowledge-final-gate.sh", "--json"],
+        ["rtk", "bash", "-lc", "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json"],
     )
     parse_errors = []
     parsed = {}

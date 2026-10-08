@@ -10,6 +10,7 @@ import pathlib
 import re
 import secrets
 import statistics
+import fcntl
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 from .common import KnowledgeHubError, ensure_private_directory, utc_timestamp
@@ -18,6 +19,8 @@ TRACE_ROOT = pathlib.Path(".cache/knowledge-hub/observability")
 TRACEPARENT_RE = re.compile(r"^00-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$")
 MAX_SPAN_ATTRS = 64
 MAX_ATTRIBUTE_CHARS = 1024
+MAX_TRACE_LEDGER_BYTES = 4 * 1024 * 1024
+TRACE_RETENTION_DAYS = 30
 SENSITIVE_ATTRIBUTE_NAMES = {"query", "raw_query", "body", "content", "prompt", "task"}
 
 
@@ -118,6 +121,12 @@ def append_span(root: pathlib.Path, span: Mapping[str, Any]) -> Dict[str, Any]:
     descriptor = os.open(str(path), flags, 0o600)
     os.fchmod(descriptor, 0o600)
     with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        if os.fstat(handle.fileno()).st_size + len((serialized + '\n').encode()) > MAX_TRACE_LEDGER_BYTES:
+            return {"status":"budget-exceeded", "recorded":False, "receipt_sha256":"",
+                    "overflow_count":1, "max_bytes":MAX_TRACE_LEDGER_BYTES,
+                    "retention_days":TRACE_RETENTION_DAYS, "retention_mode":"report-only",
+                    "raw_query_stored":False}
         handle.write(serialized + "\n")
         handle.flush()
         os.fsync(handle.fileno())

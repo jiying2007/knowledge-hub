@@ -267,13 +267,15 @@ output = {
     )[:10],
     "kept_temp": args.keep_temp,
     "result_count": len(results),
+    "executed_result_count": sum(result['status'] != 'delegated-unverified' for result in results),
+    "delegated_result_count": sum(result['status'] == 'delegated-unverified' for result in results),
+    "full_regression_completed": args.suite == 'full' and not args.test and status == 'pass',
     "results": results,
 }
 
 if args.summary_json:
-    failed_results = [
-        result for result in results if result.get("status") != "pass"
-    ]
+    failed_results = [result for result in results if result.get("status") == "fail"]
+    delegated_results = [result for result in results if result.get("status") == "delegated-unverified"]
     summary_output = {
         key: value for key, value in output.items() if key != "results"
     }
@@ -289,6 +291,8 @@ if args.summary_json:
             ],
             "failures": failed_results[:20],
             "failures_truncated": len(failed_results) > 20,
+            "delegated_ids": [str(result.get('id', '')) for result in delegated_results][:20],
+            "delegated_truncated": len(delegated_results) > 20,
         }
     )
     print(json.dumps(summary_output, ensure_ascii=False, indent=2))

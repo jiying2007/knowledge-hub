@@ -21,7 +21,7 @@ from .common import compact_json, ensure_private_directory
 INTERACTIVE_TELEMETRY_SCHEMA_VERSION = 3
 INTERACTION_CONTRACT = "knowledge-retrieval-interaction-v1"
 PERFORMANCE_CONTRACT = "knowledge-retrieval-performance-v2"
-IMPLEMENTATION_GENERATION = "knowledge-retrieval-implementation-20260731-v1"
+IMPLEMENTATION_GENERATION = "knowledge-retrieval-implementation-20261008-v5"
 
 
 def make_interaction_id(

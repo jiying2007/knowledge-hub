@@ -9,6 +9,10 @@ from .common import KnowledgeHubError, pretty_json, repository_root
 from .engineering import evaluate_engineering_contract, run_engineering_quality
 
 
+def _blocked_preflight(checked):
+    return dict(checked, phase='preflight', checks={}, errors=['engineering preflight failed'])
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         prog="knowledge-engineering-check.sh",
@@ -17,15 +21,37 @@ def main(argv=None) -> int:
     parser.add_argument("--root", default="")
     parser.add_argument("--mode", choices=("contract", "full"), default="contract")
     parser.add_argument("--sbom-output", default="")
+    parser.add_argument('--in-place', action='store_true', help='Run against this exact tree; normal full mode captures an isolated dirty snapshot')
+    parser.add_argument('--replay', default='', help='Replay a retained failure snapshot relative to this root; requires original host input hashes')
+    parser.add_argument('--preflight', action='store_true', help='Check input, interpreter, loopback and DNS capabilities without expensive checks')
     output_mode = parser.add_mutually_exclusive_group()
     output_mode.add_argument("--json", action="store_true")
     output_mode.add_argument("--summary-json", action="store_true")
     args = parser.parse_args(argv)
     root = repository_root(args.root or None)
     try:
-        if args.mode == "full":
+        if args.preflight:
+            if args.replay or args.in_place or args.sbom_output:
+                raise KnowledgeHubError('preflight cannot be combined with replay, in-place or SBOM overrides')
+            from .engineering_preflight import preflight
+            payload = preflight(root, verify_capabilities=True)
+        elif args.replay:
+            if args.mode != 'full' or args.in_place or args.sbom_output:
+                raise KnowledgeHubError('replay requires full mode without in-place or SBOM overrides')
+            from .snapshot_retention import replay_failure
+            from .engineering_preflight import preflight
+            checked = preflight(root, verify_capabilities=True)
+            payload = replay_failure(root, args.replay) if checked['status'] == 'pass' else _blocked_preflight(checked)
+        elif args.mode == "full":
             output = pathlib.Path(args.sbom_output).expanduser() if args.sbom_output else None
-            payload = run_engineering_quality(root, sbom_output=output)
+            if args.in_place:
+                from .engineering_preflight import preflight
+                checked = preflight(root, verify_capabilities=True)
+                payload = (run_engineering_quality(root, sbom_output=output) if checked['status'] == 'pass'
+                           else _blocked_preflight(checked))
+            else:
+                from .engineering_snapshot import run_snapshot_engineering
+                payload = run_snapshot_engineering(root, sbom_output=output)
         else:
             payload = evaluate_engineering_contract(root)
     except KnowledgeHubError as exc:
@@ -80,6 +106,9 @@ def main(argv=None) -> int:
                 },
                 "error_count": len(payload.get("errors", [])),
                 "errors": list(payload.get("errors", []))[:20],
+                "preflight": args.preflight or payload.get('phase') == 'preflight',
+                "environment": payload.get('environment', {}),
+                "expensive_checks_started": payload.get('expensive_checks_started'),
             }
         print(pretty_json(projection))
     else:

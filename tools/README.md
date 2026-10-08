@@ -1,6 +1,42 @@
 # Knowledge Hub Tools
 
-所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护和本地 commit，但不会自动 push/merge/release/tag、删除外部资料、发布、提升 active、关闭 owner gate、写 memory、修改源项目或改变远端 Git 状态。
+所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护。commit/push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory 和源项目写入分别需要明确授权。
+
+## 运营与检索闭环
+
+并发快照、活动回执身份、受控 Provider 执行、检查缓存、独立评估与复核消费详见[运营契约](optimization-operations.md)。
+
+日常仍使用 5 条稳定入口。需要深入时选择以下选项：
+
+| 目标 | 已有入口与选项 | 结果边界 |
+| --- | --- | --- |
+| 近期采用健康 | `knowledge-metrics.sh --summary-json` 的 recent_health | 7/30/90 天按当前 contract/generation 统计；累计 adoption 单列，local-only 不成为生产证据 |
+| owner 批次复核 | `knowledge-review-after.sh --batch-size 10 --json` | current-validity、candidate-decision、historical-integrity 分流；正文/镜像、重复候选和证据目录自动准备，人签语义决定 |
+| 新鲜健康概览 | `knowledge-health-summary.sh --refresh-gate --gate-suite quick --summary-json` | 更新本机 quick 快照；full 留在正式工程批次，不补造外部观测 |
+| 自然问句 | `knowledge-search.sh "如何在 Obsidian 查看知识的反向链接和关系图？" --query-mode natural --summary-json --no-telemetry` | 显式选择的问句规范化；否定约束保留，默认 exact 不变 |
+| 评估集对比 | `knowledge-retrieval-benchmark.sh --holdout --cases tests/fixtures/retrieval_unseen.json` | 明确区分 dev/regression 与冻结工程验证；绑定数据集、源码和 evaluator，不是 production-derived 资格 |
+| Provider 权限 | `rtk bash ~/codex/scripts/knowledge-provider.sh status` | 分操作能力与 policy/config 状态；实际调用继续校验 |
+| 事务异常 | `knowledge-recovery-audit.sh --summary-json` | 用完整 writes 和 before/after hash 判断，不能仅看 applied_paths；冲突保留后续用户写入 |
+| 运行时维护 | `knowledge-runtime-maintenance.sh --summary-json` | 默认计划；明确授权后按 scope apply，保护当前索引、未完成事务和 telemetry |
+
+复核 packet 的优先级由当前事实暴露、治理风险和逾期时间决定；只选择有界批次，不自动延后日期、删候选、代签或提升。包内 preparation_ms 是机器准备耗时，不冒充人工审阅耗时。归档输入的摘要/主题标签经过校验保留；近重复只提示关联，回执绑定事务和内容 hash。可通过已有 traceparent 关联归档，不保存 raw query/body；观测失败不使已验证的持久化结果失败。
+
+`knowledge-review-after.sh --json --include-sources --include-owner-gates --triage-limit 500 --batch-size 10` 会同时准备条目与来源的 `evidence_triage.owner_preparation` 交接包。查看 `remaining` 和 `overflow` 确认实际覆盖；声明 Owner 路由与真实签收分开，机器包不产生审阅决定。投影只保留有界元数据，canonical JSON UTF-8 最多 48KiB。
+
+## CI 职责与成本
+
+| 链路 | 责任 | 运行策略 |
+| --- | --- | --- |
+| quality | runtime 兼容、pytest、工程/供应链、恢复、MCP | PR 代表版本，master 完整矩阵；完整验证复用已有 engineering evidence |
+| signed-quality-attestation | 同 master SHA 的 Quality 制品签名与回读 | 只消费受信 push/master 成功 run；subject、policy、verifier 和 evidence digest 分开验证 |
+| security-critical-change-review | 高风险修改的人审绑定 | 不与普通 pytest 合并或跳过；批准绑定精确 head/fingerprint |
+| terminal-closure / hosting reconcile | 仓库托管与终态事实 | 不代替产品、owner 或生产采用验收 |
+| observation / evidence intake / ratchet | 真实外部观测与有界状态推进 | 缺真实 provenance 保持阻断，不用 fixture 刷绿 |
+| recovery-drill | 独立恢复验证 | 保留周期演练和证据，不以同机备份宣称异地恢复 |
+
+优化 CI 先比较同一提交的 job/step 时长、队列等待和重复执行，再调整职责。不能减少安全、exact-head、签名或恢复约束换取速度。关键事务/归档故障分支使用 `coverage --branch` 的定向验证，报告与全仓 statement coverage 分开；不直接让历史分支覆盖率阻断无关修改。
+
+full engineering 的子命令统一使用本仓受限 CI transport。外层完整 pytest 与 full regression 仍执行；递归标记本身不构成成功证据，缺少新鲜父测试证据时返回 delegated-unverified，不给 shared_unit_tests PASS。超时返回结构化失败，不提高时间预算或当作通过。归档只对提交前的 WriteConflict 自动重试至多三次，绑定同一份已检查输入；持久化/回读不确定、脱敏和策略失败均不自动重试。
 
 用户、文档和自动化默认只调用稳定 shell 入口：
 
@@ -97,7 +133,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --summ
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --summary-json --diagnostics
 ```
 
-`registry/command-surface.json` 是 48 个稳定 wrapper 的机器可读目录，按五平面与 daily/maintenance/governance/engineering/internal 分级；daily 固定为这 5 条，复杂度门禁禁止 wrapper 无计划增长。公共 JSON CLI 使用统一 `status_contract`，状态稳定为 `pass / needs-review / needs-fix / blocked`；`--json` 用于完整取证，`--summary-json` 用于有界首屏。
+`registry/command-surface.json` 是稳定 wrapper 的机器可读目录，数量以其中的 `wrapper_baseline` 和 `commands` 为准，按五平面与 daily/maintenance/governance/engineering/internal 分级；daily 固定为这 5 条，复杂度门禁禁止 wrapper 无计划增长。公共 JSON CLI 使用统一 `status_contract`，状态稳定为 `pass / needs-review / needs-fix / blocked`；`--json` 用于完整取证，`--summary-json` 用于有界首屏。
 
 忽略提交的运行时资产使用独立保留策略维护。默认命令只输出精确候选，不删除任何内容；只有显式 `--apply` 才清理旧 schema 搜索索引、超过保留期且状态为 `applied/rolled-back` 的事务目录，或把运行时目录/文件权限收紧到 `0700/0600`。当前索引、未来版本索引、telemetry、未完成/无 journal 事务始终保留，symlink 或特殊文件会阻断整批计划：
 
@@ -116,7 +152,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-runtime-maintenance.sh --scope runtime-
 | contract | `knowledge-engineering-check.sh --mode contract --json` | 只读验证能力型系统 Python 选择、Python 3.8–3.14 CI 覆盖、直接 pin、hash locks、CI least privilege、Action SHA、精确 CI transport allowlist 和 Dependabot |
 | full | `knowledge-engineering-check.sh --mode full --json` | 在 hash-locked Python 3.10–3.14 工程环境执行全包 Ruff correctness、直接 mypy 清单、Bandit 中高风险扫描、pytest 与 full regression/subprocess 合并后的 whole-package statement coverage（总计 ≥75%）、build、Hub check、retrieval、pip-audit 和 SBOM；成功快照绑定 candidate signature |
 
-full regression 属于 Level 2 长门禁，单次非零退出最多重试 1 次；每次 attempt 的退出码和有界 stdout/stderr 都写入工程快照，第二次仍失败才判定门禁失败，成功恢复则显式标记 `recovered_after_retry=true`。其他子门禁不自动重试。full 模式写入的 coverage、build、SBOM 和工程快照都位于 `.tmp/` 或 `.cache/`，不是长期知识或 release artifact。product full gate 要求 24 小时内且 signature 匹配的工程快照；紧接 full engineering 运行时可加 `--reuse-engineering-evidence`，只复用同一签名快照中的 coverage/pytest 与 full regression 通过证据。quick gate 自动复用同一签名的新鲜 coverage/pytest 证据以满足日常反馈时延，但不会取得 full regression 或 `terminal=true` 资格；快照陈旧、签名变化或证据项不完整时一律自动重跑真实测试。
+full regression 属于 Level 2 长门禁，默认不对非零退出、确定性错误或未知失败自动重试；仅明确 transient 的 EAGAIN/EINTR 异常或调用者显式分类的退出码可在既定预算内重试。每次 attempt 的退出码、错误分类和有界 stdout/stderr 都写入工程快照，成功恢复则显式标记 `recovered_after_retry=true`，预算耗尽仍阻断。full 模式写入的 coverage、build、SBOM 和工程快照都位于 `.tmp/` 或 `.cache/`，不是长期知识或 release artifact。product full gate 要求 24 小时内且 signature 匹配的工程快照；紧接 full engineering 运行时可加 `--reuse-engineering-evidence`，只复用同一签名快照中的 coverage/pytest 与 full regression 通过证据。quick gate 自动复用同一签名的新鲜 coverage/pytest 证据以满足日常反馈时延，但不会取得 full regression 或 `terminal=true` 资格；快照陈旧、签名变化或证据项不完整时一律自动重跑真实测试。
 
 ## Agent 运行时只读入口
 

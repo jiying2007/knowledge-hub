@@ -15,7 +15,6 @@ import os
 import pathlib
 import re
 import stat
-import subprocess
 from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 import yaml
@@ -538,12 +537,11 @@ def run_rtk(
     environment = os.environ.copy()
     if extra_env:
         environment.update({str(key): str(value) for key, value in extra_env.items()})
-    completed = subprocess.run(
+    from .bounded_process import run_bounded
+
+    completed, output_truncated = run_bounded(
         full,
         cwd=str(root),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
         timeout=timeout,
         env=environment,
     )
@@ -554,7 +552,11 @@ def run_rtk(
         "stdout": completed.stdout,
         "stderr": completed.stderr,
         "duration_sec": round(duration, 3),
+        "output_truncated": output_truncated,
+        "execution_status": "passed" if completed.returncode == 0 else "failed",
     }
+    if output_truncated:
+        raise KnowledgeHubError("command output exceeded bounded capture budget: {}".format(result["command"]))
     if completed.returncode not in accepted_exit_codes:
         raise KnowledgeHubError(
             "command failed ({}): {}\n{}".format(completed.returncode, result["command"], completed.stderr.strip())

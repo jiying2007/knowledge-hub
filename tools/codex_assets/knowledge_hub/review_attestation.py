@@ -16,7 +16,7 @@ from .common import (
     resolve_inside,
 )
 from .model import assert_transition
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 FORM_KIND = "content-review-attestation"
@@ -229,6 +229,7 @@ def generate_review_form(
 ) -> Dict[str, Any]:
     if not confirm_attestation:
         raise KnowledgeHubError("--confirm-attestation is required after an explicit human decision")
+    inputs = snapshot_inputs(root)
     context = _item_context(root, item_id, target_status)
     if not expected_item_sha256:
         raise KnowledgeHubError("--expected-sha256 is required")
@@ -304,7 +305,7 @@ def generate_review_form(
     encoded = encode_jsonl([form])
     if target.exists() and target.read_text(encoding="utf-8") != encoded:
         raise KnowledgeHubError("review attestation output already exists with different content: {}".format(relative))
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(relative, encoded, expected_sha256=file_sha256(target) if target.exists() else "")
     result: Dict[str, Any] = {
         "schema_version": 1,

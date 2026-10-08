@@ -15,7 +15,7 @@ from .common import (
     render_markdown,
     split_frontmatter,
 )
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 MANAGED_START = "<!-- pcr02-owner-device-release-validation:start -->"
@@ -295,6 +295,7 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
 
 
 def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+    inputs = snapshot_inputs(root)
     packet_path = root / OWNER_PACKET_PATH
     if not packet_path.exists() or file_sha256(packet_path) != OWNER_PACKET_SHA256:
         raise KnowledgeHubError("PCR02 specialized owner Packet is missing or hash-mismatched")
@@ -305,7 +306,7 @@ def harden_pcr02_validation(root: pathlib.Path, today: dt.date, apply: bool = Fa
     missing_ids = sorted(set(TARGETS) - set(by_id))
     if missing_ids:
         raise KnowledgeHubError("missing PCR02 candidates: {}".format(", ".join(missing_ids)))
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     rows: List[Dict[str, Any]] = []
     for item_id, contract in TARGETS.items():
         original_item = by_id[item_id]

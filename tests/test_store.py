@@ -1,6 +1,7 @@
 import json
 import fcntl
 import multiprocessing
+import os
 
 import pytest
 
@@ -23,6 +24,41 @@ def _hold_repository_lock(lock_path, ready, release):
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
+def _terminate_at_replace(root, phase):
+    transaction = RepositoryTransaction(root, 'process-exit')
+    transaction.add_text('one.txt', 'after\n')
+    original = store_module.os.replace
+
+    def replace(source, target):
+        if str(target) == str(root / 'one.txt') and phase == 'before':
+            os._exit(73)
+        original(source, target)
+        if str(target) == str(root / 'one.txt') and phase == 'after':
+            os._exit(73)
+
+    store_module.os.replace = replace
+    transaction.apply()
+
+
+@pytest.mark.parametrize('phase', ['before', 'after'])
+def test_hard_exit_is_reconciled_and_later_user_changes_are_protected(tmp_path, phase):
+    target = tmp_path / 'one.txt'
+    target.write_text('before\n')
+    child = multiprocessing.Process(target=_terminate_at_replace, args=(tmp_path, phase))
+    child.start()
+    child.join(10)
+    assert child.exitcode == 73
+    audit = audit_transactions(tmp_path)['rows'][0]
+    assert audit['recoverable']
+    assert audit['reconciliation'][0]['state'] == phase
+    if phase == 'after':
+        assert audit['applied_paths'] == ['one.txt']
+        target.write_text('later-user-write\n')
+        conflict = audit_transactions(tmp_path)['rows'][0]
+        assert not conflict['recoverable'] and conflict['conflict_paths'] == ['one.txt']
+        assert target.read_text() == 'later-user-write\n'
+
+
 def test_transaction_apply_is_idempotent(tmp_path):
     transaction = RepositoryTransaction(tmp_path, "apply")
     transaction.add_text("nested/a.txt", "value\n")
@@ -33,6 +69,53 @@ def test_transaction_apply_is_idempotent(tmp_path):
     repeated = RepositoryTransaction(tmp_path, "repeat")
     repeated.add_text("nested/a.txt", "value\n")
     assert repeated.apply().status == "no-change"
+
+
+def test_original_snapshot_cannot_be_replaced_by_late_hash(tmp_path):
+    from tools.codex_assets.knowledge_hub.common import file_sha256
+
+    target = tmp_path / 'registry/items.jsonl'
+    target.parent.mkdir()
+    target.write_text('old\n')
+    snapshot = {'registry/items.jsonl':file_sha256(target)}
+    target.write_text('another-successful-write\n')
+    transaction = RepositoryTransaction(tmp_path, expected_inputs=snapshot)
+    transaction.add_text('registry/items.jsonl', 'stale-snapshot\n', expected_sha256=file_sha256(target))
+    with pytest.raises(KnowledgeHubError, match='snapshot changed'):
+        transaction.apply()
+    assert target.read_text() == 'another-successful-write\n'
+
+
+def test_failure_after_replace_before_journal_is_rolled_back(tmp_path, monkeypatch):
+    target = tmp_path / 'one.txt'
+    target.write_text('before\n')
+    transaction = RepositoryTransaction(tmp_path, 'replace-window')
+    transaction.add_text('one.txt', 'after\n')
+    original = store_module._fsync_directory
+    injected = False
+
+    def sync(path):
+        nonlocal injected
+        if path == tmp_path and not injected:
+            injected = True
+            raise OSError('failure after rename')
+        return original(path)
+
+    monkeypatch.setattr(store_module, '_fsync_directory', sync)
+    with pytest.raises(KnowledgeHubError):
+        transaction.apply()
+    assert target.read_text() == 'before\n'
+    assert incomplete_transactions(tmp_path) == []
+
+
+@pytest.mark.parametrize('value', ['user-write\n', 'intended\n'])
+def test_expected_missing_target_refuses_interleaved_creation(tmp_path, value):
+    transaction = RepositoryTransaction(tmp_path, expected_inputs={})
+    transaction.add_text('new.txt', 'intended\n')
+    (tmp_path / 'new.txt').write_text(value)
+    with pytest.raises(KnowledgeHubError, match='no longer missing'):
+        transaction.apply()
+    assert (tmp_path / 'new.txt').read_text() == value
 
 
 def test_transaction_rolls_back_partial_apply(tmp_path, monkeypatch):

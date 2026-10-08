@@ -22,7 +22,7 @@
       "required": ["interaction_contract", "performance_contract", "implementation_generation", "interactive_telemetry_schema_version", "feedback_schema_version"],
       "properties": {
         "implementation_generation": {
-          "const": "knowledge-retrieval-implementation-20260731-v1"
+          "const": "knowledge-retrieval-implementation-20261008-v5"
         }
       }
     },

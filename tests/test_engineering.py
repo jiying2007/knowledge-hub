@@ -180,6 +180,18 @@ def test_quality_command_fails_after_retry_budget(tmp_path, monkeypatch):
     assert [attempt["status"] for attempt in payload["attempts"]] == ["fail", "fail"]
 
 
+def test_quality_timeout_is_a_structured_failure_and_transport_is_bound(tmp_path, monkeypatch):
+    import subprocess
+
+    def timeout(*args, **kwargs):
+        assert kwargs['extra_env']['PATH'].startswith(str(tmp_path / 'tools/ci'))
+        raise subprocess.TimeoutExpired('bounded-quality-command', 1)
+
+    monkeypatch.setattr(engineering, 'run_rtk', timeout)
+    payload = engineering._run_quality_command(tmp_path, ('python', '-m', 'pytest'), 1)
+    assert payload['status'] == 'fail' and payload['attempt_count'] == 1
+
+
 def test_coverage_report_recollection_recovers_and_preserves_initial_evidence(tmp_path, monkeypatch):
     calls = []
 
@@ -194,8 +206,9 @@ def test_coverage_report_recollection_recovers_and_preserves_initial_evidence(tm
         }
 
     monkeypatch.setattr(engineering, "_run_quality_command", fake_run)
-    initial = {"status": "fail", "error": "first coverage report failed"}
-    payload = engineering._recover_coverage_report(tmp_path, "python", initial)
+    initial = {"status": "fail", "error": "No data to report."}
+    payload = engineering._recover_coverage_report(tmp_path, "python", initial,
+        {'coverage':{'status':'pass'}, 'full_regression':{'status':'pass'}})
 
     assert payload["status"] == "pass"
     assert payload["recovered_after_recollection"] is True
@@ -234,7 +247,8 @@ def test_coverage_report_recollection_remains_fail_closed(tmp_path, monkeypatch)
     payload = engineering._recover_coverage_report(
         tmp_path,
         "python",
-        {"status": "fail", "error": "first coverage report failed"},
+        {"status": "fail", "error": "No data to report."},
+        {'coverage':{'status':'pass'}, 'full_regression':{'status':'pass'}},
     )
 
     assert payload["status"] == "fail"

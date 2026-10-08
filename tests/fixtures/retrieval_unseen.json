@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "dataset_role": "frozen-validation",
+  "used_for_tuning": false,
+  "production_derived": false,
+  "provenance": "人工构造的独立工程案例；冻结后不得用于调参或修改 gold；不代表真实用户或生产资格。",
+  "split": "cross-project-query-class",
+  "frozen_cases_sha256": "2de4efe0561007851d540e4d4647095cf915bb769dcec33954300773e72641f1",
+  "cases": [
+    {"id":"unseen-asan-en", "query_class":"mixed", "query":"ASAN address sanitizer 内存越界调试", "expected_ids":["embedded-asan-debug-guide-20260629"]},
+    {"id":"unseen-charge-pin", "query_class":"identifier", "query":"GD32L235 PA12 快慢充兼容", "expected_ids":["gd32l235-pa12-fast-slow-charge-compatibility-20260713"]},
+    {"id":"unseen-release-version", "query_class":"version", "query":"GD32L235 v1.1.38 NAS 正式发布归档", "expected_ids":["gd32l235-v1-1-38-nas-release-20260718"]},
+    {"id":"unseen-display-register", "query_class":"mixed", "query":"ST77912 MI_FB framebuffer 分工决策", "expected_ids":["pcr02-st77912-fb-mi-fb-boundary-decision-20260711"]},
+    {"id":"unseen-obsidian-alias", "query_class":"synonym", "query":"Obsidian 双向链接关系图集成", "expected_ids":["knowledge-hub-obsidian-integration-20260713"]},
+    {"id":"unseen-authority", "query_class":"authority-conflict", "query":"Knowledge Hub 统一知识控制面", "expected_ids":["knowledge-hub-root"], "forbidden_ids":["knowledge-hub-readiness-profile-20260713"]},
+    {"id":"unseen-unknown", "query_class":"no-answer", "query":"zzunseenasteroidprotocol867234", "expected_zero_hit":true},
+    {"id":"unseen-unknown-negation", "query_class":"negation-no-answer", "query":"不要 zzunseenvolcanoplatform793241", "expected_zero_hit":true}
+  ]
+}

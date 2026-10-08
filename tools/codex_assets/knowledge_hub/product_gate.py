@@ -17,12 +17,14 @@ from .common import (
     working_tree_signature,
 )
 from .maturity import evaluate_maturity_axes
-from .product_gate_parallel import collect_parallel_results
+from .product_gate_parallel import collect_parallel_results, attach_command_timeout_diagnostics
 from .product_gate_support import (
     _candidate_integrity as _candidate_integrity,
     _engineering_quality_state as _engineering_quality_state,
+    _full_regression_verified as _full_regression_verified,
     _git_delivery_state as _git_delivery_state,
     _project_readiness as _project_readiness,
+    _regression_execution_summary as _regression_execution_summary,
     _restore_state as _restore_state,
     _source_runtime_ready as _source_runtime_ready,
     _unit_test_evidence_reuse_mode as _unit_test_evidence_reuse_mode,
@@ -146,6 +148,8 @@ def run_product_gate(
                 "status": "pass",
                 "suite": "full",
                 "full_regression_executed": True,
+                "full_regression_completed": True,
+                "delegated_result_count": 0,
                 "evidence_source": "fresh-engineering-snapshot",
             }
         else:
@@ -224,7 +228,7 @@ def run_product_gate(
         or engineering_quality.get("fresh", False),
         "shared_unit_tests": unit_result["exit_code"] == 0,
         "full_regression": regression_suite != "full"
-        or (regression_result["exit_code"] == 0 and regression_payload.get("status") == "pass"),
+        or _full_regression_verified(regression_result, regression_payload),
         "git_diff_check": diff_result["exit_code"] == 0,
         "candidate_integrity": candidate_integrity["unchanged"],
         "transaction_recovery": not incomplete,
@@ -396,6 +400,7 @@ def run_product_gate(
         "engineering_contract": engineering_contract,
         "engineering_quality": engineering_quality,
     }
+    attach_command_timeout_diagnostics(checks, results)
     blocker_metadata = {
         "knowledge_check": ("knowledge-check-failed", "governance"),
         "product_status": ("product-status-failed", "governance"),
@@ -621,10 +626,12 @@ def run_product_gate(
             "status_technical_ready": False,
             "status_technical_readiness_reason": "knowledge-status 只声明控制面与 source runtime；产品技术就绪仅由本 final gate 全部 hard_checks 判定。",
             "unit_summary": unit_result.get("stdout", "").strip().splitlines()[-1] if unit_result.get("stdout", "").strip() else "",
+            "unit_evidence_status": unit_result.get("evidence_status", "passed" if unit_result["exit_code"] == 0 else "failed"),
             "full_regression": {
                 "status": regression_payload.get("status", "unparseable"),
                 "suite": regression_suite,
                 "full_regression_executed": regression_suite == "full",
+                **_regression_execution_summary(regression_payload, regression_suite, hard_checks['full_regression']),
                 "result_count": regression_payload.get("result_count", 0),
                 "slowest_results": regression_payload.get("slowest_results", []),
                 "command": regression_result.get("command", ""),

@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import sys
+from typing import Any, Dict
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -20,10 +21,40 @@ parser.add_argument("--window-days", type=int, default=30, help="Near-due window
 parser.add_argument("--source-window-days", type=int, default=30, help="Near-due window for registered sources.")
 parser.add_argument("--include-sources", action="store_true", help="Include near-due source detail rows.")
 parser.add_argument("--include-owner-gates", action="store_true", help="Include open owner gate detail rows.")
+parser.add_argument("--batch-size", type=int, default=10, help="Bound each owner work packet to 1-50 items.")
+parser.add_argument("--triage-limit", type=int, default=100, help="Bound evidence preparation details to 1-500 rows; never approves review.")
+parser.add_argument("--consume-item", default="", help="Record an explicit packet consumption decision")
+parser.add_argument("--decision", choices=("accepted", "deferred", "changes-requested"))
+parser.add_argument("--reviewer", default="")
+parser.add_argument("--evidence-ref", default="")
+parser.add_argument("--body-sha256", default="")
+parser.add_argument("--next-review-at", default="")
+parser.add_argument("--review-seconds", type=float, default=None)
+parser.add_argument('--review-event-id', default='')
+parser.add_argument("--apply", action="store_true")
 args = parser.parse_args(argv)
+if args.consume_item:
+    from .review_consumption_cli import main as consumption_main
+
+    forwarded = ['--root', str(root), '--item-id', args.consume_item, '--decision', args.decision or '',
+                 '--reviewer', args.reviewer, '--evidence-ref', args.evidence_ref, '--body-sha256', args.body_sha256,
+                 '--next-review-at', args.next_review_at]
+    if args.review_seconds is not None:
+        forwarded += ['--review-seconds', str(args.review_seconds)]
+    if args.review_event_id:
+        forwarded += ['--review-event-id', args.review_event_id]
+    if args.apply:
+        forwarded.append('--apply')
+    raise SystemExit(consumption_main(forwarded))
+if args.apply:
+    parser.error('--apply requires --consume-item; reports remain read-only')
 
 if args.window_days < 0:
     parser.error("--window-days must be >= 0")
+if not 1 <= args.batch_size <= 50:
+    parser.error("--batch-size must be 1-50")
+if not 1 <= args.triage_limit <= 500:
+    parser.error("--triage-limit must be 1-500")
 if args.source_window_days < 0:
     parser.error("--source-window-days must be >= 0")
 
@@ -127,6 +158,12 @@ try:
 except Exception as exc:
     errors.append(f"cannot read registry/sources.json: {exc}")
     sources = []
+
+# The metadata checker also reports retired provenance review dates. Include
+# its ledger without restoring these sources as current knowledge entrances.
+retired_sources_path = root / 'registry/retired-sources.jsonl'
+if retired_sources_path.is_file():
+    sources.extend(read_jsonl(retired_sources_path))
 
 worksheet_paths = sorted((root / "artifacts" / "manifests").glob("*owner-decision-worksheets-*.jsonl"))
 if not worksheet_paths:
@@ -234,7 +271,7 @@ if args.include_owner_gates:
 item_review_rows = sorted(stale_items + near_due_items, key=lambda row: (row["review_after"], row["item_id"]))
 
 def group_item_rows(rows, field, missing_value=""):
-    grouped = {}
+    grouped: Dict[str, Any] = {}
     for row in rows:
         raw_key = str(row.get(field, ""))
         key = raw_key if raw_key else missing_value
@@ -327,6 +364,12 @@ output = {
 }
 
 if args.json or args.summary_json:
+    from tools.codex_assets.knowledge_hub.review_batches import prepare_review_batches
+    from tools.codex_assets.knowledge_hub.review_triage import prepare_review_triage
+    output["operating_batches"] = prepare_review_batches(root, item_review_rows, items, args.batch_size, as_of=today)
+    output['evidence_triage'] = prepare_review_triage(root, item_review_rows, items, sources,
+                                                      open_owner_gates, today, detail_limit=args.triage_limit,
+                                                      packet_size=args.batch_size)
     projection = output
     if args.summary_json:
         projection = {
@@ -337,6 +380,9 @@ if args.json or args.summary_json:
             "report_only": True,
             "today": output["today"],
             "counts": output["counts"],
+            "operating_batches": output["operating_batches"],
+            "evidence_triage": {key:value for key,value in output['evidence_triage'].items()
+                                if key not in {'rows', 'runtime_check_cache'}},
             "groups": {
                 key: {
                     name: {
