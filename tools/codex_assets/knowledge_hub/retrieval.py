@@ -33,6 +33,7 @@ from .search import (
 )
 from .search_ranking import PRIVATE_IPV4_PATTERN
 from .retrieval_metrics import validate_cases, ranking_summary
+from .retrieval_integrity_projection import benchmark_integrity
 
 
 DEFAULT_CASES = "tests/fixtures/retrieval_cases.json"
@@ -583,43 +584,10 @@ def run_retrieval_benchmark(
         if extended_probes
         else {"status": "skipped", "reason": "custom-case-or-explicitly-disabled"}
     )
-    integrity: Dict[str, Any] = {
-        "result_count": result_count,
-        "unregistered_result_count": unregistered_result_count,
-        "unregistered_result_rate": round(
-            unregistered_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "control_result_count": control_result_count,
-        "control_result_rate": round(
-            control_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "duplicate_result_count": duplicate_result_count,
-        "duplicate_result_rate": round(
-            duplicate_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "compatibility_hit_count": compatibility_hit_count,
-        "internal_endpoint_exposure_count": internal_endpoint_exposure_count,
-        "forbidden_hit_count": forbidden_hit_count,
-        "zero_hit_failure_count": ranking_metrics['zero_hit_failure_count'],
-    }
-    integrity["status"] = (
-        "pass"
-        if all(
-            integrity[key] == 0
-            for key in (
-                "unregistered_result_count",
-                "control_result_count",
-                "duplicate_result_count",
-                "compatibility_hit_count",
-                "internal_endpoint_exposure_count",
-                "forbidden_hit_count",
-                "zero_hit_failure_count",
-            )
-        )
-        else "fail"
+    integrity = benchmark_integrity(
+        result_count, unregistered_result_count, control_result_count, duplicate_result_count,
+        compatibility_hit_count, internal_endpoint_exposure_count, forbidden_hit_count,
+        ranking_metrics['zero_hit_failure_count'],
     )
     performance_target_met = bool(
         not enforce_performance_thresholds

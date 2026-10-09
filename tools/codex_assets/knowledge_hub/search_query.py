@@ -9,7 +9,7 @@ import sqlite3
 import time
 from collections import Counter
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
-from .common import KnowledgeHubError, source_id, utc_timestamp
+from .common import KnowledgeHubError, utc_timestamp
 from .retrieval_telemetry import IMPLEMENTATION_GENERATION, INTERACTION_CONTRACT, INTERACTIVE_TELEMETRY_SCHEMA_VERSION, PERFORMANCE_CONTRACT, append_optional_telemetry, make_interaction_id
 from .search_ranking import is_historical_result as _historical_result
 from .search_core import (
@@ -25,10 +25,10 @@ from .search_core import (
 from .search_index import SearchIndex
 from .query_concepts import ConceptQuery, corpus_lexicon, extract_concepts, project_routes
 from .query_matching import ConceptMatcher
-from .query_scope import candidate_concepts
 from .query_intent_ranking import order_query_intent
 from .query_topic_roles import scoped_topics
 from .query_focus import focus_order
+from .search_result_projection import deduplicate_paths, search_result
 from .search_query_support import (
     _archive_intent,
     _cursor_fingerprint,
@@ -36,7 +36,6 @@ from .search_query_support import (
     _encode_cursor,
     _filter_reason,
     _matched_query_terms,
-    _preview,
     _scan_candidates,
     _score,
     _validate_retrieval_contract,
@@ -212,50 +211,9 @@ def search(
         )
         if scored is None:
             continue
-        score, reasons, coverage = scored
-        line_no, preview, body_match, preview_redacted = _preview(
-            str(row["body"]),
-            list((candidate_concepts(concept_plan, item) or concept_plan).terms),
-            item,
-        )
-        selected_source = "knowledge-hub"
-        if filters.sources:
-            selected_source = next((value for value in filters.sources if value in physical_sources), "knowledge-hub")
-        result: Dict[str, Any] = {
-            "source": selected_source,
-            "path": str(row["path"]),
-            "line": line_no,
-            "preview": preview,
-            "preview_redacted": preview_redacted,
-            "score": score,
-            "match": "body-and-metadata" if body_match and item else "body" if body_match else "registry-metadata",
-            "match_kind": reasons[0],
-            "why_selected": reasons,
-            "query_coverage": round(coverage, 3),
-            "evidence_strength": item.get("evidence_strength", ""),
-            "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
-            "item_id": item.get("id", ""),
-            "id": item.get("id", ""),
-            "title": item.get("title", ""),
-            "kind": item.get("kind", ""),
-            "domain": item.get("domain", ""),
-            "status": item.get("status", ""),
-            "owner": item.get("owner", ""),
-            "source_id": source_id(item),
-            "review_after": item.get("review_after", ""),
-            "tags": item.get("tags", []),
-        }
-        candidates.append(result)
+        candidates.append(search_result(row, item, scored, concept_plan, filters, physical_sources))
     candidates.sort(key=focus_order)
-    deduplicated: List[Dict[str, Any]] = []
-    seen_paths: Set[str] = set()
-    for candidate in candidates:
-        candidate_path = str(candidate.get("path", ""))
-        if candidate_path in seen_paths:
-            continue
-        seen_paths.add(candidate_path)
-        deduplicated.append(candidate)
-    candidates = deduplicated
+    candidates = deduplicate_paths(candidates)
     candidates = order_query_intent(candidates, concept_plan, query)
     if not _archive_intent(query):
         current_candidates = [

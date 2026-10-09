@@ -103,6 +103,25 @@ def _record(args: argparse.Namespace, root: pathlib.Path) -> int:
     return 0
 
 
+def _validate(args: argparse.Namespace) -> int:
+    raw = json.loads(read_utf8_bounded(pathlib.Path(args.input).expanduser(), 128 * 1024, "activity input"))
+    if not isinstance(raw, dict):
+        raise KnowledgeHubError("activity input must be an object")
+    if raw.get("kind") == "activity-session-receipt":
+        receipt = normalize_receipt(raw, source_ref="input")
+        result = {
+            "schema_version": 2,
+            "status": "pass",
+            "kind": receipt["kind"],
+            "item_count": len(receipt["work_items"]),
+        }
+    else:
+        item = normalize_item(raw, source_kind="validation", source_ref="input")
+        result = {"schema_version": 2, "status": "pass", "kind": item["kind"], "item_id": item["item_id"]}
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
+
 def main(argv: Iterable[str] = ()) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default="")
@@ -179,22 +198,7 @@ def main(argv: Iterable[str] = ()) -> int:
     if args.command == "record":
         return _record(args, root)
     if args.command == "validate":
-        raw = json.loads(read_utf8_bounded(pathlib.Path(args.input).expanduser(), 128 * 1024, "activity input"))
-        if not isinstance(raw, dict):
-            raise KnowledgeHubError("activity input must be an object")
-        if raw.get("kind") == "activity-session-receipt":
-            receipt = normalize_receipt(raw, source_ref="input")
-            result = {
-                "schema_version": 2,
-                "status": "pass",
-                "kind": receipt["kind"],
-                "item_count": len(receipt["work_items"]),
-            }
-        else:
-            item = normalize_item(raw, source_kind="validation", source_ref="input")
-            result = {"schema_version": 2, "status": "pass", "kind": item["kind"], "item_id": item["item_id"]}
-        print(json.dumps(result, ensure_ascii=False))
-        return 0
+        return _validate(args)
     today, _ = resolve_today(args.as_of)
     facts = build_facts(
         root, period=args.period, scope=args.scope, as_of=today,

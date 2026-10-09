@@ -44,6 +44,13 @@ from .schemas import validate_instance
 
 UNIT_TEST_TIMEOUT_SECONDS = 180
 
+def _parse_check_result(result):
+    try:
+        return parse_json_output(result)
+    except Exception as exc:
+        return {"status": "unparseable", "errors": [str(exc)], "parse_error": str(exc)}
+
+
 def run_product_gate(
     root: pathlib.Path,
     as_of: str,
@@ -109,18 +116,9 @@ def run_product_gate(
     restore = restore_head if git_delivery["worktree_clean"] else restore_candidate
     incomplete = results["incomplete"]
     engineering_quality = _engineering_quality_state(root, signature)
-    try:
-        check_payload = parse_json_output(check_result)
-    except Exception as exc:
-        check_payload = {"status": "unparseable", "errors": [str(exc)], "parse_error": str(exc)}
-    try:
-        status_payload = parse_json_output(status_result)
-    except Exception as exc:
-        status_payload = {"status": "unparseable", "errors": [str(exc)], "parse_error": str(exc)}
-    try:
-        source_check_payload = parse_json_output(source_check_result)
-    except Exception as exc:
-        source_check_payload = {"status": "unparseable", "errors": [str(exc)], "parse_error": str(exc)}
+    check_payload = _parse_check_result(check_result)
+    status_payload = _parse_check_result(status_result)
+    source_check_payload = _parse_check_result(source_check_result)
     regression_result: Dict[str, Any] = {
         "command": "not-run in quick product gate",
         "exit_code": 0,

@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import selectors
+import tempfile
 import time
 
 
@@ -16,11 +17,26 @@ class BoundedTimeoutExpired(subprocess.TimeoutExpired):
     output_incomplete = True
 
 
-def run_bounded(command, *, cwd, env, timeout=None, output_limit=8 * 1024 * 1024):
+def _launch(command, cwd, env, input_bytes, output_limit):
+    arguments = dict(cwd=cwd, env=env, stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE, start_new_session=True)
+    if input_bytes is None:
+        return subprocess.Popen(command, **arguments)
+    if not isinstance(input_bytes, bytes) or len(input_bytes) > output_limit:
+        raise ValueError("input must be bytes within the capture budget")
+    # A private file avoids pipe-writer threads and input/output deadlocks.
+    # Popen duplicates the descriptor; the launcher closes its copy immediately.
+    with tempfile.TemporaryFile() as stream:
+        stream.write(input_bytes)
+        stream.seek(0)
+        return subprocess.Popen(command, stdin=stream, **arguments)
+
+
+def run_bounded(command, *, cwd, env, timeout=None, output_limit=8 * 1024 * 1024,
+                input_bytes=None, raw_output=False):
     if output_limit < 1:
         raise ValueError("output limit must be positive")
-    process = subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, start_new_session=True)
+    process = _launch(command, cwd, env, input_bytes, output_limit)
     buffers = [bytearray(), bytearray()]
     overflow = [False, False]
 
@@ -58,7 +74,8 @@ def run_bounded(command, *, cwd, env, timeout=None, output_limit=8 * 1024 * 1024
     finally:
         for stream in streams:
             stream.close()
-    stdout, stderr = [value.decode("utf-8", errors="replace") for value in buffers]
+    stdout, stderr = [bytes(value) if raw_output else value.decode("utf-8", errors="replace")
+                      for value in buffers]
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr), any(overflow)
 
 

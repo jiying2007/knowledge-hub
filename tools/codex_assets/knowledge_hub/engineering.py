@@ -614,6 +614,22 @@ def _write_engineering_snapshot(root: pathlib.Path, payload: Mapping[str, Any]) 
     return str(path.relative_to(root))
 
 
+def _blocked_quality_result(root, contract, checks, sbom_path) -> Dict[str, Any]:
+    blocking_errors = list(contract["errors"])
+    if not contract["python_support"]["current_supported"]:
+        blocking_errors.append("full engineering quality requires a supported Python >=3.10")
+    return {
+        "schema_version": 1,
+        "generated_at": utc_timestamp(),
+        "status": "fail",
+        "mode": "full",
+        "contract": contract,
+        "checks": checks,
+        "sbom": {"path": str(sbom_path.relative_to(root)), "generated": False},
+        "errors": blocking_errors,
+    }
+
+
 def run_engineering_quality(
     root: pathlib.Path,
     sbom_output: Optional[pathlib.Path] = None,
@@ -631,19 +647,7 @@ def run_engineering_quality(
         raise KnowledgeHubError("SBOM output must stay inside the repository") from exc
     checks: Dict[str, Dict[str, Any]] = {}
     if contract["status"] != "pass" or not contract["python_support"]["current_supported"]:
-        blocking_errors = list(contract["errors"])
-        if not contract["python_support"]["current_supported"]:
-            blocking_errors.append("full engineering quality requires a supported Python >=3.10")
-        return {
-            "schema_version": 1,
-            "generated_at": utc_timestamp(),
-            "status": "fail",
-            "mode": "full",
-            "contract": contract,
-            "checks": checks,
-            "sbom": {"path": str(sbom_path.relative_to(root)), "generated": False},
-            "errors": blocking_errors,
-        }
+        return _blocked_quality_result(root, contract, checks, sbom_path)
 
     python = _current_python_executable()
     dist_dir = ".tmp/engineering/dist"

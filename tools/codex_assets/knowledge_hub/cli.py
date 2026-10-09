@@ -184,22 +184,41 @@ def _tool_validation(args: Any) -> Dict[str, str]:
     }
 
 
+def _capture_validation(args: Any) -> Dict[str, str]:
+    session_mode_count = sum(
+        int(value)
+        for value in (
+            args.scan_tool_assets,
+            args.tool_asset_session_start,
+            args.tool_asset_session_close,
+            bool(args.tool_asset_candidate),
+        )
+    )
+    if session_mode_count > 1:
+        raise KnowledgeHubError("tool asset scan/start/close/import modes are mutually exclusive")
+    return _tool_validation(args)
+
+
+def _run_governed_provider(args: Any, parser: Any) -> int:
+    from .governed_provider_cli import main as governed_main
+
+    if args.provider_archive or args.provider_capabilities or args.apply and args.dry_run:
+        parser.error("governed Provider cannot combine with another Provider mode or conflicting apply/dry-run")
+    forwarded = ["--root", args.root or str(repository_root()), "--policy-root", args.policy_root,
+                 "--operation", args.provider_operation, "--source", args.source,
+                 "--project", args.project, "--kind", args.kind or "validation"]
+    if args.apply:
+        forwarded.append("--apply")
+    if args.reconcile_plan:
+        forwarded += ['--reconcile-plan', args.reconcile_plan]
+    return governed_main(forwarded)
+
+
 def main(argv: Sequence[str] = ()) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
     if args.command == "capture" and args.governed_provider:
-        from .governed_provider_cli import main as governed_main
-
-        if args.provider_archive or args.provider_capabilities or args.apply and args.dry_run:
-            parser.error("governed Provider cannot combine with another Provider mode or conflicting apply/dry-run")
-        forwarded = ["--root", args.root or str(repository_root()), "--policy-root", args.policy_root,
-                     "--operation", args.provider_operation, "--source", args.source,
-                     "--project", args.project, "--kind", args.kind or "validation"]
-        if args.apply:
-            forwarded.append("--apply")
-        if args.reconcile_plan:
-            forwarded += ['--reconcile-plan', args.reconcile_plan]
-        return governed_main(forwarded)
+        return _run_governed_provider(args, parser)
     if args.command == "capture" and (args.provider_archive or args.provider_capabilities):
         return _run_provider_archive(args, parser)
     if args.apply and args.dry_run:
@@ -208,18 +227,7 @@ def main(argv: Sequence[str] = ()) -> int:
     today, date_source = resolve_today(args.as_of)
     try:
         if args.command == "capture":
-            session_mode_count = sum(
-                int(value)
-                for value in (
-                    args.scan_tool_assets,
-                    args.tool_asset_session_start,
-                    args.tool_asset_session_close,
-                    bool(args.tool_asset_candidate),
-                )
-            )
-            if session_mode_count > 1:
-                raise KnowledgeHubError("tool asset scan/start/close/import modes are mutually exclusive")
-            validation = _tool_validation(args)
+            validation = _capture_validation(args)
             if args.tool_asset_session_start:
                 if args.apply or args.hub_dry_run:
                     raise KnowledgeHubError("session start is local runtime state only and cannot apply or plan Hub import")

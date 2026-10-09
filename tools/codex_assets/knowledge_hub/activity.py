@@ -335,6 +335,21 @@ def collect_git(
     return sorted(rows, key=lambda row: row["repo_id"]), {"registered_count": registered, "readable_count": len(rows)}
 
 
+def _facts_summary(items, registry_rows, git_rows) -> Dict[str, Any]:
+    counts = Counter((item["status"], item["verification"]) for item in items)
+    return {
+        "item_count": len(items),
+        "done_verified": counts[("done", "verified")],
+        "done_pending_verification": counts[("done", "reported")] + counts[("done", "missing")],
+        "in_progress": sum(value for (state, _), value in counts.items() if state == "in_progress"),
+        "blocked": sum(value for (state, _), value in counts.items() if state == "blocked"),
+        "planned": sum(value for (state, _), value in counts.items() if state == "planned"),
+        "registry_count": len(registry_rows),
+        "git_repository_count": len(git_rows),
+        "git_commit_count": sum(row["commit_count"] for row in git_rows),
+    }
+
+
 def build_facts(
     root: pathlib.Path,
     *,
@@ -391,7 +406,6 @@ def build_facts(
         git_rows, git_coverage = collect_git(root, codex_root, range_start, range_end, project_id if scope == "project" else "")
         if git_coverage["readable_count"] < git_coverage["registered_count"]:
             warnings.append("部分登记仓库不可读；Git 覆盖不完整。")
-    counts = Counter((item["status"], item["verification"]) for item in items)
     return {
         "schema_version": FACTS_SCHEMA_VERSION,
         "kind": "knowledge-hub.activity-facts-v2",
@@ -403,17 +417,7 @@ def build_facts(
         "period": {"start": range_start.isoformat(), "end": range_end.isoformat()},
         "subject": {"id": effective_subject, "display_name": config.get("display_name", "")},
         "project_id": project_id,
-        "summary": {
-            "item_count": len(items),
-            "done_verified": counts[("done", "verified")],
-            "done_pending_verification": counts[("done", "reported")] + counts[("done", "missing")],
-            "in_progress": sum(value for (state, _), value in counts.items() if state == "in_progress"),
-            "blocked": sum(value for (state, _), value in counts.items() if state == "blocked"),
-            "planned": sum(value for (state, _), value in counts.items() if state == "planned"),
-            "registry_count": len(registry_rows),
-            "git_repository_count": len(git_rows),
-            "git_commit_count": sum(row["commit_count"] for row in git_rows),
-        },
+        "summary": _facts_summary(items, registry_rows, git_rows),
         "work_items": items,
         "registry_activity": registry_rows,
         "git_activity": git_rows,

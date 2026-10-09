@@ -211,6 +211,15 @@ def attestation_review_basis(attestation_mode: str, token: str, source_ref: str)
     )
 
 
+def _validated_source_ref(attestation_source_ref: str) -> str:
+    source_ref = attestation_source_ref.strip()
+    if not source_ref:
+        raise KnowledgeHubError("--attestation-source-ref is required")
+    if len(source_ref) > 500 or any(character in source_ref for character in "\r\n\t"):
+        raise KnowledgeHubError("attestation source ref contains unsupported control characters or is too long")
+    return source_ref
+
+
 def generate_review_form(
     root: pathlib.Path,
     item_id: str,
@@ -240,11 +249,7 @@ def generate_review_form(
     if target_status == "active" and attestation_mode != "human-reviewed":
         raise KnowledgeHubError("active promotion requires direct human-reviewed attestation")
     reviewer = _validate_identity(attested_by)
-    source_ref = attestation_source_ref.strip()
-    if not source_ref:
-        raise KnowledgeHubError("--attestation-source-ref is required")
-    if len(source_ref) > 500 or any(character in source_ref for character in "\r\n\t"):
-        raise KnowledgeHubError("attestation source ref contains unsupported control characters or is too long")
+    source_ref = _validated_source_ref(attestation_source_ref)
     token = confirmation_token(context)
     statement = _validate_statement(attestation_text, context, token, reviewer, attestation_mode)
     review_date = attested_at or as_of.isoformat()

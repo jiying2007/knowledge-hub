@@ -224,6 +224,13 @@ def _stable_payload(existing: Mapping[str, Any], workspaces: List[Dict[str, Any]
     }
 
 
+def _resolve_scan_roots(scan_roots: Sequence[pathlib.Path]) -> List[pathlib.Path]:
+    resolved_roots = [path.expanduser().resolve(strict=False) for path in scan_roots]
+    if not resolved_roots:
+        raise KnowledgeHubError("at least one --scan-root is required")
+    return resolved_roots
+
+
 def discover_workspaces(
     root: pathlib.Path,
     scan_roots: Sequence[pathlib.Path],
@@ -234,9 +241,7 @@ def discover_workspaces(
     if maximum_depth < 1 or maximum_depth > 32:
         raise KnowledgeHubError("maximum depth must be between 1 and 32")
     inputs = snapshot_inputs(root)
-    resolved_roots = [path.expanduser().resolve(strict=False) for path in scan_roots]
-    if not resolved_roots:
-        raise KnowledgeHubError("at least one --scan-root is required")
+    resolved_roots = _resolve_scan_roots(scan_roots)
     registered = _registered_remote_map(root, include_external=include_external)
     matches: Dict[str, List[pathlib.Path]] = defaultdict(list)
     scanned_repositories = 0

@@ -48,6 +48,14 @@ min_tmp_free_bytes = int(os.environ.get("KNOWLEDGE_REGRESSION_MIN_TMP_FREE_BYTES
 default_jobs = min(4, os.cpu_count() or 1) if args.suite == "full" else 1
 regression_jobs = max(1, int(os.environ.get("KNOWLEDGE_REGRESSION_JOBS", str(default_jobs))))
 
+def final_gate_diagnostics(result):
+    return {
+        "final_gate_exit": result["exit_code"],
+        "final_gate_stdout_chars": len(result["stdout"]),
+        "final_gate_stderr_tail": [display_path(line) for line in result["stderr"][-4000:].splitlines()[-20:]],
+    }
+
+
 def resolve_today():
     if args.as_of:
         raw_value = args.as_of
