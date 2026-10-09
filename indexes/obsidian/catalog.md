@@ -10,6 +10,7 @@
 - [Codex token-lean 固定上下文优化验证候选](../../artifacts/manifests/codex-token-lean-context-validation-20260714.md) · `reviewing` · `codex-token-lean-context-validation-20260714`
 - [llm_agent 多源外部实践吸收终态架构候选](../../domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md) · `reviewing` · `llm-agent-external-practice-intake-terminal-20260719`
 - [session-wrap 原始许可证恢复与运行验证](../../domains/codex/validation/provider-codex-94a9746ffadd3a7353d0c589.md) · `reviewing` · `provider-codex-94a9746ffadd3a7353d0c589`
+- [默认配置与执行日志修复交付应用闭环](../../domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md) · `reviewing` · `provider-codex-f8fab5f7ef5796515f389169`
 
 ## embedded
 
@@ -171,6 +172,7 @@
 - [合并与受管应用检查点（外部 CI 阻塞交接）](../../projects/llm-agent/validation/provider-llm-agent-25d0ff0e4fc8c26e5698cdb2.md) · `reviewing` · `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
 - [微信公众号批量研究工作流与二十篇文章优化评估](../../projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md) · `reviewing` · `llm-agent-wechat-account-research-assessment-20260716`
 - [无模型验证方案及真实证据边界](../../projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md) · `reviewing` · `provider-llm-agent-8912fe6311526d7f75e9d50a`
+- [资格工具修复与已有签名证据接入](../../projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md) · `reviewing` · `provider-llm-agent-af374aa724c6b6f6701a408f`
 
 ## projects/llm-tools
 

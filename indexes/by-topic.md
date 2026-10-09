@@ -605,3 +605,5 @@
 - ADK8.0.5与Root参考内容身份闭环: `projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md`; `provider-llm-agent-1422b948993c2cee4b4e82d7`
 - 无模型验证方案及真实证据边界: `projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md`; `provider-llm-agent-8912fe6311526d7f75e9d50a`
 - Knowledge Hub 第八轮检索边界与验收记录: `governance/product/validation/provider-knowledge-hub-56f418441b56faa9b2eb4fdd.md`; `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
+- 默认配置与执行日志修复交付应用闭环: `domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md`; `provider-codex-f8fab5f7ef5796515f389169`
+- 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`

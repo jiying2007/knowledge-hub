@@ -626,3 +626,5 @@
 - 2027-01-06: `provider-llm-agent-1422b948993c2cee4b4e82d7`
 - 2027-01-06: `provider-llm-agent-8912fe6311526d7f75e9d50a`
 - 2027-01-06: `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
+- 2027-01-06: `provider-codex-f8fab5f7ef5796515f389169`
+- 2027-01-07: `provider-llm-agent-af374aa724c6b6f6701a408f`

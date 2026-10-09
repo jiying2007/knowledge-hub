@@ -417,6 +417,7 @@
 - ADK 8.0.4 与 llm_agent 归档资源治理迭代: `projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md`; `provider-llm-agent-1e0955b8405e311ca5dc1a58`
 - ADK8.0.5与Root参考内容身份闭环: `projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md`; `provider-llm-agent-1422b948993c2cee4b4e82d7`
 - 无模型验证方案及真实证据边界: `projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md`; `provider-llm-agent-8912fe6311526d7f75e9d50a`
+- 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`
 
 ## Agent Dev Kit
 

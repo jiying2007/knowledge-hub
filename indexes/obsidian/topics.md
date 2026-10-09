@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (94)
+## validation (96)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
@@ -67,7 +67,7 @@
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## provider-archive (24)
+## provider-archive (26)
 
 - [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
 - [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
