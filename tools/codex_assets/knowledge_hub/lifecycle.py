@@ -27,7 +27,7 @@ from .indexing import CORE_INDEXES, update_core_indexes, update_project_index, u
 from .model import assert_transition, merge_frontmatter_mirror, require_valid_item
 from .obsidian_view import stage_obsidian_views
 from .review_attestation import confirmation_token, suggested_output_path
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 LIFECYCLE_LEDGER = "registry/lifecycle-events.jsonl"
@@ -133,7 +133,7 @@ def capture(
     registered_source_id: str = "",
     registered_source_path: str = "",
 ) -> Dict[str, Any]:
-    source = source.expanduser().resolve()
+    inputs, source = snapshot_inputs(root), source.expanduser().resolve()
     if not source.is_file():
         raise KnowledgeHubError("capture source must be a readable file: {}".format(source))
     if source.suffix.lower() == ".md":
@@ -282,7 +282,7 @@ def capture(
         "evidence_refs": validation_refs,
     }
 
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     _add_transaction_text(transaction, root, target, rendered)
     if companion_path:
         companion = {
@@ -375,7 +375,7 @@ def transition(
     reason: str = "",
     superseded_by: str = "",
 ) -> Dict[str, Any]:
-    items = registry_items(root)
+    inputs, items = snapshot_inputs(root), registry_items(root)
     matches = [row for row in items if row.get("id") == item_id]
     if len(matches) != 1:
         raise KnowledgeHubError("item id must resolve to exactly one registry row: {}".format(item_id))
@@ -560,7 +560,7 @@ def transition(
         "executed_at": utc_timestamp(),
         "evidence_refs": list(review["validation_refs"]),
     }
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(str(before["path"]), rendered, expected_sha256=actual_item_sha)
     next_items = _replace_item(items, after)
     _add_transaction_text(transaction, root, "registry/items.jsonl", encode_jsonl(next_items))

@@ -16,7 +16,7 @@ from .common import (
     resolve_inside,
 )
 from .model import assert_transition
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 FORM_KIND = "content-review-attestation"
@@ -211,6 +211,15 @@ def attestation_review_basis(attestation_mode: str, token: str, source_ref: str)
     )
 
 
+def _validated_source_ref(attestation_source_ref: str) -> str:
+    source_ref = attestation_source_ref.strip()
+    if not source_ref:
+        raise KnowledgeHubError("--attestation-source-ref is required")
+    if len(source_ref) > 500 or any(character in source_ref for character in "\r\n\t"):
+        raise KnowledgeHubError("attestation source ref contains unsupported control characters or is too long")
+    return source_ref
+
+
 def generate_review_form(
     root: pathlib.Path,
     item_id: str,
@@ -229,6 +238,7 @@ def generate_review_form(
 ) -> Dict[str, Any]:
     if not confirm_attestation:
         raise KnowledgeHubError("--confirm-attestation is required after an explicit human decision")
+    inputs = snapshot_inputs(root)
     context = _item_context(root, item_id, target_status)
     if not expected_item_sha256:
         raise KnowledgeHubError("--expected-sha256 is required")
@@ -239,11 +249,7 @@ def generate_review_form(
     if target_status == "active" and attestation_mode != "human-reviewed":
         raise KnowledgeHubError("active promotion requires direct human-reviewed attestation")
     reviewer = _validate_identity(attested_by)
-    source_ref = attestation_source_ref.strip()
-    if not source_ref:
-        raise KnowledgeHubError("--attestation-source-ref is required")
-    if len(source_ref) > 500 or any(character in source_ref for character in "\r\n\t"):
-        raise KnowledgeHubError("attestation source ref contains unsupported control characters or is too long")
+    source_ref = _validated_source_ref(attestation_source_ref)
     token = confirmation_token(context)
     statement = _validate_statement(attestation_text, context, token, reviewer, attestation_mode)
     review_date = attested_at or as_of.isoformat()
@@ -304,7 +310,7 @@ def generate_review_form(
     encoded = encode_jsonl([form])
     if target.exists() and target.read_text(encoding="utf-8") != encoded:
         raise KnowledgeHubError("review attestation output already exists with different content: {}".format(relative))
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(relative, encoded, expected_sha256=file_sha256(target) if target.exists() else "")
     result: Dict[str, Any] = {
         "schema_version": 1,

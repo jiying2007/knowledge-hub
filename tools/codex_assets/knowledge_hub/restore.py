@@ -28,6 +28,8 @@ from .recovery_evidence import (
     execution_environment_evidence,
     expected_repository_from_registry,
 )
+from .check_dependencies import dependency_fingerprints
+from .unit_evidence import record_parent_unit
 
 
 def _candidate_paths(root: pathlib.Path) -> List[str]:
@@ -224,9 +226,101 @@ def _run_restore_check(
     check["recovered_after_retry"] = (
         len(attempts) > 1 and check["status"] == "pass"
     )
-    if max_attempts > 1:
-        check["attempts"] = attempts
+    check["attempts"] = attempts
     return check
+
+
+def _run_restored_unit_check(restored, command, command_env) -> Dict[str, Any]:
+    source_signature = working_tree_signature(restored)
+    kernel_signature = dependency_fingerprints(restored)['kernel']
+    check = _run_restore_check(restored, command, command_env, parse_status=False)
+    if check['status'] != 'pass':
+        return check
+    try:
+        if dependency_fingerprints(restored)['kernel'] != kernel_signature:
+            raise KnowledgeHubError('restored unit kernel inputs changed during execution')
+        receipt = record_parent_unit(restored, source_signature, kernel_signature, check)
+    except (KnowledgeHubError, OSError) as exc:
+        return dict(check, status='fail', parent_unit_evidence_error=str(exc))
+    return dict(check, parent_unit_evidence=receipt)
+
+
+def _restore_commands(restored, as_of) -> Dict[str, List[str]]:
+    return {
+        "dependency_imports": [
+            "bash",
+            "tools/ci/python-runtime.sh",
+            "-c",
+            "import jsonschema, pytest, yaml",
+        ],
+        "knowledge_check": [
+            "bash",
+            "tools/knowledge-check.sh",
+            "--dry-run",
+            "--json",
+            "--diagnostics",
+            "--as-of",
+            as_of,
+        ],
+        "unit_tests": [
+            "bash",
+            "tools/ci/python-runtime.sh",
+            "-m",
+            "pytest",
+            "-q",
+        ],
+        "link_audit": ["bash", "tools/knowledge-link-audit.sh", "--json", "--strict"],
+        "obsidian_view": ["bash", "tools/knowledge-obsidian-view-build.sh", "--check", "--json"],
+        "retrieval_benchmark": ["bash", "tools/knowledge-retrieval-benchmark.sh", "--json"],
+        "project_readiness": [
+            "bash",
+            "tools/knowledge-project-readiness.sh",
+            "--check",
+            "--json",
+            "--as-of",
+            as_of,
+        ],
+        "team_export_plan": ["bash", "tools/knowledge-export.sh", "--plan", "--json"],
+        "search_smoke": ["bash", "tools/knowledge-search.sh", "ASAN", "--json", "--limit", "3", "--no-telemetry"],
+        "context_smoke": [
+            "bash",
+            "tools/knowledge-context.sh",
+            "--cwd",
+            str(restored),
+            "--query",
+            "knowledge-hub 自举",
+            "--task-type",
+            "general",
+            "--json",
+            "--no-telemetry",
+        ],
+        "product_gate_smoke": [
+            "bash",
+            "tools/knowledge-final-gate.sh",
+            "--json",
+            "--final-profile",
+            "product",
+            "--as-of",
+            as_of,
+        ],
+    }
+
+
+def _run_restore_checks(restored, as_of, runtime_env) -> Dict[str, Any]:
+    checks = {}
+    for name, command in _restore_commands(restored, as_of).items():
+        command_env = dict(runtime_env)
+        if name == "product_gate_smoke":
+            command_env["KNOWLEDGE_FINAL_GATE_INNER_REGRESSION"] = "1"
+        if name == 'unit_tests':
+            checks[name] = _run_restored_unit_check(restored, command, command_env)
+        else:
+            checks[name] = _run_restore_check(
+                restored, command, command_env,
+                parse_status=name != 'dependency_imports',
+                max_attempts=2 if name == 'retrieval_benchmark' else 1,
+            )
+    return checks
 
 
 def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candidate") -> Dict[str, Any]:
@@ -279,75 +373,7 @@ def run_restore_drill(root: pathlib.Path, as_of: str, source_mode: str = "candid
             timeout=60,
         )
         runtime_env = _restore_check_environment(restored, runtime_python)
-        commands = {
-            "dependency_imports": [
-                "bash",
-                "tools/ci/python-runtime.sh",
-                "-c",
-                "import jsonschema, pytest, yaml",
-            ],
-            "knowledge_check": [
-                "bash",
-                "tools/knowledge-check.sh",
-                "--dry-run",
-                "--json",
-                "--diagnostics",
-                "--as-of",
-                as_of,
-            ],
-            "unit_tests": [
-                "bash",
-                "tools/ci/python-runtime.sh",
-                "-m",
-                "pytest",
-                "-q",
-            ],
-            "link_audit": ["bash", "tools/knowledge-link-audit.sh", "--json", "--strict"],
-            "obsidian_view": ["bash", "tools/knowledge-obsidian-view-build.sh", "--check", "--json"],
-            "retrieval_benchmark": ["bash", "tools/knowledge-retrieval-benchmark.sh", "--json"],
-            "project_readiness": [
-                "bash",
-                "tools/knowledge-project-readiness.sh",
-                "--check",
-                "--json",
-                "--as-of",
-                as_of,
-            ],
-            "team_export_plan": ["bash", "tools/knowledge-export.sh", "--plan", "--json"],
-            "search_smoke": ["bash", "tools/knowledge-search.sh", "ASAN", "--json", "--limit", "3", "--no-telemetry"],
-            "context_smoke": [
-                "bash",
-                "tools/knowledge-context.sh",
-                "--cwd",
-                str(restored),
-                "--query",
-                "knowledge-hub 自举",
-                "--task-type",
-                "general",
-                "--json",
-                "--no-telemetry",
-            ],
-            "product_gate_smoke": [
-                "bash",
-                "tools/knowledge-final-gate.sh",
-                "--json",
-                "--final-profile",
-                "product",
-                "--as-of",
-                as_of,
-            ],
-        }
-        for name, command in commands.items():
-            command_env = dict(runtime_env)
-            if name == "product_gate_smoke":
-                command_env["KNOWLEDGE_FINAL_GATE_INNER_REGRESSION"] = "1"
-            checks[name] = _run_restore_check(
-                restored,
-                command,
-                command_env,
-                parse_status=name not in {"unit_tests", "dependency_imports"},
-                max_attempts=2 if name == "retrieval_benchmark" else 1,
-            )
+        checks = _run_restore_checks(restored, as_of, runtime_env)
     failed = [name for name, row in checks.items() if row["status"] != "pass"]
     status = (
         "pass" if not missing and not symlinks and not failed else "needs-fix"

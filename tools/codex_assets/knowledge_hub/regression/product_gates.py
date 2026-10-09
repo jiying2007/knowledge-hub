@@ -21,7 +21,8 @@ def _run_product_gate(repo, extra_args="", extra_env=""):
 def _skip_inside_product_gate(result_id, title):
     if os.environ.get("KNOWLEDGE_FINAL_GATE_INNER_REGRESSION") != "1":
         return False
-    expect(True, result_id, title, {"skipped_in_inner_final_gate": True})
+    record(result_id, title, 'delegated-unverified',
+           {"skipped_in_inner_final_gate": True, "evidence_status":"delegated-unverified"})
     return True
 
 
@@ -210,6 +211,9 @@ def test_final_gate_default_regression_path():
                 "status": "pass",
                 "suite": "full",
                 "full_regression_executed": True,
+                "full_regression_completed": True,
+                "executed_result_count": 1,
+                "delegated_result_count": 0,
                 "selected_test_count": 1,
                 "full_test_count": 1,
                 "result_count": 1,

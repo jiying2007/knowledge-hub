@@ -582,3 +582,28 @@
 - Provider 候选归档与 Runtime intake 自动化验证: `governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md`; `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - ADK 主分支同步与验证边界审查候选: `projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md`; `provider-llm-agent-85cdfb6aec9222231a5a7243`
 - 本地 GROS 构建与制品交付审查验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md`; `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
+- llm_agent / ADK 优化闭环候选: `projects/llm-agent/validation/provider-llm-agent-94244aa67d60c96f9375bcc7.md`; `provider-llm-agent-94244aa67d60c96f9375bcc7`
+- llm_agent / ADK 内外部审查与迭代记录: `projects/llm-agent/validation/provider-llm-agent-f703aef64b44092a82ffe439.md`; `provider-llm-agent-f703aef64b44092a82ffe439`
+- Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06: `governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md`; `provider-knowledge-hub-59b973037d5b9d11b551bd39`
+- 合并与受管应用检查点（外部 CI 阻塞交接）: `projects/llm-agent/validation/provider-llm-agent-25d0ff0e4fc8c26e5698cdb2.md`; `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
+- ADK 7.14.1 来源升级与运行资产验证: `projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md`; `provider-llm-agent-63e87b8724e4e121da4d4896`
+- 7.14.1 多仓主分支合并与回读: `projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md`; `provider-llm-agent-8aba0675f67e3ceadf5d9eac`
+- Knowledge Hub 写入一致性与验证证据协议优化: `governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md`; `provider-knowledge-hub-efe8d8b137ac219d030fbc06`
+- session-wrap 原始许可证恢复与运行验证: `domains/codex/validation/provider-codex-94a9746ffadd3a7353d0c589.md`; `provider-codex-94a9746ffadd3a7353d0c589`
+- ADK临时Git fixture加固收口: `projects/llm-agent/validation/provider-llm-agent-232c6f020366e6dfa82fba4f.md`; `provider-llm-agent-232c6f020366e6dfa82fba4f`
+- Codex 7.14.2 来源与运行采用验证: `domains/codex/validation/provider-codex-8008d911326cf0c6cbb838fb.md`; `provider-codex-8008d911326cf0c6cbb838fb`
+- 7.14.2消费链与门禁加固最终回读: `projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md`; `provider-llm-agent-4699a5202fd8753d00f8eb44`
+- ADK与llm_agent信任边界及来源迭代审查候选: `projects/llm-agent/archive/provider-llm-agent-47752ebe98d16c6e9c2adfa0.md`; `provider-llm-agent-47752ebe98d16c6e9c2adfa0`
+- Knowledge Hub 第三轮优化验收记录: `governance/product/validation/provider-knowledge-hub-c7c483680173c6870d96c7a1.md`; `provider-knowledge-hub-c7c483680173c6870d96c7a1`
+- ADK 8.0.1 文件IO安全迭代与来源到运行资产验证: `projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md`; `provider-llm-agent-946122d739b2544d9d0b6975`
+- ADK8.0.2持久化、锁安全与实际运行资产验证: `projects/llm-agent/validation/provider-llm-agent-67eea36661773841b2559d61.md`; `provider-llm-agent-67eea36661773841b2559d61`
+- Knowledge Hub 第四轮审查与迭代: `governance/product/validation/provider-knowledge-hub-d868d31fd675378e3a609792.md`; `provider-knowledge-hub-d868d31fd675378e3a609792`
+- ADK8.0.3证据JSON与跨仓交付边界验证: `projects/llm-agent/validation/provider-llm-agent-189f00d88f7c213c70d4c4e2.md`; `provider-llm-agent-189f00d88f7c213c70d4c4e2`
+- ADK 8.0.4 与 llm_agent 归档资源治理迭代: `projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md`; `provider-llm-agent-1e0955b8405e311ca5dc1a58`
+- Knowledge Hub 第六轮全面迭代验证记录: `governance/product/validation/provider-knowledge-hub-d07893a6a191b3752a3b832c.md`; `provider-knowledge-hub-d07893a6a191b3752a3b832c`
+- Knowledge Hub 第七轮建议落地验证: `governance/product/validation/provider-knowledge-hub-0edf1f5613bc36c0adda6305.md`; `provider-knowledge-hub-0edf1f5613bc36c0adda6305`
+- ADK8.0.5与Root参考内容身份闭环: `projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md`; `provider-llm-agent-1422b948993c2cee4b4e82d7`
+- 无模型验证方案及真实证据边界: `projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md`; `provider-llm-agent-8912fe6311526d7f75e9d50a`
+- Knowledge Hub 第八轮检索边界与验收记录: `governance/product/validation/provider-knowledge-hub-56f418441b56faa9b2eb4fdd.md`; `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
+- 默认配置与执行日志修复交付应用闭环: `domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md`; `provider-codex-f8fab5f7ef5796515f389169`
+- 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`

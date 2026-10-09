@@ -5,9 +5,12 @@
 ## codex
 
 - [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing` · `adk-four-repo-source-live-validation-20260927`
+- [Codex 7.14.2 来源与运行采用验证](../../domains/codex/validation/provider-codex-8008d911326cf0c6cbb838fb.md) · `reviewing` · `provider-codex-8008d911326cf0c6cbb838fb`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing` · `codex-readiness-validation-20260713`
 - [Codex token-lean 固定上下文优化验证候选](../../artifacts/manifests/codex-token-lean-context-validation-20260714.md) · `reviewing` · `codex-token-lean-context-validation-20260714`
 - [llm_agent 多源外部实践吸收终态架构候选](../../domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md) · `reviewing` · `llm-agent-external-practice-intake-terminal-20260719`
+- [session-wrap 原始许可证恢复与运行验证](../../domains/codex/validation/provider-codex-94a9746ffadd3a7353d0c589.md) · `reviewing` · `provider-codex-94a9746ffadd3a7353d0c589`
+- [默认配置与执行日志修复交付应用闭环](../../domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md) · `reviewing` · `provider-codex-f8fab5f7ef5796515f389169`
 
 ## embedded
 
@@ -42,9 +45,16 @@
 - [Knowledge Hub 产品成熟度全面实现审计 2026-07-13](../../artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md) · `reviewing` · `knowledge-hub-product-maturity-implementation-20260713`
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing` · `knowledge-hub-comprehensive-optimization-assessment-20260730`
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing` · `knowledge-hub-terminal-closure-validation-20260718`
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing` · `provider-knowledge-hub-efe8d8b137ac219d030fbc06`
+- [Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06](../../governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md) · `reviewing` · `provider-knowledge-hub-59b973037d5b9d11b551bd39`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing` · `knowledge-hub-readiness-validation-20260713`
 - [Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30](../../governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-validation-20260730`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
+- [Knowledge Hub 第七轮建议落地验证](../../governance/product/validation/provider-knowledge-hub-0edf1f5613bc36c0adda6305.md) · `reviewing` · `provider-knowledge-hub-0edf1f5613bc36c0adda6305`
+- [Knowledge Hub 第三轮优化验收记录](../../governance/product/validation/provider-knowledge-hub-c7c483680173c6870d96c7a1.md) · `reviewing` · `provider-knowledge-hub-c7c483680173c6870d96c7a1`
+- [Knowledge Hub 第八轮检索边界与验收记录](../../governance/product/validation/provider-knowledge-hub-56f418441b56faa9b2eb4fdd.md) · `reviewing` · `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
+- [Knowledge Hub 第六轮全面迭代验证记录](../../governance/product/validation/provider-knowledge-hub-d07893a6a191b3752a3b832c.md) · `reviewing` · `provider-knowledge-hub-d07893a6a191b3752a3b832c`
+- [Knowledge Hub 第四轮审查与迭代](../../governance/product/validation/provider-knowledge-hub-d868d31fd675378e3a609792.md) · `reviewing` · `provider-knowledge-hub-d868d31fd675378e3a609792`
 - [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing` · `knowledge-hub-data-lifecycle-growth-v1`
 - [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing` · `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing` · `software-tool-artifact-restore-drill-20260716`
@@ -137,7 +147,17 @@
 ## projects/llm-agent
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active` · `llm-agent-adk-target-architecture`
+- [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing` · `provider-llm-agent-8aba0675f67e3ceadf5d9eac`
+- [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing` · `provider-llm-agent-4699a5202fd8753d00f8eb44`
+- [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing` · `provider-llm-agent-63e87b8724e4e121da4d4896`
+- [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing` · `provider-llm-agent-946122d739b2544d9d0b6975`
+- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing` · `provider-llm-agent-1e0955b8405e311ca5dc1a58`
 - [ADK 主分支同步与验证边界审查候选](../../projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md) · `reviewing` · `provider-llm-agent-85cdfb6aec9222231a5a7243`
+- [ADK8.0.2持久化、锁安全与实际运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-67eea36661773841b2559d61.md) · `reviewing` · `provider-llm-agent-67eea36661773841b2559d61`
+- [ADK8.0.3证据JSON与跨仓交付边界验证](../../projects/llm-agent/validation/provider-llm-agent-189f00d88f7c213c70d4c4e2.md) · `reviewing` · `provider-llm-agent-189f00d88f7c213c70d4c4e2`
+- [ADK8.0.5与Root参考内容身份闭环](../../projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md) · `reviewing` · `provider-llm-agent-1422b948993c2cee4b4e82d7`
+- [ADK与llm_agent信任边界及来源迭代审查候选](../../projects/llm-agent/archive/provider-llm-agent-47752ebe98d16c6e9c2adfa0.md) · `reviewing` · `provider-llm-agent-47752ebe98d16c6e9c2adfa0`
+- [ADK临时Git fixture加固收口](../../projects/llm-agent/validation/provider-llm-agent-232c6f020366e6dfa82fba4f.md) · `reviewing` · `provider-llm-agent-232c6f020366e6dfa82fba4f`
 - [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing` · `llm-agent-readiness-validation-20260713`
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing` · `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing` · `llm-agent-portable-full-gate-remediation-20260717`
@@ -145,9 +165,14 @@
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing` · `llm-agent-exact-source-quick-gate-audit-20260715`
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing` · `llm-agent-spec-kit-reference-tracking-20260723`
 - [github/spec-kit正式登记验证](../../projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md) · `reviewing` · `llm-agent-spec-kit-reference-onboarding-validation-20260723`
+- [llm_agent / ADK 优化闭环候选](../../projects/llm-agent/validation/provider-llm-agent-94244aa67d60c96f9375bcc7.md) · `reviewing` · `provider-llm-agent-94244aa67d60c96f9375bcc7`
+- [llm_agent / ADK 内外部审查与迭代记录](../../projects/llm-agent/validation/provider-llm-agent-f703aef64b44092a82ffe439.md) · `reviewing` · `provider-llm-agent-f703aef64b44092a82ffe439`
 - [llm_agent 与 agent-dev-kit 外部实践搜索及吸收候选](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-candidates.md) · `reviewing` · `llm-agent-external-practice-absorption-candidates-20260723`
 - [llm_agent 外部实践吸收落地](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md) · `reviewing` · `llm-agent-external-practice-absorption-20260723`
+- [合并与受管应用检查点（外部 CI 阻塞交接）](../../projects/llm-agent/validation/provider-llm-agent-25d0ff0e4fc8c26e5698cdb2.md) · `reviewing` · `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
 - [微信公众号批量研究工作流与二十篇文章优化评估](../../projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md) · `reviewing` · `llm-agent-wechat-account-research-assessment-20260716`
+- [无模型验证方案及真实证据边界](../../projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md) · `reviewing` · `provider-llm-agent-8912fe6311526d7f75e9d50a`
+- [资格工具修复与已有签名证据接入](../../projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md) · `reviewing` · `provider-llm-agent-af374aa724c6b6f6701a408f`
 
 ## projects/llm-tools
 

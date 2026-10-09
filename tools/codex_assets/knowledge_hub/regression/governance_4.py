@@ -437,7 +437,7 @@ def test_review_after_as_of_deterministic():
             "future_check_exit": future_check["exit_code"],
             "past_status_exit": past_status["exit_code"],
             "future_status_exit": future_status["exit_code"],
-            "final_gate_exit": final_result["exit_code"],
+            **final_gate_diagnostics(final_result),
             "past_check_today": parsed.get("past_check", {}).get("today"),
             "past_status_today": parsed.get("past_status", {}).get("today"),
             "past_status_final_gate_command": parsed.get("past_status", {}).get("final_gate_command"),

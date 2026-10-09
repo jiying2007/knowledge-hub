@@ -5,6 +5,8 @@ import json
 import pathlib
 import sys
 
+from tools.codex_assets.knowledge_hub.review_triage import _EvidenceReader, _body_evidence, _reference
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
@@ -56,14 +58,38 @@ def bucket_for(row):
     return domain or "uncategorized"
 
 
-def action_for(row):
+def _current_review(row, reader, as_of):
+    decision = row.get('human_review_decision')
+    if (reader is None or as_of is None or row.get('content_review_status') != 'accepted'
+            or decision not in {'approved-active', 'approved-reviewing', 'accept-as-review-record'}
+            or not isinstance(row.get('human_reviewed_by'), str) or not row['human_reviewed_by'].strip()):
+        return False
+    try:
+        if dt.date.fromisoformat(row.get('review_after', '')) <= as_of:
+            return False
+    except (TypeError, ValueError):
+        return False
+    body = _body_evidence(reader, row)
+    return body['status'] == 'metadata-ready' and body['prior_human_content_hash_matches']
+
+
+def _verified_evidence(row, reader):
+    if reader is None or row.get('evidence_validation_status') != 'verified':
+        return False
+    evidence, validation = row.get('evidence_refs') or [], row.get('validation_refs') or []
+    if not isinstance(evidence, list) or not isinstance(validation, list):
+        return False
+    refs = evidence + validation
+    return bool(refs) and len(refs) <= 16 and all(
+        _reference(reader, ref)['status'] == 'local-hash-confirmed' for ref in refs)
+
+
+def action_for(row, reader=None, as_of=None):
     tags = set(row.get("tags", []) or [])
-    evidence_refs = row.get("evidence_refs", []) or []
-    validation_refs = row.get("validation_refs", []) or []
-    has_human_review = bool(row.get("human_reviewed_by") and row.get("human_review_decision"))
-    has_evidence = bool(evidence_refs or validation_refs or row.get("evidence_strength"))
+    has_human_review = _current_review(row, reader, as_of)
+    has_evidence = has_human_review and _verified_evidence(row, reader)
     if row.get("decision_status") == "candidate" or "decision-candidate" in tags:
-        if has_human_review and has_evidence:
+        if has_human_review and has_evidence and row.get('human_review_decision') in {'approved-active', 'approved-reviewing'}:
             return "owner-ready-validation-pending"
         return "owner-review-and-validation"
     if "manual-validation-pending" in tags:
@@ -87,7 +113,9 @@ def parse_date(value):
 items = [row for row in load_items() if row.get("status") == "reviewing"]
 window_end = as_of + dt.timedelta(days=args.window_days)
 by_bucket = collections.Counter(bucket_for(row) for row in items)
-by_action = collections.Counter(action_for(row) for row in items)
+reader = _EvidenceReader(root)
+prepared = [(row, action_for(row, reader, as_of)) for row in items]
+by_action = collections.Counter(action for _, action in prepared)
 near_due = []
 for row in items:
     review_after = parse_date(row.get("review_after", ""))
@@ -95,7 +123,7 @@ for row in items:
         near_due.append(row)
 
 rows = []
-for row in sorted(items, key=lambda item: (item.get("review_after", ""), item.get("domain", ""), item.get("id", ""))):
+for row, action in sorted(prepared, key=lambda pair: (pair[0].get("review_after", ""), pair[0].get("domain", ""), pair[0].get("id", ""))):
     rows.append(
         {
             "id": row.get("id", ""),
@@ -105,7 +133,7 @@ for row in sorted(items, key=lambda item: (item.get("review_after", ""), item.ge
             "owner": row.get("owner", ""),
             "review_after": row.get("review_after", ""),
             "bucket": bucket_for(row),
-            "recommended_action": action_for(row),
+            "recommended_action": action,
             "promotion": row.get("promotion", ""),
             "decision_status": row.get("decision_status", ""),
             "path": row.get("path", ""),
@@ -123,6 +151,8 @@ output = {
     "by_bucket": dict(sorted(by_bucket.items())),
     "by_recommended_action": dict(sorted(by_action.items())),
     "items": rows[: args.limit],
+    "evidence_bytes_read":reader.total,
+    "evidence_byte_overflow":reader.overflow,
     "must_not": [
         "不生成 owner decision",
         "不关闭 owner gate",
@@ -144,4 +174,3 @@ else:
     print(f"- by_action: {output['by_recommended_action']}")
     for row in output["items"]:
         print(f"- {row['review_after']}: `{row['id']}` [{row['bucket']}] {row['recommended_action']}")
-

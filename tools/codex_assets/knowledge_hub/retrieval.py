@@ -32,6 +32,8 @@ from .search import (
     search,
 )
 from .search_ranking import PRIVATE_IPV4_PATTERN
+from .retrieval_metrics import validate_cases, ranking_summary
+from .retrieval_integrity_projection import benchmark_integrity
 
 
 DEFAULT_CASES = "tests/fixtures/retrieval_cases.json"
@@ -79,16 +81,26 @@ def _ndcg_at_10(
     ranked: Sequence[Mapping[str, Any]],
     relevance_by_id: Mapping[str, int],
     relevance_by_path: Mapping[str, int],
+    identity_by_id: Optional[Mapping[str, str]] = None,
 ) -> float:
-    actual = [
-        max(
-            int(relevance_by_id.get(str(row.get("item_id", "")), 0)),
-            int(relevance_by_path.get(str(row.get("path", "")), 0)),
-        )
-        for row in ranked[:10]
-    ]
+    identities = dict(identity_by_id or {})
+    for row in ranked:
+        if row.get('item_id') and row.get('path'):
+            identities.setdefault(str(row['item_id']), str(row['path']))
+    relevance_by_document: Dict[str, int] = {}
+    for item_id, relevance in relevance_by_id.items():
+        key = 'path:' + identities[item_id] if item_id in identities else 'id:' + item_id
+        relevance_by_document[key] = max(relevance_by_document.get(key, 0), int(relevance))
+    for path, relevance in relevance_by_path.items():
+        key = 'path:' + path
+        relevance_by_document[key] = max(relevance_by_document.get(key, 0), int(relevance))
+    actual = []
+    for row in ranked[:10]:
+        item_id, path = str(row.get('item_id', '')), str(row.get('path', ''))
+        key = 'path:' + identities[item_id] if item_id in identities else ('path:' + path if path else 'id:' + item_id)
+        actual.append(relevance_by_document.get(key, 0))
     ideal = sorted(
-        list(relevance_by_id.values()) + list(relevance_by_path.values()),
+        list(relevance_by_document.values()),
         reverse=True,
     )[:10]
     ideal_dcg = _dcg(ideal)
@@ -119,11 +131,16 @@ def retrieval_benchmark_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "status": payload.get("status", ""),
         "case_file": payload.get("case_file", ""),
         "case_count": payload.get("case_count", 0),
+        "top_k": payload.get("top_k", 3),
         "search_case_count": payload.get("search_case_count", 0),
         "route_case_count": payload.get("route_case_count", 0),
         "hit_rate": payload.get("hit_rate", 0),
         "mrr": payload.get("mrr", 0),
         "ndcg_at_10": payload.get("ndcg_at_10", 0),
+        **{key:payload.get(key) for key in (
+            'metric_scope', 'ranking_case_count', 'ranking_metrics_applicable',
+            'zero_hit_case_count', 'zero_hit_success_count', 'zero_hit_accuracy', 'zero_hit_failure_count',
+        )},
         "authority_recall_at_3": payload.get("authority_recall_at_3", 0),
         "route_accuracy": payload.get("route_accuracy", 0),
         "performance_thresholds_enforced": payload.get(
@@ -354,7 +371,7 @@ def run_retrieval_benchmark(
 ) -> Dict[str, Any]:
     path = cases_path or root / DEFAULT_CASES
     payload = load_json(path, {}) or {}
-    cases = list(payload.get("cases", []))
+    cases = validate_cases(payload)
     routes = route_rows(root) if payload.get("generated_route_matrix") or payload.get("route_cases") else []
     rows: List[Dict[str, Any]] = []
     latencies: List[float] = []
@@ -368,9 +385,12 @@ def run_retrieval_benchmark(
     duplicate_result_count = 0
     compatibility_hit_count = 0
     internal_endpoint_exposure_count = 0
+    forbidden_hit_count = 0
     governed_items = registry_items(root)
     registry_ids = {str(row.get("id", "")) for row in governed_items}
     registry_paths = {str(row.get("path", "")) for row in governed_items}
+    registry_bindings = {(str(row.get('id', '')), str(row.get('path', ''))) for row in governed_items}
+    identity_by_id = {str(row.get('id', '')):str(row.get('path', '')) for row in governed_items}
     compatibility_patterns = tuple(
         str(value)
         for value in payload.get(
@@ -413,7 +433,7 @@ def run_retrieval_benchmark(
             ranked.append({"rank": index, "item_id": item_id, "path": item_path, "score": item.get("score", 0)})
             result_count += 1
             if registry_ids or registry_paths:
-                if item_id not in registry_ids or item_path not in registry_paths:
+                if (item_id, item_path) not in registry_bindings:
                     unregistered_result_count += 1
             if _control_path(item_path):
                 control_result_count += 1
@@ -432,6 +452,7 @@ def run_retrieval_benchmark(
                     {"rank": index, "item_id": item_id, "path": item_path}
                 )
         expected_zero_hit = bool(case.get("expected_zero_hit", False))
+        forbidden_hit_count += len(forbidden_hits)
         hit = (
             not result.get("results", [])
             if expected_zero_hit
@@ -454,7 +475,7 @@ def run_retrieval_benchmark(
             for value in expected_paths:
                 relevance_paths.setdefault(value, 3)
             ndcg_values.append(
-                _ndcg_at_10(ranked, relevance_ids, relevance_paths)
+                _ndcg_at_10(ranked, relevance_ids, relevance_paths, identity_by_id)
             )
             if case.get("authority_case", True):
                 authority_case_count += 1
@@ -471,7 +492,7 @@ def run_retrieval_benchmark(
                 "reciprocal_rank": round(reciprocal_rank, 4),
                 "ndcg_at_10": round(ndcg_values[-1], 4)
                 if expected_ids or expected_paths
-                else 1.0,
+                else None,
                 "expected_ids": sorted(expected_ids),
                 "expected_paths": sorted(expected_paths),
                 "forbidden_ids": sorted(forbidden_ids),
@@ -495,6 +516,7 @@ def run_retrieval_benchmark(
         else 0.0
     )
     p95_ms = _percentile(latencies, 0.95)
+    ranking_metrics = ranking_summary(rows)
     latency_target_met = bool(latencies) and p95_ms <= maximum_p95_ms
     route_case_rows: List[Dict[str, Any]] = []
     matrix = payload.get("generated_route_matrix", {})
@@ -562,39 +584,10 @@ def run_retrieval_benchmark(
         if extended_probes
         else {"status": "skipped", "reason": "custom-case-or-explicitly-disabled"}
     )
-    integrity: Dict[str, Any] = {
-        "result_count": result_count,
-        "unregistered_result_count": unregistered_result_count,
-        "unregistered_result_rate": round(
-            unregistered_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "control_result_count": control_result_count,
-        "control_result_rate": round(
-            control_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "duplicate_result_count": duplicate_result_count,
-        "duplicate_result_rate": round(
-            duplicate_result_count / result_count if result_count else 0.0,
-            4,
-        ),
-        "compatibility_hit_count": compatibility_hit_count,
-        "internal_endpoint_exposure_count": internal_endpoint_exposure_count,
-    }
-    integrity["status"] = (
-        "pass"
-        if all(
-            integrity[key] == 0
-            for key in (
-                "unregistered_result_count",
-                "control_result_count",
-                "duplicate_result_count",
-                "compatibility_hit_count",
-                "internal_endpoint_exposure_count",
-            )
-        )
-        else "fail"
+    integrity = benchmark_integrity(
+        result_count, unregistered_result_count, control_result_count, duplicate_result_count,
+        compatibility_hit_count, internal_endpoint_exposure_count, forbidden_hit_count,
+        ranking_metrics['zero_hit_failure_count'],
     )
     performance_target_met = bool(
         not enforce_performance_thresholds
@@ -604,9 +597,10 @@ def run_retrieval_benchmark(
         "pass"
         if count
         and hit_rate >= minimum_hit_rate
-        and mrr >= minimum_mrr
-        and ndcg_at_10 >= minimum_ndcg_at_10
-        and authority_recall_at_3 >= minimum_authority_recall_at_3
+        and (not ranking_metrics['ranking_metrics_applicable'] or (
+            mrr >= minimum_mrr and ndcg_at_10 >= minimum_ndcg_at_10
+        ))
+        and (not authority_case_count or authority_recall_at_3 >= minimum_authority_recall_at_3)
         and performance_target_met
         and route_accuracy == 1.0
         and integrity["status"] == "pass"
@@ -634,6 +628,8 @@ def run_retrieval_benchmark(
         "hit_rate": round(hit_rate, 4),
         "mrr": round(mrr, 4),
         "ndcg_at_10": round(ndcg_at_10, 4),
+        "metric_scope": "ranking-on-answerable-cases; abstention-on-zero-hit-cases",
+        **{key:value for key, value in ranking_metrics.items() if key not in {'mrr', 'ndcg_at_10'}},
         "authority_case_count": authority_case_count,
         "authority_hit_count": authority_hit_count,
         "authority_recall_at_3": round(authority_recall_at_3, 4),

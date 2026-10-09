@@ -4,14 +4,14 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (72)
+## validation (96)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
-- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
-- [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing`
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
+- [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
+- [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
+- [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing`
+- [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing`
+- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
 
 ## pcr02 (59)
 
@@ -67,6 +67,24 @@
 - [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 - [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
+## provider-archive (26)
+
+- [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
+- [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
+- [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing`
+- [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing`
+- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
+- [ADK8.0.2持久化、锁安全与实际运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-67eea36661773841b2559d61.md) · `reviewing`
+
+## knowledge-hub (16)
+
+- [Knowledge Hub root](../../README.md) · `active`
+- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
+- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
+- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
+- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
+- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
+
 ## ssc305 (16)
 
 - [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
@@ -84,15 +102,6 @@
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
 - [Owner Review 规范](../../governance/owner-review-rules.md) · `active`
 - [中文 Commit Changelog PR 规范](../../governance/commit-changelog-pr-rules.md) · `active`
-
-## knowledge-hub (14)
-
-- [Knowledge Hub root](../../README.md) · `active`
-- [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing`
-- [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing`
-- [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing`
-- [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing`
-- [Knowledge Hub current readiness model](../../governance/product/current/readiness-model.md) · `reviewing`
 
 ## x5 (12)
 
@@ -332,6 +341,13 @@
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
+## evidence (4)
+
+- [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
+- [排障记录规范](../../governance/debug-record-rules.md) · `active`
+- [证据写法规范](../../governance/evidence-rules.md) · `active`
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing`
+
 ## exact-source (4)
 
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing`
@@ -394,6 +410,12 @@
 - [Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30](../../governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md) · `reviewing`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing`
 
+## automation (3)
+
+- [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
+- [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
+- [Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06](../../governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md) · `reviewing`
+
 ## boot-time (3)
 
 - [PCR02 SSC305 SDK裁剪规划运行态基线验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md) · `reviewing`
@@ -423,12 +445,6 @@
 - [Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选](../../projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md) · `reviewing`
 - [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
 - [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
-
-## evidence (3)
-
-- [Registry 中文可读性与证据字段扩展](../../registry/schema.md) · `active`
-- [排障记录规范](../../governance/debug-record-rules.md) · `active`
-- [证据写法规范](../../governance/evidence-rules.md) · `active`
 
 ## long-term-assets (3)
 
@@ -465,6 +481,12 @@
 - [GD32L235 充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md) · `reviewing`
 - [GD32L235 可配置充电温度软硬保护策略决策候选](../../projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md) · `reviewing`
 - [GD32L235 高温回桩热态充电治理策略决策候选](../../projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md) · `reviewing`
+
+## transaction (3)
+
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing`
+- [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
+- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
 
 ## v1.1.2 (3)
 
@@ -513,11 +535,6 @@
 
 - [ASAN 调试方法论（团队级）](../../domains/embedded/runbooks/asan-debug-guide.md) · `active`
 - [PCR02 显示动作 UAF 源码修复验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md) · `reviewing`
-
-## automation (2)
-
-- [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
 
 ## boot-optimization (2)
 
@@ -629,11 +646,6 @@
 - [PCR02 SSC305 方法与工具来源吸收验证](../../projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md) · `reviewing`
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing`
 
-## provider-archive (2)
-
-- [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing`
-- [本地 GROS 构建与制品交付审查验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md) · `reviewing`
-
 ## qr-scan (2)
 
 - [PCR02 Video/Audio 共享内存使用说明](../../projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md) · `reviewing`
@@ -663,6 +675,11 @@
 
 - [PCR02 customer UBI 启动优化复核决策候选](../../projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-review-20260804.md) · `reviewing`
 - [PCR02 customer 静态 UBI 卷启动扫描优化候选](../../projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-20260803.md) · `reviewing`
+
+## retrieval (2)
+
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing`
+- [Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06](../../governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md) · `reviewing`
 
 ## security-review (2)
 
@@ -713,11 +730,6 @@
 
 - [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
 - [PCR02 SSC305 第三方库编译优化基线](../../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md) · `reviewing`
-
-## transaction (2)
-
-- [PCR02 多 WiFi 存储与切换完整实现方案](../../projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md) · `reviewing`
-- [PCR02电机Hall校准前置事务验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md) · `reviewing`
 
 ## uart (2)
 
@@ -1134,6 +1146,10 @@
 
 - [AI 生成内容标注规范](../../governance/ai-generated-content-labeling.md) · `active`
 
+## idempotency (1)
+
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing`
+
 ## immutable-manifest (1)
 
 - [X5 供应商资料不可变清单与修订协议](../../projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md) · `reviewing`
@@ -1402,6 +1418,10 @@
 
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md) · `reviewing`
 
+## reliability (1)
+
+- [Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06](../../governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md) · `reviewing`
+
 ## remote-debug (1)
 
 - [PCR02 Remote ADB/HIL 部署与失联恢复 Runbook](../../projects/xcrz-sigmastar-demo/current/runbooks/pcr02-remote-adb-hil-deployment-recovery.md) · `reviewing`
@@ -1421,6 +1441,10 @@
 ## retrieval-feedback (1)
 
 - [Knowledge Hub 真实项目证据与反馈波次 2026-07-26](../../governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md) · `draft`
+
+## review (1)
+
+- [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing`
 
 ## reviewing (1)
 

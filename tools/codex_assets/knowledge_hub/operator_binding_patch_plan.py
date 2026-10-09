@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .common import encode_jsonl, file_sha256, registry_items
 from .evidence import evaluate_evidence_contract
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 PROPOSAL_PROJECTION = "knowledge-operator-binding-proposal-v1"
 PATCH_PLAN_PROJECTION = "knowledge-operator-binding-patch-plan-v1"
@@ -358,12 +358,12 @@ def _materialize(
 
 
 def _transaction_plan(
-    root: pathlib.Path, items: Sequence[Mapping[str, Any]]
+    root: pathlib.Path, items: Sequence[Mapping[str, Any]], inputs=None
 ) -> Tuple[Dict[str, Any], str, str, List[str]]:
     registry_path = root / "registry" / "items.jsonl"
-    before_sha256 = file_sha256(registry_path)
+    before_sha256 = inputs["registry/items.jsonl"] if inputs is not None else file_sha256(registry_path)
     transaction = RepositoryTransaction(
-        root, transaction_id="kh-operator-binding-patch-plan"
+        root, transaction_id="kh-operator-binding-patch-plan", expected_inputs=inputs
     )
     transaction.add_text(
         "registry/items.jsonl",
@@ -453,10 +453,11 @@ def build_binding_patch_plan(
     chosen, reasons = _selected_rows(proposal, selected)
     if reasons:
         return _blocked(reasons, selected)
+    inputs = snapshot_inputs(root)
     items, rows, reasons = _materialize(root, chosen)
     if reasons:
         return _blocked(reasons, selected)
-    plan, before_sha256, after_sha256, reasons = _transaction_plan(root, items)
+    plan, before_sha256, after_sha256, reasons = _transaction_plan(root, items, inputs)
     if reasons:
         return _blocked(reasons, selected)
     return _success(selected, rows, plan, before_sha256, after_sha256)

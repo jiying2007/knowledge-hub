@@ -17,7 +17,7 @@ from .common import (
     render_markdown,
     split_frontmatter,
 )
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 HOME_START = "<!-- knowledge-hub-obsidian-views:start -->"
@@ -444,7 +444,7 @@ def stage_obsidian_views(
 def build_obsidian_views(
     root: pathlib.Path, apply: bool = False, reconcile_content_mirrors: bool = False
 ) -> Dict[str, Any]:
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=snapshot_inputs(root))
     staged = stage_obsidian_views(
         root,
         transaction,

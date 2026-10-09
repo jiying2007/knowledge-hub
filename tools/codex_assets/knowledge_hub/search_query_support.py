@@ -5,11 +5,16 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-import math
 import pathlib
+import re
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 from .common import KnowledgeHubError, compact_json, read_repository_bytes_bounded, source_id
 from .schema_subset import validate_contract_subset
+from .query_concepts import ConceptQuery, FIELD_VALUES, exact_concept_match
+from .query_scope import candidate_concepts
+from .query_matching import ConceptMatcher, Match, document_matcher
+from .query_focus import focus_bonus
+from .search_score_evidence import concept_evidence_score, distinctive_evidence_score, select_distinctive_terms
 from .search_ranking import is_historical_result as _historical_result, path_priority as _path_priority, redact_internal_endpoints as _redact_internal_endpoints, status_priority as _status_priority
 from .search_core import (
     ARCHIVE_INTENT_TERMS,
@@ -51,11 +56,33 @@ def _matched_query_terms(
     terms: Sequence[str],
     body: str,
     item: Mapping[str, Any],
+    exact: bool = False,
+    matcher: Optional[Match] = None,
 ) -> List[str]:
     """Return query terms matched by a row without exposing matched body text."""
 
+    body = _topic_body(body)
     combined = (_metadata_haystack(item) if item else "") + "\n" + body.lower()
-    return [term for term in terms if _term_matches(term, combined)]
+    topical = '\n'.join((str(item.get('title', '')), str(item.get('summary_zh', '')),
+                         ' '.join(str(tag) for tag in item.get('tags', [])), body)).lower()
+    matcher = matcher or (_concept_matches if exact else _term_matches)
+    return [term for term in terms if matcher(term, topical if term in FIELD_VALUES else combined)]
+
+
+def _concept_matches(term: str, text: str) -> bool:
+    return any(exact_concept_match(variant, text, normalized=True) for variant in _term_variants(term))
+
+
+def _topic_body(body: str) -> str:
+    """Exclude YAML property mirrors, preserving physical line numbers for previews."""
+    opening = re.match(r'\A(?:\ufeff)?---\r?\n', body)
+    if not opening:
+        return body
+    closing = re.search(r'(?m)^---[ \t]*\r?$(?:\n|\Z)', body[opening.end():])
+    if not closing:
+        return ''
+    end = opening.end() + closing.end()
+    return '\n' * body[:end].count('\n') + body[end:]
 
 
 def _archive_intent(query: str) -> bool:
@@ -63,9 +90,11 @@ def _archive_intent(query: str) -> bool:
     return any(_term_matches(term, lowered) for term in ARCHIVE_INTENT_TERMS)
 
 
-def _cursor_fingerprint(query: str, filters: SearchFilters) -> str:
+def _cursor_fingerprint(query: str, filters: SearchFilters, concept_plan: Optional[ConceptQuery] = None) -> str:
     payload = {
         "query": query,
+        'query_policy':'curated-metadata-concepts-v3',
+        'concept_plan':concept_plan.__dict__ if concept_plan and (concept_plan.enabled or concept_plan.enforce_constraints) else None,
         "filters": {
             "source": list(filters.sources),
             "owner": list(filters.owners),
@@ -268,6 +297,7 @@ def _preview(
     terms: Sequence[str],
     item: Mapping[str, Any],
 ) -> Tuple[int, str, bool, bool]:
+    body = _topic_body(body)
     lower = body.lower()
     positions = [(lower.find(term), term) for term in terms if lower.find(term) >= 0]
     if not positions:
@@ -295,14 +325,28 @@ def _score(
     indexed_title: str,
     terms: Sequence[str],
     query: str,
+    concept_plan: Optional[ConceptQuery] = None,
+    query_matcher: Optional[Match] = None,
 ) -> Optional[Tuple[int, List[str], float]]:
+    shared_context = False
+    if concept_plan and (concept_plan.enabled or concept_plan.enforce_constraints):
+        scoped = candidate_concepts(concept_plan, item)
+        if scoped is None:
+            return None
+        shared_context = bool(concept_plan.project_domains and not scoped.project_domains)
+        concept_plan, terms = scoped, scoped.terms
+    body = _topic_body(body)
     body_haystack = body.lower()
-    matched_terms = _matched_query_terms(terms, body, item)
+    natural = bool(concept_plan and concept_plan.enabled)
+    matches = document_matcher((query_matcher or ConceptMatcher(terms)) if natural else _term_matches)
+    matched_terms = _matched_query_terms(terms, body, item, exact=natural, matcher=matches)
     if not matched_terms:
         return None
     coverage = len(matched_terms) / float(max(1, len(terms)))
     score, path_reason = _path_priority(relative)
     reasons = [path_reason, "query-coverage:{:.2f}".format(coverage)]
+    if shared_context:
+        reasons.append('shared-policy-comparison')
     score += int(coverage * 180)
     if item:
         status = str(item.get("status", ""))
@@ -318,7 +362,7 @@ def _score(
         score += 190
         reasons.append("exact-title")
     elif title:
-        title_hits = sum(1 for term in terms if _term_matches(term, title))
+        title_hits = sum(1 for term in terms if matches(term, title))
         score += title_hits * 70
         if title_hits:
             reasons.append("title-tokens")
@@ -326,65 +370,42 @@ def _score(
         score += 150
         reasons.append("exact-id")
     elif item_id:
-        id_hits = sum(1 for term in terms if _term_matches(term, item_id))
+        id_hits = sum(1 for term in terms if term not in FIELD_VALUES and matches(term, item_id))
         score += id_hits * 55
         if id_hits:
             reasons.append("id-tokens")
     for field_text, weight, reason in ((tags, 45, "tag-tokens"), (summary, 40, "summary-tokens"), (path_text, 30, "path-tokens")):
-        hits = sum(1 for term in terms if _term_matches(term, field_text))
+        hits = sum(1 for term in terms if (reason != 'path-tokens' or term not in FIELD_VALUES) and matches(term, field_text))
         if hits:
             score += hits * weight
             reasons.append(reason)
-    distinctive_terms = [
-        term
-        for term in terms
-        if term not in GENERIC_QUERY_TERMS
-        and (
-            len(term) >= 3
-            or len("".join(CJK_PATTERN.findall(term))) >= 2
-        )
-    ]
+    distinctive_terms = select_distinctive_terms(terms)
+    if distinctive_terms and normalized_query and normalized_query in summary:
+        # A complete question in a curated summary is stronger evidence than
+        # a title sharing only CJK ngrams. Generic-only queries gain no bonus.
+        summary_token_score = 40 * sum(matches(term, summary) for term in terms)
+        score += max(0, min(120, 180 - summary_token_score))
+        reasons.append('exact-summary')
     metadata_fields = "\n".join((title, item_id, tags, summary, path_text))
-    matched_distinctive_anywhere = [
-        term
-        for term in distinctive_terms
-        if _term_matches(term, metadata_fields) or _term_matches(term, body_haystack)
-    ]
-    matched_distinctive_metadata = [
-        term for term in distinctive_terms if _term_matches(term, metadata_fields)
-    ]
-    exact_query_match = bool(
-        normalized_query
-        and (
-            normalized_query in metadata_fields
-            or normalized_query in body_haystack
-        )
-    )
-    if len(distinctive_terms) >= 2 and not exact_query_match:
-        minimum_distinctive = (
-            2
-            if len(distinctive_terms) == 2
-            else max(2, int(math.ceil(len(distinctive_terms) * 0.5)))
-        )
-        if (
-            len(matched_distinctive_anywhere) < minimum_distinctive
-            or not matched_distinctive_metadata
-        ):
-            return None
-    distinctive_hits = [term for term in distinctive_terms if _term_matches(term, metadata_fields)]
-    if distinctive_hits:
-        score += min(480, sum(min(180, 45 + (12 * len(term))) for term in distinctive_hits))
-        reasons.append("distinctive-metadata:{}".format(len(distinctive_hits)))
-    body_only_hits = [
-        term
-        for term in distinctive_terms
-        if _term_matches(term, body_haystack) and not _term_matches(term, metadata_fields)
-    ]
-    if body_only_hits:
-        score -= min(120, len(body_only_hits) * 30)
-        reasons.append("body-only-distinctive-penalty")
+    topic_fields = '\n'.join((title, tags, summary))
+    full_document = metadata_fields + '\n' + body_haystack
+    topic_document = topic_fields + '\n' + body_haystack
+    def evidence_text(term: str) -> str:
+        return topic_fields if term in FIELD_VALUES else metadata_fields
+    concept_score = concept_evidence_score(concept_plan, natural, terms, matches, full_document,
+                                           topic_document, metadata_fields, evidence_text, item)
+    if concept_score is None:
+        return None
+    score += concept_score[0]
+    reasons.extend(concept_score[1])
+    distinctive_score = distinctive_evidence_score(distinctive_terms, matches, evidence_text, body_haystack,
+                                                   normalized_query, topic_fields)
+    if distinctive_score is None:
+        return None
+    score += distinctive_score[0]
+    reasons.extend(distinctive_score[1])
     metadata_term_match = any(
-        _term_matches(term, metadata_fields) for term in terms
+        matches(term, evidence_text(term)) for term in terms
     )
     if relative == "README.md" and not metadata_term_match:
         score -= 160
@@ -393,6 +414,7 @@ def _score(
         term
         for term in distinctive_terms
         if ASCII_TOKEN_PATTERN.fullmatch(term) and term not in GENERIC_QUERY_TERMS
+        and term not in FIELD_VALUES
     ]
     if len(ascii_distinctive) >= 2 and all(term in path_text for term in ascii_distinctive):
         score += 220
@@ -400,7 +422,7 @@ def _score(
     if normalized_query and normalized_query in body_haystack:
         score += 55
         reasons.append("exact-body")
-    elif any(_term_matches(term, body_haystack) for term in terms):
+    elif any(matches(term, body_haystack) for term in terms):
         score += 20
         reasons.append("body-tokens")
     if suffix in {".json", ".jsonl"}:
@@ -421,4 +443,5 @@ def _score(
         reasons.append("template-projection-penalty")
     if _historical_result(item, relative) and not _archive_intent(query):
         reasons.append("historical-fallback-lane")
-    return int(score), reasons, coverage
+    focus_score, focus_reasons = focus_bonus(query, concept_plan, title)
+    return int(score + focus_score), reasons + focus_reasons, coverage

@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import sys
+import subprocess
 import uuid
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -26,6 +27,10 @@ from .common import (
 )
 from .artifact_governance import evaluate_artifact_governance
 from .command_surface import evaluate_command_surface
+from .check_dependencies import dependency_fingerprints, check_identity, cached_check, store_check, cache_safe
+from .unit_evidence import record_parent_unit
+from .engineering_results import exception_attempt as _exception_attempt, failed_attempts as _failed_attempts, retain_regression_failure as _retain_regression_failure
+from .engineering_results import coverage_failure_class
 from .complexity_budget import evaluate_complexity_budget
 from .engineering_dependencies import (
     direct_pins as _direct_pins,
@@ -433,7 +438,8 @@ def _run_quality_command(
     """Run one quality command and retain bounded evidence for every attempt."""
 
     attempts: List[Dict[str, Any]] = []
-    accepted_exit_codes = tuple(sorted({0, *retry_exit_codes}))
+    # Acceptance means capture the process result, never quality success or retry.
+    accepted_exit_codes = tuple(range(-128, 256))
     for attempt_number in range(1, max_attempts + 1):
         try:
             result = run_rtk(
@@ -441,24 +447,14 @@ def _run_quality_command(
                 command,
                 timeout=timeout,
                 accepted_exit_codes=accepted_exit_codes,
+                extra_env={"PATH": str(root / "tools/ci") + os.pathsep + os.environ.get("PATH", "")},
             )
-        except (KnowledgeHubError, OSError) as exc:
-            attempts.append(
-                {
-                    "attempt": attempt_number,
-                    "status": "fail",
-                    "error": str(exc),
-                }
-            )
-            if attempt_number < max_attempts:
+        except (KnowledgeHubError, OSError, subprocess.TimeoutExpired) as exc:
+            attempt = _exception_attempt(attempt_number, exc)
+            attempts.append(attempt)
+            if attempt['retry_eligible'] and attempt_number < max_attempts:
                 continue
-            return {
-                "status": "fail",
-                "attempt_count": len(attempts),
-                "recovered_after_retry": False,
-                "attempts": attempts,
-                "error": str(exc),
-            }
+            return _failed_attempts(attempts, str(exc))
 
         attempt_status = "pass" if result["exit_code"] == 0 else "fail"
         attempt = {
@@ -469,7 +465,9 @@ def _run_quality_command(
             "duration_sec": result["duration_sec"],
             "stdout_tail": _tail(result["stdout"]),
             "stderr_tail": _tail(result["stderr"]),
+            "retry_eligible": result["exit_code"] in retry_exit_codes,
         }
+        _retain_regression_failure(command, result, attempt)
         attempts.append(attempt)
         if attempt_status == "pass":
             return {
@@ -482,14 +480,13 @@ def _run_quality_command(
                 "recovered_after_retry": len(attempts) > 1,
                 "attempts": attempts,
             }
+        summary = attempt.get('failure_summary', {})
+        if isinstance(summary, dict) and summary.get('failure_ids'):
+            break  # Structured contract failures require repair, not blind retry.
+        if not attempt['retry_eligible']:
+            break
 
-    return {
-        "status": "fail",
-        "attempt_count": len(attempts),
-        "recovered_after_retry": False,
-        "attempts": attempts,
-        "error": "command failed after {} attempt(s)".format(len(attempts)),
-    }
+    return _failed_attempts(attempts, "command failed after {} attempt(s)".format(len(attempts)))
 
 
 def _run_engineering_check(
@@ -504,9 +501,9 @@ def _run_engineering_check(
             command,
             timeout,
             max_attempts=2,
-            retry_exit_codes=(1,),
+            retry_exit_codes=(),
         )
-    retry_exit_codes = (1,) if name == "coverage" else ()
+    retry_exit_codes: Sequence[int] = ()
     return _run_quality_command(
         root,
         command,
@@ -551,8 +548,17 @@ def _recover_coverage_report(
     root: pathlib.Path,
     python: str,
     initial: Mapping[str, Any],
+    completed_checks: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Recollect coverage once after a report failure, preserving first-failure evidence."""
+    """Recollect only classified coverage data loss after both test runs passed."""
+
+    classification = coverage_failure_class(initial)
+    completed = completed_checks or {}
+    if classification != 'recoverable-coverage-data' or any(
+            completed.get(name, {}).get('status') != 'pass' for name in ('coverage', 'full_regression')):
+        return {'status':'fail', 'initial':dict(initial), 'failure_class':classification,
+                'diagnostic':{'status':'not-run'}, 'recollection':{},
+                'recovered_after_recollection':False, 'error':'coverage failure is not eligible for recollection'}
 
     diagnostic = _run_quality_command(
         root,
@@ -561,16 +567,7 @@ def _recover_coverage_report(
     )
     recollection: Dict[str, Dict[str, Any]] = {}
     for name, command, timeout in _coverage_recollection_commands(python):
-        if name == "full_regression":
-            result = _run_quality_command(
-                root,
-                command,
-                timeout,
-                max_attempts=2,
-                retry_exit_codes=(1,),
-            )
-        else:
-            result = _run_quality_command(root, command, timeout)
+        result = _run_quality_command(root, command, timeout)
         recollection[name] = result
         if result["status"] != "pass":
             break
@@ -582,6 +579,7 @@ def _recover_coverage_report(
         "diagnostic": diagnostic,
         "recollection": recollection,
         "recovered_after_recollection": recovered,
+        "failure_class":classification,
     }
     if recovered:
         for field in ("command", "duration_sec", "stdout_tail", "stderr_tail"):
@@ -616,12 +614,29 @@ def _write_engineering_snapshot(root: pathlib.Path, payload: Mapping[str, Any]) 
     return str(path.relative_to(root))
 
 
+def _blocked_quality_result(root, contract, checks, sbom_path) -> Dict[str, Any]:
+    blocking_errors = list(contract["errors"])
+    if not contract["python_support"]["current_supported"]:
+        blocking_errors.append("full engineering quality requires a supported Python >=3.10")
+    return {
+        "schema_version": 1,
+        "generated_at": utc_timestamp(),
+        "status": "fail",
+        "mode": "full",
+        "contract": contract,
+        "checks": checks,
+        "sbom": {"path": str(sbom_path.relative_to(root)), "generated": False},
+        "errors": blocking_errors,
+    }
+
+
 def run_engineering_quality(
     root: pathlib.Path,
     sbom_output: Optional[pathlib.Path] = None,
 ) -> Dict[str, Any]:
     root = pathlib.Path(root).resolve()
     candidate_signature = working_tree_signature(root)
+    fingerprints = dependency_fingerprints(root)
     contract = evaluate_engineering_contract(root)
     output_root = root / ".tmp" / "engineering"
     ensure_private_directory_tree(root, output_root)
@@ -632,19 +647,7 @@ def run_engineering_quality(
         raise KnowledgeHubError("SBOM output must stay inside the repository") from exc
     checks: Dict[str, Dict[str, Any]] = {}
     if contract["status"] != "pass" or not contract["python_support"]["current_supported"]:
-        blocking_errors = list(contract["errors"])
-        if not contract["python_support"]["current_supported"]:
-            blocking_errors.append("full engineering quality requires a supported Python >=3.10")
-        return {
-            "schema_version": 1,
-            "generated_at": utc_timestamp(),
-            "status": "fail",
-            "mode": "full",
-            "contract": contract,
-            "checks": checks,
-            "sbom": {"path": str(sbom_path.relative_to(root)), "generated": False},
-            "errors": blocking_errors,
-        }
+        return _blocked_quality_result(root, contract, checks, sbom_path)
 
     python = _current_python_executable()
     dist_dir = ".tmp/engineering/dist"
@@ -729,12 +732,20 @@ def run_engineering_quality(
     )
     quality_errors: List[str] = []
     for name, command, timeout in commands:
-        checks[name] = _run_engineering_check(
-            root,
-            name,
-            command,
-            timeout,
-        )
+        dependency, identity = check_identity(name, command, fingerprints)
+        cacheable = name in {'ruff_correctness', 'mypy', 'bandit'} and cache_safe(root, name)
+        cached = cached_check(root, name, identity) if cacheable else None
+        checks[name] = cached or _run_engineering_check(root, name, command, timeout)
+        checks[name]['dependencies'] = dependency
+        if cacheable and cached is None and checks[name]['status'] == 'pass':
+            after_inputs = dependency_fingerprints(root)
+            if after_inputs['kernel'] == fingerprints['kernel']:
+                store_check(root, name, identity, checks[name])
+        if name == 'coverage' and checks[name]['status'] == 'pass':
+            try:
+                record_parent_unit(root, candidate_signature, fingerprints['kernel'], checks[name])
+            except KnowledgeHubError as exc:
+                quality_errors.append('parent unit evidence failed: {}'.format(exc))
         if checks[name]["status"] != "pass" and name != "coverage_report":
             quality_errors.append("{} failed".format(name))
     if checks.get("coverage_report", {}).get("status") != "pass":
@@ -742,6 +753,7 @@ def run_engineering_quality(
             root,
             python,
             checks["coverage_report"],
+            checks,
         )
         if checks["coverage_report"]["status"] != "pass":
             quality_errors.append("coverage_report failed")
@@ -770,6 +782,7 @@ def run_engineering_quality(
             "after_signature": candidate_signature_after,
         },
         "errors": quality_errors,
+        "dependency_fingerprints": fingerprints,
     }
     payload["snapshot"] = {
         "path": ENGINEERING_SNAPSHOT_RELATIVE,

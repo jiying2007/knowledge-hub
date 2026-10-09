@@ -32,8 +32,8 @@ run_with_failure_stdout_mirror() {
 skip_nested_final_gate_pytest() {
   if [[ "${KNOWLEDGE_FINAL_GATE_INNER_REGRESSION:-}" == "1"
         && $# -eq 3 && "$1" == "-m" && "$2" == "pytest" && "$3" == "-q" ]]; then
-    printf '%s\n' 'nested final-gate pytest skipped; outer regression/engineering test evidence owns this layer'
-    exit 0
+    printf '%s\n' 'nested final-gate pytest delegated; no successful parent evidence supplied'
+    exit 77
   fi
 }
 

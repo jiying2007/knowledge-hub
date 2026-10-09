@@ -93,6 +93,20 @@ def _unit_test_evidence_reuse_mode(
         return "automatic-quick"
     return "disabled"
 
+def _full_regression_verified(result, payload):
+    delegated = payload.get('delegated_result_count')
+    return (result.get('exit_code') == 0 and payload.get('status') == 'pass'
+            and payload.get('full_regression_completed') is True
+            and type(delegated) is int and delegated == 0)
+
+
+def _regression_execution_summary(payload, suite, ready):
+    return {'full_regression_completed':suite == 'full' and ready,
+            'executed_result_count':payload.get('executed_result_count', 0),
+            'delegated_result_count':payload.get('delegated_result_count', 0),
+            'delegated_ids':payload.get('delegated_ids', [])[:20]}
+
+
 def product_snapshot_path(root: pathlib.Path, regression_suite: str) -> pathlib.Path:
     if regression_suite not in {"quick", "full"}:
         raise ValueError("regression_suite must be quick or full")

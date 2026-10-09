@@ -31,7 +31,7 @@ from .project_readiness_validation import (
     validate_existing_validation_body,
     validation_expectations,
 )
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 MANAGED_START = "<!-- knowledge-hub-project-readiness:start -->"
@@ -471,7 +471,7 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
     transaction.add_text(path, content, expected_sha256=file_sha256(target) if target.exists() else "")
 
 
-def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+def _registered_projects(root: pathlib.Path):
     projects_doc = load_json(root / "registry/projects.json", {}) or {}
     projects = [dict(row) for row in projects_doc.get("projects", [])]
     if not projects:
@@ -481,6 +481,12 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         raise KnowledgeHubError("every registered project must define a non-empty id")
     if len(set(project_ids)) != len(project_ids):
         raise KnowledgeHubError("registry/projects.json contains duplicate project ids")
+    return projects, project_ids
+
+
+def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+    inputs = snapshot_inputs(root)
+    projects, project_ids = _registered_projects(root)
     product_policy, policy_errors = load_product_policy(root)
     readiness_extensions, extension_errors = readiness_extensions_by_project(
         product_policy, project_ids
@@ -688,7 +694,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         current_source_ids,
     )
     readiness_index = _readiness_index(projects, project_paths)
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     for path, content in rendered_docs.items():
         _add_text(transaction, root, path, content)
     for path, content in readme_updates.items():

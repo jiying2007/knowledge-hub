@@ -9,6 +9,7 @@ import pathlib
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union
 
 from .common import KnowledgeHubError, run_rtk
+from .complexity_baseline import baseline_python_texts
 
 
 def _load_policy(root: pathlib.Path) -> Mapping[str, Any]:
@@ -137,23 +138,6 @@ def _git_ref_exists(root: pathlib.Path, ref: str) -> bool:
     return result["exit_code"] == 0
 
 
-def _git_show_text(
-    root: pathlib.Path,
-    ref: str,
-    relative: str,
-) -> Optional[str]:
-    try:
-        result = run_rtk(
-            root,
-            ["git", "show", "{}:{}".format(ref, relative)],
-            timeout=20,
-            accepted_exit_codes=(0, 128),
-        )
-    except (KnowledgeHubError, OSError):
-        return None
-    return result["stdout"] if result["exit_code"] == 0 else None
-
-
 def _baseline_functions(text: str) -> Dict[str, int]:
     return {
         str(row["qualname"]): int(row["lines"])
@@ -232,9 +216,8 @@ def _baseline_function_regressions(
 
 
 def _evaluate_against_git_baseline(
-    root: pathlib.Path,
     *,
-    baseline_ref: str,
+    baseline_text: Optional[str],
     relative: str,
     line_count: int,
     functions: List[Dict[str, Any]],
@@ -242,7 +225,6 @@ def _evaluate_against_git_baseline(
     function_limit: int,
     cap: Any,
 ) -> Tuple[bool, List[Dict[str, Any]], List[Dict[str, Any]]]:
-    baseline_text = _git_show_text(root, baseline_ref, relative)
     if baseline_text is None:
         return (
             False,
@@ -277,11 +259,16 @@ def _evaluate_against_git_baseline(
                 "limit": module_limit,
             }
         )
+    baseline_functions = (
+        _baseline_functions(baseline_text)
+        if any(int(row["lines"]) > function_limit for row in functions)
+        else {}
+    )
     regressions.extend(
         _baseline_function_regressions(
             relative,
             functions,
-            _baseline_functions(baseline_text),
+            baseline_functions,
             function_limit=function_limit,
         )
     )
@@ -355,6 +342,7 @@ def _evaluate_python(
     module_rows: List[Dict[str, Any]] = []
     package = root / "tools/codex_assets/knowledge_hub"
     paths = sorted(package.rglob("*.py")) if package.exists() else []
+    baseline_texts = baseline_python_texts(root, baseline_ref) if baseline_ref else {}
     for path in paths:
         relative = str(path.relative_to(root))
         text = path.read_text(encoding="utf-8")
@@ -364,8 +352,7 @@ def _evaluate_python(
         if baseline_ref:
             is_baseline, new_regressions, attention = (
                 _evaluate_against_git_baseline(
-                    root,
-                    baseline_ref=baseline_ref,
+                    baseline_text=baseline_texts.get(relative),
                     relative=relative,
                     line_count=line_count,
                     functions=functions,
@@ -603,4 +590,3 @@ def evaluate_complexity_budget(root: pathlib.Path) -> Dict[str, Any]:
         ),
         "errors": errors,
     }
-

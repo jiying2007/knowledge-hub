@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "dataset_role": "development-regression",
+  "used_for_tuning": true,
+  "production_derived": false,
+  "cases": [
+    {"id":"natural-asan", "query_class":"natural-zh", "query":"嵌入式程序出现内存越界，怎样用 ASAN 排查？", "expected_ids":["embedded-asan-debug-guide-20260629"]},
+    {"id":"mixed-asan", "query_class":"mixed", "query":"embedded ASAN 调试 guide", "expected_ids":["embedded-asan-debug-guide-20260629"]},
+    {"id":"natural-display", "query_class":"natural-zh", "query":"ST77912 双屏 SPI 帧率和高温老化有什么约束？", "expected_ids":["pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711"]},
+    {"id":"mixed-display", "query_class":"mixed", "query":"ST77912 framebuffer 和 MI_FB 应该如何分工？", "expected_ids":["pcr02-st77912-fb-mi-fb-boundary-decision-20260711"]},
+    {"id":"natural-release", "query_class":"authority-conflict", "query":"PCR02 NAS 正式发布真实性怎样核验？", "expected_ids":["pcr02-soc-v1-1-33-nas-release-audit-20260715"], "forbidden_ids":["pcr02-owner-ready-validation-paths-20260713"]},
+    {"id":"natural-obsidian", "query_class":"natural-zh", "query":"如何在 Obsidian 查看知识的反向链接和关系图？", "expected_ids":["knowledge-hub-obsidian-integration-20260713"]},
+    {"id":"mixed-obsidian", "query_class":"synonym", "query":"Obsidian backlinks Graph 双向链接", "expected_ids":["knowledge-hub-obsidian-integration-20260713"]},
+    {"id":"natural-control-plane", "query_class":"authority-conflict", "query":"Knowledge Hub 的 registry、owner 和统一知识控制面在哪里说明？", "expected_ids":["knowledge-hub-root"], "forbidden_ids":["knowledge-hub-readiness-profile-20260713"]},
+    {"id":"natural-gd32-release", "query_class":"natural-zh", "query":"GD32L235 v1.1.38 发布到 NAS 的记录在哪里？", "expected_ids":["gd32l235-v1-1-38-nas-release-20260718"]},
+    {"id":"natural-gd32-charge", "query_class":"natural-zh", "query":"GD32L235 PA12 快慢充怎样兼容？", "expected_ids":["gd32l235-pa12-fast-slow-charge-compatibility-20260713"]},
+    {"id":"no-answer-a", "query_class":"no-answer", "query":"zzholdoutmissingtopicquasar987", "expected_zero_hit":true},
+    {"id":"no-answer-b", "query_class":"no-answer", "query":"zzyunregisteredprotocolnebula654", "expected_zero_hit":true}
+  ]
+}

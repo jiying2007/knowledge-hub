@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .common import KnowledgeHubError, file_sha256, load_json, pretty_json, repository_rows
 from .context import normalize_remote_key, remote_urls_from_config
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 
 PRUNED_DIRECTORY_NAMES = {
@@ -224,6 +224,13 @@ def _stable_payload(existing: Mapping[str, Any], workspaces: List[Dict[str, Any]
     }
 
 
+def _resolve_scan_roots(scan_roots: Sequence[pathlib.Path]) -> List[pathlib.Path]:
+    resolved_roots = [path.expanduser().resolve(strict=False) for path in scan_roots]
+    if not resolved_roots:
+        raise KnowledgeHubError("at least one --scan-root is required")
+    return resolved_roots
+
+
 def discover_workspaces(
     root: pathlib.Path,
     scan_roots: Sequence[pathlib.Path],
@@ -233,9 +240,8 @@ def discover_workspaces(
 ) -> Dict[str, Any]:
     if maximum_depth < 1 or maximum_depth > 32:
         raise KnowledgeHubError("maximum depth must be between 1 and 32")
-    resolved_roots = [path.expanduser().resolve(strict=False) for path in scan_roots]
-    if not resolved_roots:
-        raise KnowledgeHubError("at least one --scan-root is required")
+    inputs = snapshot_inputs(root)
+    resolved_roots = _resolve_scan_roots(scan_roots)
     registered = _registered_remote_map(root, include_external=include_external)
     matches: Dict[str, List[pathlib.Path]] = defaultdict(list)
     scanned_repositories = 0
@@ -281,7 +287,7 @@ def discover_workspaces(
     existing = load_json(local_path, {}) or {}
     local_payload = _stable_payload(existing, workspaces, unmatched)
     content = pretty_json(local_payload) + "\n"
-    transaction = RepositoryTransaction(root)
+    transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(
         "local/workspaces.json",
         content,

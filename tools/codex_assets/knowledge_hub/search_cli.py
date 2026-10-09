@@ -1,6 +1,7 @@
 """CLI for cached Knowledge Hub search."""
 
 from __future__ import annotations
+from .natural_query import normalize_question
 
 import argparse
 import json
@@ -89,6 +90,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rebuild-index", action="store_true")
     parser.add_argument("--cursor", default="")
     parser.add_argument("--no-telemetry", action="store_true")
+    parser.add_argument("--query-mode", choices=("exact", "natural"), default="exact")
     return parser
 
 
@@ -99,7 +101,7 @@ def main(argv: Sequence[str] = ()) -> int:
         root = repository_root(args.root)
         payload = search(
             root,
-            args.query,
+            normalize_question(args.query) if args.query_mode == "natural" else args.query,
             args.limit,
             SearchFilters(args.source, args.owner, args.status, args.kind, args.domain, args.source_id),
             rebuild_index=args.rebuild_index,

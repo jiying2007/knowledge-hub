@@ -8,7 +8,7 @@ import sys
 
 from .common import bytes_sha256, file_sha256, load_markdown, render_markdown
 from .model import merge_frontmatter_mirror
-from .store import RepositoryTransaction
+from .store import RepositoryTransaction, snapshot_inputs
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -20,6 +20,7 @@ mode.add_argument("--dry-run", action="store_true", help="Validate and print the
 mode.add_argument("--apply", action="store_true", help="Apply validated registry updates.")
 parser.add_argument("--json", action="store_true")
 args = parser.parse_args(argv)
+inputs = snapshot_inputs(root)
 
 items_path = root / "registry" / "items.jsonl"
 forms_path = pathlib.Path(args.forms).expanduser()
@@ -410,7 +411,7 @@ for item in items:
     rewritten.append(updated_by_id.get(item_id, item))
 encoded = "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in rewritten) + "\n"
 
-transaction = RepositoryTransaction(root)
+transaction = RepositoryTransaction(root, expected_inputs=inputs)
 for relative_path, rendered in rendered_by_path.items():
     target_path = root / relative_path
     transaction.add_text(

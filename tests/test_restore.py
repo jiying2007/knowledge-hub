@@ -1,4 +1,10 @@
+import hashlib
+import json
+import os
 import subprocess
+import sys
+
+import pytest
 
 from tools.codex_assets.knowledge_hub import restore
 from tools.codex_assets.knowledge_hub.common import repository_root
@@ -300,3 +306,125 @@ def test_restore_check_fails_when_retry_budget_is_exhausted(tmp_path, monkeypatc
         "fail",
         "fail",
     ]
+
+
+def _unit_target(root, *, passes=True):
+    root.mkdir(parents=True, exist_ok=True)
+    (root / 'tests').mkdir()
+    (root / 'tests/test_unit.py').write_text('def test_unit():\n    assert {}\n'.format(passes), encoding='utf-8')
+    (root / 'README.md').write_text('restore fixture\n', encoding='utf-8')
+    (root / '.gitignore').write_text('.tmp/\n.cache/\n.pytest_cache/\n__pycache__/\nignored_input.py\n', encoding='utf-8')
+    subprocess.run(['rtk', 'git', 'init', '-q'], cwd=root, check=True, capture_output=True)
+    return [sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider']
+
+
+def _unit_env():
+    return {'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1', 'PYTHONDONTWRITEBYTECODE':'1',
+            'KNOWLEDGE_FINAL_GATE_INNER_REGRESSION':'0'}
+
+
+def test_successful_restored_unit_run_retains_actual_attempt_and_target_receipt(tmp_path):
+    from tools.codex_assets.knowledge_hub.unit_evidence import UNIT_RECEIPT, verified_parent_unit
+    from tools.codex_assets.knowledge_hub.check_dependencies import dependency_fingerprints
+
+    command = _unit_target(tmp_path / 'restored')
+    target = tmp_path / 'restored'
+    source = restore.working_tree_signature(target)
+    kernel = dependency_fingerprints(target)['kernel']
+    result = restore._run_restored_unit_check(target, command, _unit_env())
+    receipt = json.loads((target / UNIT_RECEIPT).read_text())
+    assert result['status'] == 'pass' and result['attempt_count'] == 1
+    assert receipt == result['parent_unit_evidence']
+    assert receipt['source_signature'] == source and receipt['test_set_sha256'] == kernel
+    actual = receipt['result']
+    assert actual['attempts'][0]['exit_code'] == 0 and actual['attempts'][0]['status'] == 'pass'
+    assert '-m pytest -q' in actual['command']
+    assert receipt['result_sha256'] == hashlib.sha256(json.dumps(actual, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    assert verified_parent_unit(target)['run_id'] == receipt['run_id']
+    assert not (tmp_path / UNIT_RECEIPT).exists()
+
+
+@pytest.mark.parametrize('exit_kind', ['failed-pytest', 'exit77'])
+def test_failed_or_delegated_restored_unit_never_records_pass(tmp_path, monkeypatch, exit_kind):
+    from tools.codex_assets.knowledge_hub.unit_evidence import UNIT_RECEIPT
+
+    command = _unit_target(tmp_path, passes=False)
+    if exit_kind == 'exit77':
+        command = [sys.executable, '-c', 'import sys; sys.exit(77)']
+    def forbidden(*args, **kwargs):
+        pytest.fail('failed or delegated unit cannot be attested')
+    monkeypatch.setattr(restore, 'record_parent_unit', forbidden)
+    result = restore._run_restored_unit_check(tmp_path, command, _unit_env())
+    assert result['status'] == 'fail' and result['attempt_count'] == 1
+    assert result['attempts'][0]['status'] == 'fail'
+    assert not (tmp_path / UNIT_RECEIPT).exists()
+
+
+@pytest.mark.parametrize('changed', ['source', 'ignored-kernel'])
+def test_successful_runner_with_changed_inputs_cannot_write_pass_receipt(tmp_path, monkeypatch, changed):
+    from tools.codex_assets.knowledge_hub.unit_evidence import UNIT_RECEIPT
+
+    command = _unit_target(tmp_path)
+    path = tmp_path / ('README.md' if changed == 'source' else 'ignored_input.py')
+    path.write_text('before = 1\n', encoding='utf-8')
+    source_before = restore.working_tree_signature(tmp_path)
+    real_run = restore.run_rtk
+    def mutate_after_actual_run(root, command, **kwargs):
+        result = real_run(root, command, **kwargs)
+        path.write_text('after = 2\n', encoding='utf-8')
+        return result
+    monkeypatch.setattr(restore, 'run_rtk', mutate_after_actual_run)
+    result = restore._run_restored_unit_check(tmp_path, command, _unit_env())
+    assert result['status'] == 'fail' and result['attempts'][0]['exit_code'] == 0
+    assert 'inputs changed' in result['parent_unit_evidence_error']
+    assert not (tmp_path / UNIT_RECEIPT).exists()
+    if changed == 'ignored-kernel':
+        assert restore.working_tree_signature(tmp_path) == source_before
+
+
+def test_actual_timeout_cannot_register_restored_unit_pass(tmp_path, monkeypatch):
+    from tools.codex_assets.knowledge_hub.bounded_process import run_bounded
+    from tools.codex_assets.knowledge_hub.unit_evidence import UNIT_RECEIPT
+
+    _unit_target(tmp_path)
+    def timed_out(*args, **kwargs):
+        return run_bounded([sys.executable, '-c', 'import time; time.sleep(2)'],
+                           cwd=tmp_path, env=os.environ.copy(), timeout=.05)
+    monkeypatch.setattr(restore, 'run_rtk', timed_out)
+    with pytest.raises(subprocess.TimeoutExpired):
+        restore._run_restored_unit_check(tmp_path, [sys.executable], _unit_env())
+    assert not (tmp_path / UNIT_RECEIPT).exists()
+
+
+def test_restored_parent_proof_is_rechecked_after_downstream_input_change(tmp_path):
+    from tools.codex_assets.knowledge_hub.unit_evidence import verified_parent_unit
+
+    command = _unit_target(tmp_path)
+    result = restore._run_restored_unit_check(tmp_path, command, _unit_env())
+    assert result['status'] == 'pass' and verified_parent_unit(tmp_path)
+    (tmp_path / 'tests/test_unit.py').write_text('def test_changed():\n    assert False\n', encoding='utf-8')
+    assert verified_parent_unit(tmp_path) is None
+
+
+def test_restore_check_sequence_registers_target_proof_before_product_smoke(tmp_path, monkeypatch):
+    from tools.codex_assets.knowledge_hub.unit_evidence import verified_parent_unit
+
+    target = tmp_path / 'restored'
+    command = _unit_target(target)
+    monkeypatch.setattr(restore, '_restore_commands', lambda *args: {
+        'unit_tests':command, 'product_gate_smoke':['fixture-smoke'],
+    })
+    actual_check = restore._run_restore_check
+    def check_with_smoke(root, arguments, command_env, **kwargs):
+        assert root == target
+        if arguments == command:
+            assert command_env['KNOWLEDGE_FINAL_GATE_INNER_REGRESSION'] == '0'
+            return actual_check(root, arguments, command_env, **kwargs)
+        assert command_env['KNOWLEDGE_FINAL_GATE_INNER_REGRESSION'] == '1'
+        proof = verified_parent_unit(root)
+        assert proof is not None
+        return {'status':'pass', 'used_run_id':proof['run_id']}
+    monkeypatch.setattr(restore, '_run_restore_check', check_with_smoke)
+    checks = restore._run_restore_checks(target, '2026-10-09', _unit_env())
+    assert checks['unit_tests']['status'] == checks['product_gate_smoke']['status'] == 'pass'
+    assert checks['unit_tests']['parent_unit_evidence']['run_id'] == checks['product_gate_smoke']['used_run_id']

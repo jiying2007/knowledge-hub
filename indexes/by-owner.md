@@ -461,6 +461,31 @@
 - `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - `provider-llm-agent-85cdfb6aec9222231a5a7243`
 - `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
+- `provider-llm-agent-94244aa67d60c96f9375bcc7`
+- `provider-llm-agent-f703aef64b44092a82ffe439`
+- `provider-knowledge-hub-59b973037d5b9d11b551bd39`
+- `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
+- `provider-llm-agent-63e87b8724e4e121da4d4896`
+- `provider-llm-agent-8aba0675f67e3ceadf5d9eac`
+- `provider-knowledge-hub-efe8d8b137ac219d030fbc06`
+- `provider-codex-94a9746ffadd3a7353d0c589`
+- `provider-llm-agent-232c6f020366e6dfa82fba4f`
+- `provider-codex-8008d911326cf0c6cbb838fb`
+- `provider-llm-agent-4699a5202fd8753d00f8eb44`
+- `provider-llm-agent-47752ebe98d16c6e9c2adfa0`
+- `provider-knowledge-hub-c7c483680173c6870d96c7a1`
+- `provider-llm-agent-946122d739b2544d9d0b6975`
+- `provider-llm-agent-67eea36661773841b2559d61`
+- `provider-knowledge-hub-d868d31fd675378e3a609792`
+- `provider-llm-agent-189f00d88f7c213c70d4c4e2`
+- `provider-llm-agent-1e0955b8405e311ca5dc1a58`
+- `provider-knowledge-hub-d07893a6a191b3752a3b832c`
+- `provider-knowledge-hub-0edf1f5613bc36c0adda6305`
+- `provider-llm-agent-1422b948993c2cee4b4e82d7`
+- `provider-llm-agent-8912fe6311526d7f75e9d50a`
+- `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
+- `provider-codex-f8fab5f7ef5796515f389169`
+- `provider-llm-agent-af374aa724c6b6f6701a408f`
 
 ## pcr02-registry-owner
 
