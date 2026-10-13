@@ -21,7 +21,16 @@ def capabilities(root):
         config = {}
     archive_enabled = valid and policy.get('enabled') is True
     activity_enabled = bool(config.get('valid') and config.get('receipt_persistence') and config.get('subject_id'))
+    subject_enabled = False
+    try:
+        from .provider_subjects import policy as subject_policy, principal
+        subject_policy(root)
+        principal(root)
+        subject_enabled = True
+    except (KnowledgeHubError, OSError, ValueError):
+        pass
     return {'schema_version':'knowledge-provider.capabilities/v1', 'status':'READY_FOR_CALL',
+            'supported_versions': {'context': [2, 3], 'archive': [1, 2]},
             'provider':'knowledge-hub', 'read_only':True,
             'operations':{
                 'context':{'mode':'readonly', 'available':True, 'write_allowed':False},
@@ -32,5 +41,11 @@ def capabilities(root):
                            'policy_valid':bool(valid), 'active_promotion_allowed':False,
                            'allowed_kinds':policy.get('allowed_kinds', []) if valid else []},
                 'activity-capture':{'mode':'configured-subject-only', 'write_allowed':activity_enabled,
-                                    'subject_configured':bool(config.get('subject_id'))}},
+                                    'subject_configured':bool(config.get('subject_id'))},
+                'resolve': {'mode':'readonly', 'available':True, 'write_allowed':False},
+                'register': {'mode':'exact-authorized-declaration', 'available':True, 'write_allowed':subject_enabled},
+                'bind': {'mode':'exact-authorized-local-binding', 'available':True, 'write_allowed':subject_enabled},
+                'assign': {'mode':'exact-authorized-reassignment', 'available':True, 'write_allowed':subject_enabled},
+                'archive-v2': {'mode':'candidate-only', 'available':True, 'write_allowed':subject_enabled and bool(archive_enabled),
+                               'subject_types':['project', 'domain', 'personal', 'unassigned']}},
             'note':'Each operation still validates its route, inputs and policy at call time.'}

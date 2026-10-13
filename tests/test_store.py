@@ -188,7 +188,8 @@ def test_recovery_audit_reports_interrupted_transaction_without_writing(tmp_path
 
     assert result["status"] == "needs-recovery-review"
     assert result["attention_count"] == 1
-    assert result["rows"][0]["recoverable"] is True
+    assert result["rows"][0]["recoverable"] is False
+    assert result["rows"][0]["reconciliation"][0]["state"] == "unknown"
     assert backup.read_text() == "before\n"
 
 
@@ -203,6 +204,32 @@ def test_recovery_audit_treats_invalid_journal_as_attention_required(tmp_path):
     assert result["attention_count"] == 1
     assert result["rows"][0]["requires_attention"] is True
     assert result["rows"][0]["recoverable"] is False
+
+
+@pytest.mark.parametrize('hashes', [{}, {'before_sha256': 'a' * 64}, {'after_sha256': 'b' * 64}])
+@pytest.mark.parametrize('marked_applied', [False, True])
+def test_legacy_journal_never_authorizes_overwriting_later_user_bytes(tmp_path, hashes, marked_applied):
+    target = tmp_path / 'document.md'
+    target.write_text('later-user-write\n')
+    journal_dir = tmp_path / '.tmp/transactions/legacy'
+    backup = journal_dir / 'before/document.md'
+    backup.parent.mkdir(parents=True)
+    backup.write_text('old-backup\n')
+    journal = dict(schema_version=1, transaction_id='legacy', status='applying',
+                   writes=[dict(path='document.md', **hashes)],
+                   applied_paths=['document.md'] if marked_applied else [], rollback_paths=[])
+    (journal_dir / 'journal.json').write_text(json.dumps(journal))
+    row = audit_transactions(tmp_path)['rows'][0]
+    assert row['reconciliation'][0]['state'] == 'unknown'
+    assert row['recoverable'] is False
+    assert row['requires_attention'] is True
+    assert row['recovery_action'] == 'inspect journal and backups before any write'
+    assert target.read_text() == 'later-user-write\n'
+    transaction = RepositoryTransaction(tmp_path, 'legacy')
+    transaction._rollback_locked(journal, [])
+    assert journal['status'] == 'rollback-incomplete'
+    assert journal['rollback_paths'] == []
+    assert target.read_text() == 'later-user-write\n'
 
 
 def test_recovery_projection_is_bounded_and_has_summary_mode():

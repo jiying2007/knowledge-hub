@@ -58,8 +58,9 @@ def test_all_registered_projects_have_one_reviewing_evidence_contract():
         paths = _project_paths(project)
         assert set(paths) == set(SLOT_NAMES)
         for slot, path in paths.items():
-            item_id = "{}-readiness-{}-20260713".format(project["id"], slot)
-            item = items[item_id]
+            matches = [row for row in items.values() if row["path"] == path and row.get("readiness_slot") == slot]
+            assert len(matches) == 1
+            item = matches[0]
             assert item["path"] == path
             assert item["status"] == "reviewing"
             assert item["decision_owner"]

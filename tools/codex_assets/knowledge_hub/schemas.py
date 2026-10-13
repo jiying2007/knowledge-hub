@@ -191,6 +191,9 @@ def _static_registry_instances(
     root: pathlib.Path,
 ) -> Iterable[Tuple[str, str, Any]]:
     contracts = (
+        ("provider-subject-policy-v1", "registry/provider-subject-policy.json"),
+        ("provider-workspaces-v1", "registry/provider-workspaces.json"),
+        ("provider-bindings-v1", "local/provider-bindings.json"),
         ("provider-archive-policy-v1", "registry/provider-archive-policy.json"),
         ("command-surface-v1", "registry/command-surface.json"),
         ("engineering-budgets-v1", "registry/engineering-budgets.json"),
@@ -204,6 +207,10 @@ def _static_registry_instances(
         if path.is_file():
             yield contract_id, relative, load_json(path, {})
     body_coverage = root / "registry/body-coverage.json"
+    for contract_id, relative in (("provider-operation-ledger-v1", "registry/provider-operations.jsonl"), ("provider-grant-v1", "registry/provider-grants.jsonl")):
+        if (root / relative).is_file():
+            for number, row in enumerate(load_jsonl(root / relative), 1):
+                yield contract_id, relative + ":" + str(number), row
     if body_coverage.is_file():
         yield (
             "body-coverage-v2",

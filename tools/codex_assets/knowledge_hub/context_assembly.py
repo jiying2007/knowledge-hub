@@ -16,7 +16,7 @@ from .context_support import (
     _compact_mapping,
     _current_exclusion_reason,
     _fit_summary_budget,
-    _git_head_from_config,
+    workspace_git_head,
     _public_item,
     _query_route_selection,
     _rank_item,
@@ -43,6 +43,19 @@ SearchFunction = Callable[..., Dict[str, Any]]
 
 def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
+
+
+def _bound_cwd_route(root, cwd, routes, cwd_route):
+    if not (root / "local/provider-bindings.json").is_file():
+        return cwd_route
+    from .provider_onboarding import resolve_workspace
+    resolution = resolve_workspace(root, cwd)
+    target = resolution.get("subject_ref")
+    if resolution["state"] == "resolved" and target and target["type"] == "project":
+        return next((r for r in routes if r["project_id"] == target["id"]), None)
+    if resolution["state"] == "conflict":
+        raise ValueError("workspace subject binding conflicts with repository identity")
+    return cwd_route
 
 
 def assemble_context(
@@ -99,7 +112,7 @@ def assemble_context(
     workspace_ref, workspace_match = _workspace_for_cwd(cwd, local_workspaces, repositories, routes)
     workspace_source_evidence = _mapping(workspace_match.get("source_evidence"))
     recorded_workspace_head = str(workspace_source_evidence.get("git_head", ""))
-    current_workspace_head = _git_head_from_config(git_config)
+    current_workspace_head = workspace_git_head(cwd, git_config)
     if recorded_workspace_head or current_workspace_head:
         evidence_state = (
             "fresh"
@@ -130,7 +143,7 @@ def assemble_context(
                 "repo_id": matched_repo.get("repo_id"),
             }
         )
-    cwd_route = repo_route or workspace_route
+    cwd_route = _bound_cwd_route(root, cwd, routes, repo_route or workspace_route)
     query_selection = _query_route_selection(query, routes)
     initial_query_selection = query_selection
     query_route = query_selection["route"]

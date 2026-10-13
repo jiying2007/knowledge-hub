@@ -607,3 +607,9 @@
 - Knowledge Hub 第八轮检索边界与验收记录: `governance/product/validation/provider-knowledge-hub-56f418441b56faa9b2eb4fdd.md`; `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
 - 默认配置与执行日志修复交付应用闭环: `domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md`; `provider-codex-f8fab5f7ef5796515f389169`
 - 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`
+- Knowledge Provider 无 Git 工作区检索与候选归档设计: `governance/product/archive/provider-knowledge-hub-6adcb6abc0606e01b3abfd73.md`; `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
+- A123X 知识入口: `projects/a123x/README.md`; `a123x-knowledge-entry`
+- A123X readiness validation: `projects/a123x/validation/project-readiness.md`; `a123x-readiness-validation-20261012`
+- Knowledge Provider 全归属检索与归档实施方案: `governance/product/archive/provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26.md`; `provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26`
+- A123X Knowledge Provider 路由与候选归档验证: `projects/a123x/archive/provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32.md`; `provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32`
+- Knowledge Provider 全归属实现验收记录: `governance/product/archive/provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301.md`; `provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301`

@@ -52,6 +52,7 @@
     "schema_version": {"const": 1},
     "profile": {
       "enum": [
+        "knowledge-project",
         "control-plane",
         "runtime-assets",
         "software-tool",

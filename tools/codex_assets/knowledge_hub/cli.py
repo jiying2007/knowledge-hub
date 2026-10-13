@@ -214,15 +214,34 @@ def _run_governed_provider(args: Any, parser: Any) -> int:
     return governed_main(forwarded)
 
 
-def main(argv: Sequence[str] = ()) -> int:
+def _parse_capture_arguments(argv):
+    import sys
+    supplied = list(argv) if argv else sys.argv[1:]
+    if "--provider-v2" in supplied:
+        from .provider_cli import main as subject_main
+        forwarded = supplied.copy()
+        forwarded.remove("--provider-v2")
+        if forwarded and forwarded[0] == "capture":
+            forwarded.pop(0)
+        return None, None, subject_main(forwarded)
     parser = build_parser()
-    args = parser.parse_args(list(argv) if argv else None)
+    return parser, parser.parse_args(list(argv) if argv else None), None
+
+
+def _check_write_mode(parser, args):
+    if args.apply and args.dry_run:
+        parser.error("--apply and --dry-run are mutually exclusive")
+
+
+def main(argv: Sequence[str] = ()) -> int:
+    parser, args, provider_result = _parse_capture_arguments(argv)
+    if provider_result is not None:
+        return provider_result
     if args.command == "capture" and args.governed_provider:
         return _run_governed_provider(args, parser)
     if args.command == "capture" and (args.provider_archive or args.provider_capabilities):
         return _run_provider_archive(args, parser)
-    if args.apply and args.dry_run:
-        parser.error("--apply and --dry-run are mutually exclusive")
+    _check_write_mode(parser, args)
     root = repository_root(args.root)
     today, date_source = resolve_today(args.as_of)
     try:

@@ -991,6 +991,31 @@
         "knowledge-hub-automation-runs"
       ],
       "route_key_policy": "control-plane-query-aware"
+    },
+    {
+      "project_id": "a123x",
+      "name": "A123X",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "",
+      "aliases": [
+        "a123x"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [],
+      "workspace_refs": [
+        "workspace://a123x"
+      ],
+      "hub_entry": "projects/a123x/README.md",
+      "current_path": "projects/a123x/current",
+      "archive_path": "projects/a123x/archive",
+      "decisions_path": "projects/a123x/decisions",
+      "validation_path": "projects/a123x/validation",
+      "domain_refs": [
+        "projects/a123x"
+      ],
+      "default_source_ids": [],
+      "route_key_policy": "subject-workspace"
     }
   ]
 }

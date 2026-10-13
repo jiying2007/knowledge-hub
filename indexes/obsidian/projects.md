@@ -4,6 +4,7 @@
 
 | 项目 | 类型 | registry 状态 | readiness |
 |---|---|---|---|
+| [A123X](../../projects/a123x/README.md) | `knowledge-project` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Agent Dev Kit](../../projects/agent-dev-kit/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [PCR02 Main App](../../projects/app-main/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [PCR02 OTA App](../../projects/app-ota/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |

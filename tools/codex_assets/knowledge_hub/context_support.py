@@ -27,6 +27,11 @@ CONTEXT_RECEIPT_REGISTRY_PATHS = (
     "registry/project-groups.json",
     "registry/project-routes.json",
     "local/workspaces.json",
+    "local/provider-bindings.json",
+    "registry/provider-workspaces.json",
+    "registry/provider-subject-policy.json",
+    "registry/provider-grants.jsonl",
+    "local/activity-report.json",
 )
 TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
     "debug": {"debug-record": 10, "runbook": 5, "validation": 3, "project-archive": 2},
@@ -83,13 +88,21 @@ def find_git_config(cwd_text: str) -> Tuple[Optional[pathlib.Path], Optional[pat
             gitdir = directory / gitdir
         if (gitdir / "config").exists():
             return gitdir / "config", directory
+        try:
+            common = (gitdir / "commondir").read_text(encoding="utf-8").strip()
+            common_dir = (gitdir / common).resolve()
+            if (common_dir / "config").is_file():
+                return common_dir / "config", directory
+        except OSError:
+            pass
     return None, None
 
 
-def _git_head_from_config(config_path: Optional[pathlib.Path]) -> str:
+def _git_head_from_config(config_path: Optional[pathlib.Path], git_directory: Optional[pathlib.Path] = None) -> str:
     if not config_path:
         return ""
-    git_dir = config_path.parent
+    git_dir = git_directory or config_path.parent
+    common_dir = config_path.parent
     try:
         head = (git_dir / "HEAD").read_text(encoding="ascii", errors="replace").strip()
     except OSError:
@@ -97,12 +110,15 @@ def _git_head_from_config(config_path: Optional[pathlib.Path]) -> str:
     if not head.startswith("ref:"):
         return head if re.fullmatch(r"[0-9a-f]{40}", head) else ""
     ref = head.split(":", 1)[1].strip()
+    if not ref.startswith("refs/") or ".." in pathlib.PurePosixPath(ref).parts:
+        return ""
     try:
-        commit = (git_dir / ref).read_text(encoding="ascii", errors="replace").strip()
+        ref_path = git_dir / ref if (git_dir / ref).is_file() else common_dir / ref
+        commit = ref_path.read_text(encoding="ascii", errors="replace").strip()
     except OSError:
         commit = ""
         try:
-            for line in (git_dir / "packed-refs").read_text(
+            for line in (common_dir / "packed-refs").read_text(
                 encoding="ascii", errors="replace"
             ).splitlines():
                 if not line or line.startswith(("#", "^")):
@@ -114,6 +130,26 @@ def _git_head_from_config(config_path: Optional[pathlib.Path]) -> str:
         except (OSError, ValueError):
             commit = ""
     return commit if re.fullmatch(r"[0-9a-f]{40}", commit) else ""
+
+
+def workspace_git_head(cwd_text: str, config_path: Optional[pathlib.Path]) -> str:
+    """Read this workspace HEAD while shared refs/remotes use the common directory."""
+    if not config_path:
+        return ""
+    _, git_root = find_git_config(cwd_text)
+    if not git_root:
+        return ""
+    entry = git_root / ".git"
+    directory = entry
+    if entry.is_file():
+        try:
+            text = entry.read_text(encoding="utf-8").strip()
+            directory = pathlib.Path(text.split(":", 1)[1].strip())
+            if not directory.is_absolute():
+                directory = git_root / directory
+        except (OSError, IndexError):
+            return ""
+    return _git_head_from_config(config_path, directory)
 
 
 def remote_urls_from_config(config_path: Optional[pathlib.Path]) -> List[Dict[str, str]]:
@@ -396,6 +432,8 @@ def _rank_item(
     source_ids: Set[str],
     route_selected: bool,
 ) -> Tuple[int, List[str]]:
+    if item.get("visibility") == "personal-local":
+        return 0, []
     haystack = "\n".join(
         str(value)
         for value in (
@@ -526,7 +564,7 @@ def context_receipt_request(
         "limit": limit,
         "context_budget": context_budget,
         "project_hint": project_hint,
-        "workspace_git_head": _git_head_from_config(git_config),
+        "workspace_git_head": workspace_git_head(cwd, git_config),
         "registry_signatures": {
             relative: _path_signature(root / relative)
             for relative in CONTEXT_RECEIPT_REGISTRY_PATHS

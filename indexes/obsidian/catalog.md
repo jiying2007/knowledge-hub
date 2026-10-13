@@ -56,9 +56,18 @@
 - [Knowledge Hub 第六轮全面迭代验证记录](../../governance/product/validation/provider-knowledge-hub-d07893a6a191b3752a3b832c.md) · `reviewing` · `provider-knowledge-hub-d07893a6a191b3752a3b832c`
 - [Knowledge Hub 第四轮审查与迭代](../../governance/product/validation/provider-knowledge-hub-d868d31fd675378e3a609792.md) · `reviewing` · `provider-knowledge-hub-d868d31fd675378e3a609792`
 - [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing` · `knowledge-hub-data-lifecycle-growth-v1`
+- [Knowledge Provider 全归属实现验收记录](../../governance/product/archive/provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301.md) · `reviewing` · `provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301`
+- [Knowledge Provider 全归属检索与归档实施方案](../../governance/product/archive/provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26.md) · `reviewing` · `provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26`
+- [Knowledge Provider 无 Git 工作区检索与候选归档设计](../../governance/product/archive/provider-knowledge-hub-6adcb6abc0606e01b3abfd73.md) · `reviewing` · `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
 - [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing` · `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing` · `software-tool-artifact-restore-drill-20260716`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing` · `software-tool-evidence-audit-20260715`
+
+## projects/a123x
+
+- [A123X Knowledge Provider 路由与候选归档验证](../../projects/a123x/archive/provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32.md) · `reviewing` · `provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32`
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing` · `a123x-readiness-validation-20261012`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing` · `a123x-knowledge-entry`
 
 ## projects/agent-dev-kit
 

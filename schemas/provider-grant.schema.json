@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/provider-grant-v1",
+  "title": "Exact local Provider action grant",
+  "type": "object",
+  "required": ["id", "actor", "action", "subject_ref", "expected_hash", "status", "expires_at", "visibility_change"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "actor": {"type": "string", "minLength": 1, "maxLength": 160},
+    "action": {"enum": ["register", "bind", "assign", "archive"]},
+    "subject_ref": {"type": "object", "required": ["type", "id"], "properties": {"type": {"enum": ["project", "domain", "personal", "unassigned"]}, "id": {"type": "string", "minLength": 1, "maxLength": 160}}, "additionalProperties": false},
+    "expected_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["active", "revoked", "expired"]},
+    "expires_at": {"type": "string", "format": "date"},
+    "visibility_change": {"type": "boolean"},
+    "declaration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "binding_path_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "intake_attestation_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

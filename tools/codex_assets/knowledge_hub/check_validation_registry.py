@@ -184,6 +184,8 @@ def _registry_rest_2(ctx):
             ctx['route_registry_health']['invalid_reference_count'] += 1
         project_ids.add(project_id)
         for field in ['name', 'type', 'domain', 'entry', 'current', 'archive', 'decisions', 'validation', 'groups', 'repo_boundary', 'status']:
+            if field == 'groups' and project.get('type') == 'knowledge-project' and project.get('groups') == []:
+                continue
             if project.get(field) in ('', None, []):
                 ctx['errors'].append(f'projects:{project_id} missing {field}')
                 ctx['route_registry_health']['invalid_reference_count'] += 1
@@ -204,7 +206,7 @@ def _registry_rest_2(ctx):
             ctx['route_registry_health']['missing_entry_paths'].append(entry)
             ctx['errors'].append(f'projects:{project_id} entry path missing: {entry}')
         groups_value = project.get('groups', [])
-        if not isinstance(groups_value, list) or not groups_value:
+        if not isinstance(groups_value, list) or (not groups_value and project.get('type') != 'knowledge-project'):
             ctx['errors'].append(f'projects:{project_id} groups must be non-empty list')
             ctx['route_registry_health']['invalid_reference_count'] += 1
     project_groups_doc = ctx['load_json'](ctx['root'] / 'registry' / 'project-groups.json')
@@ -264,6 +266,8 @@ def _registry_rest_4(ctx):
             ctx['route_registry_health']['invalid_reference_count'] += 1
         ctx['repository_ids'].add(repo_id)
         for field in ['remote_key', 'remote_kind', 'workspace_ref', 'groups', 'lifecycle', 'status']:
+            if field in {'remote_key', 'remote_kind'} and repo.get('identity_kind') == 'local' and repo.get('local_identity'):
+                continue
             if repo.get(field) in ('', None, []):
                 ctx['errors'].append(f'repositories:{repo_id} missing {field}')
                 ctx['route_registry_health']['invalid_reference_count'] += 1
@@ -355,6 +359,8 @@ def _registry_rest_6(ctx):
             ctx['route_registry_health']['invalid_reference_count'] += 1
         ctx['route_keys'].add(route_key)
         for field in ['project_id', 'name', 'type', 'aliases', 'repo_refs', 'workspace_refs', 'hub_entry', 'current_path', 'archive_path', 'decisions_path', 'validation_path', 'route_key_policy']:
+            if field in {'repo_refs', 'workspace_refs'} and route.get('route_key_policy') == 'subject-workspace' and route.get(field) == []:
+                continue
             if route.get(field) in ('', None, []):
                 ctx['errors'].append(f'project-routes:{route_key} missing {field}')
                 ctx['route_registry_health']['invalid_reference_count'] += 1

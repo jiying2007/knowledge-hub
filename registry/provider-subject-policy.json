@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "enabled": true,
+  "owner_id": "leiwenjun",
+  "actions": ["read", "archive", "register", "bind", "assign"],
+  "domains": ["embedded", "codex"],
+  "configured_principal": true,
+  "authorization_basis": "用户要求实施已确认的全归属方案；只允许脱敏 reviewing 候选。项目登记绑定要求真实声明和精确授权，分配及可见性改变要求精确目标授权，不授权 active、owner decision、memory、源项目或远端写入。"
+}

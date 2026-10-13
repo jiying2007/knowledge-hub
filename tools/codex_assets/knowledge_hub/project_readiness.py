@@ -371,12 +371,13 @@ def _route_document(
     for project in projects:
         project_id = str(project["id"])
         groups_for_project = [str(value) for value in project.get("groups", [])]
-        group_id = groups_for_project[0] if groups_for_project else project_id
+        group_id = groups_for_project[0] if groups_for_project else ("" if project.get("type") == "knowledge-project" else project_id)
         existing = existing_by_project.get(project_id, {})
         repos = _repo_rows_for_project(project, repositories)
         repo_refs = _dedupe(str(row.get("repo_id", "")) for row in repos)
-        workspace_refs = _dedupe(str(row.get("workspace_ref", "")) for row in repos)
-        if not repo_refs or not workspace_refs:
+        workspace_refs = _dedupe([str(row.get("workspace_ref", "")) for row in repos]
+                                + list(project.get("workspace_refs", [])) + list(existing.get("workspace_refs", [])))
+        if (not repo_refs or not workspace_refs) and project.get("type") != "knowledge-project":
             raise KnowledgeHubError("project route lacks repository/workspace references: {}".format(project_id))
         aliases = _dedupe(
             list(existing.get("aliases", []))
@@ -425,7 +426,7 @@ def _route_document(
                     value for value in configured_source_ids if value in current_source_ids
                 ],
                 "route_key_policy": existing.get(
-                    "route_key_policy", "control-plane-query-aware" if project_id == "knowledge-hub" else "git-remote-first"
+                    "route_key_policy", "subject-workspace" if project.get("type") == "knowledge-project" else "control-plane-query-aware" if project_id == "knowledge-hub" else "git-remote-first"
                 ),
             }
         )
@@ -484,9 +485,12 @@ def _registered_projects(root: pathlib.Path):
     return projects, project_ids
 
 
-def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False) -> Dict[str, Any]:
+def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool = False,
+                               projects_override=None, routes_override=None, prepare_hook=None,
+                               items_override=None, readme_overrides=None) -> Dict[str, Any]:
     inputs = snapshot_inputs(root)
-    projects, project_ids = _registered_projects(root)
+    from .project_readiness_inputs import registration_projects, local_workspace_inputs, aggregate_members
+    projects, project_ids = registration_projects(root, projects_override)
     product_policy, policy_errors = load_product_policy(root)
     readiness_extensions, extension_errors = readiness_extensions_by_project(
         product_policy, project_ids
@@ -498,7 +502,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
             )
         )
 
-    all_items = registry_items(root)
+    actual_items = registry_items(root)
+    all_items = actual_items if items_override is None else items_override
     retired_projection_items = [
         row
         for row in all_items
@@ -514,9 +519,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     repositories = repository_rows(root)
     groups = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
     groups_by_id = {str(row.get("id", "")): row for row in groups if row.get("id")}
-    existing_routes = route_rows(root)
-    local_rows = list((load_json(root / "local/workspaces.json", {}) or {}).get("workspaces", []))
-    local_workspaces = {str(row.get("workspace_ref", "")): row for row in local_rows if row.get("workspace_ref")}
+    existing_routes = route_rows(root) if routes_override is None else routes_override
+    local_workspaces = local_workspace_inputs(root)
     item_ids = {str(row.get("id")) for row in items}
     item_paths = {str(row.get("path")) for row in items}
     items_by_path = {str(row.get("path")): row for row in items if row.get("path")}
@@ -527,7 +531,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     project_paths: Dict[str, Dict[str, str]] = {}
     workspace_states: Dict[str, str] = {}
     rendered_docs: Dict[str, str] = {}
-    new_items: List[Dict[str, Any]] = []
+    actual_ids = {row["id"] for row in actual_items}
+    new_items: List[Dict[str, Any]] = [row for row in all_items if row["id"] not in actual_ids]
     metadata_updated_items: List[str] = []
     readme_updates: Dict[str, str] = {}
 
@@ -538,25 +543,12 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         project["evidence_profile"] = evidence_profile
         group_ids = [str(value) for value in project.get("groups", [])]
         group = groups_by_id.get(group_ids[0], {}) if group_ids else {}
-        member_project_ids = (
-            [
-                str(value)
-                for value in group.get("member_project_ids", [])
-                if str(value) != project_id
-            ]
-            if evidence_profile == "aggregate-group"
-            else []
-        )
-        if evidence_profile == "aggregate-group" and not member_project_ids:
-            raise KnowledgeHubError(
-                "aggregate-group project must declare at least one non-self member project: {}".format(
-                    project_id
-                )
-            )
+        member_project_ids = aggregate_members(group, project_id, evidence_profile)
         paths = _project_paths(project)
         project_paths[project_id] = paths
         repos = _repo_rows_for_project(project, repositories)
-        workspace_state = _workspace_state(repos, local_workspaces)
+        locations = repos or [{"workspace_ref": ref} for ref in project.get("workspace_refs", [])]
+        workspace_state = _workspace_state(locations, local_workspaces)
         workspace_states[project_id] = workspace_state
         definitions = {
             "validation": (
@@ -634,9 +626,12 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
 
         readme_path = str(project["entry"])
         readme = root / readme_path
-        if not readme.exists():
+        if not readme.exists() and readme_path not in (readme_overrides or {}):
             raise KnowledgeHubError("project entry is missing: {}".format(readme_path))
-        readme_updates[readme_path] = _managed_readme(readme_path, readme.read_text(encoding="utf-8"), project, paths)
+        source_readme = (readme_overrides or {}).get(readme_path)
+        if source_readme is None:
+            source_readme = readme.read_text(encoding="utf-8")
+        readme_updates[readme_path] = _managed_readme(readme_path, source_readme, project, paths)
 
     core_contents = {path: (root / path).read_text(encoding="utf-8") for path in CORE_INDEXES}
     project_index = (root / "indexes/by-project.md").read_text(encoding="utf-8")
@@ -722,6 +717,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
                 obsidian_stage["content_drifts"],
             )
         )
+    if prepare_hook is not None:
+        prepare_hook(transaction)
     plan = transaction.plan()
     result: Dict[str, Any] = {
         "schema_version": 1,

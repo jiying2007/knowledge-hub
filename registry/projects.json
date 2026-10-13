@@ -548,6 +548,24 @@
       "repo_boundary": "control-plane",
       "status": "registered",
       "evidence_profile": "control-plane"
+    },
+    {
+      "id": "a123x",
+      "name": "A123X",
+      "type": "knowledge-project",
+      "domain": "projects/a123x",
+      "entry": "projects/a123x/README.md",
+      "current": "projects/a123x/current",
+      "archive": "projects/a123x/archive",
+      "decisions": "projects/a123x/decisions",
+      "validation": "projects/a123x/validation",
+      "groups": [],
+      "repo_boundary": "none",
+      "status": "registered",
+      "workspace_refs": [
+        "workspace://a123x"
+      ],
+      "evidence_profile": "knowledge-project"
     }
   ]
 }

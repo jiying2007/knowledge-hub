@@ -50,6 +50,7 @@ class PlannedWrite:
     content: bytes
     expected_sha256: str = ""
     expected_missing: bool = False
+    delete: bool = False
 
 
 @dataclass
@@ -100,13 +101,23 @@ class RepositoryTransaction:
             expected_sha256 = self.expected_inputs.get(safe, "")
         self.writes[safe] = PlannedWrite(safe, content, expected_sha256, missing)
 
+    def add_delete(self, relative: str, expected_sha256: str) -> None:
+        """Remove an exact regular file, with the same backup/recovery protocol."""
+        if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+            raise KnowledgeHubError("deletion requires exact content identity")
+        safe = normalize_relpath(relative)
+        target = resolve_inside(self.root, safe)
+        if not target.is_file() or file_sha256(target) != expected_sha256:
+            raise WriteConflict("delete source changed")
+        self.writes[safe] = PlannedWrite(safe, b"", expected_sha256, False, True)
+
     def plan(self) -> Dict[str, Any]:
         rows = []
         for relative in sorted(self.writes):
             write = self.writes[relative]
             target = resolve_inside(self.root, relative)
             before_hash = file_sha256(target) if target.exists() else ""
-            after_hash = bytes_sha256(write.content)
+            after_hash = "" if write.delete else bytes_sha256(write.content)
             rows.append(
                 {
                     "path": relative,
@@ -115,6 +126,7 @@ class RepositoryTransaction:
                     "after_sha256": after_hash,
                     "changed": before_hash != after_hash,
                     "expected_sha256": write.expected_sha256,
+                    **({"operation": "delete"} if write.delete else {}),
                 }
             )
         return {
@@ -164,11 +176,12 @@ class RepositoryTransaction:
             backup = self.backup_root / relative
             ensure_private_directory(self.stage_root)
             ensure_private_directory_tree(self.stage_root, staged.parent)
-            with staged.open("wb") as handle:
-                os.chmod(str(staged), 0o600)
-                handle.write(self.writes[relative].content)
-                handle.flush()
-                os.fsync(handle.fileno())
+            if not self.writes[relative].delete:
+                with staged.open("wb") as handle:
+                    os.chmod(str(staged), 0o600)
+                    handle.write(self.writes[relative].content)
+                    handle.flush()
+                    os.fsync(handle.fileno())
             if target.exists():
                 ensure_private_directory(self.backup_root)
                 ensure_private_directory_tree(self.backup_root, backup.parent)
@@ -183,6 +196,8 @@ class RepositoryTransaction:
         changed = [row for row in plan["writes"] if row["changed"]]
         unchanged = [row["path"] for row in plan["writes"] if not row["changed"]]
         with self._lock():
+            if incomplete_transactions(self.root):
+                raise KnowledgeHubError("STORAGE_RECOVERY_REQUIRED")
             self._verify_inputs()
             # Re-evaluate all preconditions after acquiring the single-writer lock.
             for row in changed:
@@ -224,7 +239,10 @@ class RepositoryTransaction:
                     journal["pending_path"] = relative
                     self._write_journal(journal)
                     target.parent.mkdir(parents=True, exist_ok=True)
-                    os.replace(str(staged), str(target))
+                    if self.writes[relative].delete:
+                        target.unlink()
+                    else:
+                        os.replace(str(staged), str(target))
                     _fsync_directory(target.parent)
                     journal["applied_paths"].append(relative)
                     journal["pending_path"] = ""
@@ -248,7 +266,7 @@ class RepositoryTransaction:
     def _rollback_locked(self, journal: Dict[str, Any], diagnostics: List[str]) -> None:
         states = reconcile_writes(self.root, self.runtime_root, journal)
         applied = [row["path"] for row in states if row["state"] == "after"]
-        conflicts = [row["path"] for row in states if row["state"] in {"conflict", "backup-invalid"}]
+        conflicts = [row["path"] for row in states if row["state"] in {"conflict", "backup-invalid", "unknown"}]
         journal["applied_paths"] = list(dict.fromkeys(list(journal.get("applied_paths", [])) + applied))
         for relative in reversed(applied):
             target = resolve_inside(self.root, relative)
@@ -318,6 +336,13 @@ def validate_journal(journal):
         if path in paths:
             raise KnowledgeHubError("journal contains duplicate write paths")
         paths.add(path)
+        if write.get("operation", "write") not in {"write", "delete"}:
+            raise KnowledgeHubError("journal operation is invalid")
+        if write.get("operation") == "delete" and (
+            write.get("after_sha256") != "" or write.get("exists_before") is not True
+            or not re.fullmatch(r"[0-9a-f]{64}", str(write.get("before_sha256", "")))
+        ):
+            raise KnowledgeHubError("journal deletion identity is invalid")
         # Older journals without hashes are inspectable but cannot prove recovery.
         for key in ("before_sha256", "after_sha256"):
             value = write.get(key)
@@ -357,7 +382,9 @@ def reconcile_writes(root, runtime_root, journal):
         actual = file_sha256(target) if target.exists() else ""
         before, after = write.get("before_sha256"), write.get("after_sha256")
         if before is None or after is None:
-            state = "after" if relative in journal.get("applied_paths", []) else "unknown"
+            # Path markers alone cannot prove that current bytes are still ours.
+            # Legacy records are inspectable but cannot authorize recovery.
+            state = "unknown"
         else:
             state = "before" if actual == before else "after" if actual == after else "conflict"
         backup = runtime_root / "before" / relative
@@ -426,7 +453,7 @@ def audit_transactions(root: pathlib.Path, transaction_id: str = "") -> Dict[str
                 elif not any(write.get("path") == relative and write.get("exists_before") is False
                              for write in journal.get("writes", [])):
                     backup_missing.append(relative)
-            conflicts = [row["path"] for row in reconciliation if row["state"] in {"conflict", "backup-invalid"}]
+            conflicts = [row["path"] for row in reconciliation if row["state"] in {"conflict", "backup-invalid", "unknown"}]
             recoverable = status in {"staged", "applying", "rollback-incomplete"} and not backup_missing and not conflicts
             rows.append(
                 {

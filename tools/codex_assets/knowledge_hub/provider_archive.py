@@ -9,7 +9,7 @@ import pathlib
 import re
 import tempfile
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from .common import (
     KnowledgeHubError, file_sha256, load_json, load_markdown, normalize_relpath,
@@ -36,15 +36,28 @@ SAFE_METADATA = {
 }
 
 
-def _archive_context(root: pathlib.Path, args: argparse.Namespace):
+def checked_archive_policy(root: pathlib.Path, kind: Optional[str]):
     policy = load_json(root / POLICY)
     if validate_instance(root, "provider-archive-policy-v1", policy)["status"] != "pass":
         raise KnowledgeHubError("archive policy structure is invalid")
     if (not isinstance(policy, dict) or policy.get("schema_version") != 1
             or policy.get("mode") != "candidate-only" or policy.get("enabled") is not True):
         raise KnowledgeHubError("provider candidate archive policy is disabled or invalid")
-    if args.kind not in LOW_RISK_KINDS or args.kind not in policy.get("allowed_kinds", []):
+    if kind is not None and (kind not in LOW_RISK_KINDS or kind not in policy.get("allowed_kinds", [])):
         raise KnowledgeHubError("archive kind requires manual review")
+    owners = load_json(root / "registry/owners.json", {}).get("owners", [])
+    if not isinstance(owners, list) or any(not isinstance(row, dict) for row in owners):
+        raise KnowledgeHubError("archive policy owners are invalid")
+    if policy.get("owner_id") not in {row.get("id") for row in owners}:
+        raise KnowledgeHubError("archive policy owner is not registered")
+    maximum = policy.get("maximum_bytes")
+    if not isinstance(maximum, int) or isinstance(maximum, bool) or not 1 <= maximum <= 131072:
+        raise KnowledgeHubError("archive byte budget is invalid")
+    return policy
+
+
+def _archive_context(root: pathlib.Path, args: argparse.Namespace):
+    policy = checked_archive_policy(root, args.kind)
     if re.fullmatch(r"[a-z0-9][a-z0-9-]{0,80}", args.project) is None:
         raise KnowledgeHubError("archive project id is invalid")
     if not args.sanitized:
@@ -73,6 +86,14 @@ def _archive_context(root: pathlib.Path, args: argparse.Namespace):
     return owner, route, raw
 
 
+def _require_current_legacy_subject(root, operation_id, project):
+    from .provider_subjects import OPERATIONS_PATH
+    from .common import load_jsonl
+    indexed = next((r for r in load_jsonl(root / OPERATIONS_PATH) if r.get("operation_id") == operation_id), None)
+    if indexed and indexed.get("current_subject_ref") != {"type": "project", "id": project}:
+        raise KnowledgeHubError("UPGRADE_REQUIRED")
+
+
 def archive(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
     owner, route, raw = _archive_context(root, args)
     with tempfile.TemporaryDirectory(prefix="kh-provider-archive-") as temporary:
@@ -93,6 +114,7 @@ def archive(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
         source_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
         identity = json.dumps([args.project, args.kind, title, source_hash], ensure_ascii=False)
         operation_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+        _require_current_legacy_subject(root, operation_id, args.project)
         item_id = "provider-{}-{}".format(args.project, operation_id[:24])
         lane = "validation_path" if args.kind == "validation" else "archive_path"
         base = normalize_relpath(str(route.get(lane, "")))
@@ -102,7 +124,7 @@ def archive(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
         target = base + "/" + item_id + ".md"
         domain = ("projects/" + args.project if base.startswith("projects/")
                   else "codex" if base.startswith("domains/codex/") else "governance")
-        rows = duplicate_inventory(root, registry_items(root))
+        rows = [row for row in duplicate_inventory(root, registry_items(root)) if row.get("visibility") != "personal-local"]
         existing = next((row for row in rows if row.get("id") == item_id), None)
         if existing:
             if (existing.get("path") != target or existing.get("status") != "reviewing"
@@ -199,6 +221,10 @@ def run(args):
             raise KnowledgeHubError("--apply conflicts with --dry-run")
         result = _archive_with_retry(repository_root(args.root), args)
     except (KnowledgeHubError, OSError, ValueError, TypeError, AttributeError) as exc:
+        if str(exc) == "UPGRADE_REQUIRED":
+            print(json.dumps({"schema_version": "knowledge-provider.error/v1", "status": "UPGRADE_REQUIRED", "read_only": True,
+                              "reason_code": "UPGRADE_REQUIRED", "next_action": "reconcile-with-api-version-2"}))
+            return 2
         # Do not echo source paths, body or attacker-controlled metadata in public errors.
         result = {"schema_version": "knowledge-provider.archive-receipt/v1", "status": "BLOCKED",
                   "persisted": False, "reason_code": _reason_code(exc),

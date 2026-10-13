@@ -1,0 +1,20 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://knowledge-hub.local/schemas/provider-context-v3",
+  "title":"Independent execution, retrieval and archive subjects",
+  "type":"object",
+  "required":["schema_version","read_only","execution_subject","retrieval_scope","route_resolution","source_state","archive_eligibility","context","authority_lanes","next_actions"],
+  "properties":{
+    "schema_version":{"const":"knowledge-provider.context/v3"},"read_only":{"const":true},
+    "execution_subject":{"anyOf":[{"$ref":"#/$defs/subject"},{"type":"null"}]},
+    "retrieval_scope":{"type":"array","maxItems":10,"items":{"$ref":"#/$defs/subject"}},
+    "route_resolution":{"type":"object","required":["state","subject_ref","reason_codes"],"properties":{"state":{"enum":["resolved","unresolved","conflict"]},"subject_ref":{"anyOf":[{"$ref":"#/$defs/subject"},{"type":"null"}]},"reason_codes":{"$ref":"#/$defs/strings"}},"additionalProperties":false},
+    "source_state":{"type":"object","required":["vcs","commit","verification_state"],"properties":{"vcs":{"enum":["git","none"]},"commit":{"type":["string","null"],"pattern":"^[a-f0-9]{40}$"},"verification_state":{"const":"unverified"}},"additionalProperties":false},
+    "archive_eligibility":{"type":"object","required":["eligible","subject_ref","reason_codes"],"properties":{"eligible":{"type":"boolean"},"subject_ref":{"anyOf":[{"$ref":"#/$defs/subject"},{"type":"null"}]},"reason_codes":{"$ref":"#/$defs/strings"}},"additionalProperties":false},
+    "context":{"type":"array","maxItems":10,"items":{"type":"object","required":["subject_ref","items","zero_hit"],"properties":{"subject_ref":{"anyOf":[{"$ref":"#/$defs/subject"},{"type":"null"}]},"items":{"type":"array","maxItems":16,"items":{"type":"object"}},"zero_hit":{"type":"boolean"},"lane":{"const":"discovery"}},"additionalProperties":false}},
+    "authority_lanes":{"type":"object","required":["authoritative","provisional","historical","discovery"],"properties":{"authoritative":{"$ref":"#/$defs/strings"},"provisional":{"$ref":"#/$defs/strings"},"historical":{"$ref":"#/$defs/strings"},"discovery":{"$ref":"#/$defs/strings"}},"additionalProperties":false},
+    "next_actions":{"$ref":"#/$defs/strings"},"cache":{"type":"object","required":["hit"],"properties":{"hit":{"type":"boolean"}},"additionalProperties":false}
+  },
+  "$defs":{"strings":{"type":"array","items":{"type":"string"}},"subject":{"type":"object","required":["type","id"],"properties":{"type":{"enum":["project","domain","personal","unassigned"]},"id":{"type":"string","minLength":1,"maxLength":160}},"additionalProperties":false}},
+  "additionalProperties":false
+}

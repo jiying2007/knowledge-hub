@@ -628,3 +628,9 @@
 - 2027-01-06: `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
 - 2027-01-06: `provider-codex-f8fab5f7ef5796515f389169`
 - 2027-01-07: `provider-llm-agent-af374aa724c6b6f6701a408f`
+- 2027-01-10: `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
+- 2027-01-12: `a123x-knowledge-entry`
+- 2027-01-12: `a123x-readiness-validation-20261012`
+- 2027-01-11: `provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26`
+- 2027-01-11: `provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32`
+- 2027-01-11: `provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301`
