@@ -86,6 +86,14 @@ def _archive_context(root: pathlib.Path, args: argparse.Namespace):
     return owner, route, raw
 
 
+def _require_current_legacy_subject(root, operation_id, project):
+    from .provider_subjects import OPERATIONS_PATH
+    from .common import load_jsonl
+    indexed = next((r for r in load_jsonl(root / OPERATIONS_PATH) if r.get("operation_id") == operation_id), None)
+    if indexed and indexed.get("current_subject_ref") != {"type": "project", "id": project}:
+        raise KnowledgeHubError("UPGRADE_REQUIRED")
+
+
 def archive(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
     owner, route, raw = _archive_context(root, args)
     with tempfile.TemporaryDirectory(prefix="kh-provider-archive-") as temporary:
@@ -106,11 +114,7 @@ def archive(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:
         source_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
         identity = json.dumps([args.project, args.kind, title, source_hash], ensure_ascii=False)
         operation_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()
-        from .provider_subjects import OPERATIONS_PATH
-        from .common import load_jsonl
-        indexed = next((r for r in load_jsonl(root / OPERATIONS_PATH) if r.get("operation_id") == operation_id), None)
-        if indexed and indexed.get("current_subject_ref") != {"type": "project", "id": args.project}:
-            raise KnowledgeHubError("UPGRADE_REQUIRED")
+        _require_current_legacy_subject(root, operation_id, args.project)
         item_id = "provider-{}-{}".format(args.project, operation_id[:24])
         lane = "validation_path" if args.kind == "validation" else "archive_path"
         base = normalize_relpath(str(route.get(lane, "")))

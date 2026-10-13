@@ -108,6 +108,16 @@ def _project_name(root: pathlib.Path, domain: str) -> str:
     return project_id
 
 
+def _capture_extra_metadata(item, generated_by_ai, ai_role, ai_model_or_tool, today, provider_metadata):
+    if generated_by_ai:
+        item.update({"ai_role": ai_role, "ai_model_or_tool": ai_model_or_tool, "ai_generated_at": today.isoformat()})
+    if provider_metadata:
+        allowed = {"subject_ref", "created_subject_ref", "principal_id", "provider_operation_id", "provenance"}
+        if set(provider_metadata) - allowed:
+            raise KnowledgeHubError("unsupported provider metadata")
+        item.update(dict(provider_metadata))
+
+
 def capture(
     root: pathlib.Path,
     source: pathlib.Path,
@@ -235,19 +245,7 @@ def capture(
         "updated_at": today.isoformat(),
         "manual_validation_pending": True,
     }
-    if generated_by_ai:
-        item.update(
-            {
-                "ai_role": ai_role,
-                "ai_model_or_tool": ai_model_or_tool,
-                "ai_generated_at": today.isoformat(),
-            }
-        )
-    if provider_metadata:
-        allowed = {"subject_ref", "created_subject_ref", "principal_id", "provider_operation_id", "provenance"}
-        if set(provider_metadata) - allowed:
-            raise KnowledgeHubError("unsupported provider metadata")
-        item.update(dict(provider_metadata))
+    _capture_extra_metadata(item, generated_by_ai, ai_role, ai_model_or_tool, today, provider_metadata)
     current_items = registry_items(root)
     existing = next((row for row in current_items if row.get("id") == inferred_id), None)
     if existing:

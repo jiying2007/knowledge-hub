@@ -50,12 +50,19 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str] = ()) -> int:
+def _dispatch_subject_context(argv):
     import sys
     supplied = list(argv) if argv else sys.argv[1:]
     if "--api-version" in supplied or any(v.startswith("--api-version=") for v in supplied):
         from .provider_cli import main as subject_main
         return subject_main(["context"] + supplied)
+    return None
+
+
+def main(argv: Sequence[str] = ()) -> int:
+    provider_result = _dispatch_subject_context(argv)
+    if provider_result is not None:
+        return provider_result
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
     if args.limit < 1:

@@ -46,6 +46,19 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
+def _bound_cwd_route(root, cwd, routes, cwd_route):
+    if not (root / "local/provider-bindings.json").is_file():
+        return cwd_route
+    from .provider_onboarding import resolve_workspace
+    resolution = resolve_workspace(root, cwd)
+    target = resolution.get("subject_ref")
+    if resolution["state"] == "resolved" and target and target["type"] == "project":
+        return next((r for r in routes if r["project_id"] == target["id"]), None)
+    if resolution["state"] == "conflict":
+        raise ValueError("workspace subject binding conflicts with repository identity")
+    return cwd_route
+
+
 def assemble_context(
     root: pathlib.Path,
     cwd: str,
@@ -131,16 +144,7 @@ def assemble_context(
                 "repo_id": matched_repo.get("repo_id"),
             }
         )
-    cwd_route = repo_route or workspace_route
-    # Explicit subject bindings also cover ordinary directories and local-only Git.
-    if (root / "local/provider-bindings.json").is_file():
-        from .provider_onboarding import resolve_workspace
-        binding_resolution = resolve_workspace(root, cwd)
-        bound_subject = binding_resolution.get("subject_ref")
-        if binding_resolution["state"] == "resolved" and bound_subject and bound_subject["type"] == "project":
-            cwd_route = next((r for r in routes if r["project_id"] == bound_subject["id"]), None)
-        elif binding_resolution["state"] == "conflict":
-            raise ValueError("workspace subject binding conflicts with repository identity")
+    cwd_route = _bound_cwd_route(root, cwd, routes, repo_route or workspace_route)
     query_selection = _query_route_selection(query, routes)
     initial_query_selection = query_selection
     query_route = query_selection["route"]

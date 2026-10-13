@@ -489,13 +489,8 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
                                projects_override=None, routes_override=None, prepare_hook=None,
                                items_override=None, readme_overrides=None) -> Dict[str, Any]:
     inputs = snapshot_inputs(root)
-    if projects_override is None:
-        projects, project_ids = _registered_projects(root)
-    else:
-        projects = [dict(row) for row in projects_override]
-        project_ids = [str(row["id"]) for row in projects]
-        if not projects or len(project_ids) != len(set(project_ids)):
-            raise KnowledgeHubError("invalid project registration overlay")
+    from .project_readiness_inputs import registration_projects, local_workspace_inputs, aggregate_members
+    projects, project_ids = registration_projects(root, projects_override)
     product_policy, policy_errors = load_product_policy(root)
     readiness_extensions, extension_errors = readiness_extensions_by_project(
         product_policy, project_ids
@@ -525,13 +520,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
     groups = list((load_json(root / "registry/project-groups.json", {}) or {}).get("groups", []))
     groups_by_id = {str(row.get("id", "")): row for row in groups if row.get("id")}
     existing_routes = route_rows(root) if routes_override is None else routes_override
-    local_rows = list((load_json(root / "local/workspaces.json", {}) or {}).get("workspaces", []))
-    local_workspaces = {str(row.get("workspace_ref", "")): row for row in local_rows if row.get("workspace_ref")}
-    from .provider_onboarding import binding_rows
-    for binding in binding_rows(root):
-        candidate = pathlib.Path(binding["path"])
-        if candidate.is_dir() and [candidate.stat().st_dev, candidate.stat().st_ino] == binding["directory_identity"]:
-            local_workspaces[binding["workspace_ref"]] = {"path": binding["path"]}
+    local_workspaces = local_workspace_inputs(root)
     item_ids = {str(row.get("id")) for row in items}
     item_paths = {str(row.get("path")) for row in items}
     items_by_path = {str(row.get("path")): row for row in items if row.get("path")}
@@ -554,21 +543,7 @@ def generate_project_readiness(root: pathlib.Path, today: dt.date, apply: bool =
         project["evidence_profile"] = evidence_profile
         group_ids = [str(value) for value in project.get("groups", [])]
         group = groups_by_id.get(group_ids[0], {}) if group_ids else {}
-        member_project_ids = (
-            [
-                str(value)
-                for value in group.get("member_project_ids", [])
-                if str(value) != project_id
-            ]
-            if evidence_profile == "aggregate-group"
-            else []
-        )
-        if evidence_profile == "aggregate-group" and not member_project_ids:
-            raise KnowledgeHubError(
-                "aggregate-group project must declare at least one non-self member project: {}".format(
-                    project_id
-                )
-            )
+        member_project_ids = aggregate_members(group, project_id, evidence_profile)
         paths = _project_paths(project)
         project_paths[project_id] = paths
         repos = _repo_rows_for_project(project, repositories)
