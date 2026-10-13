@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 第三轮优化验收记录
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-c7c483680173c6870d96c7a1
 title: Knowledge Hub 第三轮优化验收记录
 kind: validation
@@ -41,10 +45,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 第三轮优化验收记录
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: c7c483680173c6870d96c7a1b7519ba5f78d7ac0b83265bd8518ab055b6d3a23
 ---
 
 # Knowledge Hub 第三轮优化验收记录

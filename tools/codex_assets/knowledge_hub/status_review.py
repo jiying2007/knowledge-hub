@@ -2,6 +2,7 @@ import collections
 import hashlib
 import pathlib
 from typing import Any, Dict, List, Sequence, Tuple
+from .delegated_content_review import review_state, review_counts
 
 REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
 
@@ -163,12 +164,17 @@ def _collect_item_rows(root: pathlib.Path, items: Sequence[Dict[str, Any]]) -> T
     external_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
     for item in items:
         if item.get("generated_by_ai") is True:
+            delegated = review_state(root, item)
             missing = [field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"] if _is_blank(item.get(field))]
             current_sha = _repository_file_sha256(root, item.get("path", ""))
             stored_sha = str(item.get("human_review_content_sha256", ""))
             decision = str(item.get("human_review_decision", ""))
             drifted = decision in REVIEW_CONTENT_BOUND_DECISIONS and bool(stored_sha) and stored_sha != current_sha
-            if missing:
+            if delegated["status"] == "invalid":
+                ai_rows.append(_make_item_row(root, item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
+            elif delegated["closed"]:
+                pass
+            elif missing:
                 ai_rows.append(_make_item_row(root, item, "ai-human-review", ["missing-{}".format(field.replace("_", "-")) for field in missing], missing))
             elif decision in {"needs-edits", "defer"}:
                 ai_rows.append(_make_item_row(root, item, "ai-human-review", ["unresolved-{}".format(decision)], ["review_resolution"]))
@@ -229,7 +235,7 @@ def build_review_queues(
         "status": "needs-human-review" if all_rows else "clear", "read_only": True, "report_only": True,
         "final_profile": final_profile, "active_blocking_final_gate": bool(active_rows), "product_blocking_final_gate": bool(all_rows),
         "blocking_final_gate": bool(all_rows), "queue_source": "registry/items.jsonl + registry/sources.json", "sample_limit": limit,
-        "summary": {"total_pending_count": len(all_rows), "ai_generated_pending_count": len(ai_rows), "external_source_pending_count": len(external_rows), "active_or_promotion_blocker_count": len(active_rows), "by_priority": dict(sorted(priorities.items())), "by_owner": dict(sorted(owners.items()))},
+        "summary": {"total_pending_count": len(all_rows), "ai_generated_pending_count": len(ai_rows), "external_source_pending_count": len(external_rows), "active_or_promotion_blocker_count": len(active_rows), "by_priority": dict(sorted(priorities.items())), "by_owner": dict(sorted(owners.items())), **review_counts(root, items)},
         "ai_generated_pending": ai_rows[:limit], "external_source_pending": external_rows[:limit],
         "commands": {"status_json": "rtk bash ~/knowledge-hub/tools/knowledge-status.sh --as-of {} --json".format(today.isoformat()), "index_plan": "rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-queue --json", "recommended_batch_json": _queue_command(recommended, limit, json_mode=True), "recommended_forms_jsonl": _queue_command(recommended, limit, forms_jsonl=True), "recommended_validate_queue_forms": _queue_command(recommended, limit, json_mode=True, validate_path="'<review-queue-forms.jsonl>'")},
         "must_not": ["队列是 report-only 派生视图，不写 registry", "不得把 AI 草稿或外部资料队列当 owner decision", "不得自动提升 active 或关闭 owner gate", "不得写 ~/.codex/memories"],

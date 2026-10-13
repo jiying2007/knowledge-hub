@@ -390,10 +390,8 @@ def test_review_after_as_of_deterministic():
         [
             "rtk",
             "bash",
-            "tools/knowledge-final-gate.sh",
-            "--json",
-            "--as-of",
-            "2026-06-01",
+            "-lc",
+            "KNOWLEDGE_FINAL_GATE_INNER_REGRESSION=1 rtk bash tools/knowledge-final-gate.sh --json --as-of 2026-06-01",
         ],
     )
     parsed = {}
@@ -428,7 +426,8 @@ def test_review_after_as_of_deterministic():
         and not any(row.get("id") == item_id for row in past_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
         and any(row.get("id") == item_id for row in future_registry.get("stale_review_after_sample", []) if isinstance(row, dict))
         and parsed.get("final_gate", {}).get("as_of") == "2026-06-01"
-        and parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status") == "pass",
+        and parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status") == "pass"
+        and parsed.get("final_gate", {}).get("checks", {}).get("shared_unit_tests", {}).get("exit_code") == 77,
         "review-after-as-of-deterministic",
         "--as-of fixes review_after warning semantics for check/status/final-gate",
         {
@@ -444,6 +443,7 @@ def test_review_after_as_of_deterministic():
             "past_actions_text": past_actions_text,
             "final_gate_as_of": parsed.get("final_gate", {}).get("as_of"),
             "final_gate_check_status": parsed.get("final_gate", {}).get("checks", {}).get("knowledge_check", {}).get("status"),
+            "nested_unit_scope": "delegated-unverified; calendar assertions only",
             "future_warning_sample": parsed.get("future_check", {}).get("warnings", [])[:5],
             "past_stale_count": past_registry.get("stale_review_after_count"),
             "future_stale_count": future_registry.get("stale_review_after_count"),

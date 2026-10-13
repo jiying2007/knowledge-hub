@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK8.0.2持久化、锁安全与实际运行资产验证
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-67eea36661773841b2559d61
 title: ADK8.0.2持久化、锁安全与实际运行资产验证
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK8.0.2持久化、锁安全与实际运行资产验证
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 67eea36661773841b2559d61fe84016953c861d6f9a39d6c8d11a543bd9cf4ac
 ---
 
 # ADK8.0.2持久化、锁安全与实际运行资产验证

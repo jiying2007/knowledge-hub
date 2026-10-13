@@ -24,7 +24,7 @@
     {"name":"knowledge-review-after","wrapper":"tools/knowledge-review-after.sh","plane":"governance","tier":"daily","summary_json":true,"read_only":true},
     {"name":"knowledge-check","wrapper":"tools/knowledge-check.sh","plane":"evidence-operations","tier":"daily","summary_json":true,"read_only":true},
 
-    {"name":"knowledge-context","wrapper":"tools/knowledge-context.sh","plane":"query","tier":"maintenance","summary_json":true,"read_only":true},
+    {"name":"knowledge-provider","wrapper":"tools/knowledge-provider.sh","plane":"query","tier":"maintenance","summary_json":true,"read_only":false},
     {"name":"knowledge-evidence-pack","wrapper":"tools/knowledge-evidence-pack.sh","plane":"query","tier":"maintenance","summary_json":false,"read_only":true},
     {"name":"knowledge-map","wrapper":"tools/knowledge-map.sh","plane":"query","tier":"maintenance","summary_json":true,"read_only":true},
     {"name":"knowledge-metrics","wrapper":"tools/knowledge-metrics.sh","plane":"evidence-operations","tier":"maintenance","summary_json":true,"read_only":true},

@@ -253,7 +253,7 @@ def _run_concurrency_probe(
         "p95_ms": round(p95_ms, 2),
         "max_ms": round(max(latencies) if latencies else 0.0, 2),
         "maximum_p95_ms": maximum_p95_ms,
-        "failures": failures,
+        "failures": failures, "samples": rows,
     }
 
 

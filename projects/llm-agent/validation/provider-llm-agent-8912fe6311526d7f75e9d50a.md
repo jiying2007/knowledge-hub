@@ -1,4 +1,10 @@
 ---
+aliases:
+- 无模型验证方案及真实证据边界
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-8912fe6311526d7f75e9d50a
 title: 无模型验证方案及真实证据边界
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 无模型验证方案及真实证据边界
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 8912fe6311526d7f75e9d50ad297881e617b139fe18bbf7b7cb304a8a8da9245
 ---
 
 # 无模型验证方案交付结论

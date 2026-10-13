@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 第六轮全面迭代验证记录
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-d07893a6a191b3752a3b832c
 title: Knowledge Hub 第六轮全面迭代验证记录
 kind: validation
@@ -42,10 +46,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 第六轮全面迭代验证记录
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: d07893a6a191b3752a3b832c896fcb088b3f305f8107bf4cf8f7e936e1c329e2
 ---
 
 # Knowledge Hub 第六轮全面迭代验证记录

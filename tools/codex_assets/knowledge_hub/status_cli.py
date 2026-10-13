@@ -318,12 +318,12 @@ if stale_sources:
     )
 if review_queues.get("summary", {}).get("total_pending_count", 0):
     next_actions.append(
-        "复核 AI 生成和外部资料的人工复核队列；先运行："
+        "复核 AI 生成和外部资料的待复核队列；已授权普通内容支持 AI 受托复核，其他材料按原人工门禁处理。先运行："
         f"{review_queues.get('commands', {}).get('index_plan', '')}。"
     )
 if review_queue_product_blocking_count:
     next_actions.append(
-        "product 终态要求 AI/外部资料复核队列清零；这是人工复核阻断，不是工具失败。先导出表单、人工填写、校验，再用 review queue apply 工具落地。"
+        "product 终态要求 AI/外部资料复核队列清零；这是 owner-review 复核阻断，不是工具失败。已授权普通内容须完整审读、独立审查并绑定哈希，再用 review queue apply 的 --ai-delegated 模式验证与落地；疑点保持开放。其他材料继续使用人工表单与原门禁。"
     )
 if product_source_inventory_blocking_count:
     next_actions.append(
@@ -418,7 +418,7 @@ if review_queue_product_blocking_count:
         "id": "review-queue-pending-product",
         "severity": "owner-review",
         "count": review_queue_product_blocking_count,
-        "summary_zh": "product 终态要求 AI/外部资料人工复核队列清零；普通待复核项属于 owner-review 阻断，不能由工具代签或自动清零。",
+        "summary_zh": "product 终态要求 AI/外部资料复核队列清零；待复核项属于 owner-review 阻断。已授权普通内容可经完整审读、独立审查和精确哈希绑定完成 AI 受托复核；疑点及其他材料保持原门禁，AI 记录与真人签收分别计数。",
         "commands": [
             review_queues.get("commands", {}).get("recommended_batch_json", ""),
             review_queues.get("commands", {}).get("recommended_forms_jsonl", ""),

@@ -153,6 +153,24 @@ def test_quality_command_retries_and_preserves_attempt_evidence(tmp_path, monkey
     assert payload["attempts"][1]["status"] == "pass"
 
 
+def test_failed_benchmark_retains_complete_metrics_beyond_output_tail(tmp_path, monkeypatch):
+    report = {'status': 'fail', 'concurrency_probe': {'p95_ms': 1234,
+              'samples': [{'id': 'known-case', 'latency_ms': 1234}]},
+              'latency_ms': {'p95': 234}, 'thresholds': {'maximum_concurrent_p95_ms': 1000}}
+    import json
+    monkeypatch.setattr(engineering, 'run_rtk', lambda *args, **kwargs: {
+        'command': 'rtk bash tools/knowledge-retrieval-benchmark.sh --summary-json',
+        'exit_code': 1, 'stdout': '', 'stderr': json.dumps(report, indent=2),
+        'duration_sec': 1.0})
+    payload = engineering._run_quality_command(
+        tmp_path, ('bash', 'tools/knowledge-retrieval-benchmark.sh', '--summary-json'), 10)
+    assert payload['status'] == 'fail'
+    summary = payload['attempts'][0]['failure_summary']
+    assert summary['concurrency_probe'] == report['concurrency_probe']
+    assert summary['latency_ms'] == report['latency_ms']
+    assert summary['thresholds'] == report['thresholds']
+
+
 def test_quality_command_fails_after_retry_budget(tmp_path, monkeypatch):
     monkeypatch.setattr(
         engineering,

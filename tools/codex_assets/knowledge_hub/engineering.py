@@ -520,7 +520,7 @@ def _coverage_recollection_commands(
         (
             "coverage",
             (python, "-m", "coverage", "run", "--parallel-mode", "-m", "pytest", "-q"),
-            300,
+            600,
         ),
         (
             "full_regression",
@@ -671,7 +671,7 @@ def run_engineering_quality(
         (
             "coverage",
             (python, "-m", "coverage", "run", "--parallel-mode", "-m", "pytest", "-q"),
-            300,
+            600,
         ),
         ("build", (python, "-m", "build", "--no-isolation", "--outdir", dist_dir), 180),
         ("knowledge_check", ("bash", "tools/knowledge-check.sh", "--dry-run", "--json"), 120),

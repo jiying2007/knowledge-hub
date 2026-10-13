@@ -1,4 +1,10 @@
 ---
+aliases:
+- 7.14.1 多仓主分支合并与回读
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-8aba0675f67e3ceadf5d9eac
 title: 7.14.1 多仓主分支合并与回读
 kind: validation
@@ -42,12 +48,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 7.14.1 多仓主分支合并与回读
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 8aba0675f67e3ceadf5d9eacf02d343ee088ec2b6049701f676486a0046acee8
 ---
 
 # 7.14.1 多仓主分支合并与回读

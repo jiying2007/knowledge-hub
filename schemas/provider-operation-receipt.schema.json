@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://knowledge-hub.local/schemas/provider-operation-receipt-v2",
+  "$id": "https://knowledge-hub.local/schemas/provider-operation-receipt-v4",
   "title": "Provider verified or uncertain subject operation",
   "type": "object",
   "$defs": {
@@ -10,17 +10,16 @@
       "id": {"type": "string", "minLength": 1, "maxLength": 160}
     }, "additionalProperties": false}
   },
-  "required": ["schema_version", "status", "persisted", "write_performed", "operation_id", "item_id", "subject_ref", "assignment_state", "project_archived", "candidate_status", "content_sha256", "source_sha256", "transaction_id", "promotion", "active_promoted", "owner_review_performed", "reason_codes"],
+  "required": ["schema_version", "status", "read_only", "persisted", "write_performed", "operation_id", "item_id", "subject_ref", "candidate_status", "content_sha256", "source_sha256", "transaction_id", "promotion", "active_promoted", "owner_review_performed", "reason_codes"],
   "properties": {
-    "schema_version": {"const": "knowledge-provider.operation-receipt/v2"},
+    "schema_version": {"const": "knowledge-provider.operation-receipt/v4"},
+    "read_only": {"type": "boolean"},
     "status": {"enum": ["PLANNED", "BLOCKED", "ARCHIVED", "ALREADY_ARCHIVED", "ASSIGNED", "ALREADY_ASSIGNED", "UNKNOWN", "CONFLICT", "NOT_FOUND", "VERIFIED", "PRESENT_UNVERIFIED"]},
     "persisted": {"type": ["boolean", "null"]},
     "write_performed": {"type": ["boolean", "null"]},
     "operation_id": {"$ref": "#/$defs/hash"},
     "item_id": {"type": ["string", "null"], "maxLength": 128},
     "subject_ref": {"$ref": "#/$defs/subject"},
-    "assignment_state": {"enum": ["assigned", "unassigned", null]},
-    "project_archived": {"type": "boolean"},
     "candidate_status": {"enum": ["reviewing", "draft", "active", "archived", "superseded", "rejected", "personal", null]},
     "content_sha256": {"$ref": "#/$defs/hash"},
     "source_sha256": {"$ref": "#/$defs/hash"},
@@ -32,10 +31,10 @@
     "expected_hash": {"$ref": "#/$defs/hash"}
   },
   "allOf": [
+    {"if": {"properties": {"status": {"enum": ["ARCHIVED", "ASSIGNED"]}}}, "then": {"properties": {"candidate_status": {"const": "reviewing"}, "write_performed": {"const": true}, "read_only": {"const": false}, "transaction_id": {"type": "string"}}}},
     {"if": {"properties": {"status": {"enum": ["ARCHIVED", "ALREADY_ARCHIVED", "ASSIGNED", "ALREADY_ASSIGNED", "VERIFIED"]}}}, "then": {"properties": {"persisted": {"const": true}, "operation_id": {"type": "string"}, "item_id": {"type": "string"}, "content_sha256": {"type": "string"}, "subject_ref": {"type": "object"}}}},
     {"if": {"properties": {"status": {"const": "UNKNOWN"}}}, "then": {"properties": {"persisted": {"const": null}, "write_performed": {"const": null}}}},
-    {"if": {"properties": {"status": {"enum": ["PLANNED", "BLOCKED"]}}}, "then": {"properties": {"persisted": {"const": false}, "write_performed": {"const": false}}}},
-    {"if": {"properties": {"assignment_state": {"const": "unassigned"}}}, "then": {"properties": {"project_archived": {"const": false}}}}
+    {"if": {"properties": {"status": {"enum": ["PLANNED", "BLOCKED"]}}}, "then": {"properties": {"persisted": {"const": false}, "write_performed": {"const": false}}}}
   ],
   "additionalProperties": false
 }

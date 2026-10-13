@@ -279,15 +279,16 @@ def _registry_rest_4(ctx):
         if not project_id and lifecycle != 'external-reference':
             ctx['errors'].append(f'repositories:{repo_id} empty project_id only allowed for external-reference')
             ctx['route_registry_health']['invalid_reference_count'] += 1
-        remote_key = str(repo.get('remote_key', ''))
+        from .remote_identity import identity_key
+        remote_key = identity_key(repo.get('remote_key'))
+        if not remote_key and repo.get('identity_kind') != 'local':
+            ctx['errors'].append(f'repositories:{repo_id} requires an exact structured remote identity')
+            ctx['route_registry_health']['invalid_reference_count'] += 1
         if remote_key:
             if remote_key in ctx['remote_keys']:
                 ctx['errors'].append(f'repositories:{repo_id} duplicate remote_key: {remote_key}')
                 ctx['route_registry_health']['invalid_reference_count'] += 1
             ctx['remote_keys'].add(remote_key)
-            if any((token in remote_key for token in ('://', '@', '/home/', '/vsdata/'))) or remote_key.endswith('.git') or remote_key.startswith('/'):
-                ctx['errors'].append(f'repositories:{repo_id} remote_key must be normalized logical key: {remote_key}')
-                ctx['route_registry_health']['invalid_reference_count'] += 1
         if repo.get('remote_kind') and repo.get('remote_kind') not in ctx['ALLOWED_REMOTE_KINDS']:
             ctx['errors'].append(f"repositories:{repo_id} invalid remote_kind: {repo.get('remote_kind')}")
             ctx['route_registry_health']['invalid_reference_count'] += 1

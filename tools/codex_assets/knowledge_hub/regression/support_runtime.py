@@ -11,6 +11,7 @@ import sys
 import tempfile
 import threading
 import time  # noqa: F401 - compatibility export through support facade
+from .copy_policy import ignored_fixture_names
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -125,17 +126,7 @@ def copy_repo(label):
     repo = temp_root / "repo"
 
     def ignore_fixture_paths(directory, names):
-        ignored = set()
-        directory_path = pathlib.Path(directory).resolve()
-        if directory_path == root:
-            # Regression fixtures must rebuild ignored derived state. Copying a live
-            # .cache while other workers run root-level read tools creates a mixed
-            # snapshot and lets non-authoritative local state leak between cases.
-            ignored.update({".git", ".tmp", ".codex", ".cache"})
-        if directory_path == root / "artifacts":
-            ignored.add("vault")
-        ignored.update(name for name in names if name in {"__pycache__", ".pytest_cache"})
-        return ignored
+        return ignored_fixture_names(root, directory, names)
 
     shutil.copytree(root, repo, ignore=ignore_fixture_paths)
     vault_source = root / "artifacts" / "vault"

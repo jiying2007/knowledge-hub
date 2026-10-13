@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK 7.14.1 来源升级与运行资产验证
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-63e87b8724e4e121da4d4896
 title: ADK 7.14.1 来源升级与运行资产验证
 kind: validation
@@ -42,12 +48,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK 7.14.1 来源升级与运行资产验证
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 63e87b8724e4e121da4d4896d649c2d91a675c8ffe92715acc2fa1e3c0b9263f
 ---
 
 # ADK 7.14.1 来源升级与运行资产验证

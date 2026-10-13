@@ -1,4 +1,10 @@
 ---
+aliases:
+- llm_agent / ADK 内外部审查与迭代记录
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-f703aef64b44092a82ffe439
 title: llm_agent / ADK 内外部审查与迭代记录
 kind: validation
@@ -42,12 +48,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- llm_agent / ADK 内外部审查与迭代记录
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: f703aef64b44092a82ffe439905a17b2a7b976b264a8185778adc46da6eead05
 ---
 
 # llm_agent / ADK 内外部审查与迭代记录

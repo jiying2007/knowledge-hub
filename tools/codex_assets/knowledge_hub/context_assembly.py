@@ -10,12 +10,8 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
 from .common import load_json, project_rows, registry_items, repository_rows, route_rows, utc_timestamp
 from .context_support import (
     BUDGET_LIMITS,
-    SUMMARY_JSON_MAX_ITEMS,
     TASK_TYPES,
-    _compact_context_item,
-    _compact_mapping,
     _current_exclusion_reason,
-    _fit_summary_budget,
     workspace_git_head,
     _public_item,
     _query_route_selection,
@@ -26,6 +22,7 @@ from .context_support import (
     _workspace_for_cwd,
     find_git_config,
     remote_urls_from_config,
+    normalize_remote_key,
 )
 from .retrieval_telemetry import (
     IMPLEMENTATION_GENERATION,
@@ -92,7 +89,7 @@ def assemble_context(
     projects_list = project_rows(root)
     projects = {str(row.get("id")): row for row in projects_list if row.get("id")}
     repo_by_id = {str(row.get("repo_id")): row for row in repositories if row.get("repo_id")}
-    repo_by_remote = {str(row.get("remote_key", "")).lower(): row for row in repositories if row.get("remote_key")}
+    repo_by_remote = {normalize_remote_key(row.get("remote_key")): row for row in repositories if normalize_remote_key(row.get("remote_key"))}
     groups_payload = _mapping(load_json(root / "registry/project-groups.json", {}))
     groups_list = list(groups_payload.get("groups", []))
     group_by_id = {str(row.get("id")): row for row in groups_list if isinstance(row, Mapping) and row.get("id")}
@@ -105,8 +102,8 @@ def assemble_context(
     matched_repo: Optional[Mapping[str, Any]] = None
     matched_remote: Optional[Mapping[str, Any]] = None
     for remote in git_remotes:
-        if remote["remote_key"] in repo_by_remote:
-            matched_repo = repo_by_remote[remote["remote_key"]]
+        if normalize_remote_key(remote["remote_key"]) in repo_by_remote:
+            matched_repo = repo_by_remote[normalize_remote_key(remote["remote_key"])]
             matched_remote = remote
             break
     workspace_ref, workspace_match = _workspace_for_cwd(cwd, local_workspaces, repositories, routes)
@@ -334,7 +331,7 @@ def assemble_context(
             "本机 workspace source_evidence HEAD 已陈旧；先运行 knowledge-workspace-discover.sh --apply 再形成源码结论。",
         )
     payload: Dict[str, Any] = {
-        "schema_version": 2,
+        "assembly_model": "shared-retrieval-ranking",
         "read_only": True,
         "cwd": cwd,
         "query": query,
@@ -410,154 +407,6 @@ def assemble_context(
         "total_ms": payload["latency_ms"],
     }
     return payload
-
-
-def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    context = _mapping(payload.get("context"))
-    route_selection = _mapping(payload.get("route_selection"))
-    search_payload = _mapping(payload.get("search"))
-    zero_hit = _mapping(search_payload.get("zero_hit"))
-    search_trace = _mapping(search_payload.get("search_trace"))
-    search_index = _mapping(search_payload.get("index"))
-    preflight = _mapping(payload.get("knowledge_preflight"))
-
-    compact_sections: Dict[str, List[Dict[str, Any]]] = {}
-    seen_items: Set[str] = set()
-    selected_item_count = 0
-    raw_evidence: List[str] = []
-    seen_evidence: Set[str] = set()
-    for section in ("current", "recent", "related", "search_fallback"):
-        compact_rows: List[Dict[str, Any]] = []
-        rows = context.get(section, [])
-        if not isinstance(rows, list):
-            rows = []
-        for row in rows:
-            if selected_item_count >= SUMMARY_JSON_MAX_ITEMS:
-                break
-            if not isinstance(row, Mapping):
-                continue
-            compact = _compact_context_item(row)
-            dedupe_key = str(compact.get("id") or compact.get("path") or "")
-            if dedupe_key and dedupe_key in seen_items:
-                continue
-            if dedupe_key:
-                seen_items.add(dedupe_key)
-            compact_rows.append(compact)
-            selected_item_count += 1
-            path = str(compact.get("path") or "")
-            if path and path not in seen_evidence:
-                seen_evidence.add(path)
-                raw_evidence.append(path)
-        compact_sections[section] = compact_rows
-
-    candidates: List[Dict[str, Any]] = []
-    raw_candidates = route_selection.get("candidates", [])
-    if not isinstance(raw_candidates, list):
-        raw_candidates = []
-    for candidate in raw_candidates:
-        compact_candidate = _compact_mapping(candidate, ("project_id", "score"))
-        if compact_candidate:
-            candidates.append(compact_candidate)
-    compact_route_selection = _compact_mapping(
-        route_selection,
-        (
-            "status",
-            "selection_source",
-            "cwd_route_project_id",
-            "query_route_project_id",
-            "selected_project_id",
-        ),
-    ) or {}
-    if candidates:
-        compact_route_selection["candidates"] = candidates
-
-    route_status = str(route_selection.get("status", "unresolved"))
-    confidence = {"selected": "high", "ambiguous": "medium", "unresolved": "low"}.get(
-        route_status,
-        "low",
-    )
-    telemetry = _mapping(payload.get("telemetry"))
-    candidate_recommendation = _mapping(payload.get("candidate_recommendation"))
-
-    search_results = search_payload.get("results", [])
-    if not isinstance(search_results, list):
-        search_results = []
-    risks = context.get("risks", [])
-    if not isinstance(risks, list):
-        risks = []
-    summary = {
-        "schema_version": payload.get("schema_version", 2),
-        "projection": "agent-summary-v1",
-        "read_only": bool(payload.get("read_only", True)),
-        "task_type": payload.get("task_type", "general"),
-        "context_budget": payload.get("context_budget", "normal"),
-        "knowledge_preflight": _compact_mapping(preflight, ("required",)) or {},
-        "repo_route": _compact_mapping(
-            payload.get("repo_route"),
-            ("repo_id", "project_id", "workspace_ref"),
-        ),
-        "route": _compact_mapping(
-            payload.get("route"),
-            (
-                "project_id",
-                "hub_entry",
-                "current_path",
-                "archive_path",
-                "decisions_path",
-                "validation_path",
-            ),
-        ),
-        "route_selection": compact_route_selection,
-        "context": {
-            "budget": context.get("budget", payload.get("context_budget", "normal")),
-            "effective_limit": context.get("effective_limit", 0),
-            **compact_sections,
-            "authority_lanes": _compact_mapping(
-                context.get("authority_lanes"),
-                ("active_ids", "provisional_ids", "historical_ids"),
-            )
-            or {},
-            "risks": risks[:2],
-        },
-        "search_summary": {
-            "status": search_payload.get("status", ""),
-            "count": search_payload.get("count", len(search_results)),
-            "total_matches": search_payload.get("total_matches", 0),
-            "fallback_count": search_payload.get("fallback_count", 0),
-            "latency_ms": search_payload.get("latency_ms", 0),
-            "index": _compact_mapping(search_index, ("state", "mode", "fresh", "rebuilt")) or {},
-            "zero_hit": _compact_mapping(zero_hit, ("is_zero_hit", "reason")) or {},
-            "search_trace": _compact_mapping(
-                search_trace,
-                (
-                    "schema_version",
-                    "excluded_by_filters_total",
-                    "excluded_truncated",
-                ),
-            )
-            or {},
-        },
-        "candidate_recommendation": _compact_mapping(
-            candidate_recommendation,
-            ("required", "allowed_kinds", "threshold"),
-        )
-        or {},
-        "context_contract": {
-            "read_tier": "L1",
-            "budget_profile": payload.get("context_budget", "normal"),
-            "confidence": confidence,
-            "raw_evidence": raw_evidence,
-            "raw_required_for_conclusion": bool(preflight.get("required", False)),
-            "fallback_condition": "歧义、低置信度或高风险时读取 --json 与 raw_evidence。",
-        },
-        "latency_ms": payload.get("latency_ms", 0),
-        "telemetry": _compact_mapping(
-            telemetry,
-            ("status", "recorded", "reason", "error_code"),
-        )
-        or {},
-    }
-    return _fit_summary_budget(summary)
 
 
 def record_context_telemetry(

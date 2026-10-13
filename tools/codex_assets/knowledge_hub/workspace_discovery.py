@@ -273,7 +273,7 @@ def discover_workspaces(
                 "workspace_ref": repo.get("workspace_ref", ""),
                 "repo_id": repo.get("repo_id", ""),
                 "project_id": repo.get("project_id", ""),
-                "remote_key": remote_key,
+                "remote_key": repo["remote_key"],
                 "path": str(selected),
                 "present": True,
                 "read_only_discovery": True,

@@ -1,4 +1,10 @@
 ---
+aliases:
+- 合并与受管应用检查点（外部 CI 阻塞交接）
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-25d0ff0e4fc8c26e5698cdb2
 title: 合并与受管应用检查点（外部 CI 阻塞交接）
 kind: validation
@@ -42,12 +48,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 合并与受管应用检查点（外部 CI 阻塞交接）
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 25d0ff0e4fc8c26e5698cdb21925d1c275747bfba8ddb79d543eb0278f81a245
 ---
 
 # 合并与受管应用检查点（外部 CI 阻塞交接）

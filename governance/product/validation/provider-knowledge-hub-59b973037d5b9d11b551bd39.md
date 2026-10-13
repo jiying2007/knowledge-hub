@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-59b973037d5b9d11b551bd39
 title: Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06
 kind: validation
@@ -45,10 +49,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 59b973037d5b9d11b551bd3951399dd52c45cbb08c0d9479a6a60f3cf55e31cd
 ---
 
 # Knowledge Hub 可靠性与运营自动化优化验证

@@ -40,6 +40,10 @@ def status_summary(payload: Mapping[str, Any]) -> Dict[str, Any]:
         },
         "review_queues": {
             "status": queues.get("status", ""),
+            "ai_delegated_closed_count": queue_summary.get(
+                "ai_delegated_closed_count", 0
+            ),
+            "human_reviewed_count": queue_summary.get("human_reviewed_count", 0),
             "total_pending_count": queue_summary.get("total_pending_count", 0),
             "ai_generated_pending_count": queue_summary.get(
                 "ai_generated_pending_count", 0

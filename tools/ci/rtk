@@ -146,7 +146,7 @@ case "$command_name" in
       tools/knowledge-search.sh|\
       tools/knowledge-review-after.sh|\
       tools/knowledge-check.sh|\
-      tools/knowledge-context.sh|\
+      tools/knowledge-provider.sh|\
       tools/knowledge-evidence-pack.sh|\
       tools/knowledge-map.sh|\
       tools/knowledge-metrics.sh|\

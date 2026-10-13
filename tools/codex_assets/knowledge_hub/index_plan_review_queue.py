@@ -4,6 +4,7 @@ import argparse
 import collections
 import pathlib
 from typing import Counter
+from .delegated_content_review import review_state, review_counts
 
 REVIEW_CONTENT_BOUND_DECISIONS = {"accept-as-review-record", "archive-only", "reject"}
 
@@ -171,22 +172,32 @@ def make_external_source_queue_item(source):
         ],
     }
 
+def _ai_review_inputs(item):
+    delegated = review_state(root, item)
+    missing_fields = [
+        field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+        if is_blank(item.get(field))
+    ]
+    current_content_sha256 = repository_file_sha256(item.get("path", ""))
+    stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
+    review_content_drifted = (
+        str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
+        and bool(stored_review_sha256)
+        and stored_review_sha256 != current_content_sha256
+    )
+    return delegated, missing_fields, review_content_drifted
+
+
 def build_review_queue_view(items, sources):
     rows = []
     for item in items:
         if item.get("generated_by_ai") is True:
-            missing_fields = [
-                field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
-                if is_blank(item.get(field))
-            ]
-            current_content_sha256 = repository_file_sha256(item.get("path", ""))
-            stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
-            review_content_drifted = (
-                str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
-                and bool(stored_review_sha256)
-                and stored_review_sha256 != current_content_sha256
-            )
-            if missing_fields:
+            delegated, missing_fields, review_content_drifted = _ai_review_inputs(item)
+            if delegated["status"] == "invalid":
+                rows.append(make_review_queue_item(item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
+            elif delegated["closed"]:
+                pass
+            elif missing_fields:
                 rows.append(
                     make_review_queue_item(
                         item,
@@ -263,6 +274,7 @@ def build_review_queue_view(items, sources):
             "active_or_promotion_blocker_count": len([row for row in rows if row.get("priority") == "P0"]),
             "by_priority": dict(sorted(priority_counts.items())),
             "source": "registry/items.jsonl + registry/sources.json",
+            **review_counts(root, items),
             "read_only": True,
             "report_only": True,
             "owner_gate_mutation": False,
@@ -364,4 +376,3 @@ def make_review_queue_form(row):
         "notes_zh": "这是人工复核填写前的只读 JSONL 骨架；registry item 的 content_sha256 绑定当前整文件，正文漂移后表单必须重新导出。工具不写 registry，不生成结论，不提升 active。",
     }
     return form
-

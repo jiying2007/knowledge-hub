@@ -6,8 +6,13 @@ import pathlib
 import pytest
 
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, load_jsonl
-from tools.codex_assets.knowledge_hub.provider_archive import archive, main
+from tools.codex_assets.knowledge_hub.provider_operations import archive
+from tools.codex_assets.knowledge_hub.provider_cli import main, parser
 from test_lifecycle import _root
+
+
+def item_path(root, receipt):
+    return next(row["path"] for row in load_jsonl(root / "registry/items.jsonl") if row["id"] == receipt["item_id"])
 
 
 def setup(tmp_path):
@@ -22,10 +27,14 @@ def setup(tmp_path):
         "schema_version": 1, "enabled": True, "mode": "candidate-only", "owner_id": "leiwenjun",
         "allowed_kinds": ["validation", "runbook"], "maximum_bytes": 131072,
     }))
+    (root / "local").mkdir()
+    (root / "local/provider-principal.json").write_text('{"schema_version":1,"enabled":true,"principal_id":"local-user"}')
+    policy = pathlib.Path(__file__).resolve().parents[1] / "registry/provider-subject-policy.json"
+    (root / "registry/provider-subject-policy.json").write_bytes(policy.read_bytes())
     source = tmp_path / "input.md"
     source.write_text("# 验证记录\n\n结论：事务和索引同步验证通过。\n")
-    args = argparse.Namespace(source=str(source), project="test", kind="validation", title="",
-                              sanitized=True, apply=True, as_of="2026-10-05")
+    args = parser().parse_args(["archive", "--subject", "project:test", "--source", str(source), "--kind", "validation",
+                               "--sanitized", "--apply", "--cwd", str(tmp_path)])
     return root, source, args
 
 
@@ -43,8 +52,8 @@ def test_archive_atomic_receipt_and_retry(tmp_path):
     assert retry["status"] == "ALREADY_ARCHIVED" and not retry["write_performed"]
     assert retry["content_sha256"] == first["content_sha256"]
     assert (root / "registry/items.jsonl").read_bytes() == before
-    (root / first["target"]).write_text("# changed\n")
-    with pytest.raises(KnowledgeHubError, match="content drift"):
+    (root / item["path"]).write_text("# changed\n")
+    with pytest.raises(KnowledgeHubError, match="CONTENT_DRIFT"):
         archive(root, args)
 
 
@@ -54,7 +63,7 @@ def test_dry_run_never_claims_persistence(tmp_path):
     result = archive(root, args)
     assert result["status"] == "PLANNED" and not result["persisted"]
     assert (root / "registry/items.jsonl").read_text() == ""
-    assert not (root / result["target"]).exists()
+    assert not list((root / "projects/test/validation").glob("provider-*.md"))
 
 
 @pytest.mark.parametrize("change", ["secret", "route", "kind", "owner", "metadata", "sanitized", "disabled", "symlink", "size", "session"])
@@ -64,7 +73,7 @@ def test_negative_paths_do_not_write(tmp_path, change):
     if change == "secret":
         source.write_text("# 秘密\n\npassword=" + "a" * 20)
     elif change == "route":
-        args.project = "unknown"
+        args.subject = "project:unknown"
     elif change == "kind":
         args.kind = "decision"
     elif change == "owner":
@@ -92,7 +101,7 @@ def test_negative_paths_do_not_write(tmp_path, change):
 def test_public_error_does_not_echo_secret(tmp_path, capsys):
     root, source, _ = setup(tmp_path)
     source.write_text("password=" + "a" * 20)
-    assert main(["--root", str(root), "--project", "test", "--source", str(source),
+    assert main(["archive", "--root", str(root), "--subject", "project:test", "--source", str(source),
                  "--kind", "validation", "--sanitized", "--apply"]) == 2
     output = capsys.readouterr().out
     assert "a" * 20 not in output
@@ -106,10 +115,10 @@ def test_malformed_policy_returns_public_json_without_writing(tmp_path, capsys, 
     policy = json.loads(policy_path.read_text())
     policy['allowed_kinds'] = invalid
     policy_path.write_text(json.dumps(policy))
-    assert main(['--root', str(root), '--project', 'test', '--source', str(source),
+    assert main(['archive', '--root', str(root), '--subject', 'project:test', '--source', str(source),
                  '--kind', 'validation', '--sanitized', '--apply']) == 2
     receipt = json.loads(capsys.readouterr().out)
-    assert receipt['reason_code'] == 'policy-invalid'
+    assert receipt['reason_codes'] == ['POLICY_DENIED']
     assert (root / 'registry/items.jsonl').read_text() == ''
 
 
@@ -121,7 +130,7 @@ def test_archive_preserves_descriptive_metadata(tmp_path):
     assert item['summary_zh'] == '精确中文摘要'
     assert item['tags'] == ['provider-archive', 'validation', '事务', '验证']
     from tools.codex_assets.knowledge_hub.schemas import validate_instance
-    assert validate_instance(root, 'provider-archive-receipt-v1', receipt)['status'] == 'pass'
+    assert validate_instance(root, 'provider-operation-receipt-v4', receipt)['status'] == 'pass'
 
 
 def test_interleaved_capture_cannot_lose_successful_registry_update(tmp_path, monkeypatch):
@@ -142,35 +151,34 @@ def test_interleaved_capture_cannot_lose_successful_registry_update(tmp_path, mo
         return snapshot
 
     monkeypatch.setattr(lifecycle, 'registry_items', interleaved)
-    from tools.codex_assets.knowledge_hub.store import WriteConflict
-    with pytest.raises(WriteConflict):
-        archive(root, args)
+    first = archive(root, args)
+    assert first["status"] == "ARCHIVED"
     rows = original(root)
-    assert len(rows) == 1 and rows[0]['id'] == nested['item_id']
-    assert archive(root, args)['status'] == 'ARCHIVED'
+    assert len(rows) == 2 and nested['item_id'] in {row['id'] for row in rows}
+    assert archive(root, args)['status'] == 'ALREADY_ARCHIVED'
     assert len(original(root)) == 2
 
 
 def test_public_archive_retries_only_prewrite_conflicts_with_frozen_input(tmp_path, monkeypatch, capsys):
-    from tools.codex_assets.knowledge_hub import provider_archive
+    from tools.codex_assets.knowledge_hub import provider_operations
     from tools.codex_assets.knowledge_hub.store import WriteConflict
 
     root, source, _ = setup(tmp_path)
-    original = provider_archive.archive
+    original = provider_operations._archive
     seen = []
     content = source.read_text()
 
-    def conflict_once(root_arg, args):
-        seen.append(pathlib.Path(args.source).read_text())
+    def conflict_once(root_arg, args, frozen):
+        seen.append(frozen[0])
         if len(seen) == 1:
             source.write_text('# 后续用户改动\n')
             raise WriteConflict('another Knowledge Hub write transaction is active')
-        return original(root_arg, args)
+        return original(root_arg, args, frozen)
 
-    monkeypatch.setattr(provider_archive, 'archive', conflict_once)
-    assert main(['--root', str(root), '--project', 'test', '--source', str(source),
+    monkeypatch.setattr(provider_operations, '_archive', conflict_once)
+    assert main(['archive', '--root', str(root), '--subject', 'project:test', '--source', str(source),
                  '--kind', 'validation', '--sanitized', '--apply']) == 0
     receipt = json.loads(capsys.readouterr().out)
-    assert receipt['attempt_count'] == 2 and receipt['persisted']
+    assert len(seen) == 2 and receipt['persisted']
     assert seen == [content, content]
     assert source.read_text() == '# 后续用户改动\n'

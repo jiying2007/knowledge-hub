@@ -44,7 +44,7 @@ related:
 Codex 在任意项目目录处理以下任务时，应先运行或等价执行 Hub 上下文预检：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用户问题或任务>" --task-type <type> --context-budget small --limit 3 --summary-json
+rtk bash ~/knowledge-hub/tools/knowledge-provider.sh context --cwd "$PWD" --query "<用户问题或任务>" --task-type <type> --context-budget small --limit 3 --summary-json
 ```
 
 `task-type` 常用值：
@@ -56,11 +56,11 @@ rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<用�
 - `runbook`：操作指南、复用流程、排障手册。
 - `source`：source coverage、source 边界、迁移状态。
 
-摘要预检输出的 `route` 是当前项目入口，`context` 是去重候选索引，`context_contract.raw_evidence` 是原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并用 `--json` 回退 `ranked_items` 和 `search` 完整证据。`candidate_recommendation.required=true` 时，完成或中断都必须生成 Hub candidate，或明确说明“本次无可归档结论”。
+Provider v4 的 `execution_subject` 是执行主体，`retrieval_scope` 是检索范围，`context[].items[].path` 是原文入口。显式 `--execution-project` 或 `--workspace` 固定执行主体，跨项目查询显式指定 `--retrieval-project`；查询别名不授权主体转移。`authority_lanes` 区分事实、候选、历史和 discovery。归档另查 `archive_eligibility` 并显式传 `--subject`。产生合格耐久结论时登记 reviewing candidate，否则明确说明“本次无可归档结论”。
 
 ## 上下文装配原则
 
-`knowledge-context.sh` 或等价预检应输出“预算内、可解释、可追溯”的上下文，而不是把搜索结果无差别塞给会话。
+`knowledge-provider.sh context` 或等价预检应输出“预算内、可解释、可追溯”的上下文，而不是把搜索结果无差别塞给会话。
 
 推荐装配顺序：
 

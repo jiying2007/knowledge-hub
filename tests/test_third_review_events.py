@@ -8,7 +8,7 @@ from tools.codex_assets.knowledge_hub import review_events
 from tools.codex_assets.knowledge_hub import private_io, review_batches, review_consumption_cli
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, registry_items
 from tools.codex_assets.knowledge_hub.private_io import PrivateWriteUncertain
-from tools.codex_assets.knowledge_hub.provider_archive import archive
+from tools.codex_assets.knowledge_hub.provider_operations import archive
 from tools.codex_assets.knowledge_hub.review_batches import record_consumption, prepare_review_batches
 from tools.codex_assets.knowledge_hub.review_state import load_state
 

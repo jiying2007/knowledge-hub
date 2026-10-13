@@ -41,6 +41,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 85cdfb6aec9222231a5a7243b5c9bd8d99fecf19139ae1379052f386902d581a
 ---
 
 # ADK 主分支同步与验证边界审查候选

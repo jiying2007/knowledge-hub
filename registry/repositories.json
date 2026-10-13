@@ -4,7 +4,10 @@
     {
       "repo_id": "pcr02-ssc305",
       "project_id": "pcr02-ssc305",
-      "remote_key": "robot/pcr02_ssc305",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "robot/pcr02_ssc305"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-ssc305",
       "groups": [
@@ -22,7 +25,10 @@
     {
       "repo_id": "xcrz-sigmastar-demo",
       "project_id": "xcrz-sigmastar-demo",
-      "remote_key": "robot/xcrz_sigmastar_demo",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "robot/xcrz_sigmastar_demo"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://xcrz-sigmastar-demo",
       "groups": [
@@ -39,7 +45,10 @@
     {
       "repo_id": "pcr02-api",
       "project_id": "pcr02-api",
-      "remote_key": "embedded/module/api",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/module/api"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-api",
       "groups": [
@@ -55,7 +64,10 @@
     {
       "repo_id": "pcr02-app",
       "project_id": "pcr02-app",
-      "remote_key": "embedded/module/app",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/module/app"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-app",
       "groups": [
@@ -71,7 +83,10 @@
     {
       "repo_id": "pcr02-hdi",
       "project_id": "pcr02-hdi",
-      "remote_key": "embedded/module/hdi",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/module/hdi"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-hdi",
       "groups": [
@@ -87,7 +102,10 @@
     {
       "repo_id": "pcr02-sensor",
       "project_id": "pcr02-sensor",
-      "remote_key": "vosen/modules/sensor",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "vosen/modules/sensor"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-sensor",
       "groups": [
@@ -103,7 +121,10 @@
     {
       "repo_id": "pcr02-daemon",
       "project_id": "pcr02-daemon",
-      "remote_key": "embedded/app/daemon",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/daemon"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-daemon",
       "groups": [
@@ -118,7 +139,10 @@
     {
       "repo_id": "pcr02-cli",
       "project_id": "pcr02-cli",
-      "remote_key": "embedded/app/cli",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/cli"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-cli",
       "groups": [
@@ -133,7 +157,10 @@
     {
       "repo_id": "pcr02-cmd-server",
       "project_id": "pcr02-cmd-server",
-      "remote_key": "embedded/app/cmd_server",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/cmd_server"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-cmd-server",
       "groups": [
@@ -149,8 +176,6 @@
     {
       "repo_id": "pcr02-proto-c",
       "project_id": "pcr02-proto-c",
-      "remote_key": "embedded/app/proto_c",
-      "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-proto-c",
       "groups": [
         "pcr02"
@@ -160,13 +185,13 @@
         "proto-c"
       ],
       "lifecycle": "first-party",
-      "status": "registered"
+      "status": "registered",
+      "identity_kind": "local",
+      "local_identity": "workspace://pcr02-proto-c"
     },
     {
       "repo_id": "pcr02-wifi",
       "project_id": "pcr02-wifi",
-      "remote_key": "embedded/module/wifi",
-      "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-wifi",
       "groups": [
         "pcr02"
@@ -176,12 +201,17 @@
         "wifi"
       ],
       "lifecycle": "first-party",
-      "status": "registered"
+      "status": "registered",
+      "identity_kind": "local",
+      "local_identity": "workspace://pcr02-wifi"
     },
     {
       "repo_id": "pcr02-mp4",
       "project_id": "pcr02-mp4",
-      "remote_key": "embedded/module/mp4",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/module/mp4"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://pcr02-mp4",
       "groups": [
@@ -197,7 +227,10 @@
     {
       "repo_id": "app-ota",
       "project_id": "app-ota",
-      "remote_key": "embedded/app/app_ota",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/app_ota"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://app-ota",
       "groups": [
@@ -213,7 +246,10 @@
     {
       "repo_id": "app-product-test",
       "project_id": "app-product-test",
-      "remote_key": "embedded/app/app_product_test",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/app_product_test"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://app-product-test",
       "groups": [
@@ -230,7 +266,10 @@
     {
       "repo_id": "app-tool",
       "project_id": "app-tool",
-      "remote_key": "embedded/app/app_tool",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/app_tool"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://app-tool",
       "groups": [
@@ -245,7 +284,10 @@
     {
       "repo_id": "app-main",
       "project_id": "app-main",
-      "remote_key": "embedded/app/app_main",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/app/app_main"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://app-main",
       "groups": [
@@ -260,7 +302,10 @@
     {
       "repo_id": "gd32l235",
       "project_id": "gd32l235",
-      "remote_key": "robot/gd32l235",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "robot/gd32l235"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://gd32l235",
       "groups": [
@@ -276,7 +321,10 @@
     {
       "repo_id": "hc32f072",
       "project_id": "hc32f072",
-      "remote_key": "robot/hc32f072",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "robot/hc32f072"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://hc32f072",
       "groups": [
@@ -292,7 +340,10 @@
     {
       "repo_id": "mm32spin023c",
       "project_id": "mm32spin023c",
-      "remote_key": "robot/mm32spin023c",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "robot/mm32spin023c"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://mm32spin023c",
       "groups": [
@@ -308,7 +359,10 @@
     {
       "repo_id": "firmware-release-tools",
       "project_id": "firmware-release-tools",
-      "remote_key": "embedded/tools/firmware-release-tools",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/firmware-release-tools"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://firmware-release-tools",
       "groups": [
@@ -325,7 +379,10 @@
     {
       "repo_id": "firmware-toolchains",
       "project_id": "firmware-toolchains",
-      "remote_key": "embedded/tools/firmware-toolchains",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/firmware-toolchains"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://firmware-toolchains",
       "groups": [
@@ -342,7 +399,10 @@
     {
       "repo_id": "codex",
       "project_id": "codex",
-      "remote_key": "jiying2007/codex",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "jiying2007/codex"
+      },
       "remote_kind": "github",
       "workspace_ref": "~/codex",
       "groups": [
@@ -358,7 +418,10 @@
     {
       "repo_id": "llm-agent",
       "project_id": "llm-agent",
-      "remote_key": "jiying2007/llm_agent",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "jiying2007/llm_agent"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://llm-agent",
       "groups": [
@@ -375,7 +438,10 @@
     {
       "repo_id": "agent-dev-kit",
       "project_id": "agent-dev-kit",
-      "remote_key": "jiying2007/agent-dev-kit",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "jiying2007/agent-dev-kit"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://agent-dev-kit",
       "groups": [
@@ -391,7 +457,10 @@
     {
       "repo_id": "digital-worker",
       "project_id": "digital-worker",
-      "remote_key": "jiying2007/digital-worker",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "jiying2007/digital-worker"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://digital-worker",
       "groups": [
@@ -407,7 +476,10 @@
     {
       "repo_id": "llm-tools",
       "project_id": "llm-tools",
-      "remote_key": "embedded/tools/llm_tools",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/llm_tools"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://llm-tools",
       "groups": [
@@ -424,7 +496,10 @@
     {
       "repo_id": "sigmastar-flasher",
       "project_id": "sigmastar-flasher",
-      "remote_key": "embedded/tools/sigmastar-flasher",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/sigmastar-flasher"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://sigmastar-flasher",
       "groups": [
@@ -440,7 +515,10 @@
     {
       "repo_id": "mm32spin-validator",
       "project_id": "mm32spin-validator",
-      "remote_key": "embedded/tools/mm32spin-validator",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/mm32spin-validator"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://mm32spin-validator",
       "groups": [
@@ -456,7 +534,10 @@
     {
       "repo_id": "ota-packager",
       "project_id": "ota-packager",
-      "remote_key": "embedded/tools/ota-packager",
+      "remote_key": {
+        "provider_id": "host-b04a2baf5cdecbdc93cb42b75a5dc2acaf37fbdad0cdd23086eeba7f910c9a8b",
+        "repository_path": "embedded/tools/ota-packager"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://ota-packager",
       "groups": [
@@ -471,7 +552,10 @@
     {
       "repo_id": "scale-engine",
       "project_id": "",
-      "remote_key": "hongmaple/scale-engine",
+      "remote_key": {
+        "provider_id": "gitee.com",
+        "repository_path": "hongmaple/scale-engine"
+      },
       "remote_kind": "gitee",
       "workspace_ref": "workspace://scale-engine",
       "groups": [
@@ -486,7 +570,10 @@
     {
       "repo_id": "openspec",
       "project_id": "",
-      "remote_key": "fission-ai/openspec",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "fission-ai/openspec"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://openspec",
       "groups": [
@@ -501,7 +588,10 @@
     {
       "repo_id": "vibeflow",
       "project_id": "",
-      "remote_key": "ttttstc/vibeflow",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "ttttstc/vibeflow"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://vibeflow",
       "groups": [
@@ -516,7 +606,10 @@
     {
       "repo_id": "superpowers",
       "project_id": "",
-      "remote_key": "obra/superpowers",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "obra/superpowers"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://superpowers",
       "groups": [
@@ -531,7 +624,10 @@
     {
       "repo_id": "gitlab-bot",
       "project_id": "",
-      "remote_key": "goodideal/gitlab-bot",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "goodideal/gitlab-bot"
+      },
       "remote_kind": "github",
       "workspace_ref": "workspace://gitlab-bot",
       "groups": [
@@ -546,7 +642,10 @@
     {
       "repo_id": "x5-integration",
       "project_id": "x5-rdk",
-      "remote_key": "robot/d_rdk_x5_repo/integration",
+      "remote_key": {
+        "provider_id": "host-5a4b545996966878069413478fe1859f1f63a048010f936cb07c45006fa64d87",
+        "repository_path": "robot/d_rdk_x5_repo/integration"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://x5-integration",
       "groups": [
@@ -562,8 +661,6 @@
     {
       "repo_id": "x5-manifest",
       "project_id": "x5-rdk",
-      "remote_key": "robot/d_rdk_x5_repo/manifest",
-      "remote_kind": "internal-git",
       "workspace_ref": "workspace://x5-manifest",
       "groups": [
         "x5-rdk"
@@ -573,12 +670,17 @@
         "d_rdk_x5_repo/manifest"
       ],
       "lifecycle": "first-party",
-      "status": "registered"
+      "status": "registered",
+      "identity_kind": "local",
+      "local_identity": "workspace://x5-manifest"
     },
     {
       "repo_id": "x5-vendor-docs",
       "project_id": "x5-rdk",
-      "remote_key": "robot/d_rdk_x5_repo/vendor-docs",
+      "remote_key": {
+        "provider_id": "host-5a4b545996966878069413478fe1859f1f63a048010f936cb07c45006fa64d87",
+        "repository_path": "robot/d_rdk_x5_repo/vendor-docs"
+      },
       "remote_kind": "internal-git",
       "workspace_ref": "workspace://x5-vendor-docs",
       "groups": [
@@ -594,7 +696,10 @@
     {
       "repo_id": "knowledge-hub",
       "project_id": "knowledge-hub",
-      "remote_key": "jiying2007/knowledge-hub",
+      "remote_key": {
+        "provider_id": "github.com",
+        "repository_path": "jiying2007/knowledge-hub"
+      },
       "remote_kind": "github",
       "workspace_ref": "~/knowledge-hub",
       "groups": [

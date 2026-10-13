@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 第四轮审查与迭代
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-d868d31fd675378e3a609792
 title: Knowledge Hub 第四轮审查与迭代
 kind: validation
@@ -41,10 +45,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 第四轮审查与迭代
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: d868d31fd675378e3a60979261a09d8515ec31cdca088886289a9ec735b06cc3
 ---
 
 # Knowledge Hub 第四轮审查与迭代

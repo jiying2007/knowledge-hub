@@ -1,4 +1,8 @@
 ---
+aliases:
+- Codex 7.14.2 来源与运行采用验证
+related:
+- indexes/obsidian-home.md
 id: provider-codex-8008d911326cf0c6cbb838fb
 title: Codex 7.14.2 来源与运行采用验证
 kind: validation
@@ -43,10 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Codex 7.14.2 来源与运行采用验证
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: codex
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 8008d911326cf0c6cbb838fb24344f60c2f97f7ac874f8798f35432da21d0641
 ---
 
 # Codex 7.14.2 来源与运行采用验证

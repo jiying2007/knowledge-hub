@@ -32,7 +32,29 @@ parser.add_argument("--next-review-at", default="")
 parser.add_argument("--review-seconds", type=float, default=None)
 parser.add_argument('--review-event-id', default='')
 parser.add_argument("--apply", action="store_true")
+parser.add_argument('--autonomous-plan', action='store_true', help='Prepare hash-bound machine work and human confirmation batches')
+parser.add_argument('--automation-limit', type=int, default=10)
+parser.add_argument('--project-limit', type=int, default=2)
+parser.add_argument('--automation-offset', type=int, default=0)
+parser.add_argument('--project-offset', type=int, default=0)
+parser.add_argument('--discovery-offset', type=int, default=0, help='Continue the registered-evidence inventory page within each selected project')
+parser.add_argument('--run-machine-checks', action='store_true', help='Execute only the fixed Hub metadata check; never commands from content')
+parser.add_argument('--verify-autonomous-plan', default='', help='Read and recheck a previously generated automation plan before separately authorized execution')
+parser.add_argument('--semantic-task', action='store_true', help='Export scanned local bodies for an explicitly chosen review agent; no network calls')
+parser.add_argument('--semantic-result', default='', help='Validate a concrete semantic response against --verify-autonomous-plan; never approve it')
 args = parser.parse_args(argv)
+if args.autonomous_plan and args.verify_autonomous_plan:
+    parser.error('prepare and verify are mutually exclusive')
+if (args.autonomous_plan or args.verify_autonomous_plan or args.run_machine_checks) and (args.consume_item or args.apply):
+    parser.error('automation preparation cannot consume human decisions or apply lifecycle changes')
+if args.run_machine_checks and not args.autonomous_plan:
+    parser.error('--run-machine-checks requires --autonomous-plan')
+if args.semantic_task and (not args.autonomous_plan or not args.json):
+    parser.error('--semantic-task requires --autonomous-plan --json')
+if args.semantic_result and not args.verify_autonomous_plan:
+    parser.error('--semantic-result requires --verify-autonomous-plan')
+if args.autonomous_plan and not (args.json or args.summary_json):
+    parser.error('--autonomous-plan requires --json or --summary-json')
 if args.consume_item:
     from .review_consumption_cli import main as consumption_main
 
@@ -73,6 +95,25 @@ def resolve_today():
     return dt.date.today(), source
 
 today, today_source = resolve_today()
+if args.verify_autonomous_plan:
+    from .common import KnowledgeHubError, read_utf8_bounded
+    from .review_automation import verify_automation_plan
+    try:
+        plan = json.loads(read_utf8_bounded(pathlib.Path(args.verify_autonomous_plan), 16 * 1024 * 1024, 'automation plan'))
+        # Accept the stable CLI projection as well as its nested plan.
+        if isinstance(plan, dict) and 'autonomous_plan' in plan:
+            plan = plan['autonomous_plan']
+        if args.semantic_result:
+            from .review_semantic import MAX_BYTES, validate_semantic_result
+            result = json.loads(read_utf8_bounded(pathlib.Path(args.semantic_result), MAX_BYTES, 'semantic result'))
+            report = validate_semantic_result(root, plan, result, today)
+        else:
+            report = verify_automation_plan(root, plan, today)
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    except (KnowledgeHubError, OSError, ValueError, RecursionError) as exc:
+        print(json.dumps({'status': 'needs-fix', 'error': str(exc)}, ensure_ascii=False))
+        raise SystemExit(1) from exc
+    raise SystemExit(0)
 item_window_end = today + dt.timedelta(days=args.window_days)
 source_window_end = today + dt.timedelta(days=args.source_window_days)
 
@@ -371,6 +412,24 @@ if args.json or args.summary_json:
                                                       open_owner_gates, today, detail_limit=args.triage_limit,
                                                       packet_size=args.batch_size)
     projection = output
+    if args.autonomous_plan:
+        from .review_automation import build_automation_plan
+        from .common import KnowledgeHubError
+        try:
+            output['autonomous_plan'] = build_automation_plan(
+                root, items, item_review_rows, None, today,
+                content_limit=args.automation_limit, project_limit=args.project_limit,
+                content_offset=args.automation_offset, project_offset=args.project_offset,
+                discovery_offset=args.discovery_offset,
+                run_machine_checks=args.run_machine_checks)
+            if output['autonomous_plan']['status'] != 'prepared':
+                errors.append('automation preparation failed or incomplete')
+            elif args.semantic_task:
+                from .review_semantic import prepare_semantic_task
+                output['semantic_task'] = prepare_semantic_task(root, output['autonomous_plan'], today)
+        except (KnowledgeHubError, OSError, ValueError) as exc:
+            errors.append('automation: ' + str(exc))
+        output['status'] = 'fail' if errors else status
     if args.summary_json:
         projection = {
             "schema_version": 1,
@@ -401,6 +460,9 @@ if args.json or args.summary_json:
             },
             "error_count": len(errors),
         }
+        if args.autonomous_plan:
+            projection['status'] = output['status']
+            projection['autonomous_plan'] = output.get('autonomous_plan', {'status': 'needs-fix'})
     print(json.dumps(projection, ensure_ascii=False, indent=2))
 else:
     print("# Knowledge review_after Report")

@@ -13,7 +13,9 @@ from tools.codex_assets.knowledge_hub.context import (
     assemble_context,
     record_context_telemetry,
 )
-from tools.codex_assets.knowledge_hub.context_cli import main as context_main
+from tools.codex_assets.knowledge_hub.provider_cli import main as context_main
+from tools.codex_assets.knowledge_hub.provider_operations import archive
+from test_provider_subjects import subject_root
 
 
 def _jsonl(rows):
@@ -223,161 +225,49 @@ def test_invalid_explicit_project_hint_fails_closed(tmp_path):
         assemble_context(root, str(root), "P1 发布", project_hint="missing")
 
 
-def test_summary_json_is_compact_deduplicated_and_traceable(tmp_path, capsys):
-    root = _context_root(tmp_path)
-    exit_code = context_main(
-        [
-            "--root",
-            str(root),
-            "--cwd",
-            str(root),
-            "--query",
-            "P1 发布",
-            "--task-type",
-            "release",
-            "--context-budget",
-            "small",
-            "--limit",
-            "3",
-            "--summary-json",
-        ]
-    )
+def test_provider_context_summary_is_bounded_and_traceable(tmp_path, capsys):
+    root, _, args = subject_root(tmp_path)
+    receipt = archive(root, args)
+    assert context_main(["context", "--root", str(root), "--cwd", str(root),
+                         "--query", "事务", "--retrieval-project", "test",
+                         "--summary-json"]) == 0
     output = capsys.readouterr().out.strip()
     parsed = json.loads(output)
-
-    assert exit_code == 0
-    assert "\n" not in output
-    assert len(output.encode("utf-8")) <= 2048
-    assert parsed["projection"] == "agent-summary-v1"
-    assert "ranked_items" not in parsed
-    assert "search" not in parsed
-    assert parsed["search_summary"]["count"] <= 3
-    assert parsed["context_contract"]["read_tier"] == "L1"
-    assert parsed["context_contract"]["raw_evidence"]
-    assert parsed["telemetry"]["status"] == "disabled"
-    assert parsed["context"]["authority_lanes"]["provisional_ids"] == ["p1-runbook"]
-    assert parsed["search_summary"]["search_trace"]["schema_version"] == (
-        "knowledge-hub.search-trace.v1"
-    )
-    item_ids = [
-        row["id"]
-        for section in ("current", "recent", "related", "search_fallback")
-        for row in parsed["context"][section]
-        if row.get("id")
-    ]
-    assert len(item_ids) == len(set(item_ids))
+    assert len(output.encode("utf-8")) <= 4096
+    assert parsed["schema_version"] == "knowledge-provider.context/v4"
+    assert parsed["read_only"] is True
+    items = [row for group in parsed["context"] for row in group["items"]]
+    assert receipt["item_id"] in {row["id"] for row in items}
+    assert len(items) == len({row["id"] for row in items})
+    assert all(row["path"] for row in items)
 
 
-def test_context_receipt_reuses_and_invalidates_on_selected_evidence_change(tmp_path, capsys):
-    root = _context_root(tmp_path)
-    arguments = [
-        "--root",
-        str(root),
-        "--cwd",
-        str(root),
-        "--query",
-        "private P1 release query",
-        "--project",
-        "p1",
-        "--task-type",
-        "release",
-        "--context-budget",
-        "small",
-        "--summary-json",
-        "--receipt-key",
-        "p1-release",
-    ]
+def test_provider_cache_reuses_and_invalidates_selected_body(tmp_path, capsys):
+    root, _, args = subject_root(tmp_path)
+    archive(root, args)
+    arguments = ["context", "--root", str(root), "--cwd", str(root),
+                 "--query", "privatequerytoken", "--retrieval-project", "test",
+                 "--summary-json", "--receipt-key", "test-release"]
     assert context_main(arguments) == 0
     first = json.loads(capsys.readouterr().out)
-    assert first["context_receipt"]["reused"] is False
+    assert first["cache"]["hit"] is False
     assert context_main(arguments) == 0
-    second = json.loads(capsys.readouterr().out)
-    assert second["context_receipt"]["reused"] is True
-
-    receipt_path = root / ".cache/knowledge-hub/context-receipts/p1-release.json"
-    receipt_text = receipt_path.read_text()
-    assert "private P1 release query" not in receipt_text
-    assert json.loads(receipt_text)["raw_query_stored"] is False
-
-    selected_path = first["context_contract"]["raw_evidence"][0]
-    (root / selected_path).write_text("# evidence changed\n")
+    assert json.loads(capsys.readouterr().out)["cache"]["hit"] is True
+    receipt_path = root / ".cache/knowledge-hub/context-receipts/v4-test-release.json"
+    assert "privatequerytoken" not in receipt_path.read_text()
+    selected = next(row for group in first["context"] for row in group["items"])
+    (root / selected["path"]).write_text("# changed body\n")
     assert context_main(arguments) == 0
-    third = json.loads(capsys.readouterr().out)
-    assert third["context_receipt"]["reused"] is False
-    assert third["context_receipt"]["reason"] == "selected-evidence-changed"
+    assert json.loads(capsys.readouterr().out)["cache"]["hit"] is False
 
 
-def test_context_cli_invalid_project_reports_clean_error(tmp_path, capsys):
-    root = _context_root(tmp_path)
-    with pytest.raises(SystemExit) as caught:
-        context_main(
-            [
-                "--root",
-                str(root),
-                "--cwd",
-                str(root),
-                "--query",
-                "P1 发布",
-                "--project",
-                "missing",
-            ]
-        )
-    assert caught.value.code == 2
-    stderr = capsys.readouterr().err
-    assert "unknown or ambiguous project hint" in stderr
-    assert "Traceback" not in stderr
-
-
-def test_summary_json_enforces_byte_budget_with_dynamic_risks():
-    rows = [
-        {
-            "id": "item-{}".format(index),
-            "title": "很长的动态候选标题" * 60,
-            "kind": "project-archive",
-            "status": "reviewing",
-            "path": "projects/p1/archive/item-{}.md".format(index),
-            "why_selected": ["query-term:p1", "task-kind:archive", "status:reviewing"],
-        }
-        for index in range(8)
-    ]
-    payload = {
-        "schema_version": 2,
-        "read_only": True,
-        "task_type": "archive",
-        "context_budget": "small",
-        "knowledge_preflight": {"required": True, "source_of_truth": "registry"},
-        "route_selection": {"status": "selected", "selected_project_id": "p1"},
-        "route": {"project_id": "p1", "name": "P1"},
-        "context": {
-            "budget": "small",
-            "effective_limit": 4,
-            "selection_order": ["current", "recent", "related", "risk"],
-            "current": rows[:4],
-            "recent": rows[4:],
-            "related": [],
-            "search_fallback": [],
-            "risks": ["动态风险说明" * 80 for _ in range(5)],
-        },
-        "search": {
-            "status": "pass",
-            "count": 4,
-            "total_matches": 8,
-            "index": {"state": "warm", "mode": "local-index"},
-            "zero_hit": {"is_zero_hit": False},
-        },
-        "telemetry": {"status": "disabled", "recorded": False},
-    }
-
-    summary = context_module.summarize_context(payload)
-    encoded = json.dumps(summary, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    item_count = sum(
-        len(summary["context"][section])
-        for section in ("current", "recent", "related", "search_fallback")
-    )
-
-    assert len(encoded) <= context_module.SUMMARY_JSON_MAX_BYTES
-    assert item_count <= context_module.SUMMARY_JSON_MAX_ITEMS
-    assert summary["context_contract"]["raw_evidence"]
+def test_provider_context_rejects_retired_project_argument(tmp_path, capsys):
+    root, _, _ = subject_root(tmp_path)
+    code = context_main(["context", "--root", str(root), "--project", "test"])
+    result = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert result["status"] == "BLOCKED"
+    assert result["reason_codes"] == ["SCHEMA_INVALID"]
 
 
 def test_context_telemetry_storage_failure_is_non_blocking(monkeypatch, tmp_path):

@@ -372,6 +372,19 @@ def _mark_authorization_used(root: pathlib.Path, authorization_id: str, today: d
     return encode_jsonl(rows)
 
 
+def _lifecycle_successor(before):
+    after = dict(before)
+    # A validated lifecycle decision supersedes the prior AI content record.
+    after.pop("ai_delegated_content_review", None)
+    return after
+
+
+def _stage_lifecycle_item(root, transaction, before, after, rendered, authorization_id, actual_item_sha):
+    from .provider_operations import stage_metadata_update
+    transaction.add_text(str(before["path"]), rendered, expected_sha256=actual_item_sha)
+    stage_metadata_update(root, transaction, before, after, rendered, authorization_id)
+
+
 def transition(
     root: pathlib.Path,
     item_id: str,
@@ -518,7 +531,7 @@ def transition(
         raise KnowledgeHubError(
             "lifecycle gate state is inconsistent: authorization and review are required"
         )
-    after = dict(before)
+    after = _lifecycle_successor(before)
     after["status"] = target_status
     after["updated_at"] = today.isoformat()
     attestation_mode = str(review["attestation_mode"])
@@ -570,7 +583,7 @@ def transition(
         "evidence_refs": list(review["validation_refs"]),
     }
     transaction = RepositoryTransaction(root, expected_inputs=inputs)
-    transaction.add_text(str(before["path"]), rendered, expected_sha256=actual_item_sha)
+    _stage_lifecycle_item(root, transaction, before, after, rendered, authorization_id, actual_item_sha)
     next_items = _replace_item(items, after)
     _add_transaction_text(transaction, root, "registry/items.jsonl", encode_jsonl(next_items))
     for relative, content in core_updates.items():

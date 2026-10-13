@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK8.0.5与Root参考内容身份闭环
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-1422b948993c2cee4b4e82d7
 title: ADK8.0.5与Root参考内容身份闭环
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK8.0.5与Root参考内容身份闭环
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 1422b948993c2cee4b4e82d7d64ceb634e1b36f7433df6fafc28eca1d580a317
 ---
 
 # ADK 8.0.5 与参考内容身份迭代

@@ -12,13 +12,19 @@ from .store import RepositoryTransaction
 from .security import scan_secret_text
 from .workspace_discovery import _source_entries
 from .schemas import validate_instance
+from .remote_identity import identity_key
 
 
 def bind_snapshot_route(source, snapshot, head):
     config, _ = find_git_config(str(source))
     remotes = remote_urls_from_config(config)
-    registered = {row.get('remote_key'):row for row in repository_rows(source)}
-    remote = next((row for row in remotes if row['remote'] == 'origin' and row['remote_key'] in registered), None)
+    for configured in remotes:
+        parsed_remote = urllib.parse.urlsplit(configured["url"])
+        if (scan_secret_text(configured["url"]) or parsed_remote.password or parsed_remote.query or parsed_remote.fragment
+                or parsed_remote.scheme in {"http", "https"} and parsed_remote.username):
+            raise KnowledgeHubError("snapshot routing rejects credential-bearing remote configuration")
+    registered = {identity_key(row.get('remote_key')):row for row in repository_rows(source) if identity_key(row.get('remote_key'))}
+    remote = next((row for row in remotes if row['remote'] == 'origin' and identity_key(row['remote_key']) in registered), None)
     if remote is None:
         return {'status':'not-registered', 'source_remote_key':''}
     url = remote['url']
@@ -26,7 +32,7 @@ def bind_snapshot_route(source, snapshot, head):
     if (scan_secret_text(url) or parsed.password or parsed.query or parsed.fragment
             or parsed.scheme in ('http', 'https') and parsed.username):
         raise KnowledgeHubError('snapshot routing rejects credential-bearing remote configuration')
-    row = registered[remote['remote_key']]
+    row = registered[identity_key(remote['remote_key'])]
     ignored = run_rtk(snapshot, ['git', 'check-ignore', '-q', 'local/workspaces.json'], accepted_exit_codes=(0, 1))
     if ignored['exit_code'] != 0:
         raise KnowledgeHubError('snapshot routing view must use ignored host configuration')
@@ -50,7 +56,7 @@ def bind_snapshot_route(source, snapshot, head):
     document['workspaces'] = [binding] + workspaces
     for key, value in {'schema_version':1, 'generated_at':dt.date.today().isoformat(),
                        'discovery_mode':'read-only-local-git-remote-match', 'tracked':False,
-                       'unmatched_registered_remote_keys':sorted(key for key in registered if key and key != remote['remote_key'])}.items():
+                       'unmatched_registered_remote_keys':sorted(key for key in registered if key and key != identity_key(remote['remote_key']))}.items():
         document.setdefault(key, value)
     if (snapshot / 'schemas/catalog.json').is_file() and validate_instance(snapshot, 'local-workspaces-v1', document)['status'] != 'pass':
         raise KnowledgeHubError('snapshot host view violates the existing workspace schema')

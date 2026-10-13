@@ -19,7 +19,7 @@ dry-run 与 apply 都校验修订 CAS；旧回执按原 hash 保存在私有 rev
 本仓的受控入口仅调用公开 Provider Adapter；默认只生成计划。
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --governed-provider --source /tmp/sanitized-conclusion.md --project knowledge-hub
+rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --governed-provider --source /tmp/sanitized-conclusion.md --subject project:knowledge-hub
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --governed-provider --provider-operation activity-capture --source /tmp/activity-receipt.json
 ```
 
@@ -29,7 +29,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --governed-provider --provid
 
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-capture.sh --governed-provider --reconcile-plan PLAN_SHA256
-rtk bash ~/codex/scripts/knowledge-provider.sh archive --project knowledge-hub --reconcile-operation OPERATION_SHA256 --expected-content-sha256 CONTENT_SHA256 --json
+rtk bash ~/codex/scripts/knowledge-provider.sh reconcile --operation-id OPERATION_SHA256 --expected-content-sha256 CONTENT_SHA256 --json
 rtk bash ~/codex/scripts/knowledge-provider.sh activity-capture --reconcile-receipt RECEIPT_ID --receipt-date YYYY-MM-DD --expected-content-sha256 CONTENT_SHA256 --json
 ```
 

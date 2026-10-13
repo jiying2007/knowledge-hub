@@ -1,4 +1,10 @@
 ---
+aliases:
+- 本地 GROS 构建与制品交付审查验证
+related:
+- projects/xcrz-sigmastar-demo/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2
 title: 本地 GROS 构建与制品交付审查验证
 kind: validation
@@ -42,12 +48,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 本地 GROS 构建与制品交付审查验证
-related:
-- projects/xcrz-sigmastar-demo/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: xcrz-sigmastar-demo
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 6fe2c665cc326326e1fa22e2b7ccdc5cc2b39b6091ff8c68bb855790fd219d18
 ---
 
 # 本地 GROS 构建与制品交付审查验证

@@ -30,6 +30,7 @@ def test_wrapper_ignores_colliding_tools_package(tmp_path):
     (collision / "__init__.py").write_text("", encoding="utf-8")
     env = dict(os.environ)
     env["PYTHONPATH"] = str(tmp_path)
+    env["KNOWLEDGE_PYTHON_RUNTIME"] = sys.executable
     result = subprocess.run(
         ["bash", str(ROOT / "tools/knowledge-search.sh"), "--help"],
         cwd=str(tmp_path),
@@ -104,6 +105,12 @@ def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
     fixture_selector = fixture_root / "tools/ci/python-runtime.sh"
     fixture_selector.parent.mkdir(parents=True)
     shutil.copy2(ROOT / "tools/ci/python-runtime.sh", fixture_selector)
+    (fixture_root / "tools/codex_assets").mkdir(parents=True)
+    shutil.copy2(ROOT / "tools/codex_assets/isolated_runtime.py", fixture_root / "tools/codex_assets/isolated_runtime.py")
+    shutil.copy2(ROOT / "tools/__init__.py", fixture_root / "tools/__init__.py")
+    fixture_module = fixture_root / "tools/codex_assets/knowledge_hub"
+    fixture_module.mkdir(parents=True)
+    (fixture_module / "search_cli.py").write_text('print("fixture help")\n')
     (fixture_root / "requirements-runtime.lock").write_text(
         "fixture lock\n",
         encoding="utf-8",
@@ -167,3 +174,116 @@ def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
 
     assert second.returncode == 0, second.stderr
     assert trace.read_text(encoding="utf-8").splitlines() == ["call"]
+
+
+def test_isolated_runtime_never_imports_root_shadow_or_stale_bytecode(tmp_path):
+    fixture = tmp_path / "repo"
+    runtime = fixture / "tools/codex_assets/isolated_runtime.py"
+    runtime.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / "tools/codex_assets/isolated_runtime.py", runtime)
+    (fixture / "tools/__init__.py").write_text("")
+    (fixture / "tools/probe.py").write_text(
+        'import json, sys; print(json.dumps({"isolated": sys.flags.isolated}))\n')
+    marker = tmp_path / "executed"
+    malicious = f'from pathlib import Path; Path({str(marker)!r}).write_text("unapproved")\n'
+    (fixture / "json.py").write_text(malicious)
+    (fixture / "sitecustomize.py").write_text(malicious)
+    import py_compile
+    source = fixture / "tools/probe.py"
+    approved = source.read_text()
+    source.write_text(malicious)
+    py_compile.compile(str(source), doraise=True)
+    source.write_text(approved)
+    result = subprocess.run(
+        [sys.executable, "-I", str(runtime), str(fixture), "tools.probe"],
+        cwd=fixture, env=dict(os.environ, PYTHONPATH=str(fixture)),
+        capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == '{"isolated": 1}'
+    assert not marker.exists()
+
+
+def test_isolated_pytest_imports_explicit_tools_without_root_shadow(tmp_path):
+    fixture = tmp_path / 'repo'
+    (fixture / 'tools/ci').mkdir(parents=True)
+    (fixture / 'tools/codex_assets').mkdir()
+    shutil.copy2(ROOT / 'tools/ci/python-runtime.sh', fixture / 'tools/ci/python-runtime.sh')
+    shutil.copy2(ROOT / 'tools/codex_assets/isolated_runtime.py', fixture / 'tools/codex_assets/isolated_runtime.py')
+    (fixture / 'tools/__init__.py').write_text('')
+    (fixture / 'tools/probe.py').write_text('VALUE = "approved"\n')
+    (fixture / 'tests').mkdir()
+    (fixture / 'tests/helpers.py').write_text('EXPECTED = "approved"\n')
+    (fixture / 'tests/test_probe.py').write_text(
+        'import json\nfrom tools.probe import VALUE\nfrom tests.helpers import EXPECTED\n'
+        'def test_probe():\n    assert VALUE == EXPECTED\n    assert json.loads("{}") == {}\n')
+    marker = tmp_path / 'executed'
+    malicious = f'from pathlib import Path; Path({str(marker)!r}).write_text("unapproved")\n'
+    (fixture / 'json.py').write_text(malicious)
+    (fixture / 'sitecustomize.py').write_text(malicious)
+    result = subprocess.run(
+        ['bash', str(fixture / 'tools/ci/python-runtime.sh'), '-m', 'pytest',
+         '-q', 'tests/test_probe.py', '-p', 'no:cacheprovider'], cwd=fixture,
+        env=dict(os.environ, KNOWLEDGE_PYTHON_RUNTIME=sys.executable, PYTHONPATH=str(fixture)),
+        capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert '1 passed' in result.stdout
+    assert not marker.exists()
+
+
+def test_isolated_runtime_rejects_sourceless_repository_module(tmp_path):
+    import py_compile
+    fixture = tmp_path / 'repo'
+    runtime = fixture / 'tools/codex_assets/isolated_runtime.py'
+    runtime.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / 'tools/codex_assets/isolated_runtime.py', runtime)
+    (fixture / 'tools/__init__.py').write_text('')
+    source = fixture / 'tools/probe.py'
+    marker = tmp_path / 'executed'
+    source.write_text(f'from pathlib import Path; Path({str(marker)!r}).touch()\n')
+    py_compile.compile(str(source), cfile=str(source.with_suffix('.pyc')), doraise=True)
+    source.unlink()
+    result = subprocess.run(
+        [sys.executable, '-I', str(runtime), str(fixture), 'tools.probe'],
+        cwd=fixture, capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode != 0
+    assert 'repository modules require source' in result.stderr
+    assert not marker.exists()
+
+
+def test_isolated_runtime_ignores_unchecked_hash_package_bytecode(tmp_path):
+    import py_compile
+    fixture = tmp_path / 'repo'
+    runtime = fixture / 'tools/codex_assets/isolated_runtime.py'
+    runtime.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / 'tools/codex_assets/isolated_runtime.py', runtime)
+    initializer = fixture / 'tools/__init__.py'
+    marker = tmp_path / 'executed'
+    initializer.write_text(f'from pathlib import Path; Path({str(marker)!r}).touch()\n')
+    py_compile.compile(str(initializer), doraise=True,
+                       invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH)
+    initializer.write_text('')
+    (fixture / 'tools/probe.py').write_text('print("approved")\n')
+    result = subprocess.run(
+        [sys.executable, '-I', str(runtime), str(fixture), 'tools.probe'],
+        cwd=fixture, capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == 'approved'
+    assert not marker.exists()
+
+
+def test_isolated_runtime_rejects_external_top_level_initializer(tmp_path):
+    fixture = tmp_path / 'repo'
+    runtime = fixture / 'tools/codex_assets/isolated_runtime.py'
+    runtime.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / 'tools/codex_assets/isolated_runtime.py', runtime)
+    marker = tmp_path / 'executed'
+    external = tmp_path / 'initializer.py'
+    external.write_text(f'from pathlib import Path; Path({str(marker)!r}).touch()\n')
+    (fixture / 'tools/__init__.py').symlink_to(external)
+    (fixture / 'tools/probe.py').write_text('print("approved")\n')
+    result = subprocess.run(
+        [sys.executable, '-I', str(runtime), str(fixture), 'tools.probe'],
+        cwd=fixture, capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode != 0
+    assert 'repository package outside approved boundary' in result.stderr
+    assert not marker.exists()

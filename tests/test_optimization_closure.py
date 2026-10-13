@@ -9,12 +9,12 @@ import datetime as dt
 
 import pytest
 
-from test_provider_archive import setup
+from test_provider_archive import setup, item_path
 from test_activity_v2 import _hub, _item
 from tools.codex_assets.knowledge_hub import obsidian_view, governed_provider_cli, observability_runtime
 from tools.codex_assets.knowledge_hub.activity import capture_receipt
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, registry_items
-from tools.codex_assets.knowledge_hub.provider_archive import archive
+from tools.codex_assets.knowledge_hub.provider_operations import archive
 from tools.codex_assets.knowledge_hub.schemas import validate_instance
 from tools.codex_assets.knowledge_hub.store import audit_transactions, WriteConflict
 from tools.codex_assets.knowledge_hub.private_io import atomic_private_write
@@ -88,9 +88,9 @@ def test_explicit_receipt_identity_conflict_and_compare_swap_revision(tmp_path):
 def test_archive_receipt_negative_contracts(tmp_path, key, value):
     root, _, args = setup(tmp_path)
     receipt = archive(root, args)
-    assert validate_instance(root, 'provider-archive-receipt-v1', receipt)['status'] == 'pass'
+    assert validate_instance(root, 'provider-operation-receipt-v4', receipt)['status'] == 'pass'
     receipt[key] = value
-    assert validate_instance(root, 'provider-archive-receipt-v1', receipt)['status'] != 'pass'
+    assert validate_instance(root, 'provider-operation-receipt-v4', receipt)['status'] != 'pass'
 
 
 @pytest.mark.parametrize('journal', [[], {'status':'applying','writes':['invalid']},
@@ -141,9 +141,32 @@ def test_private_writer_rejects_symlink_ancestor_before_creating_directories(tmp
     assert not (outside / 'new').exists()
 
 
-def test_timeout_reaps_owned_grandchild(tmp_path):
+def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
+    from tools.codex_assets.knowledge_hub import bounded_process
+
     pid_path = tmp_path / 'pid'
-    script = "import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(5)']); pathlib.Path(sys.argv[1]).write_text(str(p.pid)); time.sleep(5)"
+    script = "import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)']); pathlib.Path(sys.argv[1]).write_text(str(p.pid)); time.sleep(30)"
+    launch = bounded_process._launch
+
+    def launch_ready(*args, **kwargs):
+        process = launch(*args, **kwargs)
+        deadline = time.monotonic() + 5
+        try:
+            while not pid_path.exists():
+                exited = os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                if exited is not None or time.monotonic() >= deadline:
+                    raise RuntimeError('test subprocess did not become ready')
+                time.sleep(.01)
+        except BaseException:
+            try:
+                os.killpg(process.pid, 9)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            raise
+        return process
+
+    monkeypatch.setattr(bounded_process, '_launch', launch_ready)
     with pytest.raises(subprocess.TimeoutExpired):
         run_bounded([sys.executable, '-c', script, str(pid_path)], cwd=str(tmp_path), env=os.environ.copy(), timeout=.3)
     pid = int(pid_path.read_text())
@@ -217,12 +240,12 @@ def test_review_lane_quota_prevents_history_starvation():
 def test_consumption_filters_only_matching_body_and_never_promotes(tmp_path):
     root, _, args = setup(tmp_path)
     item = archive(root, args)
-    rows = [dict(item_id=item['item_id'], path=item['target'], owner='owner', status='reviewing', review_class='ordinary')]
+    rows = [dict(item_id=item['item_id'], path=item_path(root, item), owner='owner', status='reviewing', review_class='ordinary')]
     record_consumption(root, item['item_id'], 'accepted', 'explicit-reviewer', 'proof', item['content_sha256'], apply=True)
     packet = prepare_review_batches(root, rows, registry_items(root))
     assert packet['owner_count'] == 0 and packet['consumed_or_deferred_count'] == 1
     assert registry_items(root)[0]['status'] == 'reviewing'
-    path = root / item['target']
+    path = root / item_path(root, item)
     path.write_text(path.read_text() + '\n正文发生变化。\n')
     assert prepare_review_batches(root, rows, registry_items(root))['owner_count'] == 1
 
@@ -290,7 +313,7 @@ def test_gate_denial_never_invokes_provider_apply(tmp_path, monkeypatch):
 @pytest.mark.parametrize('corrupt', [False, True])
 def test_governed_provider_success_requires_bound_identity_and_readback(tmp_path, monkeypatch, corrupt):
     source = tmp_path / 'input.json'
-    source.write_text('{}')
+    source.write_text('{"session_date":"2026-10-13"}')
     target = tmp_path / '.tmp/activity/receipt.json'
     target.parent.mkdir(parents=True)
     import hashlib
@@ -307,6 +330,8 @@ def test_governed_provider_success_requires_bound_identity_and_readback(tmp_path
         if '--apply' in args:
             target.write_text('wrong' if corrupt else encoded)
             payload.update(applied=True, target=str(target))
+        if '--reconcile-receipt' in args:
+            payload.update(status='CONFLICT' if corrupt else 'VERIFIED', persisted=True)
         return {'stdout':json.dumps(payload), 'command':'test'}
 
     monkeypatch.setattr(governed_provider_cli, 'run_rtk', run)
@@ -409,7 +434,7 @@ def test_deferred_review_reappears_when_due_without_touching_registry(tmp_path):
     root, _, args = setup(tmp_path)
     item = archive(root, args)
     today = dt.date.today()
-    rows = [dict(item_id=item['item_id'], path=item['target'], owner='owner', status='reviewing', review_class='ordinary')]
+    rows = [dict(item_id=item['item_id'], path=item_path(root, item), owner='owner', status='reviewing', review_class='ordinary')]
     future = today + dt.timedelta(days=2)
     record_consumption(root, item['item_id'], 'deferred', 'explicit-reviewer', 'proof', item['content_sha256'],
                        next_review_at=future.isoformat(), review_seconds=12, apply=True)

@@ -59,6 +59,18 @@ def exception_attempt(number, error):
 
 
 def retain_regression_failure(command, result, attempt):
+    if "tools/knowledge-retrieval-benchmark.sh" in command and result['exit_code'] != 0:
+        try:
+            try:
+                report = parse_json_output(result)
+            except KnowledgeHubError:
+                report = parse_json_output(dict(result, stdout=result.get('stderr', '')))
+            attempt['failure_summary'] = {key: report.get(key) for key in
+                ('status', 'hit_rate', 'mrr', 'ndcg_at_10', 'authority_recall_at_3',
+                 'route_accuracy', 'integrity', 'latency_ms', 'index_preparation',
+                 'concurrency_probe', 'scale_probe', 'thresholds', 'performance_target_met')}
+        except KnowledgeHubError:
+            attempt['failure_summary'] = {'status': 'unparseable'}
     if 'tools.codex_assets.knowledge_hub.regression_cli' in command and result['exit_code'] != 0:
         try:
             report = parse_json_output(result)

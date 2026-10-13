@@ -207,7 +207,7 @@ def _static_registry_instances(
         if path.is_file():
             yield contract_id, relative, load_json(path, {})
     body_coverage = root / "registry/body-coverage.json"
-    for contract_id, relative in (("provider-operation-ledger-v1", "registry/provider-operations.jsonl"), ("provider-grant-v1", "registry/provider-grants.jsonl")):
+    for contract_id, relative in (("provider-operation-ledger-v4", "registry/provider-operations.jsonl"), ("provider-grant-v1", "registry/provider-grants.jsonl")):
         if (root / relative).is_file():
             for number, row in enumerate(load_jsonl(root / relative), 1):
                 yield contract_id, relative + ":" + str(number), row

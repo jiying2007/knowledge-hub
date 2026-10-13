@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 第八轮检索边界与验收记录
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-56f418441b56faa9b2eb4fdd
 title: Knowledge Hub 第八轮检索边界与验收记录
 kind: validation
@@ -41,10 +45,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 第八轮检索边界与验收记录
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 56f418441b56faa9b2eb4fddce56bbe73641216ab0bbad5190e4710f15c71458
 ---
 
 # Knowledge Hub 第八轮检索边界与验收记录

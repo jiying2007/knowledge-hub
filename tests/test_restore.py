@@ -391,9 +391,24 @@ def test_actual_timeout_cannot_register_restored_unit_pass(tmp_path, monkeypatch
         return run_bounded([sys.executable, '-c', 'import time; time.sleep(2)'],
                            cwd=tmp_path, env=os.environ.copy(), timeout=.05)
     monkeypatch.setattr(restore, 'run_rtk', timed_out)
-    with pytest.raises(subprocess.TimeoutExpired):
-        restore._run_restored_unit_check(tmp_path, [sys.executable], _unit_env())
+    result = restore._run_restored_unit_check(tmp_path, [sys.executable], _unit_env())
+    assert result['status'] == 'fail' and result['timed_out'] is True
+    assert result['timeout_sec'] == .05
     assert not (tmp_path / UNIT_RECEIPT).exists()
+
+
+def test_only_restored_unit_uses_full_suite_timeout(tmp_path, monkeypatch):
+    _unit_target(tmp_path)
+    deadlines = []
+
+    def failed_check(*args, **kwargs):
+        deadlines.append(kwargs.get('timeout', 180))
+        return {'status': 'fail'}
+
+    monkeypatch.setattr(restore, '_run_restore_check', failed_check)
+    restore._run_restore_checks(tmp_path, '2026-10-13', _unit_env())
+    assert deadlines.count(600) == 1
+    assert all(value == 180 for value in deadlines if value != 600)
 
 
 def test_restored_parent_proof_is_rechecked_after_downstream_input_change(tmp_path):

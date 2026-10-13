@@ -20,7 +20,7 @@ Knowledge Hub（`~/knowledge-hub`）是团队、项目、Codex 与个人知识�
 - 自动化默认 `report-only`。删除、发布、push/merge/rebase/tag、提升 active、owner decision、关闭 owner gate、写 memory、修改源项目或外部系统，必须有明确授权、证据、回滚和验证。
 - 不以本地 commit 代替 owner approval、promotion、source write、memory write 或远端发布授权；当前工作区上层规则禁止时不得自动 commit。
 - reviewing candidate 不是 active 事实；来源、owner、状态、review 周期未验证前不得声明 active。AI 受托 owner 操作必须记录授权和执行身份。
-- 本地低风险耐久结论已获 candidate-only 自动登记授权，通过 `~/codex/scripts/knowledge-provider.sh archive --project <明确路由> --source <脱敏结论文件> --kind <允许类型> --sanitized --apply` 生成 reviewing 候选；无需逐条重复询问。只有 `ARCHIVED`/`ALREADY_ARCHIVED` 且 `persisted=true` 可声明归档成功。策略由 `registry/provider-archive-policy.json` 控制；shadow 路由仍为 report-only。
+- 本地低风险耐久结论已获 candidate-only 自动登记授权，通过 `~/codex/scripts/knowledge-provider.sh archive --subject <明确主体> --source <脱敏结论文件> --kind <允许类型> --sanitized --apply` 生成 reviewing 候选；无需逐条重复询问。只有 `ARCHIVED`/`ALREADY_ARCHIVED` 且 `persisted=true` 可声明归档成功。策略由 `registry/provider-archive-policy.json` 控制；shadow 路由仍为 report-only。
 - 非平凡任务实施前自动执行 `execution-policy ensure`，使用实际请求临时文件、准确当前线程、实际模式与验收项登记并回读 intake；相同任务幂等，冲突先 replan。不得把 intake 登记当作完成或 final PASS。
 
 ## 3. 内容硬边界
@@ -35,10 +35,10 @@ Knowledge Hub（`~/knowledge-hub`）是团队、项目、Codex 与个人知识�
 - 项目事实查询优先显式项目、small budget、summary：
 
 ```bash
-rtk bash tools/knowledge-context.sh --cwd "$PWD" --project <project_id> --query "<任务>" --task-type <type> --context-budget small --limit 3 --summary-json --no-telemetry
+rtk bash tools/knowledge-provider.sh context --cwd "$PWD" --execution-project <project_id> --query "<任务>" --task-type <type> --context-budget small --limit 3 --summary-json
 ```
 
-仅路由歧义、解释不足或高风险结论回退 `--json` 与候选原文。只读预检默认不写 telemetry；需要运营统计时显式启用。
+仅路由歧义、解释不足或高风险结论回退 `--json` 与候选原文。Provider context 不写 telemetry，运营统计使用独立搜索或活动入口。
 - debug/release/decision 产生耐久、可复用且有证据的结论时生成 reviewing candidate；validation/general 默认不强制。无合格结论应输出“本次无可归档结论”。
 - 工具资产会话用 `tools/knowledge-capture.sh --tool-asset-session-start|--tool-asset-session-close`；baseline 只存 HEAD、路径、size、SHA256，不存 prompt、参数值或环境变量。
 - 工具候选需同项目至少两个不同会话复用，或至少三个会话且覆盖两个项目；只生成 reviewing dry-run 计划。candidate 仅写项目 `tmp/`、`.tmp/` 或系统 `/tmp`，未经授权不用 `--apply`。

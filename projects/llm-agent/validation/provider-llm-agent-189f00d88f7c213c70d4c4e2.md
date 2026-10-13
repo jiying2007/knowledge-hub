@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK8.0.3证据JSON与跨仓交付边界验证
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-189f00d88f7c213c70d4c4e2
 title: ADK8.0.3证据JSON与跨仓交付边界验证
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK8.0.3证据JSON与跨仓交付边界验证
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 189f00d88f7c213c70d4c4e2009bcc3f1de5e918b75aab9ffa19624d338943dc
 ---
 
 # ADK8.0.3证据JSON与跨仓交付边界验证
