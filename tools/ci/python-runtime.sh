@@ -38,7 +38,7 @@ else
 fi
 
 knowledge_exec_runtime() {
-  if [[ "${1:-}" == "-m" && "${2:-}" == tools.* ]]; then
+  if [[ "${1:-}" == "-m" && ( "${2:-}" == tools.* || "${2:-}" == pytest ) ]]; then
     shift
     knowledge_module="$1"
     shift

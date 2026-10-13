@@ -201,3 +201,30 @@ def test_isolated_runtime_never_imports_root_shadow_or_stale_bytecode(tmp_path):
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == '{"isolated": 1}'
     assert not marker.exists()
+
+
+def test_isolated_pytest_imports_explicit_tools_without_root_shadow(tmp_path):
+    fixture = tmp_path / 'repo'
+    (fixture / 'tools/ci').mkdir(parents=True)
+    (fixture / 'tools/codex_assets').mkdir()
+    shutil.copy2(ROOT / 'tools/ci/python-runtime.sh', fixture / 'tools/ci/python-runtime.sh')
+    shutil.copy2(ROOT / 'tools/codex_assets/isolated_runtime.py', fixture / 'tools/codex_assets/isolated_runtime.py')
+    (fixture / 'tools/__init__.py').write_text('')
+    (fixture / 'tools/probe.py').write_text('VALUE = "approved"\n')
+    (fixture / 'tests').mkdir()
+    (fixture / 'tests/helpers.py').write_text('EXPECTED = "approved"\n')
+    (fixture / 'tests/test_probe.py').write_text(
+        'import json\nfrom tools.probe import VALUE\nfrom tests.helpers import EXPECTED\n'
+        'def test_probe():\n    assert VALUE == EXPECTED\n    assert json.loads("{}") == {}\n')
+    marker = tmp_path / 'executed'
+    malicious = f'from pathlib import Path; Path({str(marker)!r}).write_text("unapproved")\n'
+    (fixture / 'json.py').write_text(malicious)
+    (fixture / 'sitecustomize.py').write_text(malicious)
+    result = subprocess.run(
+        ['bash', str(fixture / 'tools/ci/python-runtime.sh'), '-m', 'pytest',
+         '-q', 'tests/test_probe.py', '-p', 'no:cacheprovider'], cwd=fixture,
+        env=dict(os.environ, KNOWLEDGE_PYTHON_RUNTIME=sys.executable, PYTHONPATH=str(fixture)),
+        capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert '1 passed' in result.stdout
+    assert not marker.exists()

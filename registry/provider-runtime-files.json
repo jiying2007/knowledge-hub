@@ -1,9 +1,4 @@
 {
-  "schema_version": 1,
-  "identity_model": "exact-reviewed-executable-files",
-  "inventory_roots": [
-    "tools"
-  ],
   "files": {
     "schemas/catalog.json": "ef3f70004494f32a5225282efec35018d7f323c0cd1e1de767503a2a6d0515ea",
     "schemas/local-workspaces.schema.json": "431e4b8e24cfa158476ef04de902bd722f72139c8bfa766a9e028e0d8df39357",
@@ -18,11 +13,11 @@
     "schemas/provider-workspaces.schema.json": "4bb6f2496affac68deda5ff4043b2d0209a8284537664718a47a03004b45f5c7",
     "tools/__init__.py": "283b7ed68fef4222fe22934507d6b5b994032872dd960273e90c24d9be9a7724",
     "tools/ci/bootstrap-path.sh": "d3b2b7cf979606b611edd2826a840711eea02299e528320b7b11ee58f57b3458",
-    "tools/ci/python-runtime.sh": "2c27053e5ddade9a9cb1ac43070b52354c8b6af2b9bc78d5e317bb94982522a2",
+    "tools/ci/python-runtime.sh": "32dd6daaf196a333fdbc873aaea2687b3ec42cc8e6a2d1c4b6feefc07938f3ca",
     "tools/ci/rtk": "260559b0d81dbcc4af6e58de67b8e5fb4ac5a2da29aed567a2bf2a556339b3c1",
     "tools/ci/run-mcp-conformance.sh": "f66f14940b9c715967e6506e940b2ec9c8760cc9c4306bcddb64ba215fb13971",
     "tools/codex_assets/__init__.py": "6e71cd30ae4cf9484864536948915c19df861c56abfb8282de35d5332a5323ab",
-    "tools/codex_assets/isolated_runtime.py": "26fe1928612a1805b936c5ed6044943dffe33bf24c512fb21ce4ef0d8ffec4b4",
+    "tools/codex_assets/isolated_runtime.py": "88d6aefeac94a24ad3ebd59fdbb7f3e06d68ff66f68002a86d6f492ced98bd97",
     "tools/codex_assets/knowledge_hub/__init__.py": "885ffc21688365390f7ae7fcdd6f644ae0b075bcbc457b17b7db432300a1e56c",
     "tools/codex_assets/knowledge_hub/action_check_cli.py": "af7d69a8cdc8db759026f7d2102bc3545a27bf4e6c55c3bd0a149a8c0fa27739",
     "tools/codex_assets/knowledge_hub/activity.py": "0b64c667ec99aadc3e051ad97fa893ef4f2cad875f51014dcdec1a894b8bfc8e",
@@ -228,7 +223,7 @@
     "tools/codex_assets/knowledge_hub/remote_identity.py": "b2078a4ac39490fb0fee534d175d04023334fd60ab569bd614fbffab8f2840c4",
     "tools/codex_assets/knowledge_hub/repository_private_ratchet.py": "dd748466410fff58d9794c39724735a4de86221a17091367a5a5d50d1f95b330",
     "tools/codex_assets/knowledge_hub/repository_private_ratchet_cli.py": "c73a4086bd16c41a00bd3ea31054c32ddc6aa0a732eb8dcbec81c9ad4aeb1c30",
-    "tools/codex_assets/knowledge_hub/restore.py": "905bf26341d0761dfa75c8be9094135b9e50c2aedea8d43446413a01d875f0ad",
+    "tools/codex_assets/knowledge_hub/restore.py": "39f83b3a665f2f791b3adf45ab8a566f3c8b03d0412c653ea0fd0ede1eb5d365",
     "tools/codex_assets/knowledge_hub/restore_cli.py": "622b6c58566b86237b355715d23446159c2ebf115db511ce562fe7fb45661772",
     "tools/codex_assets/knowledge_hub/retrieval.py": "c5e054181200911eb5cb5ed809035871fd2ff983aa563febe461c4513fcfd2e8",
     "tools/codex_assets/knowledge_hub/retrieval_cache.py": "d69d754aa026471a6c6c8e4485b7ae4c8999b66767e45c1ec790a3b72cadbd02",
@@ -361,5 +356,10 @@
     "tools/runtime/knowledge-mcp.sh": "089e9f6ee49650b748d7a94a686bc3f3627aaf0663b762eb07e37748fd057583",
     "tools/runtime/knowledge-platform-v5.sh": "17c38033ee349b8605faa21ad897e1ab58deae3c0ce3bcaed320133aba838f0f",
     "tools/runtime/knowledge-runtime.sh": "5347163cc7cc352def38c220d75ab6103ae13de6946c3ff5fc324c05a4228212"
-  }
+  },
+  "identity_model": "exact-reviewed-executable-files",
+  "inventory_roots": [
+    "tools"
+  ],
+  "schema_version": 1
 }

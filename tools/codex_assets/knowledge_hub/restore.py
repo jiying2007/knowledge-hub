@@ -6,6 +6,7 @@ import hashlib
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -178,6 +179,7 @@ def _run_restore_check(
     *,
     parse_status: bool = True,
     max_attempts: int = 1,
+    timeout: int = 180,
 ) -> Dict[str, Any]:
     attempts: List[Dict[str, Any]] = []
     for attempt_number in range(1, max_attempts + 1):
@@ -185,7 +187,7 @@ def _run_restore_check(
             result = run_rtk(
                 restored,
                 command,
-                timeout=180,
+                timeout=timeout,
                 accepted_exit_codes=(0, 1, 2, 4, 5),
                 extra_env=command_env,
             )
@@ -211,6 +213,14 @@ def _run_restore_check(
                 "stderr_tail": result["stderr"].strip().splitlines()[-10:],
                 "duration_sec": result["duration_sec"],
             }
+        except subprocess.TimeoutExpired as exc:
+            row = {
+                "attempt": attempt_number,
+                "status": "fail",
+                "error": "restore check timed out",
+                "timed_out": True,
+                "timeout_sec": exc.timeout,
+            }
         except (KnowledgeHubError, OSError) as exc:
             row = {
                 "attempt": attempt_number,
@@ -233,7 +243,7 @@ def _run_restore_check(
 def _run_restored_unit_check(restored, command, command_env) -> Dict[str, Any]:
     source_signature = working_tree_signature(restored)
     kernel_signature = dependency_fingerprints(restored)['kernel']
-    check = _run_restore_check(restored, command, command_env, parse_status=False)
+    check = _run_restore_check(restored, command, command_env, parse_status=False, timeout=600)
     if check['status'] != 'pass':
         return check
     try:
