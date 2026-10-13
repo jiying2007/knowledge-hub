@@ -15,6 +15,10 @@ from tools.codex_assets.knowledge_hub.recovery_cli import (
 from tools.codex_assets.knowledge_hub.store import RepositoryTransaction, audit_transactions, incomplete_transactions
 
 
+# POSIX 崩溃注入与 flock 测试需继承父进程已核验的仓库模块；不依赖解释器默认启动方式。
+PROCESS_CONTEXT = multiprocessing.get_context("fork")
+
+
 def _hold_repository_lock(lock_path, ready, release):
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a+") as handle:
@@ -44,7 +48,7 @@ def _terminate_at_replace(root, phase):
 def test_hard_exit_is_reconciled_and_later_user_changes_are_protected(tmp_path, phase):
     target = tmp_path / 'one.txt'
     target.write_text('before\n')
-    child = multiprocessing.Process(target=_terminate_at_replace, args=(tmp_path, phase))
+    child = PROCESS_CONTEXT.Process(target=_terminate_at_replace, args=(tmp_path, phase))
     child.start()
     child.join(10)
     assert child.exitcode == 73
@@ -149,9 +153,9 @@ def test_single_writer_lock_rejects_concurrent_apply_without_partial_write(tmp_p
     target.write_text("before\n")
     transaction = RepositoryTransaction(tmp_path, "concurrent-writer")
     transaction.add_text("registry/items.jsonl", "after\n")
-    ready = multiprocessing.Event()
-    release = multiprocessing.Event()
-    holder = multiprocessing.Process(
+    ready = PROCESS_CONTEXT.Event()
+    release = PROCESS_CONTEXT.Event()
+    holder = PROCESS_CONTEXT.Process(
         target=_hold_repository_lock,
         args=(tmp_path / ".tmp/locks/knowledge-hub.lock", ready, release),
     )
