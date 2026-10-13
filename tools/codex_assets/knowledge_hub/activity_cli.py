@@ -187,7 +187,7 @@ def main(argv: Iterable[str] = ()) -> int:
     if args.command == 'capture' and args.reconcile_receipt:
         if args.apply:
             raise KnowledgeHubError('reconciliation cannot apply')
-        from .provider_reconcile import reconcile_activity
+        from .activity_reconcile import reconcile_activity
         payload = reconcile_activity(root, args.reconcile_receipt, args.receipt_date, args.expected_content_sha256)
         print(json.dumps(payload, ensure_ascii=False))
         return 0 if payload['status'] != 'CONFLICT' else 2

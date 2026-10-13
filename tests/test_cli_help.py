@@ -9,7 +9,7 @@ CLI_MODULES = (
     "action_check_cli",
     "artifact_restore_cli",
     "compliance_eval_cli",
-    "context_cli",
+    "provider_cli",
     "doctor_cli",
     "engineering_cli",
     "evidence_pack_cli",

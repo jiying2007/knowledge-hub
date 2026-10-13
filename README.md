@@ -53,17 +53,21 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --summary-json --dia
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<任务或问题>" --task-type general --context-budget small --limit 3 --summary-json
+rtk bash ~/knowledge-hub/tools/knowledge-provider.sh context --cwd "$PWD" --query "<任务或问题>" --task-type general --context-budget small --limit 3 --summary-json
 ```
 
-预检结果用于确定项目入口、当前事实目录、归档目录、决策目录和候选知识落点。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。
-预检和检索不会修改受 Git 管理的知识资产；context 预检默认不写 telemetry，需要运营样本时显式加 `--telemetry`。检索 telemetry 仍是可重建的本地 cache，存储不可用时业务结果继续返回并标记 `degraded`。运行时保留由 `tools/knowledge-runtime-maintenance.sh` 管理：默认只规划；显式 `--apply` 也不删除 telemetry 或未完成事务。
-Agent 默认使用 `--summary-json --context-budget small --limit 3`，只装配 route、候选索引、风险和原文入口；路由歧义、需要完整排序解释或高风险结论时，去掉 `--summary-json` 并使用 `--json` 回退完整证据。`--context-budget small|normal|deep` 和 `--limit` 会共同约束候选与全文搜索结果。任何输出都不代表条目已提升 active 或 owner 已签收。
-在 `~/knowledge-hub` 内自举维护时，`repo_route` 表示当前 cwd 属于 Knowledge Hub 仓库，`route` 表示 query 目标；如果 query 明确命中 PCR02、agent-dev-kit 等项目别名，预检仍应路由到目标项目。检查 Hub 自身治理上下文可用：
+Provider v4 返回独立的 `execution_subject`、`retrieval_scope`、`route_resolution` 和 `archive_eligibility`。Codex memory、raw session 和项目本地 README 只能辅助定位，不能覆盖 Hub 当前事实。查询别名只参与检索，不改变执行或归档主体。
+context 为只读查询，默认不写 telemetry；显式 `--receipt-key` 启用可重建的私有摘要缓存，缓存不可写时返回 `cache.status=unavailable`。搜索 telemetry 的存储不可用时继续返回检索结果并标记 `degraded`。
+Agent 默认使用 `--summary-json --context-budget small --limit 3`，摘要不超过 4096 bytes。`authority_lanes` 区分有效事实、候选、历史和 discovery，任何输出都不代表 active 提升或 owner 签收。`--execution-project` 或 `--workspace` 固定执行主体，跨项目查询使用 `--retrieval-project`；未解析 cwd 只提供 discovery。
+检查 Hub 自身治理上下文可用：
 
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd ~/knowledge-hub --query "增强 Knowledge Hub 自举体验" --task-type general --context-budget small --limit 3 --summary-json
+rtk bash ~/codex/scripts/knowledge-provider.sh context --cwd "$PWD" --execution-project knowledge-hub --query "增强 Knowledge Hub 自举体验" --summary-json
+rtk bash ~/codex/scripts/knowledge-provider.sh context --cwd "$PWD" --retrieval-project a123x --query "构建记录" --summary-json
+rtk bash ~/codex/scripts/knowledge-provider.sh archive --subject project:a123x --source /tmp/sanitized-conclusion.md --kind audit --sanitized --dry-run
 ```
+
+Git 未初始化、没有 commit 或没有 remote 不妨碍显式主体查询和候选归档；`source_state` 如实记录来源状态。公共入口仅接受当前 v4 参数，不提供旧版本选择。Native 按发布锁和文件清单在每次调用前后核验实际执行文件；本机独立主体配置为 `local/provider-principal.json`，与日报配置分离。只有 `ARCHIVED/ALREADY_ARCHIVED` 且 `persisted=true` 表示候选持久化成功。迁移接受的当前快照保持 `historical_validation_verified=false`。
 
 ## Agent 运行时派生契约
 

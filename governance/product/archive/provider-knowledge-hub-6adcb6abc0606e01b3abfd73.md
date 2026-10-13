@@ -46,6 +46,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 6adcb6abc0606e01b3abfd73a6e7a757ea3d609f9b7887b923d2bfb1ad0d21c2
 ---
 
 # Knowledge Provider 无 Git 工作区检索与候选归档设计

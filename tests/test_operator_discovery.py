@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from tools.codex_assets.knowledge_hub.remote_identity import parse_remote
 import pathlib
 
 from tools.codex_assets.knowledge_hub import (
@@ -40,7 +41,7 @@ def _fixture_root(root: pathlib.Path) -> pathlib.Path:
                 {
                     "repo_id": "tool-repo",
                     "project_id": "tool",
-                    "remote_key": "example/tool",
+                    "remote_key": parse_remote("https://github.com/example/tool.git"),
                     "remote_kind": "github",
                     "workspace_ref": "workspace://tool",
                     "lifecycle": "first-party",

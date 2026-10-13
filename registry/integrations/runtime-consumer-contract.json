@@ -5,7 +5,7 @@
   "provider": "knowledge-hub",
   "consumer_class": "engineering-runtime-binding",
   "public_operations": {
-    "context": "tools/knowledge-context.sh",
+    "context": "tools/knowledge-provider.sh context",
     "evidence_pack": "tools/knowledge-evidence-pack.sh",
     "action_check": "tools/knowledge-action-check.sh",
     "proposal_route": "tools/knowledge-proposal-route.sh",

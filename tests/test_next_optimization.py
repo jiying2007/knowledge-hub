@@ -17,12 +17,13 @@ from tools.codex_assets.knowledge_hub import private_io
 from tools.codex_assets.knowledge_hub.engineering_snapshot import capture_snapshot
 from tools.codex_assets.knowledge_hub.runtime_catalog import runtime_catalog
 from tools.codex_assets.knowledge_hub.retrieval_diagnostics import development_diagnostics
-from test_provider_archive import setup
-from tools.codex_assets.knowledge_hub.provider_archive import archive
+from test_provider_archive import setup, item_path
+from tools.codex_assets.knowledge_hub.provider_operations import archive
 from tools.codex_assets.knowledge_hub.common import registry_items
 from tools.codex_assets.knowledge_hub.review_batches import record_consumption, prepare_review_batches
 from tools.codex_assets.knowledge_hub import retrieval_cli, retrieval_holdout
-from tools.codex_assets.knowledge_hub.provider_reconcile import reconcile_archive, reconcile_activity
+from tools.codex_assets.knowledge_hub.provider_operations import reconcile
+from tools.codex_assets.knowledge_hub.activity_reconcile import reconcile_activity
 
 
 def test_root_python_is_a_cache_dependency(tmp_path):
@@ -138,7 +139,8 @@ def test_snapshot_preserves_registered_routing_without_credentials(tmp_path, cre
     root.mkdir()
     run_rtk(root, ['git', 'init'])
     (root / 'registry').mkdir()
-    row = {'remote_key':'team/hub', 'repo_id':'hub', 'project_id':'hub', 'workspace_ref':'~/hub'}
+    from tools.codex_assets.knowledge_hub.remote_identity import parse_remote
+    row = {'remote_key':parse_remote('https://example.invalid/team/hub.git'), 'repo_id':'hub', 'project_id':'hub', 'workspace_ref':'~/hub'}
     (root / 'registry/repositories.json').write_text(json.dumps({'repositories':[row]}))
     (root / '.gitignore').write_text('local/workspaces.json\n.tmp/\n')
     run_rtk(root, ['git', 'add', '.'])
@@ -229,7 +231,7 @@ def test_diagnostic_preserves_actual_retrieved_identity():
 def test_accepted_consumption_expires_and_cycle_changes_reopen(tmp_path):
     root, _, args = setup(tmp_path)
     receipt = archive(root, args)
-    rows = [dict(item_id=receipt['item_id'], path=receipt['target'], owner='owner', status='reviewing')]
+    rows = [dict(item_id=receipt['item_id'], path=item_path(root, receipt), owner='owner', status='reviewing')]
     record_consumption(root, receipt['item_id'], 'accepted', 'explicit-reviewer', 'proof', receipt['content_sha256'], apply=True)
     items = registry_items(root)
     assert prepare_review_batches(root, rows, items)['owner_count'] == 0
@@ -259,9 +261,9 @@ def test_holdout_cli_respects_flags_and_quality_gate(tmp_path, monkeypatch, caps
 def test_public_reconcile_is_readonly_and_requires_exact_hash(tmp_path):
     root, _, args = setup(tmp_path)
     receipt = archive(root, args)
-    result = reconcile_archive(root, args.project, receipt['operation_id'], receipt['content_sha256'])
-    assert result['status'] == 'VERIFIED' and result['read_only'] and not result['durable_acknowledgement']
-    assert reconcile_archive(root, args.project, receipt['operation_id'], '0' * 64)['status'] != 'VERIFIED'
+    result = reconcile(root, receipt['operation_id'], receipt['content_sha256'])
+    assert result['status'] == 'VERIFIED' and result['read_only']
+    assert reconcile(root, receipt['operation_id'], '0' * 64)['status'] != 'VERIFIED'
     activity_root = _hub(tmp_path / 'activity')
     source = tmp_path / 'receipt.json'
     _receipt(source, 'item', 'session-reconcile')

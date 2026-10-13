@@ -59,7 +59,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 捕获 | `knowledge-capture.sh`、`knowledge-new.sh` | `--apply` 只创建 draft/reviewing/personal，不创建 active |
 | 生命周期 | `knowledge-review-attest.sh`、`knowledge-promote.sh`、`knowledge-retire.sh` | execution authorization 与 content review attestation 独立校验；明确真人决定后可机械生成本地 form，active 禁止 delegated mode，工具不生成 owner 决策 |
 | 恢复审计 | `knowledge-recovery-audit.sh` | 只读检查未完成 transaction 和恢复动作 |
-| 检索/context | `knowledge-search.sh`、`knowledge-context.sh` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
+| 检索/context | `knowledge-search.sh`、`knowledge-provider.sh context` | FTS5 + 中文 2/3-gram + weighted recall + fallback + `why_selected` |
 | 项目矩阵 | `knowledge-project-readiness.sh` | 30×4 reviewing 槽位；30/30 本机 source mapped，0/30 evidence-ready；group 元数据不重复计数 |
 | PCR02 证据路径 | `knowledge-pcr02-owner-readiness.sh` | 三条 candidate 已绑定 hash-bound owner 决定，继续保持 reviewing、实机/release/evidence pending |
 | Obsidian | `knowledge-obsidian-view-build.sh`、`knowledge-link-audit.sh` | 文件层 Properties/MOC/Base/链接自动检查；真实 GUI 验收单独报告，当前为 `not-validated` |
@@ -95,7 +95,7 @@ Knowledge Hub 是知识系统和权威控制面，Obsidian 是可选客户端。
 ```bash
 rtk bash ~/knowledge-hub/tools/knowledge-health-summary.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<query>" --json
-rtk bash ~/knowledge-hub/tools/knowledge-context.sh --cwd "$PWD" --query "<task>" --task-type general --json
+rtk bash ~/knowledge-hub/tools/knowledge-provider.sh context --cwd "$PWD" --query "<task>" --task-type general --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 ```
 

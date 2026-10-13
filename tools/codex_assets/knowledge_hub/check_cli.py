@@ -10,6 +10,7 @@ from .common import KnowledgeHubError, display_path, file_sha256, load_markdown,
 from .model import FRONTMATTER_MIRROR_FIELDS, validate_item
 from .output_contract import status_contract
 from .security import scan_secret_text
+from .delegated_content_review import FIELD, review_state, load_ledger
 from .source_coverage import select_source_coverage_closeout
 from .check_validation_pre import run_pre_after, run_pre_before
 from .check_validation_registry import run_registry_head, run_registry_rest
@@ -29,6 +30,10 @@ parser.add_argument('--as-of', default='', metavar='YYYY-MM-DD', help='Use a fix
 args = parser.parse_args(argv)
 errors = []
 warnings = []
+try:
+    load_ledger(root)
+except (KnowledgeHubError, OSError, ValueError, KeyError, TypeError) as exc:
+    errors.append(f'ai-content-review-authorization-ledger invalid: {exc}')
 explain = None
 READABILITY_GATE_START = dt.date(2026, 6, 21)
 
@@ -431,6 +436,10 @@ if not args.sources_only:
                     frontmatter_status_health[counter] += 1
                     frontmatter_status_health['rows'].append({'item_id': item_id, 'path': rel_path.as_posix(), 'field': field, 'registry_value': registry_value, 'frontmatter_value': declared_value, 'status': 'mismatch'})
                     errors.append(f'frontmatter-status:{item_id} field={field} registry={registry_value} frontmatter={declared_value}: {rel_path.as_posix()}')
+        if FIELD in item:
+            delegated = review_state(root, item)
+            if delegated['status'] == 'invalid':
+                errors.append(f"items:{item_id} invalid AI delegated content review: {delegated['reason']}")
         human_review_content_sha256 = str(item.get('human_review_content_sha256', ''))
         if human_review_content_sha256:
             if not SHA256_RE.fullmatch(human_review_content_sha256):

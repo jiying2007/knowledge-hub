@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+from typing import Any, List
 
 from .common import (KnowledgeHubError, load_json, pretty_json,
                      read_utf8_bounded, file_sha256, resolve_inside)
@@ -178,7 +179,8 @@ def bind_workspace(root, workspace_ref, path, coverage="subtree", expected_gener
 
 def resolve_workspace(root, cwd):
     cwd = pathlib.Path(cwd).expanduser().resolve()
-    candidates, stale = [], []
+    candidates: List[Any] = []
+    stale: List[Any] = []
     for row in binding_rows(root):
         base = pathlib.Path(row["path"])
         if cwd != base and (row["coverage"] != "subtree" or base not in cwd.parents):
@@ -193,7 +195,8 @@ def resolve_workspace(root, cwd):
     from .common import repository_rows
     remotes = remote_urls_from_config(config)
     repos = repository_rows(root)
-    known = [r for r in repos if any(m["remote_key"] == r.get("remote_key") for m in remotes)]
+    from .remote_identity import identity_key
+    known = [r for r in repos if identity_key(r.get("remote_key")) and any(m["remote_key"] == r.get("remote_key") for m in remotes)]
     projects = {r.get("project_id") for r in known if r.get("project_id")}
     deepest = max((len(pathlib.Path(r["path"]).parts) for r in candidates), default=0)
     selected = [r for r in candidates if len(pathlib.Path(r["path"]).parts) == deepest]

@@ -1,4 +1,10 @@
 ---
+aliases:
+- 7.14.2消费链与门禁加固最终回读
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-4699a5202fd8753d00f8eb44
 title: 7.14.2消费链与门禁加固最终回读
 kind: validation
@@ -43,12 +49,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 7.14.2消费链与门禁加固最终回读
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 4699a5202fd8753d00f8eb4487e1ae4030c88064a968758c6ca131aadbabd59d
 ---
 
 # 7.14.2消费链与门禁加固最终回读

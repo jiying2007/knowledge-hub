@@ -10,38 +10,49 @@ import pathlib
 import sys
 import tempfile
 import subprocess
+from typing import Any, Dict
 
-from .common import KnowledgeHubError, parse_json_output, run_rtk, file_sha256, resolve_inside
+from .common import KnowledgeHubError, parse_json_output, run_rtk, file_sha256
 from .private_io import atomic_private_write, private_execution_lock
 from .operation_journal import record_stage, reconcile_plan
 
 
 class PersistenceUnverified(KnowledgeHubError):
     """An apply was invoked; do not report a false no-write guarantee."""
+    plan_sha256: str
+    operation_identity: Dict[str, Any]
+    reconciliation: Dict[str, Any]
 
 
 def _apply_and_verify(root, args, planned, identity_keys):
     try:
-        result = parse_json_output(run_rtk(root, args + ['--apply'], timeout=60))
+        approved_args = args + (['--expected-content-sha256', planned['content_sha256']] if 'archive' in args else [])
+        result = parse_json_output(run_rtk(root, approved_args + ['--apply'], timeout=60, extra_env={'KNOWLEDGE_HUB_ROOT':str(root)}))
         if not isinstance(result.get('status'), str):
             raise KnowledgeHubError('Provider result status type is invalid')
         successful = (result.get('status') in {'ARCHIVED', 'ALREADY_ARCHIVED'} and result.get('persisted') is True
                       if 'archive' in args else result.get('status') == 'pass' and result.get('applied') is True)
         if not successful or any(not isinstance(result.get(key), str) or result.get(key) != planned.get(key) for key in identity_keys):
             raise KnowledgeHubError('Provider outcome does not match the approved identity')
-        if not isinstance(result.get('target'), str):
-            raise KnowledgeHubError('Provider result target type is invalid')
-        target = pathlib.Path(result['target'])
-        relative = str(target.relative_to(root)) if target.is_absolute() else str(target)
         expected = result[identity_keys[1]]
-        if file_sha256(resolve_inside(root, relative)) != expected:
+        if 'archive' in args:
+            command = args[:2] + ['reconcile', '--operation-id', result['operation_id'], '--expected-content-sha256', expected, '--json']
+        else:
+            receipt_date = planned.get('receipt_date')
+            if not receipt_date:
+                raise KnowledgeHubError('activity receipt date is required')
+            command = args[:2] + ['activity-capture', '--reconcile-receipt', result['receipt_id'], '--receipt-date', receipt_date,
+                                  '--expected-content-sha256', expected, '--json']
+        verified = parse_json_output(run_rtk(root, command, timeout=60, extra_env={'KNOWLEDGE_HUB_ROOT':str(root)}))
+        if (verified.get('status') != 'VERIFIED' or verified.get('persisted') is not True
+                or verified.get(identity_keys[0]) != result[identity_keys[0]] or verified.get(identity_keys[1]) != expected):
             raise KnowledgeHubError('persisted Provider output readback mismatch')
         return result
     except (KnowledgeHubError, OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as exc:
         raise PersistenceUnverified(str(exc)) from exc
 
 
-def execute_provider(root, policy_root, thread_id, operation, source, *, project='', kind='validation', apply=False):
+def execute_provider(root, policy_root, thread_id, operation, source, *, subject='', kind='validation', apply=False):
     if not thread_id or thread_id != os.environ.get('CODEX_THREAD_ID'):
         raise KnowledgeHubError('must use the actual current thread id')
     if operation not in {'archive', 'activity-capture'}:
@@ -57,21 +68,23 @@ def execute_provider(root, policy_root, thread_id, operation, source, *, project
         frozen.write_bytes(raw)
         args = ['bash', str(provider), operation]
         if operation == 'archive':
-            if not project:
-                raise KnowledgeHubError('archive requires an explicit project')
-            args += ['--project', project, '--source', str(frozen), '--kind', kind, '--sanitized']
+            if not subject:
+                raise KnowledgeHubError('archive requires an explicit subject')
+            args += ['--subject', subject, '--source', str(frozen), '--kind', kind, '--sanitized']
         else:
             args += ['--input', str(frozen)]
         args += ['--json']
-        planned = parse_json_output(run_rtk(root, args, timeout=60))
+        planned = parse_json_output(run_rtk(root, args, timeout=60, extra_env={'KNOWLEDGE_HUB_ROOT':str(root)}))
         if not isinstance(planned.get('status'), str) or planned['status'] not in {'PLANNED', 'ALREADY_ARCHIVED', 'pass'}:
             raise KnowledgeHubError('Provider did not produce an acceptable dry-run')
         identity_keys = ('operation_id', 'content_sha256') if operation == 'archive' else ('receipt_id', 'sha256')
         if any(not isinstance(planned.get(key), str) or not planned[key] for key in identity_keys):
             raise KnowledgeHubError('Provider dry-run identity fields are invalid')
+        receipt_date = json.loads(raw).get('session_date', '') if operation == 'activity-capture' else ''
+        if operation == 'activity-capture':
+            planned = dict(planned, receipt_date=receipt_date)
         plan = {'operation':operation, 'source_sha256':source_digest, 'thread_id':thread_id,
-                'provider_plan':planned, 'source_frozen':True, 'project':project,
-                'receipt_date':json.loads(raw).get('session_date', '') if operation == 'activity-capture' else ''}
+                'provider_plan':planned, 'source_frozen':True, 'subject':subject, 'receipt_date':receipt_date}
         plan_text = json.dumps(plan, sort_keys=True, ensure_ascii=False)
         digest = hashlib.sha256(plan_text.encode()).hexdigest()
         if not apply:
@@ -132,7 +145,7 @@ def main(argv=None):
     parser.add_argument('--operation', choices=('archive', 'activity-capture'), default='archive')
     parser.add_argument('--source', default='')
     parser.add_argument('--reconcile-plan', default='')
-    parser.add_argument('--project', default='')
+    parser.add_argument('--subject', default='')
     parser.add_argument('--kind', default='validation')
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args(argv)
@@ -144,7 +157,7 @@ def main(argv=None):
         else:
             payload = execute_provider(pathlib.Path(args.root).resolve(), pathlib.Path(args.policy_root).resolve(),
                                    args.thread_id, args.operation, pathlib.Path(args.source),
-                                   project=args.project, kind=args.kind, apply=args.apply)
+                                   subject=args.subject, kind=args.kind, apply=args.apply)
         print(json.dumps(payload, ensure_ascii=False))
         return 0
     except (KnowledgeHubError, OSError, ValueError, TypeError, subprocess.TimeoutExpired) as exc:

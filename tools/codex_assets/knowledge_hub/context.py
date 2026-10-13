@@ -8,15 +8,9 @@ from typing import Any, Dict, Mapping
 from . import context_support as _support
 from .search import search
 
-# Preserve the established context module surface while implementation is split
-# into bounded support and assembly modules.
+# Shared ranking interface used by Provider and repository diagnostics.
 TASK_TYPES = _support.TASK_TYPES
 BUDGET_LIMITS = _support.BUDGET_LIMITS
-SUMMARY_JSON_MAX_BYTES = _support.SUMMARY_JSON_MAX_BYTES
-SUMMARY_JSON_MAX_ITEMS = _support.SUMMARY_JSON_MAX_ITEMS
-CONTEXT_RECEIPT_SCHEMA_VERSION = _support.CONTEXT_RECEIPT_SCHEMA_VERSION
-CONTEXT_RECEIPT_KEY_PATTERN = _support.CONTEXT_RECEIPT_KEY_PATTERN
-CONTEXT_RECEIPT_REGISTRY_PATHS = _support.CONTEXT_RECEIPT_REGISTRY_PATHS
 TASK_KIND_WEIGHTS = _support.TASK_KIND_WEIGHTS
 
 normalize_remote_key = _support.normalize_remote_key
@@ -35,17 +29,6 @@ _route_domains = _support._route_domains
 _route_matches_domain = _support._route_matches_domain
 _rank_item = _support._rank_item
 _public_item = _support._public_item
-_compact_mapping = _support._compact_mapping
-_compact_context_item = _support._compact_context_item
-_summary_json_size = _support._summary_json_size
-_path_signature = _support._path_signature
-context_receipt_path = _support.context_receipt_path
-context_receipt_request = _support.context_receipt_request
-load_context_receipt = _support.load_context_receipt
-write_context_receipt = _support.write_context_receipt
-attach_context_receipt = _support.attach_context_receipt
-_sync_summary_raw_evidence = _support._sync_summary_raw_evidence
-_fit_summary_budget = _support._fit_summary_budget
 _current_exclusion_reason = _support._current_exclusion_reason
 
 
@@ -70,12 +53,6 @@ def assemble_context(
         project_hint=project_hint,
         _search_fn=search,
     )
-
-
-def summarize_context(payload: Mapping[str, Any]) -> Dict[str, Any]:
-    from .context_assembly import summarize_context as _summarize_context
-
-    return _summarize_context(payload)
 
 
 def record_context_telemetry(

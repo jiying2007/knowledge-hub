@@ -1,4 +1,10 @@
 ---
+aliases:
+- llm_agent / ADK 优化闭环候选
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-94244aa67d60c96f9375bcc7
 title: llm_agent / ADK 优化闭环候选
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- llm_agent / ADK 优化闭环候选
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 94244aa67d60c96f9375bcc71e37b481cca98c0a547ee807628bdda58c5487a4
 ---
 
 # llm_agent / ADK 优化闭环候选

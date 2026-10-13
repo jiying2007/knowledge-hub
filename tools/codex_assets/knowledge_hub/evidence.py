@@ -151,6 +151,7 @@ def evaluate_evidence_contract(
     current_project = str(current_project_id).strip()
     missing: List[str] = []
     invalid: List[str] = []
+    member_diagnostics: Dict[str, Any] = {}
     for field in requirements:
         value = contract.get(field)
         if field == "member_project_ids":
@@ -158,6 +159,18 @@ def evaluate_evidence_contract(
             dependency_members = (
                 members - {current_project} if current_project else members
             )
+            pending_members = dependency_members - ready_members
+            member_diagnostics = {
+                "status": (
+                    "missing-members" if not members
+                    else "member-evidence-pending" if pending_members
+                    else "members-ready"
+                ),
+                "registered_member_ids": sorted(members),
+                "dependency_member_ids": sorted(dependency_members),
+                "ready_member_ids": sorted(dependency_members & ready_members),
+                "pending_member_ids": sorted(pending_members),
+            }
             if not members:
                 missing.append(field)
             elif not dependency_members.issubset(ready_members):
@@ -178,7 +191,7 @@ def evaluate_evidence_contract(
     if declared_status == "ready" and missing:
         invalid.append("status")
     status = "ready" if not missing and not invalid and declared_status == "ready" else "pending"
-    return {
+    result = {
         "status": status,
         "profile": profile,
         "declared_status": declared_status,
@@ -186,3 +199,6 @@ def evaluate_evidence_contract(
         "invalid_fields": sorted(set(invalid)),
         "required_fields": list(requirements),
     }
+    if profile == "aggregate-group":
+        result["member_diagnostics"] = member_diagnostics
+    return result

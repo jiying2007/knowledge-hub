@@ -8,18 +8,23 @@ import pathlib
 import os
 import re
 import time
+from typing import Any, Dict, List
 
 from .common import KnowledgeHubError, repository_root, read_bytes_bounded
-from .provider_subjects import policy, digest, read_guard
+from .provider_subjects import digest, read_guard
 from .provider_operations import response
 from .store import WriteConflict
 
 
+class ProviderParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise KnowledgeHubError("SCHEMA_INVALID")
+
+
 def parser():
-    p = argparse.ArgumentParser(description="Knowledge Provider: explicit subjects, persistent workspaces, candidate-only writes.")
-    p.add_argument("operation", choices=("status", "resolve", "grant", "register", "bind", "archive", "assign", "reconcile", "migrate-operations", "context", "capture-source"))
+    p = ProviderParser(description="Knowledge Provider v4: explicit subjects and candidate-only operations.", allow_abbrev=False)
+    p.add_argument("operation", choices=("status", "resolve", "grant", "register", "bind", "archive", "assign", "reconcile", "context", "capture-source"))
     p.add_argument("--root", default="")
-    p.add_argument("--api-version", type=int, choices=(2, 3), default=2)
     p.add_argument("--cwd", default=os.environ.get("KNOWLEDGE_PROVIDER_CALLER_CWD", str(pathlib.Path.cwd())))
     p.add_argument("--project", default="")
     p.add_argument("--name", default="")
@@ -29,8 +34,9 @@ def parser():
     p.add_argument("--expected-generation", type=int, default=0)
     p.add_argument("--authorization-id", default="")
     p.add_argument("--declaration-file", default="")
-    p.add_argument("--grant-action", choices=("register", "bind", "assign"), default="register")
+    p.add_argument("--grant-action", choices=("register", "bind", "archive", "assign"), default="register")
     p.add_argument("--subject", default="")
+    p.add_argument("--from-subject", default="")
     p.add_argument("--source", default="")
     p.add_argument("--provenance-file", default="")
     p.add_argument("--kind", default="audit")
@@ -65,7 +71,8 @@ def capture_source(args):
     root = pathlib.Path(args.cwd).expanduser().resolve()
     if not args.file or len(args.file) > 64 or len(set(args.file)) != len(args.file):
         raise KnowledgeHubError("SOURCE_BUDGET_EXCEEDED")
-    total, rows, unstable, start = 0, [], False, time.monotonic()
+    total, unstable, start = 0, False, time.monotonic()
+    rows: List[Dict[str, Any]] = []
     denied = {".git", ".aws", ".ssh", ".codex", "build", "dist", "node_modules"}
     if any(part in denied for part in root.parts) or str(root).startswith(("/proc", "/sys", "/dev")):
         raise KnowledgeHubError("SOURCE_REJECTED")
@@ -98,15 +105,15 @@ def capture_source(args):
 
 
 def validate_arguments(args):
-    common = {"root", "api_version", "cwd", "json", "summary_json", "operation", "dry_run"}
+    common = {"root", "cwd", "json", "summary_json", "operation", "dry_run"}
     fields = {
         "status": set(), "resolve": set(),
         "register": {"project", "name", "declaration_file", "authorization_id", "apply"},
         "bind": {"workspace", "path", "coverage", "expected_generation", "authorization_id", "apply"},
-        "grant": {"grant_action", "project", "name", "declaration_file", "workspace", "path", "coverage", "expected_generation", "subject", "item_id", "expected_content_sha256", "authorization_id", "apply"},
-        "archive": {"subject", "source", "provenance_file", "kind", "title", "sanitized", "declared_scope", "authorization_id", "apply"},
-        "assign": {"subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "apply"},
-        "reconcile": {"operation_id", "expected_content_sha256"}, "migrate-operations": {"apply"},
+        "grant": {"grant_action", "project", "name", "declaration_file", "workspace", "path", "coverage", "expected_generation", "subject", "from_subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "source", "provenance_file", "kind", "title", "sanitized", "apply"},
+        "archive": {"subject", "source", "provenance_file", "kind", "title", "sanitized", "declared_scope", "authorization_id", "expected_content_sha256", "apply"},
+        "assign": {"subject", "from_subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "apply"},
+        "reconcile": {"operation_id", "expected_content_sha256"},
         "capture-source": {"file"},
         "context": {"query", "workspace", "execution_project", "retrieval_project", "retrieval_domain", "archive_subject", "personal", "unassigned", "limit", "context_budget", "task_type", "receipt_key"},
     }
@@ -119,9 +126,9 @@ def validate_arguments(args):
 
 
 def run(root, args):
+    if (root / "local/provider-maintenance.json").exists():
+        raise KnowledgeHubError("PROVIDER_MAINTENANCE")
     validate_arguments(args)
-    if args.operation == "context" and args.api_version != 3 or args.operation != "context" and args.api_version != 2:
-        raise KnowledgeHubError("SCHEMA_INVALID")
     if args.operation == "archive" and args.project:
         raise KnowledgeHubError("SCHEMA_INVALID")
     if args.operation in {"status", "resolve", "context", "capture-source", "reconcile"} and args.apply:
@@ -145,38 +152,35 @@ def run(root, args):
         from .provider_onboarding import bind_workspace
         return bind_workspace(root, args.workspace, args.path, args.coverage, args.expected_generation, args.authorization_id, args.apply)
     if args.operation == "archive":
-        from .provider_operations import archive_v2
-        return archive_v2(root, args)
+        from .provider_operations import archive
+        return archive(root, args)
     if args.operation == "assign":
         from .provider_operations import assign
         return assign(root, args)
     if args.operation == "reconcile":
         from .provider_operations import reconcile
         return reconcile(root, args.operation_id, args.expected_content_sha256)
-    if args.operation == "migrate-operations":
-        from .provider_operations import import_legacy
-        policy(root)
-        return import_legacy(root, args.apply)
     if args.operation == "context":
-        if args.api_version != 3 or not args.query or not 1 <= args.limit <= 16:
+        if not args.query or not 1 <= args.limit <= 16:
             raise KnowledgeHubError("SCHEMA_INVALID")
-        from .provider_context import context_v3
-        return context_v3(root, args)
+        from .provider_context import context
+        return context(root, args)
     return capture_source(args)
 
 
 def main(argv=None):
-    args = parser().parse_args(argv)
-    root = repository_root(args.root)
+    args = argparse.Namespace(apply=False)
     try:
+        args = parser().parse_args(argv)
+        root = repository_root(args.root)
         value = run(root, args)
-        if value.get("schema_version") == "knowledge-provider.context/v3":
+        if value.get("schema_version") == "knowledge-provider.context/v4":
             from .schemas import validate_instance
-            if validate_instance(root, "provider-context-v3", value)["status"] != "pass":
+            if validate_instance(root, "provider-context-v4", value)["status"] != "pass":
                 raise KnowledgeHubError("SCHEMA_INVALID")
-        if value.get("schema_version") == "knowledge-provider.operation-receipt/v2":
+        if value.get("schema_version") == "knowledge-provider.operation-receipt/v4":
             from .schemas import validate_instance
-            if validate_instance(root, "provider-operation-receipt-v2", value)["status"] != "pass":
+            if validate_instance(root, "provider-operation-receipt-v4", value)["status"] != "pass":
                 raise KnowledgeHubError("SCHEMA_INVALID")
         code = 0 if value.get("status") not in {"CONFLICT", "UNKNOWN", "BLOCKED"} else 2
     except (KnowledgeHubError, OSError, ValueError, TypeError, StopIteration, KeyError) as exc:

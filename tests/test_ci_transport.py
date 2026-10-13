@@ -1,6 +1,8 @@
 import os
+import pathlib
 import shutil
 import subprocess
+import sys
 
 from tools.codex_assets.knowledge_hub.common import repository_root
 
@@ -48,6 +50,19 @@ def test_ci_transport_allows_registered_path_audit_wrapper():
     result = _run("bash", "tools/knowledge-path-audit.sh", "--help")
 
     assert result.returncode == 0, result.stderr
+
+
+def test_ci_transport_allows_current_provider_and_rejects_retired_context():
+    environment = {
+        "PATH": str(ROOT / "tools/ci") + os.pathsep + str(pathlib.Path(sys.executable).parent) + os.pathsep + os.environ["PATH"],
+        "KNOWLEDGE_PYTHON_RUNTIME": sys.executable,
+    }
+    result = _run("bash", "tools/knowledge-provider.sh", "--help", extra_env=environment)
+    assert result.returncode == 0, result.stderr
+    assert "Knowledge Provider v4" in result.stdout
+    retired = _run("bash", "tools/knowledge-context.sh", "--help")
+    assert retired.returncode == 64
+    assert "denied wrapper" in retired.stderr
 
 
 def test_ci_transport_allows_governed_runtime_selector():

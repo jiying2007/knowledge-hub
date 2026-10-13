@@ -1,4 +1,3 @@
-import argparse
 import datetime as dt
 import json
 import pathlib
@@ -7,8 +6,8 @@ import pytest
 
 from test_provider_archive import setup
 from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, load_jsonl, file_sha256
-from tools.codex_assets.knowledge_hub.provider_subjects import digest, OPERATIONS_PATH, GRANTS_PATH, BINDINGS_PATH
-from tools.codex_assets.knowledge_hub.provider_operations import archive_v2, assign, reconcile, import_legacy
+from tools.codex_assets.knowledge_hub.provider_subjects import OPERATIONS_PATH, GRANTS_PATH, BINDINGS_PATH
+from tools.codex_assets.knowledge_hub.provider_operations import archive, assign, reconcile, assignment_request
 from tools.codex_assets.knowledge_hub.provider_onboarding import register_project, bind_workspace, resolve_workspace
 from tools.codex_assets.knowledge_hub.provider_cli import parser, run, main
 from tools.codex_assets.knowledge_hub.store import RepositoryTransaction
@@ -16,9 +15,10 @@ from tools.codex_assets.knowledge_hub.store import RepositoryTransaction
 
 def subject_root(tmp_path):
     root, source, old = setup(tmp_path)
-    (root / "local").mkdir()
+    (root / "local").mkdir(exist_ok=True)
     (root / "local/activity-report.json").write_text(json.dumps({"schema_version": 2, "enabled": True,
         "default_scope": "personal", "subject_id": "local-user", "receipt_persistence": True}))
+    (root / "local/provider-principal.json").write_text(json.dumps({"schema_version": 1, "enabled": True, "principal_id": "local-user"}))
     policy = pathlib.Path(__file__).parents[1] / "registry/provider-subject-policy.json"
     (root / "registry/provider-subject-policy.json").write_bytes(policy.read_bytes())
     (root / "registry/provider-workspaces.json").write_text('{"schema_version":1,"workspaces":[]}')
@@ -51,11 +51,11 @@ def test_all_subjects_archive_without_git_and_retry(tmp_path, target):
     root, source, args = subject_root(tmp_path)
     assert not (root / ".git").exists()
     args.subject, args.declared_scope = target, "team-general"
-    first = archive_v2(root, args)
+    first = archive(root, args)
     assert first["status"] == "ARCHIVED" and first["persisted"] is True
     assert first["candidate_status"] == "reviewing" and first["promotion"] == "none"
-    assert first["project_archived"] == target.startswith("project:")
-    second = archive_v2(root, args)
+    assert first["subject_ref"] == {"type": target.split(":")[0], "id": target.split(":")[1]}
+    second = archive(root, args)
     assert second["status"] == "ALREADY_ARCHIVED" and second["write_performed"] is False
     assert len(load_jsonl(root / "registry/items.jsonl")) == 1
     assert reconcile(root, first["operation_id"], first["content_sha256"])["status"] == "VERIFIED"
@@ -67,7 +67,7 @@ def test_subject_denials_have_no_effect(tmp_path, target):
     args.subject = target
     args.declared_scope = "team-general"
     with pytest.raises(KnowledgeHubError):
-        archive_v2(root, args)
+        archive(root, args)
     assert load_jsonl(root / "registry/items.jsonl") == []
     assert not (root / OPERATIONS_PATH).exists()
 
@@ -75,26 +75,27 @@ def test_subject_denials_have_no_effect(tmp_path, target):
 def test_assign_keeps_id_and_replays_creation_after_move(tmp_path):
     root, _, args = subject_root(tmp_path)
     args.subject = "unassigned:local-user"
-    first = archive_v2(root, args)
+    first = archive(root, args)
     old_path = load_jsonl(root / "registry/items.jsonl")[0]["path"]
     move = parser().parse_args(["assign", "--subject", "project:test", "--item-id", first["item_id"],
                                "--expected-content-sha256", first["content_sha256"], "--apply"])
-    request_hash = digest({"action": "assign", "item_id": first["item_id"], "subject_ref": {"type": "project", "id": "test"},
-                           "expected_content_sha256": first["content_sha256"]})
+    move.from_subject = "unassigned:local-user"
+    request_hash, _, _ = assignment_request(root, move, "validation")
     move.authorization_id = grant(root, "assign", {"type": "project", "id": "test"}, request_hash, visibility_change=True)
     result = assign(root, move)
     assert result["status"] == "ASSIGNED" and result["item_id"] == first["item_id"]
     assert not (root / old_path).exists()
     assert assign(root, move)["status"] == "ALREADY_ASSIGNED"
-    assert archive_v2(root, args)["subject_ref"] == {"type": "project", "id": "test"}
+    assert archive(root, args)["subject_ref"] == {"type": "project", "id": "test"}
     assert len(load_jsonl(root / "registry/items.jsonl")) == 1
 
 
 def test_assign_authorization_is_exact_not_substring(tmp_path):
     root, _, args = subject_root(tmp_path)
-    first = archive_v2(root, args)
+    first = archive(root, args)
     move = parser().parse_args(["assign", "--subject", "personal:local-user", "--item-id", first["item_id"],
                                "--expected-content-sha256", first["content_sha256"], "--apply"])
+    move.from_subject = "project:test"
     move.authorization_id = grant(root, "assign", {"type": "personal", "id": "local-user-extra"}, "0" * 64, visibility_change=True)
     before = (root / "registry/items.jsonl").read_bytes()
     with pytest.raises(KnowledgeHubError):
@@ -150,7 +151,7 @@ def test_archive_policy_denials_are_zero_write(tmp_path, change):
     policy_path.write_text(json.dumps(policy))
     before = (root / "registry/items.jsonl").read_bytes()
     with pytest.raises(KnowledgeHubError):
-        archive_v2(root, args)
+        archive(root, args)
     assert (root / "registry/items.jsonl").read_bytes() == before
     assert not (root / OPERATIONS_PATH).exists()
 
@@ -176,21 +177,18 @@ def test_bind_revoked_before_snapshot_is_denied(tmp_path, monkeypatch):
     assert not (root / BINDINGS_PATH).exists()
 
 
-def test_legacy_codex_lane_reconcile_and_v2_replay(tmp_path):
+def test_codex_lane_reconcile_and_replay(tmp_path):
     root, source, args = subject_root(tmp_path)
     routes_path = root / "registry/project-routes.json"
     routes = json.loads(routes_path.read_text())
     routes["routes"][0]["validation_path"] = "domains/codex/validation"
     routes_path.write_text(json.dumps(routes))
-    from tools.codex_assets.knowledge_hub.provider_archive import archive
-    legacy_args = argparse.Namespace(project="test", source=str(source), kind="validation", title="", sanitized=True, apply=True, as_of="")
-    first = archive(root, legacy_args)
-    assert import_legacy(root, True)["status"] == "IMPORTED"
+    first = archive(root, args)
     row = load_jsonl(root / OPERATIONS_PATH)[0]
-    verified = reconcile(root, first["operation_id"], row["current_content_sha256"])
+    verified = reconcile(root, first["operation_id"], row["content_sha256"])
     assert verified["status"] == "VERIFIED"
     assert verified["subject_ref"] == {"type":"project", "id":"test"}
-    replay = archive_v2(root, args)
+    replay = archive(root, args)
     assert replay["status"] == "ALREADY_ARCHIVED" and replay["item_id"] == first["item_id"]
     assert len(load_jsonl(root / "registry/items.jsonl")) == 1
 
@@ -208,7 +206,7 @@ def test_context_archive_eligibility_respects_disabled_policy(tmp_path):
     value = json.loads(path.read_text())
     value["enabled"] = False
     path.write_text(json.dumps(value))
-    args = parser().parse_args(["context", "--api-version", "3", "--cwd", str(tmp_path), "--execution-project", "test", "--query", "事务"])
+    args = parser().parse_args(["context", "--cwd", str(tmp_path), "--execution-project", "test", "--query", "事务"])
     result = run(root, args)
     assert result["archive_eligibility"]["eligible"] is False
     assert "POLICY_DENIED" in result["archive_eligibility"]["reason_codes"]
@@ -231,14 +229,15 @@ def test_linked_worktree_uses_common_remote_but_own_head(tmp_path):
     (work / ".git").write_text("gitdir: " + str(linked) + "\n")
     config, root = find_git_config(str(work))
     assert config == common / "config" and root == work
-    assert remote_urls_from_config(config)[0]["remote_key"] == "team/project"
+    from tools.codex_assets.knowledge_hub.remote_identity import parse_remote
+    assert remote_urls_from_config(config)[0]["remote_key"] == parse_remote("https://example.org/team/project.git")
     assert workspace_git_head(str(work), config) == "2" * 40
 
 
 def test_explicit_logical_workspace_without_git_and_conflict(tmp_path):
     root, _, _ = subject_root(tmp_path)
     (root / "registry/provider-workspaces.json").write_text('{"schema_version":1,"workspaces":[{"workspace_ref":"workspace://test","subject_ref":{"type":"project","id":"test"}}]}')
-    args = parser().parse_args(["context", "--api-version", "3", "--cwd", str(tmp_path), "--workspace", "workspace://test", "--query", "事务"])
+    args = parser().parse_args(["context", "--cwd", str(tmp_path), "--workspace", "workspace://test", "--query", "事务"])
     value = run(root, args)
     assert value["execution_subject"] == {"type":"project", "id":"test"}
     assert value["source_state"]["vcs"] == "none" and value["archive_eligibility"]["eligible"] is True
@@ -253,8 +252,8 @@ def test_explicit_logical_workspace_without_git_and_conflict(tmp_path):
 def test_private_queries_are_explicit_and_cache_invalidates(tmp_path):
     root, _, args = subject_root(tmp_path)
     args.subject = "personal:local-user"
-    first = archive_v2(root, args)
-    query = parser().parse_args(["context", "--api-version", "3", "--cwd", str(tmp_path), "--query", "事务", "--summary-json", "--personal", "--receipt-key", "own"])
+    first = archive(root, args)
+    query = parser().parse_args(["context", "--cwd", str(tmp_path), "--query", "事务", "--summary-json", "--personal", "--receipt-key", "own"])
     value = run(root, query)
     assert value["cache"]["hit"] is False
     assert value["context"][0]["items"][0]["id"] == first["item_id"]
@@ -271,7 +270,7 @@ def test_private_queries_are_explicit_and_cache_invalidates(tmp_path):
 
 def test_retrieval_project_does_not_change_execution(tmp_path):
     root, _, _ = subject_root(tmp_path)
-    query = parser().parse_args(["context", "--api-version", "3", "--cwd", str(tmp_path), "--query", "事务", "--retrieval-project", "test"])
+    query = parser().parse_args(["context", "--cwd", str(tmp_path), "--query", "事务", "--retrieval-project", "test"])
     result = run(root, query)
     assert result["execution_subject"] is None
     assert result["retrieval_scope"] == [{"type": "project", "id": "test"}]

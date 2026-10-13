@@ -25,6 +25,7 @@ if [[ -n "${KNOWLEDGE_PYTHON_RUNTIME:-}" ]]; then
 else
   knowledge_python_candidates=(
     python3
+    "$knowledge_repo_root/.tmp/provider-runtime/venv/bin/python"
     "$knowledge_repo_root/.tmp/engineering/venv/bin/python"
     python3.14
     python3.13
@@ -35,6 +36,16 @@ else
     python3.8
   )
 fi
+
+knowledge_exec_runtime() {
+  if [[ "${1:-}" == "-m" && "${2:-}" == tools.* ]]; then
+    shift
+    knowledge_module="$1"
+    shift
+    exec rtk "$knowledge_selected_python" -I "$knowledge_repo_root/tools/codex_assets/isolated_runtime.py" "$knowledge_repo_root" "$knowledge_module" "$@"
+  fi
+  exec rtk "$knowledge_selected_python" -I "$@"
+}
 
 knowledge_cache_eligible=false
 if [[ "${1:-}" == "-m" && "${2:-}" == tools.codex_assets.knowledge_hub.* ]]; then
@@ -70,7 +81,8 @@ if [[ "$knowledge_cache_eligible" == true
           && "$knowledge_runtime_cache" -nt "$knowledge_cached_python"
           && "$knowledge_runtime_cache" -nt "$knowledge_runtime_lock"
           && "$knowledge_runtime_cache" -nt "${BASH_SOURCE[0]}" ]]; then
-      exec rtk "$knowledge_cached_python" "$@"
+      knowledge_selected_python="$knowledge_cached_python"
+      knowledge_exec_runtime "$@"
     fi
   fi
 fi
@@ -81,7 +93,7 @@ for knowledge_python_candidate in "${knowledge_python_candidates[@]}"; do
     continue
   fi
   knowledge_python_version="$(
-    rtk "$knowledge_python_resolved" -c \
+    rtk "$knowledge_python_resolved" -I -c \
       'import importlib.util, sys; required = ("yaml", "jsonschema") + (("tomli",) if sys.version_info < (3, 11) else ()); missing = [name for name in required if importlib.util.find_spec(name) is None]; sys.exit(1) if missing else print("{}.{}".format(sys.version_info[0], sys.version_info[1]))' \
       2>/dev/null || true
   )"
@@ -97,7 +109,8 @@ for knowledge_python_candidate in "${knowledge_python_candidates[@]}"; do
           2>/dev/null || true
       fi
     fi
-    exec rtk "$knowledge_python_resolved" "$@"
+    knowledge_selected_python="$knowledge_python_resolved"
+    knowledge_exec_runtime "$@"
   fi
 done
 

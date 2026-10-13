@@ -41,6 +41,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 47752ebe98d16c6e9c2adfa0b390f7794d61c172b3e4fe3bc06050627e505922
 ---
 
 # ADK与llm_agent信任边界及来源迭代审查候选

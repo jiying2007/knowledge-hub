@@ -350,6 +350,9 @@ def validate_journal(journal):
                 raise KnowledgeHubError("journal hash is invalid")
         if "exists_before" in write and type(write["exists_before"]) is not bool:
             raise KnowledgeHubError("journal exists_before must be boolean")
+        if write.get("before_sha256") is not None and write.get("after_sha256") is not None:
+            if "exists_before" not in write or write["exists_before"] != bool(write["before_sha256"]):
+                raise KnowledgeHubError("journal existence proof is missing or inconsistent")
     for key in ("applied_paths", "rollback_paths"):
         values = journal.get(key, [])
         if not isinstance(values, list) or any(not isinstance(v, str) or v not in paths for v in values):
@@ -388,7 +391,7 @@ def reconcile_writes(root, runtime_root, journal):
         else:
             state = "before" if actual == before else "after" if actual == after else "conflict"
         backup = runtime_root / "before" / relative
-        if state == "after" and write.get("exists_before") is True:
+        if state == "after" and before:
             if not backup.is_file() or file_sha256(backup) != before:
                 state = "backup-invalid"
         rows.append({"path":relative, "state":state, "actual_sha256":actual})

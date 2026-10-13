@@ -8,7 +8,6 @@ import hashlib
 import json
 import re
 
-from .activity import load_activity_config
 from .common import KnowledgeHubError, load_json, load_jsonl, route_rows, file_sha256, resolve_inside
 from .store import incomplete_transactions, WriteConflict
 
@@ -16,6 +15,7 @@ POLICY_PATH = "registry/provider-subject-policy.json"
 GRANTS_PATH = "registry/provider-grants.jsonl"
 OPERATIONS_PATH = "registry/provider-operations.jsonl"
 BINDINGS_PATH = "local/provider-bindings.json"
+PRINCIPAL_PATH = "local/provider-principal.json"
 WORKSPACES_PATH = "registry/provider-workspaces.json"
 SUBJECT_TYPES = {"project", "domain", "personal", "unassigned"}
 
@@ -55,10 +55,11 @@ def policy(root):
 
 
 def principal(root):
-    config = load_activity_config(root)
-    value = config.get("subject_id", "") if config.get("valid") else ""
-    if not value:
+    config = load_json(root / PRINCIPAL_PATH, {})
+    from .schemas import validate_instance
+    if validate_instance(root, "provider-principal-v1", config)["status"] != "pass" or config.get("enabled") is not True:
         raise KnowledgeHubError("PRINCIPAL_UNCONFIGURED")
+    value = config["principal_id"]
     subject({"type": "personal", "id": value})
     return value
 
@@ -128,7 +129,7 @@ def item_subject(item):
 
 
 def signatures(root):
-    paths = (POLICY_PATH, GRANTS_PATH, BINDINGS_PATH, WORKSPACES_PATH, OPERATIONS_PATH, "local/activity-report.json")
+    paths = (POLICY_PATH, GRANTS_PATH, BINDINGS_PATH, WORKSPACES_PATH, OPERATIONS_PATH, PRINCIPAL_PATH, "registry/provider-archive-policy.json")
     return {path: file_sha256(root / path) if (root / path).is_file() else "absent" for path in paths}
 
 

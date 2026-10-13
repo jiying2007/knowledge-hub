@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+from tools.codex_assets.knowledge_hub.remote_identity import parse_remote
 import re
 import shutil
 
@@ -274,7 +275,7 @@ def test_generator_accepts_an_additional_registry_project_without_core_code_chan
         {
             "repo_id": "scalable-project-31",
             "project_id": "scalable-project-31",
-            "remote_key": "example/scalable-project-31",
+            "remote_key": parse_remote("https://github.com/example/scalable-project-31.git"),
             "remote_kind": "github",
             "workspace_ref": "workspace://scalable-project-31",
             "groups": [],

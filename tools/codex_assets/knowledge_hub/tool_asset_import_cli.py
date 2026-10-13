@@ -195,7 +195,7 @@ def _repository_route(root: pathlib.Path, source_repo: str) -> Tuple[str, Dict[s
     for row in data.get("repositories", []):
         if not isinstance(row, dict) or row.get("status") != "registered":
             continue
-        identities = {str(row.get("repo_id", "")), str(row.get("remote_key", ""))}
+        identities = {str(row.get("repo_id", ""))}
         identities.update(str(value) for value in row.get("aliases", []) if isinstance(value, str))
         if source_repo in identities:
             matches.append(row)

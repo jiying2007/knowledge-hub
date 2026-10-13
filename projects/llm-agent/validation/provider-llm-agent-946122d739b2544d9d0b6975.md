@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK 8.0.1 文件IO安全迭代与来源到运行资产验证
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-946122d739b2544d9d0b6975
 title: ADK 8.0.1 文件IO安全迭代与来源到运行资产验证
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK 8.0.1 文件IO安全迭代与来源到运行资产验证
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 946122d739b2544d9d0b69759535ffe24325b0af05c3d31a98e2497133e7fa71
 ---
 
 # ADK 8.0.1 文件IO安全迭代与来源到运行资产验证

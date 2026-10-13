@@ -35,7 +35,10 @@
           "workspace_ref": {"type": "string", "minLength": 1},
           "repo_id": {"type": "string", "minLength": 1},
           "project_id": {"type": "string"},
-          "remote_key": {"type": "string", "minLength": 1},
+          "remote_key": {"type": "object", "required": ["provider_id", "repository_path"], "properties": {
+            "provider_id": {"type": "string", "pattern": "^(github\\.com|gitee\\.com|host-[a-f0-9]{64})$"},
+            "repository_path": {"type": "string", "minLength": 1, "maxLength": 256}
+          }, "additionalProperties": false},
           "path": {"type": "string", "minLength": 1},
           "present": {"const": true},
           "read_only_discovery": {"const": true},

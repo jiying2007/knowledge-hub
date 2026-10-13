@@ -284,7 +284,8 @@ def _restore_commands(restored, as_of) -> Dict[str, List[str]]:
         "search_smoke": ["bash", "tools/knowledge-search.sh", "ASAN", "--json", "--limit", "3", "--no-telemetry"],
         "context_smoke": [
             "bash",
-            "tools/knowledge-context.sh",
+            "tools/knowledge-provider.sh",
+            "context",
             "--cwd",
             str(restored),
             "--query",
@@ -292,7 +293,6 @@ def _restore_commands(restored, as_of) -> Dict[str, List[str]]:
             "--task-type",
             "general",
             "--json",
-            "--no-telemetry",
         ],
         "product_gate_smoke": [
             "bash",

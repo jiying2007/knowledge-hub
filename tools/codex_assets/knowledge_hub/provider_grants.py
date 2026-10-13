@@ -63,7 +63,33 @@ def issue_grant(root, args):
             raise KnowledgeHubError("DECLARATION_MISMATCH")
         extra = {"binding_path_sha256": planned["binding_path_sha256"]}
         widening = False
+    elif action == "archive":
+        import argparse
+        import json
+        from .provider_operations import archive
+        from .authorization import require_authorization
+        planned_args = argparse.Namespace(**vars(args))
+        planned_args.apply = False
+        planned_args.authorization_id = ""
+        planned = archive(root, planned_args)
+        target = subject(args.subject)
+        expected = planned.get("expected_hash") or planned.get("operation_id")
+        if not expected or target["id"] not in raw:
+            raise KnowledgeHubError("DECLARATION_MISMATCH")
+        widening = False
+        exact_scope = {"actor": actor, "action": "archive", "subject_ref": target,
+                       "expected_hash": expected, "visibility_change": False}
+        approval = require_authorization(root, args.authorization_id, ["automation-apply-with-review"], dt.date.today(), [])
+        try:
+            approved_scope = json.loads(approval["scope"])
+        except ValueError:
+            raise KnowledgeHubError("AUTHORIZATION_REQUIRED") from None
+        if approved_scope != exact_scope:
+            raise KnowledgeHubError("POLICY_DENIED")
+        extra = {}
     else:
+        if re.fullmatch(r"[a-f0-9]{64}", args.expected_content_sha256) is None:
+            raise KnowledgeHubError("CONTENT_HASH_REQUIRED")
         from .provider_subjects import route_subject, verify_item
         from .common import registry_items
         target = subject(args.subject)
@@ -71,17 +97,27 @@ def issue_grant(root, args):
             item = next((r for r in registry_items(root) if r["id"] == args.item_id), None)
             if not item or args.item_id not in raw or target["id"] not in raw:
                 raise KnowledgeHubError("DECLARATION_MISMATCH")
+            from .provider_operations import operations, safe_text
+            from .common import resolve_inside
+            recorded = [row for row in operations(root) if row["item_id"] == args.item_id]
+            if not recorded:
+                raise KnowledgeHubError("CONTENT_PROOF_REQUIRED")
+            verify_item(root, item, recorded[-1]["content_sha256"])
             verify_item(root, item, args.expected_content_sha256)
+            safe_text(read_utf8_bounded(resolve_inside(root, item["path"]), 131072, "assignment content"))
             route = route_subject(root, target, item["kind"])
             widening = route["visibility"] != item["visibility"]
-        expected = digest({"action": "assign", "item_id": args.item_id, "subject_ref": target,
-                           "expected_content_sha256": args.expected_content_sha256})
+        from .provider_operations import assignment_request
+        expected, source_subject, planned_widening = assignment_request(root, args, item["kind"])
+        if source_subject != item.get("subject_ref") or planned_widening != widening:
+            raise KnowledgeHubError("ROUTE_CONFLICT")
         # Intake proves request provenance, not approval of an arbitrary transfer.
         # Assignment also requires an exact reviewed host authorization scope.
         from .authorization import require_authorization
         import json
         approval = require_authorization(root, args.authorization_id, ["automation-apply-with-review"], dt.date.today(), [])
-        exact_scope = {"actor": actor, "action": "assign", "subject_ref": target, "item_id": args.item_id,
+        exact_scope = {"actor": actor, "action": "assign", "from_subject": source_subject,
+                       "subject_ref": target, "item_id": args.item_id,
                        "expected_hash": expected, "visibility_change": widening}
         try:
             approved_scope = json.loads(approval["scope"])

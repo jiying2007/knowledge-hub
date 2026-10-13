@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK临时Git fixture加固收口
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-232c6f020366e6dfa82fba4f
 title: ADK临时Git fixture加固收口
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK临时Git fixture加固收口
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 232c6f020366e6dfa82fba4f3cf395f000f554a2420b602e8a8be9eb133f6f35
 ---
 
 # ADK临时Git fixture加固收口

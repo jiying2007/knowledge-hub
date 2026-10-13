@@ -84,7 +84,7 @@ def _source_candidates(
                 details={
                     "repo_id": repo_id,
                     "remote_kind": str(repo.get("remote_kind", "")),
-                    "remote_key": str(repo.get("remote_key", "")),
+                    "remote_key": repo.get("remote_key"),
                     "workspace_ref": str(repo.get("workspace_ref", "")),
                     "lifecycle": str(repo.get("lifecycle", "")),
                 },
@@ -164,7 +164,7 @@ def _provider_queries(
 ) -> List[Dict[str, Any]]:
     queries = []
     for repo in repos:
-        remote_key = str(repo.get("remote_key", ""))
+        remote_key = repo.get("remote_key", {})
         if not remote_key:
             continue
         remote_kind = str(repo.get("remote_kind", ""))
@@ -172,7 +172,7 @@ def _provider_queries(
             {
                 "provider": remote_kind or "repository-provider",
                 "operation": _operation(field, remote_kind),
-                "target": remote_key,
+                "target": remote_key["repository_path"],
                 "executed": False,
                 "read_only": True,
                 "transport_owned_by_provider": True,

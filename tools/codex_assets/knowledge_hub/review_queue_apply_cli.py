@@ -8,6 +8,7 @@ import sys
 
 from .common import bytes_sha256, file_sha256, load_markdown, render_markdown
 from .model import merge_frontmatter_mirror
+from .provider_operations import stage_metadata_update
 from .store import RepositoryTransaction, snapshot_inputs
 
 root = pathlib.Path(sys.argv[1]).resolve()
@@ -379,6 +380,8 @@ updated_by_id = {}
 for update in planned_updates:
     form = next(form for line_no, form in forms if line_no == update["line_no"])
     item = dict(updated_by_id.get(update["id"], items_by_id[update["id"]]))
+    # Keep the authorization ledger; the current real-human record supersedes AI review.
+    item.pop("ai_delegated_content_review", None)
     item["human_reviewed_by"] = str(form.get("human_reviewed_by", "")).strip()
     item["human_reviewed_at"] = str(form.get("human_reviewed_at", "")).strip()
     item["review_basis"] = str(form.get("review_basis", "")).strip()
@@ -412,6 +415,8 @@ for item in items:
 encoded = "\n".join(json.dumps(item, ensure_ascii=False, separators=(",", ":")) for item in rewritten) + "\n"
 
 transaction = RepositoryTransaction(root, expected_inputs=inputs)
+for item_id, item in updated_by_id.items():
+    stage_metadata_update(root, transaction, items_by_id[item_id], item, rendered_by_path[item["path"]])
 for relative_path, rendered in rendered_by_path.items():
     target_path = root / relative_path
     transaction.add_text(

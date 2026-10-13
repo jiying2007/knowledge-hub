@@ -98,3 +98,42 @@ def test_aggregate_without_current_project_keeps_legacy_member_check():
     assert result["status"] == "pending"
     assert "member_project_ids" in result["missing_fields"]
 
+
+def test_aggregate_diagnostics_distinguish_empty_list_from_pending_members():
+    empty = evaluate_evidence_contract(_ready_aggregate_contract())
+    pending = evaluate_evidence_contract(
+        _ready_aggregate_contract("mcu", "ready", "pending", "unknown"),
+        ready_member_ids=["ready", "unrelated"], current_project_id="mcu",
+    )
+    assert empty["member_diagnostics"]["status"] == "missing-members"
+    assert empty["member_diagnostics"]["registered_member_ids"] == []
+    assert pending["status"] == "pending"
+    assert "member_project_ids" in pending["missing_fields"]
+    assert pending["member_diagnostics"] == {
+        "status": "member-evidence-pending",
+        "registered_member_ids": ["mcu", "pending", "ready", "unknown"],
+        "dependency_member_ids": ["pending", "ready", "unknown"],
+        "ready_member_ids": ["ready"],
+        "pending_member_ids": ["pending", "unknown"],
+    }
+
+
+def test_member_readiness_does_not_override_pending_declaration_or_owner():
+    contract = _ready_aggregate_contract("mcu", "ready")
+    contract["status"] = "pending"
+    result = evaluate_evidence_contract(contract, ["ready"], "mcu")
+    assert result["member_diagnostics"]["status"] == "members-ready"
+    assert result["status"] == "pending"
+    contract["status"] = "ready"
+    contract["owner_ref"] = None
+    result = evaluate_evidence_contract(contract, ["ready"], "mcu")
+    assert result["member_diagnostics"]["status"] == "members-ready"
+    assert result["status"] == "pending"
+    assert "owner_ref" in result["missing_fields"]
+
+
+def test_self_only_diagnostics_have_no_pending_dependency():
+    result = evaluate_evidence_contract(_ready_aggregate_contract("self"), [], "self")
+    assert result["status"] == "ready"
+    assert result["member_diagnostics"]["dependency_member_ids"] == []
+    assert result["member_diagnostics"]["pending_member_ids"] == []

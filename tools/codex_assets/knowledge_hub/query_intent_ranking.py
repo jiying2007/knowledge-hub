@@ -2,6 +2,7 @@
 
 import re
 from .search_core import _domain_matches
+from .query_language import normative_question
 
 
 def order_query_intent(candidates, plan, query):
@@ -19,7 +20,9 @@ def order_query_intent(candidates, plan, query):
         for row in chosen:
             row['why_selected'].append('comparison-layer-coverage')
         return chosen + [row for row in candidates if row not in chosen]
-    if plan.governance and normative:
+    if plan.governance and normative and normative_question(query):
+        # A governance field can be part of a location question. Only an
+        # explicit normative question may prefer standards over architecture.
         normative.sort(key=lambda row:row.get('kind') != 'standard')
         for row in normative:
             row['why_selected'].append('normative-query-authority')

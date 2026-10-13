@@ -59,14 +59,15 @@ def _repository_identity(hub_root: pathlib.Path, repo: pathlib.Path, requested: 
 
 
 def _row_identities(row: Mapping[str, Any]) -> set[str]:
-    values = {str(row.get("repo_id", "")), str(row.get("remote_key", ""))}
+    values = {str(row.get("repo_id", ""))}
     values.update(str(value) for value in row.get("aliases", []) if isinstance(value, str))
     return {value for value in values if value}
 
 
 def _remote_matches(remote_url: str, row: Mapping[str, Any]) -> bool:
-    normalized = remote_url.rstrip("/").removesuffix(".git").replace(":", "/")
-    return any(normalized.endswith(value.rstrip("/").removesuffix(".git")) for value in _row_identities(row))
+    from .remote_identity import parse_remote, identity_key
+    actual = identity_key(parse_remote(remote_url))
+    return bool(actual and actual == identity_key(row.get("remote_key")))
 
 
 def _is_candidate_path(relative: str) -> bool:

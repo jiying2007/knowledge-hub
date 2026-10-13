@@ -1,4 +1,10 @@
 ---
+aliases:
+- 资格工具修复与已有签名证据接入
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-af374aa724c6b6f6701a408f
 title: 资格工具修复与已有签名证据接入
 kind: validation
@@ -43,12 +49,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- 资格工具修复与已有签名证据接入
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: af374aa724c6b6f6701a408f61a9609e2eeddcadde771ee671cf35343b45dac2
 ---
 
 # 资格工具修复与已有证据接入验证

@@ -68,13 +68,13 @@ def reconcile_plan(root, policy_root, digest):
     receipt = plan['provider_plan']
     command = ['bash', str(policy_root / 'scripts/knowledge-provider.sh')]
     if plan['operation'] == 'archive':
-        command += ['archive', '--project', plan['project'], '--reconcile-operation', receipt['operation_id'],
+        command += ['reconcile', '--operation-id', receipt['operation_id'],
                     '--expected-content-sha256', receipt['content_sha256'], '--json']
     elif plan['operation'] == 'activity-capture':
         command += ['activity-capture', '--reconcile-receipt', receipt['receipt_id'], '--receipt-date', plan['receipt_date'],
                     '--expected-content-sha256', receipt['sha256'], '--json']
     else:
         raise KnowledgeHubError('operation type is unsupported')
-    result = parse_json_output(run_rtk(root, command, timeout=60))
+    result = parse_json_output(run_rtk(root, command, timeout=60, extra_env={'KNOWLEDGE_HUB_ROOT':str(root)}))
     return {'status':result['status'], 'plan_sha256':digest, 'read_only':True, 'reconciliation':result,
             'automatic_retry_performed':False}

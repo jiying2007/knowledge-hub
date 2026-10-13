@@ -31,7 +31,7 @@
     ]
   },
   "read_surfaces": {
-    "context": "tools/knowledge-context.sh",
+    "context": "tools/knowledge-provider.sh context",
     "evidence_pack": "tools/knowledge-evidence-pack.sh",
     "action_check": "tools/knowledge-action-check.sh"
   },

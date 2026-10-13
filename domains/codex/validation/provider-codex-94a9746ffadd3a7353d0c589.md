@@ -1,4 +1,8 @@
 ---
+aliases:
+- session-wrap 原始许可证恢复与运行验证
+related:
+- indexes/obsidian-home.md
 id: provider-codex-94a9746ffadd3a7353d0c589
 title: session-wrap 原始许可证恢复与运行验证
 kind: validation
@@ -42,10 +46,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- session-wrap 原始许可证恢复与运行验证
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: codex
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 94a9746ffadd3a7353d0c58983ea7c728239125a80ab33480c85b79eb783b06c
 ---
 
 # session-wrap 原始许可证恢复与运行验证

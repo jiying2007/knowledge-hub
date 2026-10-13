@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK 8.0.4 与 llm_agent 归档资源治理迭代
+related:
+- projects/llm-agent/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: provider-llm-agent-1e0955b8405e311ca5dc1a58
 title: ADK 8.0.4 与 llm_agent 归档资源治理迭代
 kind: validation
@@ -41,12 +47,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK 8.0.4 与 llm_agent 归档资源治理迭代
-related:
-- projects/llm-agent/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
+subject_ref: &id001
+  id: llm-agent
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 1e0955b8405e311ca5dc1a586bea8c90ac035563245248ff9ad0201de4605075
 ---
 
 # ADK 8.0.4 与 llm_agent 归档资源治理迭代

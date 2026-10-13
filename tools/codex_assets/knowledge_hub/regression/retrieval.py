@@ -291,254 +291,53 @@ def test_knowledge_search_invalid_filters():
         },
     )
 
+def _provider_context(query, *scopes, summary=False):
+    command = ["rtk", "bash", "tools/knowledge-provider.sh", "context", "--cwd", str(root),
+               "--query", query, "--context-budget", "small", "--limit", "3",
+               "--summary-json" if summary else "--json", *scopes]
+    result = run_cmd(root, command)
+    try:
+        payload = json.loads(result["stdout"])
+    except (ValueError, TypeError):
+        payload = {}
+    return result, payload
+
+
 def test_knowledge_context_budget_explainability():
-    result = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "PCR02 OTA 归档路径",
-        "--task-type",
-        "archive",
-        "--context-budget",
-        "small",
-        "--json",
-    ])
-    summary_result = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "PCR02 OTA 归档路径",
-        "--task-type",
-        "archive",
-        "--context-budget",
-        "small",
-        "--limit",
-        "3",
-        "--summary-json",
-        "--no-telemetry",
-    ])
-    parsed = {}
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception:
-        pass
-    context = parsed.get("context", {})
-    ranked_items = parsed.get("ranked_items", [])
-    first_item = ranked_items[0] if ranked_items else {}
-    canonical_paths = parsed.get("canonical_paths", {})
-    context_canonical_paths = context.get("canonical_paths", {})
-    search = parsed.get("search", {})
-    search_fallback = context.get("search_fallback", [])
-    summary = {}
-    try:
-        summary = json.loads(summary_result["stdout"])
-    except Exception:
-        pass
-    summary_bytes = len(summary_result["stdout"].strip().encode("utf-8"))
-    expect(
-        result["exit_code"] == 0
-        and parsed.get("schema_version") == 2
-        and parsed.get("context_budget") == "small"
-        and context.get("budget") == "small"
-        and context.get("effective_limit") == 3
-        and parsed.get("route", {}).get("project_id") == "pcr02-ssc305"
-        and canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"
-        and context_canonical_paths.get("archive") == "projects/pcr02-ssc305/archive"
-        and isinstance(context.get("current"), list)
-        and isinstance(context.get("risks"), list)
-        and len(search.get("results", [])) <= context.get("effective_limit", 0)
-        and (
-            search.get("count", 0) >= 1
-            or (
-                search.get("fallback_count", 0) >= 1
-                and any(row.get("fallback_term") == "ota" for row in search_fallback)
-            )
-        )
-        and first_item.get("why_selected")
-        and "工程归档和 Codex archive 只作 historical provenance，不作为新增入口。" in context.get("risks", [])
-        and summary_result["exit_code"] == 0
-        and summary.get("projection") == "agent-summary-v1"
-        and "ranked_items" not in summary
-        and "search" not in summary
-        and summary_bytes <= 4096
-        and summary.get("context_contract", {}).get("raw_evidence")
-        and summary.get("search_summary", {}).get("count", 0) <= 3,
-        "knowledge-context-budget-explainability",
-        "knowledge-context emits bounded full context and compact traceable agent summary",
-        {
-            "exit_code": result["exit_code"],
-            "context_budget": parsed.get("context_budget"),
-            "route": parsed.get("route", {}),
-            "canonical_paths": canonical_paths,
-            "context": context,
-            "search": search,
-            "first_item": first_item,
-            "summary_bytes": summary_bytes,
-            "summary": summary,
-            "stdout_sample": result["stdout"][:1200],
-            "summary_stdout_sample": summary_result["stdout"][:1200],
-            "stderr_sample": result["stderr"][:500],
-            "summary_stderr_sample": summary_result["stderr"][:500],
-        },
-    )
+    result, payload = _provider_context("PCR02 OTA 归档路径", "--retrieval-project", "pcr02-ssc305", summary=True)
+    items = [item for group in payload.get("context", []) for item in group["items"]]
+    expect(result["exit_code"] == 0 and payload.get("schema_version") == "knowledge-provider.context/v4"
+           and payload.get("read_only") is True and 0 < len(items) <= 3
+           and len({item["id"] for item in items}) == len(items)
+           and len(result["stdout"].strip().encode("utf-8")) <= 4096
+           and all(item.get("path") and item.get("why_selected") for item in items),
+           "knowledge-context-budget-explainability", "Provider v4 returns bounded, deduplicated, traceable retrieval",
+           {"exit_code": result["exit_code"], "context": payload.get("context"), "stderr": result["stderr"][:500]})
+
 
 def test_knowledge_context_self_route():
-    result = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "增强 Knowledge Hub 自举体验",
-        "--task-type",
-        "general",
-        "--context-budget",
-        "small",
-        "--json",
-    ])
-    parsed = {}
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception:
-        pass
-    route = parsed.get("route", {})
-    repo_route = parsed.get("repo_route", {})
-    context = parsed.get("context", {})
-    domain_refs = set(route.get("domain_refs", []))
-    current_ids = {row.get("id", "") for row in context.get("current", [])}
-    expect(
-        result["exit_code"] == 0
-        and repo_route.get("repo_id") == "knowledge-hub"
-        and route.get("project_id") == "knowledge-hub"
-        and parsed.get("workspace_ref") == "~/knowledge-hub"
-        and {"root", "governance"}.issubset(domain_refs)
-        and parsed.get("canonical_paths", {}).get("hub_entry") == "README.md"
-        and (
-            "knowledge-hub-root" in current_ids
-            or any(str(row.get("domain", "")) == "governance" for row in context.get("current", []))
-        ),
-        "knowledge-context-self-route",
-        "knowledge-context resolves Knowledge Hub cwd to self route without losing root/governance context",
-        {
-            "exit_code": result["exit_code"],
-            "repo_route": repo_route,
-            "route": route,
-            "route_selection": parsed.get("route_selection", {}),
-            "context": context,
-            "stdout_sample": result["stdout"][:1200],
-            "stderr_sample": result["stderr"][:500],
-        },
-    )
+    result, payload = _provider_context("增强 Knowledge Hub 自举体验", "--execution-project", "knowledge-hub")
+    expect(result["exit_code"] == 0 and payload.get("execution_subject") == {"type": "project", "id": "knowledge-hub"}
+           and payload.get("retrieval_scope") == [{"type": "project", "id": "knowledge-hub"}],
+           "knowledge-context-self-route", "Explicit Hub execution subject resolves independently of ranking",
+           {"exit_code": result["exit_code"], "execution_subject": payload.get("execution_subject")})
+
 
 def test_knowledge_context_control_plane_query_override():
-    pcr02 = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "PCR02 OTA 归档路径",
-        "--task-type",
-        "archive",
-        "--context-budget",
-        "small",
-        "--json",
-    ])
-    llm_agent = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "agent-dev-kit lock gitlink 检查",
-        "--task-type",
-        "validation",
-        "--context-budget",
-        "small",
-        "--json",
-    ])
-    parsed_pcr02 = {}
-    parsed_llm = {}
-    try:
-        parsed_pcr02 = json.loads(pcr02["stdout"])
-    except Exception:
-        pass
-    try:
-        parsed_llm = json.loads(llm_agent["stdout"])
-    except Exception:
-        pass
-    expect(
-        pcr02["exit_code"] == 0
-        and llm_agent["exit_code"] == 0
-        and parsed_pcr02.get("repo_route", {}).get("repo_id") == "knowledge-hub"
-        and parsed_llm.get("repo_route", {}).get("repo_id") == "knowledge-hub"
-        and parsed_pcr02.get("route", {}).get("project_id") == "pcr02-ssc305"
-        and parsed_llm.get("route", {}).get("project_id") == "agent-dev-kit"
-        and parsed_pcr02.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub"
-        and parsed_llm.get("route_selection", {}).get("cwd_route_project_id") == "knowledge-hub",
-        "knowledge-context-control-plane-query-override",
-        "Knowledge Hub control-plane cwd preserves query alias routing for project targets",
-        {
-            "pcr02_exit_code": pcr02["exit_code"],
-            "llm_agent_exit_code": llm_agent["exit_code"],
-            "pcr02_route": parsed_pcr02.get("route", {}),
-            "llm_agent_route": parsed_llm.get("route", {}),
-            "pcr02_selection": parsed_pcr02.get("route_selection", {}),
-            "llm_agent_selection": parsed_llm.get("route_selection", {}),
-            "pcr02_stdout_sample": pcr02["stdout"][:800],
-            "llm_agent_stdout_sample": llm_agent["stdout"][:800],
-        },
-    )
+    result, payload = _provider_context("PCR02 OTA 归档路径", "--execution-project", "knowledge-hub",
+                                        "--retrieval-project", "pcr02-ssc305")
+    expect(result["exit_code"] == 0 and payload.get("execution_subject") == {"type": "project", "id": "knowledge-hub"}
+           and payload.get("retrieval_scope") == [{"type": "project", "id": "pcr02-ssc305"}],
+           "knowledge-context-control-plane-query-override",
+           "Cross-project retrieval keeps explicit execution and archival identity unchanged",
+           {"exit_code": result["exit_code"], "execution_subject": payload.get("execution_subject"),
+            "retrieval_scope": payload.get("retrieval_scope")})
+
 
 def test_knowledge_context_control_plane_alias_ambiguity():
-    result = run_cmd(root, [
-        "rtk",
-        "bash",
-        "tools/knowledge-context.sh",
-        "--cwd",
-        str(root),
-        "--query",
-        "Knowledge Hub PCR02 OTA 归档路径",
-        "--task-type",
-        "archive",
-        "--context-budget",
-        "small",
-        "--json",
-    ])
-    parsed = {}
-    try:
-        parsed = json.loads(result["stdout"])
-    except Exception:
-        pass
-    route = parsed.get("route", {})
-    route_selection = parsed.get("route_selection", {})
-    matched_by = route.get("matched_by", [])
-    expect(
-        result["exit_code"] == 0
-        and parsed.get("repo_route", {}).get("repo_id") == "knowledge-hub"
-        and route.get("project_id") == "pcr02-ssc305"
-        and route_selection.get("cwd_route_project_id") == "knowledge-hub"
-        and route_selection.get("query_route_project_id") == "pcr02-ssc305"
-        and route_selection.get("selected_project_id") == "pcr02-ssc305"
-        and route_selection.get("query_score", 0) > 0
-        and any(row.get("type") == "control-plane-query-aware" for row in matched_by),
-        "knowledge-context-control-plane-alias-ambiguity",
-        "Knowledge Hub control-plane query with mixed Hub and project aliases selects target project",
-        {
-            "exit_code": result["exit_code"],
-            "route": route,
-            "route_selection": route_selection,
-            "matched_by": matched_by,
-            "stdout_sample": result["stdout"][:1000],
-            "stderr_sample": result["stderr"][:500],
-        },
-    )
+    result, payload = _provider_context("Knowledge Hub PCR02 OTA 归档路径", "--execution-project", "knowledge-hub")
+    expect(result["exit_code"] == 0 and payload.get("execution_subject") == {"type": "project", "id": "knowledge-hub"}
+           and payload.get("retrieval_scope") == [{"type": "project", "id": "knowledge-hub"}],
+           "knowledge-context-control-plane-alias-ambiguity",
+           "Mixed query aliases cannot redirect the execution subject or default retrieval scope",
+           {"exit_code": result["exit_code"], "execution_subject": payload.get("execution_subject")})

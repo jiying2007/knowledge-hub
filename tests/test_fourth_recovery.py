@@ -25,7 +25,7 @@ def _provider_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(provider, 'run_rtk', transport)
     def execute():
         return provider.execute_provider(tmp_path, tmp_path, 'fixture-thread', 'archive',
-                                         source, project='fixture', apply=True)
+                                         source, subject='project:fixture', apply=True)
     return execute, planned
 
 
@@ -46,7 +46,7 @@ def test_same_plan_concurrent_execution_invokes_apply_once(tmp_path, monkeypatch
             with pytest.raises(KnowledgeHubError, match='already in progress'):
                 execute()
             assert provider.main(['--root', str(tmp_path), '--policy-root', str(tmp_path),
-                                  '--source', str(tmp_path / 'source.md'), '--project', 'fixture', '--apply']) == 3
+                                  '--source', str(tmp_path / 'source.md'), '--subject', 'project:fixture', '--apply']) == 3
             competitor = json.loads(capsys.readouterr().out)
             assert competitor['status'] == 'blocked' and competitor['applied'] is False
         finally:

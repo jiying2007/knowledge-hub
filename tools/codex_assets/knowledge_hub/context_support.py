@@ -1,38 +1,16 @@
-"""Routing, receipt, and summary helpers for Knowledge Hub context assembly."""
+"""Shared routing and ranking algorithms for Knowledge Hub retrieval."""
 
 from __future__ import annotations
 
-import hashlib
-import json
-import os
 import pathlib
 import re
-import urllib.parse
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
-from .common import ensure_private_directory, ensure_private_file, file_sha256, source_id
+from .common import source_id
 
 
 TASK_TYPES = {"debug", "archive", "release", "decision", "runbook", "source", "validation", "session", "general"}
 BUDGET_LIMITS = {"small": 3, "normal": 8, "deep": 16}
-SUMMARY_JSON_MAX_BYTES = 2048
-SUMMARY_JSON_MAX_ITEMS = 3
-CONTEXT_RECEIPT_SCHEMA_VERSION = 1
-CONTEXT_RECEIPT_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
-CONTEXT_RECEIPT_REGISTRY_PATHS = (
-    "registry/items.jsonl",
-    "registry/sources.json",
-    "registry/projects.json",
-    "registry/repositories.json",
-    "registry/project-groups.json",
-    "registry/project-routes.json",
-    "local/workspaces.json",
-    "local/provider-bindings.json",
-    "registry/provider-workspaces.json",
-    "registry/provider-subject-policy.json",
-    "registry/provider-grants.jsonl",
-    "local/activity-report.json",
-)
 TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
     "debug": {"debug-record": 10, "runbook": 5, "validation": 3, "project-archive": 2},
     "archive": {"project-archive": 10, "codex-session": 7, "audit": 4, "debug-record": 3},
@@ -47,19 +25,8 @@ TASK_KIND_WEIGHTS: Dict[str, Dict[str, int]] = {
 
 
 def normalize_remote_key(value: Any) -> str:
-    text = str(value or "").strip()
-    if not text:
-        return ""
-    if re.match(r"^[^/@:]+@[^/:]+:.+", text):
-        text = text.split(":", 1)[1]
-    else:
-        parsed = urllib.parse.urlparse(text)
-        if parsed.scheme and parsed.path:
-            text = parsed.path
-    text = text.strip().strip("/")
-    if text.endswith(".git"):
-        text = text[:-4]
-    return text.lower()
+    from .remote_identity import identity_key
+    return identity_key(value)
 
 
 def _safe_resolve(value: str) -> pathlib.Path:
@@ -166,13 +133,15 @@ def remote_urls_from_config(config_path: Optional[pathlib.Path]) -> List[Dict[st
         if section:
             current_remote = section.group(1)
             continue
-        if line.startswith("["):
+        if line.lstrip().startswith("["):
             current_remote = ""
             continue
         match = re.match(r"\s*url\s*=\s*(.+?)\s*$", line)
         if match and current_remote:
+            from .remote_identity import parse_remote
+            identity = parse_remote(match.group(1))
             rows.append(
-                {"remote": current_remote, "url": match.group(1), "remote_key": normalize_remote_key(match.group(1))}
+                {"remote": current_remote, "url": match.group(1), "remote_key": identity}
             )
     return sorted(rows, key=lambda row: (0 if row["remote"] == "origin" else 1, row["remote"]))
 
@@ -500,233 +469,6 @@ def _public_item(score: int, item: Mapping[str, Any], reasons: Sequence[str]) ->
         "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
         "why_selected": list(reasons),
     }
-
-
-def _compact_mapping(value: Any, fields: Sequence[str]) -> Optional[Dict[str, Any]]:
-    if not isinstance(value, Mapping):
-        return None
-    compact: Dict[str, Any] = {}
-    for field in fields:
-        candidate = value.get(field)
-        if candidate is None or candidate == "" or candidate == [] or candidate == {}:
-            continue
-        compact[field] = candidate
-    return compact
-
-
-def _compact_context_item(row: Mapping[str, Any]) -> Dict[str, Any]:
-    compact = {
-        "id": row.get("id") or row.get("item_id", ""),
-        "title": row.get("title", ""),
-        "kind": row.get("kind", ""),
-        "status": row.get("status", ""),
-        "path": row.get("path", ""),
-    }
-    source = row.get("source_id")
-    if source:
-        compact["source_id"] = source
-    reasons = [str(reason) for reason in row.get("why_selected", []) if str(reason)][:3]
-    if reasons:
-        compact["why_selected"] = reasons
-    return compact
-
-
-def _summary_json_size(summary: Mapping[str, Any]) -> int:
-    return len(
-        json.dumps(summary, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    )
-
-
-def _path_signature(path: pathlib.Path) -> str:
-    return file_sha256(path) if path.is_file() else "absent"
-
-
-def context_receipt_path(root: pathlib.Path, key: str) -> pathlib.Path:
-    if not CONTEXT_RECEIPT_KEY_PATTERN.fullmatch(key):
-        raise ValueError("receipt key must match [A-Za-z0-9][A-Za-z0-9._-]{0,63}")
-    return root / ".cache/knowledge-hub/context-receipts" / "{}.json".format(key)
-
-
-def context_receipt_request(
-    root: pathlib.Path,
-    cwd: str,
-    query: str,
-    task_type: str,
-    limit: int,
-    context_budget: str,
-    project_hint: str,
-) -> Dict[str, Any]:
-    git_config, _ = find_git_config(cwd)
-    return {
-        "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
-        "cwd": str(_safe_resolve(cwd)),
-        "task_type": task_type,
-        "limit": limit,
-        "context_budget": context_budget,
-        "project_hint": project_hint,
-        "workspace_git_head": workspace_git_head(cwd, git_config),
-        "registry_signatures": {
-            relative: _path_signature(root / relative)
-            for relative in CONTEXT_RECEIPT_REGISTRY_PATHS
-        },
-    }
-
-
-def load_context_receipt(
-    root: pathlib.Path, key: str, request: Mapping[str, Any]
-) -> Tuple[Optional[Dict[str, Any]], str]:
-    path = context_receipt_path(root, key)
-    if not path.is_file():
-        return None, "missing"
-    try:
-        receipt = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None, "invalid"
-    if receipt.get("schema_version") != CONTEXT_RECEIPT_SCHEMA_VERSION:
-        return None, "schema-mismatch"
-    if receipt.get("request") != dict(request):
-        return None, "request-signature-changed"
-    evidence = receipt.get("evidence_signatures")
-    if not isinstance(evidence, dict):
-        return None, "evidence-signatures-missing"
-    for relative, expected in evidence.items():
-        target = (root / str(relative)).resolve()
-        try:
-            target.relative_to(root.resolve())
-        except ValueError:
-            return None, "unsafe-evidence-path"
-        if _path_signature(target) != expected:
-            return None, "selected-evidence-changed"
-    summary = receipt.get("summary")
-    if not isinstance(summary, dict):
-        return None, "summary-missing"
-    return dict(summary), "hit"
-
-
-def write_context_receipt(
-    root: pathlib.Path,
-    key: str,
-    request: Mapping[str, Any],
-    summary: Mapping[str, Any],
-) -> pathlib.Path:
-    path = context_receipt_path(root, key)
-    raw_paths = ((summary.get("context_contract") or {}).get("raw_evidence") or [])
-    evidence_signatures: Dict[str, str] = {}
-    for value in raw_paths:
-        relative = str(value)
-        target = (root / relative).resolve()
-        try:
-            target.relative_to(root.resolve())
-        except ValueError:
-            continue
-        evidence_signatures[relative] = _path_signature(target)
-    payload = {
-        "schema_version": CONTEXT_RECEIPT_SCHEMA_VERSION,
-        "key": key,
-        "request": dict(request),
-        "evidence_signatures": evidence_signatures,
-        "summary": dict(summary),
-        "raw_query_stored": False,
-    }
-    ensure_private_directory(path.parent)
-    temporary = path.with_name(".{}.{}.tmp".format(path.name, os.getpid()))
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    ensure_private_file(temporary)
-    os.replace(str(temporary), str(path))
-    ensure_private_file(path)
-    return path
-
-
-def attach_context_receipt(
-    summary: Dict[str, Any], key: str, reused: bool, reason: str
-) -> Dict[str, Any]:
-    summary["context_receipt"] = {
-        "key": key,
-        "reused": reused,
-        "reason": reason,
-        "raw_query_stored": False,
-    }
-    return _fit_summary_budget(summary)
-
-
-def _sync_summary_raw_evidence(summary: Dict[str, Any]) -> None:
-    context = summary.get("context", {})
-    contract = summary.get("context_contract", {})
-    paths: List[str] = []
-    for section in ("current", "recent", "related", "search_fallback"):
-        for row in context.get(section, []):
-            path = str(row.get("path", ""))
-            if path and path not in paths:
-                paths.append(path)
-    contract["raw_evidence"] = paths
-
-
-def _fit_summary_budget(summary: Dict[str, Any]) -> Dict[str, Any]:
-    """Keep the L1 projection valid and traceable within its byte contract."""
-    if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
-        return summary
-    context = summary["context"]
-    sections = ("current", "recent", "related", "search_fallback")
-
-    for section in reversed(sections):
-        for row in reversed(context.get(section, [])):
-            reasons = row.get("why_selected", [])
-            if len(reasons) > 1:
-                row["why_selected"] = reasons[:1]
-    if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
-        return summary
-
-    risks = context.get("risks", [])
-    while len(risks) > 2 and _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
-        risks.pop(-2)
-
-    while _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
-        row_count = sum(len(context.get(section, [])) for section in sections)
-        if row_count <= 1:
-            break
-        removed = False
-        for section in reversed(sections):
-            rows = context.get(section, [])
-            if rows:
-                rows.pop()
-                removed = True
-                break
-        if not removed:
-            break
-        _sync_summary_raw_evidence(summary)
-
-    optional_paths = (
-        (summary.get("search_summary", {}).get("search_trace", {}), "excluded_by_filters"),
-        (summary.get("search_summary", {}).get("search_trace", {}), "retry_queries"),
-        (summary.get("search_summary", {}), "latency_ms"),
-        (summary, "latency_ms"),
-        (summary.get("candidate_recommendation", {}), "reason_zh"),
-        (summary.get("telemetry", {}), "error_code"),
-    )
-    for mapping, field in optional_paths:
-        if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
-            break
-        mapping.pop(field, None)
-
-    for section in reversed(sections):
-        for row in reversed(context.get(section, [])):
-            if _summary_json_size(summary) <= SUMMARY_JSON_MAX_BYTES:
-                break
-            row.pop("title", None)
-            row.pop("why_selected", None)
-
-    if _summary_json_size(summary) > SUMMARY_JSON_MAX_BYTES:
-        context["risks"] = []
-        summary.get("route_selection", {}).pop("candidates", None)
-        repo_route = summary.get("repo_route")
-        if isinstance(repo_route, dict):
-            repo_route.pop("groups", None)
-            repo_route.pop("lifecycle", None)
-        route = summary.get("route")
-        if isinstance(route, dict):
-            route.pop("name", None)
-
-    return summary
 
 
 def _current_exclusion_reason(row: Mapping[str, Any]) -> str:

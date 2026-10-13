@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 第七轮建议落地验证
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-0edf1f5613bc36c0adda6305
 title: Knowledge Hub 第七轮建议落地验证
 kind: validation
@@ -41,10 +45,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 第七轮建议落地验证
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 0edf1f5613bc36c0adda63059eb4b1ed215c0d7169f7b6114b48ecb9ec3be1a6
 ---
 
 # Knowledge Hub 第七轮建议落地验证

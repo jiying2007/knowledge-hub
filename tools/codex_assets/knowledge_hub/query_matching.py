@@ -20,7 +20,7 @@ class ConceptMatcher:
                 for variant in _term_variants(term))
 
     def __call__(self, term: str, text: str) -> bool:
-        return any(variant in text if pattern is None else pattern.search(text) is not None
+        return any(variant in text and (pattern is None or pattern.search(text) is not None)
                    for variant, pattern in self.patterns[term])
 
 

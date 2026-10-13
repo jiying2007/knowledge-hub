@@ -41,7 +41,15 @@ ignore = ["E501"]
 python_version = "3.10"
 files = [
     "tools/codex_assets/knowledge_hub/store.py",
-    "tools/codex_assets/knowledge_hub/provider_archive.py",
+    "tools/codex_assets/knowledge_hub/provider_operations.py",
+    "tools/codex_assets/knowledge_hub/provider_policy.py",
+    "tools/codex_assets/knowledge_hub/provider_cli.py",
+    "tools/codex_assets/knowledge_hub/provider_context.py",
+    "tools/codex_assets/knowledge_hub/provider_subjects.py",
+    "tools/codex_assets/knowledge_hub/provider_grants.py",
+    "tools/codex_assets/knowledge_hub/provider_onboarding.py",
+    "tools/codex_assets/knowledge_hub/remote_identity.py",
+    "tools/codex_assets/knowledge_hub/governed_provider_cli.py",
     "tools/codex_assets/knowledge_hub/metrics_windows.py",
     "tools/codex_assets/knowledge_hub/review_batches.py",
     "tools/codex_assets/knowledge_hub/provider_capabilities.py",

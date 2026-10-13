@@ -30,6 +30,7 @@ def test_wrapper_ignores_colliding_tools_package(tmp_path):
     (collision / "__init__.py").write_text("", encoding="utf-8")
     env = dict(os.environ)
     env["PYTHONPATH"] = str(tmp_path)
+    env["KNOWLEDGE_PYTHON_RUNTIME"] = sys.executable
     result = subprocess.run(
         ["bash", str(ROOT / "tools/knowledge-search.sh"), "--help"],
         cwd=str(tmp_path),
@@ -104,6 +105,12 @@ def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
     fixture_selector = fixture_root / "tools/ci/python-runtime.sh"
     fixture_selector.parent.mkdir(parents=True)
     shutil.copy2(ROOT / "tools/ci/python-runtime.sh", fixture_selector)
+    (fixture_root / "tools/codex_assets").mkdir(parents=True)
+    shutil.copy2(ROOT / "tools/codex_assets/isolated_runtime.py", fixture_root / "tools/codex_assets/isolated_runtime.py")
+    shutil.copy2(ROOT / "tools/__init__.py", fixture_root / "tools/__init__.py")
+    fixture_module = fixture_root / "tools/codex_assets/knowledge_hub"
+    fixture_module.mkdir(parents=True)
+    (fixture_module / "search_cli.py").write_text('print("fixture help")\n')
     (fixture_root / "requirements-runtime.lock").write_text(
         "fixture lock\n",
         encoding="utf-8",
@@ -167,3 +174,30 @@ def test_runtime_selector_reuses_validated_cache_for_public_modules(tmp_path):
 
     assert second.returncode == 0, second.stderr
     assert trace.read_text(encoding="utf-8").splitlines() == ["call"]
+
+
+def test_isolated_runtime_never_imports_root_shadow_or_stale_bytecode(tmp_path):
+    fixture = tmp_path / "repo"
+    runtime = fixture / "tools/codex_assets/isolated_runtime.py"
+    runtime.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / "tools/codex_assets/isolated_runtime.py", runtime)
+    (fixture / "tools/__init__.py").write_text("")
+    (fixture / "tools/probe.py").write_text(
+        'import json, sys; print(json.dumps({"isolated": sys.flags.isolated}))\n')
+    marker = tmp_path / "executed"
+    malicious = f'from pathlib import Path; Path({str(marker)!r}).write_text("unapproved")\n'
+    (fixture / "json.py").write_text(malicious)
+    (fixture / "sitecustomize.py").write_text(malicious)
+    import py_compile
+    source = fixture / "tools/probe.py"
+    approved = source.read_text()
+    source.write_text(malicious)
+    py_compile.compile(str(source), doraise=True)
+    source.write_text(approved)
+    result = subprocess.run(
+        [sys.executable, "-I", str(runtime), str(fixture), "tools.probe"],
+        cwd=fixture, env=dict(os.environ, PYTHONPATH=str(fixture)),
+        capture_output=True, text=True, timeout=20, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == '{"isolated": 1}'
+    assert not marker.exists()

@@ -1,4 +1,8 @@
 ---
+aliases:
+- Provider 候选归档与 Runtime intake 自动化验证
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-a8edf99197b5ebb7b44dca52
 title: Provider 候选归档与 Runtime intake 自动化验证
 kind: validation
@@ -42,10 +46,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Provider 候选归档与 Runtime intake 自动化验证
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: a8edf99197b5ebb7b44dca5227898d0ca297448a5f3b66afe154d14a54b898c2
 ---
 
 # Provider 候选归档与 Runtime intake 自动化验证

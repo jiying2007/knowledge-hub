@@ -519,6 +519,8 @@ def transition(
             "lifecycle gate state is inconsistent: authorization and review are required"
         )
     after = dict(before)
+    # A validated lifecycle decision supersedes the prior AI content record.
+    after.pop("ai_delegated_content_review", None)
     after["status"] = target_status
     after["updated_at"] = today.isoformat()
     attestation_mode = str(review["attestation_mode"])
@@ -571,6 +573,8 @@ def transition(
     }
     transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(str(before["path"]), rendered, expected_sha256=actual_item_sha)
+    from .provider_operations import stage_metadata_update
+    stage_metadata_update(root, transaction, before, after, rendered, authorization_id)
     next_items = _replace_item(items, after)
     _add_transaction_text(transaction, root, "registry/items.jsonl", encode_jsonl(next_items))
     for relative, content in core_updates.items():

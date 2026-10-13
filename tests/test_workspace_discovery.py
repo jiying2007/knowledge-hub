@@ -2,6 +2,7 @@ import json
 import pathlib
 
 from tools.codex_assets.knowledge_hub.workspace_discovery import discover_workspaces
+from tools.codex_assets.knowledge_hub.remote_identity import parse_remote, identity_key
 
 
 def _repository(path: pathlib.Path, remote: str, head: str = "a" * 40) -> None:
@@ -26,7 +27,7 @@ def _hub(path: pathlib.Path) -> pathlib.Path:
                     {
                         "repo_id": "sample",
                         "project_id": "sample",
-                        "remote_key": "team/sample",
+                        "remote_key": parse_remote("https://example.invalid/team/sample.git"),
                         "workspace_ref": "workspace://sample",
                         "lifecycle": "first-party",
                     }
@@ -70,7 +71,7 @@ def test_discovery_prefers_work_path_and_reports_alternates(tmp_path):
     assert row["path"] == str(working)
     assert row["alternate_count"] == 1
     assert row["alternate_paths"] == [str(release)]
-    assert payload["duplicate_remote_keys"] == ["team/sample"]
+    assert payload["duplicate_remote_keys"] == [identity_key(parse_remote("https://example.invalid/team/sample.git"))]
 
 
 def test_discovery_apply_is_transactional_and_idempotent(tmp_path):
@@ -85,4 +86,4 @@ def test_discovery_apply_is_transactional_and_idempotent(tmp_path):
     assert second["status"] == "no-change"
     local = json.loads((hub / "local/workspaces.json").read_text(encoding="utf-8"))
     assert local["tracked"] is False
-    assert local["workspaces"][0]["remote_key"] == "team/sample"
+    assert local["workspaces"][0]["remote_key"] == parse_remote("https://example.invalid/team/sample.git")

@@ -1,4 +1,8 @@
 ---
+aliases:
+- Knowledge Hub 写入一致性与验证证据协议优化
+related:
+- indexes/obsidian-home.md
 id: provider-knowledge-hub-efe8d8b137ac219d030fbc06
 title: Knowledge Hub 写入一致性与验证证据协议优化
 kind: validation
@@ -47,10 +51,12 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- Knowledge Hub 写入一致性与验证证据协议优化
-related:
-- indexes/obsidian-home.md
+subject_ref: &id001
+  id: knowledge-hub
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: efe8d8b137ac219d030fbc061d06f0214ad15842a56183ecf0733aa67643bac2
 ---
 
 # Knowledge Hub 写入一致性与验证证据协议优化

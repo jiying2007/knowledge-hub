@@ -24,7 +24,10 @@ def expected_repository_from_registry(root: pathlib.Path) -> str:
             and row.get("repo_id") == "knowledge-hub"
             and row.get("status") == "registered"
         ):
-            return str(row.get("remote_key", ""))
+            identity = row.get("remote_key")
+            if isinstance(identity, Mapping) and identity.get("provider_id") == "github.com":
+                return str(identity.get("repository_path", ""))
+            return ""
     return ""
 
 

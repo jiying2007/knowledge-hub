@@ -38,6 +38,18 @@ MAX_VOCABULARY = 200000
 MAX_TERMS = 64
 
 
+def concept_units(word: str, vocabulary: Mapping[str, int]) -> Tuple[str, ...]:
+    """Keep curated multilingual units visible inside compositional phrases."""
+    from .search_core import SYNONYMS
+    if word in SYNONYMS or vocabulary.get(word) == 0:
+        return (word,)
+    for offset in range(2, len(word) - 1):
+        prefix, suffix = word[:offset], word[offset:]
+        if prefix in vocabulary and suffix in SYNONYMS:
+            return prefix, suffix
+    return (word,)
+
+
 def project_routes(root: pathlib.Path) -> List[Mapping[str, Any]]:
     if not (root / 'registry/project-routes.json').exists():
         return []
@@ -73,7 +85,7 @@ class ConceptQuery:
     excluded_project_domains: Tuple[str, ...] = ()
 
 
-def clean_segments(value: str, vocabulary: Optional[Mapping[str, int]] = None) -> List[str]:
+def clean_segments(value: str, vocabulary: Optional[Mapping[str, int]] = None, *, question: bool = False) -> List[str]:
     # Removing a classifier preserves the ordinal, rather than inventing an alias.
     protected: Dict[str, str] = {}
     if vocabulary:
@@ -98,7 +110,12 @@ def clean_segments(value: str, vocabulary: Optional[Mapping[str, int]] = None) -
     # Negation is retained separately; lexical compounds such as 无线 and
     # 非易失性 are never stripped by a single-character stopword rule.
     value = re.sub(r'不(?=是|会|可|允许|暴露|代表|需要|替代|进入|提供|授权|写|修改|开放|使用)', ' ', value)
-    return [protected.get(part, part) for part in SCAFFOLD.sub(' ', value).split() if part]
+    parts = SCAFFOLD.sub(' ', value).split()
+    if question:
+        # Strip question actions after scaffold splitting, before restoring
+        # protected aliases. Corpus noun forms such as 浏览器 stay intact.
+        parts = [re.sub(r'^(?:查看|查阅|浏览)(?!器)(?=[\u4e00-\u9fff]|$)', '', part) for part in parts]
+    return [protected.get(part, part) for part in parts if part]
 
 
 def corpus_lexicon(items: Iterable[Mapping[str, Any]]) -> Tuple[Dict[str, int], int]:
@@ -258,6 +275,7 @@ def extract_concepts(query: str, vocabulary: Mapping[str, int], document_count: 
             global_anchors=tuple(name for name in limits.names if name not in positive),
             enforce_constraints=bool(limits.names or limits.excluded_aliases),
             excluded_project_anchors=limits.excluded_aliases, excluded_project_domains=limits.excluded_domains)
+    from .search_core import SYNONYMS
     terms, anchors, unknown = [], [], []
     for token in tokens:
         if not CJK.fullmatch(token):
@@ -269,17 +287,21 @@ def extract_concepts(query: str, vocabulary: Mapping[str, int], document_count: 
                     or (token.isupper() and len(token) >= 3)):
                 anchors.append(term)
             continue
-        for part in clean_segments(token, vocabulary):
+        for part in clean_segments(token, vocabulary, question=True):
+            # Curated topic units must not split an explicit Chinese entity
+            # name into a topic plus its classifier and erase its constraint.
+            curated_topics = not any(head in part for head in CHINESE_ENTITY_HEADS)
             offset, unmatched = 0, ''
             while offset < len(part):
                 word = next((part[offset:offset + width] for width in range(min(6, len(part) - offset), 1, -1)
-                             if part[offset:offset + width] in vocabulary), '')
+                             if part[offset:offset + width] in vocabulary
+                             or (curated_topics and part[offset:offset + width] in SYNONYMS)), '')
                 if word:
                     if len(unmatched) >= 2:
                         terms.append(unmatched)
                         unknown.append(unmatched)
                     unmatched = ''
-                    terms.append(word)
+                    terms.extend(concept_units(word, vocabulary))
                     offset += len(word)
                 else:
                     unmatched += part[offset]
@@ -305,7 +327,7 @@ def _finish_concepts(query, tokens, terms, anchors, unknown, vocabulary, documen
     explicit_entities = [term for term in explicit_entities if term not in limits.excluded_aliases]
     anchors.extend(term for term in explicit_entities if term not in anchors)
     leading = next((part for token in tokens if CJK.fullmatch(token)
-                    for part in clean_segments(token, vocabulary) if len(part) >= 2), '')
+                    for part in clean_segments(token, vocabulary, question=True) if len(part) >= 2), '')
     project_anchors: List[str] = []
     project_domains: Set[str] = set()
     for anchor in terms:
