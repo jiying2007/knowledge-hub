@@ -141,9 +141,32 @@ def test_private_writer_rejects_symlink_ancestor_before_creating_directories(tmp
     assert not (outside / 'new').exists()
 
 
-def test_timeout_reaps_owned_grandchild(tmp_path):
+def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
+    from tools.codex_assets.knowledge_hub import bounded_process
+
     pid_path = tmp_path / 'pid'
-    script = "import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(5)']); pathlib.Path(sys.argv[1]).write_text(str(p.pid)); time.sleep(5)"
+    script = "import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)']); pathlib.Path(sys.argv[1]).write_text(str(p.pid)); time.sleep(30)"
+    launch = bounded_process._launch
+
+    def launch_ready(*args, **kwargs):
+        process = launch(*args, **kwargs)
+        deadline = time.monotonic() + 5
+        try:
+            while not pid_path.exists():
+                exited = os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                if exited is not None or time.monotonic() >= deadline:
+                    raise RuntimeError('test subprocess did not become ready')
+                time.sleep(.01)
+        except BaseException:
+            try:
+                os.killpg(process.pid, 9)
+            except ProcessLookupError:
+                pass
+            process.wait()
+            raise
+        return process
+
+    monkeypatch.setattr(bounded_process, '_launch', launch_ready)
     with pytest.raises(subprocess.TimeoutExpired):
         run_bounded([sys.executable, '-c', script, str(pid_path)], cwd=str(tmp_path), env=os.environ.copy(), timeout=.3)
     pid = int(pid_path.read_text())

@@ -174,6 +174,33 @@ def archive(root, args):
                 raise
 
 
+def _archive_commit_hook(root, args, target, actor, operation_id, item_id, op_rows, op_hash, origin, conflict, route, archive_policy):
+    from .provider_onboarding import resolve_workspace
+    def prepare(transaction, item, rendered):
+        predicted = hashlib.sha256(transaction.writes[item["path"]].content).hexdigest()
+        if args.expected_content_sha256 and predicted != args.expected_content_sha256:
+            raise KnowledgeHubError("CONTENT_DRIFT")
+        row = {"operation_id": operation_id, "schema_version": 4, "request_sha256": operation_id, "action": "archive", "item_id": item_id,
+               "created_subject_ref": target, "subject_ref": target,
+               "content_sha256": predicted,
+               "transaction_id": transaction.transaction_id, "principal_id": actor,
+               "verification_basis": {"kind": "transaction", "proof_ref": transaction.transaction_id}, "before_content_sha256": None}
+        # Bind this ledger to the same snapshot used for the replay check.
+        transaction.expected_inputs[OPERATIONS_PATH] = op_hash
+        transaction.add_text(OPERATIONS_PATH, encode_jsonl(op_rows + [row]))
+        authorize(root, "archive", target)
+        if checked_archive_policy(root, args.kind) != archive_policy:
+            raise WriteConflict("archive policy changed before commit")
+        if resolve_workspace(root, args.cwd) != origin:
+            raise WriteConflict("workspace changed before commit")
+        if conflict:
+            authorize(root, "archive", target, args.authorization_id, expected_hash=operation_id, require_exact=True)
+        if route_subject(root, target, args.kind) != route:
+            raise WriteConflict("route changed before commit")
+        args._commit_started = args.apply
+    return prepare
+
+
 def _archive(root, args, frozen):
     raw, metadata, body, title, provenance = frozen
     target = subject(args.subject)
@@ -221,28 +248,8 @@ def _archive(root, args, frozen):
         checked = pathlib.Path(directory) / "checked.md"
         checked.write_text(raw, encoding="utf-8")
 
-        def prepare(transaction, item, rendered):
-            predicted = hashlib.sha256(transaction.writes[item["path"]].content).hexdigest()
-            if args.expected_content_sha256 and predicted != args.expected_content_sha256:
-                raise KnowledgeHubError("CONTENT_DRIFT")
-            row = {"operation_id": operation_id, "schema_version": 4, "request_sha256": operation_id, "action": "archive", "item_id": item_id,
-                   "created_subject_ref": target, "subject_ref": target,
-                   "content_sha256": predicted,
-                   "transaction_id": transaction.transaction_id, "principal_id": actor,
-                   "verification_basis": {"kind": "transaction", "proof_ref": transaction.transaction_id}, "before_content_sha256": None}
-            # Bind this ledger to the same snapshot used for the replay check.
-            transaction.expected_inputs[OPERATIONS_PATH] = op_hash
-            transaction.add_text(OPERATIONS_PATH, encode_jsonl(op_rows + [row]))
-            authorize(root, "archive", target)
-            if checked_archive_policy(root, args.kind) != archive_policy:
-                raise WriteConflict("archive policy changed before commit")
-            if resolve_workspace(root, args.cwd) != origin:
-                raise WriteConflict("workspace changed before commit")
-            if conflict:
-                authorize(root, "archive", target, args.authorization_id, expected_hash=operation_id, require_exact=True)
-            if route_subject(root, target, args.kind) != route:
-                raise WriteConflict("route changed before commit")
-            args._commit_started = args.apply
+        prepare = _archive_commit_hook(root, args, target, actor, operation_id, item_id, op_rows,
+                                       op_hash, origin, conflict, route, archive_policy)
 
         result = capture(root, checked, args.kind, path, dt.date.today(), args.apply,
                          item_id=item_id, title=title, domain=route["domain"], owner=host["owner_id"],
@@ -278,6 +285,23 @@ def _assignment_views(root, transaction, after, rendered, next_items, op_rows):
     op_rows[-1]["content_sha256"] = new_hash
     transaction.add_text(OPERATIONS_PATH, encode_jsonl(op_rows))
     return new_hash
+
+
+def _assignment_document(item, metadata, body, target, route, old_subject):
+    new_path = route["base"] + "/" + item["id"] + ".md"
+    after = dict(item, subject_ref=target, created_subject_ref=item.get("created_subject_ref", old_subject), domain=route["domain"], scope=route["scope"],
+                 visibility=route["visibility"], path=new_path, updated_at=dt.date.today().isoformat())
+    # Replace only exact self-references; unrelated provenance is retained.
+    for key in ("validation_refs", "evidence_refs"):
+        after[key] = [new_path if r == item["path"] else r for r in item.get(key, [])]
+    from .model import require_valid_item, merge_frontmatter_mirror
+    require_valid_item(after)
+    mirror = merge_frontmatter_mirror(metadata, after)
+    mirror["subject_ref"] = target
+    mirror["created_subject_ref"] = after["created_subject_ref"]
+    rendered = render_markdown(mirror, body)
+    new_hash = hashlib.sha256(rendered.encode()).hexdigest()
+    return after, rendered, new_hash
 
 
 def assign(root, args):
@@ -324,18 +348,7 @@ def assign(root, args):
         new_path = route["base"] + "/" + item["id"] + ".md"
         if new_path != item["path"] and resolve_inside(root, new_path).exists():
             raise KnowledgeHubError("ROUTE_CONFLICT")
-        after = dict(item, subject_ref=target, created_subject_ref=item.get("created_subject_ref", old_subject), domain=route["domain"], scope=route["scope"],
-                     visibility=route["visibility"], path=new_path, updated_at=dt.date.today().isoformat())
-        # Replace only exact self-references; unrelated provenance is retained.
-        for key in ("validation_refs", "evidence_refs"):
-            after[key] = [new_path if r == item["path"] else r for r in item.get(key, [])]
-        from .model import require_valid_item, merge_frontmatter_mirror
-        require_valid_item(after)
-        mirror = merge_frontmatter_mirror(metadata, after)
-        mirror["subject_ref"] = target
-        mirror["created_subject_ref"] = after["created_subject_ref"]
-        rendered = render_markdown(mirror, body)
-        new_hash = hashlib.sha256(rendered.encode()).hexdigest()
+        after, rendered, new_hash = _assignment_document(item, metadata, body, target, route, old_subject)
         transaction = RepositoryTransaction(root, expected_inputs=inputs)
         transaction.add_text(new_path, rendered)
         if new_path != item["path"]:

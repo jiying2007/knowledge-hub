@@ -39,10 +39,19 @@ def attested_request(raw, request_file):
     raise KnowledgeHubError("DECLARATION_UNATTESTED")
 
 
-def issue_grant(root, args):
-    host, actor = policy(root), principal(root)
-    raw = read_utf8_bounded(pathlib.Path(args.declaration_file), 131072, "actual user request")
-    request_sha, attestation = attested_request(raw, args.declaration_file)
+def _require_exact_scope(root, authorization_id, exact_scope):
+    import json
+    from .authorization import require_authorization
+    approval = require_authorization(root, authorization_id, ["automation-apply-with-review"], dt.date.today(), [])
+    try:
+        approved_scope = json.loads(approval["scope"])
+    except ValueError:
+        raise KnowledgeHubError("AUTHORIZATION_REQUIRED") from None
+    if approved_scope != exact_scope:
+        raise KnowledgeHubError("POLICY_DENIED")
+
+
+def _grant_action_scope(root, args, host, actor, raw):
     action = args.grant_action
     if action not in host["actions"]:
         raise KnowledgeHubError("POLICY_DENIED")
@@ -65,9 +74,7 @@ def issue_grant(root, args):
         widening = False
     elif action == "archive":
         import argparse
-        import json
         from .provider_operations import archive
-        from .authorization import require_authorization
         planned_args = argparse.Namespace(**vars(args))
         planned_args.apply = False
         planned_args.authorization_id = ""
@@ -79,13 +86,7 @@ def issue_grant(root, args):
         widening = False
         exact_scope = {"actor": actor, "action": "archive", "subject_ref": target,
                        "expected_hash": expected, "visibility_change": False}
-        approval = require_authorization(root, args.authorization_id, ["automation-apply-with-review"], dt.date.today(), [])
-        try:
-            approved_scope = json.loads(approval["scope"])
-        except ValueError:
-            raise KnowledgeHubError("AUTHORIZATION_REQUIRED") from None
-        if approved_scope != exact_scope:
-            raise KnowledgeHubError("POLICY_DENIED")
+        _require_exact_scope(root, args.authorization_id, exact_scope)
         extra = {}
     else:
         if re.fullmatch(r"[a-f0-9]{64}", args.expected_content_sha256) is None:
@@ -113,19 +114,20 @@ def issue_grant(root, args):
             raise KnowledgeHubError("ROUTE_CONFLICT")
         # Intake proves request provenance, not approval of an arbitrary transfer.
         # Assignment also requires an exact reviewed host authorization scope.
-        from .authorization import require_authorization
-        import json
-        approval = require_authorization(root, args.authorization_id, ["automation-apply-with-review"], dt.date.today(), [])
         exact_scope = {"actor": actor, "action": "assign", "from_subject": source_subject,
                        "subject_ref": target, "item_id": args.item_id,
                        "expected_hash": expected, "visibility_change": widening}
-        try:
-            approved_scope = json.loads(approval["scope"])
-        except ValueError:
-            raise KnowledgeHubError("AUTHORIZATION_REQUIRED") from None
-        if approved_scope != exact_scope:
-            raise KnowledgeHubError("POLICY_DENIED")
+        _require_exact_scope(root, args.authorization_id, exact_scope)
         extra = {}
+    return target, expected, widening, extra
+
+
+def issue_grant(root, args):
+    host, actor = policy(root), principal(root)
+    raw = read_utf8_bounded(pathlib.Path(args.declaration_file), 131072, "actual user request")
+    request_sha, attestation = attested_request(raw, args.declaration_file)
+    action = args.grant_action
+    target, expected, widening, extra = _grant_action_scope(root, args, host, actor, raw)
     ident = "grant-" + digest([actor, action, expected, request_sha, dt.date.today().isoformat()])
     with read_guard(root):
         inputs = snapshot_inputs(root)

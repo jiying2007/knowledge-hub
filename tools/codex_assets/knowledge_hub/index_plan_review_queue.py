@@ -172,22 +172,27 @@ def make_external_source_queue_item(source):
         ],
     }
 
+def _ai_review_inputs(item):
+    delegated = review_state(root, item)
+    missing_fields = [
+        field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
+        if is_blank(item.get(field))
+    ]
+    current_content_sha256 = repository_file_sha256(item.get("path", ""))
+    stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
+    review_content_drifted = (
+        str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
+        and bool(stored_review_sha256)
+        and stored_review_sha256 != current_content_sha256
+    )
+    return delegated, missing_fields, review_content_drifted
+
+
 def build_review_queue_view(items, sources):
     rows = []
     for item in items:
         if item.get("generated_by_ai") is True:
-            delegated = review_state(root, item)
-            missing_fields = [
-                field for field in ["human_reviewed_by", "human_reviewed_at", "review_basis"]
-                if is_blank(item.get(field))
-            ]
-            current_content_sha256 = repository_file_sha256(item.get("path", ""))
-            stored_review_sha256 = str(item.get("human_review_content_sha256", ""))
-            review_content_drifted = (
-                str(item.get("human_review_decision", "")) in REVIEW_CONTENT_BOUND_DECISIONS
-                and bool(stored_review_sha256)
-                and stored_review_sha256 != current_content_sha256
-            )
+            delegated, missing_fields, review_content_drifted = _ai_review_inputs(item)
             if delegated["status"] == "invalid":
                 rows.append(make_review_queue_item(item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
             elif delegated["closed"]:
