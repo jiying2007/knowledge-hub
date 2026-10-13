@@ -29,7 +29,7 @@ def attested_request(raw, request_file):
                               stderr=subprocess.PIPE, timeout=10, env=runtime_env)
         receipt = json.loads(call.stdout)
     except (OSError, ValueError, subprocess.TimeoutExpired):
-        raise KnowledgeHubError("DECLARATION_UNATTESTED")
+        raise KnowledgeHubError("DECLARATION_UNATTESTED") from None
     if (call.returncode == 0 and receipt.get("schema_version") == "codex-request-verification/v1"
             and receipt.get("status") == "VERIFIED" and receipt.get("read_only") is True
             and receipt.get("user_message_verified") is True
@@ -64,7 +64,7 @@ def issue_grant(root, args):
         extra = {"binding_path_sha256": planned["binding_path_sha256"]}
         widening = False
     else:
-        from .provider_subjects import route_subject, verify_item, authorize
+        from .provider_subjects import route_subject, verify_item
         from .common import registry_items
         target = subject(args.subject)
         with read_guard(root):
@@ -86,7 +86,7 @@ def issue_grant(root, args):
         try:
             approved_scope = json.loads(approval["scope"])
         except ValueError:
-            raise KnowledgeHubError("AUTHORIZATION_REQUIRED")
+            raise KnowledgeHubError("AUTHORIZATION_REQUIRED") from None
         if approved_scope != exact_scope:
             raise KnowledgeHubError("POLICY_DENIED")
         extra = {}

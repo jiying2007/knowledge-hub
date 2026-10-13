@@ -5,10 +5,10 @@ from __future__ import annotations
 import pathlib
 import re
 
-from .common import (KnowledgeHubError, load_json, project_rows, route_rows, pretty_json,
+from .common import (KnowledgeHubError, load_json, pretty_json,
                      read_utf8_bounded, file_sha256, resolve_inside)
 from .provider_subjects import (BINDINGS_PATH, WORKSPACES_PATH, GRANTS_PATH, authorize,
-                               digest, subject, policy)
+                               digest, subject)
 from .store import RepositoryTransaction, snapshot_inputs
 from .context_support import find_git_config, remote_urls_from_config
 

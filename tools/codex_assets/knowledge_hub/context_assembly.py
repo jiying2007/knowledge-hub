@@ -16,7 +16,6 @@ from .context_support import (
     _compact_mapping,
     _current_exclusion_reason,
     _fit_summary_budget,
-    _git_head_from_config,
     workspace_git_head,
     _public_item,
     _query_route_selection,

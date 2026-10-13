@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-import pathlib
 
-from .common import KnowledgeHubError, registry_items, route_rows, read_utf8_bounded, file_sha256, resolve_inside
-from .context import assemble_context, summarize_context
+from .common import KnowledgeHubError, registry_items, read_utf8_bounded, file_sha256, resolve_inside
+from .context import assemble_context
 from .search import query_terms
 from .provider_onboarding import resolve_workspace, workspace_rows
 from .provider_subjects import authorize, principal, read_guard, route_subject, signatures, subject, digest

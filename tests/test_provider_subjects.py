@@ -11,7 +11,7 @@ from tools.codex_assets.knowledge_hub.provider_subjects import digest, OPERATION
 from tools.codex_assets.knowledge_hub.provider_operations import archive_v2, assign, reconcile, import_legacy
 from tools.codex_assets.knowledge_hub.provider_onboarding import register_project, bind_workspace, resolve_workspace
 from tools.codex_assets.knowledge_hub.provider_cli import parser, run, main
-from tools.codex_assets.knowledge_hub.store import RepositoryTransaction, incomplete_transactions
+from tools.codex_assets.knowledge_hub.store import RepositoryTransaction
 
 
 def subject_root(tmp_path):

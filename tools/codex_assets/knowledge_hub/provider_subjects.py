@@ -6,7 +6,6 @@ import contextlib
 import fcntl
 import hashlib
 import json
-import pathlib
 import re
 
 from .activity import load_activity_config

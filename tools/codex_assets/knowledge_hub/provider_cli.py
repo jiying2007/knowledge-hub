@@ -9,8 +9,8 @@ import os
 import re
 import time
 
-from .common import KnowledgeHubError, repository_root, read_bytes_bounded, file_sha256
-from .provider_subjects import policy, principal, digest, read_guard
+from .common import KnowledgeHubError, repository_root, read_bytes_bounded
+from .provider_subjects import policy, digest, read_guard
 from .provider_operations import response
 from .store import WriteConflict
 
@@ -78,7 +78,7 @@ def capture_source(args):
         try:
             candidate.resolve().relative_to(root)
         except ValueError:
-            raise KnowledgeHubError("SOURCE_REJECTED")
+            raise KnowledgeHubError("SOURCE_REJECTED") from None
         if any((root.joinpath(*path.parts[:i])).is_symlink() for i in range(1, len(path.parts) + 1)):
             raise KnowledgeHubError("SOURCE_REJECTED")
         before = candidate.stat()
