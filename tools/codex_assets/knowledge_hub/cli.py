@@ -215,6 +215,15 @@ def _run_governed_provider(args: Any, parser: Any) -> int:
 
 
 def main(argv: Sequence[str] = ()) -> int:
+    import sys
+    supplied = list(argv) if argv else sys.argv[1:]
+    if "--provider-v2" in supplied:
+        from .provider_cli import main as subject_main
+        forwarded = supplied.copy()
+        forwarded.remove("--provider-v2")
+        if forwarded and forwarded[0] == "capture":
+            forwarded.pop(0)
+        return subject_main(forwarded)
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
     if args.command == "capture" and args.governed_provider:

@@ -3,6 +3,7 @@
 .tmp/
 tmp/
 local/workspaces.json
+local/provider-bindings.json
 local/obsidian-runtime-acceptance.json
 local/activity-report.json
 __pycache__/

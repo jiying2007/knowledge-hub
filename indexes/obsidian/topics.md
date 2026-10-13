@@ -4,14 +4,14 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (96)
+## validation (97)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
 - [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing`
 - [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing`
-- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
 
 ## pcr02 (59)
 
@@ -22,50 +22,50 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (53)
+## manual-validation-pending (55)
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
-- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
-## no-active-promotion (42)
+## no-active-promotion (44)
 
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## ai-generated (36)
+## ai-generated (38)
 
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## owner-review-pending (32)
+## owner-review-pending (34)
 
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
-## project-readiness (32)
+## project-readiness (34)
 
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
-- [GD32L235 Firmware readiness validation](../../projects/gd32l235/validation/project-readiness.md) · `reviewing`
 
 ## provider-archive (26)
 
@@ -505,6 +505,11 @@
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
 - [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
+
+## a123x (2)
+
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 
 ## adb (2)
 
@@ -1029,6 +1034,10 @@
 ## engineering-quality (1)
 
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
+
+## entry (1)
+
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 
 ## evb (1)
 

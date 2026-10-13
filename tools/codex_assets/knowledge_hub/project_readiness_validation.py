@@ -9,6 +9,10 @@ from .evidence import project_evidence_profile
 
 
 PROFILE_VALIDATION_EXPECTATIONS = {
+    "knowledge-project": [
+        "知识证据验证：核对文档、手工来源或文件集合身份及覆盖范围；不要求 Git。",
+        "候选边界验证：reviewing 不代表业务 owner 签收、active 或产品放行。",
+    ],
     "embedded-target": (
         "工程验证：在源项目运行适用的构建、单元/集成测试并保留命令、版本和日志摘要。",
         "设备验证：需要硬件行为的结论必须补 HIL/实机、环境条件和可复现实验记录。",
@@ -43,6 +47,8 @@ def validation_expectations(
         "来源验证：确认 Git remote key、当前分支/版本和源码事实，Hub 不代替源仓事实。",
         "责任验证：由真实 decision owner 明确接受、修改或拒绝边界候选。",
     ]
+    if profile == "knowledge-project":
+        rows[1] = "来源验证：核对已声明的文档、手工记录或文件集合；Git 为可选证据。"
     rows.extend(PROFILE_VALIDATION_EXPECTATIONS[profile])
     rows.extend(str(value) for value in extension.get("validation_expectations_zh", []))
     return rows

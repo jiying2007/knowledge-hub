@@ -9,7 +9,7 @@
   ],
   "properties": {
     "event_id": {"type": "string", "minLength": 1},
-    "event_type": {"enum": ["capture", "promote", "retire"]},
+    "event_type": {"enum": ["capture", "promote", "retire", "reassign"]},
     "item_id": {"type": "string", "minLength": 1},
     "before_status": {"type": "string", "minLength": 1},
     "after_status": {"enum": ["draft", "active", "reviewing", "archived", "superseded", "rejected", "personal"]},

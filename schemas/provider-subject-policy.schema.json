@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/provider-subject-policy-v1",
+  "title": "Provider subject host policy",
+  "type": "object",
+  "required": ["schema_version", "enabled", "owner_id", "actions", "domains", "configured_principal", "authorization_basis"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "enabled": {"type": "boolean"},
+    "owner_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "actions": {"type": "array", "uniqueItems": true, "items": {"enum": ["read", "archive", "register", "bind", "assign"]}},
+    "domains": {"type": "array", "uniqueItems": true, "items": {"enum": ["embedded", "codex"]}},
+    "configured_principal": {"const": true},
+    "authorization_basis": {"type": "string", "minLength": 1, "maxLength": 2048}
+  },
+  "additionalProperties": false
+}

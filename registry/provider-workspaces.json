@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "workspaces": [
+    {
+      "workspace_ref": "workspace://a123x",
+      "subject_ref": {
+        "type": "project",
+        "id": "a123x"
+      }
+    }
+  ]
+}

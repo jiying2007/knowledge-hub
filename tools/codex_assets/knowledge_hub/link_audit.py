@@ -485,7 +485,7 @@ def audit_links(root: pathlib.Path) -> Dict[str, Any]:
     readiness_paths = {
         str(row["path"])
         for row in items
-        if "project-readiness" in set(str(value) for value in row.get("tags", []))
+        if row.get("readiness_slot") == "validation"
     }
     readiness_without_inbound = sorted(path for path in readiness_paths if incoming.get(path, 0) == 0)
     registered_without_inbound = sorted(

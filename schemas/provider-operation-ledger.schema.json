@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-hub.local/schemas/provider-operation-ledger-v1",
+  "title": "Provider stable operation identity and current observation",
+  "type": "object",
+  "required": ["operation_id", "api_version", "action", "item_id", "created_subject_ref", "current_subject_ref", "current_content_sha256", "transaction_id", "principal_id"],
+  "properties": {
+    "operation_id": {"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "api_version": {"enum":[1,2]}, "action": {"enum":["archive","assign"]},
+    "item_id": {"type":"string","minLength":1,"maxLength":160},
+    "created_subject_ref": {"$ref":"#/$defs/subject"}, "current_subject_ref": {"$ref":"#/$defs/subject"},
+    "current_content_sha256": {"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "transaction_id": {"type":["string","null"]}, "principal_id": {"type":["string","null"],"maxLength":160},
+    "authorization_ref": {"type":"string","minLength":1,"maxLength":160},
+    "historical_validation_verified": {"const":false}
+  },
+  "$defs": {"subject":{"type":"object","required":["type","id"],"properties":{"type":{"enum":["project","domain","personal","unassigned"]},"id":{"type":"string","minLength":1,"maxLength":160}},"additionalProperties":false}},
+  "additionalProperties": false
+}

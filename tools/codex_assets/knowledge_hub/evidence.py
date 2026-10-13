@@ -8,6 +8,7 @@ from .common import KnowledgeHubError
 
 
 EVIDENCE_PROFILE_REQUIREMENTS = {
+    "knowledge-project": ("owner_ref", "source_refs", "validation_refs"),
     "control-plane": (
         "owner_ref",
         "source_refs",

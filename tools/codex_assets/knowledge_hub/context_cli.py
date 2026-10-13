@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import os
 from typing import Sequence
 
 from .common import repository_root
@@ -24,7 +25,7 @@ from .context import (
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Resolve Knowledge Hub context by Git remote, route aliases and registries.")
     parser.add_argument("--root", default="")
-    parser.add_argument("--cwd", default=str(pathlib.Path.cwd()))
+    parser.add_argument("--cwd", default=os.environ.get("KNOWLEDGE_PROVIDER_CALLER_CWD", str(pathlib.Path.cwd())))
     parser.add_argument("--query", required=True)
     parser.add_argument(
         "--project",
@@ -50,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] = ()) -> int:
+    import sys
+    supplied = list(argv) if argv else sys.argv[1:]
+    if "--api-version" in supplied or any(v.startswith("--api-version=") for v in supplied):
+        from .provider_cli import main as subject_main
+        return subject_main(["context"] + supplied)
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv else None)
     if args.limit < 1:

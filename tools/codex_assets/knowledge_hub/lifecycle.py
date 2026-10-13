@@ -132,6 +132,8 @@ def capture(
     source_from: str = "",
     registered_source_id: str = "",
     registered_source_path: str = "",
+    provider_metadata: Optional[Mapping[str, Any]] = None,
+    prepare_hook=None,
 ) -> Dict[str, Any]:
     inputs, source = snapshot_inputs(root), source.expanduser().resolve()
     if not source.is_file():
@@ -241,6 +243,11 @@ def capture(
                 "ai_generated_at": today.isoformat(),
             }
         )
+    if provider_metadata:
+        allowed = {"subject_ref", "created_subject_ref", "principal_id", "provider_operation_id", "provenance"}
+        if set(provider_metadata) - allowed:
+            raise KnowledgeHubError("unsupported provider metadata")
+        item.update(dict(provider_metadata))
     current_items = registry_items(root)
     existing = next((row for row in current_items if row.get("id") == inferred_id), None)
     if existing:
@@ -263,6 +270,8 @@ def capture(
     )
 
     mirror = merge_frontmatter_mirror(original_metadata, item)
+    if provider_metadata:
+        mirror.update(dict(provider_metadata))
     rendered = render_markdown(mirror, body)
     next_items = list(current_items) + [item]
     core_updates = update_core_indexes(_load_index_contents(root), item)
@@ -326,6 +335,8 @@ def capture(
                 obsidian_stage["content_drifts"],
             )
         )
+    if prepare_hook is not None:
+        prepare_hook(transaction, item, rendered)
     plan = transaction.plan()
     result: Dict[str, Any] = {
         "action": "capture",

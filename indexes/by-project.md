@@ -450,3 +450,12 @@
 ## Digital Worker
 
 - Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
+
+## A123X
+
+- A123X 知识入口: `projects/a123x/README.md`; `a123x-knowledge-entry`
+- A123X readiness validation: `projects/a123x/validation/project-readiness.md`; `a123x-readiness-validation-20261012`
+
+## a123x
+
+- A123X Knowledge Provider 路由与候选归档验证: `projects/a123x/archive/provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32.md`; `provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32`

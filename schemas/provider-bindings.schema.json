@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://knowledge-hub.local/schemas/provider-bindings-v1",
+  "title":"Explicit local bindings with directory identity and generation",
+  "type":"object","required":["schema_version","bindings"],
+  "properties":{"schema_version":{"const":1},"bindings":{"type":"array","items":{"$ref":"#/$defs/binding"}}},
+  "$defs":{
+    "subject":{"type":"object","required":["type","id"],"properties":{"type":{"enum":["project","domain","personal","unassigned"]},"id":{"type":"string","minLength":1,"maxLength":160}},"additionalProperties":false},
+    "binding":{"type":"object","required":["binding_id","workspace_ref","subject_ref","path","requested_path","coverage","generation","directory_identity","authorization_ref","origin"],"properties":{
+      "binding_id":{"type":"string","pattern":"^binding-[a-f0-9]{64}$"},
+      "workspace_ref":{"type":"string","pattern":"^workspace://[a-z0-9][a-z0-9-]{0,80}$"},
+      "subject_ref":{"$ref":"#/$defs/subject"},"path":{"type":"string","pattern":"^/","maxLength":4096},"requested_path":{"type":"string","pattern":"^/","maxLength":4096},
+      "coverage":{"enum":["exact-root","subtree"]},"generation":{"type":"integer","minimum":1},
+      "directory_identity":{"type":"array","items":{"type":"integer","minimum":0},"minItems":2,"maxItems":2},
+      "authorization_ref":{"type":"string","minLength":1,"maxLength":160},"origin":{"const":"explicit"}
+    },"additionalProperties":false}
+  },"additionalProperties":false
+}
