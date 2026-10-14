@@ -162,6 +162,19 @@ def _default_branch_state(
     }
 
 
+def _inventory_dirty(
+    residue: Mapping[str, Sequence[str]],
+    default_state: Mapping[str, Any],
+) -> bool:
+    return bool(
+        residue["remaining_candidates"]
+        or (
+            default_state["default_branch_present"]
+            and residue["unexpected_implementation_branches"]
+        )
+    )
+
+
 def evaluate_remote_branch_inventory(
     root: pathlib.Path,
     *,
@@ -243,13 +256,7 @@ def evaluate_remote_branch_inventory(
                 ],
             }
         )
-        dirty = bool(
-            residue["remaining_candidates"]
-            or (
-                default_state["default_branch_present"]
-                and residue["unexpected_implementation_branches"]
-            )
-        )
+        dirty = _inventory_dirty(residue, default_state)
         if not dirty:
             return {
                 "schema_version": "knowledge-hub.remote-branch-inventory.v1",
