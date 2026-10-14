@@ -396,4 +396,6 @@ class StaticConnectorAdapter:
     ) -> Sequence[Mapping[str, Any]]:
         if checkpoint == self._next_cursor:
             return []
-        return self._rows[:limit]
+        if len(self._rows) > limit:
+            raise KnowledgeHubError("static connector fixture exceeds batch limit")
+        return self._rows
