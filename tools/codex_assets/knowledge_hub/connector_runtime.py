@@ -20,6 +20,7 @@ from .runtime_p5_security import principal_context
 
 MAX_OBJECTS_PER_BATCH = 1000
 MAX_BODY_CHARS = 256 * 1024
+MAX_BATCH_BODY_CHARS = 16 * 1024 * 1024
 CHECKPOINT_ROOT = pathlib.Path(".cache/knowledge-hub/connectors")
 
 
@@ -69,6 +70,10 @@ def save_checkpoint(
     if len(cursor) > 2048:
         raise KnowledgeHubError("connector checkpoint cursor exceeds budget")
     path = _checkpoint_path(root, connector_id)
+    current = load_checkpoint(root, connector_id)
+    current_sequence = int(current.get("sequence", 0) or 0)
+    if current_sequence != int(previous_sequence):
+        raise KnowledgeHubError("connector checkpoint sequence changed")
     payload = {
         "connector_id": connector_id,
         "cursor": cursor,
@@ -119,7 +124,10 @@ def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any
     body = str(row.get("body", ""))
     if len(body) > MAX_BODY_CHARS:
         raise KnowledgeHubError("connector body exceeds budget")
-    tombstone = bool(row.get("tombstone", False))
+    tombstone_value = row.get("tombstone", False)
+    if type(tombstone_value) is not bool:
+        raise KnowledgeHubError("connector tombstone must be boolean")
+    tombstone = tombstone_value
     content_sha = (
         hashlib.sha256(body.encode("utf-8")).hexdigest() if not tombstone else ""
     )
@@ -224,15 +232,21 @@ def sync_connector(
     checkpoint = load_checkpoint(root, adapter.connector_id)
     cursor = str(checkpoint.get("cursor", ""))
     changed = _changed_rows(adapter.list_changed(cursor, limit))
+    if len(changed) > limit or len(changed) > MAX_OBJECTS_PER_BATCH:
+        raise KnowledgeHubError("connector returned more rows than requested")
     accepted: List[Dict[str, Any]] = []
     quarantined: List[Dict[str, Any]] = []
     tombstones: List[Dict[str, Any]] = []
+    total_body_chars = 0
     for row in changed:
         try:
             normalized = normalize_object(adapter.connector_id, row)
         except KnowledgeHubError as exc:
             quarantined.append(_quarantine_record(row, str(exc)))
             continue
+        total_body_chars += len(str(normalized.get("body", "")))
+        if total_body_chars > MAX_BATCH_BODY_CHARS:
+            raise KnowledgeHubError("connector batch body exceeds budget")
         if normalized["tombstone"]:
             tombstones.append(normalized)
         else:
