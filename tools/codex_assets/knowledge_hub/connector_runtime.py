@@ -127,10 +127,9 @@ def _normalize_acl(value: Any) -> List[str]:
         raise KnowledgeHubError("connector ACL must be a sequence")
     if len(value) > 64:
         raise KnowledgeHubError("connector ACL exceeds budget")
-    rows = [str(row).strip() for row in value]
-    if any(not row or len(row) > 256 for row in rows):
+    if any(not isinstance(row, str) or not row.strip() or len(row) > 256 for row in value):
         raise KnowledgeHubError("connector ACL contains invalid subject")
-    return rows
+    return [row.strip() for row in value]
 
 
 def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any]:
