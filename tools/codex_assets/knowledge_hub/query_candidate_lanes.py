@@ -1,6 +1,6 @@
 """Read lexical and authority lanes with one snapshot and unique body reads."""
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .search_candidate_io import (
     MAX_CANDIDATES, _candidate_headers, _validate_headers,
@@ -14,7 +14,7 @@ def read_candidate_lanes(
     normalized: str,
     lexical_limit: int,
     authority_limit: int,
-    filters: SearchFilters | None = None,
+    filters: Optional[SearchFilters] = None,
 ) -> Tuple[List[Dict[str, Any]], int]:
     for limit in (lexical_limit, authority_limit):
         if type(limit) is not int or not 1 <= limit <= MAX_CANDIDATES:
