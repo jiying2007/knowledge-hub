@@ -190,7 +190,7 @@ def _validate_event(event: Mapping[str, Any]) -> None:
 
 def append_memory_events(
     root: pathlib.Path,
-    events: Sequence[Mapping[str, Any]],
+    events: Any,
 ) -> List[Dict[str, Any]]:
     if isinstance(events, (str, bytes)) or not isinstance(events, Sequence):
         raise KnowledgeHubError("memory events must be a sequence")
