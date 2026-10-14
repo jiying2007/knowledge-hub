@@ -191,6 +191,74 @@ def _sha256_text(value: Any) -> str:
     return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
 
 
+def _checkpoint_proposal(
+    connector_id: str,
+    checkpoint: Mapping[str, Any],
+    cursor: str,
+    accepted: Sequence[Mapping[str, Any]],
+    tombstones: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    material = {
+        "connector_id": connector_id,
+        "previous_sequence": int(checkpoint.get("sequence", 0) or 0),
+        "previous_cursor_sha256": _sha256_text(checkpoint.get("cursor", "")),
+        "cursor": cursor,
+        "accepted": [
+            [str(row.get("object_id", "")), str(row.get("version", "")), str(row.get("content_sha256", ""))]
+            for row in accepted
+        ],
+        "tombstones": [
+            [str(row.get("object_id", "")), str(row.get("version", ""))]
+            for row in tombstones
+        ],
+    }
+    digest = hashlib.sha256(
+        json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return {
+        "schema_version": "knowledge-hub.connector-checkpoint-proposal.v1",
+        "connector_id": connector_id,
+        "previous_sequence": material["previous_sequence"],
+        "previous_cursor_sha256": material["previous_cursor_sha256"],
+        "cursor": cursor,
+        "batch_sha256": digest,
+    }
+
+
+def acknowledge_connector_sync(
+    root: pathlib.Path,
+    proposal: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if proposal.get("schema_version") != "knowledge-hub.connector-checkpoint-proposal.v1":
+        raise KnowledgeHubError("invalid connector checkpoint proposal")
+    connector_id = str(proposal.get("connector_id", ""))
+    previous_sequence = proposal.get("previous_sequence")
+    cursor = str(proposal.get("cursor", ""))
+    batch_sha256 = str(proposal.get("batch_sha256", ""))
+    previous_cursor_sha256 = str(proposal.get("previous_cursor_sha256", ""))
+    if type(previous_sequence) is not int or previous_sequence < 0:
+        raise KnowledgeHubError("invalid connector checkpoint proposal sequence")
+    if len(batch_sha256) != 64 or any(ch not in "0123456789abcdef" for ch in batch_sha256):
+        raise KnowledgeHubError("invalid connector checkpoint proposal digest")
+    current = load_checkpoint(root, connector_id)
+    if _sha256_text(current.get("cursor", "")) != previous_cursor_sha256:
+        raise KnowledgeHubError("connector checkpoint cursor changed")
+    saved = save_checkpoint(
+        root,
+        connector_id,
+        cursor=cursor,
+        previous_sequence=previous_sequence,
+    )
+    return {
+        "schema_version": "knowledge-hub.connector-checkpoint-ack.v1",
+        "status": "pass",
+        "connector_id": connector_id,
+        "batch_sha256": batch_sha256,
+        "checkpoint": saved,
+        "checkpoint_advanced": True,
+    }
+
+
 def _sync_observation(
     root: pathlib.Path,
     adapter: ConnectorAdapter,
@@ -269,12 +337,14 @@ def sync_connector(
         else:
             accepted.append(normalized)
     saved = dict(checkpoint)
+    proposal: Dict[str, Any] = {}
     if not quarantined:
-        saved = save_checkpoint(
-            root,
+        proposal = _checkpoint_proposal(
             adapter.connector_id,
-            cursor=str(adapter.checkpoint()),
-            previous_sequence=int(checkpoint.get("sequence", 0) or 0),
+            checkpoint,
+            str(adapter.checkpoint()),
+            accepted,
+            tombstones,
         )
     result: Dict[str, Any] = {
         "schema_version": "knowledge-hub.connector-sync.v1",
@@ -285,7 +355,9 @@ def sync_connector(
         "tombstones": tombstones,
         "quarantine": quarantined,
         "checkpoint": saved,
-        "checkpoint_advanced": not quarantined,
+        "checkpoint_proposal": proposal,
+        "checkpoint_advanced": False,
+        "requires_consumer_ack": not quarantined,
         "canonical_write_performed": False,
         "hub_core_network_client": False,
         "transport_owned_by_adapter_or_caller": True,
