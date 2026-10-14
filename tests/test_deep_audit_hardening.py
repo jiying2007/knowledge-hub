@@ -190,3 +190,25 @@ def test_provider_corpus_signature_ignores_unrelated_domain_body(tmp_path, monke
     assert second == first
     relevant.write_text("changed", encoding="utf-8")
     assert provider_context.corpus_signature(tmp_path, args, {}) != first
+
+
+def test_memory_scope_delete_scans_ledger_constant_times(tmp_path, monkeypatch):
+    for index in range(40):
+        _record(tmp_path, scope="scope:bulk", summary="row-{}".format(index))
+    original = memory_runtime._read_unlocked
+    calls = {"count": 0}
+
+    def counted(root):
+        calls["count"] += 1
+        return original(root)
+
+    monkeypatch.setattr(memory_runtime, "_read_unlocked", counted)
+    result = memory_runtime.forget_scope(
+        tmp_path,
+        principal_id="principal",
+        agent_id="agent",
+        scope_ref="scope:bulk",
+    )
+    assert result["scope_deleted"] is True
+    assert result["deleted_count"] == 40
+    assert calls["count"] <= 3
