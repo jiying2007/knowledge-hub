@@ -188,8 +188,18 @@ def _validate_event(event: Mapping[str, Any]) -> None:
         raise KnowledgeHubError("memory event must not perform canonical writes")
 
 
-def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[str, Any]:
-    _validate_event(event)
+def append_memory_events(
+    root: pathlib.Path,
+    events: Sequence[Mapping[str, Any]],
+) -> List[Dict[str, Any]]:
+    if isinstance(events, (str, bytes)) or not isinstance(events, Sequence):
+        raise KnowledgeHubError("memory events must be a sequence")
+    if not events:
+        return []
+    for event in events:
+        if not isinstance(event, Mapping):
+            raise KnowledgeHubError("memory event must be an object")
+        _validate_event(event)
     path = _ledger_path(root)
     lock_path = _lock_path(root)
     with lock_path.open("a+") as lock:
@@ -197,7 +207,7 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         try:
             rows = _read_unlocked(root)
-            if len(rows) >= MAX_EVENTS:
+            if len(rows) + len(events) > MAX_EVENTS:
                 raise KnowledgeHubError("memory ledger is full")
             if path.exists() and path.stat().st_size:
                 with path.open("rb") as tail:
@@ -205,14 +215,20 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
                     if tail.read(1) != b"\n":
                         raise KnowledgeHubError("memory ledger tail is incomplete")
             previous = str(rows[-1].get("event_sha256", "")) if rows else ""
-            record = dict(event)
-            record["previous_event_sha256"] = previous
-            record["event_sha256"] = _digest(record)
-            encoded = (
-                json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
-            ).encode("utf-8")
+            records: List[Dict[str, Any]] = []
+            encoded_rows: List[bytes] = []
+            for event in events:
+                record = dict(event)
+                record["previous_event_sha256"] = previous
+                record["event_sha256"] = _digest(record)
+                previous = record["event_sha256"]
+                encoded = (
+                    json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
+                ).encode("utf-8")
+                records.append(record)
+                encoded_rows.append(encoded)
             current_bytes = path.stat().st_size if path.exists() else 0
-            if current_bytes + len(encoded) > MAX_LEDGER_BYTES:
+            if current_bytes + sum(len(value) for value in encoded_rows) > MAX_LEDGER_BYTES:
                 raise KnowledgeHubError("memory ledger is full")
             flags = (
                 os.O_APPEND
@@ -222,12 +238,17 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
             )
             descriptor = os.open(str(path), flags, 0o600)
             os.fchmod(descriptor, 0o600)
-            with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-                handle.write(encoded.decode("utf-8"))
+            with os.fdopen(descriptor, "ab") as handle:
+                handle.write(b"".join(encoded_rows))
                 handle.flush()
                 os.fsync(handle.fileno())
         finally:
             fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+    return records
+
+
+def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[str, Any]:
+    record = append_memory_events(root, [event])[0]
     return {
         "status": "recorded",
         "record": record,
@@ -368,16 +389,23 @@ def forget_scope(
         agent_id=agent_id,
         scope_ref=scope_ref,
     )
-    receipts = []
-    for row in active:
-        result = forget_memory(
-            root,
-            memory_id=str(row.get("memory_id", "")),
-            principal_id=principal_id,
+    events = [
+        memory_event(
             agent_id=agent_id,
+            principal_id=principal_id,
+            level="working",
+            summary="",
             scope_ref=scope_ref,
+            source_refs=(),
+            event_type="forget",
+            memory_id=str(row.get("memory_id", "")),
         )
-        receipts.append(str(result.get("receipt_sha256", "")))
+        for row in active
+    ]
+    receipts = [
+        str(row.get("event_sha256", ""))
+        for row in append_memory_events(root, events)
+    ]
     remaining = active_memories(
         root,
         principal_id=principal_id,
