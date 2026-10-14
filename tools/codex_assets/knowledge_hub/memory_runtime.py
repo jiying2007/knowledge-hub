@@ -243,9 +243,11 @@ def active_memories(
     now: Optional[dt.datetime] = None,
 ) -> List[Dict[str, Any]]:
     current = now or dt.datetime.now(dt.timezone.utc)
-    state: Dict[str, Dict[str, Any]] = {}
+    state: Dict[Tuple[str, str], Dict[str, Any]] = {}
     for row in read_memory_ledger(root):
         memory_id = str(row.get("memory_id", ""))
+        row_scope = str(row.get("scope_ref", ""))
+        state_key = (row_scope, memory_id)
         if str(row.get("principal_id", "")) != principal_id:
             continue
         if str(row.get("agent_id", "")) != agent_id:
@@ -253,12 +255,12 @@ def active_memories(
         if scope_ref and str(row.get("scope_ref", "")) != scope_ref:
             continue
         if row.get("event_type") in {"forget", "supersede"}:
-            state.pop(memory_id, None)
+            state.pop(state_key, None)
             continue
         if not _expired(row, current):
-            state[memory_id] = dict(row)
+            state[state_key] = dict(row)
         else:
-            state.pop(memory_id, None)
+            state.pop(state_key, None)
     return sorted(state.values(), key=lambda row: str(row.get("recorded_at", "")))
 
 
