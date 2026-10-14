@@ -8,17 +8,58 @@ import pathlib
 import os
 import re
 import time
+import sys
 from typing import Any, Dict, List
 
 from .common import KnowledgeHubError, repository_root, read_bytes_bounded
 from .provider_subjects import digest, read_guard
 from .provider_operations import response
 from .store import WriteConflict
+from .context_support import TASK_TYPES
+
+
+class ProviderArgumentError(KnowledgeHubError):
+    def __init__(self, field, issue, allowed_values=()):
+        super().__init__("SCHEMA_INVALID")
+        self.diagnostic = {"field": field, "issue": issue, "allowed_values": list(allowed_values)}
 
 
 class ProviderParser(argparse.ArgumentParser):
     def error(self, message):
-        raise KnowledgeHubError("SCHEMA_INVALID")
+        # argparse messages can contain private argument values; never echo them.
+        raise ProviderArgumentError("arguments", "invalid-arguments")
+
+    def _check_value(self, action, value):
+        if action.choices is not None and value not in action.choices:
+            raise ProviderArgumentError(action.option_strings[0] if action.option_strings else action.dest,
+                                        "invalid-choice", action.choices)
+
+    def _get_value(self, action, arg_string):
+        try:
+            return super()._get_value(action, arg_string)
+        except argparse.ArgumentError:
+            raise ProviderArgumentError(action.option_strings[0] if action.option_strings else action.dest,
+                                        "invalid-type") from None
+
+    def parse_args(self, args=None, namespace=None):
+        supplied = list(sys.argv[1:] if args is None else args)
+        self.help_operation = supplied[0] if supplied and supplied[0] in OPERATION_FIELDS else None
+        return super().parse_args(supplied, namespace)
+
+    def print_help(self, file=None):
+        operation = getattr(self, "help_operation", None)
+        allowed = PUBLIC_COMMON_FIELDS | (OPERATION_FIELDS.get(operation, set()) if operation is not None else set())
+        options = [{"flags": action.option_strings,
+                    "allowed_values": list(action.choices) if action.choices is not None else []}
+                   for action in self._actions if action.option_strings
+                   and (operation is None or action.dest in allowed) and action.dest != "root"]
+        print(json.dumps({"schema_version": "knowledge-provider.help/v4", "status": "HELP",
+                          "operation": operation, "read_only": True, "persisted": False,
+                          "write_performed": False, "operations": list(OPERATION_FIELDS), "options": options,
+                          "context_task_types": sorted(TASK_TYPES),
+                          "result_boundaries": {"context": "read-only; inspect authority_lanes separately",
+                                                "archive": "only persisted success acknowledges candidate archive"}},
+                         ensure_ascii=False), file=file)
 
 
 def parser():
@@ -58,7 +99,7 @@ def parser():
     p.add_argument("--unassigned", action="store_true")
     p.add_argument("--limit", type=int, default=3)
     p.add_argument("--context-budget", choices=("small", "normal", "deep"), default="small")
-    p.add_argument("--task-type", choices=("general", "debug", "release", "source", "archive", "decision", "validation", "session", "runbook"), default="general")
+    p.add_argument("--task-type", choices=sorted(TASK_TYPES), default="general")
     p.add_argument("--receipt-key", default="")
     output = p.add_mutually_exclusive_group()
     output.add_argument("--json", action="store_true")
@@ -104,9 +145,8 @@ def capture_source(args):
             "file_count": len(rows), "coverage": "explicit-allowlist", "manifest_sha256": digest(rows), "files": rows}
 
 
-def validate_arguments(args):
-    common = {"root", "cwd", "json", "summary_json", "operation", "dry_run"}
-    fields = {
+PUBLIC_COMMON_FIELDS = {"cwd", "json", "summary_json", "operation", "dry_run", "help"}
+OPERATION_FIELDS = {
         "status": set(), "resolve": set(),
         "register": {"project", "name", "declaration_file", "authorization_id", "apply"},
         "bind": {"workspace", "path", "coverage", "expected_generation", "authorization_id", "apply"},
@@ -116,11 +156,15 @@ def validate_arguments(args):
         "reconcile": {"operation_id", "expected_content_sha256"},
         "capture-source": {"file"},
         "context": {"query", "workspace", "execution_project", "retrieval_project", "retrieval_domain", "archive_subject", "personal", "unassigned", "limit", "context_budget", "task_type", "receipt_key"},
-    }
+}
+
+
+def validate_arguments(args):
+    common = PUBLIC_COMMON_FIELDS | {"root"}
     defaults = vars(parser().parse_args([args.operation]))
-    if any(value != defaults.get(key) for key, value in vars(args).items()
-           if key not in common | fields[args.operation] and not key.startswith("_")):
-        raise KnowledgeHubError("SCHEMA_INVALID")
+    for key, value in vars(args).items():
+        if key not in common | OPERATION_FIELDS[args.operation] and not key.startswith("_") and value != defaults.get(key):
+            raise ProviderArgumentError("--" + key.replace("_", "-"), "unsupported-for-operation")
     if len(args.retrieval_project) > 8 or len(set(args.retrieval_project)) != len(args.retrieval_project):
         raise KnowledgeHubError("READ_BUDGET_EXCEEDED")
 
@@ -190,6 +234,8 @@ def main(argv=None):
         unknown = bool(getattr(args, "_commit_started", False)) and not isinstance(exc, WriteConflict)
         conflicted = reason == "CONTENT_DRIFT" and bool(getattr(args, "_operation_id", None))
         value = response("UNKNOWN" if unknown else "CONFLICT" if conflicted else "BLOCKED", getattr(args, "_operation_id", None), reason=reason)
+        if isinstance(exc, ProviderArgumentError):
+            value["diagnostics"] = [exc.diagnostic]
         code = 2
     print(json.dumps(value, ensure_ascii=False, separators=(",", ":")))
     return code

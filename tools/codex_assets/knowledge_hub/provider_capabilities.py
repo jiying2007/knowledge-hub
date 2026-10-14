@@ -5,6 +5,7 @@ from __future__ import annotations
 from .activity import load_activity_config
 from .common import KnowledgeHubError, load_json
 from .schemas import validate_instance
+from .context_support import TASK_TYPES
 
 
 def capabilities(root):
@@ -33,7 +34,8 @@ def capabilities(root):
             'protocol_version': 4,
             'provider':'knowledge-hub', 'read_only':True,
             'operations':{
-                'context':{'mode':'readonly', 'available':True, 'write_allowed':False},
+                'context':{'mode':'readonly', 'available':True, 'write_allowed':False,
+                           'task_types':sorted(TASK_TYPES), 'default_task_type':'general'},
                 'evidence-pack':{'mode':'readonly', 'available':True, 'write_allowed':False},
                 'action-check':{'mode':'readonly', 'available':True, 'write_allowed':False},
                 'proposal-route':{'mode':'shadow', 'write_allowed':False},
