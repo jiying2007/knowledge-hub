@@ -164,3 +164,29 @@ def test_temporal_graph_rejects_invalid_node_budget(tmp_path, maximum):
         temporal_graph.temporal_context_graph(
             tmp_path, as_of="2026-10-14", maximum_nodes=maximum
         )
+
+
+def test_provider_corpus_signature_ignores_unrelated_domain_body(tmp_path, monkeypatch):
+    relevant = tmp_path / "relevant.md"
+    unrelated = tmp_path / "unrelated.md"
+    relevant.write_text("alpha", encoding="utf-8")
+    unrelated.write_text("before", encoding="utf-8")
+    rows = [
+        {"id": "a", "path": "relevant.md", "domain": "wanted", "visibility": "team-internal"},
+        {"id": "b", "path": "unrelated.md", "domain": "other", "visibility": "team-internal"},
+    ]
+    monkeypatch.setattr(provider_context, "_execution", lambda root, args, resolution: (None, resolution))
+    monkeypatch.setattr(
+        provider_context,
+        "scope_inputs",
+        lambda root, args, execution: [{"type": "domain", "id": "wanted"}],
+    )
+    monkeypatch.setattr(provider_context, "authorize", lambda root, action, scope: None)
+    monkeypatch.setattr(provider_context, "registry_items", lambda root: rows)
+    args = type("Args", (), {})()
+    first = provider_context.corpus_signature(tmp_path, args, {})
+    unrelated.write_text("after", encoding="utf-8")
+    second = provider_context.corpus_signature(tmp_path, args, {})
+    assert second == first
+    relevant.write_text("changed", encoding="utf-8")
+    assert provider_context.corpus_signature(tmp_path, args, {}) != first
