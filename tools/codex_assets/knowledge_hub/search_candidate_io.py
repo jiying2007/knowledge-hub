@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import sqlite3
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Sequence
 
 from .search_core import SEARCH_MAX_FILE_BYTES, SEARCH_MAX_TOTAL_BYTES, SearchBoundaryError, SearchFilters
 
