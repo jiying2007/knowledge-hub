@@ -23,6 +23,7 @@ from .search_core import (
     SEARCH_AUTHORITY_CANDIDATE_LIMIT,
     SEARCH_MAX_FILE_BYTES,
     SearchBoundaryError,
+    SearchFilters,
     TOKEN_CACHE_SCHEMA_VERSION,
     _PersistentTokenCache,
     _governed_items_by_path,
@@ -582,15 +583,27 @@ class SearchIndex:
         finally:
             connection.close()
 
-    def candidate_lanes(self, query: str, candidate_limit: int, authority_limit: int,
-                        concept_plan: Optional[ConceptQuery] = None):
+    def candidate_lanes(
+        self,
+        query: str,
+        candidate_limit: int,
+        authority_limit: int,
+        concept_plan: Optional[ConceptQuery] = None,
+        filters: Optional[SearchFilters] = None,
+    ):
         expression = self._candidate_expression(query, concept_plan)
         if not expression:
             return [], 0
         with contextlib.closing(sqlite3.connect(str(self.path))) as connection:
             connection.row_factory = sqlite3.Row
-            return read_candidate_lanes(connection, expression, query.strip().lower(),
-                                        candidate_limit, authority_limit)
+            return read_candidate_lanes(
+                connection,
+                expression,
+                query.strip().lower(),
+                candidate_limit,
+                authority_limit,
+                filters,
+            )
 
     def _candidate_expression(self, query: str, concept_plan: Optional[ConceptQuery]) -> str:
         plan = concept_plan or self.concept_query(query)
