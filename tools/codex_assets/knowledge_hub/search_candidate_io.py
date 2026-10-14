@@ -6,17 +6,54 @@ import math
 import sqlite3
 from typing import Any, Dict, List
 
-from .search_core import SEARCH_MAX_FILE_BYTES, SEARCH_MAX_TOTAL_BYTES, SearchBoundaryError
+from .search_core import SEARCH_MAX_FILE_BYTES, SEARCH_MAX_TOTAL_BYTES, SearchBoundaryError, SearchFilters
 
 MAX_CANDIDATES = 4096
 MAX_METADATA_BYTES = 1024 * 1024
 BODY_BATCH_SIZE = 32
 
 
+def _filter_sql(filters: SearchFilters) -> tuple[str, List[Any]]:
+    clauses: List[str] = []
+    params: List[Any] = []
+
+    def exact(path: str, values: Sequence[str]) -> None:
+        if not values:
+            return
+        placeholders = ",".join("?" for _ in values)
+        clauses.append("json_extract(d.item_json, ?) in ({})".format(placeholders))
+        params.append(path)
+        params.extend(values)
+
+    exact("$.owner", filters.owners)
+    exact("$.status", filters.statuses)
+    exact("$.kind", filters.normalized_kinds)
+    exact("$.source.source_id", filters.source_ids)
+    if filters.domains:
+        domain_clauses = []
+        for domain in filters.domains:
+            domain_clauses.append(
+                "(json_extract(d.item_json, '$.domain') = ? "
+                "or instr(json_extract(d.item_json, '$.domain'), ? || '/') = 1)"
+            )
+            params.extend((domain, domain))
+        clauses.append("(" + " or ".join(domain_clauses) + ")")
+    if filters.sources:
+        placeholders = ",".join("?" for _ in filters.sources)
+        clauses.append(
+            "exists (select 1 from json_each(d.physical_sources) "
+            "where json_each.value in ({}))".format(placeholders)
+        )
+        params.extend(filters.sources)
+    return (" and " + " and ".join(clauses) if clauses else ""), params
+
+
 def _candidate_headers(
     connection: sqlite3.Connection, expression: str, limit: int,
     normalized_query: str, authority_only: bool,
+    filters: Optional[SearchFilters] = None,
 ) -> List[sqlite3.Row]:
+    filter_sql, filter_params = _filter_sql(filters or SearchFilters())
     sql = """select d.id,
         length(cast(d.body as blob)) as body_bytes,
         length(cast(d.doc_key as blob)) + length(cast(d.path as blob))
@@ -32,10 +69,17 @@ def _candidate_headers(
             or lower(documents_fts.title) = ?
             or lower(documents_fts.item_id) = ?
             or lower(d.path) = ?
-        ) order by fts_rank, d.id limit ?"""
-    return connection.execute(
-        sql, (expression, int(authority_only), normalized_query, normalized_query, normalized_query, limit),
-    ).fetchall()
+        ){} order by fts_rank, d.id limit ?""".format(filter_sql)
+    params: List[Any] = [
+        expression,
+        int(authority_only),
+        normalized_query,
+        normalized_query,
+        normalized_query,
+    ]
+    params.extend(filter_params)
+    params.append(limit)
+    return connection.execute(sql, params).fetchall()
 
 
 def _validate_headers(headers: List[sqlite3.Row], limit: int) -> None:
@@ -58,6 +102,7 @@ def _validate_headers(headers: List[sqlite3.Row], limit: int) -> None:
 def read_candidate_payloads(
     connection: sqlite3.Connection, expression: str, candidate_limit: int,
     *, normalized_query: str = "", authority_only: bool = False,
+    filters: Optional[SearchFilters] = None,
 ) -> List[Dict[str, Any]]:
     """Use one read snapshot; SQLite faults propagate to the visible scan fallback.
 
@@ -69,7 +114,9 @@ def read_candidate_payloads(
     if type(BODY_BATCH_SIZE) is not int or not 1 <= BODY_BATCH_SIZE <= 32:
         raise SearchBoundaryError("SQLite body batch must be between 1 and 32")
     connection.execute("begin")
-    headers = _candidate_headers(connection, expression, candidate_limit, normalized_query, authority_only)
+    headers = _candidate_headers(
+        connection, expression, candidate_limit, normalized_query, authority_only, filters
+    )
     _validate_headers(headers, candidate_limit)
     result: List[Dict[str, Any]] = []
     for offset in range(0, len(headers), BODY_BATCH_SIZE):
