@@ -126,6 +126,8 @@ def temporal_context_graph(
     principal: Optional[Mapping[str, Any]] = None,
     knowledge_scopes: Sequence[str] = (),
 ) -> Dict[str, Any]:
+    if type(maximum_nodes) is not int or not 1 <= maximum_nodes <= 10000:
+        raise KnowledgeHubError("maximum_nodes must be between 1 and 10000")
     today, source = resolve_today(as_of)
     rows = [
         row
@@ -164,6 +166,13 @@ def temporal_context_graph(
             )
             if target not in visited and seed_ids:
                 frontier.add(target)
+    truncated = bool(frontier)
+    edges = [
+        edge
+        for edge in edges
+        if str(edge.get("source_id", "")) in visited
+        and str(edge.get("target_id", "")) in visited
+    ]
     nodes = []
     episodes = []
     for item_id in sorted(visited):
@@ -193,7 +202,7 @@ def temporal_context_graph(
         principal_id = principal_context(principal)["principal_id"]
     return {
         "schema_version": "knowledge-hub.temporal-context-graph.v1",
-        "status": "pass",
+        "status": "needs-review" if truncated else "pass",
         "derived": True,
         "authoritative": False,
         "as_of": today.isoformat(),
@@ -206,5 +215,7 @@ def temporal_context_graph(
         "episodes": episodes,
         "node_count": len(nodes),
         "edge_count": len(edges),
+        "truncated": truncated,
+        "coverage_complete": not truncated,
         "canonical_graph_mutated": False,
     }
