@@ -40,7 +40,11 @@ def corpus_signature(root, args, resolution):
 
 
 def public_item(row):
-    value = {key: row[key] for key in ("id", "item_id", "title", "kind", "status", "path") if key in row}
+    value = {
+        key: row[key]
+        for key in ("id", "item_id", "title", "kind", "status", "path", "manual_validation_pending")
+        if key in row
+    }
     reasons = []
     for reason in row.get("why_selected", []):
         if isinstance(reason, str):
@@ -57,7 +61,15 @@ def authority_lanes(groups):
     for group in groups:
         for item in group["items"]:
             ident = item.get("id") or item.get("item_id")
-            lane = "discovery" if group.get("lane") == "discovery" or not ident else "authoritative" if item.get("status") == "active" else "historical" if item.get("status") in {"archived", "superseded", "rejected"} else "provisional"
+            lane = (
+                "discovery"
+                if group.get("lane") == "discovery" or not ident
+                else "authoritative"
+                if item.get("status") == "active" and not item.get("manual_validation_pending", False)
+                else "historical"
+                if item.get("status") in {"archived", "superseded", "rejected"}
+                else "provisional"
+            )
             if ident:
                 lanes[lane].append(ident)
     return lanes
