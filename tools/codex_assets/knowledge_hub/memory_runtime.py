@@ -185,6 +185,8 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         try:
             rows = _read_unlocked(root)
+            if len(rows) >= MAX_EVENTS:
+                raise KnowledgeHubError("memory ledger is full")
             previous = str(rows[-1].get("event_sha256", "")) if rows else ""
             record = dict(event)
             record["previous_event_sha256"] = previous
