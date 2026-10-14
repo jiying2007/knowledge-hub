@@ -107,10 +107,8 @@ def search(
             seen_document_keys.add(document_key)
             combined_rows.append(row)
         if callable(lane_method):
-            combined_rows, authority_count = lane_method(
-                query, candidate_limit, SEARCH_AUTHORITY_CANDIDATE_LIMIT,
-                concept_plan=concept_plan, filters=filters,
-            )
+            combined_rows, authority_count = lane_method(query, candidate_limit, SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+                                                         concept_plan=concept_plan, filters=filters)
         else:
             authority_count = len(authority_rows)
         indexed_rows = combined_rows
