@@ -245,7 +245,10 @@ def evaluate_remote_branch_inventory(
         )
         dirty = bool(
             residue["remaining_candidates"]
-            or residue["unexpected_implementation_branches"]
+            or (
+                default_state["default_branch_present"]
+                and residue["unexpected_implementation_branches"]
+            )
         )
         if not dirty:
             return {
