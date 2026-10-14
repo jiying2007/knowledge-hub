@@ -21,6 +21,30 @@ def corpus_signature(root, args, resolution):
         authorize(root, "read", scope)
     private_scopes = [scope for scope in scopes if scope["type"] in {"personal", "unassigned"}]
     actor = principal(root) if private_scopes else None
+    team_scopes = [scope for scope in scopes if scope["type"] in {"project", "domain"}]
+    allowed_domains, allowed_sources = set(), set()
+    if team_scopes:
+        from .common import load_json, project_rows, repository_rows, route_rows, source_id
+        from .context_support import _route_domains, _route_project_ids
+        routes = route_rows(root)
+        projects = {row["id"]: row for row in project_rows(root)}
+        groups = {
+            row["id"]: row
+            for row in load_json(root / "registry/project-groups.json", {}).get("groups", [])
+        }
+        repos = {row["repo_id"]: row for row in repository_rows(root)}
+        for scope in team_scopes:
+            if scope["type"] == "domain":
+                allowed_domains.add(scope["id"])
+                continue
+            matching = [row for row in routes if row["project_id"] == scope["id"]]
+            if len(matching) != 1:
+                raise KnowledgeHubError("PROJECT_ROUTE_UNRESOLVED")
+            route = matching[0]
+            allowed_domains.update(
+                _route_domains(route, _route_project_ids(route, groups, repos), projects)
+            )
+            allowed_sources.update(route.get("default_source_ids", []))
     rows, total = [], 0
     for item in registry_items(root):
         private = item.get("visibility") == "personal-local" or item.get("path", "").startswith("notes/personal/")
@@ -28,6 +52,13 @@ def corpus_signature(root, args, resolution):
             continue
         if actor and not private:
             continue
+        if team_scopes and not private:
+            item_domain = str(item.get("domain", ""))
+            if not any(
+                item_domain == domain or item_domain.startswith(domain + "/")
+                for domain in allowed_domains
+            ) and source_id(item) not in allowed_sources:
+                continue
         path = resolve_inside(root, item["path"])
         if not path.is_file():
             rows.append([item["id"], item["path"], "absent"])
@@ -194,7 +225,8 @@ def context(root, args):
         registry_paths = ("registry/items.jsonl", "registry/sources.json", "registry/projects.json",
                           "registry/repositories.json", "registry/project-groups.json", "registry/project-routes.json",
                           "registry/retired-sources.jsonl", "local/workspaces.json", "registry/product-policy.json")
-        request = {"version": 4, "cwd": str(pathlib.Path(args.cwd).expanduser().resolve()),
+        request = {"version": 4, "implementation_generation": "provider-context-v4.2",
+                   "cwd": str(pathlib.Path(args.cwd).expanduser().resolve()),
                    "query_sha256": digest(args.query), "task_type": args.task_type, "limit": args.limit,
                    "context_budget": args.context_budget,
                    "scopes": {key: getattr(args, key) for key in
