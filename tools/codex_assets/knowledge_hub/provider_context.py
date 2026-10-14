@@ -22,9 +22,11 @@ def corpus_signature(root, args, resolution):
     private_scopes = [scope for scope in scopes if scope["type"] in {"personal", "unassigned"}]
     actor = principal(root) if private_scopes else None
     team_scopes = [scope for scope in scopes if scope["type"] in {"project", "domain"}]
-    allowed_domains, allowed_sources = set(), set()
-    if team_scopes:
-        from .common import load_json, project_rows, repository_rows, route_rows, source_id
+    allowed_domains = {scope["id"] for scope in team_scopes if scope["type"] == "domain"}
+    allowed_sources = set()
+    project_scopes = [scope for scope in team_scopes if scope["type"] == "project"]
+    if project_scopes:
+        from .common import load_json, project_rows, repository_rows, route_rows
         from .context_support import _route_domains, _route_project_ids
         routes = route_rows(root)
         projects = {row["id"]: row for row in project_rows(root)}
@@ -33,10 +35,7 @@ def corpus_signature(root, args, resolution):
             for row in load_json(root / "registry/project-groups.json", {}).get("groups", [])
         }
         repos = {row["repo_id"]: row for row in repository_rows(root)}
-        for scope in team_scopes:
-            if scope["type"] == "domain":
-                allowed_domains.add(scope["id"])
-                continue
+        for scope in project_scopes:
             matching = [row for row in routes if row["project_id"] == scope["id"]]
             if len(matching) != 1:
                 raise KnowledgeHubError("PROJECT_ROUTE_UNRESOLVED")
@@ -45,6 +44,7 @@ def corpus_signature(root, args, resolution):
                 _route_domains(route, _route_project_ids(route, groups, repos), projects)
             )
             allowed_sources.update(route.get("default_source_ids", []))
+    from .common import source_id
     rows, total = [], 0
     for item in registry_items(root):
         private = item.get("visibility") == "personal-local" or item.get("path", "").startswith("notes/personal/")
