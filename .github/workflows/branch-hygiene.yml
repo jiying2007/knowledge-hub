@@ -1,0 +1,77 @@
+name: branch-hygiene
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "43 4 * * 2"
+  workflow_run:
+    workflows:
+      - quality
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: branch-hygiene
+  cancel-in-progress: false
+
+jobs:
+  retire:
+    name: Retire exact registered branch residues
+    if: >-
+      ${{
+        github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.conclusion == 'success' &&
+         github.event.workflow_run.event == 'push' &&
+         github.event.workflow_run.head_branch == 'master')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact current master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Retire exact registered candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -c '.retirement_candidates[] | select(.expected_head != null)'             registry/branch-lifecycle.json |
+          while read -r row; do
+            branch="$(jq -r '.branch' <<<"${row}")"
+            expected="$(jq -r '.expected_head' <<<"${row}")"
+            if [[ ! "${branch}" =~ ^[A-Za-z0-9._/-]+$ || "${branch}" == "master" ]]; then
+              echo "invalid retirement branch: ${branch}" >&2
+              exit 1
+            fi
+            if [[ ! "${expected}" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "invalid expected head for ${branch}" >&2
+              exit 1
+            fi
+            ref_json="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${branch}" 2>/dev/null || true)"
+            if [[ -z "${ref_json}" ]]; then
+              echo "already absent: ${branch}"
+              continue
+            fi
+            actual="$(jq -r '.object.sha' <<<"${ref_json}")"
+            if [[ "${actual}" != "${expected}" ]]; then
+              echo "ref moved; refusing retirement: ${branch} expected=${expected} actual=${actual}" >&2
+              exit 1
+            fi
+            open_prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --head "${branch}" --json number --jq 'length')"
+            if [[ "${open_prs}" != "0" ]]; then
+              echo "open PR still owns ${branch}; refusing retirement" >&2
+              exit 1
+            fi
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${branch}"
+            echo "retired exact head: ${branch}@${expected}"
+          done
