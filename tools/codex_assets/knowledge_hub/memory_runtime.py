@@ -174,6 +174,18 @@ def _validate_event(event: Mapping[str, Any]) -> None:
             raise KnowledgeHubError("memory event missing {}".format(field))
     _date(str(event.get("recorded_at", "")))
     _source_refs(event.get("source_refs", []))
+    ttl = event.get("ttl_seconds", 0)
+    if type(ttl) is not int or not 0 <= ttl <= 365 * 24 * 3600:
+        raise KnowledgeHubError("memory TTL is outside policy")
+    summary = event.get("summary", "")
+    if not isinstance(summary, str) or len(summary) > MAX_SUMMARY_CHARS:
+        raise KnowledgeHubError("memory summary exceeds policy")
+    if str(event.get("event_type", "")) == "upsert" and not summary.strip():
+        raise KnowledgeHubError("memory summary must be non-empty")
+    if str(event.get("event_type", "")) != "upsert" and summary:
+        raise KnowledgeHubError("memory tombstone summary must be empty")
+    if event.get("canonical_write") is not False:
+        raise KnowledgeHubError("memory event must not perform canonical writes")
 
 
 def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[str, Any]:
