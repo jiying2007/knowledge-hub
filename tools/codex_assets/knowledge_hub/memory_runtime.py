@@ -187,10 +187,21 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
             rows = _read_unlocked(root)
             if len(rows) >= MAX_EVENTS:
                 raise KnowledgeHubError("memory ledger is full")
+            if path.exists() and path.stat().st_size:
+                with path.open("rb") as tail:
+                    tail.seek(-1, os.SEEK_END)
+                    if tail.read(1) != b"\n":
+                        raise KnowledgeHubError("memory ledger tail is incomplete")
             previous = str(rows[-1].get("event_sha256", "")) if rows else ""
             record = dict(event)
             record["previous_event_sha256"] = previous
             record["event_sha256"] = _digest(record)
+            encoded = (
+                json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
+            ).encode("utf-8")
+            current_bytes = path.stat().st_size if path.exists() else 0
+            if current_bytes + len(encoded) > MAX_LEDGER_BYTES:
+                raise KnowledgeHubError("memory ledger is full")
             flags = (
                 os.O_APPEND
                 | os.O_CREAT
@@ -200,10 +211,7 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
             descriptor = os.open(str(path), flags, 0o600)
             os.fchmod(descriptor, 0o600)
             with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-                handle.write(
-                    json.dumps(record, ensure_ascii=False, separators=(",", ":"))
-                    + "\n"
-                )
+                handle.write(encoded.decode("utf-8"))
                 handle.flush()
                 os.fsync(handle.fileno())
         finally:
