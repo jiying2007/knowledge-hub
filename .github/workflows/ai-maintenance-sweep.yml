@@ -67,7 +67,9 @@ jobs:
           rtk bash tools/knowledge-health-summary.sh --json \
             > .cache/knowledge-hub/ai-maintenance/health.json
           health_rc=$?
-          rtk bash tools/knowledge-review-after.sh --window-days 30 --json \
+          rtk bash tools/knowledge-review-after.sh --window-days 30 \
+            --autonomous-plan --automation-limit 10 --project-limit 2 \
+            --run-machine-checks --semantic-task --json \
             > .cache/knowledge-hub/ai-maintenance/review-after.json
           review_rc=$?
           set -e

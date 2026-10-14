@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (97)
+## validation (124)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
@@ -30,6 +30,15 @@
 - [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+
+## provider-archive (53)
+
+- [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
+- [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
+- [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing`
+- [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing`
+- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
+- [ADK 官方来源维护验证候选](../../projects/agent-dev-kit/validation/provider-agent-dev-kit-a9a2ab7befdde267c74c447a.md) · `reviewing`
 
 ## no-active-promotion (44)
 
@@ -66,15 +75,6 @@
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-
-## provider-archive (26)
-
-- [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
-- [7.14.2消费链与门禁加固最终回读](../../projects/llm-agent/validation/provider-llm-agent-4699a5202fd8753d00f8eb44.md) · `reviewing`
-- [ADK 7.14.1 来源升级与运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-63e87b8724e4e121da4d4896.md) · `reviewing`
-- [ADK 8.0.1 文件IO安全迭代与来源到运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-946122d739b2544d9d0b6975.md) · `reviewing`
-- [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
-- [ADK8.0.2持久化、锁安全与实际运行资产验证](../../projects/llm-agent/validation/provider-llm-agent-67eea36661773841b2559d61.md) · `reviewing`
 
 ## knowledge-hub (16)
 

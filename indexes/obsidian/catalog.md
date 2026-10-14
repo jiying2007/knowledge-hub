@@ -36,7 +36,9 @@
 - [外部资料吸收规范](../../governance/external-source-absorption.md) · `active` · `knowledge-hub-external-source-absorption-rules`
 - [排障记录规范](../../governance/debug-record-rules.md) · `active` · `knowledge-hub-debug-record-rules`
 - [证据写法规范](../../governance/evidence-rules.md) · `active` · `knowledge-hub-evidence-rules`
+- [AI 内容预审批次与自动收口边界](../../governance/product/validation/provider-knowledge-hub-84f3e5f2ba074e0098caa2a7.md) · `reviewing` · `provider-knowledge-hub-84f3e5f2ba074e0098caa2a7`
 - [Hosting Posture 与 GitHub 闭环分层](../../governance/hosting-posture.md) · `reviewing` · `knowledge-hub-hosting-posture-v1`
+- [Knowledge Hub AI 自动推进准备与每日维护接入](../../governance/product/validation/provider-knowledge-hub-2ec8479ec63e11add7435c69.md) · `reviewing` · `provider-knowledge-hub-2ec8479ec63e11add7435c69`
 - [Knowledge Hub Agent 运行时契约吸收决策候选](../../governance/product/decisions/agent-runtime-contract-absorption-candidate.md) · `reviewing` · `knowledge-hub-agent-runtime-contract-absorption-20260716`
 - [Knowledge Hub Contract Evolution](../../governance/contract-evolution.md) · `reviewing` · `knowledge-hub-contract-evolution-v1`
 - [Knowledge Hub Obsidian 集成边界](../../governance/obsidian-integration.md) · `reviewing` · `knowledge-hub-obsidian-integration-20260713`
@@ -48,6 +50,7 @@
 - [Knowledge Hub 写入一致性与验证证据协议优化](../../governance/product/validation/provider-knowledge-hub-efe8d8b137ac219d030fbc06.md) · `reviewing` · `provider-knowledge-hub-efe8d8b137ac219d030fbc06`
 - [Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06](../../governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md) · `reviewing` · `provider-knowledge-hub-59b973037d5b9d11b551bd39`
 - [Knowledge Hub 当前产品状态与证据缺口](../../governance/product/validation/project-readiness.md) · `reviewing` · `knowledge-hub-readiness-validation-20260713`
+- [Knowledge Hub 恢复安全与自然问句检索优化验证](../../governance/product/validation/provider-knowledge-hub-fe3802e55deaf44d2a249146.md) · `reviewing` · `provider-knowledge-hub-fe3802e55deaf44d2a249146`
 - [Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30](../../governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-validation-20260730`
 - [Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30](../../governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md) · `reviewing` · `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
 - [Knowledge Hub 第七轮建议落地验证](../../governance/product/validation/provider-knowledge-hub-0edf1f5613bc36c0adda6305.md) · `reviewing` · `provider-knowledge-hub-0edf1f5613bc36c0adda6305`
@@ -56,10 +59,13 @@
 - [Knowledge Hub 第六轮全面迭代验证记录](../../governance/product/validation/provider-knowledge-hub-d07893a6a191b3752a3b832c.md) · `reviewing` · `provider-knowledge-hub-d07893a6a191b3752a3b832c`
 - [Knowledge Hub 第四轮审查与迭代](../../governance/product/validation/provider-knowledge-hub-d868d31fd675378e3a609792.md) · `reviewing` · `provider-knowledge-hub-d868d31fd675378e3a609792`
 - [Knowledge Hub 长期数据生命周期与增长策略](../../governance/data-lifecycle-and-growth.md) · `reviewing` · `knowledge-hub-data-lifecycle-growth-v1`
+- [Knowledge Provider v4 终态主树迁移与运行验收](../../governance/product/validation/provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7.md) · `reviewing` · `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`
 - [Knowledge Provider 全归属实现验收记录](../../governance/product/archive/provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301.md) · `reviewing` · `provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301`
 - [Knowledge Provider 全归属检索与归档实施方案](../../governance/product/archive/provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26.md) · `reviewing` · `provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26`
+- [Knowledge Provider 发布核验](../../governance/product/archive/provider-knowledge-hub-790b8730417b16701123ff50.md) · `reviewing` · `provider-knowledge-hub-790b8730417b16701123ff50`
 - [Knowledge Provider 无 Git 工作区检索与候选归档设计](../../governance/product/archive/provider-knowledge-hub-6adcb6abc0606e01b3abfd73.md) · `reviewing` · `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
 - [Provider 候选归档与 Runtime intake 自动化验证](../../governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md) · `reviewing` · `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
+- [证据缺口盘点与复核推进记录](../../governance/product/validation/provider-knowledge-hub-53614ab9b8bbfe84e2d5d091.md) · `reviewing` · `provider-knowledge-hub-53614ab9b8bbfe84e2d5d091`
 - [软件工具制品隔离恢复演练 2026-07-16](../../governance/product/validation/software-tool-artifact-restore-drill-20260716.md) · `reviewing` · `software-tool-artifact-restore-drill-20260716`
 - [软件工具干净源码验证审计 2026-07-15](../../governance/product/validation/software-tool-evidence-audit-20260715.md) · `reviewing` · `software-tool-evidence-audit-20260715`
 
@@ -72,6 +78,7 @@
 ## projects/agent-dev-kit
 
 - [ADK Token 与上下文工作流优化验证](../../projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md) · `reviewing` · `agent-dev-kit-token-context-workflow-optimization-20260801`
+- [ADK 官方来源维护验证候选](../../projects/agent-dev-kit/validation/provider-agent-dev-kit-a9a2ab7befdde267c74c447a.md) · `reviewing` · `provider-agent-dev-kit-a9a2ab7befdde267c74c447a`
 - [ADK/Codex/Hub Token 与门禁优化 v2](../../projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md) · `reviewing` · `agent-dev-kit-token-context-governance-v2-20260801`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing` · `agent-dev-kit-readiness-validation-20260713`
 - [Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选](../../projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md) · `reviewing` · `agent-dev-kit-codex-team-runtime-distribution-v1`
@@ -167,21 +174,38 @@
 - [ADK8.0.5与Root参考内容身份闭环](../../projects/llm-agent/validation/provider-llm-agent-1422b948993c2cee4b4e82d7.md) · `reviewing` · `provider-llm-agent-1422b948993c2cee4b4e82d7`
 - [ADK与llm_agent信任边界及来源迭代审查候选](../../projects/llm-agent/archive/provider-llm-agent-47752ebe98d16c6e9c2adfa0.md) · `reviewing` · `provider-llm-agent-47752ebe98d16c6e9c2adfa0`
 - [ADK临时Git fixture加固收口](../../projects/llm-agent/validation/provider-llm-agent-232c6f020366e6dfa82fba4f.md) · `reviewing` · `provider-llm-agent-232c6f020366e6dfa82fba4f`
+- [Carrier 修复发布与真实模型身份缺证复验](../../projects/llm-agent/validation/provider-llm-agent-05d6a436bf36f2625ab93bf0.md) · `reviewing` · `provider-llm-agent-05d6a436bf36f2625ab93bf0`
+- [Codex 模型身份载体兼容与负诊断修复](../../projects/llm-agent/validation/provider-llm-agent-71087f273dfb302d5f589d3b.md) · `reviewing` · `provider-llm-agent-71087f273dfb302d5f589d3b`
 - [LLM Agent readiness validation](../../projects/llm-agent/validation/project-readiness.md) · `reviewing` · `llm-agent-readiness-validation-20260713`
 - [LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证](../../projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md) · `reviewing` · `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - [LLM Agent 可移植 Full 门禁修复验证 2026-07-17](../../projects/llm-agent/validation/2026-07-17-portable-full-gate-remediation.md) · `reviewing` · `llm-agent-portable-full-gate-remediation-20260717`
 - [LLM Agent 精确源码 Full 门禁审计 2026-07-17](../../projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md) · `reviewing` · `llm-agent-exact-source-full-gate-audit-20260717`
 - [LLM Agent 精确源码 Quick 门禁审计 2026-07-15](../../projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md) · `reviewing` · `llm-agent-exact-source-quick-gate-audit-20260715`
+- [M5 execution v2 真实任务与签名核验](../../projects/llm-agent/validation/provider-llm-agent-da6978d29ccbc39d2235463a.md) · `reviewing` · `provider-llm-agent-da6978d29ccbc39d2235463a`
+- [M5 v2 执行验收契约落地](../../projects/llm-agent/validation/provider-llm-agent-dd5146d74604545445b7cf86.md) · `reviewing` · `provider-llm-agent-dd5146d74604545445b7cf86`
+- [M5 一次性真实运行失败与ADK依赖修复](../../projects/llm-agent/validation/provider-llm-agent-f30190bf7f0ceb72736b4f9a.md) · `reviewing` · `provider-llm-agent-f30190bf7f0ceb72736b4f9a`
+- [M5 单次运行磁盘负结果与存储修复](../../projects/llm-agent/validation/provider-llm-agent-31988cd2df2d624396e03cd0.md) · `reviewing` · `provider-llm-agent-31988cd2df2d624396e03cd0`
+- [M5 存储修复后的真实单次运行与身份缺证](../../projects/llm-agent/validation/provider-llm-agent-6c9019634759c3598c4b9095.md) · `reviewing` · `provider-llm-agent-6c9019634759c3598c4b9095`
+- [M5 根仓交付与真实 runtime 负结果](../../projects/llm-agent/validation/provider-llm-agent-c6f631f892b9c8413e6c2b41.md) · `reviewing` · `provider-llm-agent-c6f631f892b9c8413e6c2b41`
+- [M5合并与本机一次性runtime准备](../../projects/llm-agent/validation/provider-llm-agent-4c54541ddc25de0417e371c4.md) · `reviewing` · `provider-llm-agent-4c54541ddc25de0417e371c4`
+- [M5当前main真实签名CI核验](../../projects/llm-agent/validation/provider-llm-agent-3ccf828bb9ab8991bf5f7045.md) · `reviewing` · `provider-llm-agent-3ccf828bb9ab8991bf5f7045`
+- [M5当前候选真实资格采集发布前核验](../../projects/llm-agent/validation/provider-llm-agent-53025823c567c58f2782904b.md) · `reviewing` · `provider-llm-agent-53025823c567c58f2782904b`
+- [M5执行来源与Gitlink身份修复验证闭环](../../projects/llm-agent/validation/provider-llm-agent-6295def9bb30a2c212be9cf6.md) · `reviewing` · `provider-llm-agent-6295def9bb30a2c212be9cf6`
+- [M5源码完整性Git边界修复与独立验证](../../projects/llm-agent/validation/provider-llm-agent-5aa0beb874375353fd497ca2.md) · `reviewing` · `provider-llm-agent-5aa0beb874375353fd497ca2`
+- [M5生产者干净仓库预检修复与正常流程验证](../../projects/llm-agent/validation/provider-llm-agent-4df030445710dcaf13ede006.md) · `reviewing` · `provider-llm-agent-4df030445710dcaf13ede006`
+- [M5签名执行来源修复PR194交付回执](../../projects/llm-agent/validation/provider-llm-agent-35135d5b2a455015f830b2a2.md) · `reviewing` · `provider-llm-agent-35135d5b2a455015f830b2a2`
 - [github/spec-kit 长期跟踪决策](../../projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md) · `reviewing` · `llm-agent-spec-kit-reference-tracking-20260723`
 - [github/spec-kit正式登记验证](../../projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md) · `reviewing` · `llm-agent-spec-kit-reference-onboarding-validation-20260723`
 - [llm_agent / ADK 优化闭环候选](../../projects/llm-agent/validation/provider-llm-agent-94244aa67d60c96f9375bcc7.md) · `reviewing` · `provider-llm-agent-94244aa67d60c96f9375bcc7`
 - [llm_agent / ADK 内外部审查与迭代记录](../../projects/llm-agent/validation/provider-llm-agent-f703aef64b44092a82ffe439.md) · `reviewing` · `provider-llm-agent-f703aef64b44092a82ffe439`
 - [llm_agent 与 agent-dev-kit 外部实践搜索及吸收候选](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-candidates.md) · `reviewing` · `llm-agent-external-practice-absorption-candidates-20260723`
 - [llm_agent 外部实践吸收落地](../../projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md) · `reviewing` · `llm-agent-external-practice-absorption-20260723`
+- [使用记录驱动的M5试点候选筛选与采集边界](../../projects/llm-agent/validation/provider-llm-agent-0b4e789c64d998ea9f138e05.md) · `reviewing` · `provider-llm-agent-0b4e789c64d998ea9f138e05`
 - [合并与受管应用检查点（外部 CI 阻塞交接）](../../projects/llm-agent/validation/provider-llm-agent-25d0ff0e4fc8c26e5698cdb2.md) · `reviewing` · `provider-llm-agent-25d0ff0e4fc8c26e5698cdb2`
 - [微信公众号批量研究工作流与二十篇文章优化评估](../../projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md) · `reviewing` · `llm-agent-wechat-account-research-assessment-20260716`
 - [无模型验证方案及真实证据边界](../../projects/llm-agent/validation/provider-llm-agent-8912fe6311526d7f75e9d50a.md) · `reviewing` · `provider-llm-agent-8912fe6311526d7f75e9d50a`
 - [资格工具修复与已有签名证据接入](../../projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md) · `reviewing` · `provider-llm-agent-af374aa724c6b6f6701a408f`
+- [资格工具源码交付与main运行入口回读](../../projects/llm-agent/validation/provider-llm-agent-8d83f3e3a9acd15106bf204c.md) · `reviewing` · `provider-llm-agent-8d83f3e3a9acd15106bf204c`
 
 ## projects/llm-tools
 
@@ -315,14 +339,43 @@
 - [AISpeech 四轨 reference delay 置信度边界](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-reference-delay-confidence-boundary.md) · `reviewing` · `pcr02-aispeech-reference-delay-confidence-20260915`
 - [AISpeech 回声覆盖区间与非线性留出对照](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-echo-model-review.md) · `reviewing` · `pcr02-aispeech-echo-model-review-20260921`
 - [AISpeech 声学评分对齐修复与 DTD 释放候选否决](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-quality-timeline-review.md) · `reviewing` · `pcr02-aispeech-quality-timeline-review-20260920`
+- [AISpeech 离线优化续办核验](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4.md) · `reviewing` · `provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4`
 - [AISpeech五方向全面推进与分层门禁](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-comprehensive-review.md) · `reviewing` · `aispeech-comprehensive-review-20260921`
 - [AISpeech样本18身份与电平核查](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-id18-identity-review.md) · `reviewing` · `aispeech-id18-identity-review-20260921`
 - [AISpeech迁入新媒体主线与产品链接验证](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-mainline-integration-review.md) · `reviewing` · `aispeech-mainline-integration-review-20260921`
 - [AISpeech非AGC环节审查与下一阶段重点](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-next-stage-audit.md) · `reviewing` · `aispeech-next-stage-audit-20260921`
+- [Analytic0.08dB reserve v22: reject borderline far case](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070.md) · `reviewing` · `provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070`
+- [CALL AEC v55 因果复数残余原型：负结果](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c.md) · `reviewing` · `provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c`
+- [CALL AEC v56：保留相位原型未通过双讲保护](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe.md) · `reviewing` · `provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe`
+- [CALL AEC v60 独立反例与 v61 保护实验](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4.md) · `reviewing` · `provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4`
+- [CALL AEC v65/v66 有界优化结果](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf.md) · `reviewing` · `provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf`
+- [CALL AEC v66 资源、v67 幅度占比与 v68 首次验证](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc.md) · `reviewing` · `provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc`
+- [CALL AEC v70/v71：更强候选、400例验证与原始录音](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091.md) · `reviewing` · `provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091`
+- [CALL AEC 当前优先候选固化决定](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84.md) · `reviewing` · `provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84`
+- [CALL AEC 当前最佳验证候选 v52 与原生受控接入](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922.md) · `reviewing` · `provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922`
+- [CALL AEC 独立稳定性与完整尾链复验 v6](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5.md) · `reviewing` · `provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5`
+- [CALL AEC：v62/v63 固定有界修正与 v64 独立验证](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055.md) · `reviewing` · `provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055`
+- [CALL final PCM projection constraints v17](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1.md) · `reviewing` · `provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1`
+- [CALL final PCM protected candidate v19](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648.md) · `reviewing` · `provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648`
+- [CALL 低延迟分块卷积的数学、接口及质量对照](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a.md) · `reviewing` · `provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a`
+- [CALL 原生 AEC 权重因果取证 v8](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e.md) · `reviewing` · `provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e`
+- [CALL 回声优化补充实验 v3](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b.md) · `reviewing` · `provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b`
+- [CALL 回声继续优化：配对实验与恢复复验](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016.md) · `reviewing` · `provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016`
+- [CALL 尾链单模块归因与目标投影 v9](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410.md) · `reviewing` · `provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410`
+- [CALL 无真值增益预测完整链验证 v11](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8.md) · `reviewing` · `provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8`
+- [CALL 残余回声 v57—v59 实际优化结论](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe.md) · `reviewing` · `provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe`
+- [CALL 短时相位特征与失败分层 v12](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628.md) · `reviewing` · `provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628`
+- [CALL 选择性频谱增益机制验证 v10](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec.md) · `reviewing` · `provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec`
+- [CALL 逐例保护、AGC交互及独立验证 v13-v16](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982.md) · `reviewing` · `provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982`
+- [CALL 阶段归因与两个候选的资格审查 v7](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df.md) · `reviewing` · `provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df`
+- [Correction-bound experiment and broader regression v20](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff.md) · `reviewing` · `provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff`
 - [Diag Observability Maintenance 跨平台最终平面规范 v3](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md) · `reviewing` · `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v3`
 - [Diag、Observability 与 Maintenance 平面架构审查记录](../../projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md) · `reviewing` · `pcr02-diag-observability-maintenance-plane-review-20260813`
 - [Diag、Observability 与 Maintenance 硬切换平面决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md) · `reviewing` · `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v2`
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing` · `pcr02-diag-observability-maintenance-cross-platform-plane-20260813`
+- [Expanded136 strict final-PCM fit v21: rejected](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9.md) · `reviewing` · `provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9`
+- [Fixed numerical reserve v23: development pass, independent DT failure](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645.md) · `reviewing` · `provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645`
+- [Fixed smooth prior v24: reject residual907 DT failure](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33.md) · `reviewing` · `provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33`
 - [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing` · `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
 - [HDI HAL Diag AI MP4 跨平台硬切最终复审](../../projects/xcrz-sigmastar-demo/archive/reports/2026-08-14-hdi-hal-diag-ai-mp4-hard-cut-final-review.md) · `reviewing` · `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing` · `pcr02-hdi-hal-cross-platform-host-development-review-20260813`
@@ -397,6 +450,7 @@
 - [PCR02 prog_pcr02 高负载监控证据记录](../../projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md) · `reviewing` · `pcr02-prog-pcr02-high-load-monitoring-20260702`
 - [PCR02 prog_pcr02 高负载调试手段](../../projects/xcrz-sigmastar-demo/current/runbooks/prog-pcr02-high-load-debug.md) · `reviewing` · `pcr02-prog-pcr02-high-load-debug-runbook-20260702`
 - [PCR02 prog_test AO与AI并发启动触发任务节点UAF](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-25-pcr02-prog-test-ao-ai-task-node-uaf.md) · `reviewing` · `pcr02-prog-test-ao-ai-task-node-uaf-20260825`
+- [PCR02 pstore 现场核验与暂缓启用](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95.md) · `reviewing` · `provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95`
 - [PCR02 产品出海就绪度与合规缺口归档](../../projects/xcrz-sigmastar-demo/archive/reports/2026-09-03-pcr02-export-readiness-compliance-gap.md) · `reviewing` · `pcr02-export-readiness-compliance-gap-20260903`
 - [PCR02 充电待机亮屏后的显示恢复与全量重绘候选](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md) · `reviewing` · `pcr02-display-resume-redraw-20260829`
 - [PCR02 公开 WiFi 凭据安全类型有界扫描验证](../../projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md) · `reviewing` · `pcr02-public-wifi-bounded-security-scan-20260914`
@@ -427,9 +481,32 @@
 - [app_sensor_test 选择完整性、构建身份与性能门禁验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md) · `reviewing` · `app-sensor-test-selection-performance-closure-20260731`
 - [daemon 与 prog_ota UART 独占租约验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md) · `reviewing` · `daemon-ota-uart-lease-validation-2026-08-04`
 - [prog_pcr02 Common/Proto预编译库不一致排障](../../projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-prog-pcr02-common-proto-link-failure.md) · `reviewing` · `xcrz-prog-pcr02-common-proto-link-debug-20260805`
+- [v25：160 例回归通过，新的 24 例否决采用](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb.md) · `reviewing` · `provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb`
+- [v26 固定双讲保护：证明需要重建拟合几何](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4.md) · `reviewing` · `provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4`
+- [v27：固定双讲保护新几何未达到远端收益](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91.md) · `reviewing` · `provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91`
+- [v28 直接 SI 锥候选：实际回归拒绝](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5.md) · `reviewing` · `provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5`
+- [v29：扩大开发覆盖后的固定 SI 锥候选](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9.md) · `reviewing` · `provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9`
+- [v30固定算术组约束负结果](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a.md) · `reviewing` · `provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a`
+- [v31：开发完整通过，保留独立集双讲失败](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4.md) · `reviewing` · `provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4`
+- [v32：上一整Feed对齐的shadow DTD逐帧诊断](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f.md) · `reviewing` · `provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f`
+- [v33：固定平滑 echo 占优保护未通过](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086.md) · `reviewing` · `provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086`
+- [v34：切换归因与固定保护条件的收益上限](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad.md) · `reviewing` · `provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad`
+- [v35：瞬时残差保护未通过](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc.md) · `reviewing` · `provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc`
+- [v36：实际 raw mic / estimated echo 归一化复相干性观察](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f.md) · `reviewing` · `provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f`
+- [v37：复相干性连续混合仍未通过](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd.md) · `reviewing` · `provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd`
+- [v39：已保留小幅消回声优化候选](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21.md) · `reviewing` · `provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21`
+- [v40 接力：安全小幅候选已保留，置信度几何仍待完整拟合](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c.md) · `reviewing` · `provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c`
+- [v41：完整收益拟合未建立可行性，小幅候选通过首次新24例](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4.md) · `reviewing` · `provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4`
+- [v43：优化几何已可行，但实际语音保护阻止晋升](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408.md) · `reviewing` · `provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408`
+- [v47：当前选择固定半强度候选，主目标尚未完全解决](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e.md) · `reviewing` · `provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e`
+- [v69 原生 v67 候选接入验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83.md) · `reviewing` · `provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83`
+- [v70原生隔离集成v72验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c.md) · `reviewing` · `provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c`
+- [v70原生隔离集成v72验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480.md) · `reviewing` · `provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480`
 - [xcrz_sigmastar_demo_dev 三目录吸收与删除验证](../../projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md) · `reviewing` · `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
+- [参考独立 aec/src 的 CALL AEC 对照与修复](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9.md) · `reviewing` · `provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9`
 - [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing` · `pcr02-four-repo-ai-coding-team-knowledge-20260905`
 - [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing` · `module-ai-platform-boundary-20260906`
+- [当前最优已验证候选：固定半强度v46，仍为次级优化](../../projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d.md) · `reviewing` · `provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d`
 - [本地 GROS 构建与制品交付审查验证](../../projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md) · `reviewing` · `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
 - [音频中立命名最终修订：保留原构建配置](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-final.md) · `reviewing` · `audio-neutral-naming-final-20260921`
 - [音频候选迁回开发路径与验证边界](../../projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-devpath-port-review.md) · `reviewing` · `aispeech-devpath-port-review-20260921`

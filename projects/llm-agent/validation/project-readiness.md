@@ -44,6 +44,12 @@ related:
 
 结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，decision owner 与 owner_ref 已通过 hash-bound attestation 绑定。`llm_agent@150fdee1509b899bbb0d8c0762b7a9313b63ba94` 已 fast-forward 发布到 `origin/main`，隔离源码与当前主机远端恢复 Full 均为 62/62，313 篇 live-corpus 校验通过。正式 artifact、release record、私有 submodule 零配置跨主机恢复和 rollback 证据仍未完成。当前结论是 `remote-source-restorable-on-current-host / evidence-pending`，不是 release-ready。
 
+## 历史基线与后续证据入口
+
+本页 `150fdee`、62/62 与 313 篇 corpus 数值描述 2026-07-17 的历史验证基线，不应作为当前 HEAD 或最新版本的证明。2026-10-10 回读发现已有[ADK 3.1.0-rc.3 本地发布候选闭环记录](adk-v3-1-rc3-release-closure-20260718.md)，包含后续根仓 `a1f6fa0f12b861d9139939b2acc054d0c4d7fb19`、ADK release source `defe8a078b9693b6963e434f3131891ebbcf5d62`、RC3 制品哈希与 RC2 到 RC3 升级回滚演练。
+
+该记录中的制品和 39 项安装/回滚属于 ADK 子仓；不能直接充当 `llm-agent` 根产品的 artifact、release 或 rollback 证据，也不能证明当前版本已完成相同验证。下一步应分别核对根产品与 ADK 的精确来源、机器收据和消费者身份，再评估受控补录。本页不修改 evidence contract、人工复核或发布资格。
+
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。

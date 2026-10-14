@@ -607,9 +607,86 @@
 - Knowledge Hub 第八轮检索边界与验收记录: `governance/product/validation/provider-knowledge-hub-56f418441b56faa9b2eb4fdd.md`; `provider-knowledge-hub-56f418441b56faa9b2eb4fdd`
 - 默认配置与执行日志修复交付应用闭环: `domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md`; `provider-codex-f8fab5f7ef5796515f389169`
 - 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`
+- 资格工具源码交付与main运行入口回读: `projects/llm-agent/validation/provider-llm-agent-8d83f3e3a9acd15106bf204c.md`; `provider-llm-agent-8d83f3e3a9acd15106bf204c`
+- AISpeech 离线优化续办核验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4.md`; `provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4`
+- Knowledge Hub 恢复安全与自然问句检索优化验证: `governance/product/validation/provider-knowledge-hub-fe3802e55deaf44d2a249146.md`; `provider-knowledge-hub-fe3802e55deaf44d2a249146`
+- CALL 回声继续优化：配对实验与恢复复验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016.md`; `provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016`
+- CALL 回声优化补充实验 v3: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b.md`; `provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b`
+- 参考独立 aec/src 的 CALL AEC 对照与修复: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9.md`; `provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9`
+- CALL 低延迟分块卷积的数学、接口及质量对照: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a.md`; `provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a`
+- CALL AEC 独立稳定性与完整尾链复验 v6: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5.md`; `provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5`
+- Knowledge Hub AI 自动推进准备与每日维护接入: `governance/product/validation/provider-knowledge-hub-2ec8479ec63e11add7435c69.md`; `provider-knowledge-hub-2ec8479ec63e11add7435c69`
+- CALL 阶段归因与两个候选的资格审查 v7: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df.md`; `provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df`
+- CALL 原生 AEC 权重因果取证 v8: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e.md`; `provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e`
+- AI 内容预审批次与自动收口边界: `governance/product/validation/provider-knowledge-hub-84f3e5f2ba074e0098caa2a7.md`; `provider-knowledge-hub-84f3e5f2ba074e0098caa2a7`
+- CALL 尾链单模块归因与目标投影 v9: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410.md`; `provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410`
+- CALL 选择性频谱增益机制验证 v10: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec.md`; `provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec`
+- CALL 无真值增益预测完整链验证 v11: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8.md`; `provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8`
+- CALL 短时相位特征与失败分层 v12: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628.md`; `provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628`
+- CALL 逐例保护、AGC交互及独立验证 v13-v16: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982.md`; `provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982`
+- 证据缺口盘点与复核推进记录: `governance/product/validation/provider-knowledge-hub-53614ab9b8bbfe84e2d5d091.md`; `provider-knowledge-hub-53614ab9b8bbfe84e2d5d091`
+- 使用记录驱动的M5试点候选筛选与采集边界: `projects/llm-agent/validation/provider-llm-agent-0b4e789c64d998ea9f138e05.md`; `provider-llm-agent-0b4e789c64d998ea9f138e05`
+- CALL final PCM projection constraints v17: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1.md`; `provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1`
+- CALL final PCM protected candidate v19: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648.md`; `provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648`
+- Correction-bound experiment and broader regression v20: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff.md`; `provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff`
+- Expanded136 strict final-PCM fit v21: rejected: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9.md`; `provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9`
+- Analytic0.08dB reserve v22: reject borderline far case: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070.md`; `provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070`
+- Fixed numerical reserve v23: development pass, independent DT failure: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645.md`; `provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645`
+- Fixed smooth prior v24: reject residual907 DT failure: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33.md`; `provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33`
+- v25：160 例回归通过，新的 24 例否决采用: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb.md`; `provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb`
+- v26 固定双讲保护：证明需要重建拟合几何: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4.md`; `provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4`
+- v27：固定双讲保护新几何未达到远端收益: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91.md`; `provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91`
+- v28 直接 SI 锥候选：实际回归拒绝: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5.md`; `provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5`
+- v29：扩大开发覆盖后的固定 SI 锥候选: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9.md`; `provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9`
+- v30固定算术组约束负结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a.md`; `provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a`
+- v31：开发完整通过，保留独立集双讲失败: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4.md`; `provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4`
+- v32：上一整Feed对齐的shadow DTD逐帧诊断: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f.md`; `provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f`
+- v33：固定平滑 echo 占优保护未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086.md`; `provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086`
+- v34：切换归因与固定保护条件的收益上限: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad.md`; `provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad`
+- v35：瞬时残差保护未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc.md`; `provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc`
+- v36：实际 raw mic / estimated echo 归一化复相干性观察: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f.md`; `provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f`
+- v37：复相干性连续混合仍未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd.md`; `provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd`
+- v39：已保留小幅消回声优化候选: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21.md`; `provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21`
+- v40 接力：安全小幅候选已保留，置信度几何仍待完整拟合: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c.md`; `provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c`
+- M5执行来源与Gitlink身份修复验证闭环: `projects/llm-agent/validation/provider-llm-agent-6295def9bb30a2c212be9cf6.md`; `provider-llm-agent-6295def9bb30a2c212be9cf6`
+- v41：完整收益拟合未建立可行性，小幅候选通过首次新24例: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4.md`; `provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4`
+- v43：优化几何已可行，但实际语音保护阻止晋升: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408.md`; `provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408`
+- M5生产者干净仓库预检修复与正常流程验证: `projects/llm-agent/validation/provider-llm-agent-4df030445710dcaf13ede006.md`; `provider-llm-agent-4df030445710dcaf13ede006`
+- v47：当前选择固定半强度候选，主目标尚未完全解决: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e.md`; `provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e`
+- 当前最优已验证候选：固定半强度v46，仍为次级优化: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d.md`; `provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d`
+- CALL AEC 当前最佳验证候选 v52 与原生受控接入: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922.md`; `provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922`
+- CALL AEC v55 因果复数残余原型：负结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c.md`; `provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c`
+- CALL AEC v56：保留相位原型未通过双讲保护: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe.md`; `provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe`
+- CALL 残余回声 v57—v59 实际优化结论: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe.md`; `provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe`
+- M5源码完整性Git边界修复与独立验证: `projects/llm-agent/validation/provider-llm-agent-5aa0beb874375353fd497ca2.md`; `provider-llm-agent-5aa0beb874375353fd497ca2`
+- CALL AEC v60 独立反例与 v61 保护实验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4.md`; `provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4`
+- CALL AEC：v62/v63 固定有界修正与 v64 独立验证: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055.md`; `provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055`
+- M5当前候选真实资格采集发布前核验: `projects/llm-agent/validation/provider-llm-agent-53025823c567c58f2782904b.md`; `provider-llm-agent-53025823c567c58f2782904b`
+- CALL AEC v65/v66 有界优化结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf.md`; `provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf`
+- M5签名执行来源修复PR194交付回执: `projects/llm-agent/validation/provider-llm-agent-35135d5b2a455015f830b2a2.md`; `provider-llm-agent-35135d5b2a455015f830b2a2`
+- CALL AEC v66 资源、v67 幅度占比与 v68 首次验证: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc.md`; `provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc`
+- v69 原生 v67 候选接入验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83.md`; `provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83`
+- CALL AEC v70/v71：更强候选、400例验证与原始录音: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091.md`; `provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091`
+- M5合并与本机一次性runtime准备: `projects/llm-agent/validation/provider-llm-agent-4c54541ddc25de0417e371c4.md`; `provider-llm-agent-4c54541ddc25de0417e371c4`
+- v70原生隔离集成v72验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c.md`; `provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c`
+- v70原生隔离集成v72验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480.md`; `provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480`
+- M5当前main真实签名CI核验: `projects/llm-agent/validation/provider-llm-agent-3ccf828bb9ab8991bf5f7045.md`; `provider-llm-agent-3ccf828bb9ab8991bf5f7045`
+- CALL AEC 当前优先候选固化决定: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84.md`; `provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84`
 - Knowledge Provider 无 Git 工作区检索与候选归档设计: `governance/product/archive/provider-knowledge-hub-6adcb6abc0606e01b3abfd73.md`; `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
+- M5 一次性真实运行失败与ADK依赖修复: `projects/llm-agent/validation/provider-llm-agent-f30190bf7f0ceb72736b4f9a.md`; `provider-llm-agent-f30190bf7f0ceb72736b4f9a`
 - A123X 知识入口: `projects/a123x/README.md`; `a123x-knowledge-entry`
 - A123X readiness validation: `projects/a123x/validation/project-readiness.md`; `a123x-readiness-validation-20261012`
 - Knowledge Provider 全归属检索与归档实施方案: `governance/product/archive/provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26.md`; `provider-v2-5b2ae8883dede902ab130696ae09ce5a7f574d6a0668985e145607bade9d1d26`
 - A123X Knowledge Provider 路由与候选归档验证: `projects/a123x/archive/provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32.md`; `provider-v2-8b526eb06a58fa0cb58b1b0f2a8009b5113838759c7de0cd41820d559d1b2d32`
 - Knowledge Provider 全归属实现验收记录: `governance/product/archive/provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301.md`; `provider-v2-14464b13e3f8db887ee8071db5c25748c4f9fa429ef4ed33baa0f59f352c1301`
+- Knowledge Provider 发布核验: `governance/product/archive/provider-knowledge-hub-790b8730417b16701123ff50.md`; `provider-knowledge-hub-790b8730417b16701123ff50`
+- ADK 官方来源维护验证候选: `projects/agent-dev-kit/validation/provider-agent-dev-kit-a9a2ab7befdde267c74c447a.md`; `provider-agent-dev-kit-a9a2ab7befdde267c74c447a`
+- M5 根仓交付与真实 runtime 负结果: `projects/llm-agent/validation/provider-llm-agent-c6f631f892b9c8413e6c2b41.md`; `provider-llm-agent-c6f631f892b9c8413e6c2b41`
+- M5 单次运行磁盘负结果与存储修复: `projects/llm-agent/validation/provider-llm-agent-31988cd2df2d624396e03cd0.md`; `provider-llm-agent-31988cd2df2d624396e03cd0`
+- M5 存储修复后的真实单次运行与身份缺证: `projects/llm-agent/validation/provider-llm-agent-6c9019634759c3598c4b9095.md`; `provider-llm-agent-6c9019634759c3598c4b9095`
+- PCR02 pstore 现场核验与暂缓启用: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95.md`; `provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95`
+- Codex 模型身份载体兼容与负诊断修复: `projects/llm-agent/validation/provider-llm-agent-71087f273dfb302d5f589d3b.md`; `provider-llm-agent-71087f273dfb302d5f589d3b`
+- Carrier 修复发布与真实模型身份缺证复验: `projects/llm-agent/validation/provider-llm-agent-05d6a436bf36f2625ab93bf0.md`; `provider-llm-agent-05d6a436bf36f2625ab93bf0`
+- M5 v2 执行验收契约落地: `projects/llm-agent/validation/provider-llm-agent-dd5146d74604545445b7cf86.md`; `provider-llm-agent-dd5146d74604545445b7cf86`
+- M5 execution v2 真实任务与签名核验: `projects/llm-agent/validation/provider-llm-agent-da6978d29ccbc39d2235463a.md`; `provider-llm-agent-da6978d29ccbc39d2235463a`
+- Knowledge Provider v4 终态主树迁移与运行验收: `governance/product/validation/provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7.md`; `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`

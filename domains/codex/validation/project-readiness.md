@@ -43,6 +43,12 @@ related:
 
 结构性工作台已建立；本机 source 定位由未跟踪 local mapping 动态报告，decision owner 与 owner_ref 已通过 hash-bound attestation 绑定；工程验证、实机/目标平台和发布证据尚未由本页完成。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
 
+## 已发现的后续运行采用记录
+
+2026-10-10 回读发现已有[Codex 7.14.2 来源与运行采用验证](provider-codex-8008d911326cf0c6cbb838fb.md)。该 reviewing 记录描述 2026-10-06 的 ADK 来源、Codex main `55ee271dc86926e0fe8192179f4c724ece54608e`、source-to-live 的 build/doctor/plan/dry-run/apply/check 链路，以及 build tree、plan 和 live managed state 哈希。
+
+这说明存在可继续核验的后续材料，不应再将本页“待填写”理解为完全没有历史运行采用记录。补录前需回读相应精确源码和机器收据；一次成功 live apply、保留备份或 clean managed state 均不等于实际回滚演练。release 与 rollback 合同缺口仍保留，本页不据候选摘要声明当前 live、Owner 或产品资格。
+
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。
