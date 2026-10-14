@@ -239,3 +239,36 @@ def test_structured_filter_is_applied_before_candidate_limit(tmp_path, monkeypat
         filters=SearchFilters(domains=["projects/wanted"]),
     )
     assert [row["item_id"] for row in result["results"]] == ["target"]
+
+
+def test_static_connector_cannot_skip_unconsumed_page():
+    adapter = connector_runtime.StaticConnectorAdapter(
+        "static",
+        [
+            {"object_id": str(index), "version": "1", "body": "x"}
+            for index in range(3)
+        ],
+    )
+    with pytest.raises(KnowledgeHubError, match="exceeds batch limit"):
+        adapter.list_changed("", limit=2)
+
+
+def test_connector_acl_rejects_nonstring_subject():
+    with pytest.raises(KnowledgeHubError, match="invalid subject"):
+        connector_runtime.normalize_object(
+            "static", {"object_id": "one", "version": "1", "acl": [17]},
+        )
+
+
+def test_provider_adapter_rejects_acl_truncation():
+    from tools.codex_assets.knowledge_hub.connector_adapters import github_object
+
+    with pytest.raises(KnowledgeHubError, match="excessive"):
+        github_object(
+            {
+                "repository": "org/repo",
+                "path": "README.md",
+                "sha": "a" * 40,
+                "acl": ["alice"] * 65,
+            }
+        )
