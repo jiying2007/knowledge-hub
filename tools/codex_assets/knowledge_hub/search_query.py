@@ -8,7 +8,7 @@ import pathlib
 import sqlite3
 import time
 from collections import Counter
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, List, Mapping, Optional
 from .common import KnowledgeHubError, utc_timestamp
 from .retrieval_telemetry import IMPLEMENTATION_GENERATION, INTERACTION_CONTRACT, INTERACTIVE_TELEMETRY_SCHEMA_VERSION, PERFORMANCE_CONTRACT, append_optional_telemetry, make_interaction_id
 from .search_ranking import is_historical_result as _historical_result
