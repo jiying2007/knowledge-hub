@@ -1,4 +1,10 @@
 ---
+aliases:
+- X5 V1.1.2实机前交付闭环
+related:
+- projects/firmware-toolchains/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: firmware-toolchains-x5-pre-board-readiness-20260806
 title: X5 V1.1.2实机前交付闭环
 kind: validation
@@ -14,7 +20,7 @@ source:
   source_sha256: da51cb2cde2428e0195ba263f427d1a6326b0e0a5810d837a301f225efe8f60a
   temporary_source_retained: false
 review_after: '2026-11-06'
-review_status: manual-entry-pending-review
+review_status: human-reviewed-accepted
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -32,7 +38,7 @@ evidence_refs:
 - projects/firmware-toolchains/validation/2026-08-06-x5-pre-board-readiness.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-06'
-updated_at: '2026-08-06'
+updated_at: '2026-10-10'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -43,12 +49,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- X5 V1.1.2实机前交付闭环
-related:
-- projects/firmware-toolchains/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # X5 V1.1.2 实机前交付闭环

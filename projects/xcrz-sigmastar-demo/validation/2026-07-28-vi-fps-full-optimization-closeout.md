@@ -123,8 +123,10 @@ PASS；route 分别为 5、6、1，MAIN/SUB 首帧均为 IDR，PTS rollback 为 
 | HOT | 0.504283s | 2.240004s | 2.288696s | 0 |
 
 最终 `VSHDIVI_DeInit` 的完整 ISP Device 释放仍需约 1.44–1.53s。这是进程退出或完整
-销毁阶段，不是 WARM/HOT profile 切换路径。常驻应用应通过 WARM/HOT 保留可安全复用
-的 ISP Device 来避开切换内 deinit；不能通过跳过最终 deinit 或泄漏资源来缩短退出时间。
+销毁阶段，不是 WARM/HOT profile 切换路径。当时的单轮实验说明了在受控条件下通过
+WARM/HOT 复用 ISP Device 避开切换内 deinit 的可能性；不能据此批准常驻应用默认启用，
+也不能通过跳过最终 deinit 或泄漏资源来缩短退出时间。后续复用建议以生产默认 COLD
+为保守基线，WARM/HOT 仅显式 opt-in 的受控实验；新制品仍需独立资格验证与批准。
 
 严格诊断 JSON smoke 返回成功。最终内核日志窗口未发现 CMDQ error/fail/timeout/reset、
 recursive reset、`CheckOutputTaskStatus`、segfault、fatal 或 assert。

@@ -66,6 +66,15 @@ related:
 
 结构性工作台已建立；真实 owner `leiwenjun` 已确认 `group / embedded-target` 边界，源码、设备、制品、发布和回滚证据仍待验证。当前结论是 `structurally-ready / evidence-pending`，不是 release-ready。
 
+## 已发现的历史证据入口
+
+2026-10-10 回读登记材料发现，X5 V1.1.2 的主机构建与实机前收据记录保留在 `firmware-toolchains` 项目下；按本项目 README 的边界引用原文，不迁移或复制正文：
+
+- [X5 SDK V1.1.2 固件构建验证](../../firmware-toolchains/validation/2026-08-05-x5-v1.1.2-firmware-build.md)：记载 manifest commit `9b1e8ef20c56304db60ce89159c4eaa0e057264f`、27 项源码同步、主机全量构建及 eMMC/sparse 镜像 SHA256。
+- [X5 V1.1.2 实机前交付闭环](../../firmware-toolchains/validation/2026-08-06-x5-pre-board-readiness.md)：记载 integration commit `135b1e8c93166ea2aca3dc686ddd69e8138666e0`、vendor-docs commit `eb8219cc19c36842e5513c1c52bd564e97e3ee8f` 及 16 项文件哈希复核。
+
+以上是已登记、待复核的历史来源，不证明当前 X5 基线或设备通过。本页 evidence contract 尚未绑定这些来源；补录前应回读对应源仓不可变 manifest、构建收据与制品哈希，确认项目和版本一致。设备、正式发布与回滚仍待真实验证。
+
 ## 自动结构检查
 
 - [x] registry item 与正文 frontmatter 镜像一致。

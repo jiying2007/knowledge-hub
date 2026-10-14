@@ -152,7 +152,7 @@ related:
 
 较早一次只读 preflight 曾按用户显式 serial 选择设备并确认 ADB 状态为 `device`。当时证据：
 
-- boot_id：`2f9d00d7-dc56-4f20-b196-2fbaa3b81638`；
+- 启动身份已核验；具体设备标识不进入 Hub。
 - preflight 时 uptime：约10小时47分钟；
 - `prog_pcr02`、`prog_sensor_test` 当时均未运行；
 - installed `prog_sensor_test`：80,494,700 bytes，MD5

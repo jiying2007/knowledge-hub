@@ -3,6 +3,12 @@ aliases:
 - Codex 7.14.2 来源与运行采用验证
 related:
 - indexes/obsidian-home.md
+subject_ref: &id001
+  id: codex
+  type: project
+created_subject_ref: *id001
+principal_id: null
+provider_operation_id: 8008d911326cf0c6cbb838fb24344f60c2f97f7ac874f8798f35432da21d0641
 id: provider-codex-8008d911326cf0c6cbb838fb
 title: Codex 7.14.2 来源与运行采用验证
 kind: validation
@@ -18,7 +24,7 @@ source:
   source_sha256: b57eaedcbb111dd4c8f900859e2e8ca80627f260d84bbf570c0109082da7c32a
   temporary_source_retained: false
 review_after: '2027-01-04'
-review_status: manual-entry-pending-review
+review_status: pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +40,7 @@ evidence_refs:
 - domains/codex/validation/provider-codex-8008d911326cf0c6cbb838fb.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-10-06'
-updated_at: '2026-10-06'
+updated_at: '2026-10-10'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -47,12 +53,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: codex
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 8008d911326cf0c6cbb838fb24344f60c2f97f7ac874f8798f35432da21d0641
 ---
 
 # Codex 7.14.2 来源与运行采用验证
