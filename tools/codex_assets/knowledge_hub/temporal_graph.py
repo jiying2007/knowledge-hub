@@ -117,6 +117,74 @@ def _explicit_edges(item: Mapping[str, Any]) -> List[Tuple[str, str]]:
     return edges
 
 
+def _graph_result(
+    by_id: Mapping[str, Mapping[str, Any]],
+    visited: Set[str],
+    edges: Sequence[Mapping[str, Any]],
+    frontier: Set[str],
+    *,
+    today: dt.date,
+    source: str,
+    principal: Optional[Mapping[str, Any]],
+    knowledge_scopes: Sequence[str],
+) -> Dict[str, Any]:
+    truncated = bool(frontier)
+    closed_edges = [
+        dict(edge)
+        for edge in edges
+        if str(edge.get("source_id", "")) in visited
+        and str(edge.get("target_id", "")) in visited
+    ]
+    nodes = []
+    episodes = []
+    for item_id in sorted(visited):
+        item = by_id[item_id]
+        nodes.append(
+            {
+                "id": item_id,
+                "kind": "knowledge-item",
+                "title": str(item.get("title", "")),
+                "status": str(item.get("status", "")),
+                "domain": str(item.get("domain", "")),
+                "valid_from": str(item.get("valid_from", "")),
+                "valid_to": str(item.get("valid_to", "")),
+                "tags": [str(value) for value in item.get("tags", [])][:32],
+            }
+        )
+        episodes.append(
+            {
+                "id": _episode_id(item),
+                "item_id": item_id,
+                "observed_at": str(item.get("updated_at", item.get("created_at", ""))),
+                "provenance": item.get("source", {}),
+            }
+        )
+    principal_id = (
+        principal_context(principal)["principal_id"]
+        if principal is not None
+        else "anonymous-local"
+    )
+    return {
+        "schema_version": "knowledge-hub.temporal-context-graph.v1",
+        "status": "needs-review" if truncated else "pass",
+        "derived": True,
+        "authoritative": False,
+        "as_of": today.isoformat(),
+        "as_of_source": source,
+        "principal_id": principal_id,
+        "knowledge_scopes": [str(value) for value in knowledge_scopes],
+        "authorization_applied_before_graph": True,
+        "nodes": nodes,
+        "edges": closed_edges,
+        "episodes": episodes,
+        "node_count": len(nodes),
+        "edge_count": len(closed_edges),
+        "truncated": truncated,
+        "coverage_complete": not truncated,
+        "canonical_graph_mutated": False,
+    }
+
+
 def temporal_context_graph(
     root: pathlib.Path,
     *,
@@ -166,56 +234,13 @@ def temporal_context_graph(
             )
             if target not in visited and seed_ids:
                 frontier.add(target)
-    truncated = bool(frontier)
-    edges = [
-        edge
-        for edge in edges
-        if str(edge.get("source_id", "")) in visited
-        and str(edge.get("target_id", "")) in visited
-    ]
-    nodes = []
-    episodes = []
-    for item_id in sorted(visited):
-        item = by_id[item_id]
-        nodes.append(
-            {
-                "id": item_id,
-                "kind": "knowledge-item",
-                "title": str(item.get("title", "")),
-                "status": str(item.get("status", "")),
-                "domain": str(item.get("domain", "")),
-                "valid_from": str(item.get("valid_from", "")),
-                "valid_to": str(item.get("valid_to", "")),
-                "tags": [str(value) for value in item.get("tags", [])][:32],
-            }
-        )
-        episodes.append(
-            {
-                "id": _episode_id(item),
-                "item_id": item_id,
-                "observed_at": str(item.get("updated_at", item.get("created_at", ""))),
-                "provenance": item.get("source", {}),
-            }
-        )
-    principal_id = "anonymous-local"
-    if principal is not None:
-        principal_id = principal_context(principal)["principal_id"]
-    return {
-        "schema_version": "knowledge-hub.temporal-context-graph.v1",
-        "status": "needs-review" if truncated else "pass",
-        "derived": True,
-        "authoritative": False,
-        "as_of": today.isoformat(),
-        "as_of_source": source,
-        "principal_id": principal_id,
-        "knowledge_scopes": [str(value) for value in knowledge_scopes],
-        "authorization_applied_before_graph": True,
-        "nodes": nodes,
-        "edges": edges,
-        "episodes": episodes,
-        "node_count": len(nodes),
-        "edge_count": len(edges),
-        "truncated": truncated,
-        "coverage_complete": not truncated,
-        "canonical_graph_mutated": False,
-    }
+    return _graph_result(
+        by_id,
+        visited,
+        edges,
+        frontier,
+        today=today,
+        source=source,
+        principal=principal,
+        knowledge_scopes=knowledge_scopes,
+    )
