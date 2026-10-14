@@ -264,6 +264,26 @@ def active_memories(
     return sorted(state.values(), key=lambda row: str(row.get("recorded_at", "")))
 
 
+def _require_active_memory(
+    root: pathlib.Path,
+    *,
+    memory_id: str,
+    principal_id: str,
+    agent_id: str,
+    scope_ref: str,
+) -> None:
+    if not any(
+        str(row.get("memory_id", "")) == memory_id
+        for row in active_memories(
+            root,
+            principal_id=principal_id,
+            agent_id=agent_id,
+            scope_ref=scope_ref,
+        )
+    ):
+        raise KnowledgeHubError("memory is not active in the requested scope")
+
+
 def forget_memory(
     root: pathlib.Path,
     *,
@@ -272,6 +292,13 @@ def forget_memory(
     agent_id: str,
     scope_ref: str,
 ) -> Dict[str, Any]:
+    _require_active_memory(
+        root,
+        memory_id=memory_id,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
     event = memory_event(
         agent_id=agent_id,
         principal_id=principal_id,
@@ -293,6 +320,13 @@ def supersede_memory(
     agent_id: str,
     scope_ref: str,
 ) -> Dict[str, Any]:
+    _require_active_memory(
+        root,
+        memory_id=memory_id,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
     event = memory_event(
         agent_id=agent_id,
         principal_id=principal_id,
