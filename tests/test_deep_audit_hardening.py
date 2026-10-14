@@ -212,3 +212,30 @@ def test_memory_scope_delete_scans_ledger_constant_times(tmp_path, monkeypatch):
     assert result["scope_deleted"] is True
     assert result["deleted_count"] == 40
     assert calls["count"] <= 3
+
+
+def test_structured_filter_is_applied_before_candidate_limit(tmp_path, monkeypatch):
+    from tests.test_fifth_retrieval import _hub, _item
+    from tools.codex_assets.knowledge_hub.search import SearchFilters, SearchIndex, search
+
+    noisy = _item(
+        "noise",
+        "flash flash flash flash flash",
+        "flash " * 40,
+        project="other",
+    )
+    target = _item(
+        "target",
+        "flash target",
+        "flash target answer",
+        project="wanted",
+    )
+    root = _hub(tmp_path, [noisy, target])
+    monkeypatch.setattr(SearchIndex, "CANDIDATE_LIMIT", 1)
+    monkeypatch.setattr(SearchIndex, "STRUCTURED_CANDIDATE_LIMIT", 1)
+    result = search(
+        root,
+        "flash",
+        filters=SearchFilters(domains=["projects/wanted"]),
+    )
+    assert [row["item_id"] for row in result["results"]] == ["target"]
