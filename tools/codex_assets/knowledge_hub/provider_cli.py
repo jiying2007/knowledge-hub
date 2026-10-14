@@ -48,7 +48,7 @@ class ProviderParser(argparse.ArgumentParser):
 
     def print_help(self, file=None):
         operation = getattr(self, "help_operation", None)
-        allowed = PUBLIC_COMMON_FIELDS | OPERATION_FIELDS.get(operation, set())
+        allowed = PUBLIC_COMMON_FIELDS | (OPERATION_FIELDS.get(operation, set()) if operation is not None else set())
         options = [{"flags": action.option_strings,
                     "allowed_values": list(action.choices) if action.choices is not None else []}
                    for action in self._actions if action.option_strings
