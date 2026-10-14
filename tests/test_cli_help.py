@@ -1,4 +1,5 @@
 import importlib
+import json
 
 import pytest
 
@@ -56,4 +57,10 @@ def test_public_cli_exposes_zero_exit_help(module_name, capsys):
 
     output = capsys.readouterr().out
     assert raised.value.code == 0
-    assert "usage:" in output
+    if module_name == "provider_cli":
+        result = json.loads(output)
+        assert result["schema_version"] == "knowledge-provider.help/v4"
+        assert result["status"] == "HELP" and result["read_only"] is True
+        assert result["persisted"] is False and result["write_performed"] is False
+    else:
+        assert "usage:" in output

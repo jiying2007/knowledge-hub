@@ -1,4 +1,5 @@
 import os
+import json
 import pathlib
 import shutil
 import subprocess
@@ -59,7 +60,10 @@ def test_ci_transport_allows_current_provider_and_rejects_retired_context():
     }
     result = _run("bash", "tools/knowledge-provider.sh", "--help", extra_env=environment)
     assert result.returncode == 0, result.stderr
-    assert "Knowledge Provider v4" in result.stdout
+    help_result = json.loads(result.stdout)
+    assert help_result["schema_version"] == "knowledge-provider.help/v4"
+    assert help_result["status"] == "HELP" and help_result["read_only"] is True
+    assert "context" in help_result["operations"]
     retired = _run("bash", "tools/knowledge-context.sh", "--help")
     assert retired.returncode == 64
     assert "denied wrapper" in retired.stderr
