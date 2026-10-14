@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -47,6 +48,13 @@ def _checkpoint_path(root: pathlib.Path, connector_id: str) -> pathlib.Path:
     return path
 
 
+def _checkpoint_lock_path(root: pathlib.Path, connector_id: str) -> pathlib.Path:
+    path = _checkpoint_path(root, connector_id).with_name("checkpoint.lock")
+    if path.exists() and path.is_symlink():
+        raise KnowledgeHubError("connector checkpoint lock must not be a symlink")
+    return path
+
+
 def load_checkpoint(root: pathlib.Path, connector_id: str) -> Dict[str, Any]:
     path = _checkpoint_path(root, connector_id)
     if not path.exists():
@@ -70,37 +78,46 @@ def save_checkpoint(
     if len(cursor) > 2048:
         raise KnowledgeHubError("connector checkpoint cursor exceeds budget")
     path = _checkpoint_path(root, connector_id)
-    current = load_checkpoint(root, connector_id)
-    current_sequence = int(current.get("sequence", 0) or 0)
-    if current_sequence != int(previous_sequence):
-        raise KnowledgeHubError("connector checkpoint sequence changed")
-    payload = {
-        "connector_id": connector_id,
-        "cursor": cursor,
-        "updated_at": utc_timestamp(),
-        "sequence": int(previous_sequence) + 1,
-    }
-    temporary = path.with_name(path.name + ".tmp-{}".format(os.getpid()))
-    if temporary.exists() and temporary.is_symlink():
-        raise KnowledgeHubError("connector temporary checkpoint must not be a symlink")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(str(temporary), flags, 0o600)
-    try:
-        os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            descriptor = -1
-            json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(str(temporary), str(path))
-        os.chmod(path, 0o600)
-    finally:
-        if descriptor >= 0:
-            os.close(descriptor)
-        if temporary.exists():
-            temporary.unlink()
-    return payload
+    lock_path = _checkpoint_lock_path(root, connector_id)
+    with lock_path.open("a+") as lock:
+        os.chmod(lock_path, 0o600)
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            current = load_checkpoint(root, connector_id)
+            current_sequence = int(current.get("sequence", 0) or 0)
+            if current_sequence != int(previous_sequence):
+                raise KnowledgeHubError("connector checkpoint sequence changed")
+            payload = {
+                "connector_id": connector_id,
+                "cursor": cursor,
+                "updated_at": utc_timestamp(),
+                "sequence": current_sequence + 1,
+            }
+            temporary = path.with_name(path.name + ".tmp-{}".format(os.getpid()))
+            if temporary.exists() and temporary.is_symlink():
+                raise KnowledgeHubError("connector temporary checkpoint must not be a symlink")
+            if temporary.exists():
+                temporary.unlink()
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(str(temporary), flags, 0o600)
+            try:
+                os.fchmod(descriptor, 0o600)
+                with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                    descriptor = -1
+                    json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(str(temporary), str(path))
+                os.chmod(path, 0o600)
+            finally:
+                if descriptor >= 0:
+                    os.close(descriptor)
+                if temporary.exists():
+                    temporary.unlink()
+            return payload
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
 def _normalize_acl(value: Any) -> List[str]:
