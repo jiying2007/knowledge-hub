@@ -129,7 +129,17 @@ def _residue_state(candidates: List[str], branches: List[str]) -> Dict[str, List
     candidate_set = set(candidates)
     implementation = _implementation_branches(branches)
     remaining = sorted(candidate_set.intersection(branches))
-    unexpected = sorted(set(implementation).difference(candidate_set))
+    maintenance = {
+        branch
+        for branch in branches
+        if branch.startswith("dependabot/")
+    }
+    unexpected = sorted(
+        set(branches)
+        - candidate_set
+        - maintenance
+        - {_DEFAULT_BRANCH}
+    )
     return {
         "remaining_candidates": remaining,
         "implementation_branches": implementation,
