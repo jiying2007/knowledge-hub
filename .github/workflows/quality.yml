@@ -152,9 +152,16 @@ jobs:
             .cache/knowledge-hub/restore-drill-head.json
             .cache/knowledge-hub/final-gate-product-full.json
             .cache/knowledge-hub/quality-evidence-binding.json
-            .cache/knowledge-hub/content-convergence.json
           if-no-files-found: error
           retention-days: 30
+      - name: Upload report-only content convergence evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: knowledge-hub-content-convergence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/content-convergence.json
+          if-no-files-found: warn
+          retention-days: 7
 
 
   mcp-conformance:
