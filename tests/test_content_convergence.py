@@ -168,3 +168,22 @@ def test_quality_and_maintenance_reuse_single_read_only_audit():
         "- name: Upload report-only content convergence evidence", 1
     )[0].count("content-convergence.json") == 0
     assert "git push" not in maintenance
+
+
+def test_long_source_jsonl_line_fails_before_unbounded_allocation(tmp_path):
+    paths = _fixture(tmp_path)
+    inventory = tmp_path / "sources/runtime-input/inventory.jsonl"
+    # The API must reject the read before materializing a giant JSON record.
+    inventory.write_bytes(b"x" * (convergence.MAX_INVENTORY_LINE_BYTES + 200))
+    with pytest.raises(KnowledgeHubError, match="line exceeds budget"):
+        _scan(tmp_path, paths)
+
+
+def test_source_jsonl_total_file_byte_budget(tmp_path, monkeypatch):
+    paths = _fixture(tmp_path)
+    inventory = tmp_path / "sources/runtime-input/inventory.jsonl"
+    # One individually-valid line can still exceed the aggregate file budget.
+    row = inventory.read_bytes()
+    monkeypatch.setattr(convergence, "MAX_INVENTORY_FILE_BYTES", len(row) - 1)
+    with pytest.raises(KnowledgeHubError, match="file exceeds byte budget"):
+        _scan(tmp_path, paths)
