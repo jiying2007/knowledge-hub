@@ -711,3 +711,5 @@
 - 2027-01-11: `provider-llm-agent-dd5146d74604545445b7cf86`
 - 2027-01-11: `provider-llm-agent-da6978d29ccbc39d2235463a`
 - 2027-01-12: `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`
+- 2027-01-15: `gros-knowledge-entry`
+- 2027-01-15: `gros-readiness-validation-20261015`

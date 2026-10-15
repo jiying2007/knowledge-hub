@@ -15,6 +15,7 @@
 | [Firmware Release Tools](../../projects/firmware-release-tools/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Firmware Toolchains](../../projects/firmware-toolchains/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [GD32L235 Firmware](../../projects/gd32l235/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
+| [GROS](../../projects/gros/README.md) | `knowledge-project` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [HC32F072 Firmware](../../projects/hc32f072/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [Knowledge Hub](../../README.md) | `knowledge-control-plane` | `registered` | [evidence contract 工作台](../project-readiness.md) |
 | [LLM Agent](../../projects/llm-agent/README.md) | `git-repository` | `registered` | [evidence contract 工作台](../project-readiness.md) |

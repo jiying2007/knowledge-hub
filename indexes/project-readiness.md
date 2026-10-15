@@ -37,10 +37,11 @@
 | [RDK X5 SDK](../projects/x5-rdk/README.md) | [evidence contract](../projects/x5-rdk/validation/project-readiness.md) | `local-only` |
 | [Knowledge Hub](../README.md) | [evidence contract](../governance/product/validation/project-readiness.md) | `local-only` |
 | [A123X](../projects/a123x/README.md) | [evidence contract](../projects/a123x/validation/project-readiness.md) | `local-only` |
+| [GROS](../projects/gros/README.md) | [evidence contract](../projects/gros/validation/project-readiness.md) | `local-only` |
 
 ## 判定边界
 
-- structural coverage：33 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
+- structural coverage：34 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
 - source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。
 - evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。
 - lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。
