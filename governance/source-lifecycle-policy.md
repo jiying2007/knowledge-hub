@@ -17,6 +17,14 @@
 - raw copy-body safety 判断。
 - 验证命令和 Evidence Index。
 
+## 全量内容迁移验收（与控制面覆盖分别判定）
+
+- `registry/sources.json` 和 `registry/retired-sources.jsonl` 定义来源归属和处置；`sources/*/inventory.jsonl` 中的根目录级 `covered` 或一次性汇总哈希**不等于源目录逐文件完整证明**。
+- **源侧证据：**可访问的每个源应记录可信源修订或快照身份、完整文件列表、每文件字节数与 SHA-256；变更或删除后需要可核查的重扫记录。外部源不可访问时必须保持 `unverified`，绝不推断 `0 missing`。
+- **目标侧证据：**每个文件必须有且仅有一个处置：经审核的当前 canonical 正文、历史 archive-only、合规 artifact-ref、只读 reference/summary 或明确 exclude；目标正文应有精确 ID、路径、SHA 和来源证据，且无双 active 权威。
+- **审查边界：**全量归类完成不表示所有内容需要全文复制。raw session/history、源代码、日志、凭据与不具发布许可的外部资料继续只存引用或摘要。owner 决定、content review、产品/设备/生产资格与仓库 Terminal 是独立条件。
+- **自动化：**`knowledge-orphan-files.sh --all --strict --convergence --json` 只读输出 Hub 内逐文件哈希、冻结集合归属、精确重复正文候选和 source inventory 证据粒度；`Quality` 和每日 `ai-maintenance-sweep` 使用该同一入口，不维护第二份 mutable 状态。AI 可建议保留／合并／拒绝，但没有逐项授权时不得删正文或代签审核。
+
 ## 停止条件
 
 - 发现疑似 secret。
