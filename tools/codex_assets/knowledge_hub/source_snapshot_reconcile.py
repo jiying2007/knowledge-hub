@@ -109,7 +109,8 @@ def _relative_origin(kind: str, origin_root: str, origin: Any,
     if not isinstance(origin, str) or not origin_root:
         return None
     if kind == "single-file":
-        return single_name if origin == origin_root else None
+        return single_name if (origin == origin_root and
+                               pathlib.PurePosixPath(origin_root).name == single_name) else None
     prefix = origin_root + "/"
     if origin.startswith(prefix):
         candidate = origin[len(prefix):]
