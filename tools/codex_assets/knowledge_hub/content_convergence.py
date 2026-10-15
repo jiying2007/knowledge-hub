@@ -28,17 +28,24 @@ MAX_INVENTORY_ROWS = 10000
 MAX_INVENTORY_LINE_BYTES = 65536
 
 
-def _json(path: pathlib.Path) -> Any:
+def _require_hub_file(root: pathlib.Path, path: pathlib.Path) -> None:
     if path.is_symlink() or not path.is_file():
-        raise KnowledgeHubError("missing or symlinked convergence registry: " + path.name)
+        raise KnowledgeHubError("missing or symlinked Hub evidence file: " + path.name)
+    try:
+        path.resolve(strict=True).relative_to(root)
+    except ValueError as exc:
+        raise KnowledgeHubError("Hub evidence file escapes repository: " + path.name) from exc
+
+
+def _json(root: pathlib.Path, path: pathlib.Path) -> Any:
+    _require_hub_file(root, path)
     if path.stat().st_size > 2 * 1024 * 1024:
         raise KnowledgeHubError("convergence registry exceeds 2MiB: " + path.name)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _jsonl(path: pathlib.Path) -> list:
-    if path.is_symlink() or not path.is_file():
-        raise KnowledgeHubError("missing or symlinked convergence ledger: " + path.name)
+def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
+    _require_hub_file(root, path)
     rows = []
     with path.open("rb") as handle:
         for raw in handle:
@@ -89,10 +96,10 @@ def _file_digest(root: pathlib.Path, relative: str, remaining: int):
 
 
 def _source_control(root: pathlib.Path) -> Dict[str, Any]:
-    current = _json(root / "registry/sources.json")
+    current = _json(root, root / "registry/sources.json")
     if not isinstance(current, dict) or not isinstance(current.get("sources"), list):
         raise KnowledgeHubError("invalid current source registry")
-    retired = _jsonl(root / "registry/retired-sources.jsonl")
+    retired = _jsonl(root, root / "registry/retired-sources.jsonl")
     sources = [("current", row) for row in current["sources"]]
     sources += [("retired", row) for row in retired]
     seen = set()
@@ -106,7 +113,10 @@ def _source_control(root: pathlib.Path) -> Dict[str, Any]:
         "file_level_sha256_rows": 0,
         "rows_without_sha256": 0,
     }
-    for bucket, row in sorted(sources, key=lambda pair: str(pair[1].get("id", ""))):
+    for bucket, row in sorted(
+        sources,
+        key=lambda pair: str(pair[1].get("id", "")) if isinstance(pair[1], dict) else "",
+    ):
         if not isinstance(row, dict):
             raise KnowledgeHubError("invalid source control row")
         source_id = row.get("id")
@@ -114,7 +124,7 @@ def _source_control(root: pathlib.Path) -> Dict[str, Any]:
             raise KnowledgeHubError("duplicate or invalid source identity")
         seen.add(source_id)
         inventory_path = root / "sources" / source_id / "inventory.jsonl"
-        inventory = _jsonl(inventory_path)
+        inventory = _jsonl(root, inventory_path)
         file_candidates, hashes, roots = 0, 0, 0
         for item in inventory:
             if item.get("source_id") != source_id:
