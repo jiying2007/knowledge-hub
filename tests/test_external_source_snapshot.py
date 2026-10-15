@@ -177,3 +177,40 @@ def test_existing_private_manifest_rejects_tamper_or_symlink(tmp_path):
     saved.symlink_to(origin)
     with pytest.raises(snapshot.SourceSnapshotError, match="differs or is linked"):
         snapshot.persist_private_snapshot(hub, value)
+
+
+def test_source_capture_rejects_relative_path_and_noninteger_file_count(tmp_path):
+    hub = _hub(tmp_path)
+    file = tmp_path / "a.md"
+    file.write_text("hash me", encoding="utf-8")
+    with pytest.raises(snapshot.SourceSnapshotError, match="absolute path"):
+        snapshot.capture_source_snapshot(hub, "demo", snapshot.pathlib.Path("a.md"))
+    manifest = snapshot.capture_source_snapshot(hub, "demo", file)
+    malformed = copy.deepcopy(manifest)
+    malformed["file_count"] = 1.0
+    without_hash = {k: v for k, v in malformed.items() if k != "capture_sha256"}
+    malformed["capture_sha256"] = hashlib.sha256(snapshot._canonical(without_hash)).hexdigest()
+    with pytest.raises(snapshot.SourceSnapshotError, match="file count"):
+        snapshot.validate_source_snapshot(malformed)
+
+
+def test_no_follow_source_file_open_is_nonblocking(tmp_path, monkeypatch):
+    if not hasattr(os, "O_NONBLOCK"):
+        pytest.skip("nonblocking reads unavailable on this platform")
+    hub = _hub(tmp_path)
+    file = tmp_path / "input.md"
+    file.write_text("data", encoding="utf-8")
+    actual_open = snapshot.os.open
+    seen = []
+
+    def checked_open(path, flags, *args, **kwargs):
+        if str(path) == str(file):
+            seen.append(flags)
+            assert flags & os.O_NOFOLLOW
+            assert flags & os.O_NONBLOCK
+        return actual_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(snapshot.os, "open", checked_open)
+    candidate = snapshot.capture_source_snapshot(hub, "demo", file)
+    assert candidate["file_count"] == 1
+    assert seen
