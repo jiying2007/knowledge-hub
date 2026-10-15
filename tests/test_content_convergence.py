@@ -186,4 +186,4 @@ def test_source_jsonl_total_file_byte_budget(tmp_path, monkeypatch):
     row = inventory.read_bytes()
     monkeypatch.setattr(convergence, "MAX_INVENTORY_FILE_BYTES", len(row) - 1)
     with pytest.raises(KnowledgeHubError, match="file exceeds byte budget"):
-        _scan(tmp_path, paths)
+        convergence._jsonl(tmp_path, inventory)
