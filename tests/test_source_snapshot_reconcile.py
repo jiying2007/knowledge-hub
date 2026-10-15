@@ -117,7 +117,7 @@ def test_extra_scoped_file_in_inventory_is_visible(tmp_path):
 
 def test_single_file_retired_source_is_scoped_without_owner_promotion(tmp_path):
     root, _, _ = _fixture(tmp_path)
-    source = tmp_path / "old-item.md"
+    source = tmp_path / "item.md"
     source.write_text("old evidence", encoding="utf-8")
     digest = hashlib.sha256(b"old evidence").hexdigest()
     _write_inventory(root, [{
