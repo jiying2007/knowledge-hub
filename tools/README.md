@@ -7,7 +7,7 @@
 `knowledge-inventory.sh` 保留原有的 Hub source control 盘点；额外增加**显式源目录/单文件只读快照**模式，不增加公共命令或新的 canonical 状态源。须在能访问真实来源的机器上运行，不能通过 GitHub 上的 Hub 目录反推外部迁移完成。
 
 ```bash
-rtk bash tools/knowledge-inventory.sh \
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
   --snapshot-source-id embedded-knowledge \
   --snapshot-source-path /absolute/path/to/original/source \
   --snapshot-claimed-revision <40位小写Git提交SHA> \
