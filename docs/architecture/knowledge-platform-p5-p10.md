@@ -19,13 +19,20 @@ High-risk mutation        = explicit owner/human approval
 
 P5 adds principal-aware authorization, source ACL propagation, trust classification,
 prompt-injection/tool-poisoning boundaries, a native stateless MCP 2026-07-28
-profile, and an A2A 1.0 provider card. The legacy MCP adapter remains available as a
-compatibility surface but is no longer described as the native 2026-07-28 profile.
+profile, and an A2A 1.0 provider card. The shipped native stateless MCP
+2026-07-28 stdio implementation does not accept the retired initialize/session
+compatibility path. Historical module labels such as `runtime_v3` and P4 consumer
+contracts are not separate authoritative knowledge databases. The stable
+`search.py` module is still a caller-facing compatibility facade; it cannot be
+deleted without discovering and qualifying real consumers.
 
-External source content is always data-only unless separately promoted through the
-governed canonical path. Repository privacy, branch protection, and official
-protocol-conformance evidence remain external closure requirements and may not be
-faked by repository metadata.
+External source content is data-only until separately promoted under the
+governed canonical path. The repository intentionally runs as a public personal
+GitHub repository; it does NOT require switching to private for repository
+terminal closure. Public hosting never authorizes exposing secrets, private
+workspaces, unlicensed third-party bodies, or raw session content. Protected
+`master`, actual Quality/Security checks and hosted conformance evidence remain
+required and are verified from GitHub, not assumed from local configuration.
 
 ## P6 — Retrieval Intelligence v4
 
@@ -95,18 +102,60 @@ The current global statement-coverage gate remains 75% until targeted branch cov
 is proven stable in CI; P10 must not lower existing terminal gates to make the new
 platform pass.
 
-## External closure boundary
+## One canonical state and content migration proof
 
-The following cannot be closed by an ordinary repository commit and remain explicit
-external dependencies:
+There is only one current writable knowledge authority: canonical Markdown plus
+its governed registry. `projects/`, `domains/`, and `notes/` contain the
+current or historical bodies; `sources/` and source ledgers record provenance
+and dispositions; `indexes/`, search caches, graph, and runtime memory are
+rebuildable/non-authoritative. Work-item execution and device, CI, release,
+provider ACL, and source-code facts stay authoritative in their own systems.
 
-1. make the repository private, or split public engine code from private canonical
-   knowledge before any non-public engineering knowledge is hosted;
-2. configure a server-side default-branch ruleset with PR and quality requirements,
-   conversation resolution, and force-push protection;
-3. produce official MCP conformance evidence and A2A TCK evidence if a task server is
-   ever implemented in the execution plane;
-4. run real Feishu/TAPD/CI/Google Drive provider pilots with production ACL and
-   tombstone evidence;
-5. configure a production signing identity if quality attestations become signed
-   release artifacts.
+Do not confuse a single canonical knowledge authority with one boolean that
+erases independent evidence. The existing `terminal_closure_cli` computes the
+**GitHub repository** verdict; the existing `knowledge-final-gate.sh`
+computes **product, content, project evidence, delivery and adoption** maturity.
+A human-facing dashboard may summarize these axes, but must derive them from
+these two gates, never persist a competing mutable verdict.
+
+The source-control contract covers registered source identities and approved
+dispositions; **it does not promise a byte-for-byte copy of external sources**.
+Raw Codex history/session/memory, code, logs, credentials and restricted files
+are intentionally reference-only or excluded. Even `status=covered` on a
+source-root inventory row cannot establish per-file hash completeness. The
+existing `knowledge-orphan-files.sh --all --strict` proves Hub body coverage
+by exact registry identity or frozen, unregistered-only collection. Its optional
+`--convergence --json` report hashes every tracked Hub body, produces
+non-destructive exact-duplicate hints, and highlights source-file provenance
+that cannot be independently verified from GitHub. It is a **read-only evidence
+projection**, not a new Product terminal, content promotion, or external scan.
+
+All of the following are independent acceptance conditions before claiming
+full knowledge migration: every reachable source revision has an authorized
+snapshot and a complete file-level disposition; retained bodies have a unique
+canonical path or documented historical/archive-only role; source hashes and
+links are reproducible; pending content and project owner decisions are
+resolved or explicitly excluded; no active duplicate authority remains.
+Absence of external source access must be reported as *unverified*.
+
+## Actual external qualification boundary
+
+1. Public repository hosting is allowed by the current policy; check public
+   information classification and licenses, never silently copy private or
+   secret-like data to GitHub.
+2. Protected `master`, quality and security gates, hosted offsite restore,
+   branch hygiene, and OIDC/Sigstore-signed exact-source evidence must be
+   observed for each repository release SHA. Current green evidence does not
+   cover later commits.
+3. Official native MCP conformance remains required for the shipped MCP
+   profile. A2A TCK applies only if the external execution plane later
+   implements a task server.
+4. Real connector/provider ACL changes, tombstones, retry/checkpoint behavior,
+   production retrieval evaluation, memory lifecycle and adoption metrics
+   require independent provider or production observations.
+5. Product/project owners must explicitly attest semantic boundaries and real
+   device, build, validation, release and rollback evidence. Neither CI
+   fixtures nor this architecture document can sign on their behalf.
+6. Signed CI artifacts currently use hosted OIDC/Sigstore identity. A separate
+   production **release** signing requirement, if adopted, is another
+   qualification scope and is not implied by a CI attestation.

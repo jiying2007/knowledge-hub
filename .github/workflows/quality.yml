@@ -100,6 +100,29 @@ jobs:
           printf 'KNOWLEDGE_CI_AS_OF=%s\n' "$(date -u +%F)" >> "$GITHUB_ENV"
       - name: Run full engineering gate
         run: rtk python3 -m tools.codex_assets.knowledge_hub.engineering_cli --mode full --json
+      - name: Verify full Hub canonical body coverage and source evidence boundaries
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/knowledge-hub
+          rtk bash tools/knowledge-orphan-files.sh --all --strict --convergence --json \
+            > .cache/knowledge-hub/content-convergence.json
+          rtk python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(
+              Path(".cache/knowledge-hub/content-convergence.json").read_text(encoding="utf-8")
+          )
+          convergence = payload["convergence"]
+          if payload["status"] != "ok" or not convergence["read_only"]:
+              raise SystemExit("canonical body coverage or read-only contract failed")
+          if convergence["full_external_migration_proven"] is not False:
+              raise SystemExit("external source migration must not be inferred from Hub inventory")
+          print("covered_body_count={} duplicate_hint_groups={} external_source_verified={}".format(
+              convergence["body_count"],
+              convergence["exact_duplicate_candidate_count"],
+              convergence["source_controls"]["external_source_snapshot_observed"],
+          ))
+          PY
       - name: Run deterministic compliance verdict matrix
         run: |
           mkdir -p .cache/knowledge-hub
@@ -131,6 +154,14 @@ jobs:
             .cache/knowledge-hub/quality-evidence-binding.json
           if-no-files-found: error
           retention-days: 30
+      - name: Upload report-only content convergence evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: knowledge-hub-content-convergence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/knowledge-hub/content-convergence.json
+          if-no-files-found: warn
+          retention-days: 7
 
 
   mcp-conformance:

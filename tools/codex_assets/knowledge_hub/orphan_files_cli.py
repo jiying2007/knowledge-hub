@@ -6,6 +6,8 @@ import pathlib
 import subprocess
 import sys
 
+from .content_convergence import build_content_convergence
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
@@ -16,11 +18,14 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--json", action="store_true", help="Print JSON output.")
 parser.add_argument("--all", action="store_true", help="Scan all Hub body Markdown files. Default scans changed files only.")
 parser.add_argument("--strict", action="store_true", help="Exit non-zero when missing registry references are found.")
+parser.add_argument("--convergence", action="store_true", help="Include read-only file-level SHA256, duplicate hints and external proof gaps; requires --all.")
 parser.add_argument("--limit", type=int, default=50, help="Maximum missing rows to include in output.")
 args = parser.parse_args(argv)
 
 if args.limit < 1:
     parser.error("--limit must be >= 1")
+if args.convergence and not args.all:
+    parser.error("--convergence requires --all; changed-only evidence cannot claim full Hub coverage")
 
 body_prefixes = ("projects/", "domains/", "governance/", "notes/")
 excluded_names = {"README.md"}
@@ -274,6 +279,11 @@ output = {
         "新增且已精确登记的正文不会改变集合 hash，新增未登记路径仍会使 inventory hash 漂移并阻断 strict gate。"
     ),
 }
+
+if args.convergence:
+    output["convergence"] = build_content_convergence(
+        root, checked_paths, ids_by_path, coverage_by_path
+    )
 
 if args.json:
     print(json.dumps(output, ensure_ascii=False, indent=2))
