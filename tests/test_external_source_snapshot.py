@@ -162,3 +162,18 @@ def test_inventory_public_entrypoint_snapshot_does_not_claim_closure(tmp_path):
     assert payload["product_terminal_changed"] is False
     assert str(origin) not in result.stdout
     assert (hub / payload["private_local_manifest"]).is_file()
+
+
+def test_existing_private_manifest_rejects_tamper_or_symlink(tmp_path):
+    hub = _hub(tmp_path)
+    origin = tmp_path / "a.md"
+    origin.write_text("fixture", encoding="utf-8")
+    value = snapshot.capture_source_snapshot(hub, "demo", origin)
+    saved = hub / snapshot.persist_private_snapshot(hub, value)
+    saved.write_text("tampered", encoding="utf-8")
+    with pytest.raises(snapshot.SourceSnapshotError, match="unsafe or differs"):
+        snapshot.persist_private_snapshot(hub, value)
+    saved.unlink()
+    saved.symlink_to(origin)
+    with pytest.raises(snapshot.SourceSnapshotError, match="differs or is linked"):
+        snapshot.persist_private_snapshot(hub, value)
