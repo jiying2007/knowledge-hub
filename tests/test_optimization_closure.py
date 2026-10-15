@@ -171,11 +171,19 @@ def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
         run_bounded([sys.executable, '-c', script, str(pid_path)], cwd=str(tmp_path), env=os.environ.copy(), timeout=.3)
     pid = int(pid_path.read_text())
     status = pathlib.Path('/proc') / str(pid) / 'status'
+
+    def gone_or_zombie():
+        # /proc is transient: a process can disappear between exists() and read_text().
+        try:
+            return 'State:\tZ' in status.read_text()
+        except FileNotFoundError:
+            return True
+
     for _ in range(20):
-        if not status.exists() or 'State:\tZ' in status.read_text():
+        if gone_or_zombie():
             break
         time.sleep(.05)
-    assert not status.exists() or 'State:\tZ' in status.read_text()
+    assert gone_or_zombie()
 
 
 def test_output_budget_drains_without_unbounded_capture(tmp_path):
