@@ -20,6 +20,18 @@ rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
 
 输出固定为 `status=candidate`，并显式保留 `claimed_revision_verified=false`、`origin_binding_verified=false`、`atomic_snapshot_verified=false`、`target_disposition_verified=false`、`full_external_migration_proven=false`。源侧候选获取后，仍需可信修订/原子快照绑定、每文件与现有 `sources/<id>/inventory.jsonl` 及唯一目标处置的核对、授权语义复核，才能判断单个来源是否真正迁移完毕。
 
+**私有逐文件对账（只读）：**源侧快照已经产生后，复用同一工具入口与既有 source inventory 做严格的相对路径、SHA-256 和字节数匹配。示例：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
+  --reconcile-snapshot .tmp/source-snapshots/embedded-knowledge/<digest>.json \
+  --json
+```
+
+此命令只接受 Hub 私有快照目录内的内容寻址 JSON；拒绝外部文件、符号链接、篡改、非 0600 文件和非 owner-only 的私有子目录。比较时根据已登记 source `origin_path` 的**字符串范围**匹配 inventory 中逐文件记录，不猜测文件归属或用根目录/批次级记录补齐缺口。只输出候选精确匹配、缺行、缺 hash、冲突、歧义和超出快照范围的数量；不向终端暴露源侧文件名或原始内容。
+
+即使全部字节级候选匹配，也固定 `full_external_migration_proven=false`；因为源 revision 尚未经可信渠道认证，普通目录扫描没有原子快照保证，且未验证目标文件处置/版本、授权内容审核和真实 owner 决策。对账结果是同一源控制面上的**观察投影**，不是新的可变状态或 Product/Repository 终态。
+
 ## 运营与检索闭环
 
 并发快照、活动回执身份、受控 Provider 执行、检查缓存、独立评估与复核消费详见[运营契约](optimization-operations.md)。
