@@ -311,7 +311,7 @@ def persist_private_snapshot(hub_root: pathlib.Path, snapshot: Dict[str, Any]) -
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
     try:
         fd = os.open(str(target), flags, 0o600)
-    except FileExistsError:
+    except FileExistsError as exc:
         if target.is_symlink() or not target.is_file():
             raise SourceSnapshotError("existing private snapshot differs or is linked") from exc
         existing = target.stat()
