@@ -107,7 +107,8 @@ def _hash_file(path: pathlib.Path, remaining: int) -> Tuple[str, int]:
         finally:
             os.close(fd)
         after_path = path.lstat()
-        signature = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+        def signature(info):
+            return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
         if (size != before.st_size or signature(before) != signature(opened)
                 or signature(before) != signature(after_fd)
                 or signature(before) != signature(after_path)):
