@@ -313,11 +313,11 @@ def persist_private_snapshot(hub_root: pathlib.Path, snapshot: Dict[str, Any]) -
         fd = os.open(str(target), flags, 0o600)
     except FileExistsError:
         if target.is_symlink() or not target.is_file():
-            raise SourceSnapshotError("existing private snapshot differs or is linked")
+            raise SourceSnapshotError("existing private snapshot differs or is linked") from exc
         existing = target.stat()
         if (existing.st_nlink != 1 or stat.S_IMODE(existing.st_mode) & 0o077
                 or target.read_bytes() != payload):
-            raise SourceSnapshotError("existing private snapshot is unsafe or differs")
+            raise SourceSnapshotError("existing private snapshot is unsafe or differs") from exc
     else:
         try:
             with os.fdopen(fd, "wb") as handle:
