@@ -2,6 +2,24 @@
 
 所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护。commit/push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory 和源项目写入分别需要明确授权。
 
+## 外部来源逐文件快照（私有证据候选）
+
+`knowledge-inventory.sh` 保留原有的 Hub source control 盘点；额外增加**显式源目录/单文件只读快照**模式，不增加公共命令或新的 canonical 状态源。须在能访问真实来源的机器上运行，不能通过 GitHub 上的 Hub 目录反推外部迁移完成。
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
+  --snapshot-source-id embedded-knowledge \
+  --snapshot-source-path /absolute/path/to/original/source \
+  --snapshot-claimed-revision <40位小写Git提交SHA> \
+  --json
+```
+
+未获得可信版本标识时**省略** `--snapshot-claimed-revision`，不可填 `main`、`latest` 或臆造哈希；即使填写 40 位 SHA，也只是**未认证的版本声明**。源 ID 必须存在于 `registry/sources.json` 或 `registry/retired-sources.jsonl`，扫描根必须由调用者显式传入。仅排除目录中的 `.git` 版本控制元数据，其余常规文件均计数并流式 SHA-256；符号链接、特殊文件、读取错误、目录变化或预算溢出均 fail closed。上限为 20,000 文件、20,000 目录、单文件 256 MiB、总读取 2 GiB，不适合原始大 SDK/运行时制品直接整仓扫描，应先确定适用的证据范围而**不得静默跳过**。
+
+快照以内容寻址写到本机忽略提交的 `.tmp/source-snapshots/<source-id>/<digest>.json`，文件权限为 0600；只输出不含绝对源路径的简短 JSON 摘要。**文件相对路径仍可能包含敏感名称**，完整快照不得直接放进公开 PR、Actions 日志、源仓或知识正文。该入口不会复制正文、修改外部源、写 registry、提升条目或关闭任何 owner/Content/Product gate。
+
+输出固定为 `status=candidate`，并显式保留 `claimed_revision_verified=false`、`origin_binding_verified=false`、`atomic_snapshot_verified=false`、`target_disposition_verified=false`、`full_external_migration_proven=false`。源侧候选获取后，仍需可信修订/原子快照绑定、每文件与现有 `sources/<id>/inventory.jsonl` 及唯一目标处置的核对、授权语义复核，才能判断单个来源是否真正迁移完毕。
+
 ## 运营与检索闭环
 
 并发快照、活动回执身份、受控 Provider 执行、检查缓存、独立评估与复核消费详见[运营契约](optimization-operations.md)。
