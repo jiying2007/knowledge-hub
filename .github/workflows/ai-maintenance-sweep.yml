@@ -101,6 +101,13 @@ jobs:
           )
           PY
 
+      - name: Capture read-only canonical content convergence evidence
+        run: |
+          set -euo pipefail
+          rtk bash tools/knowledge-orphan-files.sh --all --strict --convergence --json \
+            > .cache/knowledge-hub/ai-maintenance/content-convergence.json
+          test -s .cache/knowledge-hub/ai-maintenance/content-convergence.json
+
       - name: Materialize machine triage and governance review packet
         run: |
           set -euo pipefail
