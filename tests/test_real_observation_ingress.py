@@ -207,7 +207,7 @@ def test_registered_workflows_are_dispatch_only_secret_bound_and_fail_closed():
         assert expected_secret in text
         assert text.count("secrets.") == 1
         assert "git diff --exit-code -- registry/knowledge-platform-p5-p10.json registry/items.jsonl" in text
-        assert "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" in text
+        assert "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9" in text
 
 
 def test_ingress_budget_matches_github_actions_secret_limit():

@@ -351,7 +351,7 @@ jobs:
       - run: rtk python -m pip install --require-hashes -r requirements-dev.lock
       - run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --summary-json
       - run: rtk bash tools/knowledge-final-gate.sh --final-profile product --summary-json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with: {retention-days: 90}
 """,
         encoding="utf-8",
