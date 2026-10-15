@@ -26,6 +26,7 @@ MAX_FILES = 5000
 MAX_HASH_BYTES = 128 * 1024 * 1024
 MAX_INVENTORY_ROWS = 10000
 MAX_INVENTORY_LINE_BYTES = 65536
+MAX_INVENTORY_FILE_BYTES = 2 * 1024 * 1024
 
 
 def _require_hub_file(root: pathlib.Path, path: pathlib.Path) -> None:
@@ -46,9 +47,19 @@ def _json(root: pathlib.Path, path: pathlib.Path) -> Any:
 
 def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
     _require_hub_file(root, path)
+    if path.stat().st_size > MAX_INVENTORY_FILE_BYTES:
+        raise KnowledgeHubError("convergence ledger file exceeds byte budget: " + path.name)
     rows = []
+    total_bytes = 0
     with path.open("rb") as handle:
-        for raw in handle:
+        while True:
+            # Bound the read itself, not just a length check after allocation.
+            raw = handle.readline(MAX_INVENTORY_LINE_BYTES + 1)
+            if not raw:
+                break
+            total_bytes += len(raw)
+            if total_bytes > MAX_INVENTORY_FILE_BYTES:
+                raise KnowledgeHubError("convergence ledger file exceeds byte budget: " + path.name)
             if len(raw) > MAX_INVENTORY_LINE_BYTES:
                 raise KnowledgeHubError("convergence ledger line exceeds budget: " + path.name)
             if not raw.strip():
