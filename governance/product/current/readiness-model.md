@@ -62,6 +62,13 @@ product / operational qualification
 
 两条验收线独立报告，不互相伪装。
 
+## 一个产品终态目标，不增加第二套权威状态
+
+最终用户可以只看到一个总览：`Knowledge Hub 完整知识与产品终态`。该总览仅是现有 Product v5 五轴与 repository-closure 原始输出的**只读组合呈现**，不创建新的 registry PASS、重复审核队列或可手工修改的总状态。任何子轴的必需真实证据缺失，则完整产品终态保持 `needs-review`，即使 GitHub repository Terminal 已经 PASS。
+
+其中，内容收敛需同时检查：Hub 内全文覆盖、所有已知来源的文件级可审计迁入／引用／排除、实际仍可访问的源快照与回滚、唯一当前知识主本、历史／冻结正文审查。仅凭 18 个 source 控制目录、根目录级 covered inventory 或 132 篇冻结集合统计，不能声称 100% 的源文件完整迁入。可用现有 `knowledge-orphan-files.sh --all --strict --convergence --json` 产生机器可复核的 Hub 内哈希、重复提示和源证据缺口，但其自身**不签署真实 owner 或外部源完整性**。
+
+
 ## AI-first
 
 普通维护默认由 AI 自动完成：
