@@ -55,6 +55,18 @@ jobs:
           print("lock_size=" + str(len(payload)))
           PY
 
+      - name: Require candidate to match committed lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show HEAD:requirements-dev.lock > dependency-lock-candidate/committed.lock
+          if ! cmp -s dependency-lock-candidate/committed.lock dependency-lock-candidate/requirements-dev.lock; then
+            echo "Dev manifest and universal hash-locked requirements-dev.lock are out of sync." >&2
+            echo "Download this workflow's candidate artifact and commit its exact requirements-dev.lock." >&2
+            exit 1
+          fi
+          echo "Dev lock matches exact generated candidate."
+
       - name: Retain exact read-only candidate
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
