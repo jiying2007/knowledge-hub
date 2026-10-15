@@ -18,7 +18,25 @@ parser.add_argument("--sample-limit", type=int, default=8)
 parser.add_argument("--snapshot-source-id", default="")
 parser.add_argument("--snapshot-source-path", default="")
 parser.add_argument("--snapshot-claimed-revision", default="")
+parser.add_argument("--reconcile-snapshot", default="")
 args = parser.parse_args(argv)
+
+if args.reconcile_snapshot:
+    from .common import KnowledgeHubError
+    from .external_source_snapshot import SourceSnapshotError
+    from .source_snapshot_reconcile import reconcile_private_snapshot
+
+    if args.snapshot_source_id or args.snapshot_source_path or args.snapshot_claimed_revision:
+        parser.error("--reconcile-snapshot is exclusive of source capture options")
+    try:
+        result = reconcile_private_snapshot(root, pathlib.Path(args.reconcile_snapshot))
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        sys.exit(0)
+    except (SourceSnapshotError, KnowledgeHubError, OSError, ValueError) as exc:
+        reason = str(exc) if isinstance(exc, (SourceSnapshotError, KnowledgeHubError)) else "source reconciliation I/O error"
+        print(json.dumps({"status": "blocked", "reason": reason,
+                          "full_external_migration_proven": False}, ensure_ascii=False))
+        sys.exit(1)
 
 if args.snapshot_source_id or args.snapshot_source_path or args.snapshot_claimed_revision:
     # Reuse the existing public inventory entry point, without creating a 50th wrapper.
