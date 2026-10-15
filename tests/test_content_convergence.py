@@ -162,4 +162,9 @@ def test_quality_and_maintenance_reuse_single_read_only_audit():
     assert "content-convergence.json" in maintenance
     assert "contents: read" in quality
     assert "quality-evidence-binding.json" in quality
+    assert "Upload report-only content convergence evidence" in quality
+    # The required signed Quality artifact has a fixed, exact member contract.
+    assert quality.split("- name: Upload quality evidence", 1)[1].split(
+        "- name: Upload report-only content convergence evidence", 1
+    )[0].count("content-convergence.json") == 0
     assert "git push" not in maintenance
