@@ -138,3 +138,28 @@ def test_source_inventory_identity_and_digest_fail_closed(tmp_path):
     _write_json(source_file, row)
     with pytest.raises(KnowledgeHubError, match="invalid source inventory SHA256"):
         _scan(tmp_path, paths)
+
+
+def test_rejects_source_inventory_symlink_escape(tmp_path):
+    paths = _fixture(tmp_path)
+    target = tmp_path.parent / "outside-source-inventory.jsonl"
+    _write_json(target, {"source_id": "runtime-input", "sha256": ""})
+    inventory = tmp_path / "sources/runtime-input/inventory.jsonl"
+    inventory.unlink()
+    inventory.symlink_to(target)
+    with pytest.raises(KnowledgeHubError, match="symlinked"):
+        _scan(tmp_path, paths)
+
+
+def test_quality_and_maintenance_reuse_single_read_only_audit():
+    root = convergence.pathlib.Path(__file__).resolve().parents[1]
+    quality = (root / ".github/workflows/quality.yml").read_text(encoding="utf-8")
+    maintenance = (root / ".github/workflows/ai-maintenance-sweep.yml").read_text(encoding="utf-8")
+    invocation = "tools/knowledge-orphan-files.sh --all --strict --convergence --json"
+    assert invocation in quality
+    assert invocation in maintenance
+    assert "content-convergence.json" in quality
+    assert "content-convergence.json" in maintenance
+    assert "contents: read" in quality
+    assert "quality-evidence-binding.json" in quality
+    assert "git push" not in maintenance
