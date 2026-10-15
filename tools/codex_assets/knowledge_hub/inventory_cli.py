@@ -15,7 +15,40 @@ parser.add_argument("--json", action="store_true")
 parser.add_argument("--markdown", action="store_true")
 parser.add_argument("--max-files", type=int, default=50000)
 parser.add_argument("--sample-limit", type=int, default=8)
+parser.add_argument("--snapshot-source-id", default="")
+parser.add_argument("--snapshot-source-path", default="")
+parser.add_argument("--snapshot-claimed-revision", default="")
 args = parser.parse_args(argv)
+
+if args.snapshot_source_id or args.snapshot_source_path or args.snapshot_claimed_revision:
+    # Reuse the existing public inventory entry point, without creating a 50th wrapper.
+    from .external_source_snapshot import (
+        SourceSnapshotError, capture_source_snapshot, persist_private_snapshot,
+    )
+
+    if not args.snapshot_source_id or not args.snapshot_source_path:
+        parser.error("--snapshot-source-id and --snapshot-source-path must be supplied together")
+    try:
+        candidate = capture_source_snapshot(
+            root, args.snapshot_source_id, pathlib.Path(args.snapshot_source_path),
+            args.snapshot_claimed_revision,
+        )
+        private_path = persist_private_snapshot(root, candidate)
+        print(json.dumps({
+            "status": "candidate", "source_id": candidate["source_id"],
+            "file_count": candidate["file_count"], "total_bytes": candidate["total_bytes"],
+            "capture_sha256": candidate["capture_sha256"],
+            "private_local_manifest": private_path, "read_only_source": True,
+            "revision_verified": False, "external_migration_proven": False,
+            "owner_review_performed": False, "product_terminal_changed": False,
+        }, ensure_ascii=False, sort_keys=True))
+        sys.exit(0)
+    except (SourceSnapshotError, OSError, ValueError) as exc:
+        # Do not expose private absolute paths from OS error diagnostics.
+        reason = str(exc) if isinstance(exc, SourceSnapshotError) else "source snapshot I/O or argument error"
+        print(json.dumps({"status": "blocked", "reason": reason,
+                          "external_migration_proven": False}, ensure_ascii=False))
+        sys.exit(1)
 
 sources_path = root / "registry" / "sources.json"
 sources = json.loads(sources_path.read_text()).get("sources", [])
