@@ -10,6 +10,9 @@
 
 ## Updating / 更新流程
 
+Dependabot groups the five explicitly named development-tool dependencies under `dev-toolchain`, reducing independent stale PRs. This grouping never bypasses lock regeneration or full checks.
+
+
 1. Change the directly pinned package version(s) in `requirements-dev.txt`; align build backend in `pyproject.toml` if relevant.
 2. Open a branch and PR. The read-only `dev-dependency-lock-candidate` workflow checks out the exact PR HEAD and uses the SHA-pinned `setup-uv` action with a fixed uv version. It resolves a fresh universal hash-locked candidate.
 3. On mismatch, the candidate workflow fails, but preserves the generated lock as a short-retention PR artifact. Download and verify that artifact, then commit its **exact contents** as `requirements-dev.lock` on the same PR branch. Do not copy only a new direct pin without its hashes and transitive resolution.
