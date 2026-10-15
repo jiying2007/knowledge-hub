@@ -56,7 +56,7 @@ EXPECTED_RUNTIME_DIRECT = {
     "pyyaml": "6.0.3",
     "tomli": "2.4.1",
 }
-EXPECTED_BUILD_BACKEND = {"setuptools": "83.0.0"}
+EXPECTED_BUILD_BACKEND = {"setuptools": "84.0.0"}
 REQUIRED_FILES = (
     "pyproject.toml",
     "requirements-runtime.txt",
