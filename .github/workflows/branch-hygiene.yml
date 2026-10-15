@@ -45,7 +45,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          jq -c '.retirement_candidates[] | select(.expected_head != null)'             registry/branch-lifecycle.json |
+          # GitHub's Git ref prefix lookup can return HTTP 200 with [] when a
+          # previously retired ref is absent. Inventory exact branch names
+          # instead; an API/permission error must still stop the workflow.
+          inventory="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/branches?per_page=100" \
+            --jq '.[] | [.name, .commit.sha] | @tsv')"
+          if [[ -z "${inventory}" ]]; then
+            echo "remote branch inventory is empty; refusing retirement" >&2
+            exit 1
+          fi
+          jq -c '.retirement_candidates[] | select(.expected_head != null)' registry/branch-lifecycle.json |
           while read -r row; do
             branch="$(jq -r '.branch' <<<"${row}")"
             expected="$(jq -r '.expected_head' <<<"${row}")"
@@ -57,14 +67,22 @@ jobs:
               echo "invalid expected head for ${branch}" >&2
               exit 1
             fi
-            ref_json="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${branch}" 2>/dev/null || true)"
-            if [[ -z "${ref_json}" ]]; then
+            listed="$(awk -F '\t' -v name="${branch}" '$1 == name {print $2}' <<<"${inventory}")"
+            if [[ -z "${listed}" ]]; then
               echo "already absent: ${branch}"
               continue
             fi
-            actual="$(jq -r '.object.sha' <<<"${ref_json}")"
-            if [[ "${actual}" != "${expected}" ]]; then
-              echo "ref moved; refusing retirement: ${branch} expected=${expected} actual=${actual}" >&2
+            if [[ ! "${listed}" =~ ^[0-9a-f]{40}$ || "${listed}" != "${expected}" ]]; then
+              echo "remote inventory SHA mismatch: ${branch} expected=${expected} listed=${listed}" >&2
+              exit 1
+            fi
+            # Re-read an exact ref immediately before deletion to reject a
+            # concurrent move. Empty/prefix responses are NOT valid refs here.
+            ref_json="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${branch}")"
+            actual_ref="$(jq -r '.ref // empty' <<<"${ref_json}")"
+            actual="$(jq -r '.object.sha // empty' <<<"${ref_json}")"
+            if [[ "${actual_ref}" != "refs/heads/${branch}" || "${actual}" != "${expected}" ]]; then
+              echo "ref moved or no longer resolves exactly: ${branch} expected=${expected} actual=${actual}" >&2
               exit 1
             fi
             open_prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --head "${branch}" --json number --jq 'length')"
