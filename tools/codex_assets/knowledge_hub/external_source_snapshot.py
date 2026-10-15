@@ -87,7 +87,7 @@ def _hash_file(path: pathlib.Path, remaining: int) -> Tuple[str, int]:
             raise SourceSnapshotError("source contains linked or nonregular file")
         if before.st_size > MAX_SINGLE_FILE_BYTES or before.st_size > remaining:
             raise SourceSnapshotError("source hashing byte budget exceeded")
-        fd = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0))
+        fd = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0))
         try:
             opened = os.fstat(fd)
             if (not stat.S_ISREG(opened.st_mode) or
@@ -210,8 +210,8 @@ def capture_source_snapshot(hub_root: pathlib.Path, source_id: str,
         raise SourceSnapshotError("source ID is not registered")
     if claimed_revision and not HEX40.fullmatch(claimed_revision):
         raise SourceSnapshotError("claimed revision must be a 40-character lowercase SHA")
-    if not isinstance(source_path, pathlib.Path):
-        raise SourceSnapshotError("source path must be explicit")
+    if not isinstance(source_path, pathlib.Path) or not source_path.is_absolute():
+        raise SourceSnapshotError("source path must be an explicit absolute path")
     kind = "single-file" if source_path.is_file() and not source_path.is_symlink() else "directory"
     records = _scan_files(source_path)
     snapshot = {
@@ -262,7 +262,8 @@ def validate_source_snapshot(value: Dict[str, Any]) -> None:
             or value["private_relative_filenames_present"] is not True):
         raise SourceSnapshotError("snapshot must not claim proof or mutation")
     rows = value["files"]
-    if not isinstance(rows, list) or len(rows) > MAX_FILES or len(rows) != value["file_count"]:
+    if (not isinstance(rows, list) or type(value["file_count"]) is not int
+            or len(rows) > MAX_FILES or len(rows) != value["file_count"]):
         raise SourceSnapshotError("snapshot file count invalid")
     total = 0
     preceding = ""
