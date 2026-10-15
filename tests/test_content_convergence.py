@@ -180,7 +180,7 @@ def test_long_source_jsonl_line_fails_before_unbounded_allocation(tmp_path):
 
 
 def test_source_jsonl_total_file_byte_budget(tmp_path, monkeypatch):
-    paths = _fixture(tmp_path)
+    _fixture(tmp_path)
     inventory = tmp_path / "sources/runtime-input/inventory.jsonl"
     # One individually-valid line can still exceed the aggregate file budget.
     row = inventory.read_bytes()
