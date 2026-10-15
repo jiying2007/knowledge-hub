@@ -169,7 +169,7 @@ def _memory_forget_scope(root: pathlib.Path, args: argparse.Namespace) -> Dict[s
         agent_id=args.agent_id,
         scope_ref=args.scope_ref,
     )
-    return {"status": "pass", **result}
+    return {"status": "pass" if result.get("scope_deleted") else "needs-review", **result}
 
 
 def _dispatch(root: pathlib.Path, args: argparse.Namespace) -> Dict[str, Any]:

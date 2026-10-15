@@ -174,10 +174,32 @@ def _validate_event(event: Mapping[str, Any]) -> None:
             raise KnowledgeHubError("memory event missing {}".format(field))
     _date(str(event.get("recorded_at", "")))
     _source_refs(event.get("source_refs", []))
+    ttl = event.get("ttl_seconds", 0)
+    if type(ttl) is not int or not 0 <= ttl <= 365 * 24 * 3600:
+        raise KnowledgeHubError("memory TTL is outside policy")
+    summary = event.get("summary", "")
+    if not isinstance(summary, str) or len(summary) > MAX_SUMMARY_CHARS:
+        raise KnowledgeHubError("memory summary exceeds policy")
+    if str(event.get("event_type", "")) == "upsert" and not summary.strip():
+        raise KnowledgeHubError("memory summary must be non-empty")
+    if str(event.get("event_type", "")) != "upsert" and summary:
+        raise KnowledgeHubError("memory tombstone summary must be empty")
+    if event.get("canonical_write") is not False:
+        raise KnowledgeHubError("memory event must not perform canonical writes")
 
 
-def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[str, Any]:
-    _validate_event(event)
+def append_memory_events(
+    root: pathlib.Path,
+    events: Any,
+) -> List[Dict[str, Any]]:
+    if isinstance(events, (str, bytes)) or not isinstance(events, Sequence):
+        raise KnowledgeHubError("memory events must be a sequence")
+    if not events:
+        return []
+    for event in events:
+        if not isinstance(event, Mapping):
+            raise KnowledgeHubError("memory event must be an object")
+        _validate_event(event)
     path = _ledger_path(root)
     lock_path = _lock_path(root)
     with lock_path.open("a+") as lock:
@@ -185,10 +207,29 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         try:
             rows = _read_unlocked(root)
+            if len(rows) + len(events) > MAX_EVENTS:
+                raise KnowledgeHubError("memory ledger is full")
+            if path.exists() and path.stat().st_size:
+                with path.open("rb") as tail:
+                    tail.seek(-1, os.SEEK_END)
+                    if tail.read(1) != b"\n":
+                        raise KnowledgeHubError("memory ledger tail is incomplete")
             previous = str(rows[-1].get("event_sha256", "")) if rows else ""
-            record = dict(event)
-            record["previous_event_sha256"] = previous
-            record["event_sha256"] = _digest(record)
+            records: List[Dict[str, Any]] = []
+            encoded_rows: List[bytes] = []
+            for event in events:
+                record = dict(event)
+                record["previous_event_sha256"] = previous
+                record["event_sha256"] = _digest(record)
+                previous = record["event_sha256"]
+                encoded = (
+                    json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n"
+                ).encode("utf-8")
+                records.append(record)
+                encoded_rows.append(encoded)
+            current_bytes = path.stat().st_size if path.exists() else 0
+            if current_bytes + sum(len(value) for value in encoded_rows) > MAX_LEDGER_BYTES:
+                raise KnowledgeHubError("memory ledger is full")
             flags = (
                 os.O_APPEND
                 | os.O_CREAT
@@ -197,15 +238,17 @@ def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[st
             )
             descriptor = os.open(str(path), flags, 0o600)
             os.fchmod(descriptor, 0o600)
-            with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-                handle.write(
-                    json.dumps(record, ensure_ascii=False, separators=(",", ":"))
-                    + "\n"
-                )
+            with os.fdopen(descriptor, "ab") as handle:
+                handle.write(b"".join(encoded_rows))
                 handle.flush()
                 os.fsync(handle.fileno())
         finally:
             fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+    return records
+
+
+def append_memory_event(root: pathlib.Path, event: Mapping[str, Any]) -> Dict[str, Any]:
+    record = append_memory_events(root, [event])[0]
     return {
         "status": "recorded",
         "record": record,
@@ -233,9 +276,11 @@ def active_memories(
     now: Optional[dt.datetime] = None,
 ) -> List[Dict[str, Any]]:
     current = now or dt.datetime.now(dt.timezone.utc)
-    state: Dict[str, Dict[str, Any]] = {}
+    state: Dict[Tuple[str, str], Dict[str, Any]] = {}
     for row in read_memory_ledger(root):
         memory_id = str(row.get("memory_id", ""))
+        row_scope = str(row.get("scope_ref", ""))
+        state_key = (row_scope, memory_id)
         if str(row.get("principal_id", "")) != principal_id:
             continue
         if str(row.get("agent_id", "")) != agent_id:
@@ -243,13 +288,33 @@ def active_memories(
         if scope_ref and str(row.get("scope_ref", "")) != scope_ref:
             continue
         if row.get("event_type") in {"forget", "supersede"}:
-            state.pop(memory_id, None)
+            state.pop(state_key, None)
             continue
         if not _expired(row, current):
-            state[memory_id] = dict(row)
+            state[state_key] = dict(row)
         else:
-            state.pop(memory_id, None)
+            state.pop(state_key, None)
     return sorted(state.values(), key=lambda row: str(row.get("recorded_at", "")))
+
+
+def _require_active_memory(
+    root: pathlib.Path,
+    *,
+    memory_id: str,
+    principal_id: str,
+    agent_id: str,
+    scope_ref: str,
+) -> None:
+    if not any(
+        str(row.get("memory_id", "")) == memory_id
+        for row in active_memories(
+            root,
+            principal_id=principal_id,
+            agent_id=agent_id,
+            scope_ref=scope_ref,
+        )
+    ):
+        raise KnowledgeHubError("memory is not active in the requested scope")
 
 
 def forget_memory(
@@ -260,6 +325,13 @@ def forget_memory(
     agent_id: str,
     scope_ref: str,
 ) -> Dict[str, Any]:
+    _require_active_memory(
+        root,
+        memory_id=memory_id,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
     event = memory_event(
         agent_id=agent_id,
         principal_id=principal_id,
@@ -281,6 +353,13 @@ def supersede_memory(
     agent_id: str,
     scope_ref: str,
 ) -> Dict[str, Any]:
+    _require_active_memory(
+        root,
+        memory_id=memory_id,
+        principal_id=principal_id,
+        agent_id=agent_id,
+        scope_ref=scope_ref,
+    )
     event = memory_event(
         agent_id=agent_id,
         principal_id=principal_id,
@@ -310,16 +389,23 @@ def forget_scope(
         agent_id=agent_id,
         scope_ref=scope_ref,
     )
-    receipts = []
-    for row in active:
-        result = forget_memory(
-            root,
-            memory_id=str(row.get("memory_id", "")),
-            principal_id=principal_id,
+    events = [
+        memory_event(
             agent_id=agent_id,
+            principal_id=principal_id,
+            level="working",
+            summary="",
             scope_ref=scope_ref,
+            source_refs=(),
+            event_type="forget",
+            memory_id=str(row.get("memory_id", "")),
         )
-        receipts.append(str(result.get("receipt_sha256", "")))
+        for row in active
+    ]
+    receipts = [
+        str(row.get("event_sha256", ""))
+        for row in append_memory_events(root, events)
+    ]
     remaining = active_memories(
         root,
         principal_id=principal_id,

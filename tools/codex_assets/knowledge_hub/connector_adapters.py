@@ -25,7 +25,12 @@ def _acl(row: Mapping[str, Any]) -> Sequence[str]:
         return []
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
         raise KnowledgeHubError("provider ACL must be a sequence")
-    return [str(item) for item in value][:64]
+    if len(value) > 64 or any(
+        not isinstance(item, str) or not item.strip() or len(item) > 256
+        for item in value
+    ):
+        raise KnowledgeHubError("provider ACL contains invalid or excessive subjects")
+    return [item.strip() for item in value]
 
 
 def github_object(row: Mapping[str, Any]) -> Dict[str, Any]:

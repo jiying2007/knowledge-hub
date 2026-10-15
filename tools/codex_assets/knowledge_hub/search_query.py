@@ -8,7 +8,7 @@ import pathlib
 import sqlite3
 import time
 from collections import Counter
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
+from typing import Any, Dict, List, Mapping, Optional
 from .common import KnowledgeHubError, utc_timestamp
 from .retrieval_telemetry import IMPLEMENTATION_GENERATION, INTERACTION_CONTRACT, INTERACTIVE_TELEMETRY_SCHEMA_VERSION, PERFORMANCE_CONTRACT, append_optional_telemetry, make_interaction_id
 from .search_ranking import is_historical_result as _historical_result
@@ -40,6 +40,51 @@ from .search_query_support import (
     _score,
     _validate_retrieval_contract,
 )
+
+def _candidate_rows(index, query, candidate_limit, concept_plan, concept_method, filters):
+    lane_method = getattr(index, "candidate_lanes", None)
+    if callable(lane_method):
+        rows, authority_count = lane_method(
+            query, candidate_limit, SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+            concept_plan=concept_plan, filters=filters,
+        )
+        if filters.structured or filters.sources:
+            diagnostics, _ = lane_method(
+                query,
+                SEARCH_TRACE_SCORE_LIMIT,
+                min(SEARCH_AUTHORITY_CANDIDATE_LIMIT, SEARCH_TRACE_SCORE_LIMIT),
+                concept_plan=concept_plan,
+            )
+            rows = list(rows) + list(diagnostics)
+    else:
+        rows = index.candidates(
+            query,
+            candidate_limit=candidate_limit,
+            **({"concept_plan": concept_plan} if callable(concept_method) else {}),
+        )
+        authority_method = getattr(index, "authority_candidates", None)
+        authority_rows = (
+            authority_method(
+                query,
+                SEARCH_AUTHORITY_CANDIDATE_LIMIT,
+                **({"concept_plan": concept_plan} if callable(concept_method) else {}),
+            )
+            if callable(authority_method)
+            else []
+        )
+        rows = list(authority_rows) + list(rows)
+        authority_count = len(authority_rows)
+    combined = []
+    seen = set()
+    for row in rows:
+        key = str(row.get("doc_key", "")) or "{}#{}".format(
+            row.get("path", ""), row.get("item_json", "")
+        )
+        if key not in seen:
+            seen.add(key)
+            combined.append(row)
+    return combined, authority_count
+
 
 def search(
     root: pathlib.Path,
@@ -82,36 +127,9 @@ def search(
             concept_plan = concept_method(query)
         index_ready = time.monotonic()
         candidate_started = index_ready
-        lane_method = getattr(index, 'candidate_lanes', None)
-        indexed_rows: Sequence[Mapping[str, Any]] = [] if callable(lane_method) else index.candidates(
-            query,
-            candidate_limit=candidate_limit,
-            **({'concept_plan':concept_plan} if callable(concept_method) else {}),
+        indexed_rows, authority_count = _candidate_rows(
+            index, query, candidate_limit, concept_plan, concept_method, filters
         )
-        authority_method = getattr(index, "authority_candidates", None)
-        authority_rows = (
-            authority_method(query, SEARCH_AUTHORITY_CANDIDATE_LIMIT,
-                             **({'concept_plan':concept_plan} if callable(concept_method) else {}))
-            if callable(authority_method) and not callable(lane_method)
-            else []
-        )
-        combined_rows: List[Mapping[str, Any]] = []
-        seen_document_keys: Set[str] = set()
-        for row in list(authority_rows) + list(indexed_rows):
-            document_key = str(row.get("doc_key", "")) or "{}#{}".format(
-                row.get("path", ""),
-                row.get("item_json", ""),
-            )
-            if document_key in seen_document_keys:
-                continue
-            seen_document_keys.add(document_key)
-            combined_rows.append(row)
-        if callable(lane_method):
-            combined_rows, authority_count = lane_method(query, candidate_limit, SEARCH_AUTHORITY_CANDIDATE_LIMIT,
-                                                         concept_plan=concept_plan)
-        else:
-            authority_count = len(authority_rows)
-        indexed_rows = combined_rows
         index_state["authority_candidate_count"] = authority_count
         candidate_ready = time.monotonic()
     except SearchBoundaryError:

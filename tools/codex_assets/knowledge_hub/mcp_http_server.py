@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import socket
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Mapping, Optional, Sequence
 from urllib.parse import urlparse
@@ -25,8 +26,9 @@ from .protocol_conformance import (
 from .runtime_v3_contracts import DEFAULT_AGENT
 
 MAX_REQUEST_BYTES = 1024 * 1024
+REQUEST_TIMEOUT_SECONDS = 5.0
 MCP_PATH = "/mcp"
-LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1", "[::1]"}
+LOOPBACK_HOSTS = {"localhost", "127.0.0.1"}
 
 
 def _host_name(value: str) -> str:
@@ -139,7 +141,8 @@ def validate_http_request(
 
 def validate_local_origin(headers: Mapping[str, str]) -> None:
     host = _host_name(str(headers.get("Host", "")))
-    origin = _origin_host(str(headers.get("Origin", "")))
+    origin_header = str(headers.get("Origin", "")).strip()
+    origin = _origin_host(origin_header)
     if host not in LOOPBACK_HOSTS:
         raise MCPProtocolError(
             "localhost MCP transport rejected non-loopback Host",
@@ -147,7 +150,7 @@ def validate_local_origin(headers: Mapping[str, str]) -> None:
             http_status=403,
             data={"reason": "dns-rebinding-host-rejected"},
         )
-    if origin and origin not in {"localhost", "127.0.0.1", "::1"}:
+    if origin_header and (not origin or origin not in {"localhost", "127.0.0.1"}):
         raise MCPProtocolError(
             "localhost MCP transport rejected non-loopback Origin",
             code=-32001,
@@ -202,6 +205,8 @@ class _Handler(BaseHTTPRequestHandler):
             return
         request_id: Any = None
         try:
+            self.connection.settimeout(REQUEST_TIMEOUT_SECONDS)
+            validate_local_origin(self.headers)
             length_text = str(self.headers.get("Content-Length", "0")).strip()
             try:
                 length = int(length_text)
@@ -229,12 +234,13 @@ class _Handler(BaseHTTPRequestHandler):
                     http_status=400,
                 )
             request_id = request.get("id")
-            validate_local_origin(self.headers)
             validate_http_request(request, self.headers)
             root = self.server.knowledge_root  # type: ignore[attr-defined]
             agent_id = self.server.knowledge_agent_id  # type: ignore[attr-defined]
             response = handle_mcp_stateless_request(root, request, agent_id=agent_id)
             self._send_json(200, response)
+        except socket.timeout:
+            self._send_json(408, _error_payload(request_id, -32021, "MCP request timed out"))
         except MCPProtocolError as exc:
             self._send_json(
                 exc.http_status,
@@ -262,7 +268,7 @@ def serve(
     port: int = 3000,
     agent_id: str = DEFAULT_AGENT,
 ) -> None:
-    if host not in {"127.0.0.1", "localhost", "::1"}:
+    if host not in {"127.0.0.1", "localhost"}:
         raise KnowledgeHubError("native MCP transport may bind loopback only")
     if not 1 <= int(port) <= 65535:
         raise KnowledgeHubError("MCP port must be between 1 and 65535")

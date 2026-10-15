@@ -129,7 +129,17 @@ def _residue_state(candidates: List[str], branches: List[str]) -> Dict[str, List
     candidate_set = set(candidates)
     implementation = _implementation_branches(branches)
     remaining = sorted(candidate_set.intersection(branches))
-    unexpected = sorted(set(implementation).difference(candidate_set))
+    maintenance = {
+        branch
+        for branch in branches
+        if branch.startswith("dependabot/")
+    }
+    unexpected = sorted(
+        set(branches)
+        - candidate_set
+        - maintenance
+        - {_DEFAULT_BRANCH}
+    )
     return {
         "remaining_candidates": remaining,
         "implementation_branches": implementation,
@@ -150,6 +160,19 @@ def _default_branch_state(
         "default_branch_protection_observed": observed,
         "default_branch_protected": protected_value is True,
     }
+
+
+def _inventory_dirty(
+    residue: Mapping[str, Sequence[str]],
+    default_state: Mapping[str, Any],
+) -> bool:
+    return bool(
+        residue["remaining_candidates"]
+        or (
+            default_state["default_branch_present"]
+            and residue["unexpected_implementation_branches"]
+        )
+    )
 
 
 def evaluate_remote_branch_inventory(
@@ -233,10 +256,7 @@ def evaluate_remote_branch_inventory(
                 ],
             }
         )
-        dirty = bool(
-            residue["remaining_candidates"]
-            or residue["unexpected_implementation_branches"]
-        )
+        dirty = _inventory_dirty(residue, default_state)
         if not dirty:
             return {
                 "schema_version": "knowledge-hub.remote-branch-inventory.v1",

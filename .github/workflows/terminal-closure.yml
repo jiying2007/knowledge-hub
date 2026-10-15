@@ -151,6 +151,7 @@ jobs:
           name: knowledge-hub-terminal-closure-${{ env.SOURCE_REVISION }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             .cache/knowledge-hub/terminal-closure/
+            .cache/knowledge-hub/terminal-closure.json
             .cache/knowledge-hub/engineering-quality.json
             .cache/knowledge-hub/compliance-eval.json
             .cache/knowledge-hub/restore-drill-head.json

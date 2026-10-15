@@ -1,21 +1,31 @@
 """Read lexical and authority lanes with one snapshot and unique body reads."""
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .search_candidate_io import (
     MAX_CANDIDATES, _candidate_headers, _validate_headers,
 )
-from .search_core import SearchBoundaryError
+from .search_core import SearchBoundaryError, SearchFilters
 
 
-def read_candidate_lanes(connection, expression: str, normalized: str,
-                         lexical_limit: int, authority_limit: int) -> Tuple[List[Dict[str, Any]], int]:
+def read_candidate_lanes(
+    connection,
+    expression: str,
+    normalized: str,
+    lexical_limit: int,
+    authority_limit: int,
+    filters: Optional[SearchFilters] = None,
+) -> Tuple[List[Dict[str, Any]], int]:
     for limit in (lexical_limit, authority_limit):
         if type(limit) is not int or not 1 <= limit <= MAX_CANDIDATES:
             raise SearchBoundaryError('SQLite candidate limit must be between 1 and 4096')
     connection.execute('begin')
-    lexical = _candidate_headers(connection, expression, lexical_limit, normalized, False)
-    authority = _candidate_headers(connection, expression, authority_limit, normalized, True)
+    lexical = _candidate_headers(
+        connection, expression, lexical_limit, normalized, False, filters
+    )
+    authority = _candidate_headers(
+        connection, expression, authority_limit, normalized, True, filters
+    )
     _validate_headers(lexical, lexical_limit)
     _validate_headers(authority, authority_limit)
     headers, seen = [], set()
