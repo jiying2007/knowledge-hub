@@ -107,7 +107,7 @@ def _stage_team_update(root: pathlib.Path, rows: list, after: dict, relative: st
         text = (root / path).read_text(encoding="utf-8")
         txn.add_text(path, func(text, after))
     event = {"event_id": "team-update-{}-{}".format(item_id, uuid.uuid4().hex[:10]),
-             "event_type": "team-knowledge-update", "item_id": item_id,
+             "event_type": "update", "item_id": item_id,
              "before_status": "reviewing", "after_status": "reviewing",
              "authorization_id": "", "executed_by": "knowledge-submit",
              "executed_at": utc_timestamp(), "evidence_refs": [relative]}
@@ -290,7 +290,10 @@ def main(argv=None) -> int:
             or args.head_owner and not re.fullmatch(r"[A-Za-z0-9_.-]+", args.head_owner)
             or args.supersedes_pr < 0):
         parser.error("invalid Git remote/PR identity")
-    source = pathlib.Path(args.source).expanduser().resolve()
+    requested_source = pathlib.Path(args.source).expanduser()
+    if requested_source.is_symlink():
+        parser.error("source must not be a symlink")
+    source = requested_source.resolve()
     hub = pathlib.Path(args.hub_repo).expanduser().resolve()
     today = dt.date.today()
     if not (hub / "registry/items.jsonl").is_file():

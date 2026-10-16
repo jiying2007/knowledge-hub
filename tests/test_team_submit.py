@@ -115,6 +115,12 @@ def test_reviewing_update_uses_real_cas_transaction(tmp_path, monkeypatch):
     assert after["generated_by_ai"] is True
     assert "human_reviewed_by" not in after
     assert (root / "registry/lifecycle-events.jsonl").read_text(encoding="utf-8").strip()
+    from jsonschema import Draft202012Validator
+    schema_path = pathlib.Path(__file__).resolve().parents[1] / "schemas/lifecycle-event.schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    event = json.loads((root / "registry/lifecycle-events.jsonl").read_text(encoding="utf-8"))
+    Draft202012Validator(schema).validate(event)
+    assert event["event_type"] == "update"
     with pytest.raises(KnowledgeHubError, match="content SHA conflict"):
         team_submit.update_candidate(root, item["id"], source, old_sha, dt.date(2026, 10, 16), apply=True)
     after["status"] = "active"
