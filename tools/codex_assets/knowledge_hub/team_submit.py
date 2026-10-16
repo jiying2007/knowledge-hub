@@ -56,7 +56,7 @@ def _git(cwd: pathlib.Path, *argv: str, timeout: int = 120) -> str:
     if process.returncode:
         # Never echo Git output; it can contain remote addresses or credentials.
         raise KnowledgeHubError("git operation failed: {}".format(argv[0]))
-    return process.stdout.strip()
+    return process.stdout.rstrip("\n")
 
 
 def _route(root: pathlib.Path, project: str) -> str:
@@ -105,7 +105,8 @@ def update_candidate(
         raise KnowledgeHubError("only one registered reviewing item may be updated")
     before = found[0]
     relative = str(before["path"])
-    project = str(before.get("domain", "")).removeprefix("projects/")
+    domain = str(before.get("domain", ""))
+    project = domain.split("/", 1)[1] if domain.startswith("projects/") else ""
     if not relative.startswith(_route(root, project) + "/") or not relative.endswith(".md"):
         raise KnowledgeHubError("ordinary update may only edit team-knowledge/current")
     actual = file_sha256(resolve_inside(root, relative))
@@ -230,7 +231,8 @@ def main(argv=None) -> int:
             current = next((v for v in registry_items(worktree) if v.get("id") == args.item_id), None)
             if current is None:
                 raise KnowledgeHubError("item not found")
-            project = str(current.get("domain", "")).removeprefix("projects/")
+            domain = str(current.get("domain", ""))
+            project = domain.split("/", 1)[1] if domain.startswith("projects/") else ""
             preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=False)
             result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=True)
         if result.get("status") == "no-change":
