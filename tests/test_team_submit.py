@@ -89,7 +89,10 @@ def test_reviewing_update_uses_real_cas_transaction(tmp_path, monkeypatch):
         "review_after": "2027-01-01", "created_at": "2026-10-16",
         "updated_at": "2026-10-16", "promotion": "none",
         "review_status": "manual-entry-pending-review", "tags": ["debug-record"],
-        "validation_refs": [relative], "manual_validation_pending": True,
+        "validation_refs": [relative], "evidence_refs": [relative],
+        "summary_zh": "初始排障记录", "primary_language": "zh-CN",
+        "source_language": "zh-CN", "translation_status": "not-required",
+        "terminology_status": "pending-review", "manual_validation_pending": True,
         "human_reviewed_by": "old reviewer",
     }
     target.write_text(render_markdown(item, "# 旧版\n\n原始记录。"), encoding="utf-8")
