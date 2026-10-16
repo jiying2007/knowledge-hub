@@ -5,7 +5,7 @@ umask 077
 CHECKOUT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ROOT="${KH_INSTALL_ROOT:-/srv/knowledge-hub}"
 VENVDIR="${KH_VENV_DIR:-$HOME/.venvs/knowledge-hub}"
-TOKEN="$HOME/.config/knowledge-hub/team-token"
+KEYFILE="$HOME/.config/knowledge-hub/team-token"
 SERVICE_UNITS="$HOME/.config/systemd/user"
 case "$ROOT" in
   /*) ;;
@@ -29,13 +29,13 @@ fi
 ROOT="$(readlink -f "$ROOT")"
 mkdir -p "$HOME/.config/knowledge-hub" "$SERVICE_UNITS" "$(dirname "$VENVDIR")"
 chmod 0700 "$HOME/.config/knowledge-hub"
-if [[ ! -e "$TOKEN" ]]; then
-  openssl rand -hex 32 > "$TOKEN"
+if [[ ! -e "$KEYFILE" ]]; then
+  openssl rand -hex 32 > "$KEYFILE"
 fi
-[[ -f "$TOKEN" && ! -L "$TOKEN" ]] || {
+[[ -f "$KEYFILE" && ! -L "$KEYFILE" ]] || {
   echo "status=blocked reason=unsafe-token-file" >&2; exit 2;
 }
-chmod 0600 "$TOKEN"
+chmod 0600 "$KEYFILE"
 
 if [[ ! -x "$VENVDIR/bin/python" ]]; then
   python3 -m venv "$VENVDIR" || {
@@ -56,7 +56,7 @@ done
 systemctl --user daemon-reload || {
   echo "status=blocked reason=user-systemd-unavailable" >&2; exit 2;
 }
-KH_INSTALL_ROOT="$ROOT" KH_PYTHON="$PYTHON" KH_TEAM_TOKEN_FILE="$TOKEN"   KH_SYSTEMCTL_MODE=user bash "$CHECKOUT/tools/team/deploy.sh"
+KH_INSTALL_ROOT="$ROOT" KH_PYTHON="$PYTHON" KH_TEAM_TOKEN_FILE="$KEYFILE"   KH_SYSTEMCTL_MODE=user bash "$CHECKOUT/tools/team/deploy.sh"
 systemctl --user enable --now knowledge-hub-team-mcp.service knowledge-hub-team-deploy.timer
 if [[ -n "${KH_BACKUP_DIR:-}" ]]; then
   case "$KH_BACKUP_DIR" in
