@@ -13,7 +13,6 @@ import re
 import subprocess
 import tempfile
 import uuid
-from typing import Any, Dict
 
 from .common import (
     KnowledgeHubError, encode_jsonl, file_sha256, load_markdown,
