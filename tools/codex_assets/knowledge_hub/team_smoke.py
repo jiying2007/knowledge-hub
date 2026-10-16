@@ -5,7 +5,6 @@ import argparse
 import datetime as dt
 import json
 import pathlib
-import urllib.error
 import urllib.request
 
 from .common import KnowledgeHubError, registry_items
