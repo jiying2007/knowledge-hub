@@ -88,7 +88,9 @@ def _make_item_row(
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
-        "priority": _review_priority(item),
+        # Historical human-review metadata without a current body hash stays
+        # actionable as P1 owner review, without claiming current approval.
+        "priority": "P1" if "human-review-current-body-unbound" in reasons else _review_priority(item),
         "reasons": reasons,
         "missing_fields": missing_fields,
         "source_id": str(source.get("source_id", "")),

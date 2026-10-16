@@ -93,7 +93,10 @@ def make_review_queue_item(item, queue_type, reasons, missing_fields):
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
-        "priority": review_priority_for_item(item),
+        # A legacy human-review claim without a body hash is an owner-review
+        # exception (P1), not a broken technical gate. Product readiness is
+        # still blocked by the non-empty queue until current-body review.
+        "priority": "P1" if "human-review-current-body-unbound" in reasons else review_priority_for_item(item),
         "reasons": reasons,
         "missing_fields": missing_fields,
         "source_id": str(source.get("source_id", "")),

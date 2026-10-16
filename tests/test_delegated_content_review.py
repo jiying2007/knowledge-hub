@@ -393,6 +393,14 @@ def test_legacy_human_review_without_body_hash_is_an_explicit_current_exception(
     assert status["summary"]["ai_generated_pending_count"] == 1
     assert "human-review-current-body-unbound" in view["rows"][0]["reasons"]
     assert "human-review-current-body-unbound" in status["ai_generated_pending"][0]["reasons"]
+    # Legacy review identity gaps are human-review exceptions: never silently
+    # closed, never promoted, but not misreported as a technical failure.
+    assert view["rows"][0]["priority"] == "P1"
+    assert status["ai_generated_pending"][0]["priority"] == "P1"
+    assert view["summary"]["active_or_promotion_blocker_count"] == 0
+    assert status["summary"]["active_or_promotion_blocker_count"] == 0
+    assert status["product_blocking_final_gate"] is True
+    assert status["active_blocking_final_gate"] is False
 
     item["human_review_content_sha256"] = content_digest(root, item["path"])
     counts = review_counts(root, [item])
@@ -407,6 +415,23 @@ def test_legacy_human_review_without_body_hash_is_an_explicit_current_exception(
     assert counts["human_review_current_body_bound_count"] == 0
     assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 1
     assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 1
+    if lifecycle == "active":
+        assert queue.build_review_queue_view([item], [])["rows"][0]["priority"] == "P0"
+        assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["active_or_promotion_blocker_count"] == 1
+
+
+def test_active_ai_missing_human_review_is_still_hard_blocked(case):
+    root, item, _, _, _ = case
+    item["status"] = "active"
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    status = build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)
+    assert view["rows"][0]["priority"] == "P0"
+    assert status["ai_generated_pending"][0]["priority"] == "P0"
+    assert status["summary"]["active_or_promotion_blocker_count"] == 1
+    assert status["active_blocking_final_gate"] is True
+    assert status["product_blocking_final_gate"] is True
+    assert "human-review-current-body-unbound" not in view["rows"][0]["reasons"]
 
 
 def test_historical_archived_human_review_without_hash_is_not_active_gate(case):

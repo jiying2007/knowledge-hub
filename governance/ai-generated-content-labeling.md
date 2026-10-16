@@ -70,6 +70,7 @@ AI 生成或加工的内容进入 active、团队标准、AGENTS、skill 或 wor
 - **新增当前正文的人工审核记录**应同时保存经过真实审阅的 `human_review_content_sha256`，并与当前文件字节的 SHA-256 相等；reviewer、时间、证据和审核理由不能替代正文身份。
 - 历史有审核字段、但缺少该哈希的条目只证明**存在历史审核记录**，不能单凭这些字段证明当前正文仍对应当时审核的版本。机器应分开统计“历史有审核字段”和“当前正文哈希已绑定”。
 - 对仍为 `active` / `reviewing` 的 AI 条目，缺少哈希或正文发生漂移应生成只读复核异常，交由真实审核证据确认；不要批量生成签名、自动填写哈希、延期 review_after 或提升 active。历史 `archived` 条目按归档完整性而非当前发布标准分层处理。
+- 历史已有人工审核字段、但缺少当前正文 SHA 的条目维持 `human-review-current-body-unbound` 人工复核队列（P1）；不得视为当前版本已审核。它仍阻断 product terminal（`product_blocking_final_gate=true`），但不冒充运行或数据损坏故障。真正缺少人工审核字段的 active 条目及已绑定 SHA 但正文漂移的 active 条目仍保持 P0 阻断。
 - 受托 AI 复核须有真实、可重放的请求证明和独立校验证据；`request_proof=unverified` 只能保持未验证，不得转换为已签收。
 
 ## Memories 边界
