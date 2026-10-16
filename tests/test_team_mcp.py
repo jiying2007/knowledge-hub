@@ -145,6 +145,7 @@ def test_no_hidden_item_content_is_returned_through_context(tmp_path, monkeypatc
 
 def test_team_http_rejects_missing_or_weak_token_file(tmp_path):
     from tools.codex_assets.knowledge_hub.mcp_http_server import serve
+    (tmp_path / ".serving-sha").write_text(SHA + "\n", encoding="utf-8")
     with pytest.raises(KnowledgeHubError, match="token file"):
         serve(tmp_path, team=True, serving_sha=SHA)
     token = tmp_path / "token"
