@@ -92,7 +92,11 @@ def test_apply_preserves_body_human_lifecycle_and_is_idempotent(case):
     assert {k: v for k, v in item.items() if k != FIELD} == before
     assert (root / before["path"]).read_bytes() == body
     assert review_state(root, item)["closed"]
-    assert review_counts(root, [item]) == {"ai_delegated_closed_count": 1, "human_reviewed_count": 0}
+    counts = review_counts(root, [item])
+    assert counts["ai_delegated_closed_count"] == 1
+    assert counts["human_reviewed_count"] == 0
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert counts["human_review_historical_unbound_count"] == 0
     second_case = (root, item, *case[2:])
     result, payload = run_cli(second_case, apply=True)
     assert result.returncode == 0 and payload["updated_count"] == 0
@@ -297,7 +301,11 @@ def test_official_human_review_supersedes_ai_and_keeps_history(case):
     assert result.returncode == 0, result.stdout + result.stderr
     updated = json.loads((root / "registry/items.jsonl").read_text())
     assert FIELD not in updated and load_ledger(root)
-    assert review_counts(root, [updated]) == {"ai_delegated_closed_count": 0, "human_reviewed_count": 1}
+    counts = review_counts(root, [updated])
+    assert counts["ai_delegated_closed_count"] == 0
+    assert counts["human_reviewed_count"] == 1
+    assert counts["human_review_current_body_bound_count"] == 1
+    assert counts["human_review_historical_unbound_count"] == 0
     assert queue.build_review_queue_view([updated], [])["summary"]["row_count"] == 0
     assert review_state(root, updated)["status"] == "absent"
 
@@ -369,7 +377,7 @@ def test_legacy_human_review_without_body_hash_is_an_explicit_current_exception(
         "human_reviewed_by": "leiwenjun",
         "human_reviewed_at": "2026-10-16",
         "review_basis": "历史人工审核说明，不足以绑定当前文件版本",
-        "human_review_decision": "accepted",
+        "human_review_decision": "accept-as-review-record",
     })
 
     counts = review_counts(root, [item])
