@@ -65,7 +65,7 @@ def test_create_id_not_derived_from_ascii_slug(tmp_path, monkeypatch):
 
 def test_team_shell_scripts_are_parseable():
     base = pathlib.Path(__file__).resolve().parents[1] / "tools/team"
-    for name in ("serve.sh", "deploy.sh", "backup.sh"):
+    for name in ("serve.sh", "deploy.sh", "backup.sh", "install-user.sh"):
         result = subprocess.run(["bash", "-n", str(base / name)], capture_output=True, text=True, timeout=10)
         assert result.returncode == 0, name
 

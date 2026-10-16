@@ -241,3 +241,33 @@ def test_team_listener_sets_timeout_before_request_headers():
                 conn.close()
     finally:
         server.server_close()
+
+
+def test_real_repository_http_search_get_context_smoke():
+    """Smoke the actual governed corpus through HTTP; not only mocked dispatch."""
+    import pathlib
+    import threading
+    from tools.codex_assets.knowledge_hub.mcp_http_server import _BoundedTeamServer, _Handler
+    from tools.codex_assets.knowledge_hub.team_smoke import smoke
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    server = _BoundedTeamServer(("127.0.0.1", 0), _Handler, max_connections=6)
+    server.knowledge_root = root
+    server.knowledge_agent_id = "knowledge-reader"
+    server.knowledge_limiter = threading.BoundedSemaphore(3)
+    server.knowledge_team_token = "t" * 40
+    server.knowledge_serving_sha = SHA
+    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker.start()
+    try:
+        result = smoke(
+            "http://127.0.0.1:{}/mcp".format(server.server_port),
+            "t" * 40, SHA, root,
+        )
+        assert result["status"] == "pass"
+        assert result["search_results"] >= 1
+        assert result["probe_id"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        worker.join(timeout=5)

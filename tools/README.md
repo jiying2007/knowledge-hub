@@ -521,6 +521,8 @@ Active 与历史文档不能用普通 Update 改写。无远程认证时只允�
 prepared-local，不得宣称 PR 已创建。两个 PR 更新同一条时须人工处理
 CAS 冲突；禁止直接强推主线或机械合并索引。
 
+**一键用户级安装（推荐）**：主线合并且安全审核通过后，在受信 Ubuntu 服务用户的 knowledge-hub checkout 中执行 `bash tools/team/install-user.sh`。它负责建立私有令牌、独立 Python venv、用户级 systemd 单元、首次 SHA 发布与定时更新；需预先确保 `/srv/knowledge-hub` 对该服务用户可写。SSH 断开后保持用户级服务需管理员确认 lingering。安装器不负责 Caddy/证书、GitHub 安全审批和真实客户端验收。下面保留详细手工安装步骤以供故障排查。
+
 **一次性安装**：需要 Ubuntu 服务器上能运行 Git/Python 的服务用户，
 且 /srv/knowledge-hub 可由该用户管理。先在本仓 checkout 操作：
 
