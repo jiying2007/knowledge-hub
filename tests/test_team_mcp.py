@@ -157,3 +157,53 @@ def test_team_http_rejects_missing_or_weak_token_file(tmp_path):
     token.chmod(0o644)
     with pytest.raises(KnowledgeHubError, match="private regular"):
         serve(tmp_path, team=True, token_file=str(token), serving_sha=SHA)
+
+
+def test_team_http_requires_bearer_and_keeps_resource_scope(tmp_path):
+    """Live loopback HTTP request exercises the auth boundary, not a mocked router."""
+    import http.client
+    import threading
+    from tools.codex_assets.knowledge_hub.mcp_http_server import (
+        _BoundedTeamServer, _Handler,
+    )
+
+    server = _BoundedTeamServer(("127.0.0.1", 0), _Handler, max_connections=4)
+    server.knowledge_root = tmp_path
+    server.knowledge_agent_id = "knowledge-reader"
+    server.knowledge_limiter = threading.BoundedSemaphore(2)
+    server.knowledge_team_token = "t" * 40
+    server.knowledge_serving_sha = SHA
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    def request(token=None, origin=None):
+        body = json.dumps(_request("tools/list"), separators=(",", ":"))
+        headers = {
+            "Content-Type": "application/json",
+            "MCP-Protocol-Version": "2026-07-28",
+            "Mcp-Method": "tools/list",
+        }
+        if token is not None:
+            headers["Authorization"] = "Bearer " + token
+        if origin is not None:
+            headers["Origin"] = origin
+        conn = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        try:
+            conn.request("POST", "/mcp", body=body.encode("utf-8"), headers=headers)
+            response = conn.getresponse()
+            return response.status, json.loads(response.read())
+        finally:
+            conn.close()
+
+    try:
+        assert request()[0] == 401
+        assert request("wrong")[0] == 401
+        assert request("t" * 40, origin="https://evil.example")[0] == 403
+        status, payload = request("t" * 40)
+        assert status == 200
+        names = {row["name"] for row in payload["result"]["tools"]}
+        assert names == {"knowledge_search", "knowledge_get", "knowledge_context"}
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

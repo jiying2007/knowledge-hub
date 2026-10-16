@@ -70,7 +70,8 @@ def _route(root: pathlib.Path, project: str) -> str:
     return target + "/team-knowledge"
 
 
-def create_candidate(root: pathlib.Path, source: pathlib.Path, project: str, kind: str, today: dt.date, *, apply: bool) -> dict:
+def create_candidate(root: pathlib.Path, source: pathlib.Path, project: str, kind: str, today: dt.date,
+                     *, apply: bool, generated_by_ai: bool = False) -> dict:
     if kind not in KINDS:
         raise KnowledgeHubError("unsupported team knowledge kind")
     base = _route(root, project)
@@ -87,7 +88,7 @@ def create_candidate(root: pathlib.Path, source: pathlib.Path, project: str, kin
         return capture(root, staged, kind, target, today, apply, item_id=item_id,
                        domain="projects/" + project, owner="team-core",
                        visibility="team-internal", status="reviewing",
-                       generated_by_ai=False, source_type="ephemeral-file-capture",
+                       generated_by_ai=generated_by_ai, source_type="ephemeral-file-capture",
                        source_from="ephemeral-content-sha256:" + hashlib.sha256(safe.encode("utf-8")).hexdigest())
 
 
@@ -123,7 +124,7 @@ def _stage_team_update(root: pathlib.Path, rows: list, after: dict, relative: st
 
 def update_candidate(
     root: pathlib.Path, item_id: str, source: pathlib.Path,
-    expected_sha256: str, today: dt.date, *, apply: bool,
+    expected_sha256: str, today: dt.date, *, apply: bool, generated_by_ai: bool = False,
 ) -> dict:
     """Reviewing-only CAS edit through the existing journaled transaction store."""
     if not DIGEST.fullmatch(expected_sha256):
@@ -166,6 +167,9 @@ def update_candidate(
     for field in ("human_reviewed_by", "human_reviewed_at", "review_attestation_source_ref",
                   "review_content_sha256", "human_review_content_sha256"):
         after.pop(field, None)
+    if generated_by_ai:
+        after.update(generated_by_ai=True, ai_role="rewritten",
+                     ai_model_or_tool="Codex", ai_generated_at=today.isoformat())
     require_valid_item(after)
     # An old human-content attestation must never survive a body edit.
     for field in ("human_reviewed_by", "human_reviewed_at", "human_review_content_sha256",
@@ -205,10 +209,12 @@ def _build_submission(args, hub: pathlib.Path, worktree: pathlib.Path, source: p
         if not args.project:
             raise KnowledgeHubError("create requires explicit --project")
         project = args.project
-        preview = create_candidate(worktree, source, project, args.kind, today, apply=False)
+        preview = create_candidate(worktree, source, project, args.kind, today,
+                                   apply=False, generated_by_ai=args.generated_by_ai)
         if preview.get("status") == "no-change":
             raise KnowledgeHubError("item already exists; choose update with a content digest")
-        result = create_candidate(worktree, source, project, args.kind, today, apply=True)
+        result = create_candidate(worktree, source, project, args.kind, today,
+                                  apply=True, generated_by_ai=args.generated_by_ai)
     else:
         if not args.item_id:
             raise KnowledgeHubError("update requires --item-id")
@@ -217,8 +223,10 @@ def _build_submission(args, hub: pathlib.Path, worktree: pathlib.Path, source: p
             raise KnowledgeHubError("item not found")
         domain = str(current.get("domain", ""))
         project = domain.split("/", 1)[1] if domain.startswith("projects/") else ""
-        preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=False)
-        result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=True)
+        preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today,
+                                   apply=False, generated_by_ai=args.generated_by_ai)
+        result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today,
+                                  apply=True, generated_by_ai=args.generated_by_ai)
     if result.get("status") == "no-change":
         _git(hub, "worktree", "remove", "--force", str(worktree))
         print("status=no-change item_id={}".format(args.item_id))
@@ -265,6 +273,7 @@ def main(argv=None) -> int:
     parser.add_argument("--expected-sha256", default="")
     parser.add_argument("--source", required=True)
     parser.add_argument("--public-approved", action="store_true")
+    parser.add_argument("--generated-by-ai", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--base-remote", default="origin")

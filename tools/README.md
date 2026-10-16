@@ -510,6 +510,9 @@ safe-note.md 文件，在本仓工作区执行：
 
     bash tools/team/knowledge-submit.sh update --item-id <id> --expected-sha256 <64hex> --source /tmp/corrected-note.md --public-approved --create-pr
 
+由 Codex 实际生成的候选应另外传入 --generated-by-ai，并保留证据中的
+实测、推断和待验证边界；不得把 AI 产物标记为人工实测。
+
 提交器通过工程师**自己的** git 和 gh 凭证工作，创建隔离 worktree，
 复用 canonical capture/Index/Registry/事务内核并限制 PR 文件范围；
 Active 与历史文档不能用普通 Update 改写。无远程认证时只允许
