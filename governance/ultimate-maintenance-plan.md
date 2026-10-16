@@ -36,19 +36,23 @@ related:
 4. Git 默认只保存轻量文本、索引、规则和工具；大文件只保存 URI、size、hash 和摘要。唯一例外是 owner 批准、体量受控且纳入 `artifacts/vault/` 逐文件 size/hash 完整性门禁的不可变附件集。
 5. 自动化只能生成报告和候选；提升、删除、发布、写 memory 必须人工确认。
 
-## 权威等级
+## 当前知识权威与消费层级（2026-08-21 起适用）
 
-1. `domains/embedded/standards/`
-2. `domains/embedded/runbooks/`
-3. `projects/<project>/current/`
-4. `projects/<project>/decisions/`
-5. `projects/<project>/archive/`
-6. `domains/patents/`
-7. `domains/codex/`
-8. `notes/personal/`
-9. `~/.codex/memories`
+**知识权威不是简单的目录优先级。** 不同 subject/scope 的事实权威由已登记的 source、owner、生命周期、证据与明确的消费目标共同决定；跨领域冲突需要按适用范围和来源版本重新核验，不得只比较路径名。
 
-`~/.codex/memories` 永远不是规则或工程事实权威源。
+| 范围 | 当前权威 | Hub 内角色 |
+|---|---|---|
+| 已发布的嵌入式团队标准、runbook | `workspace://embedded-knowledge` | `domains/embedded/` 仅保存 reviewing 提炼稿、候选和历史 provenance；不作为并行团队发布源 |
+| PCR02 等项目当前事实、决策与验证 | `projects/<project>/current|decisions|validation/` 的已批准条目 | 项目证据需独立 owner、source、设备/发布/回滚资格；reviewing 仍非 active 事实 |
+| 项目或团队历史 | `projects/<project>/archive/` 和 `domains/<domain>/archive/` | 只作历史可追溯性，不能覆盖新的可验证事实 |
+| 专利资料与附件 | `domains/patents/`、合规 `artifacts/vault/` | 披露、法律状态、来源许可和公开范围单独审核 |
+| Codex 治理与历史 | `domains/codex/` | 历史 session/memory 不自动生成 active 工作流或指令 |
+| 个人候选 | `notes/personal/` | 不进入团队 active 检索或发布 |
+| `~/.codex/memories` | 辅助回忆来源 | 永不作为唯一规则或工程事实权威 |
+
+Hub 的统一目标是**单一知识控制面和每个适用范围的唯一正文权威**，不是把外部正式团队仓和全部原始材料重新复制一份。已签收的团队发布稿由目标 workspace 消费；Hub 按原始 source/hash、目标修订和发布资格保留引用，不能因索引可检索就自动认定内容已复核。
+
+源控制与正文发布关系以 `governance/source-boundaries.md`、`governance/path-routing.md` 和当前 Registry 为准；本页仅解释原则，不另行维护 source 状态和动态计数。
 
 ## 生命周期
 
