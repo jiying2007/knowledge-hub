@@ -205,14 +205,18 @@ def team_tools() -> list:
         return {"type": "object", "properties": fields, "required": required, "additionalProperties": False}
     query = {"type": "string", "minLength": 1, "maxLength": MAX_QUERY_LENGTH}
     limited = {"type": "integer", "minimum": 1, "maximum": 10}
+    read_only = {"readOnlyHint": True, "destructiveHint": False, "openWorldHint": False}
     return [
         {"name": "knowledge_search", "description": "Search shared, current, reviewed-or-provisional knowledge.",
+         "annotations": dict(read_only),
          "inputSchema": schema({"query": query, "limit": limited}, ["query"])},
         {"name": "knowledge_get", "description": "Read a registered, shared item by ID with bounded UTF-8 pagination.",
+         "annotations": dict(read_only),
          "inputSchema": schema({"item_id": {"type": "string"}, "offset": {"type": "integer", "minimum": 0},
                                 "max_bytes": {"type": "integer", "minimum": 1, "maximum": MAX_PAGE_BYTES},
                                 "expected_sha256": {"type": "string"}}, ["item_id"])},
         {"name": "knowledge_context", "description": "Bounded team context with explicit provisional facts.",
+         "annotations": dict(read_only),
          "inputSchema": schema({"query": query, "limit": {"type": "integer", "minimum": 1, "maximum": 3},
                                 "task_type": {"type": "string", "maxLength": 128}}, ["query"])},
     ]

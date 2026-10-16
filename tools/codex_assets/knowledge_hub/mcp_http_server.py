@@ -185,6 +185,12 @@ class _BoundedTeamServer(ThreadingHTTPServer):
         self._connection_slots = threading.BoundedSemaphore(max_connections)
         super().__init__(address, handler)
 
+    def get_request(self):
+        # Limit idle sockets BEFORE BaseHTTPRequestHandler reads HTTP headers.
+        request, address = super().get_request()
+        request.settimeout(REQUEST_TIMEOUT_SECONDS)
+        return request, address
+
     def process_request(self, request, client_address) -> None:
         if not self._connection_slots.acquire(blocking=False):
             try:

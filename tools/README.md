@@ -492,6 +492,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 
 ## LAN Team MCP v1.3 — 小团队 Git 共享与归档
 
+工程师客户端安装和现场验收细节见 [团队 MCP 客户端指南](team/CLIENTS.md)。
+
 **工作流**：工程师用 Codex 或 Markdown 提交知识 PR，维护者按已有
 Git/CI 复核并合入 master；同一 Ubuntu 服务器上的 MCP 服务只读发布
 经验证的 Git SHA。Git/Markdown/Registry 是唯一知识权威。

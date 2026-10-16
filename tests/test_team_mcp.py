@@ -92,6 +92,8 @@ def _request(method, params=None):
 def test_team_advertises_exact_tools_and_only_health_resource(tmp_path):
     tools = team_mcp.handle_team_mcp(tmp_path, _request("tools/list"), SHA)["result"]["tools"]
     assert {t["name"] for t in tools} == {"knowledge_search", "knowledge_get", "knowledge_context"}
+    assert all(t["annotations"]["readOnlyHint"] is True for t in tools)
+    assert all(t["annotations"]["destructiveHint"] is False for t in tools)
     resources = team_mcp.handle_team_mcp(tmp_path, _request("resources/list"), SHA)["result"]["resources"]
     assert [r["uri"] for r in resources] == ["knowledge://health"]
     with pytest.raises(MCPProtocolError):
@@ -221,3 +223,21 @@ def test_only_evidence_verified_active_is_advertised_as_authority():
         {"status": "reviewing"},
     ):
         assert _kind(dict(good, **changes)) == "provisional"
+
+
+def test_team_listener_sets_timeout_before_request_headers():
+    import socket
+    from tools.codex_assets.knowledge_hub.mcp_http_server import (
+        _BoundedTeamServer, _Handler, REQUEST_TIMEOUT_SECONDS,
+    )
+    server = _BoundedTeamServer(("127.0.0.1", 0), _Handler, max_connections=2)
+    try:
+        with socket.create_connection(("127.0.0.1", server.server_port), timeout=3):
+            conn, addr = server.get_request()
+            try:
+                assert addr
+                assert conn.gettimeout() == REQUEST_TIMEOUT_SECONDS
+            finally:
+                conn.close()
+    finally:
+        server.server_close()
