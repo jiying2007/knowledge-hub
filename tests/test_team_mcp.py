@@ -141,3 +141,18 @@ def test_no_hidden_item_content_is_returned_through_context(tmp_path, monkeypatc
     })
     with pytest.raises(KnowledgeHubError, match="eligibility"):
         team_mcp.team_context(tmp_path, "secret", SHA)
+
+
+def test_team_http_rejects_missing_or_weak_token_file(tmp_path):
+    from tools.codex_assets.knowledge_hub.mcp_http_server import serve
+    with pytest.raises(KnowledgeHubError, match="token file"):
+        serve(tmp_path, team=True, serving_sha=SHA)
+    token = tmp_path / "token"
+    token.write_text("short", encoding="utf-8")
+    token.chmod(0o600)
+    with pytest.raises(KnowledgeHubError, match="32-512"):
+        serve(tmp_path, team=True, token_file=str(token), serving_sha=SHA)
+    token.write_text("x" * 40, encoding="utf-8")
+    token.chmod(0o644)
+    with pytest.raises(KnowledgeHubError, match="private regular"):
+        serve(tmp_path, team=True, token_file=str(token), serving_sha=SHA)
