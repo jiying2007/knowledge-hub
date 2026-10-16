@@ -1,0 +1,21 @@
+[Unit]
+Description=Knowledge Hub LAN read-only MCP
+After=network.target
+
+[Service]
+Type=simple
+Environment=KH_INSTALL_ROOT=/srv/knowledge-hub
+Environment=KH_PYTHON=/usr/bin/python3
+Environment=KH_TEAM_PORT=3000
+Environment=KH_TEAM_TOKEN_FILE=%h/.config/knowledge-hub/team-token
+ExecStart=/usr/bin/bash /srv/knowledge-hub/current/tools/team/serve.sh
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+TasksMax=48
+MemoryMax=1G
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target
