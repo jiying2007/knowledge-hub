@@ -46,7 +46,8 @@ def main(argv=None):
     req = urllib.request.Request(url, headers={
         "Accept": "application/vnd.github+json", "User-Agent": "knowledge-hub-lan-deploy/1",
     })
-    with urllib.request.urlopen(req, timeout=15) as response:
+    # Fixed api.github.com HTTPS host; repository/sha are bounded and validated.
+    with urllib.request.urlopen(req, timeout=15) as response:  # nosec B310
         body = response.read(1048576)
     result = check_runs(json.loads(body.decode("utf-8")), args.sha)
     print(json.dumps(result, separators=(",", ":")))
