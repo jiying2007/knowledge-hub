@@ -198,9 +198,20 @@ def main(argv=None) -> int:
     parser.add_argument("--public-approved", action="store_true")
     parser.add_argument("--create-pr", action="store_true")
     parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--base-remote", default="origin")
+    parser.add_argument("--push-remote", default="origin")
+    parser.add_argument("--pr-repository", default="jiying2007/knowledge-hub")
+    parser.add_argument("--head-owner", default="")
+    parser.add_argument("--supersedes-pr", type=int, default=0)
     args = parser.parse_args(argv)
     if not args.public_approved:
         parser.error("confirm that the source may be disclosed in the configured Git remote")
+    if (not re.fullmatch(r"[A-Za-z0-9._-]+", args.base_remote)
+            or not re.fullmatch(r"[A-Za-z0-9._-]+", args.push_remote)
+            or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.pr_repository)
+            or args.head_owner and not re.fullmatch(r"[A-Za-z0-9_.-]+", args.head_owner)
+            or args.supersedes_pr < 0):
+        parser.error("invalid Git remote/PR identity")
     source = pathlib.Path(args.source).expanduser().resolve()
     hub = pathlib.Path(args.hub_repo).expanduser().resolve()
     today = dt.date.today()
@@ -208,9 +219,8 @@ def main(argv=None) -> int:
         parser.error("--hub-repo must identify a full Knowledge Hub checkout")
     _safe_source(source)
     if not args.offline:
-        _git(hub, "fetch", "--no-tags", "origin", "master")
-    base = "master" if args.offline else "origin/master"
-    ref = _git(hub, "rev-parse", base)
+        _git(hub, "fetch", "--no-tags", args.base_remote, "master")
+    ref = _git(hub, "rev-parse", "master" if args.offline else "FETCH_HEAD")
     worktree = pathlib.Path(tempfile.mkdtemp(prefix="kh-team-submit-"))
     name = "team/{}-{}".format(today.strftime("%Y%m%d"), uuid.uuid4().hex[:12])
     try:
@@ -244,15 +254,22 @@ def main(argv=None) -> int:
         _git(worktree, "diff", "--cached", "--check")
         _git(worktree, "commit", "-m", "docs(knowledge): submit team {} for {}".format(args.operation, project))
         if args.create_pr and not args.offline:
-            _git(worktree, "push", "-u", "origin", name)
-            command = ["gh", "pr", "create", "--base", "master", "--head", name,
+            _git(worktree, "push", "-u", args.push_remote, name)
+            head = args.head_owner + ":" + name if args.head_owner else name
+            command = ["gh", "pr", "create", "--repo", args.pr_repository, "--base", "master", "--head", head,
                        "--title", "docs(knowledge): team {} {}".format(args.operation, project),
-                       "--body", "Shared reviewing candidate; no active promotion. Review source, version, duplicate and public-sharing boundaries."]
+                       "--body", "Shared reviewing candidate; no active promotion. Review source, version, duplicate and public-sharing boundaries."
+                       + (" Supersedes PR #{} (previous proposal requires closure).".format(args.supersedes_pr)
+                          if args.supersedes_pr else "")]
             try:
                 pr = subprocess.run(command, cwd=str(worktree), capture_output=True, text=True, timeout=60)
             except (OSError, subprocess.TimeoutExpired):
                 pr = None
             if pr and pr.returncode == 0 and pr.stdout.strip().startswith("https://"):
+                try:
+                    _git(hub, "worktree", "remove", "--force", str(worktree))
+                except KnowledgeHubError:
+                    pass  # Retain diagnostic worktree; remote PR itself has succeeded.
                 print("status=pr-created url={} branch={} base_sha={}".format(pr.stdout.strip(), name, ref))
                 return 0
             print("status=prepared-local reason=pr-not-created branch={} path={}".format(name, worktree))
