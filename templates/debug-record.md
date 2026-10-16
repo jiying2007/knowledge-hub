@@ -1,7 +1,7 @@
 ---
 id:
 title:
-kind: project-archive
+kind: debug-record
 domain:
 path:
 scope:
