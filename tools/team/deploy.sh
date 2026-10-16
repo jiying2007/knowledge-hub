@@ -9,6 +9,12 @@ REPOSITORY="$(printenv KH_REPOSITORY || echo jiying2007/knowledge-hub)"
 PROBE_PORT="$(printenv KH_PROBE_PORT || echo 31317)"
 LIVE_PORT="$(printenv KH_TEAM_PORT || echo 3000)"
 SERVICE="$(printenv KH_SYSTEMD_SERVICE || echo knowledge-hub-team-mcp.service)"
+SYSTEMCTL_MODE="$(printenv KH_SYSTEMCTL_MODE || echo user)"
+if [[ "$SYSTEMCTL_MODE" == user ]]; then
+  service_ctl() { systemctl --user "$@"; }
+else
+  service_ctl() { systemctl "$@"; }
+fi
 mkdir -p "$ROOT/state" "$ROOT/releases"
 exec 9>"$ROOT/state/deploy.lock"
 flock -n 9 || { echo "status=busy"; exit 2; }
@@ -18,7 +24,7 @@ if [[ ! -d "$MIRROR" ]]; then
   git init --bare --quiet "$MIRROR"
   git --git-dir="$MIRROR" remote add origin "$REMOTE"
 fi
-git --git-dir="$MIRROR" fetch --no-tags --quiet origin master || {
+git --git-dir="$MIRROR" fetch --no-tags --quiet origin master:refs/heads/master || {
   echo "status=offline serving-sha=$(cat "$ROOT/state/serving-sha" 2>/dev/null || true)"
   exit 2
 }
@@ -91,16 +97,24 @@ STAGE=""
 NEXT="$ROOT/.current.$SHA.$$"
 ln -s "releases/$SHA" "$NEXT"
 mv -Tf "$NEXT" "$ROOT/current"
-if ! systemctl restart "$SERVICE" || ! PYTHONPATH="$ROOT/current" "$PYTHON" \
-      -m tools.codex_assets.knowledge_hub.team_smoke \
-      --root "$ROOT/current" --serving-sha "$SHA" --token-file "$TOKEN" \
-      --url "http://127.0.0.1:$LIVE_PORT/mcp" > "$ROOT/state/live-result.json"; then
+LIVE_OK=0
+if service_ctl restart "$SERVICE"; then
+  for attempt in 1 2 3 4 5; do
+    if PYTHONPATH="$ROOT/current" "$PYTHON" -m tools.codex_assets.knowledge_hub.team_smoke \
+        --root "$ROOT/current" --serving-sha "$SHA" --token-file "$TOKEN" \
+        --url "http://127.0.0.1:$LIVE_PORT/mcp" > "$ROOT/state/live-result.json" 2>/dev/null; then
+      LIVE_OK=1; break
+    fi
+    sleep 2
+  done
+fi
+if [[ "$LIVE_OK" != 1 ]]; then
   if [[ -n "$PREVIOUS" ]]; then
     ln -s "releases/$PREVIOUS" "$NEXT"
     mv -Tf "$NEXT" "$ROOT/current"
-    systemctl restart "$SERVICE" || true
+    service_ctl restart "$SERVICE" || true
   else
-    systemctl stop "$SERVICE" || true
+    service_ctl stop "$SERVICE" || true
     rm -f "$ROOT/current"
   fi
   printf '%s\n' "post-switch smoke failed: $SHA" > "$ROOT/state/last-failure"
