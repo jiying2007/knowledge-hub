@@ -488,3 +488,67 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 公开工具通过 `tools/ci/python-runtime.sh` 选择具备依赖的解释器。能力探针和正式模块均使用 Python 隔离模式；只加载本仓 `tools` 包，每次使用独立字节码目录，不从工作目录、`PYTHONPATH` 或 user-site 导入代码。
 
 如果系统解释器没有运行依赖，在本仓创建 `.tmp/provider-runtime/venv`，使用该环境的 `python -m pip install --require-hashes -r requirements-runtime.lock` 安装锁定依赖。随后从任意工作目录执行公开 wrapper。虚拟环境是本机依赖，不进入 Git、源码身份清单或发布数据。
+
+
+## LAN Team MCP v1.3 — 小团队 Git 共享与归档
+
+**工作流**：工程师用 Codex 或 Markdown 提交知识 PR，维护者按已有
+Git/CI 复核并合入 master；同一 Ubuntu 服务器上的 MCP 服务只读发布
+经验证的 Git SHA。Git/Markdown/Registry 是唯一知识权威。
+
+团队 MCP 默认只发布三个工具：knowledge_search / knowledge_get /
+knowledge_context。Draft、Personal、Archived、Superseded、Rejected、
+控制目录和 archive 路径永不在团队查询中服务；Reviewing 明确标记为
+provisional，Git PR 合并不等于 Active 认证。
+
+**工程师日常归档（Ubuntu/Linux）**。先写脱敏、确认为允许公开的
+safe-note.md 文件，在本仓工作区执行：
+
+    bash tools/team/knowledge-submit.sh create --project pcr02-ssc305 --kind debug-record --source /tmp/safe-note.md --public-approved --create-pr
+
+更新已有的 Reviewing 条目，必须先读取其完整旧正文 SHA256：
+
+    bash tools/team/knowledge-submit.sh update --item-id <id> --expected-sha256 <64hex> --source /tmp/corrected-note.md --public-approved --create-pr
+
+提交器通过工程师**自己的** git 和 gh 凭证工作，创建隔离 worktree，
+复用 canonical capture/Index/Registry/事务内核并限制 PR 文件范围；
+Active 与历史文档不能用普通 Update 改写。无远程认证时只允许
+prepared-local，不得宣称 PR 已创建。两个 PR 更新同一条时须人工处理
+CAS 冲突；禁止直接强推主线或机械合并索引。
+
+**一次性安装**：需要 Ubuntu 服务器上能运行 Git/Python 的服务用户，
+且 /srv/knowledge-hub 可由该用户管理。先在本仓 checkout 操作：
+
+    mkdir -p ~/.config/knowledge-hub ~/.config/systemd/user
+    umask 077
+    openssl rand -hex 32 > ~/.config/knowledge-hub/team-token
+    python3 -m venv ~/.venvs/knowledge-hub
+    ~/.venvs/knowledge-hub/bin/pip install --require-hashes -r requirements-runtime.lock
+    cp tools/team/systemd/*.service tools/team/systemd/*.timer ~/.config/systemd/user/
+    systemctl --user daemon-reload
+
+将两个 service 中的 KH_PYTHON 改成上述 venv 的绝对路径，必要时调整
+KH_INSTALL_ROOT 和 token 路径后，手工 bootstrap：
+
+    KH_INSTALL_ROOT=/srv/knowledge-hub KH_PYTHON="$HOME/.venvs/knowledge-hub/bin/python" KH_TEAM_TOKEN_FILE="$HOME/.config/knowledge-hub/team-token" KH_SYSTEMCTL_MODE=user bash tools/team/deploy.sh
+    systemctl --user enable --now knowledge-hub-team-mcp.service
+    systemctl --user enable --now knowledge-hub-team-deploy.timer
+
+部署从 GitHub master 获取 SHA，要求同一 SHA 的受信 Quality/Signed 成功，
+候选独立构建和 Search/Get/Context HTTP smoke；通过后切换 current，
+失败恢复上一版（单机允许短暂重启中断）。缓存仅在该 SHA 的 .cache 中
+可写，Git 更新失败不影响已发布副本。成员都已有 SSH 时可用
+ssh -L 3000:127.0.0.1:3000 user@server；其他情况参考
+tools/team/Caddyfile.example，使用内网 HTTPS、共享 Bearer 和可信 CA。
+无论使用 SSH 还是 HTTPS，本机 MCP 后端仍必须检验 Bearer。
+禁止把 token 写到 Git 或绕过 TLS 校验。
+
+**备份**：KH_BACKUP_DIR 指向独立挂载的 NAS/磁盘时运行
+bash tools/team/backup.sh；必须验证 bundle 与临时隔离恢复，不能
+把同机镜像视为已完成异地备份。
+
+**必须现场验收的边界**：真实 Codex CLI/VS Code MCP 协议版本；
+内网 TLS/Host/Origin/防火墙，主线实际分支规则；两名真实工程师的
+Create/Update PR；实际 5–10 并发、磁盘/索引故障与回滚；备份恢复。
+GitHub Public 仓库只接收允许互联网公开且适合发送至所用模型的知识。
+这些未执行之前，不能宣称 LAN TEAM DEPLOYED/ADOPTED。
