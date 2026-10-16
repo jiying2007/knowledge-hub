@@ -68,3 +68,56 @@ def test_team_shell_scripts_are_parseable():
     for name in ("serve.sh", "deploy.sh", "backup.sh"):
         result = subprocess.run(["bash", "-n", str(base / name)], capture_output=True, text=True, timeout=10)
         assert result.returncode == 0, name
+
+
+def test_reviewing_update_uses_real_cas_transaction(tmp_path, monkeypatch):
+    """A real registry/body/index transaction is produced; Active stays immutable."""
+    import json
+    from tools.codex_assets.knowledge_hub.common import render_markdown
+    root = tmp_path / "hub"
+    (root / "registry").mkdir(parents=True)
+    (root / "indexes").mkdir()
+    relative = "projects/pcr02-ssc305/current/team-knowledge/test-note.md"
+    target = root / relative
+    target.parent.mkdir(parents=True)
+    item = {
+        "id": "pcr02-test-note", "title": "初始排障", "kind": "debug-record",
+        "domain": "projects/pcr02-ssc305", "path": relative,
+        "scope": "project-specific", "visibility": "team-internal",
+        "status": "reviewing", "owner": "team-core",
+        "source": {"type": "manual", "from": "test"},
+        "review_after": "2027-01-01", "created_at": "2026-10-16",
+        "updated_at": "2026-10-16", "promotion": "none",
+        "review_status": "manual-entry-pending-review", "tags": ["debug-record"],
+        "validation_refs": [relative], "manual_validation_pending": True,
+        "human_reviewed_by": "old reviewer",
+    }
+    target.write_text(render_markdown(item, "# 旧版\n\n原始记录。"), encoding="utf-8")
+    (root / "registry/items.jsonl").write_text(json.dumps(item, ensure_ascii=False) + "\n", encoding="utf-8")
+    (root / "registry/lifecycle-events.jsonl").write_text("", encoding="utf-8")
+    for name in ("by-owner.md", "by-review-date.md", "by-status.md", "by-project.md", "by-topic.md"):
+        (root / "indexes" / name).write_text("# Test\n", encoding="utf-8")
+    monkeypatch.setattr(team_submit, "_route", lambda root, project:
+                        "projects/pcr02-ssc305/current/team-knowledge")
+    monkeypatch.setattr(team_submit, "stage_obsidian_views",
+                        lambda *args, **kwargs: {"missing_files": [], "content_drifts": []})
+    source = tmp_path / "revised.md"
+    source.write_text("# 新版\n\n验证后的修订。", encoding="utf-8")
+    old_sha = hashlib.sha256(target.read_bytes()).hexdigest()
+    result = team_submit.update_candidate(
+        root, item["id"], source, old_sha, dt.date(2026, 10, 16),
+        apply=True, generated_by_ai=True,
+    )
+    assert result["status"] == "applied"
+    assert "新版" in target.read_text(encoding="utf-8")
+    after = json.loads((root / "registry/items.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert after["status"] == "reviewing"
+    assert after["generated_by_ai"] is True
+    assert "human_reviewed_by" not in after
+    assert (root / "registry/lifecycle-events.jsonl").read_text(encoding="utf-8").strip()
+    with pytest.raises(KnowledgeHubError, match="content SHA conflict"):
+        team_submit.update_candidate(root, item["id"], source, old_sha, dt.date(2026, 10, 16), apply=True)
+    after["status"] = "active"
+    (root / "registry/items.jsonl").write_text(json.dumps(after, ensure_ascii=False) + "\n", encoding="utf-8")
+    with pytest.raises(KnowledgeHubError, match="reviewing item"):
+        team_submit.update_candidate(root, item["id"], source, old_sha, dt.date(2026, 10, 16), apply=True)
