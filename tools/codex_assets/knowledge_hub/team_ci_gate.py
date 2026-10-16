@@ -21,12 +21,13 @@ def check_runs(payload: dict, sha: str) -> dict:
     for run in runs:
         if not isinstance(run, dict) or run.get("head_sha") != sha:
             continue
-        if (run.get("event") != "push" or run.get("head_branch") != "master"
+        name = str(run.get("name", ""))
+        expected_events = {"quality": "push", "signed-quality-attestation": "workflow_run"}
+        if (name not in expected_events or run.get("event") != expected_events[name]
+                or run.get("head_branch") != "master"
                 or run.get("status") != "completed"):
             continue
-        name = str(run.get("name", ""))
-        if name in {"quality", "signed-quality-attestation"}:
-            matching[name] = run.get("conclusion") == "success" or matching.get(name, False)
+        matching[name] = run.get("conclusion") == "success" or matching.get(name, False)
     if not all(matching.get(name, False) for name in ("quality", "signed-quality-attestation")):
         raise KnowledgeHubError("exact-head Quality/Signed success is missing")
     return {"status": "pass", "sha": sha, "quality": "success", "signed": "success"}

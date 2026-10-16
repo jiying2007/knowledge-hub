@@ -91,6 +91,36 @@ def create_candidate(root: pathlib.Path, source: pathlib.Path, project: str, kin
                        source_from="ephemeral-content-sha256:" + hashlib.sha256(safe.encode("utf-8")).hexdigest())
 
 
+def _stage_team_update(root: pathlib.Path, rows: list, after: dict, relative: str,
+                       rendered: str, item_id: str, *, apply: bool) -> dict:
+    inputs = snapshot_inputs(root)
+    txn = RepositoryTransaction(root, expected_inputs=inputs)
+    txn.add_text(relative, rendered)
+    next_rows = [after if row.get("id") == item_id else row for row in rows]
+    txn.add_text("registry/items.jsonl", encode_jsonl(next_rows))
+    indexes = {name: (root / name).read_text(encoding="utf-8") for name in CORE_INDEXES}
+    for path, text in update_core_indexes(indexes, after).items():
+        txn.add_text(path, text)
+    for path, func in (("indexes/by-project.md", update_project_index),
+                       ("indexes/by-topic.md", update_topic_index)):
+        text = (root / path).read_text(encoding="utf-8")
+        txn.add_text(path, func(text, after))
+    event = {"event_id": "team-update-{}-{}".format(item_id, uuid.uuid4().hex[:10]),
+             "event_type": "team-knowledge-update", "item_id": item_id,
+             "before_status": "reviewing", "after_status": "reviewing",
+             "authorization_id": "", "executed_by": "knowledge-submit",
+             "executed_at": utc_timestamp(), "evidence_refs": [relative]}
+    txn.add_text("registry/lifecycle-events.jsonl", _append_event(root, event))
+    staged = stage_obsidian_views(root, txn, items=next_rows, document_overrides={relative: rendered})
+    if staged["missing_files"] or staged["content_drifts"]:
+        raise KnowledgeHubError("derived views inconsistent")
+    plan = txn.plan()
+    if apply:
+        txn.apply()
+    return {"status": "applied" if apply else "planned", "id": item_id,
+            "changed_paths": [p["path"] for p in plan["writes"] if p["changed"]]}
+
+
 def update_candidate(
     root: pathlib.Path, item_id: str, source: pathlib.Path,
     expected_sha256: str, today: dt.date, *, apply: bool,
@@ -148,32 +178,7 @@ def update_candidate(
     rendered = render_markdown(merge_frontmatter_mirror(current_meta, after), new_body)
     if rendered.encode("utf-8") == resolve_inside(root, relative).read_bytes():
         return {"status": "no-change", "id": item_id, "changed_paths": []}
-    inputs = snapshot_inputs(root)
-    txn = RepositoryTransaction(root, expected_inputs=inputs)
-    txn.add_text(relative, rendered)
-    next_rows = [after if row.get("id") == item_id else row for row in rows]
-    txn.add_text("registry/items.jsonl", encode_jsonl(next_rows))
-    indexes = {name: (root / name).read_text(encoding="utf-8") for name in CORE_INDEXES}
-    for path, text in update_core_indexes(indexes, after).items():
-        txn.add_text(path, text)
-    for path, func in (("indexes/by-project.md", update_project_index),
-                       ("indexes/by-topic.md", update_topic_index)):
-        text = (root / path).read_text(encoding="utf-8")
-        txn.add_text(path, func(text, after))
-    event = {"event_id": "team-update-{}-{}".format(item_id, uuid.uuid4().hex[:10]),
-             "event_type": "team-knowledge-update", "item_id": item_id,
-             "before_status": "reviewing", "after_status": "reviewing",
-             "authorization_id": "", "executed_by": "knowledge-submit",
-             "executed_at": utc_timestamp(), "evidence_refs": [relative]}
-    txn.add_text("registry/lifecycle-events.jsonl", _append_event(root, event))
-    staged = stage_obsidian_views(root, txn, items=next_rows, document_overrides={relative: rendered})
-    if staged["missing_files"] or staged["content_drifts"]:
-        raise KnowledgeHubError("derived views inconsistent")
-    plan = txn.plan()
-    if apply:
-        txn.apply()
-    return {"status": "applied" if apply else "planned", "id": item_id,
-            "changed_paths": [p["path"] for p in plan["writes"] if p["changed"]]}
+    return _stage_team_update(root, rows, after, relative, rendered, item_id, apply=apply)
 
 
 def _permitted_change(path: str, target_project: str) -> bool:
