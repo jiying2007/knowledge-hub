@@ -185,14 +185,20 @@ def _ai_review_inputs(item):
         and bool(stored_review_sha256)
         and stored_review_sha256 != current_content_sha256
     )
-    return delegated, missing_fields, review_content_drifted
+    review_content_unbound = (
+        item.get("status") in {"active", "reviewing"}
+        and not missing_fields
+        and not stored_review_sha256
+        and str(item.get("human_review_decision", "")) not in {"needs-edits", "defer"}
+    )
+    return delegated, missing_fields, review_content_drifted, review_content_unbound
 
 
 def build_review_queue_view(items, sources):
     rows = []
     for item in items:
         if item.get("generated_by_ai") is True:
-            delegated, missing_fields, review_content_drifted = _ai_review_inputs(item)
+            delegated, missing_fields, review_content_drifted, review_content_unbound = _ai_review_inputs(item)
             if delegated["status"] == "invalid":
                 rows.append(make_review_queue_item(item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
             elif delegated["closed"]:
@@ -223,6 +229,14 @@ def build_review_queue_view(items, sources):
                         "ai-human-review",
                         ["human-review-content-sha256-drift"],
                         ["review_resolution"],
+                    )
+                )
+            elif review_content_unbound:
+                rows.append(
+                    make_review_queue_item(
+                        item, "ai-human-review",
+                        ["human-review-current-body-unbound"],
+                        ["human_review_content_sha256", "review_resolution"],
                     )
                 )
         external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]

@@ -359,3 +359,57 @@ def test_new_scope_cannot_silently_replace_malformed_old_credential(case, change
     result, payload = run_cli((root, item, auth, *case[3:]), apply=True)
     assert result.returncode == 1 and not payload["applied"]
     assert set(load_ledger(root)) == {old["authorization_id"]}
+
+
+@pytest.mark.parametrize("lifecycle", ["active", "reviewing"])
+def test_legacy_human_review_without_body_hash_is_an_explicit_current_exception(case, lifecycle):
+    root, item, _, _, _ = case
+    item.update({
+        "status": lifecycle,
+        "human_reviewed_by": "leiwenjun",
+        "human_reviewed_at": "2026-10-16",
+        "review_basis": "历史人工审核说明，不足以绑定当前文件版本",
+        "human_review_decision": "accepted",
+    })
+
+    counts = review_counts(root, [item])
+    assert counts["human_reviewed_count"] == 1  # preserved legacy metadata count
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert counts["human_review_historical_unbound_count"] == 1
+    assert counts["human_review_content_hash_mismatch_count"] == 0
+
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    status = build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)
+    assert view["summary"]["ai_generated_pending_count"] == 1
+    assert status["summary"]["ai_generated_pending_count"] == 1
+    assert "human-review-current-body-unbound" in view["rows"][0]["reasons"]
+    assert "human-review-current-body-unbound" in status["ai_generated_pending"][0]["reasons"]
+
+    item["human_review_content_sha256"] = content_digest(root, item["path"])
+    counts = review_counts(root, [item])
+    assert counts["human_review_current_body_bound_count"] == 1
+    assert counts["human_review_historical_unbound_count"] == 0
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 0
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 0
+
+    (root / item["path"]).write_text("# 新版本\n未经重新审核", encoding="utf-8")
+    counts = review_counts(root, [item])
+    assert counts["human_review_content_hash_mismatch_count"] == 1
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 1
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 1
+
+
+def test_historical_archived_human_review_without_hash_is_not_active_gate(case):
+    root, item, _, _, _ = case
+    item.update({
+        "status": "archived",
+        "human_reviewed_by": "leiwenjun",
+        "human_reviewed_at": "2026-10-16",
+        "review_basis": "存档时历史批准；没有当前 active 适用声明",
+    })
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 0
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 0
+    assert review_counts(root, [item])["human_review_historical_unbound_count"] == 1

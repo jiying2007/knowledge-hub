@@ -199,19 +199,51 @@ def review_state(root, item, ledger=None, policy=None):
 
 
 def review_counts(root, items):
+    """Separate historical human-review claims from current-body hash evidence.
+
+    Keep the legacy human_reviewed_count for existing read-only consumers, but
+    never present it as proof that an unbound body was reviewed in this version.
+    """
     closed = 0
     human = 0
+    bound = 0
+    unbound = 0
+    mismatch = 0
     for item in items:
         if review_state(root, item)["closed"]:
             closed += 1
-        try:
-            human_hash_valid = (not item.get("human_review_content_sha256")
-                                or item["human_review_content_sha256"] == content_digest(root, item.get("path")))
-        except (KnowledgeHubError, OSError):
-            human_hash_valid = False
-        if (item.get("generated_by_ai") is True
-                and all(_string(item.get(key)) for key in ("human_reviewed_by", "human_reviewed_at", "review_basis"))
-                and item.get("human_review_decision") not in {"needs-edits", "defer"}
-                and human_hash_valid):
+        claimed = (
+            item.get("generated_by_ai") is True
+            and all(_string(item.get(key)) for key in (
+                "human_reviewed_by", "human_reviewed_at", "review_basis"))
+            and item.get("human_review_decision") not in {"needs-edits", "defer"}
+        )
+        if not claimed:
+            continue
+        recorded = item.get("human_review_content_sha256")
+        if not recorded:
+            # Legacy metadata is retained, not silently upgraded to a
+            # verified review of today's content.
             human += 1
-    return {"ai_delegated_closed_count": closed, "human_reviewed_count": human}
+            unbound += 1
+            continue
+        try:
+            matches = (
+                isinstance(recorded, str)
+                and SHA.fullmatch(recorded) is not None
+                and recorded == content_digest(root, item.get("path"))
+            )
+        except (KnowledgeHubError, OSError):
+            matches = False
+        if matches:
+            human += 1
+            bound += 1
+        else:
+            mismatch += 1
+    return {
+        "ai_delegated_closed_count": closed,
+        "human_reviewed_count": human,
+        "human_review_current_body_bound_count": bound,
+        "human_review_historical_unbound_count": unbound,
+        "human_review_content_hash_mismatch_count": mismatch,
+    }

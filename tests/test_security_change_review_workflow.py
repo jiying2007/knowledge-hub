@@ -170,3 +170,64 @@ def test_security_change_review_only_accepts_master_base():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'if base_ref != "master"' in text
     assert "only supports PRs targeting master" in text
+
+
+def test_merged_pr_comment_is_never_reprojected_as_live_security_status():
+    payload = _workflow()
+    job = payload["jobs"]["review"]
+    condition = job["if"]
+    assert "github.event.issue.state == 'open'" in condition
+    assert "github.event.pull_request.state == 'open'" in condition
+
+    steps = job["steps"]
+    resolve = next(s for s in steps if s.get("name") == "Resolve exact PR identity")
+    assert 'pull.get("state") != "open" or pull.get("merged_at")' in resolve["run"]
+    assert 'pr_open=false' in resolve["run"]
+    assert 'pr_open=true' in resolve["run"]
+    for step in steps:
+        if step["name"] in {
+            "Resolve exact PR identity",
+            "Publish exact-head security approval status",
+            "Upload bounded security review evidence",
+        }:
+            continue
+        assert step["if"] == "${{ steps.resolve.outputs.pr_open == 'true' }}"
+
+    status = next(s for s in steps if s["name"] == "Publish exact-head security approval status")
+    assert "steps.resolve.outputs.pr_open == 'true'" in status["if"]
+    assert 'pulls/${PR_NUMBER}' in status["run"]
+    assert '.state == "open" and .merged_at == null' in status["run"]
+    assert '${BASE_SHA} ${HEAD_SHA}' in status["run"]
+    assert "skip stale Security approval status projection" in status["run"]
+    upload = next(s for s in steps if s["name"] == "Upload bounded security review evidence")
+    assert "steps.resolve.outputs.pr_open == 'true'" in upload["if"]
+
+
+def test_privileged_trust_roots_are_classified_security_critical():
+    import json
+    from tools.codex_assets.knowledge_hub.review_risk import classify_review_risk
+
+    policy = json.loads(Path("registry/review-risk-policy.json").read_text(encoding="utf-8"))
+    roots = [
+        "registry/ai-content-review-authorizations.jsonl",
+        "tools/codex_assets/knowledge_hub/delegated_content_review.py",
+        "tools/codex_assets/knowledge_hub/delegated_content_review_cli.py",
+        "tools/codex_assets/knowledge_hub/review_semantic.py",
+        "tools/codex_assets/knowledge_hub/review_automation.py",
+        "tools/codex_assets/knowledge_hub/review_state.py",
+        "tools/codex_assets/knowledge_hub/status_review.py",
+        "tools/codex_assets/knowledge_hub/index_plan_review_queue.py",
+        "tools/codex_assets/knowledge_hub/runtime_p5_security.py",
+        "tools/codex_assets/knowledge_hub/retrieval_eligibility.py",
+        "tools/codex_assets/knowledge_hub/provider_grants.py",
+        "tools/codex_assets/knowledge_hub/operator_binding_governed_apply.py",
+        "tools/codex_assets/knowledge_hub/content_convergence.py",
+        "tools/codex_assets/knowledge_hub/external_source_snapshot.py",
+        "tools/codex_assets/knowledge_hub/source_snapshot_reconcile.py",
+        "tools/codex_assets/knowledge_hub/quality_evidence_binding.py",
+        "tools/codex_assets/knowledge_hub/signed_attestation.py",
+        "tools/codex_assets/knowledge_hub/mcp_http_server.py",
+    ]
+    for path in roots:
+        assert classify_review_risk(policy, path)["review_class"] == "security-critical"
+    assert classify_review_risk(policy, "tests/test_source_snapshot_reconcile.py")["review_class"] == "ordinary"
