@@ -128,7 +128,8 @@ def test_security_change_review_retains_bounded_packet():
         for step in payload["jobs"]["review"]["steps"]
         if step.get("name") == "Upload bounded security review evidence"
     )
-    assert upload["if"] == "always()"
+    assert "always()" in upload["if"]
+    assert "steps.resolve.outputs.pr_open == 'true'" in upload["if"]
     assert upload["with"]["retention-days"] == "90"
     assert (
         upload["with"]["path"]
