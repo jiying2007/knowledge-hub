@@ -222,21 +222,12 @@ def build_review_queue_view(items, sources):
                         ["review_resolution"],
                     )
                 )
-            elif review_content_drifted:
-                rows.append(
-                    make_review_queue_item(
-                        item,
-                        "ai-human-review",
-                        ["human-review-content-sha256-drift"],
-                        ["review_resolution"],
-                    )
-                )
-            elif review_content_unbound:
+            elif review_content_drifted or review_content_unbound:
                 rows.append(
                     make_review_queue_item(
                         item, "ai-human-review",
-                        ["human-review-current-body-unbound"],
-                        ["human_review_content_sha256", "review_resolution"],
+                        ["human-review-content-sha256-drift" if review_content_drifted else "human-review-current-body-unbound"],
+                        ["review_resolution"] if review_content_drifted else ["human_review_content_sha256", "review_resolution"],
                     )
                 )
         external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]
