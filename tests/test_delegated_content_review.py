@@ -310,6 +310,59 @@ def test_official_human_review_supersedes_ai_and_keeps_history(case):
     assert review_state(root, updated)["status"] == "absent"
 
 
+@pytest.mark.parametrize("lifecycle", ["active", "reviewing"])
+def test_legacy_unbound_review_requires_new_exact_body_form_before_apply(case, lifecycle):
+    root, item, _, _, _ = case
+    item.update({
+        "status": lifecycle,
+        "human_reviewed_by": "historical-fixture-reviewer",
+        "human_reviewed_at": "2026-09-01",
+        "review_basis": "历史审核元数据；未绑定当前正文",
+        "human_review_decision": "accept-as-review-record",
+    })
+    registry = root / "registry/items.jsonl"
+    registry.write_text(json.dumps(item) + "\n", encoding="utf-8")
+    before = registry.read_bytes()
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    assert view["summary"]["row_count"] == 1
+    assert view["rows"][0]["reasons"] == ["human-review-current-body-unbound"]
+
+    form = queue.make_review_queue_form(view["rows"][0])
+    form.update(
+        human_reviewed_by="regression-fixture-human",
+        human_reviewed_at="2026-10-16",
+        review_basis="Fixture human re-review of the currently hashed body; no real-world authorization claimed.",
+        review_decision="accept-as-review-record",
+    )
+    forms = root.parent / "current-review.jsonl"
+    forms.write_text(json.dumps(form) + "\n", encoding="utf-8")
+    env = dict(os.environ, PYTHONPATH=str(pathlib.Path(__file__).resolve().parents[1]))
+    cmd = ["rtk", sys.executable, "-m", "tools.codex_assets.knowledge_hub.review_queue_apply_cli",
+           str(root), "--forms", str(forms), "--json"]
+    dry_run = subprocess.run(cmd + ["--dry-run"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert dry_run.returncode == 0, dry_run.stdout + dry_run.stderr
+    assert json.loads(dry_run.stdout)["status"] == "planned"
+    assert registry.read_bytes() == before
+
+    stale = dict(form, content_sha256="0" * 64)
+    forms.write_text(json.dumps(stale) + "\n", encoding="utf-8")
+    rejected = subprocess.run(cmd + ["--apply"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert rejected.returncode == 1, rejected.stdout + rejected.stderr
+    assert "content-sha256-mismatch" in [d["code"] for d in json.loads(rejected.stdout)["diagnostics"]]
+    assert registry.read_bytes() == before
+
+    forms.write_text(json.dumps(form) + "\n", encoding="utf-8")
+    applied = subprocess.run(cmd + ["--apply"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert applied.returncode == 0, applied.stdout + applied.stderr
+    updated = json.loads(registry.read_text(encoding="utf-8"))
+    assert updated["status"] == lifecycle
+    assert updated["human_reviewed_by"] == "regression-fixture-human"
+    assert updated["human_review_content_sha256"] == content_digest(root, updated["path"])
+    assert review_counts(root, [updated])["human_review_current_body_bound_count"] == 1
+    assert queue.build_review_queue_view([updated], [])["summary"]["row_count"] == 0
+
+
 @pytest.mark.parametrize("change", ["malformed", "duplicate", "scope"])
 def test_orphan_ledger_validation_rejects_invalid_history(case, change):
     root, item, auth = install(case)

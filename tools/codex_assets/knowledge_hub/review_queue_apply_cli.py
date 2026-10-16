@@ -247,7 +247,21 @@ for line_no, form in forms:
             and bool(stored_review_sha256)
             and stored_review_sha256 != current_content_sha256
         )
-        if not expected_missing_fields and (current_review_decision in {"needs-edits", "defer"} or review_content_drifted):
+        # Mirror both canonical review-queue projections. A historical
+        # reviewer claim without a body digest is still pending for active
+        # or reviewing AI content; the apply tool must not reject a fresh,
+        # human-filled, exact-content-bound form as "already completed".
+        review_content_unbound = (
+            item.get("status") in {"active", "reviewing"}
+            and not expected_missing_fields
+            and not stored_review_sha256
+            and current_review_decision not in {"needs-edits", "defer"}
+        )
+        if not expected_missing_fields and (
+            current_review_decision in {"needs-edits", "defer"}
+            or review_content_drifted
+            or review_content_unbound
+        ):
             expected_missing_fields = ["review_resolution"]
     if queue_type == "external-source-review":
         expected_missing_fields = [
