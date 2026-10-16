@@ -1,0 +1,15 @@
+[Unit]
+Description=Refresh Knowledge Hub LAN MCP from verified Git SHA
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=KH_INSTALL_ROOT=/srv/knowledge-hub
+Environment=KH_PYTHON=/usr/bin/python3
+Environment=KH_TEAM_TOKEN_FILE=%h/.config/knowledge-hub/team-token
+Environment=KH_SYSTEMCTL_MODE=user
+ExecStart=/usr/bin/bash /srv/knowledge-hub/current/tools/team/deploy.sh
+TimeoutStartSec=600
+UMask=0077
+NoNewPrivileges=true
