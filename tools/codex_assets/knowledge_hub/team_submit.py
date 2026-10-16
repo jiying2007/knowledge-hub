@@ -186,6 +186,61 @@ def _status_files(cwd: pathlib.Path) -> list:
     return files
 
 
+def _build_submission(args, hub: pathlib.Path, worktree: pathlib.Path, source: pathlib.Path,
+                      today: dt.date, ref: str, name: str) -> int:
+    if args.operation == "create":
+        if not args.project:
+            raise KnowledgeHubError("create requires explicit --project")
+        project = args.project
+        preview = create_candidate(worktree, source, project, args.kind, today, apply=False)
+        if preview.get("status") == "no-change":
+            raise KnowledgeHubError("item already exists; choose update with a content digest")
+        result = create_candidate(worktree, source, project, args.kind, today, apply=True)
+    else:
+        if not args.item_id:
+            raise KnowledgeHubError("update requires --item-id")
+        current = next((v for v in registry_items(worktree) if v.get("id") == args.item_id), None)
+        if current is None:
+            raise KnowledgeHubError("item not found")
+        domain = str(current.get("domain", ""))
+        project = domain.split("/", 1)[1] if domain.startswith("projects/") else ""
+        preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=False)
+        result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=True)
+    if result.get("status") == "no-change":
+        print("status=no-change item_id={}".format(args.item_id))
+        return 0
+    paths = _status_files(worktree)
+    if not paths or any(not _permitted_change(path, project) for path in paths):
+        raise KnowledgeHubError("knowledge PR changed unsupported paths")
+    _git(worktree, "add", "--", *paths)
+    _git(worktree, "diff", "--cached", "--check")
+    _git(worktree, "commit", "-m", "docs(knowledge): submit team {} for {}".format(args.operation, project))
+    if args.create_pr and not args.offline:
+        _git(worktree, "push", "-u", args.push_remote, name)
+        head = args.head_owner + ":" + name if args.head_owner else name
+        command = ["gh", "pr", "create", "--repo", args.pr_repository, "--base", "master", "--head", head,
+                   "--title", "docs(knowledge): team {} {}".format(args.operation, project),
+                   "--body", "Shared reviewing candidate; no active promotion. Review source, version, duplicate and public-sharing boundaries."
+                   + (" Supersedes PR #{} (previous proposal requires closure).".format(args.supersedes_pr)
+                      if args.supersedes_pr else "")]
+        try:
+            pr = subprocess.run(command, cwd=str(worktree), capture_output=True, text=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired):
+            pr = None
+        if pr and pr.returncode == 0 and pr.stdout.strip().startswith("https://"):
+            try:
+                _git(hub, "worktree", "remove", "--force", str(worktree))
+            except KnowledgeHubError:
+                pass  # Retain diagnostic worktree; remote PR itself has succeeded.
+            print("status=pr-created url={} branch={} base_sha={}".format(pr.stdout.strip(), name, ref))
+            return 0
+        print("status=prepared-local reason=pr-not-created branch={} path={}".format(name, worktree))
+        return 2
+    print("status=prepared-local branch={} path={} base_sha={}".format(name, worktree, ref))
+    return 0
+
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Create a governed knowledge PR from an independent worktree")
     parser.add_argument("operation", choices=("create", "update"))
@@ -226,56 +281,7 @@ def main(argv=None) -> int:
     try:
         _git(hub, "worktree", "add", "--detach", str(worktree), ref)
         _git(worktree, "switch", "-c", name)
-        if args.operation == "create":
-            if not args.project:
-                raise KnowledgeHubError("create requires explicit --project")
-            project = args.project
-            preview = create_candidate(worktree, source, project, args.kind, today, apply=False)
-            if preview.get("status") == "no-change":
-                raise KnowledgeHubError("item already exists; choose update with a content digest")
-            result = create_candidate(worktree, source, project, args.kind, today, apply=True)
-        else:
-            if not args.item_id:
-                raise KnowledgeHubError("update requires --item-id")
-            current = next((v for v in registry_items(worktree) if v.get("id") == args.item_id), None)
-            if current is None:
-                raise KnowledgeHubError("item not found")
-            domain = str(current.get("domain", ""))
-            project = domain.split("/", 1)[1] if domain.startswith("projects/") else ""
-            preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=False)
-            result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=True)
-        if result.get("status") == "no-change":
-            print("status=no-change item_id={}".format(args.item_id))
-            return 0
-        paths = _status_files(worktree)
-        if not paths or any(not _permitted_change(path, project) for path in paths):
-            raise KnowledgeHubError("knowledge PR changed unsupported paths")
-        _git(worktree, "add", "--", *paths)
-        _git(worktree, "diff", "--cached", "--check")
-        _git(worktree, "commit", "-m", "docs(knowledge): submit team {} for {}".format(args.operation, project))
-        if args.create_pr and not args.offline:
-            _git(worktree, "push", "-u", args.push_remote, name)
-            head = args.head_owner + ":" + name if args.head_owner else name
-            command = ["gh", "pr", "create", "--repo", args.pr_repository, "--base", "master", "--head", head,
-                       "--title", "docs(knowledge): team {} {}".format(args.operation, project),
-                       "--body", "Shared reviewing candidate; no active promotion. Review source, version, duplicate and public-sharing boundaries."
-                       + (" Supersedes PR #{} (previous proposal requires closure).".format(args.supersedes_pr)
-                          if args.supersedes_pr else "")]
-            try:
-                pr = subprocess.run(command, cwd=str(worktree), capture_output=True, text=True, timeout=60)
-            except (OSError, subprocess.TimeoutExpired):
-                pr = None
-            if pr and pr.returncode == 0 and pr.stdout.strip().startswith("https://"):
-                try:
-                    _git(hub, "worktree", "remove", "--force", str(worktree))
-                except KnowledgeHubError:
-                    pass  # Retain diagnostic worktree; remote PR itself has succeeded.
-                print("status=pr-created url={} branch={} base_sha={}".format(pr.stdout.strip(), name, ref))
-                return 0
-            print("status=prepared-local reason=pr-not-created branch={} path={}".format(name, worktree))
-            return 2
-        print("status=prepared-local branch={} path={} base_sha={}".format(name, worktree, ref))
-        return 0
+        return _build_submission(args, hub, worktree, source, today, ref, name)
     except (KnowledgeHubError, OSError, subprocess.TimeoutExpired) as exc:
         # Keep the isolated worktree for diagnostics; never claim a PR.
         print("status=blocked kind={} worktree={}".format(type(exc).__name__, worktree))
