@@ -85,7 +85,13 @@ def _query(value: Any) -> str:
 
 
 def _kind(item: Mapping[str, Any]) -> str:
-    return "verified" if item.get("status") == "active" and not item.get("manual_validation_pending", False) else "provisional"
+    reviewed = (
+        item.get("status") == "active"
+        and not bool(item.get("manual_validation_pending", False))
+        and item.get("content_review_status") == "accepted"
+        and item.get("evidence_validation_status") == "verified"
+    )
+    return "verified" if reviewed else "provisional"
 
 
 def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5) -> Dict[str, Any]:
@@ -109,9 +115,12 @@ def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5
             "status": str(item["status"]),
             "authority": _kind(item),
             "review_required": _kind(item) != "verified",
+            "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
+            "evidence_validation_status": str(item.get("evidence_validation_status", ""))[:64],
             "summary_zh": str(item.get("summary_zh", ""))[:1024],
             "source_path": str(item["path"]),
             "score": row["score"],
+            "rank_components": dict(row.get("score_components", {})),
         })
     return {
         "schema_version": "knowledge-hub.team-search.v1",
@@ -160,6 +169,8 @@ def team_get(
         "status": item["status"],
         "authority": _kind(item),
         "review_required": _kind(item) != "verified",
+        "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
+        "evidence_validation_status": str(item.get("evidence_validation_status", ""))[:64],
         "content": raw[offset:end].decode("utf-8"),
         "content_sha256": digest,
         "source_path": item["path"],

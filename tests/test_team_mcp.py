@@ -207,3 +207,17 @@ def test_team_http_requires_bearer_and_keeps_resource_scope(tmp_path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+def test_only_evidence_verified_active_is_advertised_as_authority():
+    from tools.codex_assets.knowledge_hub.team_mcp import _kind
+    good = item(status="active", manual_validation_pending=False,
+                content_review_status="accepted", evidence_validation_status="verified")
+    assert _kind(good) == "verified"
+    for changes in (
+        {"manual_validation_pending": True},
+        {"content_review_status": "pending"},
+        {"evidence_validation_status": "pending"},
+        {"status": "reviewing"},
+    ):
+        assert _kind(dict(good, **changes)) == "provisional"
