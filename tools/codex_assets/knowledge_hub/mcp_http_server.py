@@ -310,6 +310,9 @@ def serve(
     if team:
         if not re.fullmatch(r"[a-f0-9]{40}", serving_sha):
             raise KnowledgeHubError("team profile requires exact serving SHA")
+        marker = pathlib.Path(root) / ".serving-sha"
+        if marker.is_symlink() or not marker.is_file() or marker.read_text(encoding="utf-8").strip() != serving_sha:
+            raise KnowledgeHubError("team release marker does not match serving SHA")
         if not token_file:
             raise KnowledgeHubError("team profile requires a token file")
         key_path = pathlib.Path(token_file)
