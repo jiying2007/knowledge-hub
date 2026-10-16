@@ -9,9 +9,13 @@ security boundary.
 from __future__ import annotations
 
 import argparse
+import hmac
 import json
 import pathlib
+import re
 import socket
+import stat
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Mapping, Optional, Sequence
 from urllib.parse import urlparse
@@ -24,6 +28,7 @@ from .protocol_conformance import (
     handle_mcp_stateless_request,
 )
 from .runtime_v3_contracts import DEFAULT_AGENT
+from .team_mcp import handle_team_mcp
 
 MAX_REQUEST_BYTES = 1024 * 1024
 REQUEST_TIMEOUT_SECONDS = 5.0
@@ -171,6 +176,42 @@ def _error_payload(
     return {"jsonrpc": "2.0", "id": request_id, "error": error}
 
 
+class _BoundedTeamServer(ThreadingHTTPServer):
+    """Bound *connections*, including idle pre-HTTP connections, not only POST calls."""
+
+    daemon_threads = True
+
+    def __init__(self, address, handler, *, max_connections: int) -> None:
+        self._connection_slots = threading.BoundedSemaphore(max_connections)
+        super().__init__(address, handler)
+
+    def get_request(self):
+        # Limit idle sockets BEFORE BaseHTTPRequestHandler reads HTTP headers.
+        request, address = super().get_request()
+        request.settimeout(REQUEST_TIMEOUT_SECONDS)
+        return request, address
+
+    def process_request(self, request, client_address) -> None:
+        if not self._connection_slots.acquire(blocking=False):
+            try:
+                request.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            request.close()
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._connection_slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address) -> None:
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._connection_slots.release()
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "KnowledgeHubMCP/2026-07-28"
     protocol_version = "HTTP/1.1"
@@ -200,6 +241,17 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_method_not_allowed()
 
     def do_POST(self) -> None:  # noqa: N802
+        limiter = getattr(self.server, "knowledge_limiter", None)
+        if limiter is not None and not limiter.acquire(blocking=False):
+            self._send_json(503, _error_payload(None, -32003, "MCP concurrency limit"))
+            return
+        try:
+            self._post()
+        finally:
+            if limiter is not None:
+                limiter.release()
+
+    def _post(self) -> None:
         if self.path != MCP_PATH:
             self._send_json(404, _error_payload(None, -32601, "MCP endpoint not found"))
             return
@@ -207,6 +259,12 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             self.connection.settimeout(REQUEST_TIMEOUT_SECONDS)
             validate_local_origin(self.headers)
+            token = getattr(self.server, "knowledge_team_token", None)
+            if token is not None:
+                supplied = str(self.headers.get("Authorization", ""))
+                if not hmac.compare_digest(supplied, "Bearer " + token):
+                    self._send_json(401, _error_payload(None, -32001, "Authentication required"))
+                    return
             length_text = str(self.headers.get("Content-Length", "0")).strip()
             try:
                 length = int(length_text)
@@ -237,7 +295,9 @@ class _Handler(BaseHTTPRequestHandler):
             validate_http_request(request, self.headers)
             root = self.server.knowledge_root  # type: ignore[attr-defined]
             agent_id = self.server.knowledge_agent_id  # type: ignore[attr-defined]
-            response = handle_mcp_stateless_request(root, request, agent_id=agent_id)
+            serving_sha = getattr(self.server, "knowledge_serving_sha", "")
+            response = (handle_team_mcp(root, request, serving_sha) if token is not None
+                        else handle_mcp_stateless_request(root, request, agent_id=agent_id))
             self._send_json(200, response)
         except socket.timeout:
             self._send_json(408, _error_payload(request_id, -32021, "MCP request timed out"))
@@ -258,6 +318,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=3000)
     parser.add_argument("--agent-id", default=DEFAULT_AGENT)
+    parser.add_argument("--team", action="store_true", help="Strict read-only team MCP profile")
+    parser.add_argument("--team-token-file", default="", help="Owner-only file, never a CLI secret")
+    parser.add_argument("--serving-sha", default="", help="Exact immutable Git revision being served")
+    parser.add_argument("--max-inflight", type=int, default=8)
     return parser
 
 
@@ -267,12 +331,41 @@ def serve(
     host: str = "127.0.0.1",
     port: int = 3000,
     agent_id: str = DEFAULT_AGENT,
+    team: bool = False,
+    token_file: str = "",
+    serving_sha: str = "",
+    max_inflight: int = 8,
 ) -> None:
     if host not in {"127.0.0.1", "localhost"}:
         raise KnowledgeHubError("native MCP transport may bind loopback only")
     if not 1 <= int(port) <= 65535:
         raise KnowledgeHubError("MCP port must be between 1 and 65535")
-    server = ThreadingHTTPServer((host, int(port)), _Handler)
+    if not 1 <= max_inflight <= 32:
+        raise KnowledgeHubError("max-inflight must be between 1 and 32")
+    token = None
+    if team:
+        if not re.fullmatch(r"[a-f0-9]{40}", serving_sha):
+            raise KnowledgeHubError("team profile requires exact serving SHA")
+        marker = pathlib.Path(root) / ".serving-sha"
+        if marker.is_symlink() or not marker.is_file() or marker.read_text(encoding="utf-8").strip() != serving_sha:
+            raise KnowledgeHubError("team release marker does not match serving SHA")
+        if not token_file:
+            raise KnowledgeHubError("team profile requires a token file")
+        key_path = pathlib.Path(token_file)
+        details = key_path.lstat()
+        if not stat.S_ISREG(details.st_mode) or details.st_mode & 0o077:
+            raise KnowledgeHubError("team token file must be private regular file (0600)")
+        token = key_path.read_text(encoding="utf-8").strip()
+        if not 32 <= len(token) <= 512 or any(char.isspace() for char in token):
+            raise KnowledgeHubError("team token must be 32-512 nonwhitespace characters")
+    elif token_file or serving_sha:
+        raise KnowledgeHubError("team token or serving SHA requires --team")
+    server = (_BoundedTeamServer((host, int(port)), _Handler, max_connections=max_inflight * 2)
+              if team else ThreadingHTTPServer((host, int(port)), _Handler))
+    server.daemon_threads = True
+    server.knowledge_limiter = threading.BoundedSemaphore(max_inflight) if team else None  # type: ignore[attr-defined]
+    server.knowledge_team_token = token  # type: ignore[attr-defined]
+    server.knowledge_serving_sha = serving_sha  # type: ignore[attr-defined]
     server.knowledge_root = root  # type: ignore[attr-defined]
     server.knowledge_agent_id = agent_id  # type: ignore[attr-defined]
     try:
@@ -284,7 +377,9 @@ def serve(
 def main(argv: Sequence[str] = ()) -> int:
     args = _parser().parse_args(list(argv) if argv else None)
     root = repository_root(args.root)
-    serve(root, host=args.host, port=args.port, agent_id=args.agent_id)
+    serve(root, host=args.host, port=args.port, agent_id=args.agent_id,
+          team=args.team, token_file=args.team_token_file,
+          serving_sha=args.serving_sha, max_inflight=args.max_inflight)
     return 0
 
 

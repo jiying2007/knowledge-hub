@@ -202,12 +202,16 @@ def _rrf(ranks: Sequence[Mapping[str, int]], item_id: str, k: int = 60) -> float
 
 def _authorized_items(
     root: pathlib.Path, principal: Mapping[str, Any], agent_id: str, today: dt.date,
+    candidate_filter: Optional[Callable[[Mapping[str, Any]], bool]] = None,
 ) -> Tuple[Dict[str, Any], List[Mapping[str, Any]], int, int]:
     principal_value = principal_context(principal)
     scopes = [str(value) for value in agent_profile(root, agent_id).get("knowledge_scopes", [])]
     authorized: List[Mapping[str, Any]] = []
     denied = legacy = 0
     for item in registry_items(root):
+        # Apply hard service visibility BEFORE reading any chunks or ranking.
+        if candidate_filter is not None and not candidate_filter(item):
+            continue
         if not _temporal_eligible(item, today):
             continue
         decision = authorize_item(item, principal_value, operation="search", agent_scopes=scopes)
@@ -324,6 +328,7 @@ def retrieve_v4(
     agent_id: str = DEFAULT_AGENT, limit: int = 10, as_of: str = "",
     embedding_fn: Optional[EmbeddingFn] = None, rerank_fn: Optional[RerankFn] = None,
     embedding_identity: Optional[Mapping[str, Any]] = None, cache_enabled: bool = True,
+    candidate_filter: Optional[Callable[[Mapping[str, Any]], bool]] = None,
 ) -> Dict[str, Any]:
     if not isinstance(query, str) or not query.strip() or len(query) > 4096:
         raise KnowledgeHubError("query must be non-empty and bounded")
@@ -334,7 +339,9 @@ def retrieve_v4(
         raise KnowledgeHubError("cache_enabled must be a boolean")
     binding = _embedding_binding(embedding_fn, embedding_identity)
     today, source = resolve_today(as_of)
-    principal_value, authorized, denied, legacy = _authorized_items(root, principal, agent_id, today)
+    principal_value, authorized, denied, legacy = _authorized_items(
+        root, principal, agent_id, today, candidate_filter=candidate_filter
+    )
     with DerivedCache(root, enabled=cache_enabled and bool(authorized)) as cache:
         chunks, lexical, dense, authority, freshness, best = _score_lanes(
             root, query, authorized, today, embedding_fn, cache=cache, binding=binding,
