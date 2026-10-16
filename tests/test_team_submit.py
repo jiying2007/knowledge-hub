@@ -13,8 +13,8 @@ from tools.codex_assets.knowledge_hub import team_ci_gate, team_submit
 def test_exact_quality_and_signed_runs_required():
     sha = "c" * 40
     good = {"workflow_runs": [
-        {"name": "quality", "head_sha": sha, "status": "completed", "conclusion": "success", "event": "push"},
-        {"name": "signed-quality-attestation", "head_sha": sha, "status": "completed",
+        {"name": "quality", "head_sha": sha, "head_branch": "master", "status": "completed", "conclusion": "success", "event": "push"},
+        {"name": "signed-quality-attestation", "head_sha": sha, "head_branch": "master", "status": "completed",
          "conclusion": "success", "event": "push"},
         {"name": "quality", "head_sha": "d" * 40, "status": "completed",
          "conclusion": "failure", "event": "push"},
@@ -24,6 +24,7 @@ def test_exact_quality_and_signed_runs_required():
         {"workflow_runs": good["workflow_runs"][:1]},
         {"workflow_runs": [{**good["workflow_runs"][0], "event": "pull_request"}, good["workflow_runs"][1]]},
         {"workflow_runs": [{**good["workflow_runs"][0], "head_sha": "d" * 40}, good["workflow_runs"][1]]},
+        {"workflow_runs": [{**good["workflow_runs"][0], "head_branch": "feature"}, good["workflow_runs"][1]]},
     ]:
         with pytest.raises(KnowledgeHubError, match="missing"):
             team_ci_gate.check_runs(modified, sha)

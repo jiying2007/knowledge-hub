@@ -137,6 +137,14 @@ def update_candidate(
                   "review_content_sha256", "human_review_content_sha256"):
         after.pop(field, None)
     require_valid_item(after)
+    # An old human-content attestation must never survive a body edit.
+    for field in ("human_reviewed_by", "human_reviewed_at", "human_review_content_sha256",
+                  "review_attestation_source_ref", "review_content_sha256"):
+        current_meta.pop(field, None)
+    after["validation_refs"] = [
+        relative, "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics"
+    ]
+    after["evidence_refs"] = [relative]
     rendered = render_markdown(merge_frontmatter_mirror(current_meta, after), new_body)
     if rendered.encode("utf-8") == resolve_inside(root, relative).read_bytes():
         return {"status": "no-change", "id": item_id, "changed_paths": []}
@@ -207,6 +215,7 @@ def _build_submission(args, hub: pathlib.Path, worktree: pathlib.Path, source: p
         preview = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=False)
         result = update_candidate(worktree, args.item_id, source, args.expected_sha256, today, apply=True)
     if result.get("status") == "no-change":
+        _git(hub, "worktree", "remove", "--force", str(worktree))
         print("status=no-change item_id={}".format(args.item_id))
         return 0
     paths = _status_files(worktree)

@@ -21,7 +21,8 @@ def check_runs(payload: dict, sha: str) -> dict:
     for run in runs:
         if not isinstance(run, dict) or run.get("head_sha") != sha:
             continue
-        if run.get("event") != "push" or run.get("status") != "completed":
+        if (run.get("event") != "push" or run.get("head_branch") != "master"
+                or run.get("status") != "completed"):
             continue
         name = str(run.get("name", ""))
         if name in {"quality", "signed-quality-attestation"}:

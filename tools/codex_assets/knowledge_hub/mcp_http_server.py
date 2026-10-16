@@ -176,6 +176,36 @@ def _error_payload(
     return {"jsonrpc": "2.0", "id": request_id, "error": error}
 
 
+class _BoundedTeamServer(ThreadingHTTPServer):
+    """Bound *connections*, including idle pre-HTTP connections, not only POST calls."""
+
+    daemon_threads = True
+
+    def __init__(self, address, handler, *, max_connections: int) -> None:
+        self._connection_slots = threading.BoundedSemaphore(max_connections)
+        super().__init__(address, handler)
+
+    def process_request(self, request, client_address) -> None:
+        if not self._connection_slots.acquire(blocking=False):
+            try:
+                request.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            request.close()
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._connection_slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address) -> None:
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._connection_slots.release()
+
+
 class _Handler(BaseHTTPRequestHandler):
     server_version = "KnowledgeHubMCP/2026-07-28"
     protocol_version = "HTTP/1.1"
@@ -324,7 +354,8 @@ def serve(
             raise KnowledgeHubError("team token must be 32-512 nonwhitespace characters")
     elif token_file or serving_sha:
         raise KnowledgeHubError("team token or serving SHA requires --team")
-    server = ThreadingHTTPServer((host, int(port)), _Handler)
+    server = (_BoundedTeamServer((host, int(port)), _Handler, max_connections=max_inflight * 2)
+              if team else ThreadingHTTPServer((host, int(port)), _Handler))
     server.daemon_threads = True
     server.knowledge_limiter = threading.BoundedSemaphore(max_inflight) if team else None  # type: ignore[attr-defined]
     server.knowledge_team_token = token  # type: ignore[attr-defined]

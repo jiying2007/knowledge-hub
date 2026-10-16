@@ -92,7 +92,19 @@ PID=""
 # Canonical content and code cannot be changed by the serving process.
 find "$STAGE" -path "$STAGE/.cache" -prune -o -type f -exec chmod 0444 {} +
 find "$STAGE" -path "$STAGE/.cache" -prune -o -type d -exec chmod 0555 {} +
-mv "$STAGE" "$ROOT/releases/$SHA"
+# A previous failed live switch can leave this exact SHA behind; do not
+# accidentally nest another release inside it. Reconstruct it from Git.
+if [[ -e "$ROOT/releases/$SHA" || -L "$ROOT/releases/$SHA" ]]; then
+  [[ -d "$ROOT/releases/$SHA" && ! -L "$ROOT/releases/$SHA" ]] || {
+    echo "status=blocked reason=unsafe-existing-release"; exit 2;
+  }
+  [[ "$(cat "$ROOT/releases/$SHA/.serving-sha" 2>/dev/null || true)" == "$SHA" ]] || {
+    echo "status=blocked reason=existing-release-mismatch"; exit 2;
+  }
+  chmod -R u+w "$ROOT/releases/$SHA"
+  rm -rf -- "$ROOT/releases/$SHA"
+fi
+mv -T "$STAGE" "$ROOT/releases/$SHA"
 STAGE=""
 NEXT="$ROOT/.current.$SHA.$$"
 ln -s "releases/$SHA" "$NEXT"
