@@ -6,6 +6,7 @@ import datetime as dt
 import json
 import pathlib
 import urllib.request
+from urllib.parse import urlsplit
 
 from .common import KnowledgeHubError, registry_items
 from .team_mcp import team_publishable
@@ -13,6 +14,11 @@ from .runtime_v3_contracts import MCP_PROTOCOL_VERSION
 
 
 def call(url, token, method, params=None):
+    parsed = urlsplit(url)
+    if (parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost"}
+            or parsed.path != "/mcp" or parsed.username or parsed.password
+            or parsed.query or parsed.fragment):
+        raise KnowledgeHubError("smoke is restricted to loopback MCP")
     body = dict(params or {})
     body["_meta"] = {
         "io.modelcontextprotocol/protocolVersion": MCP_PROTOCOL_VERSION,
@@ -29,7 +35,8 @@ def call(url, token, method, params=None):
         headers["Mcp-Name"] = name
     request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
                                      headers=headers, method="POST")
-    with urllib.request.urlopen(request, timeout=20) as response:
+    # Only loopback /mcp is accepted; never follows an untrusted network URL.
+    with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310
         result = json.loads(response.read(131072).decode("utf-8"))
     if result.get("error") or result.get("id") != 1:
         raise KnowledgeHubError("invalid team MCP smoke response")
