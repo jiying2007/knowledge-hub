@@ -112,7 +112,7 @@ def update_candidate(
     if actual != expected_sha256:
         raise KnowledgeHubError("content SHA conflict")
     raw = _safe_source(source)
-    current_meta, old_body = load_markdown(resolve_inside(root, relative))
+    current_meta, _ = load_markdown(resolve_inside(root, relative))
     if raw.lstrip().startswith("---\n"):
         with tempfile.TemporaryDirectory(prefix="kh-submit-parse-") as folder:
             staged = pathlib.Path(folder) / "note.md"
