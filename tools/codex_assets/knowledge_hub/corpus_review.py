@@ -62,13 +62,15 @@ def _safe_date(value: Any) -> dt.date:
 def _archive_directory(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
     """Recognize a narrowly declared retired archive *directory*, not its bodies."""
     source = item.get("source", {})
+    tags = item.get("tags", [])
     if not (
         item.get("status") == "archived"
         and item.get("review_status") == "archive-corpus-materialized"
         and item.get("promotion") == "none"
         and isinstance(source, Mapping)
         and source.get("type") == "retired-source-provenance"
-        and "historical-corpus" in item.get("tags", [])
+        and isinstance(tags, list)
+        and "historical-corpus" in tags
     ):
         return {}
     try:
