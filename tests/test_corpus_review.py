@@ -222,3 +222,92 @@ def test_real_repository_full_coverage():
     assert hashlib.sha256((root / "registry/items.jsonl").read_bytes()).hexdigest() == old_hash
     assert report["active_promoted"] is False
     assert report["canonical_write_performed"] is False
+
+
+def _install_unverified_ai_history(root):
+    """Create an authentic-shape fixture, not a human approval."""
+    from tools.codex_assets.knowledge_hub.delegated_content_review import (
+        FIELD, SCHEMA, content_digest, expected_record, item_digest,
+    )
+
+    registry = root / "registry/items.jsonl"
+    items = [json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines()]
+    item = next(row for row in items if row["id"] == "review-a")
+    item["generated_by_ai"] = True
+    entry = {
+        "id": item["id"], "path": item["path"], "owner": item["owner"],
+        "item_sha256": item_digest(item),
+        "content_sha256": content_digest(root, item["path"]),
+        "decision": "accept-as-review-record",
+        "basis": "Fixture only; this is not independent human or product review.",
+    }
+    auth = {
+        "schema_version": SCHEMA, "authorization_id": "historical-review-test",
+        "authorized_by": "team-core", "authorized_at": "2026-10-10",
+        "thread_id": "00000000-0000-0000-0000-000000000001",
+        "authorization_statement": "historical fixture",
+        "authorization_evidence_sha256": "a" * 64,
+        "executor": "Codex", "scope": "ordinary-reviewing-content-only",
+        "independent_review_sha256": "b" * 64,
+        "entries": [entry],
+        "request_proof": {
+            "state": "unverified", "request_sha256": None,
+            "intake_attestation_sha256": None, "actor_identity_verified": False,
+        },
+    }
+    item[FIELD] = expected_record(auth, entry)
+    registry.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in items),
+        encoding="utf-8",
+    )
+    (root / "registry/owners.json").write_text(
+        json.dumps({"owners": [{"id": "team-core"}]}), encoding="utf-8",
+    )
+    (root / "registry/ai-content-review-authorizations.jsonl").write_text(
+        json.dumps(auth, ensure_ascii=False) + "\n", encoding="utf-8",
+    )
+    return item
+
+
+def test_historical_ai_review_snapshot_drift_is_independently_visible(tmp_path):
+    root = _fixture(tmp_path)
+    target = _install_unverified_ai_history(root)
+    body_path = root / target["path"]
+    original = body_path.read_bytes()
+    registry_path = root / "registry/items.jsonl"
+    original_registry = registry_path.read_bytes()
+
+    baseline = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in baseline["rows"] if x["id"] == "review-a")
+    snapshot = row["review_proof"]["ai_snapshot"]
+    assert snapshot["state"] == "request-unverified"
+    assert snapshot["item_sha256_match"] is True
+    assert snapshot["content_sha256_match"] is True
+    assert snapshot["request_proof"] == "unverified"
+    assert "ai-review-request-proof-unverified" in row["signals"]
+    assert row["review_proof"]["ai_closed"] == "not-verified"
+    assert baseline["canonical_write_performed"] is False
+
+    body_path.write_bytes(original + b"\nbody changed after historical review\n")
+    changed_body = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in changed_body["rows"] if x["id"] == "review-a")
+    assert row["review_proof"]["ai_snapshot"]["content_sha256_match"] is False
+    assert row["review_proof"]["ai_snapshot"]["item_sha256_match"] is True
+    assert "ai-review-content-drift" in row["signals"]
+    assert row["review_proof"]["ai_closed"] == "not-verified"
+
+    body_path.write_bytes(original)
+    items = [json.loads(line) for line in original_registry.decode("utf-8").splitlines()]
+    next(row for row in items if row["id"] == "review-a")["updated_at"] = "2026-10-17"
+    registry_path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in items),
+        encoding="utf-8",
+    )
+    changed_item = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in changed_item["rows"] if x["id"] == "review-a")
+    assert row["review_proof"]["ai_snapshot"]["item_sha256_match"] is False
+    assert row["review_proof"]["ai_snapshot"]["content_sha256_match"] is True
+    assert "ai-review-item-identity-drift" in row["signals"]
+    assert row["review_proof"]["ai_closed"] == "not-verified"
+
+
