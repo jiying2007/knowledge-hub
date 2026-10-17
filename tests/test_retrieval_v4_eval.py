@@ -97,6 +97,40 @@ def test_retrieval_v4_filters_acl_before_ranking(tmp_path):
     assert result["lane_health"]["chunk_count"] >= 1
 
 
+def test_retrieval_v4_tokenizes_query_once_across_authorized_items(tmp_path, monkeypatch):
+    import tools.codex_assets.knowledge_hub.retrieval_v4 as retrieval_module
+
+    root = _root(tmp_path)
+    registry = root / "registry/items.jsonl"
+    items = [json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines()]
+    items[1]["acl"] = ["alice"]  # Both records are authorized for this performance case.
+    registry.write_text(
+        "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in items),
+        encoding="utf-8",
+    )
+    query = "power loss recovery filesystem"
+    calls = []
+    original = retrieval_module.search_tokens
+
+    def counted_tokens(value):
+        if value == query:
+            calls.append(value)
+        return original(value)
+
+    monkeypatch.setattr(retrieval_module, "search_tokens", counted_tokens)
+    result = retrieve_v4(
+        root,
+        query,
+        _alice(),
+        agent_id="embedded-expert",
+        as_of="2026-09-12",
+        embedding_fn=lambda _: (1.0, 0.0),
+        cache_enabled=False,
+    )
+    assert result["authorized_item_count"] == 2
+    assert calls == [query]  # Ranking and routing reuse the same token set.
+
+
 def test_hierarchical_chunks_keep_heading_and_line_provenance(tmp_path):
     root = _root(tmp_path)
     item = json.loads((root / "registry/items.jsonl").read_text(encoding="utf-8").splitlines()[0])
