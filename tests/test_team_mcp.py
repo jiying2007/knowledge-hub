@@ -273,6 +273,67 @@ def test_real_repository_http_search_get_context_smoke():
         worker.join(timeout=5)
 
 
+def test_team_mcp_authority_code_is_security_critical():
+    from tools.codex_assets.knowledge_hub.review_risk import (
+        classify_review_risk, load_review_risk_policy,
+    )
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    policy = load_review_risk_policy(root)
+    path = "tools/codex_assets/knowledge_hub/team_mcp.py"
+    assert classify_review_risk(policy, path)["review_class"] == "security-critical"
+
+
+def test_current_context_requires_exact_full_body_review_proof(tmp_path, monkeypatch):
+    active = item(
+        status="active", review_after="2099-01-01",
+        content_review_status="accepted", evidence_validation_status="verified",
+        manual_validation_pending=False,
+    )
+    raw = b"# current knowledge\n"
+    source = tmp_path / active["path"]
+    source.parent.mkdir(parents=True)
+    source.write_bytes(raw)
+    monkeypatch.setattr(team_mcp, "registry_items", lambda root: [active])
+    monkeypatch.setattr(team_mcp, "retrieve_v4", lambda *a, **kw: {
+        "results": [{"id": "team-example", "score": 1}],
+        "status": "pass", "retrieval_coverage": {"complete": True},
+    })
+    unbound_search = team_mcp.team_search(tmp_path, "knowledge", SHA)
+    assert unbound_search["results"][0]["review_required"] is True
+    assert unbound_search["results"][0]["review_binding_state"] == "unbound"
+    unbound_get = team_mcp.team_get(tmp_path, "team-example", SHA)
+    assert unbound_get["authority"] == "verified"  # historical status is retained
+    assert unbound_get["review_binding_state"] == "unbound"
+    assert unbound_get["review_required"] is True
+    unbound_context = team_mcp.team_context(tmp_path, "knowledge", SHA)
+    assert unbound_context["current"] == []
+    assert len(unbound_context["provisional"]) == 1
+
+    # A registry claim alone is never enough for search: it has not read bytes.
+    active["human_review_content_sha256"] = hashlib.sha256(raw).hexdigest()
+    declared_search = team_mcp.team_search(tmp_path, "knowledge", SHA)
+    assert declared_search["results"][0]["review_binding_state"] == "declared-unverified"
+    assert declared_search["results"][0]["review_required"] is True
+    matched_get = team_mcp.team_get(tmp_path, "team-example", SHA)
+    assert matched_get["review_binding_state"] == "current-body-bound"
+    assert matched_get["review_required"] is False
+    current_context = team_mcp.team_context(tmp_path, "knowledge", SHA)
+    assert len(current_context["current"]) == 1
+    assert current_context["provisional"] == []
+    assert current_context["current"][0]["review_required"] is False
+
+    # Any body change invalidates the old current-body approval, even if
+    # the status, owner and review_after metadata still appear unchanged.
+    source.write_bytes(raw + b"revised")
+    drifted_get = team_mcp.team_get(tmp_path, "team-example", SHA)
+    assert drifted_get["review_binding_state"] == "content-drift"
+    assert drifted_get["review_required"] is True
+    drifted_context = team_mcp.team_context(tmp_path, "knowledge", SHA)
+    assert drifted_context["current"] == []
+    assert drifted_context["provisional"][0]["review_binding_state"] == "content-drift"
+
+
 def test_overdue_active_remains_historical_authority_but_needs_current_review():
     import datetime
     from tools.codex_assets.knowledge_hub.team_mcp import _kind, _review_overdue

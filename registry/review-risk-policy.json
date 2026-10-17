@@ -218,6 +218,10 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/team_mcp.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/connector_runtime.py",
       "review_class": "security-critical"
     },
