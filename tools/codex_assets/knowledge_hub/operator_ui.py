@@ -6,6 +6,9 @@ import argparse
 import html
 import json
 import pathlib
+import socket
+import threading
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Callable, Dict, Mapping, Sequence, Tuple
@@ -15,6 +18,9 @@ from .operator_state import build_operator_state
 
 LOOPBACK_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
+STATE_CACHE_SECONDS = 3.0
+MAX_CONNECTIONS = 8
+REQUEST_TIMEOUT_SECONDS = 15.0
 _MACHINE_CLASSES = {
     "machine-discovery",
     "machine-after-prerequisite",
@@ -285,11 +291,12 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
 <table><thead><tr><th>Project</th><th>Profile</th><th>Owner boundary</th>
 <th>Evidence fields</th><th>Action class</th><th>Raw attention</th></tr></thead>
 <tbody>{projects}</tbody></table></section>
-<footer>只读界面；事实源仍是 registry / status / readiness / terminal closure。
+<footer>状态生成时间（UTC）：{generated_at}。只读界面；事实源仍是 registry / status / readiness / terminal closure。
 Lifecycle 输入必须由 operator 显式提供；not-observed 不等于失败。Discovery candidate 永远是 candidate-only；
 provider query 不代表查询已经执行，也不代表 evidence 可以绑定。</footer>
 </main></body></html>""".format(
         css=_CSS,
+        generated_at=_escape(state.get("generated_at", "unknown")),
         cards=cards,
         lifecycle=_lifecycle_rows(lifecycle_map),
         discovery=_discovery_rows(discovery_map),
@@ -302,6 +309,8 @@ provider query 不代表查询已经执行，也不代表 evidence 可以绑定�
 
 
 class OperatorHTTPServer(ThreadingHTTPServer):
+    """Bound idle connections and coalesce expensive canonical projections."""
+
     daemon_threads = True
 
     def __init__(
@@ -312,7 +321,51 @@ class OperatorHTTPServer(ThreadingHTTPServer):
     ) -> None:
         self.root = root
         self.state_builder = state_builder
+        self._connection_slots = threading.BoundedSemaphore(MAX_CONNECTIONS)
+        self._state_lock = threading.Lock()
+        self._cached_state: Dict[str, Any] | None = None
+        self._cached_at = 0.0
         super().__init__(server_address, OperatorRequestHandler)
+
+    def get_request(self):
+        request, address = super().get_request()
+        request.settimeout(REQUEST_TIMEOUT_SECONDS)
+        return request, address
+
+    def process_request(self, request, client_address) -> None:
+        if not self._connection_slots.acquire(blocking=False):
+            try:
+                request.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            request.close()
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._connection_slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address) -> None:
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._connection_slots.release()
+
+    def get_operator_state(self) -> Dict[str, Any]:
+        now = time.monotonic()
+        if self._cached_state is not None and now - self._cached_at < STATE_CACHE_SECONDS:
+            return self._cached_state
+        # The expensive status/readiness/terminal evaluator must run once even
+        # when the browser requests both HTML and JSON concurrently.
+        with self._state_lock:
+            now = time.monotonic()
+            if self._cached_state is not None and now - self._cached_at < STATE_CACHE_SECONDS:
+                return self._cached_state
+            fresh = self.state_builder(self.root)
+            self._cached_state = fresh
+            self._cached_at = time.monotonic()
+            return fresh
 
 
 class OperatorRequestHandler(BaseHTTPRequestHandler):
@@ -338,12 +391,27 @@ class OperatorRequestHandler(BaseHTTPRequestHandler):
 
     def _state(self) -> Dict[str, Any]:
         server = self.server
-        return server.state_builder(server.root)  # type: ignore[attr-defined]
+        return server.get_operator_state()  # type: ignore[attr-defined]
+
+    def _trusted_browser_request(self) -> bool:
+        port = self.server.server_port
+        allowed_hosts = {"127.0.0.1:{}".format(port), "localhost:{}".format(port)}
+        host = str(self.headers.get("Host", "")).lower()
+        origin = str(self.headers.get("Origin", "")).lower()
+        return host in allowed_hosts and (
+            not origin or origin in {"http://" + value for value in allowed_hosts}
+        )
 
     def do_GET(self) -> None:
+        if not self._trusted_browser_request():
+            self._send(HTTPStatus.FORBIDDEN, b'{"status":"forbidden"}', "application/json; charset=utf-8")
+            return
         if self.path == "/healthz":
             body = json.dumps({"status": "ok", "read_only": True}).encode("utf-8")
             self._send(HTTPStatus.OK, body, "application/json; charset=utf-8")
+            return
+        if self.path not in ("/", "/api/state"):
+            self._send(HTTPStatus.NOT_FOUND, b'{"status":"not-found"}', "application/json; charset=utf-8")
             return
         try:
             state = self._state()
