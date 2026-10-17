@@ -21,7 +21,7 @@ def _summary(result):
             "machine_checked_count", "archive_directory_observed_count",
             "machine_failed_count",
             "private_excluded_count", "total_body_bytes", "status_counts",
-            "lane_counts", "signal_counts", "duplicates",
+            "lane_counts", "signal_counts", "duplicates", "ai_review_audit",
             "report_only", "canonical_write_performed",
             "semantic_review_performed", "owner_approval_performed",
         )
