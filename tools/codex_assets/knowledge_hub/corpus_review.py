@@ -14,7 +14,7 @@ import pathlib
 import re
 import subprocess
 import unicodedata
-from typing import Any, Dict, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping
 
 from .common import (
     KnowledgeHubError, read_repository_bytes_bounded, registry_items,
