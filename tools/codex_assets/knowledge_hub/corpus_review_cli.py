@@ -8,7 +8,7 @@ import os
 import pathlib
 import tempfile
 
-from .common import KnowledgeHubError, repository_root
+from .common import KnowledgeHubError, ensure_private_directory_tree, repository_root
 from .corpus_review import build_corpus_review
 
 
@@ -37,9 +37,7 @@ def _save_ignored(root: pathlib.Path, relative: str, data: str) -> str:
     ):
         raise KnowledgeHubError("corpus output must be a JSON file under .tmp/knowledge-hub/")
     parent = root / pathlib.Path(*path.parts[:-1])
-    if parent.is_symlink():
-        raise KnowledgeHubError("private report destination is a symlink")
-    parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    ensure_private_directory_tree(root, parent)
     target = parent / path.name
     if target.is_symlink():
         raise KnowledgeHubError("private report cannot overwrite a symlink")
