@@ -162,7 +162,11 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 
 ## 安全与治理边界
 
-- 只绑定 loopback `127.0.0.1`；
+- 只绑定 loopback `127.0.0.1`，并校验精确端口的 loopback `Host`/`Origin`；
+- 最多同时接收 8 个连接，闲置 HTTP 连接超时 15 秒；
+- 使用进程内 3 秒 single-flight 状态快照，HTML/JSON 共用同一计算结果；快照过期必须重新评估，失败时不回退到旧结果；
+- `/healthz` 和未知路径不运行昂贵的 status/readiness/terminal evaluator，页面标记状态生成时间；
+- 内部异常不通过 HTTP 返回本地文件路径或运行细节，CLI/CI 仍承担完整诊断；
 - UI 只实现 GET；POST 返回 HTTP 405；
 - lifecycle 文件只能由启动参数显式提供，浏览器不能上传或选择文件；
 - 不扫描 `.tmp` transaction 目录来推断业务授权；
