@@ -51,7 +51,9 @@ def test_full_registry_coverage_without_lifecycle_mutation(tmp_path):
     report = build_corpus_review(root, dt.date(2026, 10, 17))
     assert report["item_count"] == report["accounted_for_count"] == 5
     assert report["private_excluded_count"] == 1
+    assert report["machine_attempted_count"] == 4
     assert report["machine_checked_count"] == 4
+    assert report["machine_failed_count"] == 0
     assert report["status_counts"]["active"] == 1
     assert report["signal_counts"]["active-review-overdue"] == 1
     assert report["signal_counts"]["historical-review-overdue"] == 1
@@ -77,6 +79,25 @@ def test_corrupted_body_reports_attention_without_auto_accept(tmp_path):
     assert row["review_proof"]["ai_closed"] == "not-verified"
 
 
+def test_unreadable_body_is_counted_as_attempted_not_verified(tmp_path):
+    root = _fixture(tmp_path)
+    (root / "projects/demo/validation/a.md").unlink()
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert report["item_count"] == report["accounted_for_count"] == 5
+    assert report["private_excluded_count"] == 1
+    assert report["machine_attempted_count"] == 4
+    assert report["machine_checked_count"] == 3
+    assert report["machine_failed_count"] == 1
+    assert report["machine_attempted_count"] == (
+        report["machine_checked_count"] + report["machine_failed_count"]
+    )
+    broken = next(row for row in report["rows"] if row["id"] == "review-a")
+    assert broken["machine_checked"] is False
+    assert broken["lane"] == "P0-integrity"
+    assert "body-unavailable-or-invalid" in broken["signals"]
+    assert report["semantic_review_performed"] is False
+
+
 def test_report_uses_ignored_location_only(tmp_path):
     root = _fixture(tmp_path)
     assert review_cli(["--root", str(root), "--as-of", "2026-10-17",
@@ -98,7 +119,17 @@ def test_real_repository_full_coverage():
     assert report["item_count"] >= 700
     assert report["accounted_for_count"] == report["item_count"]
     assert report["private_excluded_count"] >= 1
-    assert report["machine_checked_count"] == report["accounted_for_count"] - report["private_excluded_count"]
+    # A real repository may contain unreadable or historical bodies. Preserve
+    # findings as P0 rather than silently counting failures as scanned PASS.
+    assert report["machine_attempted_count"] == report["accounted_for_count"] - report["private_excluded_count"]
+    assert report["machine_attempted_count"] == report["machine_checked_count"] + report["machine_failed_count"]
+    failures = [
+        row for row in report["rows"]
+        if row["lane"] != "personal-excluded" and not row["machine_checked"]
+    ]
+    assert len(failures) == report["machine_failed_count"]
+    assert all(row["lane"] == "P0-integrity" for row in failures)
+    assert all("body-unavailable-or-invalid" in row["signals"] for row in failures)
     assert report["status_counts"]["reviewing"] >= 300
     assert len(report["rows"]) == report["item_count"]
     assert hashlib.sha256((root / "registry/items.jsonl").read_bytes()).hexdigest() == old_hash
