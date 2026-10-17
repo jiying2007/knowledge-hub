@@ -499,3 +499,30 @@ def test_historical_archived_human_review_without_hash_is_not_active_gate(case):
     assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 0
     assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 0
     assert review_counts(root, [item])["human_review_historical_unbound_count"] == 1
+
+
+def test_ai_review_content_hash_refuses_symlinks_and_oversized_bodies(tmp_path):
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    from tools.codex_assets.knowledge_hub.delegated_content_review import MAX_REVIEW_CONTENT_BYTES
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "projects").mkdir()
+    external = tmp_path / "external"
+    (external / "p").mkdir(parents=True)
+    (external / "p/item.md").write_text("external content", encoding="utf-8")
+    (root / "projects/sub").symlink_to(external, target_is_directory=True)
+    with pytest.raises(KnowledgeHubError):
+        content_digest(root, "projects/sub/p/item.md")
+
+    (root / "projects/sub").unlink()
+    (root / "projects/sub").mkdir()
+    (root / "projects/sub/item.md").write_bytes(b"valid")
+    assert content_digest(root, "projects/sub/item.md") == hashlib.sha256(b"valid").hexdigest()
+    (root / "projects/sub/item.md").write_bytes(b"x" * (MAX_REVIEW_CONTENT_BYTES + 1))
+    with pytest.raises(KnowledgeHubError, match="exceeds"):
+        content_digest(root, "projects/sub/item.md")
+    with pytest.raises(KnowledgeHubError):
+        content_digest(root, "projects/../external/p/item.md")
+
+
