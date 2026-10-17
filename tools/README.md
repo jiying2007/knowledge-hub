@@ -559,3 +559,36 @@ bash tools/team/backup.sh；必须验证 bundle 与临时隔离恢复，不能
 Create/Update PR；实际 5–10 并发、磁盘/索引故障与回滚；备份恢复。
 GitHub Public 仓库只接收允许互联网公开且适合发送至所用模型的知识。
 这些未执行之前，不能宣称 LAN TEAM DEPLOYED/ADOPTED。
+
+## 全库知识复核及 AI 授权边界（2026-10-17）
+
+用户明确授权 AI 辅助 review；这允许机器归类、逐条核对来源与生成修改建议，
+不构成人工签收、Active 晋升、设备实测、外部真实性或 GitHub 安全审批授权。
+复用原有 review-after / review-semantic / delegated-content-review 权限与状态合同。
+
+按 2026-10-17 主线登记元数据：总计 709，Active 17 / Reviewing 398 /
+Archived 288 / Draft 3 / Personal 2 / Rejected 1；Reviewing 中 391 条标记 AI 生成。
+已过 review_after 的 Active 15、Reviewing 148、Archived 254、Draft 1。
+这只证明元数据复核日期逾期，不证明内容错误或者语义审核已经执行。
+
+在受信 Git checkout 中运行完整、只读、哈希绑定的机器盘点：
+
+    python3 -m tools.codex_assets.knowledge_hub.corpus_review_cli --as-of 2026-10-17 --output .tmp/knowledge-hub/corpus-review-20261017.json
+
+默认仅返回脱敏统计；加 --json 输出每条非私人知识的检查详情。该脚本逐条
+核对 Registry 对应正文、frontmatter、证据和验证引用、本地重复候选、逾期、
+历史 human/AI 复核证据的哈希及授权状态。报告标注 review-only，绝不写
+canonical 正文或 Registry。私人内容只计数、隐藏身份和路径、不输出正文。
+完整逐条报告仅存 ignored .tmp/knowledge-hub/ 下，不上传外部共享位置。
+质量测试 test_real_repository_full_coverage 会读取仓库中全部登记条目，
+确保审查覆盖不是限于首 10 条的抽样，亦不冒充独立语义审核。
+
+处置顺序：P0 修复正文丢失、Frontmatter 不匹配、权限/秘密及 AI 复核无效证据；
+P1 为逾期 Active 补足实证后由真实 owner 决定适用性；P2 将 Reviewing 分批做
+AI 辅助语义复核和 Git 修改建议；P3 为 Archived 保留历史边界，仅作重复
+关联建议，不自动删除。Git CI 全绿也不能证明外部实机或 owner 审核。
+
+历史 ai_delegated_content_review 字段存在不等于用户授权证明有效：只有
+request_proof、内容 SHA、授权对象均匹配才可按既有合同计入有效复核。
+human_reviewed_by 但缺失当下正文哈希只能视为历史声明。用户本次授权
+并不允许机器补写人工审核身份、虚构复核时间或自动晋升正式知识。

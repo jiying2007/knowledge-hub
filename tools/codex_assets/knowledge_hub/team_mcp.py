@@ -94,6 +94,18 @@ def _kind(item: Mapping[str, Any]) -> str:
     return "verified" if reviewed else "provisional"
 
 
+def _review_overdue(item: Mapping[str, Any], today: dt.date) -> bool:
+    """Freshness is independent from historical evidence authority."""
+    value = item.get("review_after", "")
+    if not isinstance(value, str):
+        return True
+    try:
+        deadline = dt.date.fromisoformat(value)
+        return deadline.isoformat() != value or deadline < today
+    except ValueError:
+        return True
+
+
 def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5) -> Dict[str, Any]:
     query = _query(query)
     limit = _limit(limit, 10, 5)
@@ -114,7 +126,9 @@ def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5
             "title": str(item.get("title", ""))[:512],
             "status": str(item["status"]),
             "authority": _kind(item),
-            "review_required": _kind(item) != "verified",
+            "review_required": _kind(item) != "verified" or _review_overdue(item, today),
+            "review_after": str(item.get("review_after", "")),
+            "review_overdue": _review_overdue(item, today),
             "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
             "evidence_validation_status": str(item.get("evidence_validation_status", ""))[:64],
             "summary_zh": str(item.get("summary_zh", ""))[:1024],
@@ -168,7 +182,9 @@ def team_get(
         "item_id": item_id,
         "status": item["status"],
         "authority": _kind(item),
-        "review_required": _kind(item) != "verified",
+        "review_required": _kind(item) != "verified" or _review_overdue(item, today),
+        "review_after": str(item.get("review_after", "")),
+        "review_overdue": _review_overdue(item, today),
         "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
         "evidence_validation_status": str(item.get("evidence_validation_status", ""))[:64],
         "content": raw[offset:end].decode("utf-8"),
@@ -188,7 +204,8 @@ def team_context(root: pathlib.Path, query: str, serving_sha: str, limit: int = 
     for row in found["results"]:
         body = team_get(root, row["id"], serving_sha, max_bytes=4096)
         item = dict(row, excerpt=body["content"], content_sha256=body["content_sha256"])
-        (current if row["authority"] == "verified" else provisional).append(item)
+        (current if row["authority"] == "verified" and not row["review_overdue"]
+         else provisional).append(item)
     return {
         "schema_version": "knowledge-hub.team-context.v1",
         "serving_sha": serving_sha,
