@@ -238,6 +238,12 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         rows.append(row)
     counts = collections.Counter(x.get("status", "") for x in rows)
     lanes = collections.Counter(x["lane"] for x in rows)
+    # A successfully parsed body is not the same as an attempted machine audit.
+    # Missing/corrupt bodies remain visible as P0 findings, never as PASS.
+    private_count = sum(x["lane"] == "personal-excluded" for x in rows)
+    attempted_count = len(rows) - private_count
+    checked_count = sum(x.get("machine_checked") is True for x in rows)
+    failed_count = attempted_count - checked_count
     issue_counts = collections.Counter(flag for x in rows for flag in x["signals"])
     duplicates = _duplicate_groups(rows)
     result = {
@@ -247,8 +253,10 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "semantic_review_performed": False, "owner_approval_performed": False,
         "authorization_not_conferred_by_scan": True,
         "item_count": len(items), "accounted_for_count": len(rows),
-        "machine_checked_count": sum(x.get("machine_checked") is True for x in rows),
-        "private_excluded_count": sum(x["lane"] == "personal-excluded" for x in rows),
+        "machine_attempted_count": attempted_count,
+        "machine_checked_count": checked_count,
+        "machine_failed_count": failed_count,
+        "private_excluded_count": private_count,
         "total_body_bytes": total_bytes, "status_counts": dict(sorted(counts.items())),
         "lane_counts": dict(sorted(lanes.items())), "signal_counts": dict(sorted(issue_counts.items())),
         "duplicates": duplicates, "rows": rows,
