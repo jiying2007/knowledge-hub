@@ -21,7 +21,7 @@ from .common import (
     resolve_inside, split_frontmatter,
 )
 from .delegated_content_review import (
-    FIELD as AI_REVIEW_FIELD, load_ledger, review_state,
+    FIELD as AI_REVIEW_FIELD, expected_record, item_digest, load_ledger, review_state,
 )
 from .review_risk import classify_review_risk, load_review_risk_policy
 from .security import scan_secret_text
@@ -142,8 +142,41 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
         }
 
 
+def _ai_snapshot_binding(item: Mapping[str, Any], document: Mapping[str, Any],
+                         ledger: Mapping[str, Any]) -> Dict[str, Any]:
+    """Inspect historical review hashes without granting review authority."""
+    empty = {"item_sha256_match": None, "content_sha256_match": None,
+             "request_proof": "absent"}
+    record = item.get(AI_REVIEW_FIELD)
+    if record is None:
+        return dict(empty, state="absent")
+    if not isinstance(record, dict):
+        return dict(empty, state="record-malformed")
+    auth = ledger.get(record.get("authorization_id", ""))
+    if not isinstance(auth, dict):
+        return dict(empty, state="authorization-missing")
+    proof = str(auth.get("request_proof", {}).get("state", "unverified"))
+    entry = next((row for row in auth.get("entries", [])
+                  if row.get("id") == item.get("id")), None)
+    if entry is None or record != expected_record(auth, entry):
+        return dict(empty, state="authorization-record-drift", request_proof=proof)
+    item_match = item_digest(item) == entry["item_sha256"]
+    body_match = (document.get("sha256") == entry["content_sha256"]
+                  if document.get("status") == "read" else None)
+    if item_match is False or body_match is False:
+        state = "snapshot-drift"
+    elif body_match is None:
+        state = "body-unavailable"
+    elif proof != "verified":
+        state = "request-unverified"
+    else:
+        state = "snapshot-exact-not-semantic-approval"
+    return {"state": state, "item_sha256_match": item_match,
+            "content_sha256_match": body_match, "request_proof": proof}
+
+
 def _review_evidence(root: pathlib.Path, item: Mapping[str, Any], document: Mapping[str, Any],
-                     ledger: Mapping[str, Any], policy: Mapping[str, Any]) -> Dict[str, str]:
+                     ledger: Mapping[str, Any], policy: Mapping[str, Any]) -> Dict[str, Any]:
     digest = str(document.get("sha256", ""))
     human = str(item.get("human_review_content_sha256") or "")
     if human:
@@ -160,11 +193,12 @@ def _review_evidence(root: pathlib.Path, item: Mapping[str, Any], document: Mapp
         "ai": str(ai["status"]),
         "ai_decision": str(ai.get("decision", "")),
         "ai_closed": "verified" if ai.get("closed") is True else "not-verified",
+        "ai_snapshot": _ai_snapshot_binding(item, document, ledger),
     }
 
 
 def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str, Any],
-             review: Mapping[str, str], today: dt.date) -> List[str]:
+             review: Mapping[str, Any], today: dt.date) -> List[str]:
     issues = []
     status = item.get("status")
     if doc["status"] == "archive-directory-observed":
@@ -199,6 +233,16 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
         issues.append("human-review-historical-unbound")
     if review["ai"] in {"invalid", "needs-review"}:
         issues.append("ai-review-proof-unverified")
+    snapshot = review["ai_snapshot"]
+    if snapshot["item_sha256_match"] is False:
+        issues.append("ai-review-item-identity-drift")
+    if snapshot["content_sha256_match"] is False:
+        issues.append("ai-review-content-drift")
+    if snapshot["request_proof"] == "unverified":
+        issues.append("ai-review-request-proof-unverified")
+    if snapshot["state"] in {"record-malformed", "authorization-missing",
+                              "authorization-record-drift"}:
+        issues.append("ai-review-authorization-record-drift")
     if status == "reviewing" and review["human"] != "current-body-bound" and review["ai_closed"] != "verified":
         issues.append("candidate-needs-independent-review")
     return sorted(set(issues))
