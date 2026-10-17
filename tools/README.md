@@ -594,6 +594,15 @@ canonical 正文或 Registry。私人内容只计数、隐藏身份和路径、�
 质量测试 test_real_repository_full_coverage 会读取仓库中全部登记条目，
 确保审查覆盖不是限于首 10 条的抽样，亦不冒充独立语义审核。
 
+2026-10-17 Git Tree 事实复核：709 条 registry 记录中有 2 条历史 archived
+条目绑定的是目录（pcr02-engineering-archive-corpus、patent-disclosure-canonical-archive-corpus），
+不是 Markdown 正文文件。机器报告将 archive-directory-observed 与 machine_checked
+（正文成功读取）、machine_failed（真实缺失/无效）分开计数；目录存在且非空
+只证明历史集合的目录身份，contents_verified=false，不声称逐文件哈希、语义、
+owner 或专利法律资格已经验证。只有 archived / retired-source-provenance /
+archive-corpus-materialized / promotion=none 的精确集合路径才可采用此分类；
+缺失、空目录、非法路径或其它状态仍 fail-closed 为 P0。
+
 处置顺序：P0 修复正文丢失、Frontmatter 不匹配、权限/秘密及 AI 复核无效证据；
 P1 为逾期 Active 补足实证后由真实 owner 决定适用性；P2 将 Reviewing 分批做
 AI 辅助语义复核和 Git 修改建议；P3 为 Archived 保留历史边界，仅作重复
