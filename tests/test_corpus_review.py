@@ -148,6 +148,11 @@ def test_archive_directory_is_structural_identity_not_body_review(tmp_path):
     missing = next(x for x in broken["rows"] if x["id"] == "archive-directory")
     assert missing["lane"] == "P0-integrity"
     assert "body-unavailable-or-invalid" in missing["signals"]
+    target.symlink_to(root / "notes/personal", target_is_directory=True)
+    linked = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert linked["archive_directory_observed_count"] == 0
+    assert linked["machine_failed_count"] == 1
+    assert next(x for x in linked["rows"] if x["id"] == "archive-directory")["lane"] == "P0-integrity"
 
 
 def test_archive_directory_must_be_nonempty_and_explicitly_archived(tmp_path):
