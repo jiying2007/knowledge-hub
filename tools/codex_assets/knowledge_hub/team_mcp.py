@@ -13,7 +13,7 @@ import pathlib
 import re
 from typing import Any, Dict, Mapping
 
-from .common import KnowledgeHubError, read_utf8_bounded, registry_items, resolve_inside
+from .common import KnowledgeHubError, read_repository_bytes_bounded, registry_items
 from .protocol_conformance import (
     MCPProtocolError, MCP_PROTOCOL_VERSION, _complete_result,
     _validate_request_meta,
@@ -176,8 +176,10 @@ def team_get(
         raise KnowledgeHubError("knowledge item not found")
     item = entries[0]
     try:
-        source = resolve_inside(root, item["path"])
-        raw = read_utf8_bounded(source, MAX_DOCUMENT_BYTES, "team document").encode("utf-8")
+        # Descriptor-relative traversal rejects symlinks in every path component.
+        # Hash exactly the bytes read from the opened file descriptor.
+        raw = read_repository_bytes_bounded(root, item["path"], MAX_DOCUMENT_BYTES, "team document")
+        raw.decode("utf-8")  # Preserve the original full-document UTF-8 contract.
     except (OSError, UnicodeError, KnowledgeHubError) as exc:
         raise KnowledgeHubError("knowledge item unavailable") from exc
     digest = hashlib.sha256(raw).hexdigest()
