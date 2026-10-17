@@ -89,6 +89,47 @@ def _request(method, params=None):
     return {"jsonrpc": "2.0", "id": 2, "method": method, "params": value}
 
 
+def test_team_get_uses_component_safe_descriptor_reader(tmp_path, monkeypatch):
+    raw = b"# verified current bytes\n"
+    active = item(
+        status="active", review_after="2099-01-01",
+        content_review_status="accepted", evidence_validation_status="verified",
+        human_review_content_sha256=hashlib.sha256(raw).hexdigest(),
+    )
+    monkeypatch.setattr(team_mcp, "registry_items", lambda root: [active])
+    calls = []
+
+    def safe_reader(root, path, max_bytes, label):
+        calls.append((root, path, max_bytes, label))
+        return raw
+
+    monkeypatch.setattr(team_mcp, "read_repository_bytes_bounded", safe_reader)
+    result = team_mcp.team_get(tmp_path, "team-example", SHA)
+    assert result["review_binding_state"] == "current-body-bound"
+    assert result["content_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert result["review_required"] is False
+    assert calls == [(tmp_path, active["path"], team_mcp.MAX_DOCUMENT_BYTES, "team document")]
+
+
+def test_team_get_blocks_nested_symlink_and_invalid_utf8(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "projects").mkdir()
+    outside = tmp_path / "outside"
+    (outside / "current").mkdir(parents=True)
+    (outside / "current/test.md").write_bytes(b"# should never be served\n")
+    (root / "projects/example").symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(team_mcp, "registry_items", lambda root: [item()])
+    with pytest.raises(KnowledgeHubError, match="unavailable"):
+        team_mcp.team_get(root, "team-example", SHA)
+
+    (root / "projects/example").unlink()
+    (root / "projects/example/current").mkdir(parents=True)
+    (root / "projects/example/current/test.md").write_bytes(b"\xff")
+    with pytest.raises(KnowledgeHubError, match="unavailable"):
+        team_mcp.team_get(root, "team-example", SHA)
+
+
 def test_team_advertises_exact_tools_and_only_health_resource(tmp_path):
     tools = team_mcp.handle_team_mcp(tmp_path, _request("tools/list"), SHA)["result"]["tools"]
     assert {t["name"] for t in tools} == {"knowledge_search", "knowledge_get", "knowledge_context"}
