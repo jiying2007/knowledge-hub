@@ -190,6 +190,6 @@ def test_ai_maintenance_full_corpus_audit_is_source_bound_and_non_authoritative(
     artifact = next(step for step in steps if step.get("name") == "Upload bounded maintenance evidence")
     assert ".cache/knowledge-hub/ai-maintenance/" in artifact["with"]["path"]
     assert ".tmp/knowledge-hub/ai-maintenance-corpus-review.json" in artifact["with"]["path"]
-    assert artifact["if"] == "always"
+    assert artifact["if"] == "always()"
     assert payload["permissions"] == {"contents": "read", "issues": "write"}
     assert set(payload["on"]) == {"schedule", "workflow_dispatch"}
