@@ -8,7 +8,7 @@ import hashlib
 import math
 import pathlib
 import re
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .common import KnowledgeHubError, registry_items, resolve_today
 from .retrieval_cache import DerivedCache, fingerprint
@@ -106,8 +106,9 @@ def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
 
 def _lexical_lane(
     query: str, item: Mapping[str, Any], chunks: Sequence[Mapping[str, Any]],
+    *, query_tokens: Optional[Set[str]] = None,
 ) -> Tuple[float, Dict[str, Any]]:
-    tokens = set(search_tokens(query))
+    tokens = query_tokens if query_tokens is not None else set(search_tokens(query))
     if not tokens:
         return 0.0, {}
     metadata = " ".join([
@@ -140,9 +141,9 @@ def _freshness(item: Mapping[str, Any], today: dt.date) -> float:
     return max(0.25, 1.0 - min(max(0, (today - updated).days), 730) / 1000.0)
 
 
-def route_query(query: str) -> str:
+def route_query(query: str, *, query_tokens: Optional[Set[str]] = None) -> str:
     lowered = query.lower()
-    tokens = set(search_tokens(query))
+    tokens = query_tokens if query_tokens is not None else set(search_tokens(query))
     if IDENTIFIER_RE.search(query):
         return "exact-first"
     if tokens.intersection(TEMPORAL_TERMS) or any(term in lowered for term in TEMPORAL_TERMS):
@@ -229,6 +230,7 @@ def _score_lanes(
     root: pathlib.Path, query: str, authorized: Sequence[Mapping[str, Any]],
     today: dt.date, embedding_fn: Optional[EmbeddingFn], *,
     cache: Optional[DerivedCache] = None, binding: Tuple[str, int] = ("", 0),
+    query_tokens: Optional[Set[str]] = None,
 ) -> Tuple[
     Dict[str, List[Dict[str, Any]]], Dict[str, float], Dict[str, float],
     Dict[str, float], Dict[str, float], Dict[str, Dict[str, Any]],
@@ -239,6 +241,7 @@ def _score_lanes(
     best: Dict[str, Dict[str, Any]] = {}
     total_chars = total_chunks = 0
     query_vector = None
+    tokens = query_tokens if query_tokens is not None else set(search_tokens(query))
     for item in authorized:
         item_id = str(item.get("id", ""))
         if not item_id or item_id in chunks:
@@ -248,7 +251,9 @@ def _score_lanes(
         total_chunks += len(item_chunks)
         if total_chars > MAX_CORPUS_CHARS or total_chunks > MAX_TOTAL_CHUNKS:
             raise KnowledgeHubError("retrieval corpus exceeds chunk/character budget")
-        lexical[item_id], best[item_id] = _lexical_lane(query, item, item_chunks)
+        lexical[item_id], best[item_id] = _lexical_lane(
+            query, item, item_chunks, query_tokens=tokens
+        )
         # Keep independent external semantic recall; feature hashes only refine
         # lexical hits. Retain span metadata, not the entire corpus body.
         if embedding_fn is not None or lexical[item_id] > 0:
@@ -342,11 +347,13 @@ def retrieve_v4(
     principal_value, authorized, denied, legacy = _authorized_items(
         root, principal, agent_id, today, candidate_filter=candidate_filter
     )
+    query_tokens = set(search_tokens(query))
     with DerivedCache(root, enabled=cache_enabled and bool(authorized)) as cache:
         chunks, lexical, dense, authority, freshness, best = _score_lanes(
             root, query, authorized, today, embedding_fn, cache=cache, binding=binding,
+            query_tokens=query_tokens,
         )
-    route = route_query(query)
+    route = route_query(query, query_tokens=query_tokens)
     rows = _ranked_rows(query, route, authorized, lexical, dense, authority, freshness, best)
     selected = rows[: max(limit * 3, limit)]
     if rerank_fn is not None and selected:
