@@ -59,7 +59,38 @@ def _safe_date(value: Any) -> dt.date:
     return result
 
 
-def _local_refs(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
+def _archive_directory(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
+    """Recognize a narrowly declared retired archive *directory*, not its bodies."""
+    source = item.get("source", {})
+    tags = item.get("tags", [])
+    if not (
+        item.get("status") == "archived"
+        and item.get("review_status") == "archive-corpus-materialized"
+        and item.get("promotion") == "none"
+        and isinstance(source, Mapping)
+        and source.get("type") == "retired-source-provenance"
+        and isinstance(tags, list)
+        and "historical-corpus" in tags
+    ):
+        return {}
+    try:
+        path = resolve_inside(root, str(item.get("path", "")))
+        if not path.is_dir() or path.is_symlink() or not any(path.iterdir()):
+            return {}
+    except (KnowledgeHubError, OSError, TypeError, ValueError):
+        return {}
+    return {
+        "status": "archive-directory-observed",
+        "bytes": 0, "sha256": "", "body_sha256": "",
+        "body_empty": None, "frontmatter_matches_registry": None,
+        "secret_pattern_count": 0, "contents_verified": False,
+        "directory_identity_observed": True,
+    }
+
+
+def _local_refs(
+    root: pathlib.Path, item: Mapping[str, Any], *, archive_directory: bool = False
+) -> Dict[str, Any]:
     values: List[Any] = []
     for field in ("evidence_refs", "validation_refs"):
         refs = item.get(field, [])
@@ -75,7 +106,12 @@ def _local_refs(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
         checked += 1
         try:
             path = resolve_inside(root, value)
-            missing += not path.is_file() or path.is_symlink()
+            valid_file = path.is_file() and not path.is_symlink()
+            valid_archive_dir = (
+                archive_directory and value == item.get("path")
+                and path.is_dir() and not path.is_symlink()
+            )
+            missing += not (valid_file or valid_archive_dir)
         except (KnowledgeHubError, OSError, ValueError):
             missing += 1
     return {"status": "checked", "missing": missing, "checked": checked}
@@ -131,12 +167,15 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
              review: Mapping[str, str], today: dt.date) -> List[str]:
     issues = []
     status = item.get("status")
-    if doc["status"] != "read":
+    if doc["status"] == "archive-directory-observed":
+        issues.append("archive-directory-identity-only")
+    elif doc["status"] != "read":
         issues.append("body-unavailable-or-invalid")
-    elif doc["body_empty"]:
-        issues.append("body-empty")
-    if not doc["frontmatter_matches_registry"]:
-        issues.append("frontmatter-drift")
+    else:
+        if doc["body_empty"]:
+            issues.append("body-empty")
+        if not doc["frontmatter_matches_registry"]:
+            issues.append("frontmatter-drift")
     if doc["secret_pattern_count"]:
         issues.append("secret-pattern-requires-triage")
     if refs["status"] != "checked":
@@ -186,8 +225,10 @@ def _item_row(root: pathlib.Path, item: Mapping[str, Any], today: dt.date,
         return {"id": "redacted-sha256:" + identity, "status": "personal",
                 "lane": "personal-excluded", "machine_checked": False,
                 "signals": ["personal-excluded"], "private_content_exported": False}
-    doc = _document(root, item)
-    refs = _local_refs(root, item)
+    doc = _archive_directory(root, item) or _document(root, item)
+    refs = _local_refs(
+        root, item, archive_directory=doc["status"] == "archive-directory-observed"
+    )
     review = _review_evidence(root, item, doc, ledger, policy)
     risk = classify_review_risk(policy, item.get("path", ""))
     flags = _signals(item, doc, refs, review, today)
@@ -198,7 +239,9 @@ def _item_row(root: pathlib.Path, item: Mapping[str, Any], today: dt.date,
         "owner": str(item.get("owner", "")), "review_after": str(item.get("review_after", "")),
         "risk_class": risk["review_class"], "lane": _lane(item, flags, risk["review_class"]),
         "body": doc, "references": refs, "review_proof": review, "signals": flags,
-        "machine_checked": doc["status"] == "read", "semantic_review_performed": False,
+        "machine_checked": doc["status"] == "read",
+        "archive_directory_observed": doc["status"] == "archive-directory-observed",
+        "semantic_review_performed": False,
         "human_approval_performed": False, "lifecycle_changed": False,
     }
 
@@ -243,7 +286,8 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
     private_count = sum(x["lane"] == "personal-excluded" for x in rows)
     attempted_count = len(rows) - private_count
     checked_count = sum(x.get("machine_checked") is True for x in rows)
-    failed_count = attempted_count - checked_count
+    directory_count = sum(x.get("archive_directory_observed") is True for x in rows)
+    failed_count = attempted_count - checked_count - directory_count
     issue_counts = collections.Counter(flag for x in rows for flag in x["signals"])
     duplicates = _duplicate_groups(rows)
     result = {
@@ -255,6 +299,7 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "item_count": len(items), "accounted_for_count": len(rows),
         "machine_attempted_count": attempted_count,
         "machine_checked_count": checked_count,
+        "archive_directory_observed_count": directory_count,
         "machine_failed_count": failed_count,
         "private_excluded_count": private_count,
         "total_body_bytes": total_bytes, "status_counts": dict(sorted(counts.items())),

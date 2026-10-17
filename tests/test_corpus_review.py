@@ -98,6 +98,83 @@ def test_unreadable_body_is_counted_as_attempted_not_verified(tmp_path):
     assert report["semantic_review_performed"] is False
 
 
+def _add_archive_directory(root):
+    relative = "projects/demo/archive/corpus"
+    path = root / relative
+    path.mkdir(parents=True)
+    (path / "retained.md").write_text("# historical file\n", encoding="utf-8")
+    entry = {
+        "id": "archive-directory", "path": relative, "kind": "project-archive",
+        "domain": "projects/demo", "owner": "team-core",
+        "status": "archived", "visibility": "team-internal",
+        "source": {"type": "retired-source-provenance", "source_id": "old"},
+        "promotion": "none", "review_status": "archive-corpus-materialized",
+        "tags": ["historical-corpus", "archive-only"],
+        "review_after": "2026-09-01", "validation_refs": [relative],
+    }
+    with (root / "registry/items.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    return path
+
+
+def test_archive_directory_is_structural_identity_not_body_review(tmp_path):
+    root = _fixture(tmp_path)
+    target = _add_archive_directory(root)
+    before = (root / "registry/items.jsonl").read_bytes()
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert report["item_count"] == 6
+    assert report["private_excluded_count"] == 1
+    assert report["machine_attempted_count"] == 5
+    assert report["machine_checked_count"] == 4
+    assert report["archive_directory_observed_count"] == 1
+    assert report["machine_failed_count"] == 0
+    row = next(x for x in report["rows"] if x["id"] == "archive-directory")
+    assert row["archive_directory_observed"] is True
+    assert row["machine_checked"] is False
+    assert row["body"]["status"] == "archive-directory-observed"
+    assert row["body"]["contents_verified"] is False
+    assert row["body"]["frontmatter_matches_registry"] is None
+    assert row["references"]["missing"] == 0
+    assert "archive-directory-identity-only" in row["signals"]
+    assert "historical-review-overdue" in row["signals"]
+    assert "body-unavailable-or-invalid" not in row["signals"]
+    assert row["lane"] == "P3-historical-integrity"
+    assert (root / "registry/items.jsonl").read_bytes() == before
+    (target / "retained.md").unlink()
+    target.rmdir()
+    broken = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert broken["archive_directory_observed_count"] == 0
+    assert broken["machine_failed_count"] == 1
+    missing = next(x for x in broken["rows"] if x["id"] == "archive-directory")
+    assert missing["lane"] == "P0-integrity"
+    assert "body-unavailable-or-invalid" in missing["signals"]
+    target.symlink_to(root / "notes/personal", target_is_directory=True)
+    linked = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert linked["archive_directory_observed_count"] == 0
+    assert linked["machine_failed_count"] == 1
+    assert next(x for x in linked["rows"] if x["id"] == "archive-directory")["lane"] == "P0-integrity"
+
+
+def test_archive_directory_must_be_nonempty_and_explicitly_archived(tmp_path):
+    root = _fixture(tmp_path)
+    target = _add_archive_directory(root)
+    (target / "retained.md").unlink()
+    empty = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert empty["archive_directory_observed_count"] == 0
+    assert empty["machine_failed_count"] == 1
+    (target / "retained.md").write_text("historical", encoding="utf-8")
+    registry_path = root / "registry/items.jsonl"
+    lines = registry_path.read_text(encoding="utf-8").splitlines()
+    archive = json.loads(lines[-1])
+    archive["status"] = "active"
+    lines[-1] = json.dumps(archive, ensure_ascii=False)
+    registry_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    invalid = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert invalid["archive_directory_observed_count"] == 0
+    assert invalid["machine_failed_count"] == 1
+    assert next(x for x in invalid["rows"] if x["id"] == "archive-directory")["lane"] == "P0-integrity"
+
+
 def test_report_uses_ignored_location_only(tmp_path):
     root = _fixture(tmp_path)
     assert review_cli(["--root", str(root), "--as-of", "2026-10-17",
@@ -122,10 +199,20 @@ def test_real_repository_full_coverage():
     # A real repository may contain unreadable or historical bodies. Preserve
     # findings as P0 rather than silently counting failures as scanned PASS.
     assert report["machine_attempted_count"] == report["accounted_for_count"] - report["private_excluded_count"]
-    assert report["machine_attempted_count"] == report["machine_checked_count"] + report["machine_failed_count"]
+    assert report["machine_attempted_count"] == (
+        report["machine_checked_count"]
+        + report["archive_directory_observed_count"]
+        + report["machine_failed_count"]
+    )
+    directories = [row for row in report["rows"] if row.get("archive_directory_observed")]
+    assert report["archive_directory_observed_count"] == len(directories)
+    assert all(row["status"] == "archived" for row in directories)
+    assert all(row["body"]["contents_verified"] is False for row in directories)
     failures = [
         row for row in report["rows"]
-        if row["lane"] != "personal-excluded" and not row["machine_checked"]
+        if row["lane"] != "personal-excluded"
+        and not row["machine_checked"]
+        and not row.get("archive_directory_observed")
     ]
     assert len(failures) == report["machine_failed_count"]
     assert all(row["lane"] == "P0-integrity" for row in failures)

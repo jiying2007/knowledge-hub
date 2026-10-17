@@ -18,7 +18,8 @@ def _summary(result):
         for key in (
             "schema_version", "as_of", "source_revision", "report_sha256",
             "item_count", "accounted_for_count", "machine_attempted_count",
-            "machine_checked_count", "machine_failed_count",
+            "machine_checked_count", "archive_directory_observed_count",
+            "machine_failed_count",
             "private_excluded_count", "total_body_bytes", "status_counts",
             "lane_counts", "signal_counts", "duplicates",
             "report_only", "canonical_write_performed",
