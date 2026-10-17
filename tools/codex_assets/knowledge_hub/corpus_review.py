@@ -334,6 +334,31 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
     failed_count = attempted_count - checked_count - directory_count
     issue_counts = collections.Counter(flag for x in rows for flag in x["signals"])
     duplicates = _duplicate_groups(rows)
+    # Historical AI records are evidence observations, not fresh authorizations.
+    # Count each existing review once; personal items have no review payload.
+    ai_snapshots = [
+        row["review_proof"]["ai_snapshot"] for row in rows
+        if row.get("review_proof", {}).get("ai_snapshot", {}).get("state") != "absent"
+        and row.get("review_proof", {}).get("ai_snapshot") is not None
+    ]
+    ai_states = collections.Counter(s["state"] for s in ai_snapshots)
+    ai_audit = {
+        "historical_record_count": len(ai_snapshots),
+        "state_counts": dict(sorted(ai_states.items())),
+        "request_unverified_count": sum(s["request_proof"] == "unverified"
+                                        for s in ai_snapshots),
+        "item_identity_drift_count": sum(s["item_sha256_match"] is False
+                                         for s in ai_snapshots),
+        "body_content_drift_count": sum(s["content_sha256_match"] is False
+                                        for s in ai_snapshots),
+        "exact_snapshot_count": sum(
+            s["item_sha256_match"] is True and s["content_sha256_match"] is True
+            for s in ai_snapshots
+        ),
+        "semantic_approval_performed": False,
+        "historical_proof_promoted": False,
+        "report_only": True,
+    }
     result = {
         "schema_version": CONTRACT, "as_of": as_of.isoformat(),
         "source_revision": _source_revision(root), "report_only": True,
@@ -348,7 +373,7 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "private_excluded_count": private_count,
         "total_body_bytes": total_bytes, "status_counts": dict(sorted(counts.items())),
         "lane_counts": dict(sorted(lanes.items())), "signal_counts": dict(sorted(issue_counts.items())),
-        "duplicates": duplicates, "rows": rows,
+        "duplicates": duplicates, "ai_review_audit": ai_audit, "rows": rows,
     }
     encoded = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
     if len(encoded.encode("utf-8")) > MAX_REPORT_BYTES:

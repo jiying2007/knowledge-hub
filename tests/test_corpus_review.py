@@ -311,3 +311,33 @@ def test_historical_ai_review_snapshot_drift_is_independently_visible(tmp_path):
     assert row["review_proof"]["ai_closed"] == "not-verified"
 
 
+def test_ai_review_summary_is_hash_bound_report_only(tmp_path):
+    from tools.codex_assets.knowledge_hub.corpus_review_cli import _summary
+
+    root = _fixture(tmp_path)
+    item = _install_unverified_ai_history(root)
+    as_of = dt.date(2026, 10, 17)
+    first = build_corpus_review(root, as_of)
+    historical = first["ai_review_audit"]
+    assert historical["historical_record_count"] == 1
+    assert historical["request_unverified_count"] == 1
+    assert historical["exact_snapshot_count"] == 1
+    assert historical["item_identity_drift_count"] == 0
+    assert historical["body_content_drift_count"] == 0
+    assert historical["state_counts"] == {"request-unverified": 1}
+    assert historical["historical_proof_promoted"] is False
+    assert historical["semantic_approval_performed"] is False
+    assert _summary(first)["ai_review_audit"] == historical
+
+    document = root / item["path"]
+    document.write_bytes(document.read_bytes() + b"\ndrift\n")
+    drifted = build_corpus_review(root, as_of)["ai_review_audit"]
+    assert drifted["historical_record_count"] == 1
+    assert drifted["request_unverified_count"] == 1
+    assert drifted["exact_snapshot_count"] == 0
+    assert drifted["body_content_drift_count"] == 1
+    assert drifted["item_identity_drift_count"] == 0
+    assert drifted["state_counts"] == {"snapshot-drift": 1}
+    assert drifted["semantic_approval_performed"] is False
+
+
