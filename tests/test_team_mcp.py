@@ -271,3 +271,38 @@ def test_real_repository_http_search_get_context_smoke():
         server.shutdown()
         server.server_close()
         worker.join(timeout=5)
+
+
+def test_overdue_active_remains_historical_authority_but_needs_current_review():
+    import datetime
+    from tools.codex_assets.knowledge_hub.team_mcp import _kind, _review_overdue
+    today = datetime.date(2026, 10, 17)
+    active = item(status="active", review_after="2026-09-01",
+                  content_review_status="accepted", evidence_validation_status="verified",
+                  manual_validation_pending=False)
+    assert _kind(active) == "verified"
+    assert _review_overdue(active, today) is True
+    assert _review_overdue(dict(active, review_after="2026-10-17"), today) is False
+    assert _review_overdue(dict(active, review_after="invalid"), today) is True
+
+
+def test_overdue_active_routes_to_provisional_context(tmp_path, monkeypatch):
+    active = item(status="active", review_after="2020-01-01",
+                  content_review_status="accepted", evidence_validation_status="verified",
+                  manual_validation_pending=False)
+    monkeypatch.setattr(team_mcp, "registry_items", lambda root: [active])
+    monkeypatch.setattr(team_mcp, "retrieve_v4", lambda *a, **kw: {
+        "results": [{"id": "team-example", "score": 1}],
+        "status": "pass", "retrieval_coverage": {"complete": True},
+    })
+    monkeypatch.setattr(team_mcp, "team_get", lambda *a, **kw: {
+        "content": "# active knowledge", "content_sha256": "a" * 64,
+    })
+    value = team_mcp.team_context(tmp_path, "term", SHA, limit=2)
+    assert value["current"] == []
+    assert len(value["provisional"]) == 1
+    result = value["provisional"][0]
+    assert result["status"] == "active"
+    assert result["authority"] == "verified"
+    assert result["review_overdue"] is True
+    assert result["review_required"] is True
