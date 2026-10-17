@@ -560,6 +560,17 @@ Create/Update PR；实际 5–10 并发、磁盘/索引故障与回滚；备份�
 GitHub Public 仓库只接收允许互联网公开且适合发送至所用模型的知识。
 这些未执行之前，不能宣称 LAN TEAM DEPLOYED/ADOPTED。
 
+**Team MCP 当前事实消费边界**：`authority=verified` 只保留历史
+Active + accepted + evidence-verified 身份，并不代表当前正文仍通过复核。
+`team_search` 仅返回检索元数据，不能在未读取全部正文时证明当前版本哈希，
+因此 `review_required=true`，`review_binding_state` 仅可为
+`unbound` 或 `declared-unverified`。只有 `team_get` 对服务端
+完整 Markdown bytes 计算 SHA256 并匹配 `human_review_content_sha256`，
+且未超过 `review_after`，才返回 `review_required=false`；
+`team_context.current` 使用同样的服务端正文证明，否则放入
+`provisional` 并保留历史权威信息。AI 授权不生成 human 审核身份，
+metadata claim 不等于内容未发生漂移。
+
 ## 全库知识复核及 AI 授权边界（2026-10-17）
 
 用户明确授权 AI 辅助 review；这允许机器归类、逐条核对来源与生成修改建议，

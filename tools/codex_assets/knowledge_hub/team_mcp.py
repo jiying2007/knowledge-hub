@@ -106,6 +106,16 @@ def _review_overdue(item: Mapping[str, Any], today: dt.date) -> bool:
         return True
 
 
+def _review_binding_state(item: Mapping[str, Any], content_sha256: str = "") -> str:
+    """Separate historical review metadata from proof for the served exact body."""
+    claimed = item.get("human_review_content_sha256")
+    if not isinstance(claimed, str) or DIGEST_RE.fullmatch(claimed) is None:
+        return "unbound"
+    if not content_sha256:
+        return "declared-unverified"
+    return "current-body-bound" if claimed == content_sha256 else "content-drift"
+
+
 def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5) -> Dict[str, Any]:
     query = _query(query)
     limit = _limit(limit, 10, 5)
@@ -126,7 +136,10 @@ def team_search(root: pathlib.Path, query: str, serving_sha: str, limit: int = 5
             "title": str(item.get("title", ""))[:512],
             "status": str(item["status"]),
             "authority": _kind(item),
-            "review_required": _kind(item) != "verified" or _review_overdue(item, today),
+            # Search does not open/check the full body. Even a declared hash is
+            # not proof that the *currently served* Markdown still matches.
+            "review_required": True,
+            "review_binding_state": _review_binding_state(item),
             "review_after": str(item.get("review_after", "")),
             "review_overdue": _review_overdue(item, today),
             "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
@@ -168,6 +181,7 @@ def team_get(
     except (OSError, UnicodeError, KnowledgeHubError) as exc:
         raise KnowledgeHubError("knowledge item unavailable") from exc
     digest = hashlib.sha256(raw).hexdigest()
+    binding_state = _review_binding_state(item, digest)
     if expected_sha256 and expected_sha256 != digest:
         raise KnowledgeHubError("document version conflict")
     if offset > len(raw) or (offset and (raw[offset] & 0xc0) == 0x80 if offset < len(raw) else False):
@@ -182,7 +196,12 @@ def team_get(
         "item_id": item_id,
         "status": item["status"],
         "authority": _kind(item),
-        "review_required": _kind(item) != "verified" or _review_overdue(item, today),
+        "review_required": (
+            _kind(item) != "verified"
+            or _review_overdue(item, today)
+            or binding_state != "current-body-bound"
+        ),
+        "review_binding_state": binding_state,
         "review_after": str(item.get("review_after", "")),
         "review_overdue": _review_overdue(item, today),
         "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
@@ -203,9 +222,20 @@ def team_context(root: pathlib.Path, query: str, serving_sha: str, limit: int = 
     current, provisional = [], []
     for row in found["results"]:
         body = team_get(root, row["id"], serving_sha, max_bytes=4096)
-        item = dict(row, excerpt=body["content"], content_sha256=body["content_sha256"])
-        (current if row["authority"] == "verified" and not row["review_overdue"]
-         else provisional).append(item)
+        # A historical verified label cannot promote an unbound/drifted
+        # current body. team_get computes the full bytes SHA, not a page hash.
+        ready = (
+            row["authority"] == "verified"
+            and not row["review_overdue"]
+            and body.get("review_binding_state") == "current-body-bound"
+            and body.get("review_required") is False
+        )
+        item = dict(
+            row, excerpt=body["content"], content_sha256=body["content_sha256"],
+            review_binding_state=body.get("review_binding_state", "unbound"),
+            review_required=not ready,
+        )
+        (current if ready else provisional).append(item)
     return {
         "schema_version": "knowledge-hub.team-context.v1",
         "serving_sha": serving_sha,
