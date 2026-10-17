@@ -11,7 +11,7 @@ import threading
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Callable, Dict, Mapping, Sequence, Tuple
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Tuple
 
 from .common import KnowledgeHubError, repository_root
 from .operator_state import build_operator_state
@@ -323,7 +323,7 @@ class OperatorHTTPServer(ThreadingHTTPServer):
         self.state_builder = state_builder
         self._connection_slots = threading.BoundedSemaphore(MAX_CONNECTIONS)
         self._state_lock = threading.Lock()
-        self._cached_state: Dict[str, Any] | None = None
+        self._cached_state: Optional[Dict[str, Any]] = None
         self._cached_at = 0.0
         super().__init__(server_address, OperatorRequestHandler)
 
@@ -415,9 +415,9 @@ class OperatorRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             state = self._state()
-        except Exception as exc:
+        except Exception:
             body = json.dumps(
-                {"status": "error", "read_only": True, "error": str(exc)}
+                {"status": "error", "read_only": True, "error": "state projection unavailable"}
             ).encode("utf-8")
             self._send(HTTPStatus.INTERNAL_SERVER_ERROR, body, "application/json; charset=utf-8")
             return
