@@ -98,7 +98,7 @@ def test_real_repository_full_coverage():
     assert report["item_count"] >= 700
     assert report["accounted_for_count"] == report["item_count"]
     assert report["private_excluded_count"] >= 1
-    assert report["machine_checked_count"] <= report["accounted_for_count"]
+    assert report["machine_checked_count"] == report["accounted_for_count"] - report["private_excluded_count"]
     assert report["status_counts"]["reviewing"] >= 300
     assert len(report["rows"]) == report["item_count"]
     assert hashlib.sha256((root / "registry/items.jsonl").read_bytes()).hexdigest() == old_hash
