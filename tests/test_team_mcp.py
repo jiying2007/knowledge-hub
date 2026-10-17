@@ -277,7 +277,8 @@ def test_team_mcp_authority_code_is_security_critical():
     from tools.codex_assets.knowledge_hub.review_risk import (
         classify_review_risk, load_review_risk_policy,
     )
-    root = __import__("pathlib").Path(__file__).resolve().parents[1]
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
     policy = load_review_risk_policy(root)
     path = "tools/codex_assets/knowledge_hub/team_mcp.py"
     assert classify_review_risk(policy, path)["review_class"] == "security-critical"
