@@ -26,6 +26,7 @@ MACHINE_RATCHET_FIELDS = {
 }
 POLICY_PATH = "registry/ai-operations-policy.json"
 _GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_SHA256_DIGEST_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
 _RUN_ID_RE = re.compile(r"^[0-9]+$")
 
 
@@ -262,6 +263,7 @@ def _version_coherent(
             and details.get("release_draft") is False
             and details.get("release_prerelease") is False
             and str(details.get("release_tag_commit_sha", "")) in source_shas
+            and _SHA256_DIGEST_RE.fullmatch(str(details.get("digest", ""))) is not None
         )
     return False
 
