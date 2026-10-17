@@ -176,7 +176,8 @@ def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
         # /proc is transient: a process can disappear between exists() and read_text().
         try:
             return 'State:\tZ' in status.read_text()
-        except FileNotFoundError:
+        except (FileNotFoundError, ProcessLookupError):
+            # ESRCH also means the PID disappeared while /proc was being read.
             return True
 
     for _ in range(20):
