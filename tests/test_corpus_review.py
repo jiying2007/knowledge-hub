@@ -341,3 +341,76 @@ def test_ai_review_summary_is_hash_bound_report_only(tmp_path):
     assert drifted["semantic_approval_performed"] is False
 
 
+
+
+def test_full_corpus_optimization_covers_every_item_without_promotion(tmp_path):
+    root = _fixture(tmp_path)
+    before = (root / "registry/items.jsonl").read_bytes()
+    result = build_corpus_review(root, dt.date(2026, 10, 17))
+    plan = result["optimization_queue"]
+    summary = result["optimization_summary"]
+    assert plan["projection"] == "knowledge-hub.corpus-optimization/v1"
+    assert plan["item_count"] == plan["accounted_for_count"] == 5
+    assert plan["visible_count"] == 4
+    assert plan["private_excluded_count"] == 1
+    assert plan["coverage_complete"] is True
+    assert plan["action_count"] + plan["no_change_count"] == 4
+    assert plan["automatic_content_edits_enabled"] is False
+    assert plan["canonical_write_performed"] is False
+    assert plan["semantic_review_performed"] is False
+    assert plan["owner_approval_performed"] is False
+    assert all(row["proposal_only"] and not row["content_change_approved"]
+               for row in plan["actions"])
+    assert all(not row["item_id"].startswith("redacted-sha256:")
+               for row in plan["actions"])
+    assert "personal-a" not in json.dumps(plan)
+    assert "notes/personal/alice" not in json.dumps(plan)
+    by_id = {row["item_id"]: row for row in plan["actions"]}
+    assert by_id["active-a"]["action"] == "machine-prepare-current-review"
+    assert by_id["active-a"]["next_boundary"] == "owner-semantic-review"
+    assert by_id["review-a"]["duplicate_candidate"] is True
+    assert by_id["review-b"]["duplicate_candidate"] is True
+    assert plan["duplicate_auto_merge_enabled"] is False
+    assert "actions" not in summary
+    assert summary["fingerprint"] == plan["fingerprint"]
+    assert (root / "registry/items.jsonl").read_bytes() == before
+    assert build_corpus_review(root, dt.date(2026, 10, 17))["optimization_queue"] == plan
+
+
+def test_corpus_optimization_integrity_drift_has_machine_only_repair_proposal(tmp_path):
+    root = _fixture(tmp_path)
+    path = root / "projects/demo/validation/a.md"
+    path.write_text("# missing frontmatter\\n", encoding="utf-8")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    actions = {row["item_id"]: row for row in report["optimization_queue"]["actions"]}
+    assert actions["review-a"]["priority"] == "P0"
+    assert actions["review-a"]["action"] == "machine-diagnose-integrity"
+    assert actions["review-a"]["next_boundary"] == "governed-repair-review"
+    assert actions["review-a"]["content_change_approved"] is False
+
+
+def test_corpus_optimization_fails_closed_on_partial_report_or_private_leak(tmp_path):
+    import copy
+    import pytest
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    from tools.codex_assets.knowledge_hub.corpus_optimization import build_corpus_optimization
+
+    root = _fixture(tmp_path)
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    missing = copy.deepcopy(report)
+    missing["rows"].pop()
+    with pytest.raises(KnowledgeHubError, match="complete"):
+        build_corpus_optimization(missing)
+    leaked = copy.deepcopy(report)
+    leaked["duplicates"]["same_domain_title"].append(["personal-a", "review-a"])
+    with pytest.raises(KnowledgeHubError, match="duplicate"):
+        build_corpus_optimization(leaked)
+    unknown = copy.deepcopy(report)
+    for row in unknown["rows"]:
+        if row.get("id") == "review-a":
+            row["signals"] = ["unregistered-contract-signal"]
+            break
+    actions = build_corpus_optimization(unknown)["actions"]
+    action = next(row for row in actions if row["item_id"] == "review-a")
+    assert action["action"] == "human-governance-review"
+    assert action["priority"] == "P0"
