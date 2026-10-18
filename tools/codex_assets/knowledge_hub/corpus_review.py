@@ -20,6 +20,7 @@ from .common import (
     KnowledgeHubError, read_repository_bytes_bounded, registry_items,
     resolve_inside, split_frontmatter,
 )
+from .corpus_optimization import build_corpus_optimization
 from .delegated_content_review import (
     FIELD as AI_REVIEW_FIELD, expected_record, item_digest, load_ledger, review_state,
 )
@@ -374,6 +375,14 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "total_body_bytes": total_bytes, "status_counts": dict(sorted(counts.items())),
         "lane_counts": dict(sorted(lanes.items())), "signal_counts": dict(sorted(issue_counts.items())),
         "duplicates": duplicates, "ai_review_audit": ai_audit, "rows": rows,
+    }
+    # Reuse this canonical observation set to prepare a bounded, non-authoritative
+    # action queue for *every* non-personal item, not only the first review batch.
+    optimization = build_corpus_optimization(result)
+    result["optimization_queue"] = optimization
+    result["optimization_summary"] = {
+        key: value for key, value in optimization.items()
+        if key != "actions"
     }
     encoded = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
     if len(encoded.encode("utf-8")) > MAX_REPORT_BYTES:
