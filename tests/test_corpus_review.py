@@ -549,3 +549,114 @@ def test_archived_yaml_markers_with_crlf_or_bom_remain_p0(tmp_path):
                       if r["item_id"] == "arch-a")
         assert action["priority"] == "P0"
         assert action["content_change_approved"] is False
+
+
+def test_known_raw_templates_are_p0_when_registered_as_reviewing_content(tmp_path):
+    """Trust the canonical body template, not a factual-looking Registry title."""
+    from tools.codex_assets.knowledge_hub.common import split_frontmatter
+    from tools.codex_assets.knowledge_hub.corpus_review import UNFILLED_TEMPLATE_BODY_SHA256
+
+    repo = pathlib.Path(__file__).resolve().parents[1]
+    variants = (
+        ("debug-record", "templates/debug-record.md"),
+        ("validation", "templates/validation-report.md"),
+        ("decision", "templates/decision.md"),
+    )
+    for kind, template_path in variants:
+        root = _fixture(tmp_path / kind)
+        registry = root / "registry/items.jsonl"
+        items = [json.loads(s) for s in registry.read_text(encoding="utf-8").splitlines()]
+        entry = next(row for row in items if row["id"] == "review-a")
+        entry["kind"] = kind
+        registry.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in items),
+            encoding="utf-8",
+        )
+        _, template_body = split_frontmatter(
+            (repo / template_path).read_text(encoding="utf-8")
+        )
+        assert hashlib.sha256(template_body.strip().encode("utf-8")).hexdigest() == (
+            UNFILLED_TEMPLATE_BODY_SHA256[kind]
+        )
+        page = root / entry["path"]
+        original_meta, _ = split_frontmatter(page.read_text(encoding="utf-8"))
+        original_meta["kind"] = kind
+        page.write_text(render_markdown(original_meta, template_body),
+                        encoding="utf-8")
+        report = build_corpus_review(root, dt.date(2026, 10, 17))
+        row = next(x for x in report["rows"] if x.get("id") == "review-a")
+        assert row["body"]["frontmatter_matches_registry"] is True
+        assert row["body"]["body_sha256"] == UNFILLED_TEMPLATE_BODY_SHA256[kind]
+        assert "registered-unfilled-template" in row["signals"]
+        assert row["lane"] == "P0-integrity"
+        action = next(x for x in report["optimization_queue"]["actions"]
+                      if x["item_id"] == "review-a")
+        assert action["priority"] == "P0"
+        assert action["action"] == "machine-diagnose-integrity"
+        assert action["content_change_approved"] is False
+        assert report["semantic_review_performed"] is False
+        assert report["canonical_write_performed"] is False
+
+        # A substantive edit is NOT exactly an unfilled canonical template.
+        page.write_text(page.read_text(encoding="utf-8") +
+                        "\n## Verified observation\nActual cited source differs.\n",
+                        encoding="utf-8")
+        changed = build_corpus_review(root, dt.date(2026, 10, 17))
+        row = next(x for x in changed["rows"] if x.get("id") == "review-a")
+        assert "registered-unfilled-template" not in row["signals"]
+        assert row["lane"] != "P0-integrity"
+
+
+def test_historical_archived_template_not_misclassified_as_current_p0(tmp_path):
+    from tools.codex_assets.knowledge_hub.common import split_frontmatter
+
+    root = _fixture(tmp_path)
+    repo = pathlib.Path(__file__).resolve().parents[1]
+    _, template = split_frontmatter((repo / "templates/debug-record.md").read_text(
+        encoding="utf-8"
+    ))
+    page = root / "projects/demo/archive/a.md"
+    metadata, _ = split_frontmatter(page.read_text(encoding="utf-8"))
+    page.write_text(render_markdown(metadata, template), encoding="utf-8")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x.get("id") == "arch-a")
+    assert "registered-unfilled-template" not in row["signals"]
+    assert row["lane"] == "P3-historical-integrity"
+
+
+def test_unfilled_template_requires_matching_kind_and_current_lifecycle(tmp_path):
+    from tools.codex_assets.knowledge_hub.common import split_frontmatter
+
+    root = _fixture(tmp_path)
+    repo = pathlib.Path(__file__).resolve().parents[1]
+    _, canonical_body = split_frontmatter(
+        (repo / "templates/debug-record.md").read_text(encoding="utf-8")
+    )
+    registry = root / "registry/items.jsonl"
+    rows = [json.loads(line) for line in registry.read_text(encoding="utf-8").splitlines()]
+    item = next(row for row in rows if row["id"] == "review-a")
+    page = root / item["path"]
+    original_meta, _ = split_frontmatter(page.read_text(encoding="utf-8"))
+
+    variants = (
+        ("validation", "reviewing", False),  # Wrong template kind
+        ("debug-record", "draft", False),    # Unapproved authoring template
+        ("debug-record", "archived", False), # Retired source retained
+        ("debug-record", "active", True),    # Current published template is P0
+    )
+    for kind, status, should_alert in variants:
+        item["kind"], item["status"] = kind, status
+        registry.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+            encoding="utf-8",
+        )
+        metadata = dict(original_meta, kind=kind, status=status)
+        page.write_text(render_markdown(metadata, canonical_body), encoding="utf-8")
+        report = build_corpus_review(root, dt.date(2026, 10, 17))
+        row = next(entry for entry in report["rows"] if entry.get("id") == "review-a")
+        assert row["body"]["frontmatter_matches_registry"] is True
+        has_signal = "registered-unfilled-template" in row["signals"]
+        assert has_signal is should_alert
+        assert (row["lane"] == "P0-integrity") is should_alert
+        assert report["semantic_review_performed"] is False
+        assert report["canonical_write_performed"] is False
