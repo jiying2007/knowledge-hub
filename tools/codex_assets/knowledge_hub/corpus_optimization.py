@@ -33,6 +33,7 @@ KNOWN_SIGNALS = INTEGRITY | AI_DRIFT | TRUST | LINEAGE_BLOCKED | {
     "active-review-overdue", "candidate-needs-independent-review",
     "candidate-review-overdue", "archive-directory-identity-only",
     "historical-review-overdue", "review-date-overdue", "body-empty",
+    "archive-plaintext-provenance-only",
 }
 
 
@@ -73,7 +74,8 @@ def _route(row: Mapping[str, Any], signals: set, duplicate: bool) -> tuple:
         return "P0", "human-governance-review", "owner-semantic-review"
     if duplicate:
         return "P2", "machine-compare-duplicates", "owner-equivalence-decision"
-    if "archive-directory-identity-only" in signals:
+    if ("archive-directory-identity-only" in signals
+            or "archive-plaintext-provenance-only" in signals):
         return "P3", "machine-audit-archive-provenance", "archive-owner-review"
     if "historical-review-overdue" in signals:
         return "P3", "machine-prepare-historical-review", "archive-owner-review"
