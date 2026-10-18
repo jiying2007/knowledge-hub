@@ -317,49 +317,28 @@ def _duplicate_groups(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             "automatic_merge_allowed": False, "duplicate_is_not_equivalent": True}
 
 
-def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
-    if type(as_of) is not dt.date:
-        raise KnowledgeHubError("corpus review requires a concrete calendar date")
-    items = registry_items(root)
-    if len(items) > MAX_ITEMS or len({x.get("id") for x in items}) != len(items):
-        raise KnowledgeHubError("corpus exceeds item budget or has duplicate IDs")
-    ledger = load_ledger(root)
-    policy = load_review_risk_policy(root)
-    rows, total_bytes = [], 0
-    for item in items:
-        row = _item_row(root, item, as_of, ledger, policy)
-        total_bytes += row.get("body", {}).get("bytes", 0)
-        if total_bytes > MAX_TOTAL_BYTES:
-            raise KnowledgeHubError("corpus review total body budget exceeded")
-        rows.append(row)
-    supersession_audit = annotate_supersession(rows)
-    # Supercession conflicts are governance findings, never silent archival.
+def _annotate_lineage(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     from .corpus_supersession import BLOCKING_SIGNALS
+
+    audit = annotate_supersession(rows)
+    # Conflicting historical declarations are P0 governance, not approvals.
     for row in rows:
         if row.get("lane") != "personal-excluded" and BLOCKING_SIGNALS.intersection(
             row.get("signals", [])
         ):
             row["lane"] = "P0-governance"
-    counts = collections.Counter(x.get("status", "") for x in rows)
-    lanes = collections.Counter(x["lane"] for x in rows)
-    # A successfully parsed body is not the same as an attempted machine audit.
-    # Missing/corrupt bodies remain visible as P0 findings, never as PASS.
-    private_count = sum(x["lane"] == "personal-excluded" for x in rows)
-    attempted_count = len(rows) - private_count
-    checked_count = sum(x.get("machine_checked") is True for x in rows)
-    directory_count = sum(x.get("archive_directory_observed") is True for x in rows)
-    failed_count = attempted_count - checked_count - directory_count
-    issue_counts = collections.Counter(flag for x in rows for flag in x["signals"])
-    duplicates = _duplicate_groups(rows)
-    # Historical AI records are evidence observations, not fresh authorizations.
-    # Count each existing review once; personal items have no review payload.
+    return audit
+
+
+def _historical_ai_audit(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    # Count historical hash observations only; never generate new approval.
     ai_snapshots = [
         row["review_proof"]["ai_snapshot"] for row in rows
         if row.get("review_proof", {}).get("ai_snapshot", {}).get("state") != "absent"
         and row.get("review_proof", {}).get("ai_snapshot") is not None
     ]
     ai_states = collections.Counter(s["state"] for s in ai_snapshots)
-    ai_audit = {
+    return {
         "historical_record_count": len(ai_snapshots),
         "state_counts": dict(sorted(ai_states.items())),
         "request_unverified_count": sum(s["request_proof"] == "unverified"
@@ -376,6 +355,36 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "historical_proof_promoted": False,
         "report_only": True,
     }
+
+
+def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
+    if type(as_of) is not dt.date:
+        raise KnowledgeHubError("corpus review requires a concrete calendar date")
+    items = registry_items(root)
+    if len(items) > MAX_ITEMS or len({x.get("id") for x in items}) != len(items):
+        raise KnowledgeHubError("corpus exceeds item budget or has duplicate IDs")
+    ledger = load_ledger(root)
+    policy = load_review_risk_policy(root)
+    rows, total_bytes = [], 0
+    for item in items:
+        row = _item_row(root, item, as_of, ledger, policy)
+        total_bytes += row.get("body", {}).get("bytes", 0)
+        if total_bytes > MAX_TOTAL_BYTES:
+            raise KnowledgeHubError("corpus review total body budget exceeded")
+        rows.append(row)
+    supersession_audit = _annotate_lineage(rows)
+    counts = collections.Counter(x.get("status", "") for x in rows)
+    lanes = collections.Counter(x["lane"] for x in rows)
+    # A successfully parsed body is not the same as an attempted machine audit.
+    # Missing/corrupt bodies remain visible as P0 findings, never as PASS.
+    private_count = sum(x["lane"] == "personal-excluded" for x in rows)
+    attempted_count = len(rows) - private_count
+    checked_count = sum(x.get("machine_checked") is True for x in rows)
+    directory_count = sum(x.get("archive_directory_observed") is True for x in rows)
+    failed_count = attempted_count - checked_count - directory_count
+    issue_counts = collections.Counter(flag for x in rows for flag in x["signals"])
+    duplicates = _duplicate_groups(rows)
+    ai_audit = _historical_ai_audit(rows)
     result = {
         "schema_version": CONTRACT, "as_of": as_of.isoformat(),
         "source_revision": _source_revision(root), "report_only": True,
