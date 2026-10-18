@@ -138,6 +138,18 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/corpus_review.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/corpus_optimization.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/corpus_supersession.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/delegated_content_review.py",
       "review_class": "security-critical"
     },

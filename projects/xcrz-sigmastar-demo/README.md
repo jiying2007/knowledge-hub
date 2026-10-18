@@ -20,3 +20,17 @@
 - [项目 evidence contract](validation/project-readiness.md)
 - [统一 readiness dashboard](../../indexes/project-readiness.md)
 <!-- knowledge-hub-project-readiness:end -->
+
+## 版本化架构候选入口（仅作历史导航）
+
+以下链接是已明确登记 `supersedes_candidate` 的候选链末端，不代表真实
+Owner 签收、源仓硬切换或生产验收。历史原文继续保留唯一正文与证据追溯，
+但不应将旧版方案当作新的实施指令。
+
+- [HDI/HAL/Diag v4：当前版本化候选末端](decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md)：早期初版 → v2 → v3 → v4
+- [Diag/Observability/Maintenance v3：当前版本化候选末端](decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md)：初版 → v2 → v3
+
+上述文档在 Registry 中仍为 `reviewing`；只有源项目真实验收、独立
+owner decision 和明确的受治理生命周期操作才能改变知识权威状态。
+自动全库审计仅把旧版标记为“已声明被后续候选覆盖，建议比对清理”，
+不执行物理删除、变更 `review_after` 或自动提升 `active`。

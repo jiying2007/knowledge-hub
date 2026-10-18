@@ -21,6 +21,7 @@ from .common import (
     resolve_inside, split_frontmatter,
 )
 from .corpus_optimization import build_corpus_optimization
+from .corpus_supersession import annotate_supersession
 from .delegated_content_review import (
     FIELD as AI_REVIEW_FIELD, expected_record, item_digest, load_ledger, review_state,
 )
@@ -125,6 +126,11 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
         metadata, body = split_frontmatter(data.decode("utf-8"))
         mirrored = all(str(metadata.get(key, "")) == str(item.get(key, ""))
                        for key in ("id", "path", "status", "owner", "kind"))
+        declared = metadata.get("supersedes_candidate")
+        invalid_supersedes = declared is not None and (
+            not isinstance(declared, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,159}", declared)
+        )
         return {
             "status": "read",
             "bytes": len(data),
@@ -133,6 +139,8 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "body_empty": not bool(body.strip()),
             "frontmatter_matches_registry": mirrored,
             "secret_pattern_count": len(scan_secret_text(body)),
+            "supersedes_candidate": declared if declared and not invalid_supersedes else "",
+            "supersedes_invalid": bool(invalid_supersedes),
         }
     except (KnowledgeHubError, OSError, UnicodeError, ValueError, TypeError):
         return {
@@ -324,6 +332,14 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         if total_bytes > MAX_TOTAL_BYTES:
             raise KnowledgeHubError("corpus review total body budget exceeded")
         rows.append(row)
+    supersession_audit = annotate_supersession(rows)
+    # Supercession conflicts are governance findings, never silent archival.
+    from .corpus_supersession import BLOCKING_SIGNALS
+    for row in rows:
+        if row.get("lane") != "personal-excluded" and BLOCKING_SIGNALS.intersection(
+            row.get("signals", [])
+        ):
+            row["lane"] = "P0-governance"
     counts = collections.Counter(x.get("status", "") for x in rows)
     lanes = collections.Counter(x["lane"] for x in rows)
     # A successfully parsed body is not the same as an attempted machine audit.
@@ -374,7 +390,8 @@ def build_corpus_review(root: pathlib.Path, as_of: dt.date) -> Dict[str, Any]:
         "private_excluded_count": private_count,
         "total_body_bytes": total_bytes, "status_counts": dict(sorted(counts.items())),
         "lane_counts": dict(sorted(lanes.items())), "signal_counts": dict(sorted(issue_counts.items())),
-        "duplicates": duplicates, "ai_review_audit": ai_audit, "rows": rows,
+        "duplicates": duplicates, "ai_review_audit": ai_audit,
+        "supersession_audit": supersession_audit, "rows": rows,
     }
     # Reuse this canonical observation set to prepare a bounded, non-authoritative
     # action queue for *every* non-personal item, not only the first review batch.

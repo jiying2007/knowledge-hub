@@ -414,3 +414,46 @@ def test_corpus_optimization_fails_closed_on_partial_report_or_private_leak(tmp_
     action = next(row for row in actions if row["item_id"] == "review-a")
     assert action["action"] == "human-governance-review"
     assert action["priority"] == "P0"
+
+
+def test_real_corpus_fixture_routes_declared_supersession_as_candidate_only(tmp_path):
+    # Reuse existing bounded fixture: do not invent a second registry.
+    from tools.codex_assets.knowledge_hub.corpus_review import build_corpus_review
+
+    root = _fixture(tmp_path)
+    older = root / "projects/demo/validation/a.md"
+    newer = root / "projects/demo/validation/b.md"
+    original_registry = (root / "registry/items.jsonl").read_bytes()
+    text = newer.read_text(encoding="utf-8")
+    assert text.startswith("---")
+    newer.write_text(
+        text.replace("---\n", "---\nsupersedes_candidate: review-a\n", 1),
+        encoding="utf-8",
+    )
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    by_id = {x["id"]: x for x in report["rows"] if x.get("id")}
+    assert "superseded-candidate-provenance" in by_id["review-a"]["signals"]
+    assert report["supersession_audit"]["candidate_history_count"] == 1
+    queue = {x["item_id"]: x for x in report["optimization_queue"]["actions"]}
+    assert queue["review-a"]["action"] == "machine-compare-supersession-lineage"
+    assert queue["review-a"]["next_boundary"] == "owner-supersession-review"
+    assert queue["review-a"]["content_change_approved"] is False
+    assert older.read_bytes() and (root / "registry/items.jsonl").read_bytes() == original_registry
+
+
+def test_invalid_untrusted_declared_identity_is_not_exported(tmp_path):
+    from tests.test_corpus_review import _fixture
+    from tools.codex_assets.knowledge_hub.corpus_review import build_corpus_review
+
+    root = _fixture(tmp_path)
+    path = root / "projects/demo/validation/b.md"
+    original = path.read_text(encoding="utf-8")
+    path.write_text(
+        original.replace("---\n", "---\nsupersedes_candidate: ../private\n", 1),
+        encoding="utf-8",
+    )
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    assert report["supersession_audit"]["blocking_signal_counts"] == {
+        "supersession-declaration-invalid": 1
+    }
+    assert "../private" not in str(report)
