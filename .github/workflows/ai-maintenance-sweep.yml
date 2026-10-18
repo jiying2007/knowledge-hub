@@ -108,6 +108,78 @@ jobs:
             > .cache/knowledge-hub/ai-maintenance/content-convergence.json
           test -s .cache/knowledge-hub/ai-maintenance/content-convergence.json
 
+      - name: Capture full-corpus AI review evidence
+        run: |
+          set -euo pipefail
+          rtk python3 -m tools.codex_assets.knowledge_hub.corpus_review_cli \
+            --root . --as-of "$(date -u +%F)" \
+            --output .tmp/knowledge-hub/ai-maintenance-corpus-review.json \
+            > .cache/knowledge-hub/ai-maintenance/corpus-review-summary.json
+          rtk python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          from tools.codex_assets.knowledge_hub.corpus_review import MAX_REPORT_BYTES
+
+          summary = json.loads(Path(
+              ".cache/knowledge-hub/ai-maintenance/corpus-review-summary.json"
+          ).read_text(encoding="utf-8"))
+          full_bytes = Path(
+              ".tmp/knowledge-hub/ai-maintenance-corpus-review.json"
+          ).read_bytes()
+          if len(full_bytes) > MAX_REPORT_BYTES + 1:
+              raise SystemExit("full corpus audit exceeds redacted report byte budget")
+          full = json.loads(full_bytes)
+          expected = os.environ["SOURCE_REVISION"]
+          if summary["source_revision"] != expected or full["source_revision"] != expected:
+              raise SystemExit("full corpus audit source SHA mismatch")
+          if summary["report_sha256"] != full["report_sha256"]:
+              raise SystemExit("corpus summary and full receipt hash differ")
+          audit = summary.get("ai_review_audit")
+          if not isinstance(audit, dict) or full.get("ai_review_audit") != audit:
+              raise SystemExit("missing/mismatched AI history audit")
+          if summary["item_count"] != summary["accounted_for_count"]:
+              raise SystemExit("corpus audit missing registry items")
+          if (summary["machine_attempted_count"] !=
+                  summary["machine_checked_count"]
+                  + summary["archive_directory_observed_count"]
+                  + summary["machine_failed_count"]):
+              raise SystemExit("corpus machine read totals inconsistent")
+          if (summary["item_count"] != summary["private_excluded_count"]
+                  + summary["machine_attempted_count"]):
+              raise SystemExit("corpus private exclusions not accounted for")
+          if audit["request_unverified_count"] > audit["historical_record_count"]:
+              raise SystemExit("AI review history audit counts inconsistent")
+          if (summary["canonical_write_performed"] is not False
+                  or summary["semantic_review_performed"] is not False
+                  or summary["owner_approval_performed"] is not False
+                  or audit["historical_proof_promoted"] is not False):
+              raise SystemExit("machine-only audit attempted authority mutation")
+          # Export exactly the validated, bounded redacted bytes using the
+          # existing maintenance artifact directory; no new evidence source.
+          artifact_path = Path(
+              ".cache/knowledge-hub/ai-maintenance/corpus-review-redacted.json"
+          )
+          with artifact_path.open("xb") as artifact:
+              artifact.write(full_bytes)
+          artifact_path.chmod(0o600)
+          print(json.dumps({
+              "status": "pass", "source_revision": expected,
+              "artifact_sha256": hashlib.sha256(full_bytes).hexdigest(),
+              "report_sha256": summary["report_sha256"],
+              "items": summary["item_count"],
+              "machine_read_failures": summary["machine_failed_count"],
+              "ai_historical_records": audit["historical_record_count"],
+              "request_unverified": audit["request_unverified_count"],
+              "item_drift": audit["item_identity_drift_count"],
+              "body_drift": audit["body_content_drift_count"],
+              "exact_snapshots_not_approvals": audit["exact_snapshot_count"],
+              "canonical_write_performed": False,
+          }, sort_keys=True))
+          PY
+
       - name: Materialize machine triage and governance review packet
         run: |
           set -euo pipefail
