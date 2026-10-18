@@ -442,7 +442,6 @@ def test_real_corpus_fixture_routes_declared_supersession_as_candidate_only(tmp_
 
 
 def test_invalid_untrusted_declared_identity_is_not_exported(tmp_path):
-    from tests.test_corpus_review import _fixture
     from tools.codex_assets.knowledge_hub.corpus_review import build_corpus_review
 
     root = _fixture(tmp_path)
