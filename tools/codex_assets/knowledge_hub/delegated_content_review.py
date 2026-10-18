@@ -10,7 +10,7 @@ import json
 import pathlib
 import re
 
-from .common import KnowledgeHubError
+from .common import KnowledgeHubError, read_repository_bytes_bounded
 from .review_risk import classify_review_risk, load_review_risk_policy
 from .review_semantic import OWNER_BLOCKED
 
@@ -18,6 +18,7 @@ LEDGER = "registry/ai-content-review-authorizations.jsonl"
 FIELD = "ai_delegated_content_review"
 SHA = re.compile(r"[0-9a-f]{64}")
 SCHEMA = "knowledge-ai-content-review-authorization/v1"
+MAX_REVIEW_CONTENT_BYTES = 4 * 1024 * 1024
 
 
 def digest(value):
@@ -30,16 +31,13 @@ def item_digest(item):
 
 
 def content_digest(root, path):
+    """Hash exactly one regular bounded body through symlink-safe descriptors."""
     if not isinstance(path, str) or not path or pathlib.Path(path).is_absolute():
         raise KnowledgeHubError("invalid review content path")
-    resolved = (root / path).resolve()
-    try:
-        resolved.relative_to(root.resolve())
-    except ValueError as exc:
-        raise KnowledgeHubError("review content outside repository") from exc
-    if not resolved.is_file():
-        raise KnowledgeHubError("review content missing or outside repository")
-    return hashlib.sha256(resolved.read_bytes()).hexdigest()
+    raw = read_repository_bytes_bounded(
+        root, path, MAX_REVIEW_CONTENT_BYTES, "AI review content"
+    )
+    return hashlib.sha256(raw).hexdigest()
 
 
 def load_ledger(root):

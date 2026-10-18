@@ -116,16 +116,22 @@ jobs:
             --output .tmp/knowledge-hub/ai-maintenance-corpus-review.json \
             > .cache/knowledge-hub/ai-maintenance/corpus-review-summary.json
           rtk python3 - <<'PY'
+          import hashlib
           import json
           import os
           from pathlib import Path
 
+          from tools.codex_assets.knowledge_hub.corpus_review import MAX_REPORT_BYTES
+
           summary = json.loads(Path(
               ".cache/knowledge-hub/ai-maintenance/corpus-review-summary.json"
           ).read_text(encoding="utf-8"))
-          full = json.loads(Path(
+          full_bytes = Path(
               ".tmp/knowledge-hub/ai-maintenance-corpus-review.json"
-          ).read_text(encoding="utf-8"))
+          ).read_bytes()
+          if len(full_bytes) > MAX_REPORT_BYTES + 1:
+              raise SystemExit("full corpus audit exceeds redacted report byte budget")
+          full = json.loads(full_bytes)
           expected = os.environ["SOURCE_REVISION"]
           if summary["source_revision"] != expected or full["source_revision"] != expected:
               raise SystemExit("full corpus audit source SHA mismatch")
@@ -151,8 +157,17 @@ jobs:
                   or summary["owner_approval_performed"] is not False
                   or audit["historical_proof_promoted"] is not False):
               raise SystemExit("machine-only audit attempted authority mutation")
+          # Export exactly the validated, bounded redacted bytes using the
+          # existing maintenance artifact directory; no new evidence source.
+          artifact_path = Path(
+              ".cache/knowledge-hub/ai-maintenance/corpus-review-redacted.json"
+          )
+          with artifact_path.open("xb") as artifact:
+              artifact.write(full_bytes)
+          artifact_path.chmod(0o600)
           print(json.dumps({
               "status": "pass", "source_revision": expected,
+              "artifact_sha256": hashlib.sha256(full_bytes).hexdigest(),
               "report_sha256": summary["report_sha256"],
               "items": summary["item_count"],
               "machine_read_failures": summary["machine_failed_count"],
@@ -591,8 +606,6 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: knowledge-hub-ai-maintenance-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            .cache/knowledge-hub/ai-maintenance/
-            .tmp/knowledge-hub/ai-maintenance-corpus-review.json
+          path: .cache/knowledge-hub/ai-maintenance/
           if-no-files-found: error
           retention-days: 30
