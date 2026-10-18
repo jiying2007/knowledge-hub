@@ -34,6 +34,13 @@ MAX_ITEM_BYTES = 4 * 1024 * 1024
 MAX_TOTAL_BYTES = 32 * 1024 * 1024
 MAX_REPORT_BYTES = 4 * 1024 * 1024
 MAX_REFS_PER_ITEM = 128
+# SHA-256 of stripped *canonical template body*, never of a Registry summary.
+# Review/source metadata alone cannot certify an untouched generic template.
+UNFILLED_TEMPLATE_BODY_SHA256 = {
+    "debug-record": "0ce0544666f87ebc77160928058f3db9e43ef4c3733491b0f54e61744abcae90",
+    "validation": "adcfb01659087381a2b96473bcfa32bf32c097c82379feaacefa76320936059d",
+    "decision": "0795d90035702f6a5c18fd62a77d102f1727d650b0baabe0e6efaff501986d90",
+}
 PATH_PREFIXES = (
     "projects/", "domains/", "governance/", "artifacts/", "sources/",
     "tools/", "schemas/", "registry/", "indexes/", "templates/", "docs/",
@@ -224,6 +231,11 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
     else:
         if doc["body_empty"]:
             issues.append("body-empty")
+        if (status in {"reviewing", "active"}
+                and doc.get("body_sha256") == UNFILLED_TEMPLATE_BODY_SHA256.get(
+                    item.get("kind")
+                )):
+            issues.append("registered-unfilled-template")
         if not doc["frontmatter_matches_registry"]:
             if doc.get("historical_plaintext_archive") is True:
                 issues.append("archive-plaintext-provenance-only")
@@ -270,7 +282,8 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
 def _lane(item: Mapping[str, Any], signals: List[str], risk_class: str) -> str:
     if item.get("status") == "personal" or item.get("visibility") == "personal-local":
         return "personal-excluded"
-    if "body-unavailable-or-invalid" in signals or "frontmatter-drift" in signals:
+    if ({"body-unavailable-or-invalid", "frontmatter-drift",
+         "registered-unfilled-template"} & set(signals)):
         return "P0-integrity"
     if risk_class == "security-critical" and item.get("status") in {"active", "reviewing"}:
         return "P0-governance"

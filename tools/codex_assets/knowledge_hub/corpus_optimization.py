@@ -17,7 +17,8 @@ MAX_ROWS = 5000
 MAX_PLAN_BYTES = 2 * 1024 * 1024
 PRIORITIES = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 INTEGRITY = {"body-unavailable-or-invalid", "frontmatter-drift",
-             "review-date-invalid", "reference-budget-or-shape"}
+             "review-date-invalid", "reference-budget-or-shape",
+             "registered-unfilled-template"}
 AI_DRIFT = {"ai-review-authorization-record-drift", "ai-review-item-identity-drift",
             "ai-review-content-drift", "human-review-content-drift"}
 TRUST = {"ai-review-proof-unverified", "ai-review-request-proof-unverified",
