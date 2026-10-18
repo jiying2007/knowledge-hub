@@ -22,6 +22,7 @@ def _summary(result):
             "machine_failed_count",
             "private_excluded_count", "total_body_bytes", "status_counts",
             "lane_counts", "signal_counts", "duplicates", "ai_review_audit",
+            "supersession_audit",
             "optimization_summary",
             "report_only", "canonical_write_performed",
             "semantic_review_performed", "owner_approval_performed",

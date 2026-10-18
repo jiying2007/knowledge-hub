@@ -22,7 +22,13 @@ AI_DRIFT = {"ai-review-authorization-record-drift", "ai-review-item-identity-dri
             "ai-review-content-drift", "human-review-content-drift"}
 TRUST = {"ai-review-proof-unverified", "ai-review-request-proof-unverified",
          "human-review-historical-unbound"}
-KNOWN_SIGNALS = INTEGRITY | AI_DRIFT | TRUST | {
+LINEAGE_BLOCKED = {
+    "supersession-declaration-invalid", "supersession-predecessor-missing",
+    "supersession-cross-scope", "supersession-cycle", "supersession-fork",
+    "supersession-active-requires-owner",
+}
+KNOWN_SIGNALS = INTEGRITY | AI_DRIFT | TRUST | LINEAGE_BLOCKED | {
+    "superseded-candidate-provenance",
     "secret-pattern-requires-triage", "local-reference-missing",
     "active-review-overdue", "candidate-needs-independent-review",
     "candidate-review-overdue", "archive-directory-identity-only",
@@ -41,6 +47,8 @@ def _route(row: Mapping[str, Any], signals: set, duplicate: bool) -> tuple:
     lane = row.get("lane", "")
     if not signals.issubset(KNOWN_SIGNALS):
         return "P0", "human-governance-review", "contract-meaning-review"
+    if signals & LINEAGE_BLOCKED:
+        return "P0", "human-governance-review", "supersession-lineage-review"
     if "secret-pattern-requires-triage" in signals:
         return "P0", "human-security-review", "verified-security-review"
     if signals & INTEGRITY:
@@ -55,6 +63,8 @@ def _route(row: Mapping[str, Any], signals: set, duplicate: bool) -> tuple:
         return "P1", "machine-discover-references", "governed-evidence-review"
     if "active-review-overdue" in signals:
         return "P1", "machine-prepare-current-review", "owner-semantic-review"
+    if "superseded-candidate-provenance" in signals:
+        return "P2", "machine-compare-supersession-lineage", "owner-supersession-review"
     if "candidate-needs-independent-review" in signals:
         return "P2", "machine-prepare-candidate-review", "independent-human-review"
     if "candidate-review-overdue" in signals:
