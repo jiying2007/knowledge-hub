@@ -456,3 +456,74 @@ def test_invalid_untrusted_declared_identity_is_not_exported(tmp_path):
         "supersession-declaration-invalid": 1
     }
     assert "../private" not in str(report)
+
+
+def test_archived_plaintext_is_unbound_provenance_not_a_current_mirror(tmp_path):
+    root = _fixture(tmp_path)
+    path = root / "projects/demo/archive/a.md"
+    registry = (root / "registry/items.jsonl").read_bytes()
+    path.write_text("# Original historical evidence\n\nDo not synthesize YAML.\n",
+                    encoding="utf-8")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x.get("id") == "arch-a")
+    assert row["body"]["historical_plaintext_archive"] is True
+    assert row["body"]["frontmatter_matches_registry"] is False
+    assert "archive-plaintext-provenance-only" in row["signals"]
+    assert "frontmatter-drift" not in row["signals"]
+    assert row["lane"] == "P3-historical-integrity"
+    action = next(x for x in report["optimization_queue"]["actions"]
+                  if x["item_id"] == "arch-a")
+    assert action["action"] == "machine-audit-archive-provenance"
+    assert action["priority"] == "P3"
+    assert action["content_change_approved"] is False
+    assert report["canonical_write_performed"] is False
+    assert report["semantic_review_performed"] is False
+    assert (root / "registry/items.jsonl").read_bytes() == registry
+
+
+def test_archived_declared_metadata_conflict_remains_integrity_p0(tmp_path):
+    root = _fixture(tmp_path)
+    archive = root / "projects/demo/archive/a.md"
+    body = archive.read_text(encoding="utf-8")
+    assert "status: archived" in body
+    archive.write_text(body.replace("status: archived", "status: active", 1),
+                       encoding="utf-8")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x.get("id") == "arch-a")
+    assert row["body"]["historical_plaintext_archive"] is False
+    assert "frontmatter-drift" in row["signals"]
+    assert row["lane"] == "P0-integrity"
+
+
+def test_partial_archive_metadata_and_current_plaintext_remain_p0(tmp_path):
+    root = _fixture(tmp_path)
+    archived = root / "projects/demo/archive/a.md"
+    archived.write_text("---\nid: arch-a\n---\n\nIncomplete metadata\n",
+                        encoding="utf-8")
+    current = root / "projects/demo/current/a.md"
+    current.write_text("# Current content without metadata\n", encoding="utf-8")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    for item_id in ("arch-a", "active-a"):
+        row = next(x for x in report["rows"] if x.get("id") == item_id)
+        assert row["body"]["historical_plaintext_archive"] is False
+        assert "frontmatter-drift" in row["signals"]
+        assert row["lane"] == "P0-integrity"
+
+
+def test_non_markdown_historical_script_is_not_exempted(tmp_path):
+    root = _fixture(tmp_path)
+    script = root / "tools/history.sh"
+    script.parent.mkdir(parents=True)
+    script.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    registry = root / "registry/items.jsonl"
+    with registry.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({
+            "id": "legacy-script", "path": "tools/history.sh",
+            "status": "archived", "owner": "team-core", "kind": "audit",
+            "domain": "tools", "review_after": "2026-09-01"
+        }) + "\n")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x.get("id") == "legacy-script")
+    assert row["body"]["historical_plaintext_archive"] is False
+    assert "frontmatter-drift" in row["signals"]
+    assert row["lane"] == "P0-integrity"

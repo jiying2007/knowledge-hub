@@ -138,6 +138,13 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "body_sha256": hashlib.sha256(body.strip().encode("utf-8")).hexdigest(),
             "body_empty": not bool(body.strip()),
             "frontmatter_matches_registry": mirrored,
+            # Plain Markdown archived before YAML adoption is preserved as
+            # unbound provenance, never silently accepted as current metadata.
+            "historical_plaintext_archive": (
+                item.get("status") == "archived"
+                and path.endswith(".md")
+                and not data.startswith(b"---\\n")
+            ),
             "secret_pattern_count": len(scan_secret_text(body)),
             "supersedes_candidate": declared if declared and not invalid_supersedes else "",
             "supersedes_invalid": bool(invalid_supersedes),
@@ -218,7 +225,10 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
         if doc["body_empty"]:
             issues.append("body-empty")
         if not doc["frontmatter_matches_registry"]:
-            issues.append("frontmatter-drift")
+            if doc.get("historical_plaintext_archive") is True:
+                issues.append("archive-plaintext-provenance-only")
+            else:
+                issues.append("frontmatter-drift")
     if doc["secret_pattern_count"]:
         issues.append("secret-pattern-requires-triage")
     if refs["status"] != "checked":
