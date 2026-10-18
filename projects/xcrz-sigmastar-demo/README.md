@@ -34,3 +34,20 @@ Owner 签收、源仓硬切换或生产验收。历史原文继续保留唯一�
 owner decision 和明确的受治理生命周期操作才能改变知识权威状态。
 自动全库审计仅把旧版标记为“已声明被后续候选覆盖，建议比对清理”，
 不执行物理删除、变更 `review_after` 或自动提升 `active`。
+
+
+## 低帧媒体切换的历史纠偏导航（不提供产品默认值授权）
+
+同一功能存在不同时间和作用域的观察，禁止按文件名中的“最终”、最近日期或一次
+HIL 的 PASS 自动提升为当前生产事实。四份入口在 Registry 中仍为
+`reviewing`，源仓和实机证据需重新按具体 commit/firmware 身份核验。
+
+- [ProfileSwitchMode 受审候选](current/decisions/active-low-1-profile-switch-mode.md)：记录 COLD 为安全默认、WARM 为预生产验证候选、HOT 仅用于受控实验；不能视为已获产品 Owner 发布批准
+- [7 月 31 日推送及短周期板测](validation/2026-07-31-vi-fps-publish-validation.md)：证明当时的远端分支身份及 5 轮双向切换测试，不证明长期稳定性、功耗、温循或当前版本已部署
+- [8 月 15 日 WARM + 当前业务负载故障复核 V2](archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md)：明确纠正对 VIF sleep/re-arm 的单因归因，保留 AE warmup、DS2_RAW/SCL 负载及 WARM Channel rebuild 的交互假设；需要同构建单变量 A/B
+- [8 月 14 日原始 WARM 故障观察](archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md)：仅作最初日志和推断的历史出处，**不得单独据此宣称** VIF sleep 是已确认根因，或推导 HOT 必然失败
+
+上述是**导航与适用性提醒**，不是覆盖原始证据的整篇
+`supersedes_candidate`、历史删除指令或自动更新 Registry 的决策。
+只有当前源码/固件、相同业务负载的失败/通过 A/B、COLD/WARM/HOT 回归、长稳、温循、
+日夜/IR、功耗及独立 Owner 资格验证闭环后，才能改变生产配置建议。
