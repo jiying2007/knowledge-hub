@@ -527,3 +527,25 @@ def test_non_markdown_historical_script_is_not_exempted(tmp_path):
     assert row["body"]["historical_plaintext_archive"] is False
     assert "frontmatter-drift" in row["signals"]
     assert row["lane"] == "P0-integrity"
+
+
+def test_archived_yaml_markers_with_crlf_or_bom_remain_p0(tmp_path):
+    root = _fixture(tmp_path)
+    archive = root / "projects/demo/archive/a.md"
+    samples = (
+        "---\r\nid: arch-a\r\nstatus: active\r\n---\r\nbody\r\n",
+        "\ufeff---\nid: arch-a\nstatus: active\n---\nbody\n",
+        "--- ambiguous historical separator\nbody\n",
+    )
+    for body in samples:
+        archive.write_text(body, encoding="utf-8")
+        report = build_corpus_review(root, dt.date(2026, 10, 17))
+        row = next(r for r in report["rows"] if r.get("id") == "arch-a")
+        assert row["body"]["status"] == "read"
+        assert row["body"]["historical_plaintext_archive"] is False
+        assert "frontmatter-drift" in row["signals"]
+        assert row["lane"] == "P0-integrity"
+        action = next(r for r in report["optimization_queue"]["actions"]
+                      if r["item_id"] == "arch-a")
+        assert action["priority"] == "P0"
+        assert action["content_change_approved"] is False

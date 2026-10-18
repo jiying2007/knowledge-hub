@@ -143,7 +143,7 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "historical_plaintext_archive": (
                 item.get("status") == "archived"
                 and path.endswith(".md")
-                and not data.startswith(b"---\n")
+                and not data.startswith((b"---", b"\xef\xbb\xbf---"))
             ),
             "secret_pattern_count": len(scan_secret_text(body)),
             "supersedes_candidate": declared if declared and not invalid_supersedes else "",
