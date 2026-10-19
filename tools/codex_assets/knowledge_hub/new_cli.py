@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .common import KnowledgeHubError, load_json, resolve_today
 from .lifecycle import capture
+from .template_integrity import UNFILLED_TEMPLATE_BODY_SHA256
 
 
 AI_ROLES = ("none", "drafted", "summarized", "translated", "rewritten", "classified", "extracted")
@@ -345,7 +346,7 @@ def _item_guide(root: pathlib.Path, args: argparse.Namespace, today: dt.date, pa
     project = args.domain.split("/", 1)[1] if args.domain.startswith("projects/") else "<可选>"
     scope = "project-specific" if args.domain.startswith("projects/") else "team-general"
     visibility = "personal-local" if args.domain == "notes" and args.path.startswith("notes/personal/") else "team-internal"
-    draft_status = "archived" if registry_kind == "project-archive" else "personal" if visibility == "personal-local" else "reviewing"
+    draft_status = "archived" if registry_kind == "project-archive" else "personal" if visibility == "personal-local" else "draft" if registry_kind in UNFILLED_TEMPLATE_BODY_SHA256 else args.status
     owner_state = _owner_status(root, args.owner)
     warning = ""
     if owner_state == "unknown-owner":
