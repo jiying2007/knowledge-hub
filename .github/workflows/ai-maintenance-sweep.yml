@@ -194,6 +194,7 @@ jobs:
           rtk python3 -m tools.codex_assets.knowledge_hub.semantic_review_coverage \
             --corpus .cache/knowledge-hub/ai-maintenance/corpus-review-redacted.json \
             --comments-jsonl "$scratch" \
+            --repo-root . \
             --output .cache/knowledge-hub/ai-maintenance/semantic-review-coverage.json
           test -s .cache/knowledge-hub/ai-maintenance/semantic-review-coverage.json
       - name: Materialize machine triage and governance review packet
