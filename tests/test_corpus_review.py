@@ -554,7 +554,7 @@ def test_archived_yaml_markers_with_crlf_or_bom_remain_p0(tmp_path):
 def test_known_raw_templates_are_p0_when_registered_as_reviewing_content(tmp_path):
     """Trust the canonical body template, not a factual-looking Registry title."""
     from tools.codex_assets.knowledge_hub.common import split_frontmatter
-    from tools.codex_assets.knowledge_hub.corpus_review import UNFILLED_TEMPLATE_BODY_SHA256
+    from tools.codex_assets.knowledge_hub.template_integrity import UNFILLED_TEMPLATE_BODY_SHA256
 
     repo = pathlib.Path(__file__).resolve().parents[1]
     variants = (

@@ -22,9 +22,7 @@ from .common import (
 )
 from .corpus_optimization import build_corpus_optimization
 from .corpus_supersession import annotate_supersession
-from .template_integrity import (
-    UNFILLED_TEMPLATE_BODY_SHA256, is_registered_unfilled_template,
-)
+from .template_integrity import is_registered_unfilled_template
 from .delegated_content_review import (
     FIELD as AI_REVIEW_FIELD, expected_record, item_digest, load_ledger, review_state,
 )
