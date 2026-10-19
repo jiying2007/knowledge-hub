@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import pathlib
+import select
 import subprocess
 import sys
 import time
@@ -147,6 +148,7 @@ def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
     pid_path = tmp_path / 'pid'
     script = "import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)']); pathlib.Path(sys.argv[1]).write_text(str(p.pid)); time.sleep(30)"
     launch = bounded_process._launch
+    child_pidfds = []
 
     def launch_ready(*args, **kwargs):
         process = launch(*args, **kwargs)
@@ -157,6 +159,17 @@ def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
                 if exited is not None or time.monotonic() >= deadline:
                     raise RuntimeError('test subprocess did not become ready')
                 time.sleep(.01)
+            # Verify the grandchild belongs to the session whose timeout we test.
+            child_pid = int(pid_path.read_text())
+            assert os.getpgid(child_pid) == process.pid
+            if hasattr(os, 'pidfd_open'):
+                try:
+                    # A pidfd pins the observed process identity despite /proc PID reuse.
+                    child_pidfds.append(os.pidfd_open(child_pid))
+                except OSError:
+                    # Older Linux kernels may lack pidfd support: keep a strict
+                    # bounded /proc exit check in that environment.
+                    pass
         except BaseException:
             try:
                 os.killpg(process.pid, 9)
@@ -167,24 +180,34 @@ def test_timeout_reaps_owned_grandchild(tmp_path, monkeypatch):
         return process
 
     monkeypatch.setattr(bounded_process, '_launch', launch_ready)
-    with pytest.raises(subprocess.TimeoutExpired):
-        run_bounded([sys.executable, '-c', script, str(pid_path)], cwd=str(tmp_path), env=os.environ.copy(), timeout=.3)
-    pid = int(pid_path.read_text())
-    status = pathlib.Path('/proc') / str(pid) / 'status'
+    try:
+        with pytest.raises(subprocess.TimeoutExpired):
+            run_bounded(
+                [sys.executable, '-c', script, str(pid_path)],
+                cwd=str(tmp_path), env=os.environ.copy(), timeout=.3,
+            )
+        if child_pidfds:
+            # Poll the *original* grandchild rather than a possibly reused PID;
+            # remain fail-closed if the owned process survives group cleanup.
+            ready, _, _ = select.select(child_pidfds, [], [], 5)
+            assert ready == child_pidfds, 'timed-out process group left its grandchild alive'
+        else:
+            pid = int(pid_path.read_text())
+            status = pathlib.Path('/proc') / str(pid) / 'status'
 
-    def gone_or_zombie():
-        # /proc is transient: a process can disappear between exists() and read_text().
-        try:
-            return 'State:\tZ' in status.read_text()
-        except (FileNotFoundError, ProcessLookupError):
-            # ESRCH also means the PID disappeared while /proc was being read.
-            return True
+            def gone_or_zombie():
+                try:
+                    return 'State:\\tZ' in status.read_text()
+                except (FileNotFoundError, ProcessLookupError):
+                    return True
 
-    for _ in range(20):
-        if gone_or_zombie():
-            break
-        time.sleep(.05)
-    assert gone_or_zombie()
+            deadline = time.monotonic() + 5
+            while time.monotonic() < deadline and not gone_or_zombie():
+                time.sleep(.05)
+            assert gone_or_zombie(), 'timed-out process group left its grandchild alive'
+    finally:
+        for descriptor in child_pidfds:
+            os.close(descriptor)
 
 
 def test_output_budget_drains_without_unbounded_capture(tmp_path):
