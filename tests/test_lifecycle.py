@@ -7,6 +7,7 @@ from tools.codex_assets.knowledge_hub.common import (
     KnowledgeHubError, file_sha256, load_jsonl, repository_root,
 )
 from tools.codex_assets.knowledge_hub.lifecycle import capture, transition
+from tools.codex_assets.knowledge_hub.new_cli import main as new_main
 from tools.codex_assets.knowledge_hub.cli import _capture_summary, main as lifecycle_main
 from tools.codex_assets.knowledge_hub.model import validate_item
 from tools.codex_assets.knowledge_hub.obsidian_view import build_obsidian_views
@@ -138,6 +139,33 @@ def test_capture_exact_template_with_authored_content_is_reviewable(tmp_path, ki
     item = load_jsonl(root / "registry/items.jsonl")[0]
     assert item["status"] == "reviewing"
     assert item["manual_validation_pending"] is True
+
+
+def test_knowledge_new_apply_cannot_register_unfilled_validation_as_reviewing(
+    tmp_path, capsys,
+):
+    root = _root(tmp_path)
+    template = root / "templates/validation-report.md"
+    template.parent.mkdir()
+    template.write_text(
+        (repository_root() / "templates/validation-report.md").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    rc = new_main([
+        str(root), "--kind", "validation", "--id", "no-blank-verification",
+        "--path", "governance/no-blank-verification.md",
+        "--summary-zh", "这只是未经验证的摘要", "--apply", "--json",
+    ])
+
+    output = json.loads(capsys.readouterr().out)
+    assert rc == 2
+    assert output["status"] == "error"
+    assert "unfilled canonical validation template" in output["error"]
+    assert (root / "registry/items.jsonl").read_text() == ""
+    assert not (root / "governance/no-blank-verification.md").exists()
 
 
 def test_capture_summary_json_is_bounded_and_omits_write_rows(tmp_path, capsys):
