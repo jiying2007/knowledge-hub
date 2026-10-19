@@ -119,17 +119,42 @@ rtk rg -n "^===== SAMPLE" /tmp/<capture-log>.log | rtk tail
 
 ## Targeted Follow-Up
 
-对热点 TID 做短周期二次采集：
+**历史 TID 不能作为新设备的可执行目标。** 2026-07-02 记录里的 `807/785/735/820/781` 仅用于解释原始窗口；PID/TID 会退出、重新分配或重用。先用本次 `/proc/stat` 与线程 jiffies 差分排序确定热点，再在**同一个当前进程的** `/proc/<pid>/task/` 中复核身份。以下单次只读命令动态挑选常见候选线程，并对 `comm` 前后不一致或已经退出的线程跳过，**不是**对 CPU 热度的自动证明：
 
 ```bash
-rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid ===; cat /proc/\$pid/task/\$tid/comm; cat /proc/\$pid/task/\$tid/status | egrep 'State|voluntary|nonvoluntary'; cat /proc/\$pid/task/\$tid/wchan; cat /proc/\$pid/task/\$tid/stat; done"
+rtk adb -s "${PCR02_ADB_ENDPOINT}" shell '
+pid=$(pidof prog_pcr02) || exit 1
+case "$pid" in *" "*) echo "AMBIGUOUS_PID" >&2; exit 2 ;; esac
+[ -d "/proc/$pid/task" ] || exit 2
+found=0
+for task in /proc/"$pid"/task/[0-9]*; do
+  [ -r "$task/comm" ] || continue
+  before=$(cat "$task/comm" 2>/dev/null) || continue
+  case "$before" in
+    hdi_vi_out*|sensor_disp0|hdi_ai_prc0|hdi_ai_cap0|nav.poll|ai-vi-capture|pool_*|sensor_tof0) ;;
+    *) continue ;;
+  esac
+  tid=${task##*/}
+  [ -r "$task/stat" ] || continue
+  stat=$(cat "$task/stat" 2>/dev/null) || continue
+  after=$(cat "$task/comm" 2>/dev/null) || continue
+  [ "$before" = "$after" ] || continue
+  echo "=== pid=$pid tid=$tid comm=$before ==="
+  printf "%s\n" "$stat"
+  grep -E "^State:|^voluntary_ctxt_switches:|^nonvoluntary_ctxt_switches:" "$task/status" 2>/dev/null || true
+  cat "$task/wchan" 2>/dev/null || true
+  if [ -r "$task/stack" ]; then cat "$task/stack" 2>/dev/null || true; fi
+  found=$((found+1))
+  [ "$found" -ge 16 ] && break
+done
+[ "$found" -gt 0 ] || { echo "NO_CURRENT_TARGET_THREADS" >&2; exit 2; }
+'
 ```
 
-若内核启用了 stack：
-
-```bash
-rtk adb -s "${PCR02_ADB_ENDPOINT}" shell "pid=\$(pidof prog_pcr02); for tid in 807 785 735 820 781; do echo === \$tid stack ===; cat /proc/\$pid/task/\$tid/stack 2>/dev/null; done"
-```
+- 命令最多输出 16 个实时匹配线程；实际热点仍以**本轮首尾 CPU jiffies 增量**排序，不能以命中线程名推断忙循环或根因。
+- `NO_CURRENT_TARGET_THREADS`、线程消失、读取 `stack/wchan` 失败只能记为不可用，不能记为无故障；多进程 PID 歧义直接失败。
+- 对没有命名、已经重命名或不在过滤集合中的热点，使用本轮 `ps -T` 和 `/proc/<pid>/task` 确认实时 TID 后另做定向读取，不要从下方历史证据表复制 TID。
+- 即使两次读取 `comm` 一致，也不能完全排除极短窗口内 TID 重用；最终结论需要前后时间戳、进程/制品身份和完整采样窗口匹配。
 
 ## Source-Mapped Hot Thread Capture
 
