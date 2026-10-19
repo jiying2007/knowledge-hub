@@ -138,6 +138,18 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/template_integrity.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/search_query.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/search_query_support.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/corpus_review.py",
       "review_class": "security-critical"
     },

@@ -9,6 +9,9 @@ import pathlib
 import re
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 from .common import KnowledgeHubError, compact_json, read_repository_bytes_bounded, source_id
+from .template_integrity import (
+    UNFILLED_TEMPLATE_BODY_SHA256, is_registered_unfilled_template,
+)
 from .schema_subset import validate_contract_subset
 from .query_concepts import ConceptQuery, FIELD_VALUES, exact_concept_match
 from .query_scope import candidate_concepts
@@ -161,7 +164,10 @@ def _filters_match(item: Mapping[str, Any], physical_sources: Sequence[str], fil
     return True
 
 
-def _filter_reason(item: Mapping[str, Any], physical_sources: Sequence[str], filters: SearchFilters) -> str:
+def _filter_reason(
+    item: Mapping[str, Any], physical_sources: Sequence[str],
+    filters: SearchFilters, body: str = "",
+) -> str:
     if filters.sources and not set(filters.sources).intersection(physical_sources):
         return "physical-source"
     if filters.structured and not item:
@@ -176,7 +182,23 @@ def _filter_reason(item: Mapping[str, Any], physical_sources: Sequence[str], fil
         return "domain"
     if filters.source_ids and source_id(item) not in filters.source_ids:
         return "source-id"
+    # Reuse the P0 corpus integrity fingerprint. Do not surface fact-looking
+    # registry titles as search evidence if their actual body is only a form.
+    if (item.get("status") in {"reviewing", "active"}
+            and item.get("kind") in UNFILLED_TEMPLATE_BODY_SHA256):
+        digest = hashlib.sha256(_topic_body(body).strip().encode("utf-8")).hexdigest()
+        if is_registered_unfilled_template(
+                item.get("kind"), item.get("status"), digest):
+            return "registered-unfilled-template"
     return ""
+
+
+def _zero_hit_reason(reasons: Mapping[str, int], excluded_count: int) -> str:
+    if reasons.get("registered-unfilled-template"):
+        return "registered item has an unfilled body template, not reliable evidence"
+    if excluded_count:
+        return "matching registered items were excluded by structured filters"
+    return "no indexed document matched the query and structured filters"
 
 
 def _scan_candidates(root: pathlib.Path) -> List[Dict[str, Any]]:

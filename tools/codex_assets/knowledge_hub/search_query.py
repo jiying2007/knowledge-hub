@@ -37,6 +37,7 @@ from .search_query_support import (
     _filter_reason,
     _matched_query_terms,
     _scan_candidates,
+    _zero_hit_reason,
     _score,
     _validate_retrieval_contract,
 )
@@ -180,7 +181,7 @@ def search(
                     row.get("path", "")
                 )
             )
-        filter_reason = _filter_reason(item, physical_sources, filters)
+        filter_reason = _filter_reason(item, physical_sources, filters, str(row["body"]))
         if filter_reason:
             filtered_reasons[filter_reason] += 1
             if item and item.get("visibility") != "personal-local":
@@ -336,11 +337,7 @@ def search(
     }
     zero_hit = {
         "is_zero_hit": not bool(results),
-        "reason": ""
-        if results
-        else "matching registered items were excluded by structured filters"
-        if excluded_registered_total
-        else "no indexed document matched the query and structured filters",
+        "reason": "" if results else _zero_hit_reason(filtered_reasons, excluded_registered_total),
         "degraded_terms": [],
         "filtered_by_reason": dict(sorted(filtered_reasons.items())),
         "suggestions": [] if results else [
