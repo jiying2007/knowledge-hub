@@ -48,9 +48,8 @@ def _require_substantive_reviewing_body(kind: str, status: str, body: str) -> No
     digest = hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
     if is_registered_unfilled_template(kind, status, digest):
         raise KnowledgeHubError(
-            "unfilled canonical {} template cannot be captured as reviewing; "
+            f"unfilled canonical {kind} template cannot be captured as reviewing; "
             "write substantive source content first or use status=draft"
-            .format(kind)
         )
 
 
