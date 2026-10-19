@@ -10,6 +10,9 @@ import time
 from collections import Counter
 from typing import Any, Dict, List, Mapping, Optional
 from .common import KnowledgeHubError, utc_timestamp
+from .template_integrity import (
+    UNFILLED_TEMPLATE_BODY_SHA256, is_registered_unfilled_template,
+)
 from .retrieval_telemetry import IMPLEMENTATION_GENERATION, INTERACTION_CONTRACT, INTERACTIVE_TELEMETRY_SCHEMA_VERSION, PERFORMANCE_CONTRACT, append_optional_telemetry, make_interaction_id
 from .search_ranking import is_historical_result as _historical_result
 from .search_core import (
@@ -37,6 +40,7 @@ from .search_query_support import (
     _filter_reason,
     _matched_query_terms,
     _scan_candidates,
+    _topic_body,
     _score,
     _validate_retrieval_contract,
 )
@@ -180,6 +184,18 @@ def search(
                     row.get("path", "")
                 )
             )
+        # The authoritative corpus scanner already flags exact unfilled
+        # registered templates. Avoid treating their registry titles/summaries
+        # as answer evidence in either SQLite or repository-scan fallback.
+        if (item.get("status") in {"reviewing", "active"}
+                and item.get("kind") in UNFILLED_TEMPLATE_BODY_SHA256):
+            content_sha = hashlib.sha256(
+                _topic_body(str(row["body"])).strip().encode("utf-8")
+            ).hexdigest()
+            if is_registered_unfilled_template(
+                    item.get("kind"), item.get("status"), content_sha):
+                filtered_reasons["registered-unfilled-template"] += 1
+                continue
         filter_reason = _filter_reason(item, physical_sources, filters)
         if filter_reason:
             filtered_reasons[filter_reason] += 1
@@ -340,6 +356,8 @@ def search(
         if results
         else "matching registered items were excluded by structured filters"
         if excluded_registered_total
+        else "registered item has an unfilled body template, not reliable evidence"
+        if filtered_reasons["registered-unfilled-template"]
         else "no indexed document matched the query and structured filters",
         "degraded_terms": [],
         "filtered_by_reason": dict(sorted(filtered_reasons.items())),
