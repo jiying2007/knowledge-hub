@@ -117,7 +117,9 @@ def test_tracked_text_inventory_is_aggregate_and_directory_is_not_a_document():
     assert inv["unregistered_total"] == 3
     assert inv["under_archive_directory_count"] == 1
     assert inv["unregistered_elsewhere_count"] == 2
-    assert inv["private_path_candidates_skipped"] == 1
+    assert inv["explicit_private_prefix_skipped"] == 1
+    assert inv["unregistered_nonprivate_lower_bound"] == 2
+    assert inv["unregistered_nonprivate_upper_bound"] == 3
     assert "secret.md" not in json.dumps(report)
     assert "history.md" not in json.dumps(report)
 

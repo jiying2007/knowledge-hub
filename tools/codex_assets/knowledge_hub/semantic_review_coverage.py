@@ -42,7 +42,8 @@ def _check_corpus(corpus: Mapping[str, Any]) -> List[Mapping[str, Any]]:
     return rows
 
 
-def _tracked_text_inventory(rows: List[Mapping[str, Any]], paths: Optional[Sequence[str]]) -> Dict[str, Any]:
+def _tracked_text_inventory(rows: List[Mapping[str, Any]], paths: Optional[Sequence[str]],
+                            private_excluded_count: int) -> Dict[str, Any]:
     """Aggregate only: unregistered filenames/bodies are never exported or read."""
     if paths is None:
         return {"state": "unavailable", "unregistered_total": None}
@@ -82,7 +83,10 @@ def _tracked_text_inventory(rows: List[Mapping[str, Any]], paths: Optional[Seque
         "unregistered_total": unregistered,
         "under_archive_directory_count": under_archive,
         "unregistered_elsewhere_count": unregistered - under_archive,
-        "private_path_candidates_skipped": private_skipped,
+        "explicit_private_prefix_skipped": private_skipped,
+        "unregistered_nonprivate_lower_bound": max(0, unregistered - private_excluded_count),
+        "unregistered_nonprivate_upper_bound": unregistered,
+        "private_registry_paths_not_disclosed": True,
         "paths_or_contents_exported": False,
     }
 
@@ -184,7 +188,7 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
     reviewable = non_private - archive_directories
     if corpus.get("archive_directory_observed_count", archive_directories) != archive_directories:
         raise ValueError("archive directory count differs from corpus")
-    inventory = _tracked_text_inventory(rows, tracked_paths)
+    inventory = _tracked_text_inventory(rows, tracked_paths, private)
     all_registered_claimed = current == reviewable and unreadable == 0
     unregistered = inventory["unregistered_total"]
     if all_registered_claimed and unregistered == 0:
