@@ -38,3 +38,29 @@ def test_gd32_pa12_archive_preserves_certification_failure_and_hardware_boundary
     release = (PROJECT / HISTORICAL[2]).read_text(encoding="utf-8")
     assert "相对 `v1.1.42`" in release
     assert "未新增真实板卡烧录" in release
+
+
+def test_gd32_charging_wakeup_historical_variants_do_not_promote_current_fact():
+    readme = (PROJECT / "README.md").read_text(encoding="utf-8")
+    history = (
+        "current/soc-low-power-contract.md",
+        "archive/design/2026-07-30-smart-reserve-charge-wakeup.md",
+        "archive/session/2026-08-04-power-switch-uart-handoff-implementation.md",
+    )
+    for relative in history:
+        source = PROJECT / relative
+        assert source.is_file()
+        assert "](" + relative + ")" in readme
+        metadata, body = split_frontmatter(source.read_text(encoding="utf-8"))
+        assert metadata["status"] == "reviewing"
+        assert body.strip()
+
+    old = (PROJECT / history[0]).read_text(encoding="utf-8")
+    both = (PROJECT / history[1]).read_text(encoding="utf-8")
+    deep_only = (PROJECT / history[2]).read_text(encoding="utf-8")
+    assert "WiFi；SoC RTC 独立有效" in old
+    assert "SLEEP/DEEP_SLEEP 的强制硬件唤醒源" in both
+    assert "只有 `DEEP_SLEEP` 智能留电状态支持充电恢复" in deep_only
+    assert "不判定当前固件" in readme
+    assert "不能仅选择日期较晚的一篇" in readme
+    assert "真实 owner" in readme
