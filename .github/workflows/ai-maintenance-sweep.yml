@@ -180,6 +180,22 @@ jobs:
           }, sort_keys=True))
           PY
 
+      - name: Reconcile exact-body AI review claims (report-only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          scratch=.tmp/knowledge-hub/semantic-review-issue-comments.jsonl
+          mkdir -p .tmp/knowledge-hub
+          trap 'rm -f "$scratch"' EXIT
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/176/comments?per_page=100" \
+            --jq '.[] | {user: {login: .user.login}, body: .body} | @json' > "$scratch"
+          rtk python3 -m tools.codex_assets.knowledge_hub.semantic_review_coverage \
+            --corpus .cache/knowledge-hub/ai-maintenance/corpus-review-redacted.json \
+            --comments-jsonl "$scratch" \
+            --output .cache/knowledge-hub/ai-maintenance/semantic-review-coverage.json
+          test -s .cache/knowledge-hub/ai-maintenance/semantic-review-coverage.json
       - name: Materialize machine triage and governance review packet
         run: |
           set -euo pipefail
