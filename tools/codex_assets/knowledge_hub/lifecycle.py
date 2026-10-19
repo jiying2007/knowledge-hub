@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import pathlib
 import re
 import tempfile
@@ -28,6 +29,9 @@ from .model import assert_transition, merge_frontmatter_mirror, require_valid_it
 from .obsidian_view import stage_obsidian_views
 from .review_attestation import confirmation_token, suggested_output_path
 from .store import RepositoryTransaction, snapshot_inputs
+from .template_integrity import (
+    UNFILLED_TEMPLATE_BODY_SHA256, is_registered_unfilled_template,
+)
 
 
 LIFECYCLE_LEDGER = "registry/lifecycle-events.jsonl"
@@ -35,6 +39,18 @@ LIFECYCLE_LEDGER = "registry/lifecycle-events.jsonl"
 
 def _date_plus_days(today: dt.date, days: int = 90) -> str:
     return (today + dt.timedelta(days=days)).isoformat()
+
+
+def _require_substantive_reviewing_body(kind: str, status: str, body: str) -> None:
+    """Never register an exact, untouched canonical form as reviewing evidence."""
+    if status != "reviewing" or kind not in UNFILLED_TEMPLATE_BODY_SHA256:
+        return
+    digest = hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
+    if is_registered_unfilled_template(kind, status, digest):
+        raise KnowledgeHubError(
+            f"unfilled canonical {kind} template cannot be captured as reviewing; "
+            "write substantive source content first or use status=draft"
+        )
 
 
 def _first_heading(body: str) -> str:
@@ -181,6 +197,7 @@ def capture(
         scope = "project-specific" if domain.startswith("projects/") else "team-general"
     if status not in {"draft", "reviewing", "personal"}:
         raise KnowledgeHubError("capture may only create draft, reviewing or personal items")
+    _require_substantive_reviewing_body(kind, status, body)
     if status == "personal":
         visibility = "personal-local"
     if bool(source_type) != bool(source_from):
@@ -266,7 +283,6 @@ def capture(
         existing_ids=[str(row.get("id")) for row in current_items],
         existing_paths=[str(row.get("path")) for row in current_items],
     )
-
     mirror = merge_frontmatter_mirror(original_metadata, item)
     if provider_metadata:
         mirror.update(dict(provider_metadata))

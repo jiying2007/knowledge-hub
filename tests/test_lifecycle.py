@@ -3,8 +3,11 @@ import json
 
 import pytest
 
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, file_sha256, load_jsonl
+from tools.codex_assets.knowledge_hub.common import (
+    KnowledgeHubError, file_sha256, load_jsonl, repository_root,
+)
 from tools.codex_assets.knowledge_hub.lifecycle import capture, transition
+from tools.codex_assets.knowledge_hub.new_cli import main as new_main
 from tools.codex_assets.knowledge_hub.cli import _capture_summary, main as lifecycle_main
 from tools.codex_assets.knowledge_hub.model import validate_item
 from tools.codex_assets.knowledge_hub.obsidian_view import build_obsidian_views
@@ -59,6 +62,125 @@ def test_capture_apply_creates_reviewing_item_and_indexes(tmp_path):
     rebuilt = build_obsidian_views(root)
     assert rebuilt["content_mirror_drift_count"] == 0
     assert rebuilt["transaction"]["changed_count"] == 0
+
+
+@pytest.mark.parametrize(
+    ("kind", "template"),
+    (
+        ("debug-record", "templates/debug-record.md"),
+        ("validation", "templates/validation-report.md"),
+        ("decision", "templates/decision.md"),
+    ),
+)
+@pytest.mark.parametrize("apply", (False, True))
+def test_capture_rejects_exact_unfilled_reviewing_template(tmp_path, kind, template, apply):
+    root = _root(tmp_path)
+    source = repository_root() / template
+
+    with pytest.raises(KnowledgeHubError, match="unfilled canonical .* template"):
+        capture(
+            root, source, kind, "governance/unfilled.md",
+            dt.date(2026, 10, 19), apply, item_id="unfilled-form",
+            title="Fact-like Registry title must not prove content",
+            summary_zh="This is only metadata, not an authored report",
+        )
+
+    assert (root / "registry/items.jsonl").read_text() == ""
+    assert not (root / "governance/unfilled.md").exists()
+
+
+@pytest.mark.parametrize(
+    ("kind", "template"),
+    (
+        ("debug-record", "templates/debug-record.md"),
+        ("validation", "templates/validation-report.md"),
+        ("decision", "templates/decision.md"),
+    ),
+)
+def test_capture_unfilled_template_as_explicit_draft_only(tmp_path, kind, template):
+    root = _root(tmp_path)
+    source = repository_root() / template
+
+    result = capture(
+        root, source, kind, "governance/draft.md",
+        dt.date(2026, 10, 19), True, item_id="explicit-draft",
+        status="draft", summary_zh="Authoring form, not verified content",
+    )
+
+    assert result["status"] == "applied"
+    item = load_jsonl(root / "registry/items.jsonl")[0]
+    assert item["status"] == "draft"
+    assert "status: draft" in (root / "governance/draft.md").read_text()
+
+
+@pytest.mark.parametrize(
+    ("kind", "template"),
+    (
+        ("debug-record", "templates/debug-record.md"),
+        ("validation", "templates/validation-report.md"),
+        ("decision", "templates/decision.md"),
+    ),
+)
+def test_capture_exact_template_with_authored_content_is_reviewable(tmp_path, kind, template):
+    root = _root(tmp_path)
+    source = tmp_path / "authored.md"
+    source.write_text(
+        (repository_root() / template).read_text(encoding="utf-8")
+        + "\n## 实际补录\n有来源的独立内容；证据仍待 owner 复核。\n",
+        encoding="utf-8",
+    )
+
+    result = capture(
+        root, source, kind, "governance/authored.md",
+        dt.date(2026, 10, 19), True, item_id="authored-reviewing",
+    )
+
+    assert result["status"] == "applied"
+    item = load_jsonl(root / "registry/items.jsonl")[0]
+    assert item["status"] == "reviewing"
+    assert item["manual_validation_pending"] is True
+
+
+def test_knowledge_new_apply_cannot_register_unfilled_validation_as_reviewing(
+    tmp_path, capsys,
+):
+    root = _root(tmp_path)
+    template = root / "templates/validation-report.md"
+    template.parent.mkdir()
+    template.write_text(
+        (repository_root() / "templates/validation-report.md").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    rc = new_main([
+        str(root), "--kind", "validation", "--id", "no-blank-verification",
+        "--path", "governance/no-blank-verification.md",
+        "--summary-zh", "这只是未经验证的摘要", "--apply", "--json",
+    ])
+
+    output = json.loads(capsys.readouterr().out)
+    assert rc == 2
+    assert output["status"] == "error"
+    assert "unfilled canonical validation template" in output["error"]
+    assert (root / "registry/items.jsonl").read_text() == ""
+    assert not (root / "governance/no-blank-verification.md").exists()
+
+
+def test_knowledge_new_guide_recommends_draft_for_raw_form(tmp_path, capsys):
+    root = _root(tmp_path)
+    rc = new_main([
+        str(root), "--kind", "decision", "--domain", "projects/demo",
+        "--id", "raw-form-draft", "--path", "projects/demo/decision.md",
+        "--json",
+    ])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert payload["status"] == "guide"
+    assert "- 推荐 registry status: draft" in payload["guide"]
+    assert '"status":"draft"' in payload["guide"]
 
 
 def test_capture_summary_json_is_bounded_and_omits_write_rows(tmp_path, capsys):

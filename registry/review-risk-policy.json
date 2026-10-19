@@ -138,6 +138,14 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/lifecycle.py",
+      "review_class": "security-critical"
+    },
+    {
+      "path": "tools/codex_assets/knowledge_hub/new_cli.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/template_integrity.py",
       "review_class": "security-critical"
     },
