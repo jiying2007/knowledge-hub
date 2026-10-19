@@ -283,7 +283,6 @@ def capture(
         existing_ids=[str(row.get("id")) for row in current_items],
         existing_paths=[str(row.get("path")) for row in current_items],
     )
-
     mirror = merge_frontmatter_mirror(original_metadata, item)
     if provider_metadata:
         mirror.update(dict(provider_metadata))
