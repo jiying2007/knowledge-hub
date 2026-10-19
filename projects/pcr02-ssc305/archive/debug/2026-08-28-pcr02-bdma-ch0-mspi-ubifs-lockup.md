@@ -55,60 +55,38 @@ translation_status: not-required
 terminology_status: pending-review
 ---
 
-# 排障记录标题
+# PCR02 BDMA CH0/MSPI/NAND 阻塞：来源关联与待验证排障记录
 
-## 现象
+> **证据边界（2026-10-19 AI 补充复核）：** 本条原正文是未填写的通用排障模板。以下内容是对同仓另一篇已写实的 `reviewing` 历史记录的**有来源关联摘录**，不是本次重新读取设备日志、复现问题、修改内核或获得 owner 验收。原始 `source.source_sha256`、自引用的 `validation_refs` 不能单独证明外部源码、板端日志及修复结果。本文继续保持 `reviewing` / `manual_validation_pending=true`。
 
-说明用户可见症状、错误码、时间和频率。
+## 现象及范围（来自关联文本，非本条独立复测）
 
-## 影响范围
+- 关联记录描述：PCR02 SSC305、Linux 5.10.117 的 `/data` UBIFS 操作不可中断等待，`touch`、目录访问与部分应用线程阻塞；网络与 ADB 仍可用，并非整机立即掉线。
+- 相关链路涉及 MSPI LCD DMA、Flash FSP/QSPI NAND、BDMA CH0、UBI/UBIFS。现场版本、发生频率、触发输入和后续升级状态没有在本条独立取证。
 
-说明项目、设备、版本、模块，以及是否影响量产或现场。
+## 可追溯关联来源
 
-## 环境
+- **Knowledge Hub 历史排障正文：** [2026-08-28 BDMA CH0 / UBIFS deadlock](2026-08-28-bdma-ch0-ubifs-deadlock.md)，Registry ID `pcr02-bdma-ch0-ubifs-deadlock-20260828`，当前仍为 `reviewing`。此记录有现象、时间线、调用链、源码路径和明确的待验证边界。
+- 该关联记录摘要的现场链：`UBIFS -> UBI -> FSP/QSPI NAND -> hal_bdma_transfer -> CamOsTsemDown`；LCD 线程在 `MSPI DMA -> hal_bdma_transfer` 等待。其列出的源码路径包括 `drivers/sstar/mspi/iford/hal_mspi.c`、`drivers/sstar/flash/os/drv_flash_os_impl.c`、`drivers/sstar/bdma/iford/hal_bdma.c`。
+- **来源层级：** 上述是 Hub 已保存的历史文本和其内源代码引用；原始 SysRq/MMIO 快照、实际 SDK commit、不可变设备构建及原始日志没有在本次复核中独立获取。路径文字不是可复跑的 source revision，且不能用 `knowledge-check --dry-run` 替代设备验证。
 
-说明硬件、固件、配置、工具和输入数据。
+## 假设、历史分析和未确认事项
 
-## 时间线
-
-| 时间 | 操作或观察 | 结果 |
+| 项目 | 关联记录陈述 | 本条判定 |
 | --- | --- | --- |
-|  |  |  |
+| CH0 共享 | MSPI 与 Flash FSP/QSPI 调用同一 BDMA 通道 | 历史源码分析摘要，尚未以当前 SDK 精确 SHA 复核 |
+| 长时间阻塞 | 下游 NAND/UBIFS 与 LCD 等待同一信号量 | 历史现场栈摘要，尚无本条原始 log/设备再现 |
+| 异常路径 | MSPI DMA 后续错误/超时时缺少 BDMA cancel | 关联记录提出的软件缺口；修复源码与 HIL 尚未验收 |
+| 最初触发因素 | DMA completion/IRQ 丢失、MSPI 外设或底层状态 | 未确认；不得直接归咎 Flash 介质、NAND 损坏或特定中断竞态 |
 
-## 证据
+## 根因、修复和验证状态
 
-记录日志摘要、命令摘要、artifact 引用和 hash；不写 raw 大文件正文。
-
-## 假设与排除
-
-| 假设 | 验证动作 | 结果 | 状态 |
-| --- | --- | --- | --- |
-|  |  |  |  |
-
-## 根因
-
-确认根因；未确认时写“未确认”。
-
-## 修复或规避
-
-说明已执行动作、适用范围和副作用。
-
-## 验证
-
-说明复现前后对比、命令和通过/失败判据。
-
-### 离线待验证（可选）
-
-仅在现场或离线排障先记录、后补验证时保留此块；未验证内容必须留在假设、风险或后续动作中。
-
-```yaml
-manual_validation_pending: true
-manual_validation_reason:
-required_followup: rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
-owner:
-review_after:
-```
+- **本条独立根因：未确认。** 关联文本认为异常退出未归还 CH0 信号量是持续阻塞的软件路径解释；这不等于证明首次触发条件或生产固件修复结果。
+- **已在本条执行的修复：无。** 关联文本建议在合法获得通道并启动 DMA 后，对错误分支进行受控 cancel/清理，且必须避免与 NAND 活动传输竞态。不得在实际设备上手工强制释放 CH0。
+- **仍缺：** 精确的 SDK source commit/补丁 diff、原始受控 SysRq/MMIO 取证标识、并发 LCD 与 `/data` 压力的修复前后 HIL、IRQ/cancel race 故障注入以及 UBI/UBIFS 数据完整性核验。
 
 ## 后续动作
 
-说明是否提升为 runbook、validation、decision，或仅归档。
+1. 向源项目取得脱敏、不可变的代码版本和原始现场取证 receipt，核对本条与关联文本是否确属同一现场/同一根因；不得以同题重复条目推定同一性。
+2. 以 source SHA、artifact digest、运行版本和有界测试矩阵补独立 validation；由真实模块 owner 判断是保留独立记录、建立 supersedes 关系还是在受控流程中去重。
+3. 在上述证明之前不提升 `active`、不关闭设备证据缺口，也不把本次文字补录计为板端验证通过。
