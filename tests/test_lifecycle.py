@@ -168,6 +168,21 @@ def test_knowledge_new_apply_cannot_register_unfilled_validation_as_reviewing(
     assert not (root / "governance/no-blank-verification.md").exists()
 
 
+def test_knowledge_new_guide_recommends_draft_for_raw_form(tmp_path, capsys):
+    root = _root(tmp_path)
+    rc = new_main([
+        str(root), "--kind", "decision", "--domain", "projects/demo",
+        "--id", "raw-form-draft", "--path", "projects/demo/decision.md",
+        "--json",
+    ])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert payload["status"] == "guide"
+    assert "- 推荐 registry status: draft" in payload["guide"]
+    assert '"status":"draft"' in payload["guide"]
+
+
 def test_capture_summary_json_is_bounded_and_omits_write_rows(tmp_path, capsys):
     root = _root(tmp_path)
     source = tmp_path / "source.md"
