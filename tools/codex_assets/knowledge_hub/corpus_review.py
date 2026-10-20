@@ -23,6 +23,7 @@ from .common import (
 from .corpus_optimization import build_corpus_optimization
 from .corpus_supersession import annotate_supersession
 from .template_integrity import is_registered_unfilled_template
+from .text_integrity import has_persisted_tool_truncation
 from .delegated_content_review import (
     FIELD as AI_REVIEW_FIELD, expected_record, item_digest, load_ledger, review_state,
 )
@@ -139,6 +140,7 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "body_sha256": hashlib.sha256(body.strip().encode("utf-8")).hexdigest(),
             "body_empty": not bool(body.strip()),
             "frontmatter_matches_registry": mirrored,
+            "persisted_tool_truncation": has_persisted_tool_truncation(data),
             # Plain Markdown archived before YAML adoption is preserved as
             # unbound provenance, never silently accepted as current metadata.
             "historical_plaintext_archive": (
@@ -216,7 +218,7 @@ def _review_evidence(root: pathlib.Path, item: Mapping[str, Any], document: Mapp
 
 def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str, Any],
              review: Mapping[str, Any], today: dt.date) -> List[str]:
-    issues = []
+    issues = ["persisted-tool-truncation-marker"] if doc.get("persisted_tool_truncation") is True else []
     status = item.get("status")
     if doc["status"] == "archive-directory-observed":
         issues.append("archive-directory-identity-only")
@@ -275,7 +277,7 @@ def _lane(item: Mapping[str, Any], signals: List[str], risk_class: str) -> str:
     if item.get("status") == "personal" or item.get("visibility") == "personal-local":
         return "personal-excluded"
     if ({"body-unavailable-or-invalid", "frontmatter-drift",
-         "registered-unfilled-template"} & set(signals)):
+         "registered-unfilled-template", "persisted-tool-truncation-marker"} & set(signals)):
         return "P0-integrity"
     if risk_class == "security-critical" and item.get("status") in {"active", "reviewing"}:
         return "P0-governance"
