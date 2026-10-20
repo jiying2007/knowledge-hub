@@ -50,3 +50,14 @@ def test_historical_results_never_confer_new_review_or_operation_authority():
         "Issue #176", "不等于全库知识自动审查完成",
     ):
         assert boundary in doc
+
+
+def test_personal_history_notice_points_to_current_rules_without_scope_promotion():
+    doc = README.read_text(encoding="utf-8")
+    for value in (
+        "manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.md",
+        "domains/personal/", "notes/personal/", "../AGENTS.md", "scope=team-general",
+        "不因路径、scope 或 Owner 名称而转成团队知识", "不进入团队 active index",
+        "不读取、迁移或导出个人正文",
+    ):
+        assert value in doc

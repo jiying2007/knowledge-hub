@@ -17,6 +17,7 @@ Do not store raw SDK packages, logs, core dumps, release binaries, credentials, 
 | --- | --- | --- |
 | [2026-06-21 人工恢复与边界加固](manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md) | 包含旧 `domains/projects/pcr02/` 路径和当时的 source 枚举。 | 当前项目按 `projects/<project>/` 归属区分；PCR02 的 `projects/pcr02-ssc305/` 与 `projects/xcrz-sigmastar-demo/` 不是可互换命名空间。先定位原始条目和实际项目，不做一对一全局路径替换；枚举以当前工具与 Registry 契约为准。 |
 | [2026-06-22 恢复、搜索与人工入口加固](manifests/knowledge-hub-recovery-search-manual-hardening-20260622.md) | 仍描述 `knowledge-new.sh --source` 的 `--source-status` 参数。 | `--source-status` 已移除；当前回归契约要求它以退出码 2 和 `ERROR unknown argument: --source-status` 拒绝。不要恢复此参数，也不要把省略它解释为可自由选择 source 生命周期；当前默认值与合法字段以当前工具输出为准。 |
+| [2026-06-23 人工新增与来源推荐](manifests/knowledge-hub-manual-entry-owner-personal-source-recommendation-20260623.md) | 使用旧 `domains/personal/` 示例，并带有容易误读的 `scope=team-general`。 | 当前个人草稿入口以根 [AGENTS.md](../AGENTS.md) 的 `notes/personal/` 为准；个人标记不因路径、scope 或 Owner 名称而转成团队知识，不进入团队 active index。此说明不读取、迁移或导出个人正文。 |
 
 ### 计划、历史结果与现行证据
 
