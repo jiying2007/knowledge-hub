@@ -12,9 +12,9 @@ import json
 import pathlib
 import re
 from collections import defaultdict
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Dict, Mapping, Sequence, Set
 
-from .common import KnowledgeHubError
+from .common import ALLOWED_STATUSES, KnowledgeHubError
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -45,6 +45,15 @@ def _json(root: pathlib.Path, path: pathlib.Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _unique_metadata_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise KnowledgeHubError("duplicate key in convergence metadata")
+        result[key] = value
+    return result
+
+
 def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
     _require_hub_file(root, path)
     if path.stat().st_size > MAX_INVENTORY_FILE_BYTES:
@@ -66,19 +75,51 @@ def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
                 continue
             if len(rows) >= MAX_INVENTORY_ROWS:
                 raise KnowledgeHubError("convergence ledger row budget exceeded: " + path.name)
-            row = json.loads(raw)
+            row = json.loads(raw, object_pairs_hook=_unique_metadata_object)
             if not isinstance(row, dict):
                 raise KnowledgeHubError("convergence ledger row is not an object: " + path.name)
             rows.append(row)
     return rows
 
 
+def private_body_paths(root: pathlib.Path, body_paths: Sequence[str]) -> Set[str]:
+    """Classify before body reads; retain only counts in public projections."""
+    private_roots = {"notes/personal"}
+    for row in _jsonl(root, root / "registry/items.jsonl"):
+        status, visibility = row.get("status"), row.get("visibility")
+        if (not isinstance(status, str) or status not in ALLOWED_STATUSES
+                or visibility not in ("team-internal", "personal-local")):
+            raise KnowledgeHubError("invalid registry privacy classification")
+        relative = row.get("path")
+        if not isinstance(relative, str) or not relative:
+            raise KnowledgeHubError("invalid registry privacy path")
+        path = pathlib.PurePosixPath(relative)
+        if (path.is_absolute() or ".." in path.parts or "\\" in relative
+                or relative != path.as_posix() or relative == "."
+                or any(ord(char) < 32 for char in relative)):
+            raise KnowledgeHubError("invalid registry privacy path")
+        if status == "personal" or visibility == "personal-local":
+            private_roots.add(relative)
+    return {
+        relative for relative in body_paths
+        if relative in private_roots or any(
+            parent.as_posix() in private_roots
+            for parent in pathlib.PurePosixPath(relative).parents
+        )
+    }
+
+
 def _file_digest(root: pathlib.Path, relative: str, remaining: int):
     relative_path = pathlib.PurePosixPath(relative)
     if (not relative or relative_path.is_absolute()
-            or ".." in relative_path.parts or "\\" in relative):
+            or ".." in relative_path.parts or "\\" in relative
+            or relative != relative_path.as_posix()
+            or any(ord(char) < 32 for char in relative)):
         raise KnowledgeHubError("invalid canonical body path")
     path = root / relative
+    if any(root.joinpath(*relative_path.parts[:index]).is_symlink()
+           for index in range(1, len(relative_path.parts) + 1)):
+        raise KnowledgeHubError("canonical body has a symlinked path component")
     if path.is_symlink() or not path.is_file():
         raise KnowledgeHubError("canonical body missing or symlinked: " + relative)
     resolved = path.resolve()
@@ -193,10 +234,13 @@ def build_content_convergence(
         raise KnowledgeHubError("canonical body file count exceeds budget")
     if len(set(body_paths)) != len(body_paths):
         raise KnowledgeHubError("duplicate canonical body path in scan")
+    private_paths = private_body_paths(root, body_paths)
     groups = defaultdict(list)
     rows = []
     hashed_bytes = 0
     for relative in sorted(body_paths):
+        if relative in private_paths:
+            continue
         sha, size = _file_digest(root, relative, MAX_HASH_BYTES - hashed_bytes)
         hashed_bytes += size
         ids = list(registry_ids_by_path.get(relative, []))
@@ -230,6 +274,9 @@ def build_content_convergence(
         "canonical_authority": "Markdown + registry",
         "new_status_source": False,
         "body_count": len(rows),
+        "scope_body_count": len(body_paths),
+        "private_excluded_count": len(private_paths),
+        "private_bodies_hashed": False,
         "hashed_bytes": hashed_bytes,
         "exact_registry_count": sum(row["coverage"] == "exact-registry" for row in rows),
         "frozen_collection_count": sum(row["coverage"] == "frozen-collection" for row in rows),
@@ -244,7 +291,8 @@ def build_content_convergence(
         "owner_decisions_generated": False,
         "canonical_mutations": 0,
         "notes_zh": (
-            "本报告是仓库内正文的逐文件只读取证，不会证明外部原始目录当前文件全集。"
+            "本报告仅对非个人正文逐文件只读取证；个人正文不读取、不哈希，排除仅计数。"
+            "该报告不会证明外部原始目录当前文件全集。"
             "冻结集合覆盖、source 根目录记录或同哈希均不得自动提升 active、删除正文或签署 owner。"
             "仓库级 Terminal 和 Product/Content Terminal 必须继续使用各自现有机器门禁。"
         ),
