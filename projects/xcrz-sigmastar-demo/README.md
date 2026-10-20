@@ -51,3 +51,35 @@ HIL 的 PASS 自动提升为当前生产事实。四份入口在 Registry 中仍
 `supersedes_candidate`、历史删除指令或自动更新 Registry 的决策。
 只有当前源码/固件、相同业务负载的失败/通过 A/B、COLD/WARM/HOT 回归、长稳、温循、
 日夜/IR、功耗及独立 Owner 资格验证闭环后，才能改变生产配置建议。
+
+## 电机、构建与音频历史记录的复用边界（2026-10-20）
+
+本节落实 Issue #176 的正文审读发现，只补充当前导航，不改写历史正文、
+Registry、Owner、`review_after` 或生命周期，也不授予源项目写入、设备操作或发布权限。
+
+### 电机保护：历史测试方案不是现行安全策略
+
+[2026-05-29 电机 MCU 调试记录](archive/reports/2026-05-29-motor-mcu-debug-record.md)
+描述的是 `0.2.0-20260527.hex` 阶段性测试，原文同时保留“1.3A 持续 3s”与
+“持续偏大 10s”两种未固化口径，并明确 SoC 异常综合决策尚未实现。
+**不得据此取消 MCU 本地保护，也不得把“上报 SoC”当作已经存在的安全兜底。**
+复用前须由真实责任人核对当前 MCU/SoC 源码与固件、保护责任、通信失效处理及
+温度、堵转、缺相的受控验证；本入口不选定电流或时间阈值，不提供运动测试命令。
+
+### 构建权威：按范围和日期读取后续纠偏
+
+[GROS 单轨候选及后续纠偏](decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md)
+仅替代 HDI/HAL v4 的 `build-policy` 与 `gros-future-boundary` 范围，不废弃其分层、
+profile 隔离和 HIL 要求。该文 2026-09-05 文首已废止历史 Python resolver / JSON
+source-set 构建权威，改为原生 CMake；后面的 8 月实施记录仍保留旧图与阶段性失败。
+当前命令必须从源项目的 `GROS.md` 与对应原生 CMake 说明重新取得，不能从旧段落
+恢复 Make/Python 产品构建图。Host 测试或交叉链接不代表缺失 IoT、HIL、许可和签名已补齐。
+
+### 音频链路：不得混用分支接口和实验条件
+
+[AISpeech 源码分析与日期增补](archive/reports/2026-08-23-pcr02-aispeech-algorithm-source-analysis.md)
+依次记录预编译静态审计、`dev/vad` 候选、后续 `master` 公共 AEC/BF/AES 与
+NR 或 NN+AGC 尾链，以及最终公共头修订；它们不是同一时刻的运行事实。
+不得恢复已弃用的 `AISP_AFE_*` 分支接口或私有 include，不得把历史 gain=1.6 录音
+当作 gain=1.25 与当前 BuildID 的验证。文中资源数值的时间单位、NR-VAD 能力、
+RTC 业务接入和已安装版本须回读当前源码及独立运行证据，不由本导航推定通过。
