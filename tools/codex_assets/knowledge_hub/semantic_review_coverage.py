@@ -91,10 +91,8 @@ def _tracked_text_inventory(rows: List[Mapping[str, Any]], paths: Optional[Seque
     }
 
 
-def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]], *,
-                   owner: str, tracked_paths: Optional[Sequence[str]] = None) -> Dict[str, Any]:
-    """Match owner-posted textual claims to current body hashes; never certify semantic truth."""
-    rows = _check_corpus(corpus)
+def _collect_claims(comments: List[Mapping[str, Any]], owner: str):
+    """Only count explicitly labeled whole-body claims from expected GitHub author."""
     if not isinstance(owner, str) or not re.fullmatch(r"[A-Za-z0-9-]{1,39}", owner):
         raise ValueError("invalid expected issue commenter")
     if not isinstance(comments, list) or len(comments) > MAX_COMMENTS:
@@ -120,24 +118,23 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
         for match in RECEIPT.finditer(body):
             claimed[match.group(1)].add(match.group(2))
             receipt_rows += 1
+    return claimed, semantic_comments, untrusted_comments, receipt_rows
 
+
+def _scan_rows(rows: List[Mapping[str, Any]], claimed: Mapping[str, Any]) -> Dict[str, Any]:
+    """Count bodies without examining any personal-local identity or content."""
     by_status: Dict[str, Dict[str, int]] = defaultdict(
         lambda: {"total": 0, "current_claim": 0, "stale_claim": 0, "pending": 0}
     )
     seen = set()
     pending = []
-    readable = 0
-    current = 0
-    stale = 0
-    private = 0
-    unreadable = 0
-    archive_directories = 0
+    readable = current = stale = private = unreadable = archive_directories = 0
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError("invalid corpus row")
         if row.get("lane") == "personal-excluded":
             private += 1
-            continue  # Do not access the private identifier, title, or body.
+            continue
         identity = row.get("id")
         if not isinstance(identity, str) or not re.fullmatch(ID_PATTERN, identity) or identity in seen:
             raise ValueError("corpus contains missing or duplicated non-private IDs")
@@ -151,7 +148,7 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
             if status != "archived" or body.get("directory_identity_observed") is not True:
                 raise ValueError("unverified archive directory identity")
             archive_directories += 1
-            continue  # A directory is not a readable document; audit separately.
+            continue
         digest = body.get("sha256") if isinstance(body, dict) else None
         available = bool(
             isinstance(body, dict) and body.get("status") == "read"
@@ -173,23 +170,30 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
                 stale += 1
             signals = row.get("signals") if isinstance(row.get("signals"), list) else []
             p0 = any(
-                isinstance(s, str) and s.startswith(
+                isinstance(signal, str) and signal.startswith(
                     ("registered-unfilled", "frontmatter-drift", "body-unavailable")
-                ) for s in signals
+                ) for signal in signals
             )
             pending.append((
                 0 if p0 else 1, STATUS_ORDER[status], identity, status,
                 "body-unavailable" if not available else "stale-claim" if old else "not-reviewed"
             ))
-    if private != corpus.get("private_excluded_count"):
-        raise ValueError("private exclusion count differs from corpus")
     pending.sort()
-    non_private = len(rows) - private
-    reviewable = non_private - archive_directories
-    if corpus.get("archive_directory_observed_count", archive_directories) != archive_directories:
-        raise ValueError("archive directory count differs from corpus")
-    inventory = _tracked_text_inventory(rows, tracked_paths, private)
-    all_registered_claimed = current == reviewable and unreadable == 0
+    return {
+        "by_status": dict(sorted(by_status.items())), "pending": pending,
+        "readable": readable, "current": current, "stale": stale,
+        "private": private, "unreadable": unreadable,
+        "archive_directories": archive_directories,
+    }
+
+
+def _format_coverage(corpus: Mapping[str, Any], rows: List[Mapping[str, Any]],
+                     counts: Mapping[str, Any], inventory: Mapping[str, Any],
+                     owner: str, semantic_comments: int, untrusted_comments: int,
+                     receipt_rows: int) -> Dict[str, Any]:
+    non_private = len(rows) - counts["private"]
+    reviewable = non_private - counts["archive_directories"]
+    all_registered_claimed = counts["current"] == reviewable and counts["unreadable"] == 0
     unregistered = inventory["unregistered_total"]
     if all_registered_claimed and unregistered == 0:
         state = "registered-text-claims-complete-unverified"
@@ -197,6 +201,7 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
         state = "registered-text-claims-complete-scope-incomplete"
     else:
         state = "needs-semantic-review"
+    pending = counts["pending"]
     return {
         "schema_version": PROJECTION,
         "status": state,
@@ -210,29 +215,44 @@ def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]],
         "canonical_write_performed": False,
         "private_content_exported": False,
         "registry_item_count": len(rows),
-        "private_excluded_count": private,
+        "private_excluded_count": counts["private"],
         "non_private_count": non_private,
         "reviewable_blob_count": reviewable,
-        "archive_directory_structural_count": archive_directories,
+        "archive_directory_structural_count": counts["archive_directories"],
         "registered_text_claims_complete": all_registered_claimed,
         "all_knowledge_semantically_verified": False,
         "unregistered_tracked_text_inventory": inventory,
-        "machine_readable_body_count": readable,
-        "body_unavailable_count": unreadable,
-        "current_body_claim_count": current,
-        "stale_body_claim_count": stale,
-        "pending_body_claim_count": reviewable - current,
+        "machine_readable_body_count": counts["readable"],
+        "body_unavailable_count": counts["unreadable"],
+        "current_body_claim_count": counts["current"],
+        "stale_body_claim_count": counts["stale"],
+        "pending_body_claim_count": reviewable - counts["current"],
         "matched_issue_comment_count": semantic_comments,
         "untrusted_issue_comment_count": untrusted_comments,
         "journal_receipt_rows": receipt_rows,
-        "by_status": dict(sorted(by_status.items())),
+        "by_status": counts["by_status"],
         "next_review_queue": [
-            {"id": id_, "status": state, "reason": reason}
-            for _, __, id_, state, reason in pending[:MAX_QUEUE]
+            {"id": id_, "status": item_status, "reason": reason}
+            for _, __, id_, item_status, reason in pending[:MAX_QUEUE]
         ],
         "queue_total": len(pending),
         "queue_truncated": len(pending) > MAX_QUEUE,
     }
+
+
+def build_coverage(corpus: Mapping[str, Any], comments: List[Mapping[str, Any]], *,
+                   owner: str, tracked_paths: Optional[Sequence[str]] = None) -> Dict[str, Any]:
+    """Reconcile self-reported historical receipt hashes with exact corpus bytes."""
+    rows = _check_corpus(corpus)
+    claimed, matched, untrusted, receipts = _collect_claims(comments, owner)
+    counts = _scan_rows(rows, claimed)
+    if counts["private"] != corpus.get("private_excluded_count"):
+        raise ValueError("private exclusion count differs from corpus")
+    if counts["archive_directories"] != corpus.get(
+            "archive_directory_observed_count", counts["archive_directories"]):
+        raise ValueError("archive directory count differs from corpus")
+    inventory = _tracked_text_inventory(rows, tracked_paths, counts["private"])
+    return _format_coverage(corpus, rows, counts, inventory, owner, matched, untrusted, receipts)
 
 
 def _git_tracked_paths(root: pathlib.Path) -> List[str]:
