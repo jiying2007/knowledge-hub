@@ -14,6 +14,7 @@ from typing import Any, Dict, List
 from .common import KnowledgeHubError, repository_root, read_bytes_bounded
 from .provider_subjects import digest, read_guard
 from .provider_operations import response
+from .provider_policy import SourceRejected
 from .store import WriteConflict
 from .context_support import TASK_TYPES
 
@@ -53,12 +54,22 @@ class ProviderParser(argparse.ArgumentParser):
                     "allowed_values": list(action.choices) if action.choices is not None else []}
                    for action in self._actions if action.option_strings
                    and (operation is None or action.dest in allowed) and action.dest != "root"]
+        details = {}
+        if operation == "archive":
+            from .provider_policy import SAFE_METADATA
+            details["source_contract"] = {
+                "format": "UTF-8 Markdown with optional descriptive YAML frontmatter",
+                "allowed_metadata": sorted(SAFE_METADATA),
+                "required": ["nonempty body", "--title or frontmatter title or H1", "--sanitized"],
+                "ownership": "subject, kind, owner and status are assigned by Provider; do not copy project frontmatter",
+                "repair": "create a separate sanitized conclusion; keep the original engineering record unchanged",
+            }
         print(json.dumps({"schema_version": "knowledge-provider.help/v4", "status": "HELP",
                           "operation": operation, "read_only": True, "persisted": False,
                           "write_performed": False, "operations": list(OPERATION_FIELDS), "options": options,
                           "context_task_types": sorted(TASK_TYPES),
                           "result_boundaries": {"context": "read-only; inspect authority_lanes separately",
-                                                "archive": "only persisted success acknowledges candidate archive"}},
+                                                "archive": "only persisted success acknowledges candidate archive"}, **details},
                          ensure_ascii=False), file=file)
 
 
@@ -234,7 +245,7 @@ def main(argv=None):
         unknown = bool(getattr(args, "_commit_started", False)) and not isinstance(exc, WriteConflict)
         conflicted = reason == "CONTENT_DRIFT" and bool(getattr(args, "_operation_id", None))
         value = response("UNKNOWN" if unknown else "CONFLICT" if conflicted else "BLOCKED", getattr(args, "_operation_id", None), reason=reason)
-        if isinstance(exc, ProviderArgumentError):
+        if isinstance(exc, (ProviderArgumentError, SourceRejected)):
             value["diagnostics"] = [exc.diagnostic]
         code = 2
     print(json.dumps(value, ensure_ascii=False, separators=(",", ":")))

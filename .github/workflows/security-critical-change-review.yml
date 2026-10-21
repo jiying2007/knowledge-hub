@@ -33,8 +33,11 @@ jobs:
     name: Exact-head security-critical review
     if: >-
       ${{
-        github.event_name != 'issue_comment' ||
-        github.event.issue.pull_request != null
+        (github.event_name != 'issue_comment' ||
+         (github.event.issue.pull_request != null &&
+          github.event.issue.state == 'open')) &&
+        (github.event.pull_request == null ||
+         github.event.pull_request.state == 'open')
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -71,6 +74,13 @@ jobs:
           base_sha = str(base.get("sha") or "").lower()
           base_ref = str(base.get("ref") or "")
           head_sha = str(head.get("sha") or "").lower()
+          if pull.get("state") != "open" or pull.get("merged_at"):
+              # A merged/closed PR is historical evidence, not a live status target.
+              with Path(os.environ["GITHUB_OUTPUT"]).open(
+                  "a", encoding="utf-8"
+              ) as handle:
+                  handle.write("pr_open=false\n")
+              raise SystemExit(0)
           if base_ref != "master":
               raise SystemExit(
                   "security change review only supports PRs targeting master"
@@ -95,6 +105,7 @@ jobs:
               "a",
               encoding="utf-8",
           ) as handle:
+              handle.write("pr_open=true\n")
               handle.write("base_sha={}\n".format(base_sha))
               handle.write("head_sha={}\n".format(head_sha))
               handle.write(
@@ -118,12 +129,14 @@ jobs:
           PY
 
       - name: Checkout exact trusted base
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.resolve.outputs.base_sha }}
           persist-credentials: false
 
       - name: Verify workflow is bound to PR base
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         env:
           BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
         run: |
@@ -134,6 +147,7 @@ jobs:
           fi
 
       - name: Set up governed Python
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
@@ -141,12 +155,15 @@ jobs:
           cache-dependency-path: requirements-runtime.lock
 
       - name: Bootstrap governed CI transport
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         run: tools/ci/rtk bash tools/ci/bootstrap-path.sh
 
       - name: Install hash-locked runtime dependencies
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         run: rtk python3 -m pip install --require-hashes -r requirements-runtime.lock
 
       - name: Fetch exact PR files, reviews and approval comments
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -164,6 +181,7 @@ jobs:
             --jq '.[] | @json' > "${cache}/comments.jsonl"
 
       - name: Build and validate exact-head security review packet
+        if: ${{ steps.resolve.outputs.pr_open == 'true' }}
         id: packet
         env:
           BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
@@ -273,10 +291,11 @@ jobs:
           PY
 
       - name: Publish exact-head security approval status
-        if: ${{ always() && steps.resolve.outputs.head_repository == github.repository && steps.resolve.outputs.head_sha != '' }}
+        if: ${{ always() && steps.resolve.outputs.pr_open == 'true' && steps.resolve.outputs.head_repository == github.repository && steps.resolve.outputs.head_sha != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+          BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
           GATE_PASS: ${{ steps.packet.outputs.gate_pass }}
         run: |
           set -euo pipefail
@@ -286,6 +305,14 @@ jobs:
             state="success"
             description="Exact-head security approval verified"
           fi
+          # A comment/review may race with merging or head updates. Re-read
+          # the live PR before projecting any status onto its commit.
+          live_binding="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" \
+            --jq 'select(.state == "open" and .merged_at == null) | .base.sha + " " + .head.sha')"
+          if [[ "${live_binding}" != "${BASE_SHA} ${HEAD_SHA}" ]]; then
+            echo "PR closed or changed; skip stale Security approval status projection" >&2
+            exit 0
+          fi
           gh api --method POST \
             "repos/${GITHUB_REPOSITORY}/statuses/${HEAD_SHA}" \
             -f state="${state}" \
@@ -294,8 +321,8 @@ jobs:
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
       - name: Upload bounded security review evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() && steps.resolve.outputs.pr_open == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: knowledge-hub-security-change-review-${{ env.PR_NUMBER }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: .cache/knowledge-hub/security-change-review/packet.json

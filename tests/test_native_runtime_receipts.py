@@ -3,6 +3,7 @@ import json
 
 from tools.codex_assets.knowledge_hub.connector_runtime import (
     StaticConnectorAdapter,
+    acknowledge_connector_sync,
     sync_connector,
 )
 from tools.codex_assets.knowledge_hub.memory_runtime import (
@@ -91,8 +92,11 @@ def test_connector_sync_records_non_production_observation_receipt(tmp_path):
     )
 
     result = sync_connector(tmp_path, adapter, _principal())
+    ack = acknowledge_connector_sync(tmp_path, result["checkpoint_proposal"])
 
-    assert result["checkpoint_advanced"] is True
+    assert result["checkpoint_advanced"] is False
+    assert result["requires_consumer_ack"] is True
+    assert ack["checkpoint_advanced"] is True
     observation = result["observation"]
     assert observation["recorded"] is True
     assert observation["observation_origin"] == "static-fixture"

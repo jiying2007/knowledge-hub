@@ -8,16 +8,89 @@
     "completed_implementation_branch_retention_days": 0,
     "active_architecture_branch_requires_owner": true,
     "active_architecture_branch_requires_expiry": true,
-    "branch_delete_requires_retained_exact_head_evidence": true
+    "branch_delete_requires_retained_exact_head_evidence": true,
+    "unclassified_nonmaintenance_branch_blocks_terminal": true,
+    "retirement_delete_requires_no_open_pr": true
   },
   "retirement_candidates": [
-    {"branch": "codex/knowledge-runtime-p0-p3", "reason": "implementation absorbed by master"},
-    {"branch": "codex/knowledge-runtime-p4-interop", "reason": "implementation absorbed by master"},
-    {"branch": "codex/knowledge-runtime-p5-p10", "reason": "implementation absorbed by master"},
-    {"branch": "codex/knowledge-hub-cleanup", "reason": "cleanup absorbed by master"},
-    {"branch": "codex/readme-command-surface-authority", "reason": "README authority fix absorbed by master"},
-    {"branch": "arch/runtime-consumer-contract-v1", "reason": "runtime consumer contract is already present on master; divergent branch CI is not authoritative"},
-    {"branch": "codex/terminal-closure-campaign-v1", "reason": "delete after PR #29 is merged and post-merge master evidence is retained"}
+    {
+      "branch": "codex/knowledge-runtime-p0-p3",
+      "reason": "implementation absorbed by master"
+    },
+    {
+      "branch": "codex/knowledge-runtime-p4-interop",
+      "reason": "implementation absorbed by master"
+    },
+    {
+      "branch": "codex/knowledge-runtime-p5-p10",
+      "reason": "implementation absorbed by master"
+    },
+    {
+      "branch": "codex/knowledge-hub-cleanup",
+      "reason": "cleanup absorbed by master"
+    },
+    {
+      "branch": "codex/readme-command-surface-authority",
+      "reason": "README authority fix absorbed by master"
+    },
+    {
+      "branch": "arch/runtime-consumer-contract-v1",
+      "reason": "runtime consumer contract is already present on master; divergent branch CI is not authoritative"
+    },
+    {
+      "branch": "codex/terminal-closure-campaign-v1",
+      "reason": "delete after PR #29 is merged and post-merge master evidence is retained"
+    },
+    {
+      "branch": "evidence/llm-agent-g9-handoff-dry-run",
+      "expected_head": "c779b7e2a2a68ed00faf7a9b082eefa775807c21",
+      "reason": "dry-run workflow superseded by current evidence automation"
+    },
+    {
+      "branch": "feat/real-observation-source-registration-20260926",
+      "expected_head": "5b33ce2f38ef556894ec3276554eb10f720ed2e6",
+      "reason": "real observation registration absorbed and superseded by current master"
+    },
+    {
+      "branch": "fix/ci-evidence-date-20260925",
+      "expected_head": "fe2e1bb042c5dafd810720a5eb196d5e76329f03",
+      "reason": "UTC evidence-date fix superseded by final mainline implementation"
+    },
+    {
+      "branch": "fix/ci-evidence-date-final-20260925",
+      "expected_head": "566f1d5ed5c7a587ad3a2c0af3644c6896ce9072",
+      "reason": "UTC evidence-date final fix absorbed by current master"
+    },
+    {
+      "branch": "fix/maintenance-critical-comment-dedup-20260925",
+      "expected_head": "3c5c49fcb76c50d6d08751acfb2fd1cc1dd2c92e",
+      "reason": "maintenance comment test superseded by final mainline implementation"
+    },
+    {
+      "branch": "fix/maintenance-critical-comment-dedup-final-20260925",
+      "expected_head": "dc678220b9f084488bbcef42f41cae8e96acc395",
+      "reason": "maintenance dedup final fix absorbed by current master"
+    },
+    {
+      "branch": "governance/final-security-closure-20260926",
+      "expected_head": "c4f058ba766e46eef182f233bd02ebc9d08abe08",
+      "reason": "security closure bundle superseded by current canonical governance"
+    },
+    {
+      "branch": "governance/final-security-closure-v2-20260926",
+      "expected_head": "3a01c9f43d986b16761bd042ef6db3e3cf9dd5ee",
+      "reason": "security closure v2 fix absorbed by current registry state"
+    },
+    {
+      "branch": "governance/terminal-policy-no-static-status",
+      "expected_head": "a00b93e40421b2d5ebcb32600bc0d4eb76f94b37",
+      "reason": "terminal policy test superseded by current terminal authority"
+    },
+    {
+      "branch": "governance/terminal-policy-no-static-status-final-20260925",
+      "expected_head": "7e6c30cf5d15eb9ed021d45365bd2f883e508769",
+      "reason": "terminal verdict-neutral policy absorbed by current master"
+    }
   ],
   "closure_evidence": {
     "status": "closed",

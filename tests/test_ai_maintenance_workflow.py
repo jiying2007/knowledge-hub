@@ -163,3 +163,38 @@ def test_ai_maintenance_operational_tracker_comments_are_scoped_and_non_evidence
     assert "no production/adoption result was synthesized" in text
     assert "gh issue reopen 20" in text
     assert "gh issue reopen 21" in text
+
+
+def test_ai_maintenance_full_corpus_audit_is_source_bound_and_non_authoritative():
+    payload = _workflow()
+    steps = payload["jobs"]["sweep"]["steps"]
+    audit = next(step for step in steps if step.get("name") == "Capture full-corpus AI review evidence")
+    script = audit["run"]
+    assert "tools.codex_assets.knowledge_hub.corpus_review_cli" in script
+    assert "--root . --as-of" in script
+    assert "corpus-review-summary.json" in script
+    assert ".tmp/knowledge-hub/ai-maintenance-corpus-review.json" in script
+    assert "SOURCE_REVISION" in script
+    assert 'summary["report_sha256"] != full["report_sha256"]' in script
+    assert 'summary.get("ai_review_audit")' in script
+    assert 'summary["machine_attempted_count"]' in script
+    assert 'summary["private_excluded_count"]' in script
+    assert 'audit["request_unverified_count"]' in script
+    assert 'audit["item_identity_drift_count"]' in script
+    assert 'audit["body_content_drift_count"]' in script
+    assert 'audit["historical_proof_promoted"] is not False' in script
+    assert 'summary["canonical_write_performed"] is not False' in script
+    assert "MAX_REPORT_BYTES" in script
+    assert "corpus-review-redacted.json" in script
+    assert 'artifact_path.open("xb")' in script
+    assert '"artifact_sha256": hashlib.sha256(full_bytes).hexdigest()' in script
+    assert "gh issue close 157" not in script
+    assert "knowledge-promote" not in script
+
+    artifact = next(step for step in steps if step.get("name") == "Upload bounded maintenance evidence")
+    assert ".cache/knowledge-hub/ai-maintenance/" in artifact["with"]["path"]
+    assert ".tmp/knowledge-hub/ai-maintenance-corpus-review.json" not in artifact["with"]["path"]
+    assert "corpus-review-redacted.json" in script
+    assert artifact["if"] == "always()"
+    assert payload["permissions"] == {"contents": "read", "issues": "write"}
+    assert set(payload["on"]) == {"schedule", "workflow_dispatch"}

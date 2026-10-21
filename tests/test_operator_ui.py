@@ -260,6 +260,80 @@ def test_http_surface_is_loopback_and_rejects_write_methods(tmp_path: pathlib.Pa
         thread.join(timeout=5)
 
 
+def test_operator_cache_is_bounded_and_unknown_paths_do_not_evaluate(tmp_path):
+    calls = []
+    def expensive_builder(root):
+        calls.append(root)
+        return _sample_state()
+
+    server = operator_ui.OperatorHTTPServer(
+        (operator_ui.LOOPBACK_HOST, 0), tmp_path, state_builder=expensive_builder,
+    )
+    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker.start()
+    url = "http://127.0.0.1:{}".format(server.server_address[1])
+    try:
+        with urllib.request.urlopen(url + "/healthz", timeout=5) as response:
+            assert response.status == 200
+        with urllib.request.urlopen(url + "/api/state", timeout=5) as response:
+            assert json.load(response)["read_only"] is True
+        with urllib.request.urlopen(url, timeout=5) as response:
+            assert "状态生成时间" in response.read().decode("utf-8")
+        assert len(calls) == 1
+        with urllib.request.urlopen(url + "/api/state", timeout=5):
+            pass
+        assert len(calls) == 1
+        try:
+            urllib.request.urlopen(url + "/does-not-exist", timeout=5)
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 404
+        else:
+            raise AssertionError("unknown path succeeded")
+        assert len(calls) == 1
+        server._cached_at -= operator_ui.STATE_CACHE_SECONDS + 1
+        with urllib.request.urlopen(url + "/api/state", timeout=5):
+            pass
+        assert len(calls) == 2
+    finally:
+        server.shutdown()
+        server.server_close()
+        worker.join(timeout=5)
+
+
+def test_operator_rejects_untrusted_host_and_origin_before_state_read(tmp_path):
+    calls = []
+    def state_builder(root):
+        calls.append(root)
+        return _sample_state()
+
+    server = operator_ui.OperatorHTTPServer(
+        (operator_ui.LOOPBACK_HOST, 0), tmp_path, state_builder=state_builder,
+    )
+    worker = threading.Thread(target=server.serve_forever, daemon=True)
+    worker.start()
+    url = "http://127.0.0.1:{}/api/state".format(server.server_address[1])
+    try:
+        for headers in ({"Host": "evil.example"}, {"Origin": "http://evil.example"}):
+            request = urllib.request.Request(url, headers=headers)
+            try:
+                urllib.request.urlopen(request, timeout=5)
+            except urllib.error.HTTPError as exc:
+                assert exc.code == 403
+            else:
+                raise AssertionError("untrusted request succeeded")
+        assert calls == []
+        request = urllib.request.Request(
+            url, headers={"Origin": "http://localhost:{}".format(server.server_address[1])}
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            assert json.load(response)["read_only"] is True
+        assert len(calls) == 1
+    finally:
+        server.shutdown()
+        server.server_close()
+        worker.join(timeout=5)
+
+
 def test_live_private_fact_routes_stale_canonical_gap_to_machine_ratchet():
     queue = operator_actions.build_action_queue(
         [],

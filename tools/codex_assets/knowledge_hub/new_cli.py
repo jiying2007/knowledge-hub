@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 from .common import KnowledgeHubError, load_json, resolve_today
 from .lifecycle import capture
+from .template_integrity import UNFILLED_TEMPLATE_BODY_SHA256
 
 
 AI_ROLES = ("none", "drafted", "summarized", "translated", "rewritten", "classified", "extracted")
@@ -58,7 +59,9 @@ def _parser() -> argparse.ArgumentParser:
             "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner team-core --id pcr02-example-runbook --path projects/xcrz-sigmastar-demo/current/runbooks/example.md --dry-run --json\n"
             "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id example-source --source-path sources/example-source --role hub-canonical-source --authority knowledge-hub-canonical --write-policy knowledge-hub-only --check \"rtk test -d sources/example-source\"\n"
             "  rtk bash ~/knowledge-hub/tools/knowledge-new.sh --source --source-id runtime-example --source-path sources/runtime-example --role hub-runtime-input --authority runtime-input-provenance --write-policy runtime-read-only-input --no-check-reason \"runtime input; Hub control directory pending\"\n\n"
-            "Guide mode is read-only. --dry-run prints an exact transaction plan; --apply performs the governed transaction."
+            "Guide mode is read-only. --dry-run prints an exact transaction plan; --apply performs the governed transaction.\n"
+            "Untouched debug-record/validation/decision templates cannot enter reviewing;\n"
+            "use --status draft or capture substantive authored Markdown instead."
         ),
     )
     parser.add_argument("--source", action="store_true", dest="source_mode")
@@ -343,7 +346,7 @@ def _item_guide(root: pathlib.Path, args: argparse.Namespace, today: dt.date, pa
     project = args.domain.split("/", 1)[1] if args.domain.startswith("projects/") else "<可选>"
     scope = "project-specific" if args.domain.startswith("projects/") else "team-general"
     visibility = "personal-local" if args.domain == "notes" and args.path.startswith("notes/personal/") else "team-internal"
-    draft_status = "archived" if registry_kind == "project-archive" else "personal" if visibility == "personal-local" else "reviewing"
+    draft_status = "archived" if registry_kind == "project-archive" else "personal" if visibility == "personal-local" else "draft" if registry_kind in UNFILLED_TEMPLATE_BODY_SHA256 else args.status
     owner_state = _owner_status(root, args.owner)
     warning = ""
     if owner_state == "unknown-owner":

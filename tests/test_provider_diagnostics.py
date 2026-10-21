@@ -48,6 +48,16 @@ def test_analysis_is_not_an_alias_and_capability_matches_parser():
     assert result["operations"]["context"]["task_types"] == sorted(TASK_TYPES)
 
 
+def test_archive_help_explains_source_contract(capsys):
+    from tools.codex_assets.knowledge_hub.provider_policy import SAFE_METADATA
+    with pytest.raises(SystemExit):
+        provider_cli.main(["archive", "--help"])
+    result = json.loads(capsys.readouterr().out)
+    assert result["source_contract"]["allowed_metadata"] == sorted(SAFE_METADATA)
+    assert "--sanitized" in result["source_contract"]["required"]
+    assert "status" not in result["source_contract"]["allowed_metadata"]
+
+
 @pytest.mark.parametrize("args,field", [(["--project", "private-secret-sentinel"], "--project"), (["--apply"], "--apply")])
 def test_foreign_operation_arguments_identify_only_known_field(capsys, args, field):
     assert provider_cli.main(["context", "--query", "private-secret-sentinel"] + args) == 2

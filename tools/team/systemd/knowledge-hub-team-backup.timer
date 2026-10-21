@@ -1,0 +1,10 @@
+[Unit]
+Description=Knowledge Hub independent weekly backup
+
+[Timer]
+OnCalendar=Sun 03:00
+Persistent=true
+Unit=knowledge-hub-team-backup.service
+
+[Install]
+WantedBy=timers.target

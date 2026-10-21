@@ -10,7 +10,7 @@ import json
 import pathlib
 import re
 
-from .common import KnowledgeHubError
+from .common import KnowledgeHubError, read_repository_bytes_bounded
 from .review_risk import classify_review_risk, load_review_risk_policy
 from .review_semantic import OWNER_BLOCKED
 
@@ -18,6 +18,7 @@ LEDGER = "registry/ai-content-review-authorizations.jsonl"
 FIELD = "ai_delegated_content_review"
 SHA = re.compile(r"[0-9a-f]{64}")
 SCHEMA = "knowledge-ai-content-review-authorization/v1"
+MAX_REVIEW_CONTENT_BYTES = 4 * 1024 * 1024
 
 
 def digest(value):
@@ -30,16 +31,13 @@ def item_digest(item):
 
 
 def content_digest(root, path):
+    """Hash exactly one regular bounded body through symlink-safe descriptors."""
     if not isinstance(path, str) or not path or pathlib.Path(path).is_absolute():
         raise KnowledgeHubError("invalid review content path")
-    resolved = (root / path).resolve()
-    try:
-        resolved.relative_to(root.resolve())
-    except ValueError as exc:
-        raise KnowledgeHubError("review content outside repository") from exc
-    if not resolved.is_file():
-        raise KnowledgeHubError("review content missing or outside repository")
-    return hashlib.sha256(resolved.read_bytes()).hexdigest()
+    raw = read_repository_bytes_bounded(
+        root, path, MAX_REVIEW_CONTENT_BYTES, "AI review content"
+    )
+    return hashlib.sha256(raw).hexdigest()
 
 
 def load_ledger(root):
@@ -199,19 +197,51 @@ def review_state(root, item, ledger=None, policy=None):
 
 
 def review_counts(root, items):
+    """Separate historical human-review claims from current-body hash evidence.
+
+    Keep the legacy human_reviewed_count for existing read-only consumers, but
+    never present it as proof that an unbound body was reviewed in this version.
+    """
     closed = 0
     human = 0
+    bound = 0
+    unbound = 0
+    mismatch = 0
     for item in items:
         if review_state(root, item)["closed"]:
             closed += 1
-        try:
-            human_hash_valid = (not item.get("human_review_content_sha256")
-                                or item["human_review_content_sha256"] == content_digest(root, item.get("path")))
-        except (KnowledgeHubError, OSError):
-            human_hash_valid = False
-        if (item.get("generated_by_ai") is True
-                and all(_string(item.get(key)) for key in ("human_reviewed_by", "human_reviewed_at", "review_basis"))
-                and item.get("human_review_decision") not in {"needs-edits", "defer"}
-                and human_hash_valid):
+        claimed = (
+            item.get("generated_by_ai") is True
+            and all(_string(item.get(key)) for key in (
+                "human_reviewed_by", "human_reviewed_at", "review_basis"))
+            and item.get("human_review_decision") not in {"needs-edits", "defer"}
+        )
+        if not claimed:
+            continue
+        recorded = item.get("human_review_content_sha256")
+        if not recorded:
+            # Legacy metadata is retained, not silently upgraded to a
+            # verified review of today's content.
             human += 1
-    return {"ai_delegated_closed_count": closed, "human_reviewed_count": human}
+            unbound += 1
+            continue
+        try:
+            matches = (
+                isinstance(recorded, str)
+                and SHA.fullmatch(recorded) is not None
+                and recorded == content_digest(root, item.get("path"))
+            )
+        except (KnowledgeHubError, OSError):
+            matches = False
+        if matches:
+            human += 1
+            bound += 1
+        else:
+            mismatch += 1
+    return {
+        "ai_delegated_closed_count": closed,
+        "human_reviewed_count": human,
+        "human_review_current_body_bound_count": bound,
+        "human_review_historical_unbound_count": unbound,
+        "human_review_content_hash_mismatch_count": mismatch,
+    }

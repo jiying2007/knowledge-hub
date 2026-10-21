@@ -93,7 +93,10 @@ def make_review_queue_item(item, queue_type, reasons, missing_fields):
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
-        "priority": review_priority_for_item(item),
+        # A legacy human-review claim without a body hash is an owner-review
+        # exception (P1), not a broken technical gate. Product readiness is
+        # still blocked by the non-empty queue until current-body review.
+        "priority": "P1" if "human-review-current-body-unbound" in reasons else review_priority_for_item(item),
         "reasons": reasons,
         "missing_fields": missing_fields,
         "source_id": str(source.get("source_id", "")),
@@ -185,14 +188,20 @@ def _ai_review_inputs(item):
         and bool(stored_review_sha256)
         and stored_review_sha256 != current_content_sha256
     )
-    return delegated, missing_fields, review_content_drifted
+    review_content_unbound = (
+        item.get("status") in {"active", "reviewing"}
+        and not missing_fields
+        and not stored_review_sha256
+        and str(item.get("human_review_decision", "")) not in {"needs-edits", "defer"}
+    )
+    return delegated, missing_fields, review_content_drifted, review_content_unbound
 
 
 def build_review_queue_view(items, sources):
     rows = []
     for item in items:
         if item.get("generated_by_ai") is True:
-            delegated, missing_fields, review_content_drifted = _ai_review_inputs(item)
+            delegated, missing_fields, review_content_drifted, review_content_unbound = _ai_review_inputs(item)
             if delegated["status"] == "invalid":
                 rows.append(make_review_queue_item(item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
             elif delegated["closed"]:
@@ -216,13 +225,12 @@ def build_review_queue_view(items, sources):
                         ["review_resolution"],
                     )
                 )
-            elif review_content_drifted:
+            elif review_content_drifted or review_content_unbound:
                 rows.append(
                     make_review_queue_item(
-                        item,
-                        "ai-human-review",
-                        ["human-review-content-sha256-drift"],
-                        ["review_resolution"],
+                        item, "ai-human-review",
+                        ["human-review-content-sha256-drift" if review_content_drifted else "human-review-current-body-unbound"],
+                        ["review_resolution"] if review_content_drifted else ["human_review_content_sha256", "review_resolution"],
                     )
                 )
         external_item_fields = ["retrieved_at", "read_status", "source_license", "source_url", "url"]

@@ -16,6 +16,7 @@ from tools.codex_assets.knowledge_hub.connector_adapters import (
 )
 from tools.codex_assets.knowledge_hub.connector_runtime import (
     StaticConnectorAdapter,
+    acknowledge_connector_sync,
     load_checkpoint,
     sync_connector,
 )
@@ -61,10 +62,15 @@ def test_connector_sync_propagates_acl_tombstone_and_checkpoint(tmp_path):
         next_cursor="commit-2",
     )
     result = sync_connector(tmp_path, adapter, _principal())
+    before_ack = load_checkpoint(tmp_path, "github")
+    ack = acknowledge_connector_sync(tmp_path, result["checkpoint_proposal"])
     checkpoint = load_checkpoint(tmp_path, "github")
 
     assert result["status"] == "pass"
-    assert result["checkpoint_advanced"] is True
+    assert result["checkpoint_advanced"] is False
+    assert result["requires_consumer_ack"] is True
+    assert before_ack["cursor"] == ""
+    assert ack["checkpoint_advanced"] is True
     assert result["accepted"][0]["instruction_authority"] is False
     assert result["accepted"][0]["trust_class"] == "untrusted-external"
     assert result["tombstones"][0]["tombstone"] is True

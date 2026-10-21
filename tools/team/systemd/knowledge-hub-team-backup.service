@@ -1,0 +1,12 @@
+[Unit]
+Description=Knowledge Hub separate-filesystem Git backup and restore drill
+
+[Service]
+Type=oneshot
+Environment=KH_INSTALL_ROOT=/srv/knowledge-hub
+# Operator MUST supply a real independently mounted backup location here.
+Environment=KH_BACKUP_DIR=
+ExecStart=/usr/bin/bash /srv/knowledge-hub/current/tools/team/backup.sh
+TimeoutStartSec=600
+UMask=0077
+NoNewPrivileges=true

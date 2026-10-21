@@ -1,0 +1,21 @@
+# Install this behind internal DNS; never expose this configuration on a public listener.
+# Replace the example host and customize the trusted corporate LAN ranges.
+knowledge.example.internal {
+    tls internal
+
+    @outside not remote_ip 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+    respond @outside 403
+
+    # Only an absent Origin or the exact browser origin can be proxied.
+    @bad_origin expression `{http.request.header.Origin} != "" && {http.request.header.Origin} != "https://knowledge.example.internal"`
+    respond @bad_origin 403
+
+    reverse_proxy 127.0.0.1:3000 {
+        # The backend intentionally accepts only loopback Host/Origin.
+        header_up Host 127.0.0.1:3000
+        header_up Origin http://127.0.0.1:3000
+        header_up -X-Forwarded-For
+        header_up -X-Forwarded-Host
+        header_up -X-Forwarded-Proto
+    }
+}

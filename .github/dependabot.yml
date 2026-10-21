@@ -7,6 +7,15 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - dependencies
+    groups:
+      dev-toolchain:
+        applies-to: version-updates
+        patterns:
+          - build
+          - coverage
+          - ruff
+          - setuptools
+          - types-PyYAML
   - package-ecosystem: github-actions
     directory: /
     schedule:

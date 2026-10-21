@@ -227,13 +227,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Reaching this step proves a private-repository GitHub-hosted runner
+          # Reaching this step proves exact-source Signed execution on a GitHub-hosted runner.
           # executed the exact-source signing workflow and the OIDC attestation
           # verified successfully.
           state100="$(gh issue view 100 --repo "${GITHUB_REPOSITORY}" --json state --jq .state 2>/dev/null || true)"
           if [[ "${state100}" == "OPEN" ]]; then
             gh issue close 100 --repo "${GITHUB_REPOSITORY}" \
-              --comment "Fresh exact-source Signed verification executed successfully on a GitHub-hosted private-repository runner; the runner-allocation blocker is closed automatically."
+              --comment "Fresh exact-source Signed verification executed successfully on a GitHub-hosted runner for the current repository posture; this closes only the verified runner-execution blocker."
           fi
 
           protection_status="$(
@@ -302,7 +302,7 @@ jobs:
 
       - name: Upload signed quality evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: knowledge-hub-signed-quality-${{ env.SOURCE_REVISION }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

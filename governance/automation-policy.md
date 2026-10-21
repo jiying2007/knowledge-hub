@@ -82,6 +82,8 @@ Trust-root 文件变更采用 GitHub external review fact，而不是候选分�
 - `security-critical-change-review` 只运行 default-branch trusted workflow，checkout PR base SHA；它通过 GitHub API 读取 head files/reviews，不 checkout 或执行 PR code。唯一写权限是 `statuses: write`，仅用于把验证结果投影为 exact PR head 上的 `Security approval gate` commit status；不具备 contents / pull-requests / issues 写权限。
 - `master` protection 真正启用后，ruleset required status checks 至少必须包含稳定聚合 context `Quality gate` 与 exact-head 投影 context `Security approval gate`。`security-critical-change-review` 自身是 trusted-base evaluator：`pull_request_target` 的初始 job check 可能因“等待审批”失败，而后续 `issue_comment` 审批 run 绑定 default branch SHA，因此不能直接把 job 名 `Exact-head security-critical review` 配成 required context。`protected=true` 但允许绕过任一稳定 gate 不能视为完整治理目标。
 - 该 gate 本身、所有 workflow、authorization/review-risk/ratchet/verifier 等执行 trust root 同样分类为 `security-critical`，防止通过修改 verifier 绕过 verifier。
+- `issue_comment` 或 review 事件到达时必须重新确认 **PR 仍处于 open 且 base/head 绑定未漂移**；已关闭/已合并 PR 的历史评论只保留 provenance，不得改写旧 commit 的 `Security approval gate` 状态。任何状态发布之前必须再从 GitHub API 验证当前 PR 身份。
+- GitHub Public 仓库的 `pull_request_target` 默认事件策略预计 2026-11-02 强制执行；需要真实 repository administrator 在 Actions policies 中核验并设置只针对该受信工作流的最小允许事件策略，或者以等效受信工作流替换。当前 CI SUCCESS **不证明**此未来管理设置已完成；外部管理员待办见 issue #159。
 
 ### Provider evidence machine ratchet
 
@@ -100,7 +102,7 @@ Provider evidence 进一步按字段拆分责任边界：
 
 - observation/source artifact 必须来自真实 provider、真实生产评估、真实 memory lifecycle 或真实 adoption；不得由 AI 合成、mock、fixture、local-only 结果替代。
 - observation source run 还必须属于当前仓库、运行在 `master`，event 仅允许 `workflow_dispatch` / `schedule`，并记录 exact workflow path/head SHA；PR 分支、临时分支或无法识别 workflow path 的 artifact 不得进入真实证据链。
-- 仅满足 same-repo/master 仍不够：source workflow 必须显式注册在 `registry/ai-operations-policy.json#external_evidence.observation_source_workflow_allowlist` 对应 gap 下。当前列表为空表示尚未接入真实 observation producer，而不是让任意 master workflow 自报 `synthetic=false` 即获得生产证据资格。
+- 仅满足 same-repo/master 仍不够：source workflow 必须显式注册在 `registry/ai-operations-policy.json#external_evidence.observation_source_workflow_allowlist` 对应 gap 下。当前 machine policy 已分别登记 connector、retrieval、memory、adoption 四类受信 `real-observation-*.yml`；**登记不代表已有真实观测结果**。是否已取得可用证据只能由确切 master/run/artifact 身份与 canonical gap gate 判断，不允许任意 workflow 仅凭自报 `synthetic=false` 获得真实资格。
 - 已注册 workflow 还必须位于保留命名空间 `.github/workflows/real-observation-*.yml`；Quality/intake/ratchet/maintenance 等控制面 workflow 即使被误写入 allowlist 也会在运行时 fail-closed。
 - `external-pilot-evidence-producer` 只把显式选择的真实 observation 投影成 strict evidence；它不修改 canonical state。
 - 真实环境输入合同由 schema catalog 唯一声明：`connector-provider-observation-v1`、`production-retrieval-observation-v1`、`production-memory-observation-v1`、`production-adoption-observation-v1`；producer 输入先过 JSON Schema，再过 Python 跨字段严格 validator。外部系统无需读取实现代码猜测 payload。

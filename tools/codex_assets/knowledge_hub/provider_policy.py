@@ -7,6 +7,14 @@ LOW_RISK_KINDS = {"validation", "debug-record", "runbook", "audit", "codex-sessi
 SAFE_METADATA = {"title", "summary_zh", "tags", "primary_language", "source_language", "translation_status", "terminology_status"}
 
 
+class SourceRejected(KnowledgeHubError):
+    """Fixed diagnostics only: never include source values or unknown field names."""
+
+    def __init__(self, field, issue, allowed_values=()):
+        super().__init__("SOURCE_REJECTED")
+        self.diagnostic = {"field": field, "issue": issue, "allowed_values": sorted(allowed_values)}
+
+
 def checked_archive_policy(root, kind=None):
     value = load_json(root / "registry/provider-archive-policy.json", {})
     owners = load_json(root / "registry/owners.json", {}).get("owners", [])
@@ -23,5 +31,5 @@ def metadata_tags(metadata, kind):
     if (not isinstance(tags, list) or len(tags) > 32
             or any(not isinstance(tag, str) or not tag.strip() or len(tag) > 128 for tag in tags)
             or not isinstance(metadata.get("summary_zh", ""), str) or len(metadata.get("summary_zh", "")) > 1000):
-        raise KnowledgeHubError("SOURCE_REJECTED")
+        raise SourceRejected("source-metadata", "invalid-source-metadata", SAFE_METADATA)
     return tuple(dict.fromkeys(["provider-archive", kind] + tags))

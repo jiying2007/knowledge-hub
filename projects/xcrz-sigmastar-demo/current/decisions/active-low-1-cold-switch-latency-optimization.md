@@ -56,63 +56,42 @@ aliases:
 - PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策
 ---
 
-# 决策标题
+# PCR02 ACTIVE_LOW_1 COLD 切换耗时优化：证据导航与待决策事项
 
-## 背景
+> **状态：reviewing / 候选，不是已签署决策。** 2026-10-19 的补录依据同仓现存的 ProfileSwitchMode 历史正文，未回放当时源项目代码、计时原始数据或目标板测试。本条原模板未包含原始性能表与 owner 签字，因此 Registry 摘要中 4.812s→3.298–3.354s 等优化数值**仍无本条独立证据链**，不得作为当前版本的验收数据。
 
-说明为什么需要 owner 决策。
+## 背景与适用范围
 
-## 适用范围
+- 项目：PCR02 / SSC305，物理 1fps 与 30fps 的 VI profile 切换。
+- 决策问题：COLD 全量 teardown/rebuild 的安全兜底是否继续作为默认路径，WARM/HOT 优化能否在完成专项验收后扩大适用范围？
+- 不适用：未提供当前 VI graph、ISP lifetime、真实构建版本和板端验证标识的量产性能断言。
 
-说明决策适用的项目、模块、版本、环境和不适用场景。
+## 可核对的关联来源（仅历史项目候选）
 
-## 权威来源
+- 同仓 [ACTIVE_LOW_1 Profile Switch Mode 当前决策候选](active-low-1-profile-switch-mode.md)，ID `pcr02-active-low-1-profile-switch-mode-20260729`，自身状态为 `reviewing`，尚未形成独立 owner 签署。
+- 该来源正文描述 `VSHDIVI_InitParam_t.enProfileSwitchMode` 与 `[VI] ProfileSwitchMode=cold|warm|hot`，COLD 默认、WARM 资格验证候选、HOT 受控实验，以及 capability 不满足时回退 COLD 的计划。
+- 关联来源内记录一轮历史 HIL：COLD 1→30 API 3.407023s，WARM 2.257506s，HOT 2.240004s；30→1 API 分别为 2.154947s、1.101895s、0.504283s。这是**来源正文中的历史结果**，不是本条新跑的 A/B；和 Registry 摘要另一测量阶段/口径的数值不得拼接。
 
-- source_id：
-- source_path：
-- owner：
-- source_status：
+## 选项与风险
 
-## 决策问题
+| 选项 | 历史材料中的用途 | 尚缺证据 |
+| --- | --- | --- |
+| COLD | 全量重建、安全默认及失败兜底 | 当前版本基线耗时、故障恢复与回归 |
+| WARM | 保留部分 ISP/Sensor 生命周期的准生产候选 | 24h 长稳、温循、低照、图像一致性、功耗和故障注入 |
+| HOT | 受控实验，不做默认 | 首次切换、异常回滚与完整产品资格；收益与风险复核 |
 
-用一句话写清要批准、拒绝、延后或废弃什么。
+## 决策与当前结论
 
-## 选项
+- **本条独立 owner 决策：未取得。** 不把历史 ProfileSwitchMode 正文中的“生产默认”描述自动升级为本条当前正式发布批准。
+- 不从一轮 HIL 或未经原始报告关联的性能摘要推出量产稳定性；COLD 继续作为待源码核验的保守路径参考。
+- 旧环境变量实验文档不得作为当前可复制配置说明；最终入口应由源代码精确版本、现行配置合同和 owner 决策共同证明。
 
-| 选项 | 影响范围 | 成本 | 风险 |
-| --- | --- | --- | --- |
-|  |  |  |  |
+## 生效与回滚条件
 
-## 证据
+- 生效需要：明确的 owner 签署、源代码与二进制 SHA 绑定、带测试环境/负载/统计分布的性能报告、图像/功耗/故障恢复矩阵和可重复 rollback。
+- 任一 retained capability 失效或状态漂移时应按经源代码验证的受控 COLD 恢复策略处理；本文不授权修改运行设备。
 
-| Command | Exit Code | Result Summary | Evidence Path | Layer | Related Artifact |
-| --- | --- | --- | --- | --- | --- |
-| `rtk ...` |  | 中文摘要。 |  | Knowledge Hub / Project / Tool |  |
+## Review 周期与待办
 
-引用验证报告、runbook、artifact、源文档或 owner review。
-
-## 决策
-
-说明批准、拒绝或延后，并明确生效范围。
-
-## 当前结论
-
-说明当前已生效、待 owner 签收、被延后或被拒绝的结论；推断和建议必须单独标注。
-
-## 生效条件
-
-说明何时 active，依赖哪些验证或 owner 动作。
-
-## 回滚条件
-
-说明什么情况下撤销、归档或 supersede。
-
-## 风险与限制
-
-说明未验证点、外部依赖、过期条件、敏感信息边界和后续 owner 复核要求。
-
-## Review 周期
-
-- owner：
-- review_after：
-- 下一次复核内容：
+- 沿用 Registry 原 `owner=team-core` 与 `review_after=2026-10-26`；本次 AI 文本补录不代表 owner 批准或 review 日期刷新。
+- 取得 2026-07-28 原测量脚本/原始报告/精确 source SHA，解释与 2026-07-29 一轮 HIL 的测试口径差异；之后提交独立验证与真实 owner decision。

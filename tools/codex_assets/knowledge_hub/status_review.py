@@ -88,7 +88,9 @@ def _make_item_row(
         "owner": str(item.get("owner", "")),
         "status": str(item.get("status", "")),
         "review_after": str(item.get("review_after", "")),
-        "priority": _review_priority(item),
+        # Historical human-review metadata without a current body hash stays
+        # actionable as P1 owner review, without claiming current approval.
+        "priority": "P1" if "human-review-current-body-unbound" in reasons else _review_priority(item),
         "reasons": reasons,
         "missing_fields": missing_fields,
         "source_id": str(source.get("source_id", "")),
@@ -170,6 +172,12 @@ def _collect_item_rows(root: pathlib.Path, items: Sequence[Dict[str, Any]]) -> T
             stored_sha = str(item.get("human_review_content_sha256", ""))
             decision = str(item.get("human_review_decision", ""))
             drifted = decision in REVIEW_CONTENT_BOUND_DECISIONS and bool(stored_sha) and stored_sha != current_sha
+            unbound = (
+                item.get("status") in {"active", "reviewing"}
+                and not missing
+                and not stored_sha
+                and decision not in {"needs-edits", "defer"}
+            )
             if delegated["status"] == "invalid":
                 ai_rows.append(_make_item_row(root, item, "ai-human-review", ["ai-delegated-review-invalid"], ["review_resolution"]))
             elif delegated["closed"]:
@@ -180,6 +188,10 @@ def _collect_item_rows(root: pathlib.Path, items: Sequence[Dict[str, Any]]) -> T
                 ai_rows.append(_make_item_row(root, item, "ai-human-review", ["unresolved-{}".format(decision)], ["review_resolution"]))
             elif drifted:
                 ai_rows.append(_make_item_row(root, item, "ai-human-review", ["unresolved-content-sha256-drift"], ["review_resolution"]))
+            elif unbound:
+                ai_rows.append(_make_item_row(root, item, "ai-human-review",
+                                              ["human-review-current-body-unbound"],
+                                              ["human_review_content_sha256", "review_resolution"]))
         if str(item.get("kind", "")) == "external-source-note" or any(not _is_blank(item.get(field)) for field in external_fields):
             missing = [field for field in ["retrieved_at", "read_status", "source_license", "review_basis"] if _is_blank(item.get(field))]
             if missing:

@@ -92,7 +92,11 @@ def test_apply_preserves_body_human_lifecycle_and_is_idempotent(case):
     assert {k: v for k, v in item.items() if k != FIELD} == before
     assert (root / before["path"]).read_bytes() == body
     assert review_state(root, item)["closed"]
-    assert review_counts(root, [item]) == {"ai_delegated_closed_count": 1, "human_reviewed_count": 0}
+    counts = review_counts(root, [item])
+    assert counts["ai_delegated_closed_count"] == 1
+    assert counts["human_reviewed_count"] == 0
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert counts["human_review_historical_unbound_count"] == 0
     second_case = (root, item, *case[2:])
     result, payload = run_cli(second_case, apply=True)
     assert result.returncode == 0 and payload["updated_count"] == 0
@@ -297,9 +301,66 @@ def test_official_human_review_supersedes_ai_and_keeps_history(case):
     assert result.returncode == 0, result.stdout + result.stderr
     updated = json.loads((root / "registry/items.jsonl").read_text())
     assert FIELD not in updated and load_ledger(root)
-    assert review_counts(root, [updated]) == {"ai_delegated_closed_count": 0, "human_reviewed_count": 1}
+    counts = review_counts(root, [updated])
+    assert counts["ai_delegated_closed_count"] == 0
+    assert counts["human_reviewed_count"] == 1
+    assert counts["human_review_current_body_bound_count"] == 1
+    assert counts["human_review_historical_unbound_count"] == 0
     assert queue.build_review_queue_view([updated], [])["summary"]["row_count"] == 0
     assert review_state(root, updated)["status"] == "absent"
+
+
+@pytest.mark.parametrize("lifecycle", ["active", "reviewing"])
+def test_legacy_unbound_review_requires_new_exact_body_form_before_apply(case, lifecycle):
+    root, item, _, _, _ = case
+    item.update({
+        "status": lifecycle,
+        "human_reviewed_by": "historical-fixture-reviewer",
+        "human_reviewed_at": "2026-09-01",
+        "review_basis": "历史审核元数据；未绑定当前正文",
+        "human_review_decision": "accept-as-review-record",
+    })
+    registry = root / "registry/items.jsonl"
+    registry.write_text(json.dumps(item) + "\n", encoding="utf-8")
+    before = registry.read_bytes()
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    assert view["summary"]["row_count"] == 1
+    assert view["rows"][0]["reasons"] == ["human-review-current-body-unbound"]
+
+    form = queue.make_review_queue_form(view["rows"][0])
+    form.update(
+        human_reviewed_by="regression-fixture-human",
+        human_reviewed_at="2026-10-16",
+        review_basis="Fixture human re-review of the currently hashed body; no real-world authorization claimed.",
+        review_decision="accept-as-review-record",
+    )
+    forms = root.parent / "current-review.jsonl"
+    forms.write_text(json.dumps(form) + "\n", encoding="utf-8")
+    env = dict(os.environ, PYTHONPATH=str(pathlib.Path(__file__).resolve().parents[1]))
+    cmd = ["rtk", sys.executable, "-m", "tools.codex_assets.knowledge_hub.review_queue_apply_cli",
+           str(root), "--forms", str(forms), "--json"]
+    dry_run = subprocess.run(cmd + ["--dry-run"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert dry_run.returncode == 0, dry_run.stdout + dry_run.stderr
+    assert json.loads(dry_run.stdout)["status"] == "planned"
+    assert registry.read_bytes() == before
+
+    stale = dict(form, content_sha256="0" * 64)
+    forms.write_text(json.dumps(stale) + "\n", encoding="utf-8")
+    rejected = subprocess.run(cmd + ["--apply"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert rejected.returncode == 1, rejected.stdout + rejected.stderr
+    assert "content-sha256-mismatch" in [d["code"] for d in json.loads(rejected.stdout)["diagnostics"]]
+    assert registry.read_bytes() == before
+
+    forms.write_text(json.dumps(form) + "\n", encoding="utf-8")
+    applied = subprocess.run(cmd + ["--apply"], cwd=root.parent, env=env, capture_output=True, text=True)
+    assert applied.returncode == 0, applied.stdout + applied.stderr
+    updated = json.loads(registry.read_text(encoding="utf-8"))
+    assert updated["status"] == lifecycle
+    assert updated["human_reviewed_by"] == "regression-fixture-human"
+    assert updated["human_review_content_sha256"] == content_digest(root, updated["path"])
+    assert review_counts(root, [updated])["human_review_current_body_bound_count"] == 1
+    assert queue.build_review_queue_view([updated], [])["summary"]["row_count"] == 0
 
 
 @pytest.mark.parametrize("change", ["malformed", "duplicate", "scope"])
@@ -359,3 +420,109 @@ def test_new_scope_cannot_silently_replace_malformed_old_credential(case, change
     result, payload = run_cli((root, item, auth, *case[3:]), apply=True)
     assert result.returncode == 1 and not payload["applied"]
     assert set(load_ledger(root)) == {old["authorization_id"]}
+
+
+@pytest.mark.parametrize("lifecycle", ["active", "reviewing"])
+def test_legacy_human_review_without_body_hash_is_an_explicit_current_exception(case, lifecycle):
+    root, item, _, _, _ = case
+    item.update({
+        "status": lifecycle,
+        "human_reviewed_by": "leiwenjun",
+        "human_reviewed_at": "2026-10-16",
+        "review_basis": "历史人工审核说明，不足以绑定当前文件版本",
+        "human_review_decision": "accept-as-review-record",
+    })
+
+    counts = review_counts(root, [item])
+    assert counts["human_reviewed_count"] == 1  # preserved legacy metadata count
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert counts["human_review_historical_unbound_count"] == 1
+    assert counts["human_review_content_hash_mismatch_count"] == 0
+
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    status = build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)
+    assert view["summary"]["ai_generated_pending_count"] == 1
+    assert status["summary"]["ai_generated_pending_count"] == 1
+    assert "human-review-current-body-unbound" in view["rows"][0]["reasons"]
+    assert "human-review-current-body-unbound" in status["ai_generated_pending"][0]["reasons"]
+    # Legacy review identity gaps are human-review exceptions: never silently
+    # closed, never promoted, but not misreported as a technical failure.
+    assert view["rows"][0]["priority"] == "P1"
+    assert status["ai_generated_pending"][0]["priority"] == "P1"
+    assert view["summary"]["active_or_promotion_blocker_count"] == 0
+    assert status["summary"]["active_or_promotion_blocker_count"] == 0
+    assert status["product_blocking_final_gate"] is True
+    assert status["active_blocking_final_gate"] is False
+
+    item["human_review_content_sha256"] = content_digest(root, item["path"])
+    counts = review_counts(root, [item])
+    assert counts["human_review_current_body_bound_count"] == 1
+    assert counts["human_review_historical_unbound_count"] == 0
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 0
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 0
+
+    (root / item["path"]).write_text("# 新版本\n未经重新审核", encoding="utf-8")
+    counts = review_counts(root, [item])
+    assert counts["human_review_content_hash_mismatch_count"] == 1
+    assert counts["human_review_current_body_bound_count"] == 0
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 1
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 1
+    if lifecycle == "active":
+        assert queue.build_review_queue_view([item], [])["rows"][0]["priority"] == "P0"
+        assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["active_or_promotion_blocker_count"] == 1
+
+
+def test_active_ai_missing_human_review_is_still_hard_blocked(case):
+    root, item, _, _, _ = case
+    item["status"] = "active"
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    view = queue.build_review_queue_view([item], [])
+    status = build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)
+    assert view["rows"][0]["priority"] == "P0"
+    assert status["ai_generated_pending"][0]["priority"] == "P0"
+    assert status["summary"]["active_or_promotion_blocker_count"] == 1
+    assert status["active_blocking_final_gate"] is True
+    assert status["product_blocking_final_gate"] is True
+    assert "human-review-current-body-unbound" not in view["rows"][0]["reasons"]
+
+
+def test_historical_archived_human_review_without_hash_is_not_active_gate(case):
+    root, item, _, _, _ = case
+    item.update({
+        "status": "archived",
+        "human_reviewed_by": "leiwenjun",
+        "human_reviewed_at": "2026-10-16",
+        "review_basis": "存档时历史批准；没有当前 active 适用声明",
+    })
+    queue.configure_review_queue(root, None, lambda path: content_digest(root, path))
+    assert queue.build_review_queue_view([item], [])["summary"]["ai_generated_pending_count"] == 0
+    assert build_review_queues(root, [item], [], dt.date(2026, 10, 16), "product", 10)["summary"]["ai_generated_pending_count"] == 0
+    assert review_counts(root, [item])["human_review_historical_unbound_count"] == 1
+
+
+def test_ai_review_content_hash_refuses_symlinks_and_oversized_bodies(tmp_path):
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    from tools.codex_assets.knowledge_hub.delegated_content_review import MAX_REVIEW_CONTENT_BYTES
+
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "projects").mkdir()
+    external = tmp_path / "external"
+    (external / "p").mkdir(parents=True)
+    (external / "p/item.md").write_text("external content", encoding="utf-8")
+    (root / "projects/sub").symlink_to(external, target_is_directory=True)
+    with pytest.raises(KnowledgeHubError):
+        content_digest(root, "projects/sub/p/item.md")
+
+    (root / "projects/sub").unlink()
+    (root / "projects/sub").mkdir()
+    (root / "projects/sub/item.md").write_bytes(b"valid")
+    assert content_digest(root, "projects/sub/item.md") == hashlib.sha256(b"valid").hexdigest()
+    (root / "projects/sub/item.md").write_bytes(b"x" * (MAX_REVIEW_CONTENT_BYTES + 1))
+    with pytest.raises(KnowledgeHubError, match="exceeds"):
+        content_digest(root, "projects/sub/item.md")
+    with pytest.raises(KnowledgeHubError):
+        content_digest(root, "projects/../external/p/item.md")
+
+

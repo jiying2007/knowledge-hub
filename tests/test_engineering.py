@@ -26,7 +26,7 @@ def test_repository_engineering_contract_is_complete():
         "pyyaml": "6.0.3",
         "tomli": "2.4.1",
     }
-    assert payload["dependencies"]["build_backend"] == {"setuptools": "83.0.0"}
+    assert payload["dependencies"]["build_backend"] == {"setuptools": "84.0.0"}
     assert payload["locks"]["requirements-runtime.lock"]["hash_complete"] is True
     assert payload["locks"]["requirements-dev.lock"]["hash_complete"] is True
     assert payload["locks"]["requirements-runtime.lock"]["direct_version_mismatches"] == []
@@ -279,7 +279,7 @@ def _write_minimal_contract(root: pathlib.Path) -> None:
     (root / ".github/workflows").mkdir(parents=True)
     (root / "pyproject.toml").write_text(
         """[build-system]
-requires = ["setuptools==83.0.0"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -296,7 +296,7 @@ dependencies = [
         encoding="utf-8",
     )
     (root / "requirements-dev.txt").write_text(
-        "-r requirements-runtime.txt\npytest==9.1.1\nsetuptools==83.0.0\n",
+        "-r requirements-runtime.txt\npytest==9.1.1\nsetuptools==84.0.0\n",
         encoding="utf-8",
     )
     hashed = "package==1.0 --hash=sha256:" + "a" * 64 + "\n"
@@ -351,7 +351,7 @@ jobs:
       - run: rtk python -m pip install --require-hashes -r requirements-dev.lock
       - run: rtk bash tools/knowledge-restore-drill.sh --source-mode head --summary-json
       - run: rtk bash tools/knowledge-final-gate.sh --final-profile product --summary-json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with: {retention-days: 90}
 """,
         encoding="utf-8",

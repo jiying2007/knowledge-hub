@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -20,6 +21,7 @@ from .runtime_p5_security import principal_context
 
 MAX_OBJECTS_PER_BATCH = 1000
 MAX_BODY_CHARS = 256 * 1024
+MAX_BATCH_BODY_CHARS = 16 * 1024 * 1024
 CHECKPOINT_ROOT = pathlib.Path(".cache/knowledge-hub/connectors")
 
 
@@ -46,6 +48,13 @@ def _checkpoint_path(root: pathlib.Path, connector_id: str) -> pathlib.Path:
     return path
 
 
+def _checkpoint_lock_path(root: pathlib.Path, connector_id: str) -> pathlib.Path:
+    path = _checkpoint_path(root, connector_id).with_name("checkpoint.lock")
+    if path.exists() and path.is_symlink():
+        raise KnowledgeHubError("connector checkpoint lock must not be a symlink")
+    return path
+
+
 def load_checkpoint(root: pathlib.Path, connector_id: str) -> Dict[str, Any]:
     path = _checkpoint_path(root, connector_id)
     if not path.exists():
@@ -69,33 +78,46 @@ def save_checkpoint(
     if len(cursor) > 2048:
         raise KnowledgeHubError("connector checkpoint cursor exceeds budget")
     path = _checkpoint_path(root, connector_id)
-    payload = {
-        "connector_id": connector_id,
-        "cursor": cursor,
-        "updated_at": utc_timestamp(),
-        "sequence": int(previous_sequence) + 1,
-    }
-    temporary = path.with_name(path.name + ".tmp-{}".format(os.getpid()))
-    if temporary.exists() and temporary.is_symlink():
-        raise KnowledgeHubError("connector temporary checkpoint must not be a symlink")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
-    descriptor = os.open(str(temporary), flags, 0o600)
-    try:
-        os.fchmod(descriptor, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            descriptor = -1
-            json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(str(temporary), str(path))
-        os.chmod(path, 0o600)
-    finally:
-        if descriptor >= 0:
-            os.close(descriptor)
-        if temporary.exists():
-            temporary.unlink()
-    return payload
+    lock_path = _checkpoint_lock_path(root, connector_id)
+    with lock_path.open("a+") as lock:
+        os.chmod(lock_path, 0o600)
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            current = load_checkpoint(root, connector_id)
+            current_sequence = int(current.get("sequence", 0) or 0)
+            if current_sequence != int(previous_sequence):
+                raise KnowledgeHubError("connector checkpoint sequence changed")
+            payload = {
+                "connector_id": connector_id,
+                "cursor": cursor,
+                "updated_at": utc_timestamp(),
+                "sequence": current_sequence + 1,
+            }
+            temporary = path.with_name(path.name + ".tmp-{}".format(os.getpid()))
+            if temporary.exists() and temporary.is_symlink():
+                raise KnowledgeHubError("connector temporary checkpoint must not be a symlink")
+            if temporary.exists():
+                temporary.unlink()
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(str(temporary), flags, 0o600)
+            try:
+                os.fchmod(descriptor, 0o600)
+                with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                    descriptor = -1
+                    json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(str(temporary), str(path))
+                os.chmod(path, 0o600)
+            finally:
+                if descriptor >= 0:
+                    os.close(descriptor)
+                if temporary.exists():
+                    temporary.unlink()
+            return payload
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
 def _normalize_acl(value: Any) -> List[str]:
@@ -105,10 +127,9 @@ def _normalize_acl(value: Any) -> List[str]:
         raise KnowledgeHubError("connector ACL must be a sequence")
     if len(value) > 64:
         raise KnowledgeHubError("connector ACL exceeds budget")
-    rows = [str(row).strip() for row in value]
-    if any(not row or len(row) > 256 for row in rows):
+    if any(not isinstance(row, str) or not row.strip() or len(row) > 256 for row in value):
         raise KnowledgeHubError("connector ACL contains invalid subject")
-    return rows
+    return [row.strip() for row in value]
 
 
 def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any]:
@@ -119,7 +140,10 @@ def normalize_object(connector_id: str, row: Mapping[str, Any]) -> Dict[str, Any
     body = str(row.get("body", ""))
     if len(body) > MAX_BODY_CHARS:
         raise KnowledgeHubError("connector body exceeds budget")
-    tombstone = bool(row.get("tombstone", False))
+    tombstone_value = row.get("tombstone", False)
+    if type(tombstone_value) is not bool:
+        raise KnowledgeHubError("connector tombstone must be boolean")
+    tombstone = tombstone_value
     content_sha = (
         hashlib.sha256(body.encode("utf-8")).hexdigest() if not tombstone else ""
     )
@@ -164,6 +188,74 @@ def _changed_rows(value: Any) -> Sequence[Mapping[str, Any]]:
 
 def _sha256_text(value: Any) -> str:
     return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+
+
+def _checkpoint_proposal(
+    connector_id: str,
+    checkpoint: Mapping[str, Any],
+    cursor: str,
+    accepted: Sequence[Mapping[str, Any]],
+    tombstones: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    material = {
+        "connector_id": connector_id,
+        "previous_sequence": int(checkpoint.get("sequence", 0) or 0),
+        "previous_cursor_sha256": _sha256_text(checkpoint.get("cursor", "")),
+        "cursor": cursor,
+        "accepted": [
+            [str(row.get("object_id", "")), str(row.get("version", "")), str(row.get("content_sha256", ""))]
+            for row in accepted
+        ],
+        "tombstones": [
+            [str(row.get("object_id", "")), str(row.get("version", ""))]
+            for row in tombstones
+        ],
+    }
+    digest = hashlib.sha256(
+        json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return {
+        "schema_version": "knowledge-hub.connector-checkpoint-proposal.v1",
+        "connector_id": connector_id,
+        "previous_sequence": material["previous_sequence"],
+        "previous_cursor_sha256": material["previous_cursor_sha256"],
+        "cursor": cursor,
+        "batch_sha256": digest,
+    }
+
+
+def acknowledge_connector_sync(
+    root: pathlib.Path,
+    proposal: Mapping[str, Any],
+) -> Dict[str, Any]:
+    if proposal.get("schema_version") != "knowledge-hub.connector-checkpoint-proposal.v1":
+        raise KnowledgeHubError("invalid connector checkpoint proposal")
+    connector_id = str(proposal.get("connector_id", ""))
+    previous_sequence = proposal.get("previous_sequence")
+    cursor = str(proposal.get("cursor", ""))
+    batch_sha256 = str(proposal.get("batch_sha256", ""))
+    previous_cursor_sha256 = str(proposal.get("previous_cursor_sha256", ""))
+    if type(previous_sequence) is not int or previous_sequence < 0:
+        raise KnowledgeHubError("invalid connector checkpoint proposal sequence")
+    if len(batch_sha256) != 64 or any(ch not in "0123456789abcdef" for ch in batch_sha256):
+        raise KnowledgeHubError("invalid connector checkpoint proposal digest")
+    current = load_checkpoint(root, connector_id)
+    if _sha256_text(current.get("cursor", "")) != previous_cursor_sha256:
+        raise KnowledgeHubError("connector checkpoint cursor changed")
+    saved = save_checkpoint(
+        root,
+        connector_id,
+        cursor=cursor,
+        previous_sequence=previous_sequence,
+    )
+    return {
+        "schema_version": "knowledge-hub.connector-checkpoint-ack.v1",
+        "status": "pass",
+        "connector_id": connector_id,
+        "batch_sha256": batch_sha256,
+        "checkpoint": saved,
+        "checkpoint_advanced": True,
+    }
 
 
 def _sync_observation(
@@ -224,26 +316,34 @@ def sync_connector(
     checkpoint = load_checkpoint(root, adapter.connector_id)
     cursor = str(checkpoint.get("cursor", ""))
     changed = _changed_rows(adapter.list_changed(cursor, limit))
+    if len(changed) > limit or len(changed) > MAX_OBJECTS_PER_BATCH:
+        raise KnowledgeHubError("connector returned more rows than requested")
     accepted: List[Dict[str, Any]] = []
     quarantined: List[Dict[str, Any]] = []
     tombstones: List[Dict[str, Any]] = []
+    total_body_chars = 0
     for row in changed:
         try:
             normalized = normalize_object(adapter.connector_id, row)
         except KnowledgeHubError as exc:
             quarantined.append(_quarantine_record(row, str(exc)))
             continue
+        total_body_chars += len(str(normalized.get("body", "")))
+        if total_body_chars > MAX_BATCH_BODY_CHARS:
+            raise KnowledgeHubError("connector batch body exceeds budget")
         if normalized["tombstone"]:
             tombstones.append(normalized)
         else:
             accepted.append(normalized)
     saved = dict(checkpoint)
+    proposal: Dict[str, Any] = {}
     if not quarantined:
-        saved = save_checkpoint(
-            root,
+        proposal = _checkpoint_proposal(
             adapter.connector_id,
-            cursor=str(adapter.checkpoint()),
-            previous_sequence=int(checkpoint.get("sequence", 0) or 0),
+            checkpoint,
+            str(adapter.checkpoint()),
+            accepted,
+            tombstones,
         )
     result: Dict[str, Any] = {
         "schema_version": "knowledge-hub.connector-sync.v1",
@@ -254,7 +354,9 @@ def sync_connector(
         "tombstones": tombstones,
         "quarantine": quarantined,
         "checkpoint": saved,
-        "checkpoint_advanced": not quarantined,
+        "checkpoint_proposal": proposal,
+        "checkpoint_advanced": False,
+        "requires_consumer_ack": not quarantined,
         "canonical_write_performed": False,
         "hub_core_network_client": False,
         "transport_owned_by_adapter_or_caller": True,
@@ -293,4 +395,6 @@ class StaticConnectorAdapter:
     ) -> Sequence[Mapping[str, Any]]:
         if checkpoint == self._next_cursor:
             return []
-        return self._rows[:limit]
+        if len(self._rows) > limit:
+            raise KnowledgeHubError("static connector fixture exceeds batch limit")
+        return self._rows

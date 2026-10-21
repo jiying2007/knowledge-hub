@@ -123,6 +123,7 @@ def _row(
                 "commit_sha": "1" * 40 if field == "source_refs" else "",
                 "run_id": "123" if field == "validation_refs" else "",
                 "head_sha": "1" * 40 if field == "validation_refs" else "",
+                "digest": "sha256:" + "d" * 64 if field == "artifact_refs" else "",
                 "release_immutable": field == "artifact_refs",
                 "release_draft": False,
                 "release_prerelease": False,
@@ -275,6 +276,28 @@ def test_unverified_append_only_candidate_falls_back_to_human(tmp_path):
     assert result["status"] == "needs-governed-authorization"
     assert result["machine_ratchet_count"] == 0
     assert result["human_authorization_count"] == 1
+
+
+def test_release_asset_without_valid_sha256_digest_stays_human(tmp_path):
+    for digest in ("", "sha256:bad", "md5:" + "d" * 32, "sha256:" + "f" * 63):
+        _write_policy(tmp_path)
+        row = _row(field="artifact_refs")
+        row["candidate_snapshot"]["details"]["digest"] = digest
+        with mock.patch(
+            "tools.codex_assets.knowledge_hub.operator_auto_route."
+            "build_binding_patch_plan",
+            side_effect=_plan_side_effect,
+        ), mock.patch(
+            "tools.codex_assets.knowledge_hub.operator_auto_route."
+            "build_binding_review_bundle",
+            return_value={"status": "needs-governed-authorization"},
+        ):
+            result = build_unique_execution_routes(
+                pathlib.Path(tmp_path), _proposal([row])
+            )
+        assert result["machine_ratchet_count"] == 0
+        assert result["human_authorization_count"] == 1
+        assert result["status"] == "needs-governed-authorization"
 
 
 def test_ambiguous_target_blocks_both_routes(tmp_path):

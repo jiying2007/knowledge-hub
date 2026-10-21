@@ -1,6 +1,48 @@
 # Knowledge Hub Tools
 
+Provider `archive --help` 的 `source_contract` 列出归档输入要求。工程文档经常带有
+`id/status/owner/path` 等 frontmatter；这些字段由 Provider 分配，不能直接作为候选输入。
+应另建脱敏结论 Markdown，仅保留 `title/summary_zh/tags/primary_language/source_language/translation_status/terminology_status`
+这些描述字段，保留工程原记录，通过 `--subject`、`--kind` 明确主体和类型。
+
+`SOURCE_REJECTED` 的 `diagnostics` 返回固定类别，不回显命中的正文、路径、字段名或值：
+`unsupported-source-metadata` 或 `invalid-source-metadata` 表示输入头不符合契约；
+`sanitization-required` 要求确认脱敏后传入 `--sanitized`；`empty-source-body` 和
+`source-title-required` 要求补充正文或标题；`sensitive-content`、`machine-specific-content`、
+`raw-session-content` 要求先脱敏、提炼。预检 `PLANNED` 仍不代表归档成功；
+只有 `ARCHIVED/ALREADY_ARCHIVED` 且 `persisted=true` 才能声明候选已归档。
+
 所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护。commit/push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory 和源项目写入分别需要明确授权。
+
+## 外部来源逐文件快照（私有证据候选）
+
+`knowledge-inventory.sh` 保留原有的 Hub source control 盘点；额外增加**显式源目录/单文件只读快照**模式，不增加公共命令或新的 canonical 状态源。须在能访问真实来源的机器上运行，不能通过 GitHub 上的 Hub 目录反推外部迁移完成。
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
+  --snapshot-source-id embedded-knowledge \
+  --snapshot-source-path /absolute/path/to/original/source \
+  --snapshot-claimed-revision <40位小写Git提交SHA> \
+  --json
+```
+
+未获得可信版本标识时**省略** `--snapshot-claimed-revision`，不可填 `main`、`latest` 或臆造哈希；即使填写 40 位 SHA，也只是**未认证的版本声明**。源 ID 必须存在于 `registry/sources.json` 或 `registry/retired-sources.jsonl`，扫描根必须由调用者显式传入。仅排除目录中的 `.git` 版本控制元数据，其余常规文件均计数并流式 SHA-256；符号链接、特殊文件、读取错误、目录变化或预算溢出均 fail closed。上限为 20,000 文件、20,000 目录、单文件 256 MiB、总读取 2 GiB，不适合原始大 SDK/运行时制品直接整仓扫描，应先确定适用的证据范围而**不得静默跳过**。
+
+快照以内容寻址写到本机忽略提交的 `.tmp/source-snapshots/<source-id>/<digest>.json`，文件权限为 0600；只输出不含绝对源路径的简短 JSON 摘要。**文件相对路径仍可能包含敏感名称**，完整快照不得直接放进公开 PR、Actions 日志、源仓或知识正文。该入口不会复制正文、修改外部源、写 registry、提升条目或关闭任何 owner/Content/Product gate。
+
+输出固定为 `status=candidate`，并显式保留 `claimed_revision_verified=false`、`origin_binding_verified=false`、`atomic_snapshot_verified=false`、`target_disposition_verified=false`、`full_external_migration_proven=false`。源侧候选获取后，仍需可信修订/原子快照绑定、每文件与现有 `sources/<id>/inventory.jsonl` 及唯一目标处置的核对、授权语义复核，才能判断单个来源是否真正迁移完毕。
+
+**私有逐文件对账（只读）：**源侧快照已经产生后，复用同一工具入口与既有 source inventory 做严格的相对路径、SHA-256 和字节数匹配。示例：
+
+```bash
+rtk bash ~/knowledge-hub/tools/knowledge-inventory.sh \
+  --reconcile-snapshot .tmp/source-snapshots/embedded-knowledge/<digest>.json \
+  --json
+```
+
+此命令只接受 Hub 私有快照目录内的内容寻址 JSON；拒绝外部文件、符号链接、篡改、非 0600 文件和非 owner-only 的私有子目录。比较时根据已登记 source `origin_path` 的**字符串范围**匹配 inventory 中逐文件记录，不猜测文件归属或用根目录/批次级记录补齐缺口。只输出候选精确匹配、缺行、缺 hash、冲突、歧义和超出快照范围的数量；不向终端暴露源侧文件名或原始内容。
+
+即使全部字节级候选匹配，也固定 `full_external_migration_proven=false`；因为源 revision 尚未经可信渠道认证，普通目录扫描没有原子快照保证，且未验证目标文件处置/版本、授权内容审核和真实 owner 决策。对账结果是同一源控制面上的**观察投影**，不是新的可变状态或 Product/Repository 终态。
 
 ## 运营与检索闭环
 
@@ -458,3 +500,127 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section linking --json
 公开工具通过 `tools/ci/python-runtime.sh` 选择具备依赖的解释器。能力探针和正式模块均使用 Python 隔离模式；只加载本仓 `tools` 包，每次使用独立字节码目录，不从工作目录、`PYTHONPATH` 或 user-site 导入代码。
 
 如果系统解释器没有运行依赖，在本仓创建 `.tmp/provider-runtime/venv`，使用该环境的 `python -m pip install --require-hashes -r requirements-runtime.lock` 安装锁定依赖。随后从任意工作目录执行公开 wrapper。虚拟环境是本机依赖，不进入 Git、源码身份清单或发布数据。
+
+
+## LAN Team MCP v1.3 — 小团队 Git 共享与归档
+
+工程师客户端安装和现场验收细节见 [团队 MCP 客户端指南](team/CLIENTS.md)。
+
+**工作流**：工程师用 Codex 或 Markdown 提交知识 PR，维护者按已有
+Git/CI 复核并合入 master；同一 Ubuntu 服务器上的 MCP 服务只读发布
+经验证的 Git SHA。Git/Markdown/Registry 是唯一知识权威。
+
+团队 MCP 默认只发布三个工具：knowledge_search / knowledge_get /
+knowledge_context。Draft、Personal、Archived、Superseded、Rejected、
+控制目录和 archive 路径永不在团队查询中服务；Reviewing 明确标记为
+provisional，Git PR 合并不等于 Active 认证。
+
+**工程师日常归档（Ubuntu/Linux）**。先写脱敏、确认为允许公开的
+safe-note.md 文件，在本仓工作区执行：
+
+    bash tools/team/knowledge-submit.sh create --project pcr02-ssc305 --kind debug-record --source /tmp/safe-note.md --public-approved --create-pr
+
+更新已有的 Reviewing 条目，必须先读取其完整旧正文 SHA256：
+
+    bash tools/team/knowledge-submit.sh update --item-id <id> --expected-sha256 <64hex> --source /tmp/corrected-note.md --public-approved --create-pr
+
+由 Codex 实际生成的候选应另外传入 --generated-by-ai，并保留证据中的
+实测、推断和待验证边界；不得把 AI 产物标记为人工实测。
+
+提交器通过工程师**自己的** git 和 gh 凭证工作，创建隔离 worktree，
+复用 canonical capture/Index/Registry/事务内核并限制 PR 文件范围；
+Active 与历史文档不能用普通 Update 改写。无远程认证时只允许
+prepared-local，不得宣称 PR 已创建。两个 PR 更新同一条时须人工处理
+CAS 冲突；禁止直接强推主线或机械合并索引。
+
+**一键用户级安装（推荐）**：主线合并且安全审核通过后，在受信 Ubuntu 服务用户的 knowledge-hub checkout 中执行 `bash tools/team/install-user.sh`。它负责建立私有令牌、独立 Python venv、用户级 systemd 单元、首次 SHA 发布与定时更新；需预先确保 `/srv/knowledge-hub` 对该服务用户可写。SSH 断开后保持用户级服务需管理员确认 lingering。安装器不负责 Caddy/证书、GitHub 安全审批和真实客户端验收。下面保留详细手工安装步骤以供故障排查。
+
+**一次性安装**：需要 Ubuntu 服务器上能运行 Git/Python 的服务用户，
+且 /srv/knowledge-hub 可由该用户管理。先在本仓 checkout 操作：
+
+    mkdir -p ~/.config/knowledge-hub ~/.config/systemd/user
+    umask 077
+    openssl rand -hex 32 > ~/.config/knowledge-hub/team-token
+    python3 -m venv ~/.venvs/knowledge-hub
+    ~/.venvs/knowledge-hub/bin/pip install --require-hashes -r requirements-runtime.lock
+    cp tools/team/systemd/*.service tools/team/systemd/*.timer ~/.config/systemd/user/
+    systemctl --user daemon-reload
+
+将两个 service 中的 KH_PYTHON 改成上述 venv 的绝对路径，必要时调整
+KH_INSTALL_ROOT 和 token 路径后，手工 bootstrap：
+
+    KH_INSTALL_ROOT=/srv/knowledge-hub KH_PYTHON="$HOME/.venvs/knowledge-hub/bin/python" KH_TEAM_TOKEN_FILE="$HOME/.config/knowledge-hub/team-token" KH_SYSTEMCTL_MODE=user bash tools/team/deploy.sh
+    systemctl --user enable --now knowledge-hub-team-mcp.service
+    systemctl --user enable --now knowledge-hub-team-deploy.timer
+
+部署从 GitHub master 获取 SHA，要求同一 SHA 的受信 Quality/Signed 成功，
+候选独立构建和 Search/Get/Context HTTP smoke；通过后切换 current，
+失败恢复上一版（单机允许短暂重启中断）。缓存仅在该 SHA 的 .cache 中
+可写，Git 更新失败不影响已发布副本。成员都已有 SSH 时可用
+ssh -L 3000:127.0.0.1:3000 user@server；其他情况参考
+tools/team/Caddyfile.example，使用内网 HTTPS、共享 Bearer 和可信 CA。
+无论使用 SSH 还是 HTTPS，本机 MCP 后端仍必须检验 Bearer。
+禁止把 token 写到 Git 或绕过 TLS 校验。
+
+**备份**：KH_BACKUP_DIR 指向独立挂载的 NAS/磁盘时运行
+bash tools/team/backup.sh；必须验证 bundle 与临时隔离恢复，不能
+把同机镜像视为已完成异地备份。
+
+**必须现场验收的边界**：真实 Codex CLI/VS Code MCP 协议版本；
+内网 TLS/Host/Origin/防火墙，主线实际分支规则；两名真实工程师的
+Create/Update PR；实际 5–10 并发、磁盘/索引故障与回滚；备份恢复。
+GitHub Public 仓库只接收允许互联网公开且适合发送至所用模型的知识。
+这些未执行之前，不能宣称 LAN TEAM DEPLOYED/ADOPTED。
+
+**Team MCP 当前事实消费边界**：`authority=verified` 只保留历史
+Active + accepted + evidence-verified 身份，并不代表当前正文仍通过复核。
+`team_search` 仅返回检索元数据，不能在未读取全部正文时证明当前版本哈希，
+因此 `review_required=true`，`review_binding_state` 仅可为
+`unbound` 或 `declared-unverified`。只有 `team_get` 对服务端
+完整 Markdown bytes 计算 SHA256 并匹配 `human_review_content_sha256`，
+且未超过 `review_after`，才返回 `review_required=false`；
+`team_context.current` 使用同样的服务端正文证明，否则放入
+`provisional` 并保留历史权威信息。AI 授权不生成 human 审核身份，
+metadata claim 不等于内容未发生漂移。
+
+## 全库知识复核及 AI 授权边界（2026-10-17）
+
+用户明确授权 AI 辅助 review；这允许机器归类、逐条核对来源与生成修改建议，
+不构成人工签收、Active 晋升、设备实测、外部真实性或 GitHub 安全审批授权。
+复用原有 review-after / review-semantic / delegated-content-review 权限与状态合同。
+
+按 2026-10-17 主线登记元数据：总计 709，Active 17 / Reviewing 398 /
+Archived 288 / Draft 3 / Personal 2 / Rejected 1；Reviewing 中 391 条标记 AI 生成。
+已过 review_after 的 Active 15、Reviewing 148、Archived 254、Draft 1。
+这只证明元数据复核日期逾期，不证明内容错误或者语义审核已经执行。
+
+在受信 Git checkout 中运行完整、只读、哈希绑定的机器盘点：
+
+    python3 -m tools.codex_assets.knowledge_hub.corpus_review_cli --as-of 2026-10-17 --output .tmp/knowledge-hub/corpus-review-20261017.json
+
+默认仅返回脱敏统计；加 --json 输出每条非私人知识的检查详情。该脚本逐条
+核对 Registry 对应正文、frontmatter、证据和验证引用、本地重复候选、逾期、
+历史 human/AI 复核证据的哈希及授权状态。报告标注 review-only，绝不写
+canonical 正文或 Registry。私人内容只计数、隐藏身份和路径、不输出正文。
+完整逐条报告仅存 ignored .tmp/knowledge-hub/ 下，不上传外部共享位置。
+质量测试 test_real_repository_full_coverage 会读取仓库中全部登记条目，
+确保审查覆盖不是限于首 10 条的抽样，亦不冒充独立语义审核。
+
+2026-10-17 Git Tree 事实复核：709 条 registry 记录中有 2 条历史 archived
+条目绑定的是目录（pcr02-engineering-archive-corpus、patent-disclosure-canonical-archive-corpus），
+不是 Markdown 正文文件。机器报告将 archive-directory-observed 与 machine_checked
+（正文成功读取）、machine_failed（真实缺失/无效）分开计数；目录存在且非空
+只证明历史集合的目录身份，contents_verified=false，不声称逐文件哈希、语义、
+owner 或专利法律资格已经验证。只有 archived / retired-source-provenance /
+archive-corpus-materialized / promotion=none 的精确集合路径才可采用此分类；
+缺失、空目录、非法路径或其它状态仍 fail-closed 为 P0。
+
+处置顺序：P0 修复正文丢失、Frontmatter 不匹配、权限/秘密及 AI 复核无效证据；
+P1 为逾期 Active 补足实证后由真实 owner 决定适用性；P2 将 Reviewing 分批做
+AI 辅助语义复核和 Git 修改建议；P3 为 Archived 保留历史边界，仅作重复
+关联建议，不自动删除。Git CI 全绿也不能证明外部实机或 owner 审核。
+
+历史 ai_delegated_content_review 字段存在不等于用户授权证明有效：只有
+request_proof、内容 SHA、授权对象均匹配才可按既有合同计入有效复核。
+human_reviewed_by 但缺失当下正文哈希只能视为历史声明。用户本次授权
+并不允许机器补写人工审核身份、虚构复核时间或自动晋升正式知识。

@@ -1,4 +1,5 @@
 import errno
+import hashlib
 import json
 import os
 import sqlite3
@@ -821,3 +822,81 @@ def test_search_telemetry_binds_current_interaction_and_result_ids(monkeypatch, 
     assert captured["index_transaction_ms"] == 8.5
     assert captured["stage_timing"] == {}
     assert "private search query" not in json.dumps(captured)
+
+
+def test_registered_unfilled_template_is_not_retrievable_as_verified_knowledge(tmp_path):
+    """Registry summary may describe a claim without any authored body."""
+    from pathlib import Path
+    from tools.codex_assets.knowledge_hub.common import (
+        KnowledgeHubError, render_markdown, split_frontmatter,
+    )
+    from tools.codex_assets.knowledge_hub.template_integrity import (
+        UNFILLED_TEMPLATE_BODY_SHA256,
+    )
+
+    root = _search_root(tmp_path)
+    path = "projects/p1/current/missing-report.md"
+    template_path = Path(__file__).resolve().parents[1] / "templates/validation-report.md"
+    _, generic_body = split_frontmatter(template_path.read_text(encoding="utf-8"))
+    assert hashlib.sha256(generic_body.strip().encode("utf-8")).hexdigest() == (
+        UNFILLED_TEMPLATE_BODY_SHA256["validation"]
+    )
+
+    entry = {
+        "id": "missing-report", "title": "sigmalabarynx verified product report",
+        "kind": "validation", "domain": "projects/p1", "path": path,
+        "status": "reviewing", "owner": "owner-a", "source": {"type": "manual"},
+        "review_after": "2026-10-13", "tags": ["sigmalabarynx"],
+        "summary_zh": "sigmalabarynx: registry claim is not source evidence",
+        "visibility": "team-internal",
+    }
+    registry = root / "registry/items.jsonl"
+    records = [json.loads(row) for row in registry.read_text(encoding="utf-8").splitlines()]
+    records.append(entry)
+    registry.write_text(_jsonl(records), encoding="utf-8")
+    page = root / path
+    page.write_text(render_markdown(entry, generic_body), encoding="utf-8")
+
+    result = search(root, "sigmalabarynx", limit=5, rebuild_index=True)
+    assert result["results"] == []
+    assert result["filter_diagnostics"]["by_reason"] == {
+        "registered-unfilled-template": 1
+    }
+    assert "unfilled body template" in result["zero_hit"]["reason"]
+
+    class FailingIndex:
+        CANDIDATE_LIMIT = 256
+
+        def ensure(self, force=False):
+            raise KnowledgeHubError("local index unavailable")
+
+    fallback = search(root, "sigmalabarynx", limit=5, search_index=FailingIndex())
+    assert fallback["results"] == []
+    assert fallback["index"]["mode"] == "repository-scan-fallback"
+    assert fallback["filter_diagnostics"]["by_reason"] == {
+        "registered-unfilled-template": 1
+    }
+
+    # A real authored observation, even with identical source metadata, must
+    # remain discoverable, and index revalidation must not reuse stale flags.
+    page.write_text(render_markdown(
+        entry, generic_body + "\n## Measured observations\nA trace is attached.\n"
+    ), encoding="utf-8")
+    authored = search(root, "sigmalabarynx", limit=5, rebuild_index=True)
+    assert [row["id"] for row in authored["results"]] == ["missing-report"]
+    assert authored["filter_diagnostics"]["by_reason"].get(
+        "registered-unfilled-template", 0
+    ) == 0
+    meta, body = split_frontmatter(page.read_text(encoding="utf-8"))
+    assert meta["id"] == entry["id"]
+    assert "Measured observations" in body
+
+    # Historical templates and drafts remain visible for explicit triage,
+    # but cannot be counted as current validated knowledge.
+    for status in ("archived", "draft"):
+        entry["status"] = status
+        records[-1] = entry
+        registry.write_text(_jsonl(records), encoding="utf-8")
+        page.write_text(render_markdown(entry, generic_body), encoding="utf-8")
+        found = search(root, "sigmalabarynx", limit=5, rebuild_index=True)
+        assert [row["id"] for row in found["results"]] == ["missing-report"]

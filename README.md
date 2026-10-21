@@ -50,6 +50,9 @@ rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --summary-json --dia
 命令面的机器权威是 `registry/command-surface.json`：当前 49 个稳定 wrapper 被归入体验、查询、治理、正文与制品、证据与运营五个平面，并按 daily、maintenance、governance、engineering、internal 分级。daily 固定为上述 5 条；新增 wrapper 必须同时更新 catalog，且总数不得越过 `registry/engineering-budgets.json` 的基线。公共 JSON 状态统一映射为 `pass / needs-review / needs-fix / blocked`；完整取证使用 `--json`，首屏与 Agent 默认使用有界 `--summary-json`。
 `knowledge-health-summary.sh` 会聚合 changed-only 正文覆盖检查、reviewing triage、分轴健康状态和 report-only 运行时维护摘要；review queue 直接消费 `knowledge-index-plan` 的 canonical projection，不再维护第二套 blocker 推断。Health full contract 为 v3、summary projection 为 v2，顶层唯一综合结论是 `status`；排障时继续读取 `health_axes.control_plane`、`evidence_freshness`、`content_governance` 和 `runtime_hygiene`，不要把快照过期、内容待 owner 与控制面故障混为一类。运行时摘要只报告可回收字节和权限修复候选，不自动删除。changed-only 扫描区分新增、修改、重命名和删除，删除中的旧正文只计数并给出有界样本，不会被误报为 orphan。默认按 `full -> quick` 顺序选择 24 小时内、日期和工作树签名均匹配的 Product v5 快照；旧 schema 快照直接判为 stale，不能降级消费。可用 `--gate-suite auto|quick|full` 固定读取层级；`--refresh-gate` 在 `auto` 下刷新 quick，在显式层级下刷新所选 suite。新增长期正文应优先使用 `knowledge-new.sh` / `knowledge-capture.sh` 的事务入口，使正文、registry、lifecycle 和派生索引在同一变更中收敛；随后运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --json`，终态审计运行 `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --json`。完整扫描要求正文由 `registry/items.jsonl` 精确登记，或由 `registry/body-coverage.json` 的 `unregistered-only` 冻结路径清单覆盖。已精确登记的新增正文不改变集合 hash；未登记正文继续 fail closed。集合覆盖不创建 active 条目。
 
+**单主库内容收敛（只读取证）：** `rtk bash ~/knowledge-hub/tools/knowledge-orphan-files.sh --all --strict --convergence --json`
+在现有 orphan 全覆盖门禁的结果中补充仓库内每篇正文的 SHA-256、精确登记／冻结集合归属、相同正文的待审去重候选，以及全部 source inventory 的文件级证据缺口。每日报告由 `ai-maintenance-sweep` 的既有 Artifact 保存；PR/主线 Quality 会同源复核。该报告不产生第二终态、不自动删除历史正文、不改变 owner 或 active 状态；即使 Hub 内正文全部覆盖，也**不能证明外部源目录已逐文件取齐**。真正的 Product Content Gate、项目 owner 及实际提供方/设备/采用证据仍由各自现有门禁判断；`terminal_closure_cli` 的 GitHub PASS 仅代表仓库工程闭环。
+
 跨项目会话、排障、发布、归档或决策类问题先做 Hub 上下文预检：
 
 ```bash
@@ -149,6 +152,8 @@ rtk env PATH="$PWD/.tmp/engineering/venv/bin:$PATH" bash tools/knowledge-enginee
 ```
 
 `pyproject.toml`、runtime/dev 直接 pin、两份 universal SHA-256 lock 和构建后端必须一致；runtime lock 以 Python 3.8 为兼容解析下界，dev lock 以 Python 3.10 工程环境解析。full build 使用 `--no-isolation`，防止构建时绕过 lock 临时下载另一套后端。GitHub Actions 以 Python 3.8 验证系统运行时路径，并以 Python 3.10–3.14 验证工程矩阵；权限固定为 `contents: read`，禁止 `pull_request_target`、checkout credential persistence 和可变 Action ref；本地 contract 通过不等于远端 workflow 已实际运行。`master` 的真实 hosting protection 是 GitHub repository terminal 的硬条件；exact-head、fresh Quality 与 post-merge Signed 验证继续作为证据链纪律，但不能替代真实 `protected=true`。
+
+开发依赖更新统一参考 [哈希锁维护流程](docs/dev-dependency-lock-workflow.md)：Dependabot 将受控开发工具分组，PR 上只读生成 universal SHA-256 lock 候选，提交后的锁文件必须与候选逐字节一致；供应链和 exact-head 安全门禁保持不变。
 
 公共 Python wrapper 首次验证 Python 3 身份和 runtime 模块能力，不设置 minor 版本白名单；系统 `python3` 是默认首选，显式绝对路径 `KNOWLEDGE_PYTHON_RUNTIME` 仍拥有最高优先级。验证成功后，只为 `tools.codex_assets.knowledge_hub.*` 公共模块写入 `.cache/knowledge-hub/python-runtime-selection-v1` 私有缓存。缓存只有在解释器仍属于候选、归当前用户所有，且新于解释器、selector 和 `requirements-runtime.lock` 时才复用；任一条件漂移即重新验证。缓存不是事实权威，删除后只会回到首次验证路径。检索热路径使用 fail-closed 的 JSON Schema 关键词子集校验器，未知关键词直接失败；完整 Draft 2020-12 校验仍由 schema catalog、pytest 和 full engineering 执行。
 

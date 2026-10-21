@@ -3,6 +3,9 @@ id: pcr02-ds2-ai-shm-session-archive-20260710
 title: PCR02 DS2 与 AI 共享内存链路优化会话归档
 kind: project-archive
 domain: projects/xcrz-sigmastar-demo
+path: projects/xcrz-sigmastar-demo/archive/reports/2026-07-10-pcr02-ds2-ai-shm-session-archive.md
+scope: project-specific
+visibility: team-internal
 status: reviewing
 maturity: candidate
 owner: leiwenjun
