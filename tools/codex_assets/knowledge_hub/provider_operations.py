@@ -11,12 +11,20 @@ import tempfile
 
 from .common import (KnowledgeHubError, load_jsonl, registry_items, load_markdown, render_markdown,
                      encode_jsonl, resolve_inside, read_utf8_bounded, file_sha256, utc_timestamp)
-from .provider_policy import SAFE_METADATA, LOW_RISK_KINDS, SourceRejected, metadata_tags, checked_archive_policy
+from .provider_policy import SAFE_METADATA, LOW_RISK_KINDS, metadata_tags, checked_archive_policy
 from .security import scan_secret_text
 from .provider_subjects import (OPERATIONS_PATH, digest, subject, authorize, route_subject,
                                item_subject, verify_item, read_guard, principal)
 from .store import RepositoryTransaction, snapshot_inputs, WriteConflict
 from .lifecycle import capture
+
+
+class SourceRejected(KnowledgeHubError):
+    """Fixed diagnostics only: never include source values or unknown field names."""
+
+    def __init__(self, field, issue, allowed_values=()):
+        super().__init__("SOURCE_REJECTED")
+        self.diagnostic = {"field": field, "issue": issue, "allowed_values": sorted(allowed_values)}
 
 
 def safe_text(value):
@@ -139,7 +147,12 @@ def frozen_source(args):
         raise SourceRejected("source-metadata", "unsupported-source-metadata", SAFE_METADATA)
     if not body.strip():
         raise SourceRejected("source", "empty-source-body")
-    metadata_tags(metadata, args.kind)
+    try:
+        metadata_tags(metadata, args.kind)
+    except KnowledgeHubError as exc:
+        if str(exc) != "SOURCE_REJECTED":
+            raise
+        raise SourceRejected("source-metadata", "invalid-source-metadata", SAFE_METADATA) from None
     if any(not isinstance(value, str) for key, value in metadata.items() if key != "tags"):
         raise SourceRejected("source-metadata", "invalid-source-metadata", SAFE_METADATA)
     title = args.title or str(metadata.get("title", ""))
