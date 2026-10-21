@@ -690,3 +690,5 @@
 - M5 v2 执行验收契约落地: `projects/llm-agent/validation/provider-llm-agent-dd5146d74604545445b7cf86.md`; `provider-llm-agent-dd5146d74604545445b7cf86`
 - M5 execution v2 真实任务与签名核验: `projects/llm-agent/validation/provider-llm-agent-da6978d29ccbc39d2235463a.md`; `provider-llm-agent-da6978d29ccbc39d2235463a`
 - Knowledge Provider v4 终态主树迁移与运行验收: `governance/product/validation/provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7.md`; `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`
+- GROS 知识入口: `projects/gros/README.md`; `gros-knowledge-entry`
+- GROS readiness validation: `projects/gros/validation/project-readiness.md`; `gros-readiness-validation-20261015`

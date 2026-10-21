@@ -1,5 +1,17 @@
 # Knowledge Hub Tools
 
+Provider `archive --help` 的 `source_contract` 列出归档输入要求。工程文档经常带有
+`id/status/owner/path` 等 frontmatter；这些字段由 Provider 分配，不能直接作为候选输入。
+应另建脱敏结论 Markdown，仅保留 `title/summary_zh/tags/primary_language/source_language/translation_status/terminology_status`
+这些描述字段，保留工程原记录，通过 `--subject`、`--kind` 明确主体和类型。
+
+`SOURCE_REJECTED` 的 `diagnostics` 返回固定类别，不回显命中的正文、路径、字段名或值：
+`unsupported-source-metadata` 或 `invalid-source-metadata` 表示输入头不符合契约；
+`sanitization-required` 要求确认脱敏后传入 `--sanitized`；`empty-source-body` 和
+`source-title-required` 要求补充正文或标题；`sensitive-content`、`machine-specific-content`、
+`raw-session-content` 要求先脱敏、提炼。预检 `PLANNED` 仍不代表归档成功；
+只有 `ARCHIVED/ALREADY_ARCHIVED` 且 `persisted=true` 才能声明候选已归档。
+
 所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护。commit/push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory 和源项目写入分别需要明确授权。
 
 ## 外部来源逐文件快照（私有证据候选）

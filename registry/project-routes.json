@@ -1016,6 +1016,31 @@
       ],
       "default_source_ids": [],
       "route_key_policy": "subject-workspace"
+    },
+    {
+      "project_id": "gros",
+      "name": "GROS",
+      "type": "project",
+      "route_scope": "project",
+      "group_id": "",
+      "aliases": [
+        "gros"
+      ],
+      "topic_aliases": [],
+      "repo_refs": [],
+      "workspace_refs": [
+        "workspace://gros"
+      ],
+      "hub_entry": "projects/gros/README.md",
+      "current_path": "projects/gros/current",
+      "archive_path": "projects/gros/archive",
+      "decisions_path": "projects/gros/decisions",
+      "validation_path": "projects/gros/validation",
+      "domain_refs": [
+        "projects/gros"
+      ],
+      "default_source_ids": [],
+      "route_key_policy": "subject-workspace"
     }
   ]
 }

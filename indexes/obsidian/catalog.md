@@ -156,6 +156,11 @@
 - [PCR02 SoC 与 GD32L235 传感器频率契约及 50 Hz 融合方案](../../projects/gd32l235/archive/design/2026-07-23-sensor-rate-contract-and-50hz-fusion.md) · `reviewing` · `gd32l235-pcr02-sensor-rate-contract-50hz-fusion-20260723`
 - [PCR02 温度、充电接触、电机供电及维护模式 v1.16 设计归档](../../projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md) · `reviewing` · `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
 
+## projects/gros
+
+- [GROS readiness validation](../../projects/gros/validation/project-readiness.md) · `reviewing` · `gros-readiness-validation-20261015`
+- [GROS 知识入口](../../projects/gros/README.md) · `reviewing` · `gros-knowledge-entry`
+
 ## projects/hc32f072
 
 - [HC32F072 Firmware readiness validation](../../projects/hc32f072/validation/project-readiness.md) · `reviewing` · `hc32f072-readiness-validation-20260713`

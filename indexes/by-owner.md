@@ -569,6 +569,8 @@
 - `provider-llm-agent-dd5146d74604545445b7cf86`
 - `provider-llm-agent-da6978d29ccbc39d2235463a`
 - `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`
+- `gros-knowledge-entry`
+- `gros-readiness-validation-20261015`
 
 ## pcr02-registry-owner
 
