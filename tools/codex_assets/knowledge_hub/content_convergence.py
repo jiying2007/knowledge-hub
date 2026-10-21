@@ -7,13 +7,13 @@ Never read an external source directory or promote an archived body.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import pathlib
 import re
 from collections import defaultdict
 from typing import Any, Dict, Mapping, Sequence, Set
 
+from .body_privacy import BodyPrivacyError, declared_private, digest_public_body
 from .common import ALLOWED_STATUSES, KnowledgeHubError
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -100,16 +100,30 @@ def private_body_paths(root: pathlib.Path, body_paths: Sequence[str]) -> Set[str
             raise KnowledgeHubError("invalid registry privacy path")
         if status == "personal" or visibility == "personal-local":
             private_roots.add(relative)
-    return {
+    excluded = {
         relative for relative in body_paths
         if relative in private_roots or any(
             parent.as_posix() in private_roots
             for parent in pathlib.PurePosixPath(relative).parents
         )
     }
+    for relative in body_paths:
+        if relative in excluded:
+            continue
+        path = _body_path(root, relative, require_exists=False)
+        if not path.exists():
+            # This structural classifier also accepts absent negative controls;
+            # actual digesting still rejects an absent public body.
+            continue
+        try:
+            if declared_private(root, relative):
+                excluded.add(relative)
+        except BodyPrivacyError as exc:
+            raise KnowledgeHubError("unsafe or ambiguous body privacy metadata") from exc
+    return excluded
 
 
-def _file_digest(root: pathlib.Path, relative: str, remaining: int):
+def _body_path(root: pathlib.Path, relative: str, *, require_exists: bool = True):
     relative_path = pathlib.PurePosixPath(relative)
     if (not relative or relative_path.is_absolute()
             or ".." in relative_path.parts or "\\" in relative
@@ -120,31 +134,26 @@ def _file_digest(root: pathlib.Path, relative: str, remaining: int):
     if any(root.joinpath(*relative_path.parts[:index]).is_symlink()
            for index in range(1, len(relative_path.parts) + 1)):
         raise KnowledgeHubError("canonical body has a symlinked path component")
-    if path.is_symlink() or not path.is_file():
-        raise KnowledgeHubError("canonical body missing or symlinked: " + relative)
+    if path.is_symlink() or (require_exists and not path.is_file()):
+        raise KnowledgeHubError("canonical body missing or symlinked")
     resolved = path.resolve()
     try:
         resolved.relative_to(root)
     except ValueError as exc:
         raise KnowledgeHubError("canonical body escapes repository: " + relative) from exc
-    before = path.stat()
-    if before.st_size > remaining:
+    return path
+
+
+def _file_digest(root: pathlib.Path, relative: str, remaining: int):
+    path = _body_path(root, relative)
+    if type(remaining) is not int or remaining < 0 or path.stat().st_size > remaining:
         raise KnowledgeHubError("canonical body digest byte budget exhausted")
-    digest = hashlib.sha256()
-    size = 0
-    with path.open("rb") as handle:
-        while True:
-            chunk = handle.read(65536)
-            if not chunk:
-                break
-            size += len(chunk)
-            if size > remaining:
-                raise KnowledgeHubError("canonical body changed past digest budget")
-            digest.update(chunk)
-    after = path.stat()
-    if size != before.st_size or size != after.st_size or before.st_mtime_ns != after.st_mtime_ns:
-        raise KnowledgeHubError("canonical body changed during digest: " + relative)
-    return digest.hexdigest(), size
+    try:
+        # Recheck on the hashing descriptor: a changed declaration cannot reuse
+        # an earlier public classification from the summary pass.
+        return digest_public_body(root, relative, remaining)
+    except BodyPrivacyError as exc:
+        raise KnowledgeHubError("unsafe or changing public body") from exc
 
 
 def _source_control(root: pathlib.Path) -> Dict[str, Any]:
@@ -291,7 +300,7 @@ def build_content_convergence(
         "owner_decisions_generated": False,
         "canonical_mutations": 0,
         "notes_zh": (
-            "本报告仅对非个人正文逐文件只读取证；个人正文不读取、不哈希，排除仅计数。"
+            "本报告先按登记与保留路径排除，再有界检查文档头部；私有正文不继续读取或哈希，排除仅计数。"
             "该报告不会证明外部原始目录当前文件全集。"
             "冻结集合覆盖、source 根目录记录或同哈希均不得自动提升 active、删除正文或签署 owner。"
             "仓库级 Terminal 和 Product/Content Terminal 必须继续使用各自现有机器门禁。"
