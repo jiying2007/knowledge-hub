@@ -14,7 +14,8 @@ import re
 import selectors
 import subprocess
 import time
-from typing import Any, Dict, List, Mapping, Sequence, Set
+from collections import Counter
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set
 
 from .body_privacy import BodyPrivacyError, declared_private, digest_public_body
 
@@ -26,6 +27,38 @@ MAX_BODY_BYTES = 4 * 1024 * 1024
 MAX_TOTAL_BODY_BYTES = 64 * 1024 * 1024
 TEXT_SUFFIXES = frozenset({".md", ".mdx", ".txt"})
 SHA1 = re.compile(r"[a-f0-9]{40}\Z")
+WITHHELD_CODES = frozenset({
+    "invalid-body-path", "reserved-private-body", "unsupported-safe-file-open",
+    "not-a-regular-body", "ambiguous-header-byte-order-mark",
+    "header-event-or-alias-budget", "header-depth-budget", "header-must-be-a-mapping",
+    "unsupported-header-key", "duplicate-header-key", "ambiguous-privacy-value",
+    "unknown-privacy-classification", "first-line-budget", "ambiguous-header-delimiter",
+    "header-incomplete-or-over-budget", "invalid-expected-git-blob", "invalid-body-budget",
+    "body-byte-budget", "private-body-must-not-be-hashed", "body-changed-during-read",
+    "body-not-at-expected-git-blob",
+})
+
+
+def _withheld_reason(error: BaseException) -> str:
+    """Return only fixed codes; suppressed exception details remain private."""
+    seen = set()
+    current: Optional[BaseException] = error
+    for _ in range(8):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        if isinstance(current, BodyPrivacyError) and current.args:
+            code = current.args[0]
+            if type(code) is str and code in WITHHELD_CODES:
+                return code
+        if type(current).__module__.startswith("yaml."):
+            return "invalid-header-yaml"
+        if isinstance(current, UnicodeError):
+            return "invalid-header-encoding"
+        if isinstance(current, OSError):
+            return "body-io-unavailable"
+        current = current.__cause__ or current.__context__
+    return "unclassified-body-failure"
 
 
 class InventoryError(ValueError):
@@ -127,6 +160,7 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
         if not all(isinstance(path, str) and _relative(path) for path in roots):
             raise InventoryError("invalid-private-root")
         rows: List[Dict[str, Any]] = []
+        withheld_reasons: Dict[str, int] = Counter()
         private_count = withheld_count = total_bytes = 0
         for relative, mode, kind, blob in entries:
             if any(relative == path or relative.startswith(path + "/") for path in roots):
@@ -134,6 +168,7 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
                 continue
             if mode not in {"100644", "100755"} or kind != "blob":
                 withheld_count += 1
+                withheld_reasons["unsupported-git-entry"] += 1
                 continue
             try:
                 if declared_private(root, relative):
@@ -141,8 +176,9 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
                     continue
                 budget = min(MAX_BODY_BYTES, MAX_TOTAL_BODY_BYTES - total_bytes)
                 sha, size = digest_public_body(root, relative, budget, expected_git_blob=blob)
-            except BodyPrivacyError:
+            except BodyPrivacyError as error:
                 withheld_count += 1
+                withheld_reasons[_withheld_reason(error)] += 1
                 continue
             total_bytes += size
             rows.append({"path": relative, "git_blob": blob, "sha256": sha,
@@ -155,6 +191,7 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
             source_revision=revision, head_inventory_complete=True,
             tracked_text_count=len(entries), observed_count=len(rows),
             private_excluded_count=private_count, withheld_count=withheld_count,
+            withheld_reason_counts=dict(sorted(withheld_reasons.items())),
             observed_body_bytes=total_bytes, body_records=rows,
             registered_count=sum(row["exact_registered"] for row in rows),
             unregistered_count=sum(not row["exact_registered"] for row in rows),
