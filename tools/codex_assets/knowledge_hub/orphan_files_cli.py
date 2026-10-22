@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 from .content_convergence import build_content_convergence, private_body_paths
+from .tracked_text_inventory import build_tracked_text_inventory
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -288,6 +289,7 @@ if args.convergence:
     output["convergence"] = build_content_convergence(
         root, scope_paths, ids_by_path, coverage_by_path
     )
+    output["tracked_text_inventory"] = build_tracked_text_inventory(root)
 
 if args.json:
     print(json.dumps(output, ensure_ascii=False, indent=2))
