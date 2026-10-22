@@ -14,7 +14,7 @@
 - [按决策浏览](by-decision.md)
 - [按状态浏览](by-status.md)
 - [按复核日期浏览](by-review-date.md)
-- [30 项目成熟度工作台](project-readiness.md)
+- [项目成熟度工作台](project-readiness.md)
 - [项目成熟度 Base](obsidian/project-readiness.base)
 - [Reviewing Base](obsidian/reviewing.base)
 - [Active 知识 Base](obsidian/active-knowledge.base)
@@ -44,7 +44,9 @@
 - [统一 readiness dashboard](project-readiness.md)
 - [Knowledge Hub 当前产品状态与证据缺口](../governance/product/validation/project-readiness.md)
 - 链接检查：`rtk bash ~/knowledge-hub/tools/knowledge-link-audit.sh --json --strict`
-- 产品检查：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --as-of 2026-07-19`
+- 产品检查：`rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product`
+
+该命令默认按执行当日评价；历史复盘才显式传入有来源的 `--as-of YYYY-MM-DD`，不得把旧固定日期作为日常验收。
 
 ## 安全提醒
 
