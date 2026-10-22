@@ -566,6 +566,24 @@
         "workspace://a123x"
       ],
       "evidence_profile": "knowledge-project"
+    },
+    {
+      "id": "gros",
+      "name": "GROS",
+      "type": "knowledge-project",
+      "domain": "projects/gros",
+      "entry": "projects/gros/README.md",
+      "current": "projects/gros/current",
+      "archive": "projects/gros/archive",
+      "decisions": "projects/gros/decisions",
+      "validation": "projects/gros/validation",
+      "groups": [],
+      "repo_boundary": "none",
+      "status": "registered",
+      "workspace_refs": [
+        "workspace://gros"
+      ],
+      "evidence_profile": "knowledge-project"
     }
   ]
 }

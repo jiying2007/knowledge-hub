@@ -7,6 +7,13 @@
         "type": "project",
         "id": "a123x"
       }
+    },
+    {
+      "workspace_ref": "workspace://gros",
+      "subject_ref": {
+        "type": "project",
+        "id": "gros"
+      }
     }
   ]
 }

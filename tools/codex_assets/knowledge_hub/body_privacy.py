@@ -15,10 +15,13 @@ from typing import BinaryIO, Iterator, Tuple
 
 import yaml
 from yaml.events import AliasEvent, CollectionEndEvent, CollectionStartEvent
-from yaml.nodes import MappingNode, ScalarNode
+from yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 MAX_HEADER_BYTES = 65536
 MAX_LINE_BYTES = 4096
+MAX_HEADER_EVENTS = 10000
+MAX_HEADER_ALIASES = 128
+MAX_HEADER_DEPTH = 32
 PRIVATE_VALUES = frozenset({"private", "personal-local", "personal"})
 PUBLIC_VALUES = frozenset({"team-internal", "public"})
 STATUS_VALUES = frozenset({
@@ -69,17 +72,80 @@ def _open_body(root: pathlib.Path, relative: str) -> Iterator[BinaryIO]:
         os.close(directory)
 
 
+def _private_field(name, value, *, top_level):
+    if name not in {"visibility", "status"}:
+        return False
+    if not isinstance(value, ScalarNode) or value.tag != "tag:yaml.org,2002:str":
+        raise BodyPrivacyError("ambiguous-privacy-value")
+    classification = value.value.strip().lower()
+    if (name == "visibility" and classification in PRIVATE_VALUES
+            or name == "status" and classification == "personal"):
+        return True
+    # Nested status can describe an operation, not the document lifecycle.
+    # It must still never hide an explicit personal declaration.
+    if name == "visibility" and classification not in PUBLIC_VALUES:
+        raise BodyPrivacyError("unknown-privacy-classification")
+    if name == "status" and top_level and classification not in STATUS_VALUES:
+        raise BodyPrivacyError("unknown-privacy-classification")
+    return False
+
+
+def _private_node(node, active, memo, depth):
+    """Inspect the composed DAG once; do not construct or expand YAML aliases."""
+    if depth > MAX_HEADER_DEPTH:
+        raise BodyPrivacyError("header-depth-budget")
+    identity = id(node)
+    if identity in active:
+        raise BodyPrivacyError("header-event-or-alias-budget")
+    if identity in memo:
+        if depth + memo[identity][1] > MAX_HEADER_DEPTH:
+            raise BodyPrivacyError("header-depth-budget")
+        return memo[identity]
+    if len(active) + len(memo) >= MAX_HEADER_EVENTS:
+        raise BodyPrivacyError("header-event-or-alias-budget")
+    active.add(identity)
+    private, height = False, 0
+    if isinstance(node, MappingNode):
+        if node.tag != "tag:yaml.org,2002:map":
+            raise BodyPrivacyError("header-must-be-a-mapping")
+        seen = set()
+        for key, value in node.value:
+            # Merge keys are not ordinary string keys. Never flatten merges:
+            # precedence/overrides must not conceal a private declaration.
+            if not isinstance(key, ScalarNode) or key.tag != "tag:yaml.org,2002:str":
+                raise BodyPrivacyError("unsupported-header-key")
+            name = key.value.lower()
+            if name in seen:
+                raise BodyPrivacyError("duplicate-header-key")
+            seen.add(name)
+            private = _private_field(name, value, top_level=depth == 0) or private
+            child_private, child_height = _private_node(value, active, memo, depth + 1)
+            private = child_private or private
+            height = max(height, child_height + 1)
+    elif isinstance(node, SequenceNode):
+        if node.tag != "tag:yaml.org,2002:seq":
+            raise BodyPrivacyError("ambiguous-privacy-value")
+        for value in node.value:
+            child_private, child_height = _private_node(value, active, memo, depth + 1)
+            private = child_private or private
+            height = max(height, child_height + 1)
+    active.remove(identity)
+    memo[identity] = (private, height)
+    return private, height
+
+
 def _classify_header(data: bytes) -> bool:
     text = data.decode("utf-8")
     if "\ufeff" in text:
         raise BodyPrivacyError("ambiguous-header-byte-order-mark")
-    depth = 0
+    depth = aliases = 0
     for count, event in enumerate(yaml.parse(text, Loader=yaml.SafeLoader), 1):
-        if count > 10000 or isinstance(event, AliasEvent):
+        aliases += isinstance(event, AliasEvent)
+        if count > MAX_HEADER_EVENTS or aliases > MAX_HEADER_ALIASES:
             raise BodyPrivacyError("header-event-or-alias-budget")
         if isinstance(event, CollectionStartEvent):
             depth += 1
-            if depth > 32:
+            if depth > MAX_HEADER_DEPTH:
                 raise BodyPrivacyError("header-depth-budget")
         elif isinstance(event, CollectionEndEvent):
             depth -= 1
@@ -88,26 +154,7 @@ def _classify_header(data: bytes) -> bool:
         return False
     if not isinstance(node, MappingNode):
         raise BodyPrivacyError("header-must-be-a-mapping")
-    seen = set()
-    for key, value in node.value:
-        if not isinstance(key, ScalarNode) or key.tag != "tag:yaml.org,2002:str":
-            raise BodyPrivacyError("unsupported-header-key")
-        name = key.value.lower()
-        if name in seen:
-            raise BodyPrivacyError("duplicate-header-key")
-        seen.add(name)
-        if name not in {"visibility", "status"}:
-            continue
-        if not isinstance(value, ScalarNode) or value.tag != "tag:yaml.org,2002:str":
-            raise BodyPrivacyError("ambiguous-privacy-value")
-        classification = value.value.strip().lower()
-        if (name == "visibility" and classification in PRIVATE_VALUES
-                or name == "status" and classification == "personal"):
-            return True
-        allowed = PUBLIC_VALUES if name == "visibility" else STATUS_VALUES
-        if classification not in allowed:
-            raise BodyPrivacyError("unknown-privacy-classification")
-    return False
+    return _private_node(node, set(), {}, 0)[0]
 
 
 def _header(handle: BinaryIO) -> Tuple[bool, bytes]:

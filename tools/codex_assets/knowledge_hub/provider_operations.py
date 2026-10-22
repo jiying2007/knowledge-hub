@@ -19,10 +19,21 @@ from .store import RepositoryTransaction, snapshot_inputs, WriteConflict
 from .lifecycle import capture
 
 
+class SourceRejected(KnowledgeHubError):
+    """Fixed diagnostics only: never include source values or unknown field names."""
+
+    def __init__(self, field, issue, allowed_values=()):
+        super().__init__("SOURCE_REJECTED")
+        self.diagnostic = {"field": field, "issue": issue, "allowed_values": sorted(allowed_values)}
+
+
 def safe_text(value):
-    if (scan_secret_text(value) or re.search(r"/home/[^/\s]+/|/vsdata/|\b(?:\d{1,3}\.){3}\d{1,3}\b", value)
-            or re.search(r'"type"\s*:\s*"(?:session_meta|response_item|event_msg|turn_context)"', value)):
-        raise KnowledgeHubError("SOURCE_REJECTED")
+    if scan_secret_text(value):
+        raise SourceRejected("source", "sensitive-content")
+    if re.search(r"/home/[^/\s]+/|/vsdata/|\b(?:\d{1,3}\.){3}\d{1,3}\b", value):
+        raise SourceRejected("source", "machine-specific-content")
+    if re.search(r'"type"\s*:\s*"(?:session_meta|response_item|event_msg|turn_context)"', value):
+        raise SourceRejected("source", "raw-session-content")
 
 
 def operations(root):
@@ -127,22 +138,29 @@ def frozen_source(args):
     raw = read_utf8_bounded(pathlib.Path(args.source).expanduser(), 131072, "archive source")
     safe_text(raw)
     if not args.sanitized:
-        raise KnowledgeHubError("SOURCE_REJECTED")
+        raise SourceRejected("--sanitized", "sanitization-required")
     with tempfile.TemporaryDirectory(prefix="provider-parse-") as directory:
         checked = pathlib.Path(directory) / "checked.md"
         checked.write_text(raw, encoding="utf-8")
         metadata, body = load_markdown(checked)
-    if set(metadata) - SAFE_METADATA or not body.strip():
-        raise KnowledgeHubError("SOURCE_REJECTED")
-    metadata_tags(metadata, args.kind)
+    if set(metadata) - SAFE_METADATA:
+        raise SourceRejected("source-metadata", "unsupported-source-metadata", SAFE_METADATA)
+    if not body.strip():
+        raise SourceRejected("source", "empty-source-body")
+    try:
+        metadata_tags(metadata, args.kind)
+    except KnowledgeHubError as exc:
+        if str(exc) != "SOURCE_REJECTED":
+            raise
+        raise SourceRejected("source-metadata", "invalid-source-metadata", SAFE_METADATA) from None
     if any(not isinstance(value, str) for key, value in metadata.items() if key != "tags"):
-        raise KnowledgeHubError("SOURCE_REJECTED")
+        raise SourceRejected("source-metadata", "invalid-source-metadata", SAFE_METADATA)
     title = args.title or str(metadata.get("title", ""))
     if not title:
         match = re.search(r"(?m)^#\s+(.+)$", body)
         title = match.group(1).strip() if match else ""
     if not title or len(title) > 512:
-        raise KnowledgeHubError("SOURCE_REJECTED")
+        raise SourceRejected("--title", "source-title-required")
     safe_text(title)
     provenance = {"source_kind": "session-conclusion", "source_ref": "sanitized-conclusion", "verification_state": "declared"}
     if getattr(args, "provenance_file", ""):

@@ -108,6 +108,50 @@ def test_public_error_does_not_echo_secret(tmp_path, capsys):
     assert json.loads(output)["persisted"] is False
 
 
+@pytest.mark.parametrize("body,sanitized,issue", [
+    ("# 标题\n\npassword=" + "sensitive-sentinel-1234", True, "sensitive-content"),
+    ("# 标题\n\n/home/private-sentinel/work/", True, "machine-specific-content"),
+    ('# 标题\n\n{"type":"response_item"}', True, "raw-session-content"),
+    ("# 标题\n\n结论。", False, "sanitization-required"),
+    ("---\nprivate-sentinel: true\n---\n# 标题\n", True, "unsupported-source-metadata"),
+    ("---\ntags: invalid-private-sentinel\n---\n# 标题\n", True, "invalid-source-metadata"),
+    ("---\nprimary_language: 123\n---\n# 标题\n", True, "invalid-source-metadata"),
+    ("---\ntitle: 标题\n---\n", True, "empty-source-body"),
+    ("结论正文。", True, "source-title-required"),
+])
+def test_source_rejection_diagnostics_are_fixed_and_readonly(tmp_path, capsys, body, sanitized, issue):
+    from tools.codex_assets.knowledge_hub.schemas import validate_instance
+    root, source, _ = setup(tmp_path)
+    source.write_text(body)
+    args = ["archive", "--root", str(root), "--subject", "project:test", "--source", str(source),
+            "--kind", "validation", "--dry-run"]
+    if sanitized:
+        args.append("--sanitized")
+    before = (root / "registry/items.jsonl").read_bytes()
+    assert main(args) == 2
+    raw = capsys.readouterr().out
+    result = json.loads(raw)
+    assert result["reason_codes"] == ["SOURCE_REJECTED"]
+    assert result["diagnostics"][0]["issue"] == issue
+    assert result["persisted"] is False and result["write_performed"] is False
+    assert "sentinel" not in raw and str(source) not in raw
+    assert (root / "registry/items.jsonl").read_bytes() == before
+    assert validate_instance(root, "provider-operation-receipt-v4", result)["status"] == "pass"
+
+
+def test_repaired_source_passes_preflight_and_archives_idempotently(tmp_path):
+    root, source, args = setup(tmp_path)
+    source.write_text("---\nstatus: active\n---\n# 修复记录\n\n结论已脱敏。\n")
+    with pytest.raises(KnowledgeHubError, match="SOURCE_REJECTED"):
+        archive(root, args)
+    source.write_text("---\ntitle: 修复记录\ntags: [验证]\n---\n# 修复记录\n\n结论已脱敏。\n")
+    args.apply = False
+    assert archive(root, args)["status"] == "PLANNED"
+    args.apply = True
+    assert archive(root, args)["status"] == "ARCHIVED"
+    assert archive(root, args)["status"] == "ALREADY_ARCHIVED"
+
+
 @pytest.mark.parametrize('invalid', [None, 'validation', {}, ['validation', 'validation']])
 def test_malformed_policy_returns_public_json_without_writing(tmp_path, capsys, invalid):
     root, source, _ = setup(tmp_path)

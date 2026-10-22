@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (124)
+## validation (125)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [7.14.1 多仓主分支合并与回读](../../projects/llm-agent/validation/provider-llm-agent-8aba0675f67e3ceadf5d9eac.md) · `reviewing`
@@ -22,7 +22,7 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## manual-validation-pending (55)
+## manual-validation-pending (57)
 
 - [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
@@ -40,7 +40,7 @@
 - [ADK 8.0.4 与 llm_agent 归档资源治理迭代](../../projects/llm-agent/validation/provider-llm-agent-1e0955b8405e311ca5dc1a58.md) · `reviewing`
 - [ADK 官方来源维护验证候选](../../projects/agent-dev-kit/validation/provider-agent-dev-kit-a9a2ab7befdde267c74c447a.md) · `reviewing`
 
-## no-active-promotion (44)
+## no-active-promotion (46)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
@@ -49,7 +49,7 @@
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
-## ai-generated (38)
+## ai-generated (40)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
@@ -58,7 +58,7 @@
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
-## owner-review-pending (34)
+## owner-review-pending (36)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
@@ -67,7 +67,7 @@
 - [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
-## project-readiness (34)
+## project-readiness (35)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
@@ -193,6 +193,15 @@
 - [四仓 AI 开发资产与团队知识协作候选](../../projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md) · `reviewing`
 - [四仓 AI 资产跨平台边界修正候选](../../projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md) · `reviewing`
 
+## gros (7)
+
+- [GROS readiness validation](../../projects/gros/validation/project-readiness.md) · `reviewing`
+- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
+- [GROS 知识入口](../../projects/gros/README.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
+- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
+
 ## hal (7)
 
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
@@ -280,14 +289,6 @@
 - [HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md) · `reviewing`
 - [HDI/HAL/Diag 硬切换与零残留架构审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md) · `reviewing`
 - [HDI/HAL/Diag 跨平台重构最终方案审查与定案](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md) · `reviewing`
-
-## gros (5)
-
-- [GROS 单轨跨平台构建硬切换最终方案候选 v1](../../projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试方案审查记录](../../projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md) · `reviewing`
-- [HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md) · `reviewing`
-- [HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3](../../projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md) · `reviewing`
 
 ## hil (5)
 
@@ -565,6 +566,11 @@
 
 - [PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选](../../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md) · `reviewing`
 - [PCR02 显示动作 UAF 源码修复验证](../../projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md) · `reviewing`
+
+## entry (2)
+
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
+- [GROS 知识入口](../../projects/gros/README.md) · `reviewing`
 
 ## external-source (2)
 
@@ -1034,10 +1040,6 @@
 ## engineering-quality (1)
 
 - [Knowledge Hub 全面终态闭环优化验证 2026-07-18](../../governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md) · `reviewing`
-
-## entry (1)
-
-- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 
 ## evb (1)
 
