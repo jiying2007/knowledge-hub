@@ -1,6 +1,5 @@
 """Atomic source control creation fails closed on interrupted writes and races."""
 import errno
-import os
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
