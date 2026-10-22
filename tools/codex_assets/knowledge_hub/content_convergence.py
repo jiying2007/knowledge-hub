@@ -15,6 +15,7 @@ from typing import Any, Dict, Mapping, Sequence, Set
 
 from .body_privacy import BodyPrivacyError, declared_private, digest_public_body
 from .common import ALLOWED_STATUSES, KnowledgeHubError
+from .repository_text_inventory import build_repository_text_inventory
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -82,8 +83,8 @@ def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
     return rows
 
 
-def private_body_paths(root: pathlib.Path, body_paths: Sequence[str]) -> Set[str]:
-    """Classify before body reads; retain only counts in public projections."""
+def registry_private_roots(root: pathlib.Path) -> Set[str]:
+    """Bounded registry privacy roots; never export this internal set."""
     private_roots = {"notes/personal"}
     for row in _jsonl(root, root / "registry/items.jsonl"):
         status, visibility = row.get("status"), row.get("visibility")
@@ -100,6 +101,12 @@ def private_body_paths(root: pathlib.Path, body_paths: Sequence[str]) -> Set[str
             raise KnowledgeHubError("invalid registry privacy path")
         if status == "personal" or visibility == "personal-local":
             private_roots.add(relative)
+    return private_roots
+
+
+def private_body_paths(root: pathlib.Path, body_paths: Sequence[str]) -> Set[str]:
+    """Classify before body reads; retain only counts in public projections."""
+    private_roots = registry_private_roots(root)
     excluded = {
         relative for relative in body_paths
         if relative in private_roots or any(
@@ -295,6 +302,9 @@ def build_content_convergence(
         "exact_duplicate_candidates": duplicate_candidates,
         "duplicate_action": "review-only; no automatic deletion, merge or promotion",
         "source_controls": sources,
+        "repository_text_inventory": build_repository_text_inventory(
+            root, registry_private_roots(root), registry_ids_by_path
+        ),
         "full_external_migration_proven": False,
         "full_content_review_proven": False,
         "owner_decisions_generated": False,

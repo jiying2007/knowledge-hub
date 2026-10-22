@@ -192,8 +192,13 @@ def _identity(value: os.stat_result) -> Tuple[int, int, int, int, int]:
     return value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns
 
 
-def digest_public_body(root: pathlib.Path, relative: str, budget: int) -> Tuple[str, int]:
+def digest_public_body(root: pathlib.Path, relative: str, budget: int,
+                       *, expected_git_blob: str = "") -> Tuple[str, int]:
     """Reclassify and hash on the same descriptor, rejecting classification races."""
+    if expected_git_blob != "" and (not isinstance(expected_git_blob, str)
+            or len(expected_git_blob) != 40
+            or any(char not in "0123456789abcdef" for char in expected_git_blob)):
+        raise BodyPrivacyError("invalid-expected-git-blob")
     if type(budget) is not int or budget < 0:
         raise BodyPrivacyError("invalid-body-budget")
     try:
@@ -207,6 +212,11 @@ def digest_public_body(root: pathlib.Path, relative: str, budget: int) -> Tuple[
             if len(prefix) > budget:
                 raise BodyPrivacyError("body-byte-budget")
             digest = hashlib.sha256()
+            # Git SHA-1 is an object-identity check, not authorization or signing.
+            git_blob = hashlib.sha1() if expected_git_blob else None  # nosec B324
+            if git_blob is not None:
+                git_blob.update(b"blob " + str(before.st_size).encode("ascii") + b"\0")
+                git_blob.update(prefix)
             digest.update(prefix)
             size = len(prefix)
             while True:
@@ -217,9 +227,13 @@ def digest_public_body(root: pathlib.Path, relative: str, budget: int) -> Tuple[
                 if size > budget:
                     raise BodyPrivacyError("body-byte-budget")
                 digest.update(chunk)
+                if git_blob is not None:
+                    git_blob.update(chunk)
             after = os.fstat(handle.fileno())
             if _identity(before) != _identity(after) or size != before.st_size:
                 raise BodyPrivacyError("body-changed-during-read")
+            if git_blob is not None and git_blob.hexdigest() != expected_git_blob:
+                raise BodyPrivacyError("body-not-at-expected-git-blob")
         return digest.hexdigest(), size
     except (OSError, UnicodeError, ValueError, yaml.YAMLError, RecursionError):
         raise BodyPrivacyError("unsafe-or-changing-public-body") from None

@@ -226,6 +226,10 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/repository_text_inventory.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/content_convergence.py",
       "review_class": "security-critical"
     },

@@ -11,6 +11,7 @@ from tools.codex_assets.knowledge_hub.review_risk import (
 
 @pytest.mark.parametrize("path", [
     "tools/codex_assets/knowledge_hub/body_privacy.py",
+    "tools/codex_assets/knowledge_hub/repository_text_inventory.py",
     "tools/codex_assets/knowledge_hub/content_convergence.py",
     "registry/review-risk-policy.json",
 ])
