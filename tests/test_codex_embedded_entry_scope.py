@@ -28,6 +28,6 @@ def test_candidate_and_team_publishing_authority_remain_distinct():
     doc = (ROOT / "domains/embedded/README.md").read_text(encoding="utf-8")
     for phrase in (
         "嵌入式候选与 provenance 域", "团队已发布规范", "不自动 commit/push/merge/tag",
-        "不代表团队技能已发布或测试通过",
+        "不得在 Hub 标记团队技能已发布或测试通过",
     ):
         assert phrase in doc
