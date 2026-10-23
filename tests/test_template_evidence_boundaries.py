@@ -42,4 +42,4 @@ def test_templates_dont_confer_owner_or_source_permissions():
         (ROOT / "templates/tool-asset-candidate.md").read_text(encoding="utf-8"),
     ]
     assert all("禁止" in d and "证据" in d for d in docs)
-    assert "不代表任何真实文件、权限、脱敏或测试已被验证" in docs[1]
+    assert "不表示任何真实文件、权限、脱敏或测试已被验证" in docs[1]
