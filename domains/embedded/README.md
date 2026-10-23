@@ -10,11 +10,13 @@
 workspace://embedded-knowledge
 ```
 
-验证：
+团队仓验证（必须在 `workspace://embedded-knowledge` 对应的实际团队仓 checkout 根目录执行；不得直接在 Knowledge Hub 镜像中执行或把命令存在当成测试成功）：
 
 ```bash
 rtk bash scripts/check-all.sh
 ```
+
+本目录 `skills/` 中引用的 `scripts/check-all.sh`、`docs/templates/` 或 `docs/AGENTS.md` 也遵循相同的团队仓 cwd/版本边界；没有真实团队仓 commit、执行退出码和产物，不得在 Hub 标记团队技能已发布或测试通过。
 
 Hub 侧常用入口：
 
