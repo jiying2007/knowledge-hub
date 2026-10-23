@@ -62,4 +62,6 @@ blockers_zh: <人工评审前仍需解决的问题；没有则写“无”>
 
 # 工具资产候选
 
+> **未验证的模板，禁止直接提交为已通过证据**：YAML 中的 `source_identity_verified: true`、`sanitization.endpoint_removed: true`、`credentials_found: false`、`raw_logs_archived: false`、`generated_by_ai: false` 和推荐结果只是生成器输出形状的示例，不表示任何真实文件、权限、脱敏或测试已被验证。必须从实际扫描器和测试回执取得精确源码版本、SHA-256、验证退出码和来源授权；没有证据时保持 `not-run`/`pending`，不要复制示例布尔值冒充实测。不得从 `team-internal` 标签推导可以公开。
+
 此文件由源仓候选检测器生成，仅作为 Hub 导入输入。正文可补充简短说明，但导入器只持久化经过白名单规范化的 front matter 字段，不复制本正文、源码、raw log、core、二进制、现场端点或凭证。

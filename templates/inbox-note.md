@@ -39,6 +39,8 @@ review_basis:
 
 # 待分类知识候选
 
+> **填写前核对**：此文件是待分类草稿模板，不是可直接登记的知识事实或 owner 决定。头部的 `kind: project-current`、`domain: notes`、`owner`、`status: draft`、示例 ID、空 `source` 与日期只是占位，不代表项目归属、身份或来源已验证。创建真实条目时须先按当前 Registry 与来源证据重新选择 `kind/domain/path/owner`、检查私有分类、完整填写时间及验证待办；没有充分证据时只保留草稿，禁止提升 Active、团队发布或执行源项目操作。
+
 ## 结论摘要
 
 说明可复用结论；如果尚未形成结论，明确记录待验证问题。
