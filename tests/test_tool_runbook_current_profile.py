@@ -39,5 +39,6 @@ def test_current_review_commands_do_not_hardcode_june_2026():
     content = (ROOT / "tools/README.md").read_text(encoding="utf-8")
     assert "--as-of 2026-07-13" not in content
     assert "--as-of 2026-06-22" not in content
+    assert "--as-of 2026-07-19" not in content
     assert "2026-10-17 主线登记元数据" in content
     assert content.count("rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict\n") == 1

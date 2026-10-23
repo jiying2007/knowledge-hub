@@ -241,7 +241,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --fina
 | 链接与 Bases | `knowledge-link-audit.sh --summary-json` | 有界首屏；`--json` 提供完整历史 warning 取证。检查标准 Markdown links、readiness inbound 和只读 `.base` schema；不读取本机 `.obsidian/` 配置作为权威 |
 | Obsidian 视图 | `knowledge-obsidian-view-build.sh --check --json` | 检查 managed Properties、总/项目/主题 MOC 和只读 Bases；真实 GUI 验收单列为 `obsidian_runtime_status`，不由文件层结果冒充 |
 | 团队导出 | `knowledge-export.sh --plan --json` | 仅 `active + team-internal` canonical Markdown；执行共享 secret scan、链接闭包、hash manifest 和原子发布 |
-| 恢复演练 | `knowledge-restore-drill.sh --source-mode candidate\|head --as-of 2026-07-19 --summary-json` | v4 schema 绑定 repository、commit/workflow SHA、run id/attempt、ref 与证据 hash；candidate 验证当前候选，head 只验证 `git archive HEAD`；本地环境和不同 run 的快照不能证明 remote/offsite |
+| 恢复演练 | `knowledge-restore-drill.sh --source-mode candidate\|head --summary-json` | v4 schema 绑定 repository、commit/workflow SHA、run id/attempt、ref 与证据 hash；candidate 验证当前候选，head 只验证 `git archive HEAD`；本地环境和不同 run 的快照不能证明 remote/offsite |
 
 Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench。提交的 `indexes/obsidian/*.base` 是只读视图；正文、状态、owner、review_after、授权和 promotion 仍由 Hub registry 与 gate 决定。
 
