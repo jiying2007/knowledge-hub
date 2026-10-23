@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_tool_navigation_sets_team_checkout_and_execution_boundary():
     text = (ROOT / "domains/embedded/tools/README.md").read_text(encoding="utf-8")
-    for token in ("workspace://embedded-knowledge", "实际 checkout 根目录", "隔离测试介质",
+    for token in ("workspace://embedded-knowledge", "受信 checkout 根目录", "隔离测试介质",
                   "不代表实际设备验证", "不能从此处复制历史示例"):
         assert token in text
 
