@@ -212,34 +212,36 @@ full regression 属于 Level 2 长门禁，默认不对非零退出、确定性�
 
 ## 产品成熟度入口
 
+日常命令使用运行当日的实证日期，不固定历史 `--as-of`；需要复盘历史快照时才显式提供当日已有来源和准确 `--as-of YYYY-MM-DD`。项目分母按 `registry/projects.json` 与生成的 readiness dashboard 实时核对，历史 30 项 Owner Packet 不包括后来新增的项目。
+
 ```bash
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --regression-suite full --reuse-engineering-evidence --as-of 2026-07-13
-rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product --as-of 2026-07-13
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --summary-json --final-profile product --regression-suite full --reuse-engineering-evidence
+rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --require-terminal --final-profile product
 ```
 
-`knowledge-final-gate.sh --final-profile product` 聚合一致性、共享单元测试、事务恢复、链接、检索基准、30 个规范项目结构、task route、Obsidian Properties/MOC/Bases、团队导出计划和恢复演练。Product v5 只保留一个顶层 `status` 与一个 `terminal`，并刻意分离：
+`knowledge-final-gate.sh --final-profile product` 聚合一致性、共享单元测试、事务恢复、链接、检索基准、当前登记的规范项目结构、task route、Obsidian Properties/MOC/Bases、团队导出计划和恢复演练。Product v5 只保留一个顶层 `status` 与一个 `terminal`，并刻意分离：
 
 - `maturity_axes.platform`：平台技术能力是否通过。
 - `maturity_axes.delivery` 与 `delivery_readiness`：分别报告本地 clean committed HEAD、远端发布和异地恢复证据。
 - `maturity_axes.status`：四值 canonical 综合状态。
 - `terminal`：只有本地交付、远端发布、异地恢复、真实采用，以及规范项目的 owner/source/人工或实机/发布证据全部闭环时才为真。
 
-默认模式只要技术门禁通过即退出 0；`--require-terminal` 会在真实证据未闭环时退出 2。新项目首次生成的 4 个槽位默认使用 `decision_owner=unassigned`；当前 30 个项目已由 `knowledge-hub-terminal-owner-attestation-20260716` 统一绑定 `decision_owner=leiwenjun`，3 项 PCR02 专项边界又由 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 精确绑定。两组候选都仍保持 `reviewing`、`manual_validation_pending=true` 和 `promotion=none`，工具不得据此自动提升 active 或把 evidence contract 判为 ready。
+默认模式只要技术门禁通过即退出 0；`--require-terminal` 会在真实证据未闭环时退出 2。新项目首次生成的 4 个槽位默认使用 `decision_owner=unassigned`；2026-07-16 历史批次中的 30 个项目曾由 `knowledge-hub-terminal-owner-attestation-20260716` 精确绑定 `decision_owner=leiwenjun`；后续新增项目的 Owner 决定与真实证据不得借该旧批次自动继承，3 项 PCR02 专项边界又由 `knowledge-hub-pcr02-specialized-owner-attestation-20260716` 精确绑定。两组候选都仍保持 `reviewing`、`manual_validation_pending=true` 和 `promotion=none`，工具不得据此自动提升 active 或把 evidence contract 判为 ready。
 
 配套稳定入口：
 
 | 能力 | 命令 | 关键边界 |
 |---|---|---|
-| 30 项目结构 | `knowledge-project-readiness.sh --check --json` | 每项目只检查/生成 1 份 validation evidence contract 与统一 dashboard；不生成 profile/runbook/decision 模板投影，不生成真实项目事实；group 元数据不重复计数 |
+| 项目结构（按登记动态生成） | `knowledge-project-readiness.sh --check --json` | 每项目只检查/生成 1 份 validation evidence contract 与统一 dashboard；不生成 profile/runbook/decision 模板投影，不生成真实项目事实；group 元数据不重复计数 |
 | 本机源码发现 | `knowledge-workspace-discover.sh --plan --json` | 默认只读扫描 `~` 与存在时的 `/vsdata/<user>`，仅按 registered remote key 精确匹配；`--apply` 只写未跟踪的 `local/workspaces.json` |
 | 检索质量 | `knowledge-retrieval-benchmark.sh --summary-json` | 28 条语义 case + 274 条动态 route；v3 同时校验权威/排序/污染率、index preparation、warm、4-worker 并发和 10 倍 corpus |
 | 链接与 Bases | `knowledge-link-audit.sh --summary-json` | 有界首屏；`--json` 提供完整历史 warning 取证。检查标准 Markdown links、readiness inbound 和只读 `.base` schema；不读取本机 `.obsidian/` 配置作为权威 |
 | Obsidian 视图 | `knowledge-obsidian-view-build.sh --check --json` | 检查 managed Properties、总/项目/主题 MOC 和只读 Bases；真实 GUI 验收单列为 `obsidian_runtime_status`，不由文件层结果冒充 |
 | 团队导出 | `knowledge-export.sh --plan --json` | 仅 `active + team-internal` canonical Markdown；执行共享 secret scan、链接闭包、hash manifest 和原子发布 |
-| 恢复演练 | `knowledge-restore-drill.sh --source-mode candidate\|head --as-of 2026-07-19 --summary-json` | v4 schema 绑定 repository、commit/workflow SHA、run id/attempt、ref 与证据 hash；candidate 验证当前候选，head 只验证 `git archive HEAD`；本地环境和不同 run 的快照不能证明 remote/offsite |
+| 恢复演练 | `knowledge-restore-drill.sh --source-mode candidate\|head --summary-json` | v4 schema 绑定 repository、commit/workflow SHA、run id/attempt、ref 与证据 hash；candidate 验证当前候选，head 只验证 `git archive HEAD`；本地环境和不同 run 的快照不能证明 remote/offsite |
 
 Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench。提交的 `indexes/obsidian/*.base` 是只读视图；正文、状态、owner、review_after、授权和 promotion 仍由 Hub registry 与 gate 决定。
 
@@ -371,8 +373,8 @@ rtk bash ~/knowledge-hub/tools/knowledge-search.sh "<archive-id-or-keyword>" --d
 # 复核过期项
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section review-date
-rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --as-of 2026-06-22 --window-days 30 --json
-rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --as-of 2026-06-22 --json
+rtk bash ~/knowledge-hub/tools/knowledge-review-after.sh --window-days 30 --json
+rtk bash ~/knowledge-hub/tools/knowledge-source-check.sh --scope all --json
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 
 # owner 签收一个 gate
@@ -400,10 +402,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile pr
 
 个人笔记必须保持 `personal-local` visibility，落在 `notes/personal/`，不得进入团队 active index、团队导出或 owner gate。该边界由 registry、索引派生和产品终态门禁共同校验，不能通过 Obsidian Properties 或手工链接绕过。
 
-Product v5 JSON 先看顶层 `status` 与 `terminal`，再看 `maturity_axes.platform/content/project_evidence/delivery/adoption`。`platform_status.hard_checks` 解释技术门禁，`delivery_readiness` 分开报告本地 committed HEAD、远端发布与异地恢复，`content_readiness.project_readiness` 分开报告 30 个规范项目的结构、source mapping 和真实 evidence-ready；这些字段是当前产品成熟度的唯一判定接口。
+Product v5 JSON 先看顶层 `status` 与 `terminal`，再看 `maturity_axes.platform/content/project_evidence/delivery/adoption`。`platform_status.hard_checks` 解释技术门禁，`delivery_readiness` 分开报告本地 committed HEAD、远端发布与异地恢复，`content_readiness.project_readiness` 分开报告 当前登记的规范项目的结构、source mapping 和真实 evidence-ready；这些字段是当前产品成熟度的唯一判定接口。
 
 - `platform_status`：check、status、source runtime、共享测试、full regression、diff、事务恢复、链接、检索、项目结构、路由、导出、恢复、Obsidian 和 schema。
-- `content_readiness`：registry 内容与 30 个规范项目的结构/owner/source/人工或实机/发布证据；候选目录存在只计 structural，不计 evidence-ready。
+- `content_readiness`：registry 内容与 当前登记的规范项目的结构/owner/source/人工或实机/发布证据；候选目录存在只计 structural，不计 evidence-ready。
 - `retrieval_quality`、`operational_readiness`：检索 benchmark、恢复、事务、导出和可运维性证据。
 - `delivery_readiness`：本地 clean committed HEAD、远端 push 和独立环境 restore 三轴证据；candidate restore、本地提交或普通 CI checkout 不能互相替代。
 - `owner_and_real_evidence`、`adoption`：真实 owner/验证缺口与当前 telemetry contract 下 30 天或 50 次调用、search/context 各至少 10 个性能样本及至少 10 条绑定真实 interaction 的显式反馈；历史样本保留但不混入当前 P95。
@@ -453,7 +455,6 @@ rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-p
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --explain knowledge-hub-root
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh
-rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
 rtk bash ~/knowledge-hub/tools/knowledge-status.sh --strict
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json
 rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json --final-profile product
