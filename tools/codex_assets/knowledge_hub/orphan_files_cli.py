@@ -6,7 +6,7 @@ import pathlib
 import subprocess
 import sys
 
-from .content_convergence import build_content_convergence
+from .content_convergence import build_content_convergence, private_body_paths
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -235,7 +235,9 @@ for row in coverage_rows:
             )
             continue
         coverage_by_path[path] = row["id"]
-checked_paths = all_markdown_paths() if args.all else changed_markdown_paths()
+scope_paths = all_markdown_paths() if args.all else changed_markdown_paths()
+private_paths = private_body_paths(root, scope_paths)
+checked_paths = [path for path in scope_paths if path not in private_paths]
 missing = [
     path for path in checked_paths
     if path not in registry_paths and path not in coverage_by_path
@@ -259,6 +261,8 @@ output = {
     "strict": args.strict,
     "status": "needs-fix" if needs_fix else "ok",
     "checked_count": len(checked_paths),
+    "scope_checked_count": len(scope_paths),
+    "private_excluded_count": len(private_paths),
     "registered_count": len(registered),
     "exact_registered_count": len(registered),
     "collection_covered_count": len(collection_covered),
@@ -282,7 +286,7 @@ output = {
 
 if args.convergence:
     output["convergence"] = build_content_convergence(
-        root, checked_paths, ids_by_path, coverage_by_path
+        root, scope_paths, ids_by_path, coverage_by_path
     )
 
 if args.json:
@@ -293,6 +297,7 @@ else:
     print(f"- mode: {output['mode']}")
     print(f"- status: {output['status']}")
     print(f"- checked: {output['checked_count']}")
+    print(f"- private_excluded: {output['private_excluded_count']}")
     print(f"- exact_registered: {output['exact_registered_count']}")
     print(f"- collection_covered: {output['collection_covered_count']}")
     print(f"- missing_registry: {output['missing_registry_count']}")
