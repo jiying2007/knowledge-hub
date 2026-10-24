@@ -1,5 +1,9 @@
 # debug tools
 
+**运行身份与安全门槛：** 本页仅保存 Hub 侧候选工具使用说明。所有 `tools/debug/` 相对脚本路径以 `workspace://embedded-knowledge` 团队仓的实际 checkout 根目录为执行 cwd，必须先核真实文件、源码提交和权限。设备 core、日志、序列号、网络地址、客户信息只在批准的私有证据位置采集；不能复制完整原始材料到公开 Hub。 
+
+**危害性操作：** NAND 写入压测、OTA 升级、格式化、擦写和改变内核日志ring buffer只适用于经授权的隔离测试设备，必须有恢复/备份、存储预算和明确责任人；本页不提供可直接执行的复合压测/OTA命令。默认采集仍以非清空 `--dmesg-mode snapshot` 为准。
+
 ## 文件说明
 
 1. `gdb-core-fastpass.sh`
@@ -106,12 +110,11 @@ rtk sh tools/debug/busybox-kernel-io-watch.sh --pid 913 --duration 120 --out /tm
 - 默认不建议 `--dmesg-mode clear`，除非你明确要“只看新日志且允许清空 ring buffer”。
 - `--idle-log-every` 仅用于进一步降噪，建议在默认命令上追加，不单独作为主示例。
 
-### 3) SPI NAND 压测
+### 3) SPI NAND 压测（受控实验，不是默认命令）
 
-```bash
-rtk sh tools/debug/busybox-nand-io-pressure.sh --target-dir /data/io-stress --workers 2 --duration 1800 --block-kb 256 --block-count 4 --sync-every 5 --readback 1
-rtk sh tools/debug/busybox-nand-stress-suite.sh --duration 2400 --proc "$PROJECT_EXE" --out-dir /tmp/nand-stress-ota --extra-cmd "sh /data/app_ota/ota_upgrade.sh"
-```
+高负载NAND写入与OTA同时运行可能影响设备分区、数据和现场日志，不能从Hub复制一次历史命令直接运行。进入实验前先在团队仓实际源码检查 `busybox-nand-io-pressure.sh` 与 `busybox-nand-stress-suite.sh` 的当前参数、路径与负向门禁，由设备责任人指定隔离介质及备份/恢复流程，并执行受限预算的独立试验。
+
+**没有已授权的专用实验目录、设备身份、固件基线、数据备份和恢复方式时，保持 `not-run`。** 历史 `/data/io-stress` 与联动 `/data/app_ota/ota_upgrade.sh` 仅为旧环境线索，不是本文提供的可执行调用。独立保存真实执行退出码、dmesg快照和可复核结果；不要把测试计划写成PASS。
 
 如果已拷回设备动态库，可显著提升符号化质量：
 
