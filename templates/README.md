@@ -70,7 +70,7 @@ related:
 | `patent-disclosure` | `patent-disclosure` | `patent-disclosure.md` | 专利披露 |
 | `patent` | `patent` | `patent-disclosure.md` | 专利材料通用条目 |
 
-`knowledge-new.sh` 是只读人工新增向导，不自动创建文件。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
+`knowledge-new.sh` 在未提供完整条目参数时是只读人工新增向导；完整 item 参数的默认行为是受治理 dry-run 计划，只有显式 `--apply` 才可在事务中创建 `draft` / `reviewing` / `personal` 条目。`--source` 登记向导仍为 review-only，不执行 source 写入，也不会自动提升 active。模板别名会映射成合法 `registry kind`；人工直接写 registry 时必须使用 `registry/schema.md` 允许的 kind，不能把未知模板名当自由枚举。模板仍可人工复制使用；复制后必须更新 `id`、`path`、`owner`、`source`、`summary_zh`、`review_status`、`review_after`、`promotion`、`promotion_decision`、`tags` 和 `validation_refs`，确认 `primary_language`、`source_language`、`translation_status`、`terminology_status`、`evidence_strength`、`evidence_refs` 与正文 Evidence Index 一致，并同步 registry、`indexes/by-owner.md`、`indexes/by-review-date.md` 和 `indexes/by-status.md`；项目域条目还要同步 `indexes/by-project.md` 的项目导航入口；核心索引不得留下 duplicate item reference。
 
 `tool-asset-candidate.md` 是跨仓交换模板，不是待复制的长期正文。候选检测器可把它写到源仓 `tmp/tool-asset-candidates/<timestamp>/hub-candidate.md` 或系统 `/tmp`；Hub 侧必须通过 `knowledge-capture.sh --tool-asset-candidate <path>` 规范化导入。导入器忽略自由正文，只保留白名单字段，默认输出 dry-run 事务计划，显式 `--apply` 后仍保持 `reviewing`。
 
@@ -87,7 +87,7 @@ ASAN 项目实操验证优先使用 `asan-validation-report.md`，可作为“�
 AI 参与起草、摘要、翻译、分类、抽取或重写时，必须填写 `generated_by_ai`、`ai_role`、`ai_model_or_tool` 和 `ai_generated_at`；2026-06-21 及之后的 `generated_by_ai=true` registry item 缺少这些 provenance 字段会被 `knowledge-check` 阻断。进入 `active` 前必须补 `human_reviewed_by`、`human_reviewed_at` 和 `review_basis`，不得用空 reviewer 或占位文本关闭人工复核门禁。
 
 新增或维护 source 相关条目时，source registry 的 `owner` 必须先登记在 `registry/owners.json`；该字段表示 source 维护责任人，不等同于 owner decision。source 可复核时优先登记稳定只读 `--check "rtk ..."`；只有没有稳定检查入口时才使用 `--no-check-reason`，并在 coverage、manifest 或 Evidence Index 中写清原因和后续复核动作。
-source 新增向导的 coverage row `status` 跟随 `--source-status`：`registered`、`deprecated`、`retired` 会分别输出 `registered-pending-classification`、`deprecated-pending-classification`、`retired-pending-classification`，不得把退役或废弃 source 静默写成 registered。
+source 新增向导已移除 `--source-status` 参数，传入时以退出码 2 和 `ERROR unknown argument: --source-status` 拒绝；当前仅提供 `status=registered` 的 source 登记草稿与 `status=registered-pending-classification` 的 coverage row 草稿。已废弃或退役的 source 必须经对应 current/retired 账本与受治理流程处理，不能使用该向导把旧来源静默重新登记为 current。
 source 新增向导会按 `role`、`write_policy` 和 check/no-check 状态输出 `recommended_final_disposition`、`recommended_source_strategy` 和中文理由；这些只是人工填写提示，不替代 owner decision，不关闭 owner gate。可复制 registry JSON 默认保持保守，落盘前必须按 `registry/schema.md`、coverage manifest 和 owner gate 状态确认。
 
 `indexes/by-status.md` 使用短 canonical 行维护状态归属，例如 `- reviewing: <id>`；不要把新条目只写入说明行，也不要继续扩展超长 status bucket。
