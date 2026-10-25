@@ -67,7 +67,7 @@ def test_orphan_files_advisory_contract():
             json.dumps(
                 {
                     "id": "registered-regression-fixture",
-                    "path": registered_rel,
+                    "path": registered_rel, "status": "reviewing", "visibility": "team-internal",
                 }
             )
             + "\n"
