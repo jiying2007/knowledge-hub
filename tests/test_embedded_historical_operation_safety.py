@@ -10,6 +10,7 @@ ENTRY=ROOT/"domains/embedded/README.md"
     ("runbooks/core-dump-capture-guide.md", ("suid_dumpable","core_pattern","chmod 1777","不得执行")),
     ("runbooks/crash-bundle-collection-guide.md", ("原始core","公开Issue","受控引用")),
     ("runbooks/spi-nand-busybox-io-stress-guide.md", ("--extra-cmd","pkill -f","rm -rf","--dmesg-mode clear","断电前")),
+    ("runbooks/gdb-debug-guide.md", ("gdbserver :2345","root SSH","core_pattern","明确回滚/BuildID校验")),
     ("runbooks/server-hook-setup-guide.md", ("自托管bare Git服务器","GitHub受保护","Security/Quality")),
 ])
 def test_historical_risky_ops_require_explicit_boundary(path, phrases):
