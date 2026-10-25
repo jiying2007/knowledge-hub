@@ -39,4 +39,4 @@ def test_active_review_identity_not_changed_by_cli_documentation():
     assert "review_status: human-reviewed-accepted" in frontmatter
     assert "review_after: '2026-09-18'" in frontmatter
     assert "进入" in doc and "active" in doc
-    assert "不自动提升 active" in doc
+    assert "不会自动提升 active" in doc
