@@ -1,7 +1,7 @@
 ---
 id:
 title:
-kind: audit
+kind: external-source-note
 domain:
 path:
 scope:
