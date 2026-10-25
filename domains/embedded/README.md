@@ -35,6 +35,18 @@ Hub 侧常用入口：
 
 这些目录中的 `reviewing`、draft、旧 active body 或历史 mirror 不自动等于团队已发布事实。提升时必须记录 source SHA256、目标路径、成熟度、Owner、验证状态和回滚，并通过目标仓 `docs/governance/promotion-contract.md`。
 
+## 旧归档规范的适用性警示（2026-10-25）
+
+本仓 `standards/`、`architecture/` 与 `governance/` 下部分文件是退役团队知识仓的原文镜像。即使旧 Frontmatter 写 `maturity: verified`，只要状态仍为 `status: archived`、`searchable: false`，就只能用于历史回溯；正文中“当前生效”“强制规范”及 `docs/`、`scripts/` 等执行路径均**不得**据此获得当前 Hub 或团队发布权限。
+
+- [历史C代码规范](standards/c-coding-standards.md) 中的 `__API_LIST_H__`、`_List_t`、`_LIST_IsEmpty` 是 C/C++ 实现保留标识符示例，不能直接复制到新代码、头文件或生成模板；当前C规范需在实际团队发布仓与目标工具链上重新确认。
+- [历史发布版本说明](standards/release-versioning-guide.md) 的 `scripts/release.sh` / `--push` 与 [旧Docs索引](governance/docs-index.md) 的“当前生效”仅属于旧团队仓语境；绝不在 Hub 镜像执行或据此发布。
+- [历史平台能力矩阵](architecture/sigmastar-platform-capability-matrix.md) 的“完整／强／中”仅为当时资料组织/定性判断，不是最新SDK、板卡功能、性能或量产选型证明。
+- [历史线程排障文档](standards/thread-troubleshooting-optimization.md) 里的 `<PID>` 等标记仅是需由授权操作人员替换的参数占位；排障命令、VSHDIOS设计与2026年阶段记录不视为当前平台已验收。
+
+本节只补充检索导航和执行作用域：不修改旧正文、历史日期或原哈希，不自动迁移到团队仓、不更新 Owner/Active/`review_after`，也不授权设备、发布、源仓写入或外部证据操作。逐篇审查意见记录在 Issue #176，仍需实际团队仓提交、许可、负向测试和必要的Owner验证。
+
+
 ## Hub 候选门禁
 
 ```bash
