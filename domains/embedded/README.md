@@ -47,6 +47,18 @@ Hub 侧常用入口：
 本节只补充检索导航和执行作用域：不修改旧正文、历史日期或原哈希，不自动迁移到团队仓、不更新 Owner/Active/`review_after`，也不授权设备、发布、源仓写入或外部证据操作。逐篇审查意见记录在 Issue #176，仍需实际团队仓提交、许可、负向测试和必要的Owner验证。
 
 
+## 历史高风险操作的执行阻断（2026-10-25）
+
+以下链接仅为已归档、不可检索的原始Runbook，不是可直接复制执行的当前步骤；参见 [2026-10-25全库AI审读记录](https://github.com/jiying2007/knowledge-hub/issues/176)。已归档状态和旧示例里的“推荐”不授予当前设备、权限、测试或发布授权。
+
+- [Core采集指南](runbooks/core-dump-capture-guide.md) 所示系统级 `suid_dumpable`、`core_pattern` 更改及 `chmod 1777` 公共可写core目录，可能改变全机崩溃材料收集权限。未经真实管理员批准、专用隔离目录和敏感数据控制，不得执行或作为生产默认设置。
+- [崩溃材料打包指南](runbooks/crash-bundle-collection-guide.md) 的原始core、调试符号和内核日志必须按机密制品单独受控留存；不可上传公开Issue、公开仓库或Hub文本知识层，只可登记经许可的摘要、SHA-256及受控引用。
+- [SPI NAND压测](runbooks/spi-nand-busybox-io-stress-guide.md) 中的 `--extra-cmd` OTA升级、`pkill -f`、`rm -rf` 与 `--dmesg-mode clear` 会触发升级、误杀、删除或清除内核日志风险；只能在已授权的隔离测试环境先验证目标，不能面向现场/量产直接运行。断电/冷启动后 `/tmp` 内容可能丢失，必须在断电前把取证结果保留到受控、非易失存储。
+- [历史GDB调试指南](runbooks/gdb-debug-guide.md) 的 `gdbserver :2345` 网络监听、root SSH删除或软链接替换业务程序、修改全局 `core_pattern` 与临时glibc调试库，必须先取得授权、隔离端口和明确回滚/BuildID校验；不得把历史设备地址或旧工具链路径作为当前可连接端点，不能在生产设备照搬。
+- [历史服务器Hook指南](runbooks/server-hook-setup-guide.md) 针对自托管bare Git服务器，不适用于GitHub受保护 `master` 的权限设置；不可用普通push或自行安装hook绕过真实GitHub Security/Quality审批。
+
+这些限制是对历史执行误用的提示，**不修改任何历史正文、原始命令、owner、Active、review_after或真实运行环境**；真正整改须另有目标设备、源项目及安全/Owner审查证据。没有真实执行/制品证明时，保持 `needs-evidence`，不得声称问题已修复。
+
 ## Hub 候选门禁
 
 ```bash
