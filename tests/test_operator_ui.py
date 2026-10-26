@@ -360,3 +360,25 @@ def test_live_private_fact_routes_stale_canonical_gap_to_machine_ratchet():
     assert action["automation_eligible"] is True
     assert action["automatic_execution_enabled"] is False
     assert queue["autonomous_candidate_count"] == 1
+
+
+def test_operator_unavailable_state_does_not_claim_zero_gaps():
+    state = _sample_state()
+    state["status"] = "unavailable"
+    state["next_actions_zh"] = []
+    state["external_closure"] = {"status": "unavailable", "open_count": 0, "open_gaps": []}
+    page = operator_ui.render_dashboard(state)
+    assert "状态不可用或待修复；不能推断没有下一步动作。" in page
+    assert "外部状态不可用或无效；不能推断没有开放的 gap。" in page
+    assert "没有开放的 external closure gap。" not in page
+    assert '<span>External open</span><strong>unavailable</strong>' in page
+
+
+def test_operator_queue_surfaces_existing_automation_eligibility():
+    state = _sample_state()
+    state["action_queue"]["actions"][0]["automation_eligible"] = True
+    state["action_queue"]["actions"][1]["automation_eligible"] = False
+    page = operator_ui.render_dashboard(state)
+    assert "<th>Automation eligible</th>" in page
+    assert "<td>yes</td>" in page
+    assert "<td>no</td>" in page

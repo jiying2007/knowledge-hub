@@ -177,3 +177,15 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 - owner approval、release、promote、retire、apply、rollback、reapply、branch-protection administration、registry mutation 等写操作不由 UI 执行。
 
 AI-first 自动处理已从 provider 验证的 `machine-discovery` / 已满足前置的受限机器步骤开始，并仍遵循 `Plan → Diff → Governed PR → CI → Merge`。owner/release/external administration/apply/rollback 等高风险动作继续保留显式授权与确认；master 未 protected 前自动 merge 保持关闭。
+
+## 不可用状态与自治责任可见性
+
+Operator UI 的计数是只读投影，**不是独立验收**。如果 external evaluator 返回
+`unavailable` / `blocked` / `needs-fix` 等非可信状态，页面显示
+`unavailable` 而不显示虚假的 0 个外部缺口；Status 不可用且没有下一步动作时，
+也不会提示“没有下一步动作”。修复 evaluator 或输入后再查看新快照。
+
+Action Queue 的 `Automation eligible` 列直接显示已有 action 合同中的
+`automation_eligible`：只有严格布尔 `true` 才标为 `yes`；缺失或其它值一律
+`no`。这仅代表符合交给**独立受控执行工作流**的条件，不意味着 UI 执行了动作、
+候选通过验收、或产生 owner/设备/生产/发布授权。浏览器仍严格只读。
