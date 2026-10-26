@@ -88,3 +88,23 @@ def test_source_id_validation_precedes_directory_creation(tmp_path):
         source_files.materialize_source_file(tmp_path, "../private", "README.md", "x",
                                             apply=True)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_replay_existing_target_does_not_stage_when_disk_full(tmp_path, monkeypatch):
+    """Existing evidence must be preserved even if new temp writes would ENOSPC."""
+    folder = tmp_path / "sources/example"
+    folder.mkdir(parents=True)
+    path = folder / "coverage.md"
+    path.write_bytes(b"original manual verification")
+    before = path.stat()
+
+    def no_temp_write(*args, **kwargs):
+        raise OSError(errno.ENOSPC, "SYNTHETIC_DISK_FULL")
+
+    monkeypatch.setattr(source_files, "_publish_complete_file", no_temp_write)
+    assert source_files.materialize_source_file(
+        tmp_path, "example", "coverage.md", "new generated template", apply=True
+    ) == "preserved"
+    assert path.read_bytes() == b"original manual verification"
+    assert path.stat().st_mtime_ns == before.st_mtime_ns
+    assert sorted(p.name for p in folder.iterdir()) == ["coverage.md"]

@@ -77,6 +77,21 @@ def _publish_complete_file(directory: int, name: str, content: bytes) -> bool:
         os.fsync(directory)
 
 
+def _existing_regular_file(directory: int, name: str) -> bool:
+    """Probe the canonical name before any staging I/O; never follow symlinks."""
+    try:
+        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                             dir_fd=directory)
+    except FileNotFoundError:
+        return False
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("source-control-not-regular")
+    finally:
+        os.close(descriptor)
+    return True
+
+
 def materialize_source_file(root: pathlib.Path, source_id: str, name: str,
                             content: str, *, apply: bool = False) -> str:
     """Return created/missing/preserved; never read or replace existing content."""
@@ -89,20 +104,16 @@ def materialize_source_file(root: pathlib.Path, source_id: str, name: str,
         with _source_directory(root, source_id, apply) as directory:
             if directory is None:
                 return "missing"
-            if apply and _publish_complete_file(directory, name, payload):
-                return "created"
-            try:
-                descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
-                                     dir_fd=directory)
-            except FileNotFoundError:
-                if apply:
-                    raise ValueError("source-control-path-changed") from None
+            if _existing_regular_file(directory, name):
+                return "preserved"
+            if not apply:
                 return "missing"
-            try:
-                if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-                    raise ValueError("source-control-not-regular")
-            finally:
-                os.close(descriptor)
-            return "preserved"
+            if _publish_complete_file(directory, name, payload):
+                return "created"
+            # Another writer won the no-overwrite link race. Verify its target
+            # without reading or modifying its content.
+            if _existing_regular_file(directory, name):
+                return "preserved"
+            raise ValueError("source-control-path-changed")
     except OSError:
         raise ValueError("unsafe-source-control-path") from None
