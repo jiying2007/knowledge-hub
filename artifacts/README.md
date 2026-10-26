@@ -26,3 +26,28 @@ Do not store raw SDK packages, logs, core dumps, release binaries, credentials, 
 用于新的验收时，应另外取得同源提交、完整制品 SHA-256、执行日期、命令、实际退出码和适用范围；缺少证据就保留“需要补证”，不得补写成功结果。不要为消除审查告警改写历史原文、重签旧哈希、自动延后 `review_after`、提升 Active、代签 Owner 或关闭 owner gate。
 
 本节只增加当前入口的适用性说明，不修改上述历史正文或原有证据，也不授予发布、设备操作、源项目写入或安全审批权限。具体正文审读收据与待办仍统一记录在 Issue #176；入口说明和机器检查通过不等于全库知识自动审查完成。
+
+## Owner 准备包、现行条目与集合覆盖
+
+[旧 Owner 落地手册](manifests/pcr02-owner-resolution-playbook-20260618.md)
+混用了现行条目更新与历史操作追加；[旧字段说明](manifests/pcr02-owner-resolution-schema-20260618.md)
+又把来源身份状态与复核状态混在部分示例中。复用时按当前 [Registry schema](../registry/schema.md)
+分别处理，不能按旧表格机械回填：同一现行条目不得通过追加同 ID 多行表示历史，
+也不要仅凭旧手册新建重复迁移账本。原始历史证据继续保留，不覆盖或重签。
+
+`identity_status`、source hash/size 匹配只说明来源身份；表单字段齐全、准备包覆盖和
+`target_candidates` 都不是负责人身份认证、实际 Owner 决定或内容验收。
+`review_status` 不得用来源匹配结果替代，空白骨架不得自动补成人工已签收。
+历史默认 Owner、固定日期、允许结果与“7/7 准备完成”不能作为本轮输入或批准。
+
+`items.jsonl` 是知识条目登记，不是只在迁移、引用或归档时才使用的操作日志。
+当前事实、决策、验证及治理规范按 schema 逐条登记；冻结历史材料和低价值索引可按
+`body-coverage.json` 的既有集合契约覆盖，不为提高比例机械创建重复条目。
+**集合路径 hash 不校验正文内容，也不等于逐文件全文审读。** 未精确登记文本仍需
+明确分类和审读边界；不能用目录存在、source coverage、搜索过滤结果或附件引用
+代替其子正文、被引用脚本或附件的实际检查。
+
+本节仅是现行入口纠偏，不改变原有知识或授权。正式验收不得复用历史跳过回归的自测
+捷径，不能把 `expected`、`planned`、`pass-for-handoff` 或旧 `complete-except-owner-review`
+当作当前通过。`check` 字符串和 `no_check_reason` 均不是命令执行结果；当前门禁、
+真实正文收据、待修发现和外部补证分别报告，不自动提升 Active、改 Owner 或续期。
