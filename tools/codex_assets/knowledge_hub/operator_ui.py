@@ -90,6 +90,8 @@ def _project_rows(readiness: Mapping[str, Any]) -> str:
 def _status_actions(state: Mapping[str, Any]) -> str:
     rows = [str(value) for value in state.get("next_actions_zh", []) if str(value)]
     if not rows:
+        if state.get("status") in {"unavailable", "blocked", "not-evaluated", "needs-fix"}:
+            return '<p class="attention">状态不可用或待修复；不能推断没有下一步动作。</p>'
         return '<p class="ok">当前 status projection 没有给出下一步动作。</p>'
     return "<ul>{}</ul>".format(
         "".join("<li>{}</li>".format(_escape(row)) for row in rows)
@@ -98,6 +100,8 @@ def _status_actions(state: Mapping[str, Any]) -> str:
 
 def _external_rows(external: Mapping[str, Any]) -> str:
     rows = external.get("open_gaps", [])
+    if external.get("status") not in {"pass", "needs-review"}:
+        return '<p class="attention">外部状态不可用或无效；不能推断没有开放的 gap。</p>'
     if not rows:
         return '<p class="ok">没有开放的 external closure gap。</p>'
     items = []
@@ -129,19 +133,20 @@ def _queue_rows(queue: Mapping[str, Any], *, machine: bool) -> str:
             continue
         target = str(row.get("project_id", "")) or str(row.get("field", ""))
         rows.append(
-            "<tr><td>{}</td><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td></tr>".format(
+            "<tr><td>{}</td><td>{}</td><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
                 _escape(execution_class),
                 _escape(row.get("scope", "")),
                 _escape(target),
                 _escape(row.get("field", "")),
                 _escape(row.get("summary_zh", "")),
+                "yes" if row.get("automation_eligible") is True else "no",
             )
         )
     if not rows:
         return '<p class="ok">当前没有此类 action。</p>'
     return (
         "<table><thead><tr><th>Execution class</th><th>Scope</th><th>Target</th>"
-        "<th>Field</th><th>Next step</th></tr></thead><tbody>{}</tbody></table>".format(
+        "<th>Field</th><th>Next step</th><th>Automation eligible</th></tr></thead><tbody>{}</tbody></table>".format(
             "".join(rows)
         )
     )
@@ -240,7 +245,7 @@ def _cards(
             _card("Provider needed", discovery.get("provider_required_count", 0)),
             _card("Machine blocked", queue.get("machine_blocked_count", 0)),
             _card("Human projects", queue.get("human_project_count", 0)),
-            _card("External open", external.get("open_count", 0)),
+            _card("External open", external.get("open_count", 0) if external.get("status") in {"pass", "needs-review"} else "unavailable"),
             _card("Terminal", "true" if terminal.get("terminal") else terminal.get("status", "false")),
         )
     )
@@ -283,7 +288,7 @@ def render_dashboard(state: Mapping[str, Any]) -> str:
 页面不会生成授权、执行 apply/rollback 或自动 reapply。</p>{lifecycle}</section>
 <section><h2>Discovery Queue</h2>
 <p class="muted">自动执行本地 registry discovery；远端只生成 provider query，不在 Hub core 内发起网络或写入。</p>{discovery}</section>
-<section><h2>Machine Queue</h2><p class="muted">先由机器发现候选或等待前置；当前不会自动写仓库。</p>{machine}</section>
+<section><h2>Machine Queue</h2><p class="muted">Operator UI 本身始终只读；独立受控执行流程可依据真实门禁准备 PR，候选不等于验收完成。</p>{machine}</section>
 <section><h2>Human / External Queue</h2>{human}</section>
 <section><h2>Status Next Actions</h2>{actions}</section>
 <section><h2>External Closure</h2>{external}</section>
