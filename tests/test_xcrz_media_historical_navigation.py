@@ -26,7 +26,8 @@ def test_low_fps_navigation_is_source_bound_and_keeps_owner_gate():
     text = README.read_text(encoding="utf-8")
     start = "## 低帧媒体切换的历史纠偏导航（不提供产品默认值授权）"
     assert text.count(start) == 1
-    section = text.split(start, 1)[1]
+    # Limit the exact-link contract to this H2 section; later H2 history topics are independent.
+    section = text.split(start, 1)[1].split("\n## ", 1)[0]
     links = re.findall(r"\]\(([^)#]+\.md)\)", section)
     assert set(links) == set(IDENTITIES.values())
     by_id = {row["id"]: row for row in registry_items(ROOT)}
