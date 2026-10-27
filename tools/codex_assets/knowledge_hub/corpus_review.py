@@ -28,6 +28,7 @@ from .delegated_content_review import (
 )
 from .review_risk import classify_review_risk, load_review_risk_policy
 from .security import scan_secret_text
+from .text_integrity import has_persisted_tool_truncation
 
 CONTRACT = "knowledge-hub.corpus-review/v1"
 MAX_ITEMS = 5000
@@ -158,6 +159,7 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "body_sha256": hashlib.sha256(body.strip().encode("utf-8")).hexdigest(),
             "body_empty": not bool(body.strip()),
             "frontmatter_matches_registry": mirrored,
+            "persisted_tool_truncation": has_persisted_tool_truncation(data),
             "historical_non_markdown_asset": _archived_non_markdown_asset(item, path, data),
             # Plain Markdown archived before YAML adoption is preserved as
             # unbound provenance, never silently accepted as current metadata.
@@ -236,7 +238,7 @@ def _review_evidence(root: pathlib.Path, item: Mapping[str, Any], document: Mapp
 
 def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str, Any],
              review: Mapping[str, Any], today: dt.date) -> List[str]:
-    issues = []
+    issues = ["persisted-tool-truncation-marker"] if doc.get("persisted_tool_truncation") is True else []
     status = item.get("status")
     if doc["status"] == "archive-directory-observed":
         issues.append("archive-directory-identity-only")
@@ -296,7 +298,7 @@ def _lane(item: Mapping[str, Any], signals: List[str], risk_class: str) -> str:
     if item.get("status") == "personal" or item.get("visibility") == "personal-local":
         return "personal-excluded"
     if ({"body-unavailable-or-invalid", "frontmatter-drift",
-         "registered-unfilled-template"} & set(signals)):
+         "registered-unfilled-template", "persisted-tool-truncation-marker"} & set(signals)):
         return "P0-integrity"
     if risk_class == "security-critical" and item.get("status") in {"active", "reviewing"}:
         return "P0-governance"

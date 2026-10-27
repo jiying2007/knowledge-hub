@@ -162,6 +162,10 @@
       "review_class": "security-critical"
     },
     {
+      "path": "tools/codex_assets/knowledge_hub/text_integrity.py",
+      "review_class": "security-critical"
+    },
+    {
       "path": "tools/codex_assets/knowledge_hub/corpus_optimization.py",
       "review_class": "security-critical"
     },
