@@ -267,3 +267,15 @@ def test_registered_nontext_symlink_is_counted_as_unsafe_not_read(tmp_path):
     assert counts["registered_nontext_unsafe_count"] == 1
     assert report["status"] == "needs-review"
     assert "private.json" not in json.dumps(report)
+
+
+def test_registered_nontext_metadata_does_not_certify_dirty_worktree_bytes(tmp_path):
+    _repo(tmp_path, {"docs/public.md": b"public\\n", "registry/config.json": b'{"before":1}'})
+    (tmp_path / "registry/config.json").write_bytes(b"SYNTHETIC_WORKTREE_PRIVATE_VALUE")
+    report = inventory.build_repository_text_inventory(
+        tmp_path, set(), {"registry/config.json": ["configuration"]}
+    )
+    assert report["registered_asset_counts"]["registered_nontext_regular_count"] == 1
+    assert report["registered_nontext_metadata_only"] is True
+    assert report["registered_nontext_content_verified"] is False
+    assert "SYNTHETIC_WORKTREE_PRIVATE_VALUE" not in json.dumps(report)
