@@ -28,6 +28,7 @@ from .delegated_content_review import (
 )
 from .review_risk import classify_review_risk, load_review_risk_policy
 from .security import scan_secret_text
+from .text_integrity import has_persisted_tool_truncation
 
 CONTRACT = "knowledge-hub.corpus-review/v1"
 MAX_ITEMS = 5000
@@ -120,6 +121,25 @@ def _local_refs(
     return {"status": "checked", "missing": missing, "checked": checked}
 
 
+def _archived_non_markdown_asset(item: Mapping[str, Any], path: str, data: bytes) -> bool:
+    """Recognize historical code/config, not current metadata or syntax approval."""
+    if (item.get("status") != "archived" or item.get("kind") != "audit"
+            or data.startswith((b"---", b"\xef\xbb\xbf---"))):
+        return False
+    relative = pathlib.PurePosixPath(path)
+    if (relative.is_absolute() or ".." in relative.parts or "\\" in path
+            or relative.as_posix() != path or any(ord(char) < 32 for char in path)):
+        return False
+    if path.startswith("tools/") and path.endswith(".sh"):
+        return data.startswith((b"#!/bin/bash\n", b"#!/usr/bin/env bash\n"))
+    if path.startswith("registry/") and path.endswith(".json"):
+        try:
+            return isinstance(json.loads(data.decode("utf-8")), (dict, list))
+        except (UnicodeError, ValueError):
+            return False
+    return False
+
+
 def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
     path = str(item.get("path", ""))
     try:
@@ -139,6 +159,8 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
             "body_sha256": hashlib.sha256(body.strip().encode("utf-8")).hexdigest(),
             "body_empty": not bool(body.strip()),
             "frontmatter_matches_registry": mirrored,
+            "persisted_tool_truncation": has_persisted_tool_truncation(data),
+            "historical_non_markdown_asset": _archived_non_markdown_asset(item, path, data),
             # Plain Markdown archived before YAML adoption is preserved as
             # unbound provenance, never silently accepted as current metadata.
             "historical_plaintext_archive": (
@@ -216,7 +238,7 @@ def _review_evidence(root: pathlib.Path, item: Mapping[str, Any], document: Mapp
 
 def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str, Any],
              review: Mapping[str, Any], today: dt.date) -> List[str]:
-    issues = []
+    issues = ["persisted-tool-truncation-marker"] if doc.get("persisted_tool_truncation") is True else []
     status = item.get("status")
     if doc["status"] == "archive-directory-observed":
         issues.append("archive-directory-identity-only")
@@ -229,7 +251,8 @@ def _signals(item: Mapping[str, Any], doc: Mapping[str, Any], refs: Mapping[str,
                 item.get("kind"), status, doc.get("body_sha256")):
             issues.append("registered-unfilled-template")
         if not doc["frontmatter_matches_registry"]:
-            if doc.get("historical_plaintext_archive") is True:
+            if (doc.get("historical_plaintext_archive") is True
+                    or doc.get("historical_non_markdown_asset") is True):
                 issues.append("archive-plaintext-provenance-only")
             else:
                 issues.append("frontmatter-drift")
@@ -275,7 +298,7 @@ def _lane(item: Mapping[str, Any], signals: List[str], risk_class: str) -> str:
     if item.get("status") == "personal" or item.get("visibility") == "personal-local":
         return "personal-excluded"
     if ({"body-unavailable-or-invalid", "frontmatter-drift",
-         "registered-unfilled-template"} & set(signals)):
+         "registered-unfilled-template", "persisted-tool-truncation-marker"} & set(signals)):
         return "P0-integrity"
     if risk_class == "security-critical" and item.get("status") in {"active", "reviewing"}:
         return "P0-governance"
