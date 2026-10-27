@@ -90,6 +90,16 @@
       "branch": "governance/terminal-policy-no-static-status-final-20260925",
       "expected_head": "7e6c30cf5d15eb9ed021d45365bd2f883e508769",
       "reason": "terminal verdict-neutral policy absorbed by current master"
+    },
+    {
+      "branch": "fix/convergence-private-exclusion-20261020",
+      "expected_head": "bd3a48d8180a279f5b99bd42f656693fec14550d",
+      "reason": "PR #189 closed as superseded by protected #194: all 16 former paths retained (15 identical; review-risk policy is strict superset). Do not delete if a PR still uses the ref."
+    },
+    {
+      "branch": "fix/persisted-truncation-detection-20261020",
+      "expected_head": "78100347cd5aaaf336ec45b07b36b913614b78e7",
+      "reason": "Original detector and tests incorporated through protected PR #190 (exact detector and corpus-test blobs; extra positive policy test); no separate worktree authority."
     }
   ],
   "closure_evidence": {
