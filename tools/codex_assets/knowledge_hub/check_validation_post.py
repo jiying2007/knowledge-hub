@@ -5,9 +5,19 @@ def _body_coverage_1(ctx):
         body_coverage_payload = ctx['json'].loads(body_coverage_run.stdout)
     except Exception:
         body_coverage_payload = {}
-        ctx['errors'].append(f"body-coverage:unable to parse orphan helper JSON: {ctx['exc']}")
+        ctx['errors'].append("body-coverage:unable to parse orphan helper JSON")
+    if not isinstance(body_coverage_payload, dict) or not body_coverage_payload:
+        ctx['errors'].append('body-coverage:helper response must be a non-empty object')
+        body_coverage_payload = {}
+    elif any(not isinstance(body_coverage_payload.get(field, []), list)
+             or any(not isinstance(value, str) for value in body_coverage_payload.get(field, []))
+             for field in ('coverage_errors', 'missing_registry')):
+        ctx['errors'].append('body-coverage:invalid structured finding lists')
+        body_coverage_payload = {}
     if body_coverage_payload:
         ctx['body_coverage_health'].update(body_coverage_payload)
+        if body_coverage_payload.get('status') != 'ok' and body_coverage_run.returncode == 0:
+            ctx['errors'].append('body-coverage:non-ok helper status despite zero exit')
     if body_coverage_run.returncode != 0:
         if body_coverage_payload.get('coverage_errors'):
             for message in body_coverage_payload.get('coverage_errors', [])[:10]:
@@ -16,7 +26,9 @@ def _body_coverage_1(ctx):
             for path in body_coverage_payload.get('missing_registry', [])[:10]:
                 ctx['errors'].append(f'body-coverage:missing exact or collection coverage: {path}')
         if not body_coverage_payload.get('coverage_errors') and (not body_coverage_payload.get('missing_registry')):
-            ctx['errors'].append('body-coverage:strict helper failed without structured findings: ' + body_coverage_run.stderr.strip()[:300])
+            ctx['errors'].append(f'body-coverage:strict helper failed without structured findings (exit={body_coverage_run.returncode})')
+    if body_coverage_run.returncode != 0 or not body_coverage_payload:
+        ctx['body_coverage_health']['status'] = 'needs-fix'
     return {key: value for key, value in locals().items() if key != 'ctx'}
 
 def run_body_coverage(ctx):
@@ -139,7 +151,7 @@ def _index_security_3(ctx):
         try:
             text = path.read_text(errors='ignore')
         except Exception:
-            ctx['warnings'].append(f"{ctx['display_path'](path)}: unreadable: {ctx['exc']}")
+            ctx['warnings'].append(f"{ctx['display_path'](path)}: unreadable repository text")
             continue
         for prefix in ctx['forbidden_path_prefixes']:
             if prefix in text:

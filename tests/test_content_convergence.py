@@ -17,6 +17,10 @@ def _write_json(path, value):
 def _fixture(tmp_path):
     current = tmp_path / "registry/sources.json"
     _write_json(current, {"schema_version": 1, "sources": [{"id": "runtime-input"}]})
+    _write_json(tmp_path / "registry/items.jsonl", {
+        "id": "item-active-1", "path": "projects/demo/current/a.md",
+        "status": "active", "visibility": "team-internal",
+    })
     retired = tmp_path / "registry/retired-sources.jsonl"
     retired.write_text(json.dumps({"id": "old-extract"}) + "\n", encoding="utf-8")
 

@@ -5,6 +5,8 @@ import pathlib
 import re
 import sys
 
+from .source_control_files import materialize_source_file, valid_source_id
+
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
 
@@ -21,7 +23,7 @@ def load_json(path):
 
 def load_jsonl(path):
     rows = []
-    if not path.exists():
+    if path is None or not path.exists():
         return rows
     for line in path.read_text().splitlines():
         if not line.strip():
@@ -77,6 +79,10 @@ source_type_rules = {
 results = []
 written = []
 missing = []
+preserved = []
+
+if any(not valid_source_id(source.get("id")) for source in sources):
+    parser.error("invalid-source-control-id")
 
 for source in sources:
     source_id = source.get("id", "")
@@ -199,18 +205,19 @@ for source in sources:
 
     source_result = {"source_id": source_id, "dir": f"sources/{source_id}", "missing": [], "written": []}
     for path, content in desired.items():
-        if not path.exists():
-            source_result["missing"].append(str(path.relative_to(root)))
-            missing.append(str(path.relative_to(root)))
-            if args.apply:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(content)
-                source_result["written"].append(str(path.relative_to(root)))
-                written.append(str(path.relative_to(root)))
-        elif args.apply and path.read_text() != content:
-            path.write_text(content)
-            source_result["written"].append(str(path.relative_to(root)))
-            written.append(str(path.relative_to(root)))
+        relative = str(path.relative_to(root))
+        try:
+            outcome = materialize_source_file(root, source_id, path.name, content, apply=args.apply)
+        except ValueError as error:
+            parser.error(str(error))
+        if outcome in {"missing", "created"}:
+            source_result["missing"].append(relative)
+            missing.append(relative)
+        if outcome == "created":
+            source_result["written"].append(relative)
+            written.append(relative)
+        elif outcome == "preserved":
+            preserved.append(relative)
     results.append(source_result)
 
 status = "applied" if args.apply else "planned"
@@ -224,6 +231,10 @@ payload = {
     "coverage_manifest": str(coverage_path.relative_to(root)) if coverage_path else "",
     "missing_count": len(missing),
     "written_count": len(written),
+    "preserved_existing_count": len(preserved),
+    "preserved_existing": preserved,
+    "existing_content_validated": False,
+    "existing_files_overwritten": False,
     "missing": missing,
     "written": written,
     "results": results,
@@ -236,6 +247,7 @@ else:
     print(f"source_count: {payload['source_count']}")
     print(f"missing_count: {payload['missing_count']}")
     print(f"written_count: {payload['written_count']}")
+    print(f"preserved_existing_count: {payload['preserved_existing_count']}")
     for path in written:
         print(f"written: {path}")
     for path in missing[:50]:
