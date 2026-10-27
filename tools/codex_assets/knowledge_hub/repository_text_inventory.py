@@ -122,7 +122,7 @@ def _head_texts(root: pathlib.Path):
     entries = raw.split(b"\0")[:-1]
     if len(entries) > MAX_TREE_ENTRIES:
         raise InventoryError("git-tree-entry-budget")
-    rows, seen = [], set()
+    rows, seen, tracked_entries = [], set(), {}
     for entry in entries:
         identity, name = entry.split(b"\t", 1)
         mode, kind, blob = identity.decode("ascii").split()
@@ -130,11 +130,43 @@ def _head_texts(root: pathlib.Path):
         if not _relative(relative) or relative in seen or not SHA1.fullmatch(blob):
             raise InventoryError("invalid-git-tree-entry")
         seen.add(relative)
+        tracked_entries[relative] = (mode, kind)
         if pathlib.PurePosixPath(relative).suffix.lower() in TEXT_SUFFIXES:
             rows.append((relative, mode, kind, blob))
     if len(rows) > MAX_TEXT_FILES:
         raise InventoryError("tracked-text-file-budget")
-    return revision, rows
+    return revision, rows, tracked_entries
+
+
+def _registered_asset_counts(registered: Mapping, tracked: Mapping, roots: Set[str]) -> Dict[str, int]:
+    """Bounded metadata-only census of registered non-text files and absent paths."""
+    if not isinstance(registered, Mapping):
+        raise InventoryError("invalid-registry-mapping")
+    directories: Set[str] = set()
+    for path in tracked:
+        directories.update(parent.as_posix() for parent in pathlib.PurePosixPath(path).parents
+                           if parent.as_posix() != ".")
+    counts = {"registered_nontext_regular_count": 0,
+              "registered_nontext_unsafe_count": 0,
+              "registered_missing_path_count": 0,
+              "registered_directory_root_count": 0}
+    for path in registered:
+        if not isinstance(path, str) or not _relative(path):
+            raise InventoryError("invalid-registered-path")
+        if any(path == root or path.startswith(root + "/") for root in roots):
+            continue
+        entry = tracked.get(path)
+        if entry is not None:
+            if pathlib.PurePosixPath(path).suffix.lower() not in TEXT_SUFFIXES:
+                if entry in {("100644", "blob"), ("100755", "blob")}:
+                    counts["registered_nontext_regular_count"] += 1
+                else:
+                    counts["registered_nontext_unsafe_count"] += 1
+        elif path in directories:
+            counts["registered_directory_root_count"] += 1
+        else:
+            counts["registered_missing_path_count"] += 1
+    return counts
 
 
 def _result(status: str, **values) -> Dict:
@@ -155,10 +187,11 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
     """
     root = root.resolve()
     try:
-        revision, entries = _head_texts(root)
+        revision, entries, tracked_entries = _head_texts(root)
         roots = set(private_roots) | {"notes/personal", "personal", ".private"}
         if not all(isinstance(path, str) and _relative(path) for path in roots):
             raise InventoryError("invalid-private-root")
+        registered_asset_counts = _registered_asset_counts(registry_ids_by_path, tracked_entries, roots)
         rows: List[Dict[str, Any]] = []
         withheld_reasons: Dict[str, int] = Counter()
         private_count = withheld_count = total_bytes = 0
@@ -187,7 +220,8 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
         if current != revision:
             raise InventoryError("head-changed-during-observation")
         result = _result(
-            "needs-review" if withheld_count else "observed",
+            "needs-review" if (withheld_count or registered_asset_counts["registered_missing_path_count"]
+                               or registered_asset_counts["registered_nontext_unsafe_count"]) else "observed",
             source_revision=revision, head_inventory_complete=True,
             tracked_text_count=len(entries), observed_count=len(rows),
             private_excluded_count=private_count, withheld_count=withheld_count,
@@ -195,6 +229,9 @@ def build_repository_text_inventory(root: pathlib.Path, private_roots: Set[str],
             observed_body_bytes=total_bytes, body_records=rows,
             registered_count=sum(row["exact_registered"] for row in rows),
             unregistered_count=sum(not row["exact_registered"] for row in rows),
+            registered_asset_counts=registered_asset_counts,
+            registered_nontext_metadata_only=True,
+            registered_nontext_content_verified=False,
         )
         encoded = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         if len(encoded.encode("utf-8")) > MAX_METADATA_BYTES:

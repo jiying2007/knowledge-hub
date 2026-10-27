@@ -223,3 +223,59 @@ def test_existing_convergence_invokes_whole_repository_observer(tmp_path):
     assert whole["tracked_text_count"] == whole["observed_count"] == 2
     assert report["full_content_review_proven"] is False
     assert whole["semantic_review_performed"] is False
+
+
+def test_registered_nontext_and_missing_asset_metadata_is_counted_without_content(tmp_path):
+    _repo(tmp_path, {"docs/public.md": b"public\\n", "registry/config.json": b'{"x":1}',
+                     "tools/sample.sh": b"#!/bin/sh\\n", "history/chunk.md": b"history\\n"})
+    registered = {"docs/public.md": ["public"], "registry/config.json": ["config"],
+                  "tools/sample.sh": ["shell"], "history": ["archive-dir"],
+                  "missing/not-here.json": ["missing"], "restricted/sensitive.json": ["private"]}
+    report = inventory.build_repository_text_inventory(tmp_path, {"restricted"}, registered)
+    counts = report["registered_asset_counts"]
+    assert counts["registered_nontext_regular_count"] == 2
+    assert counts["registered_nontext_unsafe_count"] == 0
+    assert counts["registered_missing_path_count"] == 1
+    assert counts["registered_directory_root_count"] == 1
+    assert report["registered_nontext_metadata_only"] is True
+    assert report["registered_nontext_content_verified"] is False
+    assert report["status"] == "needs-review"
+    assert "restricted/sensitive.json" not in json.dumps(report)
+    assert "missing/not-here.json" not in json.dumps(report)
+    assert '"x":1' not in json.dumps(report)
+
+
+def test_invalid_registered_path_does_not_export_identity(tmp_path):
+    _repo(tmp_path, {"safe.md": b"safe\\n"})
+    report = inventory.build_repository_text_inventory(tmp_path, set(),
+                                                        {"../outside/private.json": ["secret"]})
+    assert report["status"] == "unavailable"
+    assert report["body_records"] == []
+    assert "../outside" not in json.dumps(report)
+
+
+def test_registered_nontext_symlink_is_counted_as_unsafe_not_read(tmp_path):
+    _repo(tmp_path, {"public.md": b"safe\\n", "private.json": b"private data"})
+    (tmp_path / "private.json").unlink()
+    (tmp_path / "private.json").symlink_to("public.md")
+    _git(tmp_path, "add", "private.json")
+    _git(tmp_path, "-c", "user.name=Test", "-c", "user.email=t@example.invalid",
+         "commit", "-qm", "link nontext")
+    report = inventory.build_repository_text_inventory(tmp_path, set(),
+                                                        {"private.json": ["protected"]})
+    counts = report["registered_asset_counts"]
+    assert counts["registered_nontext_unsafe_count"] == 1
+    assert report["status"] == "needs-review"
+    assert "private.json" not in json.dumps(report)
+
+
+def test_registered_nontext_metadata_does_not_certify_dirty_worktree_bytes(tmp_path):
+    _repo(tmp_path, {"docs/public.md": b"public\\n", "registry/config.json": b'{"before":1}'})
+    (tmp_path / "registry/config.json").write_bytes(b"SYNTHETIC_WORKTREE_PRIVATE_VALUE")
+    report = inventory.build_repository_text_inventory(
+        tmp_path, set(), {"registry/config.json": ["configuration"]}
+    )
+    assert report["registered_asset_counts"]["registered_nontext_regular_count"] == 1
+    assert report["registered_nontext_metadata_only"] is True
+    assert report["registered_nontext_content_verified"] is False
+    assert "SYNTHETIC_WORKTREE_PRIVATE_VALUE" not in json.dumps(report)
