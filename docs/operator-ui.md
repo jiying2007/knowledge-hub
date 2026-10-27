@@ -189,3 +189,18 @@ Action Queue 的 `Automation eligible` 列直接显示已有 action 合同中的
 `automation_eligible`：只有严格布尔 `true` 才标为 `yes`；缺失或其它值一律
 `no`。这仅代表符合交给**独立受控执行工作流**的条件，不意味着 UI 执行了动作、
 候选通过验收、或产生 owner/设备/生产/发布授权。浏览器仍严格只读。
+
+
+## 状态一致性防误判
+
+Operator UI 的 External open 数字只在 `status`、`open_count` 与实际
+`open_gaps` 列表互相一致时显示；`pass` 必须对应零项，
+`needs-review` 必须确有开放列表。异常计数、布尔计数、缺失列表或
+`needs-review + 0` 一律显示 `unavailable`，而不是误报“没有缺口”。
+
+终态卡片只有在同一个 canonical evaluator 投影同时给出
+`status=pass`、严格布尔 `terminal=true`、`blockers=[]` 时
+才显示 `true`。文本 `"true"/"false"`、状态与布尔相冲突、
+blockers 非列表或遗漏，均不可作为通过依据。JSON API 使用相同的严格
+布尔投影。这只修复 **显示和状态投影** 的防误判边界，
+不重新判定 Product/Repository Terminal，也不更改 Owner、外部证据或审批权限。

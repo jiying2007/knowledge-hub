@@ -98,10 +98,28 @@ def _status_actions(state: Mapping[str, Any]) -> str:
     )
 
 
+def _external_consistent_count(external: Mapping[str, Any]) -> Any:
+    """Show a count only when the evaluator's status and gap rows agree."""
+    status = external.get("status")
+    rows = external.get("open_gaps")
+    count = external.get("open_count")
+    if status not in {"pass", "needs-review"} or not isinstance(rows, list):
+        return "unavailable"
+    if any(not isinstance(row, Mapping) for row in rows):
+        return "unavailable"
+    if type(count) is not int or count < 0 or count != len(rows):
+        return "unavailable"
+    if (status == "pass" and count != 0) or (status == "needs-review" and count == 0):
+        return "unavailable"
+    return count
+
+
 def _external_rows(external: Mapping[str, Any]) -> str:
-    rows = external.get("open_gaps", [])
     if external.get("status") not in {"pass", "needs-review"}:
         return '<p class="attention">外部状态不可用或无效；不能推断没有开放的 gap。</p>'
+    if _external_consistent_count(external) == "unavailable":
+        return '<p class="attention">外部状态、数量或缺口列表不一致；不能推断为零或已闭环。</p>'
+    rows = external["open_gaps"]
     if not rows:
         return '<p class="ok">没有开放的 external closure gap。</p>'
     items = []
@@ -222,6 +240,18 @@ def _lifecycle_rows(lifecycle: Mapping[str, Any]) -> str:
     )
 
 
+def _terminal_display(terminal: Mapping[str, Any]) -> str:
+    """A terminal PASS needs an exact bool, PASS status and zero blockers."""
+    if (terminal.get("status") == "pass"
+            and terminal.get("terminal") is True
+            and terminal.get("blockers") == []):
+        return "true"
+    if terminal.get("terminal") is True or terminal.get("status") == "pass":
+        return "unavailable"
+    status = terminal.get("status")
+    return status if status in {"needs-review", "blocked", "not-evaluated", "unavailable"} else "unavailable"
+
+
 def _cards(
     state: Mapping[str, Any],
     readiness: Mapping[str, Any],
@@ -245,8 +275,8 @@ def _cards(
             _card("Provider needed", discovery.get("provider_required_count", 0)),
             _card("Machine blocked", queue.get("machine_blocked_count", 0)),
             _card("Human projects", queue.get("human_project_count", 0)),
-            _card("External open", external.get("open_count", 0) if external.get("status") in {"pass", "needs-review"} else "unavailable"),
-            _card("Terminal", "true" if terminal.get("terminal") else terminal.get("status", "false")),
+            _card("External open", _external_consistent_count(external)),
+            _card("Terminal", _terminal_display(terminal)),
         )
     )
 

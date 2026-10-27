@@ -77,10 +77,15 @@ def _terminal_state(root: pathlib.Path) -> Dict[str, Any]:
             "terminal": False,
             "error": str(exc),
         }
+    blockers = payload.get("blockers")
+    if not isinstance(blockers, list):
+        blockers = ["invalid-terminal-blockers"]
     return {
         "status": str(payload.get("status", "")),
-        "terminal": bool(payload.get("terminal", False)),
-        "blockers": list(payload.get("blockers", [])),
+        "terminal": (payload.get("status") == "pass"
+                     and payload.get("terminal") is True
+                     and not blockers),
+        "blockers": blockers,
         "branch_gc": payload.get("branch_gc", {}),
         "default_branch_protection": payload.get("default_branch_protection", {}),
         "hosting_posture": payload.get("hosting_posture", {}),
