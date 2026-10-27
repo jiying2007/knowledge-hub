@@ -382,3 +382,63 @@ def test_operator_queue_surfaces_existing_automation_eligibility():
     assert "<th>Automation eligible</th>" in page
     assert "<td>yes</td>" in page
     assert "<td>no</td>" in page
+
+
+def test_operator_external_count_does_not_mask_inconsistent_evaluator_state():
+    invalid_cases = [
+        {"status": "needs-review", "open_count": 0, "open_gaps": []},
+        {"status": "needs-review", "open_count": 0,
+         "open_gaps": [{"id": "real-adoption-evidence", "status": "open"}]},
+        {"status": "pass", "open_count": 1,
+         "open_gaps": [{"id": "real-adoption-evidence", "status": "open"}]},
+        {"status": "pass", "open_count": True, "open_gaps": []},
+        {"status": "pass", "open_count": 0, "open_gaps": None},
+    ]
+    for external in invalid_cases:
+        state = _sample_state()
+        state["external_closure"] = external
+        page = operator_ui.render_dashboard(state)
+        assert "外部状态、数量或缺口列表不一致；不能推断为零或已闭环。" in page
+        assert '<span>External open</span><strong>unavailable</strong>' in page
+        assert "没有开放的 external closure gap。" not in page
+
+    state = _sample_state()
+    state["external_closure"] = {"status": "pass", "open_count": 0, "open_gaps": []}
+    page = operator_ui.render_dashboard(state)
+    assert '<span>External open</span><strong>0</strong>' in page
+    assert "没有开放的 external closure gap。" in page
+
+
+def test_operator_terminal_card_never_trusts_inconsistent_pass_flags():
+    state = _sample_state()
+    for status, flag, blockers in [
+        ("pass", "false", []),
+        ("pass", False, []),
+        ("pass", True, ["branch_gc"]),
+        ("needs-review", True, []),
+        ("pass", True, None),
+    ]:
+        state["terminal_closure"] = {
+            "status": status, "terminal": flag, "blockers": blockers,
+        }
+        page = operator_ui.render_dashboard(state)
+        assert '<span>Terminal</span><strong>true</strong>' not in page
+    state["terminal_closure"] = {"status": "pass", "terminal": True, "blockers": []}
+    page = operator_ui.render_dashboard(state)
+    assert '<span>Terminal</span><strong>true</strong>' in page
+
+
+def test_operator_terminal_json_projection_uses_strict_boolean_and_blockers(monkeypatch, tmp_path):
+    samples = [
+        ({"status": "pass", "terminal": "false", "blockers": []}, False),
+        ({"status": "needs-review", "terminal": True, "blockers": []}, False),
+        ({"status": "pass", "terminal": True, "blockers": "invalid"}, False),
+        ({"status": "pass", "terminal": True, "blockers": ["branch_gc"]}, False),
+        ({"status": "pass", "terminal": True, "blockers": []}, True),
+    ]
+    for result, expected in samples:
+        monkeypatch.setattr(operator_state, "evaluate_terminal_closure",
+                            lambda _root, result=result: result)
+        projection = operator_state._terminal_state(tmp_path)
+        assert projection["terminal"] is expected
+        assert isinstance(projection["blockers"], list)
