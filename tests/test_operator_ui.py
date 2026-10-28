@@ -458,3 +458,14 @@ def test_operator_discovery_unavailable_cannot_claim_zero_candidates() -> None:
     assert "Discovery 输入不可用" in page
     assert "当前没有 machine-discovery action。" not in page
     assert "synthetic metadata failure" not in page
+
+def test_operator_missing_or_unknown_discovery_is_not_false_zero() -> None:
+    for discovery in ({}, {"status": "unexpected", "candidate_found_count": 0,
+                           "provider_required_count": 0, "rows": []}):
+        state = _sample_state()
+        state["discovery"] = discovery
+        page = operator_ui.render_dashboard(state)
+        assert '<span>Candidates found</span><strong>unavailable</strong>' in page
+        assert '<span>Provider needed</span><strong>unavailable</strong>' in page
+        assert "Discovery 输入不可用" in page
+        assert "当前没有 machine-discovery action。" not in page
