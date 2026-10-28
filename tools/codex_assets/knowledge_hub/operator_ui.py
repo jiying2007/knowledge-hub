@@ -217,7 +217,7 @@ def _discovery_is_consistent(discovery: Mapping[str, Any]) -> bool:
         queries = row.get("provider_queries")
         candidate_count = row.get("candidate_count")
         query_count = row.get("provider_query_count")
-        if kind not in counts:
+        if not isinstance(kind, str) or kind not in counts:
             return False
         if (not isinstance(candidates, list) or not isinstance(queries, list)
                 or any(not isinstance(candidate, Mapping) for candidate in candidates)
