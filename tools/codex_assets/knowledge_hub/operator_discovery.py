@@ -19,10 +19,14 @@ def _object_rows(
         payload = load_json(root / relative_path, {}) or {}
     except KnowledgeHubError as exc:
         return [], ["{}: {}".format(relative_path, exc)]
-    rows = payload.get(field, []) if isinstance(payload, Mapping) else []
-    if not isinstance(rows, list):
-        return [], ["{} field {} must be a list".format(relative_path, field)]
-    return [row for row in rows if isinstance(row, Mapping)], []
+    if not isinstance(payload, Mapping) or field not in payload:
+        return [], ["{}: missing {} collection".format(relative_path, field)]
+    rows = payload[field]
+    if not isinstance(rows, list) or any(
+        not isinstance(row, Mapping) for row in rows
+    ):
+        return [], ["{} field {} must be a list of objects".format(relative_path, field)]
+    return rows, []
 
 
 def _item_rows(root: pathlib.Path) -> Tuple[List[Mapping[str, Any]], List[str]]:
@@ -33,19 +37,28 @@ def _item_rows(root: pathlib.Path) -> Tuple[List[Mapping[str, Any]], List[str]]:
 
 
 def _index(rows: Sequence[Mapping[str, Any]], key: str) -> Dict[str, Mapping[str, Any]]:
-    return {
-        str(row.get(key, "")): row
-        for row in rows
-        if str(row.get(key, ""))
-    }
+    result: Dict[str, Mapping[str, Any]] = {}
+    for row in rows:
+        identity = row.get(key)
+        if not isinstance(identity, str) or not identity:
+            raise ValueError("registry row missing valid {} identity".format(key))
+        if identity in result:
+            raise ValueError("duplicate {} registry identity".format(key))
+        result[identity] = row
+    return result
 
 
 def _repo_rows(
     route: Mapping[str, Any], repositories: Mapping[str, Mapping[str, Any]]
 ) -> List[Mapping[str, Any]]:
     result = []
-    for repo_id in route.get("repo_refs", []):
-        row = repositories.get(str(repo_id))
+    repo_refs = route.get("repo_refs", [])
+    if not isinstance(repo_refs, list) or any(
+        not isinstance(ref, str) for ref in repo_refs
+    ):
+        raise ValueError("project route repo_refs must be a list of strings")
+    for repo_id in repo_refs:
+        row = repositories.get(repo_id)
         if row is not None:
             result.append(row)
     return result
@@ -90,8 +103,13 @@ def _source_candidates(
                 },
             )
         )
-    for source_id in route.get("default_source_ids", []):
-        source = sources.get(str(source_id))
+    source_ids = route.get("default_source_ids", [])
+    if not isinstance(source_ids, list) or any(
+        not isinstance(ref, str) for ref in source_ids
+    ):
+        raise ValueError("project route default_source_ids must be a list of strings")
+    for source_id in source_ids:
+        source = sources.get(source_id)
         if source is None:
             continue
         candidates.append(
@@ -165,14 +183,19 @@ def _provider_queries(
     queries = []
     for repo in repos:
         remote_key = repo.get("remote_key", {})
-        if not remote_key:
+        if remote_key is None or remote_key == {}:
             continue
+        if not isinstance(remote_key, Mapping):
+            raise ValueError("repository remote_key must be an object")
+        target = remote_key.get("repository_path")
+        if not isinstance(target, str) or not target:
+            raise ValueError("repository remote_key missing repository_path")
         remote_kind = str(repo.get("remote_kind", ""))
         queries.append(
             {
                 "provider": remote_kind or "repository-provider",
                 "operation": _operation(field, remote_kind),
-                "target": remote_key["repository_path"],
+                "target": target,
                 "executed": False,
                 "read_only": True,
                 "transport_owned_by_provider": True,
@@ -254,19 +277,26 @@ def build_discovery_projection(
     errors = route_errors + repo_errors + source_errors + item_errors
     if errors:
         return _unavailable(errors)
-    routes = _index(route_rows, "project_id")
-    repositories = _index(repo_rows, "repo_id")
-    sources = _index(source_rows, "id")
-    machine_actions = [
-        row
-        for row in action_queue.get("actions", [])
-        if isinstance(row, Mapping)
-        and row.get("execution_class") == "machine-discovery"
-    ]
-    rows = [
-        _discover_action(row, routes, repositories, sources, items)
-        for row in machine_actions
-    ]
+    action_rows = action_queue.get("actions", [])
+    if not isinstance(action_rows, list) or any(
+        not isinstance(row, Mapping) for row in action_rows
+    ):
+        return _unavailable(["operator action queue must contain object actions"])
+    try:
+        routes = _index(route_rows, "project_id")
+        repositories = _index(repo_rows, "repo_id")
+        sources = _index(source_rows, "id")
+        machine_actions = [
+            row
+            for row in action_rows
+            if row.get("execution_class") == "machine-discovery"
+        ]
+        rows = [
+            _discover_action(row, routes, repositories, sources, items)
+            for row in machine_actions
+        ]
+    except (KeyError, TypeError, ValueError) as exc:
+        return _unavailable(["invalid discovery input: {}".format(exc)])
     counts = Counter(str(row.get("status", "")) for row in rows)
     provider_query_count = sum(
         int(row.get("provider_query_count", 0) or 0) for row in rows
