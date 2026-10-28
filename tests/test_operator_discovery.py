@@ -279,13 +279,22 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
         "terminal_closure": {"terminal": False, "status": "needs-review"},
         "discovery": {
             "status": "needs-provider",
+            "read_only": True,
+            "network_performed": False,
+            "canonical_write_performed": False,
+            "automatic_binding_enabled": False,
+            "action_count": 1,
             "candidate_found_count": 0,
             "provider_required_count": 1,
+            "no_candidate_count": 0,
+            "provider_query_count": 1,
             "rows": [
                 {
                     "project_id": "tool",
                     "field": "release_ref",
                     "status": "provider-required",
+                    "candidate_count": 0,
+                    "provider_query_count": 1,
                     "candidates": [],
                     "provider_queries": [
                         {
