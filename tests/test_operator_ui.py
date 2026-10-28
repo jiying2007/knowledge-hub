@@ -442,3 +442,30 @@ def test_operator_terminal_json_projection_uses_strict_boolean_and_blockers(monk
         projection = operator_state._terminal_state(tmp_path)
         assert projection["terminal"] is expected
         assert isinstance(projection["blockers"], list)
+
+def test_operator_discovery_unavailable_cannot_claim_zero_candidates() -> None:
+    state = _sample_state()
+    state["discovery"] = {
+        "status": "unavailable",
+        "candidate_found_count": 0,
+        "provider_required_count": 0,
+        "rows": [],
+        "errors": ["synthetic metadata failure"],
+    }
+    page = operator_ui.render_dashboard(state)
+    assert '<span>Candidates found</span><strong>unavailable</strong>' in page
+    assert '<span>Provider needed</span><strong>unavailable</strong>' in page
+    assert "Discovery 输入不可用" in page
+    assert "当前没有 machine-discovery action。" not in page
+    assert "synthetic metadata failure" not in page
+
+def test_operator_missing_or_unknown_discovery_is_not_false_zero() -> None:
+    for discovery in ({}, {"status": "unexpected", "candidate_found_count": 0,
+                           "provider_required_count": 0, "rows": []}):
+        state = _sample_state()
+        state["discovery"] = discovery
+        page = operator_ui.render_dashboard(state)
+        assert '<span>Candidates found</span><strong>unavailable</strong>' in page
+        assert '<span>Provider needed</span><strong>unavailable</strong>' in page
+        assert "Discovery 输入不可用" in page
+        assert "当前没有 machine-discovery action。" not in page

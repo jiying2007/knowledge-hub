@@ -194,6 +194,11 @@ def _provider_query_refs(row: Mapping[str, Any]) -> str:
 
 
 def _discovery_rows(discovery: Mapping[str, Any]) -> str:
+    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
+        return (
+            '<p class="attention">Discovery 输入不可用；'
+            "不能推断没有 machine-discovery action 或候选。</p>"
+        )
     rows = []
     for row in discovery.get("rows", []):
         if not isinstance(row, Mapping):
@@ -252,6 +257,13 @@ def _terminal_display(terminal: Mapping[str, Any]) -> str:
     return status if status in {"needs-review", "blocked", "not-evaluated", "unavailable"} else "unavailable"
 
 
+def _discovery_metric(discovery: Mapping[str, Any], key: str) -> Any:
+    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
+        return "unavailable"
+    value = discovery.get(key, 0)
+    return value if type(value) is int and value >= 0 else "unavailable"
+
+
 def _cards(
     state: Mapping[str, Any],
     readiness: Mapping[str, Any],
@@ -271,8 +283,8 @@ def _cards(
             _card("Lifecycle stage", lifecycle.get("current_stage", "") or "not-observed"),
             _card("Lifecycle status", lifecycle.get("status", "not-observed")),
             _card("Machine discovery", queue.get("machine_candidate_count", 0)),
-            _card("Candidates found", discovery.get("candidate_found_count", 0)),
-            _card("Provider needed", discovery.get("provider_required_count", 0)),
+            _card("Candidates found", _discovery_metric(discovery, "candidate_found_count")),
+            _card("Provider needed", _discovery_metric(discovery, "provider_required_count")),
             _card("Machine blocked", queue.get("machine_blocked_count", 0)),
             _card("Human projects", queue.get("human_project_count", 0)),
             _card("External open", _external_consistent_count(external)),

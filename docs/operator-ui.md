@@ -139,6 +139,8 @@ Operator UI 不会尝试开启 branch protection。未保护默认分支只会�
 
 Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 
+当 `registry/project-routes.json`、`registry/repositories.json`、`registry/sources.json` 的行形状、身份、route refs 或 remote key 不符合预期，或机器 action 列表损坏时，Discovery 必须返回 `status=unavailable`、空候选并保留脱敏错误类别；不可因丢弃损坏行而将不存在的候选误报为真实零。Operator UI 的 `Candidates found` / `Provider needed` 也显示 `unavailable`，不将无观测当作无工作。该失败不执行网络查询、不写入 Registry、不授权绑定或发布。
+
 - `source_refs`：从 `registry/project-routes.json`、`registry/repositories.json` 与 `registry/sources.json` 生成 canonical repository/source 候选；
 - `validation_refs`：从 `registry/items.jsonl` 中项目 `validation_path` 下的已登记条目生成候选；
 - `artifact_refs` / `release_ref`：只根据项目已登记 repository remote 生成精确 provider query；

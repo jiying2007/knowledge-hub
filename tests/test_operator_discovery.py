@@ -278,6 +278,7 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
         "external_closure": {"open_count": 0, "open_gaps": []},
         "terminal_closure": {"terminal": False, "status": "needs-review"},
         "discovery": {
+            "status": "needs-provider",
             "candidate_found_count": 0,
             "provider_required_count": 1,
             "rows": [
@@ -302,3 +303,49 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
     assert "&lt;unsafe&gt;" in page
     assert "Discovery Queue" in page
     assert "provider-required" in page
+
+def test_discovery_rejects_malformed_registries_without_guessing(
+    tmp_path: pathlib.Path,
+) -> None:
+    cases = [
+        ("project-routes.json", "routes", [None]),
+        ("project-routes.json", "routes", [
+            {"project_id": "tool", "repo_refs": None},
+        ]),
+        ("project-routes.json", "routes", [
+            {"project_id": "tool"}, {"project_id": "tool"},
+        ]),
+        ("repositories.json", "repositories", [
+            {"repo_id": "tool-repo", "remote_kind": "github", "remote_key": "bad"},
+        ]),
+        ("repositories.json", "repositories", [
+            {"repo_id": "tool-repo", "remote_kind": "github",
+             "remote_key": {"host": "github.com"}},
+        ]),
+        ("sources.json", "sources", [{"path": "missing-identity"}]),
+    ]
+    for index, (filename, field, rows) in enumerate(cases):
+        root = _fixture_root(tmp_path / str(index))
+        _write_json(root / "registry" / filename, {field: rows})
+        result = operator_discovery.build_discovery_projection(root, _action_queue())
+        assert result["status"] == "unavailable", (filename, index)
+        assert result["action_count"] == 0
+        assert result["candidate_found_count"] == 0
+        assert result["provider_query_count"] == 0
+        assert result["network_performed"] is False
+        assert result["canonical_write_performed"] is False
+        assert result["automatic_binding_enabled"] is False
+        assert result["errors"]
+
+
+def test_discovery_rejects_malformed_machine_action_queue(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = _fixture_root(tmp_path)
+    for actions in (None, "machine-discovery", [False], [{"execution_class": "machine-discovery"}, None]):
+        result = operator_discovery.build_discovery_projection(root, {"actions": actions})
+        assert result["status"] == "unavailable"
+        assert result["action_count"] == 0
+        assert result["network_performed"] is False
+        assert result["canonical_write_performed"] is False
+        assert result["automatic_binding_enabled"] is False
