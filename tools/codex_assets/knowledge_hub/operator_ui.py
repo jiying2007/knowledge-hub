@@ -194,7 +194,7 @@ def _provider_query_refs(row: Mapping[str, Any]) -> str:
 
 
 def _discovery_rows(discovery: Mapping[str, Any]) -> str:
-    if discovery.get("status") == "unavailable":
+    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
         return (
             '<p class="attention">Discovery 输入不可用；'
             "不能推断没有 machine-discovery action 或候选。</p>"
@@ -258,7 +258,7 @@ def _terminal_display(terminal: Mapping[str, Any]) -> str:
 
 
 def _discovery_metric(discovery: Mapping[str, Any], key: str) -> Any:
-    if discovery.get("status") == "unavailable":
+    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
         return "unavailable"
     value = discovery.get(key, 0)
     return value if type(value) is int and value >= 0 else "unavailable"
