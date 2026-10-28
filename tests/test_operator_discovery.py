@@ -278,6 +278,7 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
         "external_closure": {"open_count": 0, "open_gaps": []},
         "terminal_closure": {"terminal": False, "status": "needs-review"},
         "discovery": {
+            "status": "needs-provider",
             "candidate_found_count": 0,
             "provider_required_count": 1,
             "rows": [
