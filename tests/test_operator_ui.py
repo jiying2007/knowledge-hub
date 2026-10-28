@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import pathlib
 import threading
@@ -464,6 +465,80 @@ def test_operator_missing_or_unknown_discovery_is_not_false_zero() -> None:
                            "provider_required_count": 0, "rows": []}):
         state = _sample_state()
         state["discovery"] = discovery
+        page = operator_ui.render_dashboard(state)
+        assert '<span>Candidates found</span><strong>unavailable</strong>' in page
+        assert '<span>Provider needed</span><strong>unavailable</strong>' in page
+        assert "Discovery 输入不可用" in page
+        assert "当前没有 machine-discovery action。" not in page
+
+def test_discovery_counts_agree_with_rows_before_claiming_no_work() -> None:
+    state = _sample_state()
+    valid = {
+        "status": "needs-provider",
+        "read_only": True,
+        "network_performed": False,
+        "canonical_write_performed": False,
+        "automatic_binding_enabled": False,
+        "action_count": 1,
+        "candidate_found_count": 0,
+        "provider_required_count": 1,
+        "no_candidate_count": 0,
+        "provider_query_count": 1,
+        "rows": [
+            {
+                "project_id": "tool",
+                "field": "release_ref",
+                "status": "provider-required",
+                "candidate_count": 0,
+                "provider_query_count": 1,
+                "candidates": [],
+                "provider_queries": [
+                    {"provider": "github", "operation": "list-releases-and-tags",
+                     "target": "example/tool", "read_only": True, "executed": False},
+                ],
+            }
+        ],
+    }
+    state["discovery"] = valid
+    page = operator_ui.render_dashboard(state)
+    assert '<span>Candidates found</span><strong>0</strong>' in page
+    assert '<span>Provider needed</span><strong>1</strong>' in page
+    assert "github:list-releases-and-tags:example/tool" in page
+
+    invalids = []
+    for key, value in (
+        ("status", "pass"),
+        ("action_count", 0),
+        ("candidate_found_count", 1),
+        ("provider_required_count", 0),
+        ("provider_required_count", True),
+        ("no_candidate_count", 1),
+        ("provider_query_count", 0),
+        ("read_only", False),
+        ("network_performed", True),
+        ("canonical_write_performed", True),
+        ("automatic_binding_enabled", True),
+    ):
+        candidate = copy.deepcopy(valid)
+        candidate[key] = value
+        invalids.append(candidate)
+    for key, value in (
+        ("status", []),
+        ("candidate_count", 1),
+        ("provider_query_count", 0),
+        ("candidates", "broken"),
+        ("provider_queries", [None]),
+    ):
+        candidate = copy.deepcopy(valid)
+        candidate["rows"][0][key] = value
+        invalids.append(candidate)
+    for rows in ([], [None]):
+        candidate = copy.deepcopy(valid)
+        candidate["rows"] = rows
+        invalids.append(candidate)
+
+    for candidate in invalids:
+        state["discovery"] = candidate
         page = operator_ui.render_dashboard(state)
         assert '<span>Candidates found</span><strong>unavailable</strong>' in page
         assert '<span>Provider needed</span><strong>unavailable</strong>' in page
