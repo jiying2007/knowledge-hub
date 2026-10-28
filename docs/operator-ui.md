@@ -141,6 +141,8 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 
 当 `registry/project-routes.json`、`registry/repositories.json`、`registry/sources.json` 的行形状、身份、route refs 或 remote key 不符合预期，或机器 action 列表损坏时，Discovery 必须返回 `status=unavailable`、空候选并保留脱敏错误类别；不可因丢弃损坏行而将不存在的候选误报为真实零。Operator UI 的 `Candidates found` / `Provider needed` 也显示 `unavailable`，不将无观测当作无工作。该失败不执行网络查询、不写入 Registry、不授权绑定或发布。
 
+即使 Discovery 的顶层 `status` 是已知值，页面仍应交叉核验 `action_count`、`candidate_found_count`、`provider_required_count`、`no_candidate_count`、`provider_query_count` 与实际 `rows`、逐行动候选和 provider query 数量，以及聚合状态的含义。任一计数、类型（布尔值不能冒充整数）、行状态或只读安全标志矛盾时，UI 的候选/Provider 数字和表格全部进入 `unavailable`，不能把无效快照显示为零工作、完成或可自动绑定。此举只加强只读视图，不新增 evaluator、权威状态、外部调用或写权限。
+
 - `source_refs`：从 `registry/project-routes.json`、`registry/repositories.json` 与 `registry/sources.json` 生成 canonical repository/source 候选；
 - `validation_refs`：从 `registry/items.jsonl` 中项目 `validation_path` 下的已登记条目生成候选；
 - `artifact_refs` / `release_ref`：只根据项目已登记 repository remote 生成精确 provider query；
