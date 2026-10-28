@@ -193,8 +193,58 @@ def _provider_query_refs(row: Mapping[str, Any]) -> str:
     return _badges(refs)
 
 
+def _discovery_is_consistent(discovery: Mapping[str, Any]) -> bool:
+    """Keep a malformed discovery snapshot from asserting zero machine work."""
+    rows = discovery.get("rows")
+    if not isinstance(rows, list) or any(not isinstance(row, Mapping) for row in rows):
+        return False
+    if (discovery.get("read_only") is not True
+            or discovery.get("network_performed") is not False
+            or discovery.get("canonical_write_performed") is not False
+            or discovery.get("automatic_binding_enabled") is not False):
+        return False
+    fields = (
+        "action_count", "candidate_found_count", "provider_required_count",
+        "no_candidate_count", "provider_query_count",
+    )
+    if any(type(discovery.get(key)) is not int or discovery[key] < 0 for key in fields):
+        return False
+    counts = {"candidate-found": 0, "provider-required": 0, "no-candidate": 0}
+    provider_total = 0
+    for row in rows:
+        kind = row.get("status")
+        candidates = row.get("candidates")
+        queries = row.get("provider_queries")
+        candidate_count = row.get("candidate_count")
+        query_count = row.get("provider_query_count")
+        if kind not in counts:
+            return False
+        if (not isinstance(candidates, list) or not isinstance(queries, list)
+                or any(not isinstance(candidate, Mapping) for candidate in candidates)
+                or any(not isinstance(query, Mapping) for query in queries)
+                or type(candidate_count) is not int or type(query_count) is not int
+                or candidate_count != len(candidates) or query_count != len(queries)):
+            return False
+        if (kind == "candidate-found" and candidate_count == 0
+                or kind == "provider-required" and (candidate_count != 0 or query_count == 0)
+                or kind == "no-candidate" and (candidate_count != 0 or query_count != 0)):
+            return False
+        counts[kind] += 1
+        provider_total += query_count
+    status = ("pass" if not rows else "needs-provider"
+              if counts["provider-required"] else "candidates-found")
+    return (
+        discovery.get("status") == status
+        and discovery["action_count"] == len(rows)
+        and discovery["candidate_found_count"] == counts["candidate-found"]
+        and discovery["provider_required_count"] == counts["provider-required"]
+        and discovery["no_candidate_count"] == counts["no-candidate"]
+        and discovery["provider_query_count"] == provider_total
+    )
+
+
 def _discovery_rows(discovery: Mapping[str, Any]) -> str:
-    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
+    if not _discovery_is_consistent(discovery):
         return (
             '<p class="attention">Discovery 输入不可用；'
             "不能推断没有 machine-discovery action 或候选。</p>"
@@ -258,10 +308,9 @@ def _terminal_display(terminal: Mapping[str, Any]) -> str:
 
 
 def _discovery_metric(discovery: Mapping[str, Any], key: str) -> Any:
-    if discovery.get("status") not in {"pass", "needs-provider", "candidates-found"}:
+    if not _discovery_is_consistent(discovery):
         return "unavailable"
-    value = discovery.get(key, 0)
-    return value if type(value) is int and value >= 0 else "unavailable"
+    return discovery.get(key, "unavailable")
 
 
 def _cards(
