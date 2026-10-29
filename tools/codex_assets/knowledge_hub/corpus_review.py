@@ -147,6 +147,15 @@ def _document(root: pathlib.Path, item: Mapping[str, Any]) -> Dict[str, Any]:
         metadata, body = split_frontmatter(data.decode("utf-8"))
         mirrored = all(str(metadata.get(key, "")) == str(item.get(key, ""))
                        for key in ("id", "path", "status", "owner", "kind"))
+        if (not mirrored and item.get("status") == "archived"
+                and "path" not in metadata):
+            # Legacy archived YAML may omit path; Registry remains authoritative.
+            # All other identity mirrors must be explicitly present and exact.
+            mirrored = all(
+                key in metadata
+                and str(metadata[key]) == str(item.get(key, ""))
+                for key in ("id", "status", "owner", "kind")
+            )
         declared = metadata.get("supersedes_candidate")
         invalid_supersedes = declared is not None and (
             not isinstance(declared, str)
