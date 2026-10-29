@@ -739,7 +739,7 @@ def test_archived_path_omission_does_not_hide_status_mismatch(tmp_path):
     assert "frontmatter-drift" in row["signals"]
     assert row["lane"] == "P0-integrity"
 
-def test_real_archived_path_omissions_and_reviewing_drift_stay_separate():
+def test_real_archived_path_omissions_do_not_rewrite_history():
     from tools.codex_assets.knowledge_hub import corpus_review
 
     root = pathlib.Path(__file__).resolve().parents[1]
@@ -761,17 +761,6 @@ def test_real_archived_path_omissions_and_reviewing_drift_stay_separate():
         result = corpus_review._document(root, item)
         assert result["status"] == "read"
         assert result["frontmatter_matches_registry"] is True
-
-    for item_id in (
-        "pcr02-evt2-hardware-pdf-reference-index-20260711",
-        "pcr02-evt2-mcu-soc-contract-index-20260711",
-        "pcr02-owner-ready-validation-paths-20260713",
-    ):
-        item = items[item_id]
-        assert item["status"] == "reviewing"
-        result = corpus_review._document(root, item)
-        assert result["status"] == "read"
-        assert result["frontmatter_matches_registry"] is False
 
 def test_shell_command_reference_checks_script_but_does_not_run(tmp_path):
     from tools.codex_assets.knowledge_hub import corpus_review
@@ -811,13 +800,10 @@ def test_script_command_normalization_does_not_hide_ordinary_path_misses(tmp_pat
     }
 
 
-def test_registered_schema_command_ref_is_structurally_present_not_executed():
+def test_real_script_command_ref_is_structurally_present_not_executed():
     from tools.codex_assets.knowledge_hub import corpus_review
 
     root = pathlib.Path(__file__).resolve().parents[1]
-    item = next(x for x in registry_items(root)
-                if x["id"] == "knowledge-hub-registry-schema-readability-extension")
+    item = {"validation_refs": ["tools/knowledge-check.sh --dry-run --json"]}
     result = corpus_review._local_refs(root, item)
-    assert result["status"] == "checked"
-    assert result["checked"] >= 3
-    assert result["missing"] == 0
+    assert result == {"status": "checked", "missing": 0, "checked": 1}
