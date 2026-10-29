@@ -2,6 +2,19 @@
 
 Operator UI 是 Knowledge Hub 的本地只读人工控制面。它的目标是减少“找命令、翻 JSON、手工拼接下一步”的工作，而不是建立第二套事实源或绕开治理门禁。
 
+## 最小日常流程（个人公开仓库）
+
+**只执行三条规则，不建第二套审批或验收账本：**
+
+1. **普通 PR：** AI 可以准备独立分支、最小 Diff 和 PR；等当前 PR HEAD 的 `Quality gate`、`Security approval gate` 通过且与受保护 `master` 对齐后，使用受控的 expected-head squash merge。普通改动不要求逐项人工审批；真正无人值守自动合并目前仅适用于既有受限 machine ratchet，不把其它 PR 冒充已启用 GitHub Auto-merge。
+2. **安全敏感改动：** 修改 workflow、权限、安全审核器、风险/授权策略等 trust root 时，仍由现有 exact-head Security 门禁阻断，直到真实授权事实生效。AI 不代发 `SECURITY-CHANGE-APPROVE`，也不降低门禁或执行不受信 PR 代码。
+3. **检查失败或基线变化：** 停止合并，修复问题或更新 PR 的真实 base/head，重新取得对应 HEAD 的原生检查结果；合并后从新 `master` 验收 Quality、Restore 和 Signed。GitHub 原生 PR、Actions、签名制品即是工程审计凭据，**无需为日常 PR 手工复制一份 SHA/Run ID 账本**。
+
+**一次性管理员配置（不属于每天的任务）：** 保留 `master` 的严格最新基线和两个必需检查。若仓库需要继续使用受信任的 `pull_request_target` 安全审查，在 **2026-12-02** 之前按 [#159](https://github.com/jiying2007/knowledge-hub/issues/159) 确认适用的 Actions Event Policy；仅在确实会被阻断时，为现有 `.github/workflows/security-critical-change-review.yml` 配置最小允许策略。不要为了此事项另外开发 `workflow_run` 替代体系，除非确认不能配置允许规则。
+
+`Repository Terminal PASS` 只证明仓库工程闭环，不代表 Product、Owner、真实设备或生产采用度 PASS。Operator UI 仍是只读视图，不能执行合并或发布。
+
+
 ## 启动
 
 ```bash
