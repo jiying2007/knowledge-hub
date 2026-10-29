@@ -738,3 +738,37 @@ def test_archived_path_omission_does_not_hide_status_mismatch(tmp_path):
     assert row["body"]["frontmatter_matches_registry"] is False
     assert "frontmatter-drift" in row["signals"]
     assert row["lane"] == "P0-integrity"
+
+def test_real_archived_path_omissions_and_reviewing_drift_stay_separate():
+    from tools.codex_assets.knowledge_hub import corpus_review
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    items = {row["id"]: row for row in registry_items(root)}
+    archived_path_only = (
+        "codex-archive-phased-migration-removal-20260709",
+        "codex-archive-migration-preflight-20260709",
+        "codex-archive-removal-preflight-20260710",
+        "codex-archive-extract-first-preflight-20260710",
+        "codex-openai-local-runtime-boundary-20260524",
+        "codex-token-efficiency-roadmap-coverage-20260710",
+        "codex-archive-memory-curation-file-level-audit-20260710",
+        "codex-adk-hardcut-source-to-live-audit-20260710",
+        "codex-knowledge-hub-final-hardcut-tombstone-audit-20260710",
+    )
+    for item_id in archived_path_only:
+        item = items[item_id]
+        assert item["status"] == "archived"
+        result = corpus_review._document(root, item)
+        assert result["status"] == "read"
+        assert result["frontmatter_matches_registry"] is True
+
+    for item_id in (
+        "pcr02-evt2-hardware-pdf-reference-index-20260711",
+        "pcr02-evt2-mcu-soc-contract-index-20260711",
+        "pcr02-owner-ready-validation-paths-20260713",
+    ):
+        item = items[item_id]
+        assert item["status"] == "reviewing"
+        result = corpus_review._document(root, item)
+        assert result["status"] == "read"
+        assert result["frontmatter_matches_registry"] is False
