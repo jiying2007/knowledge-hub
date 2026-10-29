@@ -772,3 +772,52 @@ def test_real_archived_path_omissions_and_reviewing_drift_stay_separate():
         result = corpus_review._document(root, item)
         assert result["status"] == "read"
         assert result["frontmatter_matches_registry"] is False
+
+def test_shell_command_reference_checks_script_but_does_not_run(tmp_path):
+    from tools.codex_assets.knowledge_hub import corpus_review
+
+    root = _fixture(tmp_path)
+    tool = root / "tools/check-ref.sh"
+    tool.parent.mkdir(parents=True, exist_ok=True)
+    tool.write_text("#!/bin/sh\ntouch {} \n".format(root / "executed.txt"),
+                    encoding="utf-8")
+    item = {"evidence_refs": [], "validation_refs": [
+        "tools/check-ref.sh --dry-run --json"
+    ]}
+    result = corpus_review._local_refs(root, item)
+    assert result == {"status": "checked", "missing": 0, "checked": 1}
+    assert not (root / "executed.txt").exists()
+
+    tool.unlink()
+    missing = corpus_review._local_refs(root, item)
+    assert missing == {"status": "checked", "missing": 1, "checked": 1}
+    assert not (root / "executed.txt").exists()
+
+
+def test_script_command_normalization_does_not_hide_ordinary_path_misses(tmp_path):
+    from tools.codex_assets.knowledge_hub import corpus_review
+
+    root = _fixture(tmp_path)
+    path = root / "tools/report with spaces.sh"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("historical fixture", encoding="utf-8")
+    item = {"validation_refs": [
+        "tools/report with spaces.sh",
+        "tools/missing.sh",
+        "projects/demo/validation/missing.md",
+    ]}
+    assert corpus_review._local_refs(root, item) == {
+        "status": "checked", "missing": 2, "checked": 3,
+    }
+
+
+def test_registered_schema_command_ref_is_structurally_present_not_executed():
+    from tools.codex_assets.knowledge_hub import corpus_review
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    item = next(x for x in registry_items(root)
+                if x["id"] == "knowledge-hub-registry-schema-readability-extension")
+    result = corpus_review._local_refs(root, item)
+    assert result["status"] == "checked"
+    assert result["checked"] >= 3
+    assert result["missing"] == 0
