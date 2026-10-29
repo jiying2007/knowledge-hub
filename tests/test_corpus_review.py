@@ -715,7 +715,7 @@ def test_archived_path_omission_cannot_hide_other_missing_identity(tmp_path):
 
 def test_current_and_reviewing_path_omission_still_block(tmp_path):
     root = _fixture(tmp_path)
-    for item_id, relative in (
+    for _item_id, relative in (
         ("active-a", "projects/demo/current/a.md"),
         ("review-a", "projects/demo/validation/a.md"),
     ):
