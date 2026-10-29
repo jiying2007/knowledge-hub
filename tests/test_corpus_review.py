@@ -660,3 +660,81 @@ def test_unfilled_template_requires_matching_kind_and_current_lifecycle(tmp_path
         assert (row["lane"] == "P0-integrity") is should_alert
         assert report["semantic_review_performed"] is False
         assert report["canonical_write_performed"] is False
+
+def _rewrite_test_frontmatter_field(path, key, value=None):
+    """Modify only one explicit YAML mirror in a temporary test fixture."""
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    assert lines[0].strip() == "---"
+    end = next(i for i, line in enumerate(lines[1:], 1) if line.strip() == "---")
+    positions = [i for i, line in enumerate(lines[1:end], 1)
+                 if line.startswith(key + ":")]
+    assert len(positions) == 1
+    i = positions[0]
+    if value is None:
+        lines.pop(i)
+    else:
+        lines[i] = "{}: {}\n".format(key, value)
+    path.write_text("".join(lines), encoding="utf-8")
+
+
+def test_archived_legacy_path_omission_is_not_false_p0(tmp_path):
+    root = _fixture(tmp_path)
+    file = root / "projects/demo/archive/a.md"
+    _rewrite_test_frontmatter_field(file, "path")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x["id"] == "arch-a")
+    assert row["body"]["frontmatter_matches_registry"] is True
+    assert "frontmatter-drift" not in row["signals"]
+    assert row["lane"] == "P3-historical-integrity"
+    assert report["canonical_write_performed"] is False
+    assert report["semantic_review_performed"] is False
+
+
+def test_archived_explicit_wrong_path_remains_p0(tmp_path):
+    root = _fixture(tmp_path)
+    file = root / "projects/demo/archive/a.md"
+    _rewrite_test_frontmatter_field(file, "path", "projects/demo/archive/wrong.md")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x["id"] == "arch-a")
+    assert row["body"]["frontmatter_matches_registry"] is False
+    assert "frontmatter-drift" in row["signals"]
+    assert row["lane"] == "P0-integrity"
+
+
+def test_archived_path_omission_cannot_hide_other_missing_identity(tmp_path):
+    root = _fixture(tmp_path)
+    file = root / "projects/demo/archive/a.md"
+    _rewrite_test_frontmatter_field(file, "path")
+    _rewrite_test_frontmatter_field(file, "kind")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x["id"] == "arch-a")
+    assert row["body"]["frontmatter_matches_registry"] is False
+    assert "frontmatter-drift" in row["signals"]
+    assert row["lane"] == "P0-integrity"
+
+
+def test_current_and_reviewing_path_omission_still_block(tmp_path):
+    root = _fixture(tmp_path)
+    for item_id, relative in (
+        ("active-a", "projects/demo/current/a.md"),
+        ("review-a", "projects/demo/validation/a.md"),
+    ):
+        _rewrite_test_frontmatter_field(root / relative, "path")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    for item_id in ("active-a", "review-a"):
+        row = next(x for x in report["rows"] if x["id"] == item_id)
+        assert row["body"]["frontmatter_matches_registry"] is False
+        assert "frontmatter-drift" in row["signals"]
+        assert row["lane"] == "P0-integrity"
+
+
+def test_archived_path_omission_does_not_hide_status_mismatch(tmp_path):
+    root = _fixture(tmp_path)
+    file = root / "projects/demo/archive/a.md"
+    _rewrite_test_frontmatter_field(file, "path")
+    _rewrite_test_frontmatter_field(file, "status", "active")
+    report = build_corpus_review(root, dt.date(2026, 10, 17))
+    row = next(x for x in report["rows"] if x["id"] == "arch-a")
+    assert row["body"]["frontmatter_matches_registry"] is False
+    assert "frontmatter-drift" in row["signals"]
+    assert row["lane"] == "P0-integrity"
