@@ -108,8 +108,13 @@ def _local_refs(
         if not value.startswith(PATH_PREFIXES) or "\n" in value or "#" in value:
             continue
         checked += 1
+        # An archived validation_ref can be a CLI invocation, not a file
+        # named "<script>.sh --flags". Check only the script's existence;
+        # never execute it or claim that its arguments were validated.
+        command = re.match(r"^(tools/[^\\s]+\\.sh)\\s+\\S", value)
+        reference_path = command.group(1) if command else value
         try:
-            path = resolve_inside(root, value)
+            path = resolve_inside(root, reference_path)
             valid_file = path.is_file() and not path.is_symlink()
             valid_archive_dir = (
                 archive_directory and value == item.get("path")
