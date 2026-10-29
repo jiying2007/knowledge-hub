@@ -14,6 +14,8 @@ Provider `archive --help` 的 `source_contract` 列出归档输入要求。工�
 
 所有工具默认保守：优先只读、dry-run、report-only；允许在 Hub 本仓内完成可回滚维护。commit/push/merge/release/tag、删除、发布、提升 active、关闭 owner gate、写 memory 和源项目写入分别需要明确授权。
 
+个人公开仓库的日常 PR 不需要重复人工审批和抄录审计流水：沿用 [Operator UI 最小日常流程](../docs/operator-ui.md#最小日常流程个人公开仓库)，由现有 Quality/Security 原生检查判断可合并性；高风险权限/信任根仍由真实授权控制。GitHub 原生 Auto-merge 未启用时，不声称普通 PR 会无人值守自动合并；现有受限 machine ratchet 的自动合并按既有 allowlist 执行。
+
 ## 外部来源逐文件快照（私有证据候选）
 
 `knowledge-inventory.sh` 保留原有的 Hub source control 盘点；额外增加**显式源目录/单文件只读快照**模式，不增加公共命令或新的 canonical 状态源。须在能访问真实来源的机器上运行，不能通过 GitHub 上的 Hub 目录反推外部迁移完成。
