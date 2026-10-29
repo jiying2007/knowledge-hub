@@ -10,7 +10,7 @@ Operator UI 是 Knowledge Hub 的本地只读人工控制面。它的目标是�
 2. **安全敏感改动：** 修改 workflow、权限、安全审核器、风险/授权策略等 trust root 时，仍由现有 exact-head Security 门禁阻断，直到真实授权事实生效。AI 不代发 `SECURITY-CHANGE-APPROVE`，也不降低门禁或执行不受信 PR 代码。
 3. **检查失败或基线变化：** 停止合并，修复问题或更新 PR 的真实 base/head，重新取得对应 HEAD 的原生检查结果；合并后从新 `master` 验收 Quality、Restore 和 Signed。GitHub 原生 PR、Actions、签名制品即是工程审计凭据，**无需为日常 PR 手工复制一份 SHA/Run ID 账本**。
 
-**一次性管理员配置（不属于每天的任务）：** 保留 `master` 的严格最新基线和两个必需检查。若仓库需要继续使用受信任的 `pull_request_target` 安全审查，在 **2026-12-02** 之前按 [#159](https://github.com/jiying2007/knowledge-hub/issues/159) 确认适用的 Actions Event Policy；仅在确实会被阻断时，为现有 `.github/workflows/security-critical-change-review.yml` 配置最小允许策略。不要为了此事项另外开发 `workflow_run` 替代体系，除非确认不能配置允许规则。
+**一次性管理员配置（非日常任务）：** `master` 的严格最新基线、Quality 与 Security 必需检查维持启用。管理员已报告创建 Active Actions Policy `Allow trusted security review`，只匹配 `.github/workflows/security-critical-change-review.yml`（[#159](https://github.com/jiying2007/knowledge-hub/issues/159)）。无需限制 Policy 的 Allowed events，也不必建立 `workflow_run` 替代系统：该工作流的实际触发器仍由其 YAML 中的 `pull_request_target`、`pull_request_review`、`issue_comment` 决定。Policy 的真实运行效果以**创建后正常 PR** 的 GitHub 原生安全状态为准；事件默认保护的生效日期是 **2026-12-02**。
 
 `Repository Terminal PASS` 只证明仓库工程闭环，不代表 Product、Owner、真实设备或生产采用度 PASS。Operator UI 仍是只读视图，不能执行合并或发布。
 
