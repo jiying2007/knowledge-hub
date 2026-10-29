@@ -111,7 +111,7 @@ def _local_refs(
         # An archived validation_ref can be a CLI invocation, not a file
         # named "<script>.sh --flags". Check only the script's existence;
         # never execute it or claim that its arguments were validated.
-        command = re.match(r"^(tools/[^\\s]+\\.sh)\\s+\\S", value)
+        command = re.match(r"^(tools/[^\s]+\.sh)\s+\S", value)
         reference_path = command.group(1) if command else value
         try:
             path = resolve_inside(root, reference_path)
