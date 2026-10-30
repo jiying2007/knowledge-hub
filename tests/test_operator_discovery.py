@@ -301,6 +301,9 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
                             "provider": "github",
                             "operation": "list-releases-and-tags",
                             "target": "<unsafe>",
+                            "read_only": True,
+                            "executed": False,
+                            "transport_owned_by_provider": True,
                         }
                     ],
                 }

@@ -494,7 +494,8 @@ def test_discovery_counts_agree_with_rows_before_claiming_no_work() -> None:
                 "candidates": [],
                 "provider_queries": [
                     {"provider": "github", "operation": "list-releases-and-tags",
-                     "target": "example/tool", "read_only": True, "executed": False},
+                     "target": "example/tool", "read_only": True, "executed": False,
+                     "transport_owned_by_provider": True},
                 ],
             }
         ],
@@ -532,6 +533,53 @@ def test_discovery_counts_agree_with_rows_before_claiming_no_work() -> None:
         candidate = copy.deepcopy(valid)
         candidate["rows"][0][key] = value
         invalids.append(candidate)
+
+    # A numerically consistent nested row must still be a read-only plan.
+    for key, value in (
+        ("read_only", False),
+        ("executed", True),
+        ("transport_owned_by_provider", False),
+        ("provider", ""),
+        ("operation", []),
+        ("target", ""),
+    ):
+        bad = copy.deepcopy(valid)
+        bad["rows"][0]["provider_queries"][0][key] = value
+        invalids.append(bad)
+
+    local = copy.deepcopy(valid)
+    local["status"] = "candidates-found"
+    local["candidate_found_count"] = 1
+    local["provider_required_count"] = 0
+    local["provider_query_count"] = 0
+    local["rows"][0].update(
+        status="candidate-found",
+        candidate_count=1,
+        provider_query_count=0,
+        provider_queries=[],
+        candidates=[{
+            "kind": "registered-source",
+            "ref": "source://tool",
+            "candidate_only": True,
+            "eligible_for_binding": False,
+        }],
+    )
+    state["discovery"] = local
+    page = operator_ui.render_dashboard(state)
+    assert '<span>Candidates found</span><strong>1</strong>' in page
+    assert "source://tool" in page
+    for key, value in (
+        ("candidate_only", False),
+        ("candidate_only", "true"),
+        ("eligible_for_binding", True),
+        ("eligible_for_binding", 0),
+        ("ref", ""),
+        ("ref", []),
+    ):
+        bad = copy.deepcopy(local)
+        bad["rows"][0]["candidates"][0][key] = value
+        invalids.append(bad)
+
     for rows in ([], [None]):
         candidate = copy.deepcopy(valid)
         candidate["rows"] = rows
