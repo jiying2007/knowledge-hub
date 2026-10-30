@@ -225,6 +225,27 @@ def _discovery_is_consistent(discovery: Mapping[str, Any]) -> bool:
                 or type(candidate_count) is not int or type(query_count) is not int
                 or candidate_count != len(candidates) or query_count != len(queries)):
             return False
+        # Nested projections must preserve the same read-only boundary as
+        # the top-level discovery result, even when counts remain consistent.
+        if any(
+            candidate.get("candidate_only") is not True
+            or candidate.get("eligible_for_binding") is not False
+            or not isinstance(candidate.get("ref"), str)
+            or not candidate["ref"]
+            for candidate in candidates
+        ):
+            return False
+        if any(
+            query.get("read_only") is not True
+            or query.get("executed") is not False
+            or query.get("transport_owned_by_provider") is not True
+            or any(
+                not isinstance(query.get(key), str) or not query[key]
+                for key in ("provider", "operation", "target")
+            )
+            for query in queries
+        ):
+            return False
         if (kind == "candidate-found" and candidate_count == 0
                 or kind == "provider-required" and (candidate_count != 0 or query_count == 0)
                 or kind == "no-candidate" and (candidate_count != 0 or query_count != 0)):
