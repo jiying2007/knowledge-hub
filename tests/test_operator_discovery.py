@@ -209,11 +209,14 @@ def test_unknown_project_is_not_guessed_and_preserves_escalation(
             ]
         },
     )
-    row = result["rows"][0]
-    assert row["status"] == "no-candidate"
-    assert row["candidates"] == []
-    assert row["provider_queries"] == []
-    assert row["escalation_class"] == "human-authorization"
+    assert result["status"] == "unavailable"
+    assert result["rows"] == []
+    assert result["action_count"] == 0
+    assert result["network_performed"] is False
+    assert result["canonical_write_performed"] is False
+    assert result["automatic_binding_enabled"] is False
+    # Do not leak project identifiers into the browser's error category.
+    assert all("unknown:" not in error for error in result["errors"])
 
 
 def test_operator_state_includes_read_only_discovery_projection(
@@ -315,6 +318,61 @@ def test_dashboard_escapes_discovery_provider_query() -> None:
     assert "&lt;unsafe&gt;" in page
     assert "Discovery Queue" in page
     assert "provider-required" in page
+
+
+def test_dangling_project_route_references_are_not_silent_partial_candidates(
+    tmp_path: pathlib.Path,
+) -> None:
+    for index, (field, values) in enumerate((
+        ("repo_refs", ["tool-repo", "no-such-repo"]),
+        ("repo_refs", ["no-such-repo"]),
+        ("repo_refs", [""]),
+        ("default_source_ids", ["tool-source", "no-such-source"]),
+        ("default_source_ids", ["no-such-source"]),
+        ("default_source_ids", [""]),
+    )):
+        root = _fixture_root(tmp_path / str(index))
+        route_path = root / "registry/project-routes.json"
+        payload = json.loads(route_path.read_text(encoding="utf-8"))
+        payload["routes"][0][field] = values
+        _write_json(route_path, payload)
+        before = route_path.read_bytes()
+        result = operator_discovery.build_discovery_projection(
+            root, _action_queue()
+        )
+        assert result["status"] == "unavailable", (field, index)
+        assert result["rows"] == []
+        assert result["action_count"] == 0
+        assert result["candidate_found_count"] == 0
+        assert result["provider_query_count"] == 0
+        assert result["network_performed"] is False
+        assert result["canonical_write_performed"] is False
+        assert result["automatic_binding_enabled"] is False
+        assert result["errors"]
+        assert "no-such-" not in json.dumps(result["errors"])
+        assert route_path.read_bytes() == before
+
+
+def test_valid_route_without_mapped_sources_still_reports_no_candidate(
+    tmp_path: pathlib.Path,
+) -> None:
+    root = _fixture_root(tmp_path)
+    route_path = root / "registry/project-routes.json"
+    payload = json.loads(route_path.read_text(encoding="utf-8"))
+    payload["routes"][0]["repo_refs"] = []
+    payload["routes"][0]["default_source_ids"] = []
+    _write_json(route_path, payload)
+    result = operator_discovery.build_discovery_projection(root, _action_queue())
+    assert result["status"] == "candidates-found"
+    assert result["network_performed"] is False
+    assert result["canonical_write_performed"] is False
+    rows = _by_field(result)
+    for field in ("source_refs", "artifact_refs", "release_ref"):
+        assert rows[field]["status"] == "no-candidate"
+        assert rows[field]["candidates"] == []
+        assert rows[field]["provider_queries"] == []
+    assert rows["validation_refs"]["status"] == "candidate-found"
+
 
 def test_discovery_rejects_malformed_registries_without_guessing(
     tmp_path: pathlib.Path,

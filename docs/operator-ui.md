@@ -154,6 +154,8 @@ Discovery Executor 只处理 `machine-discovery` action，并保持只读：
 
 当 `registry/project-routes.json`、`registry/repositories.json`、`registry/sources.json` 的行形状、身份、route refs 或 remote key 不符合预期，或机器 action 列表损坏时，Discovery 必须返回 `status=unavailable`、空候选并保留脱敏错误类别；不可因丢弃损坏行而将不存在的候选误报为真实零。Operator UI 的 `Candidates found` / `Provider needed` 也显示 `unavailable`，不将无观测当作无工作。该失败不执行网络查询、不写入 Registry、不授权绑定或发布。
 
+对机器 action 引用的未登记项目，以及已登记项目中悬空的 `repo_refs` 或 `default_source_ids`，同样必须整体 fail-closed；即使其它候选仍可找到，也不能静默丢弃缺失引用后报告“找到候选”或“没有候选”。只有**已登记、引用链有效、但确实未配置候选**的项目才可返回 `no-candidate`。错误类别不回显项目/仓库/来源的具体身份，保持只读、无网络和不写入。
+
 即使 Discovery 的顶层 `status` 是已知值，页面仍应交叉核验 `action_count`、`candidate_found_count`、`provider_required_count`、`no_candidate_count`、`provider_query_count` 与实际 `rows`、逐行动候选和 provider query 数量，以及聚合状态的含义。任一计数、类型（布尔值不能冒充整数）、行状态或只读安全标志矛盾时，UI 的候选/Provider 数字和表格全部进入 `unavailable`，不能把无效快照显示为零工作、完成或可自动绑定。此举只加强只读视图，不新增 evaluator、权威状态、外部调用或写权限。
 
 同时，页面逐项校验本地候选必须是 `candidate_only=true`、`eligible_for_binding=false`、
