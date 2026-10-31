@@ -58,9 +58,10 @@ def _repo_rows(
     ):
         raise ValueError("project route repo_refs must be a list of strings")
     for repo_id in repo_refs:
-        row = repositories.get(repo_id)
-        if row is not None:
-            result.append(row)
+        if not repo_id or repo_id not in repositories:
+            # Missing identities are not evidence that no repository exists.
+            raise ValueError("project route has an unresolved repository reference")
+        result.append(repositories[repo_id])
     return result
 
 
@@ -110,8 +111,9 @@ def _source_candidates(
         raise ValueError("project route default_source_ids must be a list of strings")
     for source_id in source_ids:
         source = sources.get(source_id)
-        if source is None:
-            continue
+        if not source_id or source is None:
+            # Do not return a partial source list as candidate-found.
+            raise ValueError("project route has an unresolved source reference")
         candidates.append(
             _candidate(
                 kind="registered-source",
@@ -213,7 +215,10 @@ def _discover_action(
 ) -> Dict[str, Any]:
     project_id = str(action.get("project_id", ""))
     field = str(action.get("field", ""))
-    route = routes.get(project_id, {})
+    if project_id not in routes:
+        # An action for an unregistered project is an input integrity error.
+        raise ValueError("machine discovery action has no registered project route")
+    route = routes[project_id]
     repos = _repo_rows(route, repositories)
     candidates: List[Dict[str, Any]] = []
     if field == "source_refs":
