@@ -19,8 +19,8 @@ source:
   type: manual
   from: target-architecture-implementation-verification
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
-review_after: '2026-10-28'
-review_status: automated-validation-pass-manual-review-pending
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: verified
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-30'
-updated_at: '2026-07-31'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

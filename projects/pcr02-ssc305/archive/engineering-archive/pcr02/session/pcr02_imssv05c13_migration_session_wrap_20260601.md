@@ -26,7 +26,7 @@ User constraints captured during the work:
 | New SDK migration target | `~/Iford_IMSSV05C13` | Git repository initialized and used for ordered commits. |
 | Current product source | `~/pcr02_ssc305_compile` | Effective product behavior source. |
 | Older vendor baseline | `~/Iford_IMD00V5.1.1_20250529` | Historical comparison source. |
-| Nested app library repo | `~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo` | Has a local app/library rebuild commit. |
+| Nested app library repo | `~/Iford_IMSSV05C13/SourceCode/sdk/verify/gros` | Has a local app/library rebuild commit. |
 
 ## Commits Produced in Target SDK
 
@@ -191,8 +191,8 @@ Recommended starting checks:
 ```bash
 rtk git -C ~/Iford_IMSSV05C13 log --oneline -14
 rtk git -C ~/Iford_IMSSV05C13 status --short
-rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo log --oneline -3
-rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/xcrz_sigmastar_demo status --short
+rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/gros log --oneline -3
+rtk git -C ~/Iford_IMSSV05C13/SourceCode/sdk/verify/gros status --short
 ```
 
 Recommended host-side preparation before board validation:

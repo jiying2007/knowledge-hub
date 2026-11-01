@@ -16,8 +16,8 @@ source:
   type: source-project-session-summary
   from: workspace://gd32l235/Docs/会话归档-GD32L235-SOC心跳重启OTA闭环-20260617.md
   source_sha256: 2eb82cf9cf8b933002a687bbcaf094a0e75efeb67593f7ba4b3ac5cabccf1ad2
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/session/2026-06-17-soc-heartbeat-reboot-ota-closure-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex
@@ -47,6 +47,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # 会话归档：GD32L235 与 SOC 心跳、重启、OTA 闭环
@@ -61,7 +62,7 @@ terminology_status: pending-review
 ## 元信息
 
 - Captured at: 2026-06-17 15:06:46 +0800
-- Scope: 当前会话，覆盖 `gd32l235` MCU、`xcrz_sigmastar_demo` SOC 应用、`modules/sensor`、`modules/app`、`app_main`、`app_ota` 的心跳状态同步、SOC reboot、OTA reboot handoff 与 PA8 boot guard 闭环。
+- Scope: 当前会话，覆盖 `gd32l235` MCU、`gros` SOC 应用、`modules/sensor`、`modules/app`、`app_main`、`app_ota` 的心跳状态同步、SOC reboot、OTA reboot handoff 与 PA8 boot guard 闭环。
 - Source: 当前会话中的方案设计、代码落地、协议审计、残留扫描、构建验证和最终闭环复核。
 - Sanitization: 已去除长工具输出和无关工作区噪声；仅保留可复用决策、文件路径、验证命令、风险边界和候选记忆。
 
@@ -209,8 +210,8 @@ terminology_status: pending-review
 |---|---|---|---|---|---|
 | project:gd32l235+pcr02 | PCR02 的 SOC/MCU heartbeat 终态为 4B 不兼容协议：`seq, endpoint_state, status_bitmap, reset_or_reboot_reason`；版本号不走心跳，改由版本查询命令获取。 | `workspace://gd32l235/Docs/串口通信协议规范.md`、本归档验证记录 | medium | high | 项目归档；如需长期规则，人工确认后写项目 AGENTS |
 | project:gd32l235 | MCU 只接受 role=SOC 的 4B heartbeat 来更新 `Soc_Boot_Guard_Flag`；boot guard 期间只抑制 WIFI/IMU/TOF 触发 PA8，不把 `Wakeup_Soc_Flag` 等同为外设唤醒。 | `App/protocol_handlers/system_handler.c`、`App/bsp.c` | medium | high | 项目归档或项目 memory candidate |
-| project:xcrz_sigmastar_demo | SOC 进入 `REBOOTING` 后必须有恢复闭环：reboot 成功由重启后 `BOOTING -> APP_READY` 闭环；reboot 命令失败且进程存活时必须恢复 `APP_READY`。 | `modules/sensor/main/sensor_entry.cpp`、`app_ota/app_ota.c` | medium | high | 项目归档 |
-| project:xcrz_sigmastar_demo | OTA 脚本不可修改时，app_ota 的边界是 handoff 前通知 MCU、失败分支恢复 APP_READY；脚本 0 返回后的实际 reboot 是外部集成契约。 | 用户约束“ota脚本不能修改，默认接管成功”、`app_ota/app_ota.c` | high | high | archive-only，避免误提升为通用规则 |
+| project:gros | SOC 进入 `REBOOTING` 后必须有恢复闭环：reboot 成功由重启后 `BOOTING -> APP_READY` 闭环；reboot 命令失败且进程存活时必须恢复 `APP_READY`。 | `modules/sensor/main/sensor_entry.cpp`、`app_ota/app_ota.c` | medium | high | 项目归档 |
+| project:gros | OTA 脚本不可修改时，app_ota 的边界是 handoff 前通知 MCU、失败分支恢复 APP_READY；脚本 0 返回后的实际 reboot 是外部集成契约。 | 用户约束“ota脚本不能修改，默认接管成功”、`app_ota/app_ota.c` | high | high | archive-only，避免误提升为通用规则 |
 | workflow:multi-repo | 本项目同时涉及 MCU 仓库和 Sigmastar 仓库；Sigmastar 的 `modules/app`、`modules/sensor` 被 `.gitignore` 忽略，提交/打包前必须用显式路径和 `check-ignore` 复核。 | 本会话 `git status`、`check-ignore` 结果 | low | high | workflow memory candidate |
 
 ## Gate Result

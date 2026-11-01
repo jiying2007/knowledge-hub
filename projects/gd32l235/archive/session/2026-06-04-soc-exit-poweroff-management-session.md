@@ -17,8 +17,8 @@ source:
   type: source-project-session-summary
   from: workspace://gd32l235/Docs/会话归档-GD32L235-SOC退出掉电管理-20260604.md
   source_sha256: 656ae32b124ff3348279f6b820a3587ae39fa7c7cdb38aeac5673117d22079eb
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/gd32l235/archive/session/2026-06-04-soc-exit-poweroff-management-session.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex
@@ -48,6 +48,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # 会话归档：GD32L235 与 SOC 退出/休眠/掉电管理
@@ -62,7 +63,7 @@ terminology_status: pending-review
 ## 元信息
 
 - Captured at: 2026-06-04
-- Scope: 当前会话，覆盖 `gd32l235` MCU、`xcrz_sigmastar_demo` SOC 主应用、`modules/sensor` 串口桥接、`modules/app` 串口协议扩展。
+- Scope: 当前会话，覆盖 `gd32l235` MCU、`gros` SOC 主应用、`modules/sensor` 串口桥接、`modules/app` 串口协议扩展。
 - Source: 当前会话中的设计讨论、日志诊断、代码落地和定向验证结果。
 - Sanitization: 已去除长原始日志，仅保留可复用结论、文件路径、关键协议状态和验证证据。
 
@@ -175,7 +176,7 @@ terminology_status: pending-review
 | Scope | Candidate | Evidence | Risk | Confidence | Write Route |
 |---|---|---|---|---|---|
 | project:gd32l235 | GD32L235 的 SOC 退出管理以 `COMMAND_SENT -> SOC_CONFIRMED/CANCELLED/timeout -> settle -> PA8/PA15` 为统一框架；PA8 只做 SOC 唤醒/休眠，PA15 控制 SoC 独立供电。 | 本会话设计与 `projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md`；原“整机保持”表述已被后续硬件复核取代 | medium | high | archive-only；当前事实回到源码与当前契约候选核验 |
-| project:pcr02_soc | SOC 应用 `xcrz_sigmastar_demo` 的 shutdown confirmed 不能在串口回调早确认，必须在关键模块退出、flush、sync 后发送；外部信号退出不回 confirmed。 | 本会话 SOC 侧实现和日志诊断 | medium | high | 项目归档 |
+| project:pcr02_soc | SOC 应用 `gros` 的 shutdown confirmed 不能在串口回调早确认，必须在关键模块退出、flush、sync 后发送；外部信号退出不回 confirmed。 | 本会话 SOC 侧实现和日志诊断 | medium | high | 项目归档 |
 | lesson:embedded-shutdown | 机械拨动开关类关机必须把硬件输入作为最终裁决，并支持取消旧请求；软件 confirmed 只能加速流程，不能替代最终硬件复核。 | PA11 快速拨动导致旧请求继续 shutdown 的排障 | medium | high | archive-only 或 lesson memory |
 | workflow:multi-repo | PCR02 项目中 `modules/sensor`、`modules/app` 与 SOC 主仓是独立仓库，提交和验证必须分仓处理，避免遗漏或误纳入无关脏文件。 | 本会话多仓状态检查 | low | high | project memory candidate |
 

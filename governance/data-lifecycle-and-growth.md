@@ -15,13 +15,16 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-18'
-review_status: manual-entry-pending-review
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 aliases:
 - Knowledge Hub 长期数据生命周期与增长策略
 related:
 - indexes/obsidian-home.md
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: pending
 ---
 
 # 长期数据生命周期与增长策略

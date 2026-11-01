@@ -7,6 +7,8 @@ import os
 import pathlib
 import re
 import sqlite3
+import json
+from types import MappingProxyType
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 import yaml
@@ -176,8 +178,12 @@ def _item_is_default_searchable(item: Mapping[str, Any]) -> bool:
 def _governed_items_by_path(
     root: pathlib.Path,
 ) -> Dict[str, List[Dict[str, Any]]]:
+    return _governed_items_from_rows(registry_items(root))
+
+
+def _governed_items_from_rows(rows: Sequence[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
     result: Dict[str, List[Dict[str, Any]]] = {}
-    for item in registry_items(root):
+    for item in rows:
         if not _item_is_default_searchable(item):
             continue
         try:
@@ -197,11 +203,38 @@ def _governed_items_by_path(
     return result
 
 
+def _registry_rows_from_bytes(root: pathlib.Path, raw: bytes) -> List[Dict[str, Any]]:
+    """Parse the exact captured bytes using the existing JSONL row contract."""
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeDecodeError as exc:
+        raise KnowledgeHubError('JSONL file must be valid UTF-8') from exc
+    path = root / 'registry/items.jsonl'
+    rows = []
+    for line_no, line in enumerate(text.splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise KnowledgeHubError('invalid JSONL {}:{}: {}'.format(path, line_no, exc)) from exc
+        if not isinstance(value, dict):
+            raise KnowledgeHubError('JSONL row must be an object: {}:{}'.format(path, line_no))
+        rows.append(value)
+    return rows
+
+
+def _governed_paths_from_bytes(root: pathlib.Path, raw: bytes) -> Mapping[str, Sequence[Mapping[str, Any]]]:
+    governed = _governed_items_from_rows(_registry_rows_from_bytes(root, raw))
+    # Signature enumeration consumes only keys. Never retain or expose mutable metadata.
+    return MappingProxyType({relative: () for relative in governed})
+
+
 def _registered_text_file_records(
     root: pathlib.Path,
     items_by_path: Optional[Mapping[str, Sequence[Mapping[str, Any]]]] = None,
 ) -> List[Tuple[pathlib.Path, str, os.stat_result]]:
-    governed = items_by_path or _governed_items_by_path(root)
+    governed = items_by_path if items_by_path is not None else _governed_items_by_path(root)
     records: List[Tuple[pathlib.Path, str, os.stat_result]] = []
     for relative in sorted(governed):
         path = root / relative
@@ -600,12 +633,21 @@ def _physical_sources(path: pathlib.Path, roots: Sequence[Tuple[str, pathlib.Pat
     return result
 
 
+def _file_identity(file_stat: os.stat_result) -> Tuple[int, int, int, int, int]:
+    return (file_stat.st_size, file_stat.st_mtime_ns, file_stat.st_ctime_ns,
+            file_stat.st_dev, file_stat.st_ino)
+
+
 def _signature(
     root: pathlib.Path,
     previous_states: Optional[Mapping[str, FileState]] = None,
     stats: Optional[Dict[str, int]] = None,
+    prepared_items_by_path: Optional[Mapping[str, Sequence[Mapping[str, Any]]]] = None,
+    prepared_registry_sha256: Optional[str] = None,
 ) -> Tuple[str, List[pathlib.Path], Dict[str, FileState]]:
-    items_by_path = _governed_items_by_path(root)
+    if (prepared_items_by_path is None) != (prepared_registry_sha256 is None):
+        raise SearchBoundaryError('prepared registry signature is incomplete')
+    items_by_path = prepared_items_by_path if prepared_items_by_path is not None else _governed_items_by_path(root)
     document_records = _registered_text_file_records(root, items_by_path)
     paths = [path for path, _, _ in document_records]
     records_by_relative = {
@@ -652,13 +694,7 @@ def _signature(
                     SEARCH_MAX_TOTAL_BYTES
                 )
             )
-        identity = (
-            file_stat.st_size,
-            file_stat.st_mtime_ns,
-            file_stat.st_ctime_ns,
-            file_stat.st_dev,
-            file_stat.st_ino,
-        )
+        identity = _file_identity(file_stat)
         previous = (previous_states or {}).get(relative)
         if (
             previous is not None
@@ -685,20 +721,8 @@ def _signature(
                 verification_stat = (root / relative).lstat()
             except (KnowledgeHubError, OSError) as exc:
                 raise SearchBoundaryError(str(exc)) from exc
-            post_read_identity = (
-                post_read_stat.st_size,
-                post_read_stat.st_mtime_ns,
-                post_read_stat.st_ctime_ns,
-                post_read_stat.st_dev,
-                post_read_stat.st_ino,
-            )
-            verification_identity = (
-                verification_stat.st_size,
-                verification_stat.st_mtime_ns,
-                verification_stat.st_ctime_ns,
-                verification_stat.st_dev,
-                verification_stat.st_ino,
-            )
+            post_read_identity = _file_identity(post_read_stat)
+            verification_identity = _file_identity(verification_stat)
             if (
                 post_read_identity != identity
                 or verification_identity != identity
@@ -714,6 +738,9 @@ def _signature(
         digest.update(b"\0")
         digest.update(content_sha256.encode("ascii"))
         digest.update(b"\n")
+    if (prepared_registry_sha256 is not None
+            and file_states['registry/items.jsonl'][5] != prepared_registry_sha256):
+        raise SearchBoundaryError('search registry changed during signature preparation')
     if stats is not None:
         stats.update(
             {

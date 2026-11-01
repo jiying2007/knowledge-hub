@@ -6,6 +6,7 @@ from tools.codex_assets.knowledge_hub import link_audit
 from tools.codex_assets.knowledge_hub.common import (
     KnowledgeHubError,
     project_rows,
+    registry_items,
     repository_root,
 )
 from tools.codex_assets.knowledge_hub.link_audit import audit_links, link_audit_summary
@@ -101,9 +102,22 @@ def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, mon
 
 
 def test_repository_readiness_links_and_bases_are_valid():
-    payload = audit_links(repository_root())
+    root = repository_root()
+    payload = audit_links(root)
     assert payload["status"] == "pass"
-    assert payload["readiness_document_count"] == len(project_rows(repository_root()))
+    projects = project_rows(root)
+    canonical_paths = {str(project["validation"]).rstrip("/") + "/project-readiness.md" for project in projects}
+    assert len(canonical_paths) == len(projects)
+    readiness = [row for row in registry_items(root) if row.get("readiness_slot") == "validation"]
+    actual_paths = {row["path"] for row in readiness}
+    assert canonical_paths <= actual_paths
+    historical = [row for row in readiness if row["path"] not in canonical_paths]
+    assert [(row["id"], row["path"]) for row in historical] == [
+        ("gros-readiness-validation-20261015", "projects/gros/archive/registration/knowledge-project-readiness.md")
+    ]
+    assert actual_paths == canonical_paths | {historical[0]["path"]}
+    assert all((root / path).is_file() for path in actual_paths)
+    assert payload["readiness_document_count"] == len(actual_paths)
     assert payload["readiness_without_inbound_count"] == 0
     assert payload["base_failure_count"] == 0
     assert payload["managed_frontmatter_coverage_percent"] == 100.0

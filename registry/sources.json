@@ -11,10 +11,19 @@
       "write_policy": "runtime-read-only-input",
       "source_strategy": "runtime-input-no-copy-no-memory-write",
       "owner": "leiwenjun",
-      "review_after": "2026-09-20",
+      "review_after": "2026-11-30",
       "check": "rtk test -d sources/codex-memories",
       "final_disposition": "runtime-input-reference-only",
-      "canonical_target": "sources/codex-memories"
+      "canonical_target": "sources/codex-memories",
+      "registration_review": {
+        "reviewed_at": "2026-10-31",
+        "performed_by": "Codex",
+        "scope": "source-registration-contract-only",
+        "previous_review_after": "2026-09-20",
+        "evidence_ref": "governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md",
+        "source_content_reviewed": false,
+        "owner_approval_performed": false
+      }
     },
     {
       "id": "codex-history",
@@ -26,10 +35,19 @@
       "write_policy": "runtime-read-only-input",
       "source_strategy": "runtime-input-index-summary-only",
       "owner": "leiwenjun",
-      "review_after": "2026-09-24",
+      "review_after": "2026-11-30",
       "check": "rtk test -d sources/codex-history",
       "final_disposition": "runtime-input-reference-only",
-      "canonical_target": "sources/codex-history"
+      "canonical_target": "sources/codex-history",
+      "registration_review": {
+        "reviewed_at": "2026-10-31",
+        "performed_by": "Codex",
+        "scope": "source-registration-contract-only",
+        "previous_review_after": "2026-09-24",
+        "evidence_ref": "governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md",
+        "source_content_reviewed": false,
+        "owner_approval_performed": false
+      }
     },
     {
       "id": "codex-raw-sessions",
@@ -41,10 +59,19 @@
       "write_policy": "runtime-read-only-input",
       "source_strategy": "runtime-input-reference-summary-only",
       "owner": "leiwenjun",
-      "review_after": "2026-09-24",
+      "review_after": "2026-11-30",
       "check": "rtk test -d sources/codex-raw-sessions",
       "final_disposition": "runtime-input-reference-only",
-      "canonical_target": "sources/codex-raw-sessions"
+      "canonical_target": "sources/codex-raw-sessions",
+      "registration_review": {
+        "reviewed_at": "2026-10-31",
+        "performed_by": "Codex",
+        "scope": "source-registration-contract-only",
+        "previous_review_after": "2026-09-24",
+        "evidence_ref": "governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md",
+        "source_content_reviewed": false,
+        "owner_approval_performed": false
+      }
     },
     {
       "id": "codex-session-index",
@@ -56,10 +83,19 @@
       "write_policy": "runtime-read-only-input",
       "source_strategy": "runtime-input-index-primary",
       "owner": "leiwenjun",
-      "review_after": "2026-09-24",
+      "review_after": "2026-11-30",
       "check": "rtk test -d sources/codex-session-index",
       "final_disposition": "runtime-input-reference-only",
-      "canonical_target": "sources/codex-session-index"
+      "canonical_target": "sources/codex-session-index",
+      "registration_review": {
+        "reviewed_at": "2026-10-31",
+        "performed_by": "Codex",
+        "scope": "source-registration-contract-only",
+        "previous_review_after": "2026-09-24",
+        "evidence_ref": "governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md",
+        "source_content_reviewed": false,
+        "owner_approval_performed": false
+      }
     },
     {
       "id": "knowledge-hub-automation-runs",
@@ -71,10 +107,19 @@
       "write_policy": "hub-native-registry",
       "source_strategy": "hub-native-automation-run-ledger",
       "owner": "leiwenjun",
-      "review_after": "2026-09-24",
+      "review_after": "2026-11-30",
       "check": "rtk test -d sources/knowledge-hub-automation-runs",
       "final_disposition": "hub-native-source",
-      "canonical_target": "registry/automation-runs.jsonl"
+      "canonical_target": "registry/automation-runs.jsonl",
+      "registration_review": {
+        "reviewed_at": "2026-10-31",
+        "performed_by": "Codex",
+        "scope": "source-registration-contract-only",
+        "previous_review_after": "2026-09-24",
+        "evidence_ref": "governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md",
+        "source_content_reviewed": false,
+        "owner_approval_performed": false
+      }
     }
   ]
 }

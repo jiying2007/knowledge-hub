@@ -23,8 +23,8 @@
 
 - [PCR02 项目入口](../projects/pcr02-ssc305/README.md)
 - [第三方库编译优化基线](../projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md)
-- [项目构建与部署指导](../projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md)
-- [终端发布验证记录](../projects/xcrz-sigmastar-demo/validation/reports/2026-05-14-prog-tool-terminal-release-report.md)
+- [项目构建与部署指导](../projects/gros/archive/historical-current/runbooks/project-build-and-deploy-guide.md)
+- [终端发布验证记录](../projects/gros/validation/reports/2026-05-14-prog-tool-terminal-release-report.md)
 - [历史归档入口](../projects/pcr02-ssc305/archive/README.md)
 - [ST77912 SPI/FPS 决策候选](../projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md)
 - [ST77912 framebuffer 边界候选](../projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md)
@@ -33,7 +33,7 @@
 ## 跨项目知识
 
 - [嵌入式 ASAN 调试方法论](../domains/embedded/runbooks/asan-debug-guide.md)
-- [ST77912 双屏 CPU 实机排查](../projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md)
+- [ST77912 双屏 CPU 实机排查](../projects/gros/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md)
 - [Knowledge Hub 长期维护计划](../governance/ultimate-maintenance-plan.md)
 - [Codex archive 边界](../domains/codex/archive/codex-archive.ref.md)
 - [专利附件引用边界](../domains/patents/artifacts/patent-disclosure-artifacts.ref.md)

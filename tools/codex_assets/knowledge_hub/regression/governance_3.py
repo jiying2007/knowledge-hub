@@ -76,7 +76,7 @@ def test_owner_archive_only_explicit_path_contract():
     if setup_error:
         expect(False, "owner-archive-only-explicit-path-contract", "owner archive-only forms can target explicit archive paths", setup_error, repo)
         return
-    archive_target = "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
+    archive_target = "projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
     form["owner_decision"] = "archive-only"
     form["target_decision"] = archive_target
     form_path = repo / "archive-owner-decisions.jsonl"

@@ -33,9 +33,9 @@ source:
   - https://obsidian.md/help/bases/syntax
   - https://obsidian.md/help/cli
   - https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: verified
 promotion: none
 promotion_decision: none; local presentation integration only, no active promotion, no owner decision and no external publish
@@ -73,7 +73,7 @@ evidence_refs:
 - https://help.obsidian.md/Obsidian%20Sync/Security%20and%20privacy
 - https://github.com/obsidianmd/obsidian-help
 created_at: '2026-07-13'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -84,6 +84,7 @@ primary_language: zh-CN
 source_language: en
 translation_status: summarized-zh
 terminology_status: reviewed
+manual_validation_pending: true
 ---
 
 # Knowledge Hub Obsidian 集成边界

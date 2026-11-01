@@ -19,8 +19,8 @@ source:
   from: llm_agent-repository
   source_sha256: e8ffc2ea1ebc9d2c7d97b5e78fc1f7ce69009bb76ec774bb63b061ea22ce9bb8
   temporary_source_retained: false
-review_after: '2026-10-23'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -48,6 +48,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # github/spec-kit 长期跟踪落地记录

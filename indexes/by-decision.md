@@ -4,14 +4,14 @@
 - `automation-report-only-default`: Knowledge Hub 自动化默认 `report-only`，不得自动删除、发布、提交、提升、关闭 owner gate 或写 memory。
 - `pcr02-owner-decision-worksheet-001`: PCR02 docs `AGENTS.md` 已由 2026-06-23 landing 确认为 `reference-only`；源项目本地 Codex 运行规则继续由源项目管理，Hub 不复制正文。
 - `pcr02-owner-decision-worksheet-002`: PCR02 diag command metadata 已由 2026-06-23 landing 确认为 `reference-only`；不提升为 `domains/embedded/standards/`。
-- `pcr02-owner-decision-worksheet-003`: ASAN runbook 已由 2026-06-23 landing 确认为 `split-approved`；项目内目标为 `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`。
+- `pcr02-owner-decision-worksheet-003`: ASAN runbook 已由 2026-06-23 landing 确认为 `split-approved`；项目内目标为 `projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`。
 - `embedded-asan-active-promotion-20260629`: 团队级 ASAN runbook 已由 2026-06-29 用户授权提升为 `active`；目标为 `domains/embedded/runbooks/asan-debug-guide.md`，不提升到 `domains/embedded/standards/`，不修改源项目，不写 memory。
 - `pcr02-owner-decision-worksheet-004`: memory auto-curation 已由 2026-06-23 landing 确认为 `teamized-report-only`；保持 no-memory-write 和 report-only 边界。
-- `pcr02-owner-decision-worksheet-005`: DVR proto/sensor 解耦计划已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
-- `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
-- `pcr02-owner-decision-worksheet-007`: DVR record/replay session archive 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`。
+- `pcr02-owner-decision-worksheet-005`: DVR proto/sensor 解耦计划已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
+- `pcr02-owner-decision-worksheet-006`: motor MCU debug record 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`。
+- `pcr02-owner-decision-worksheet-007`: DVR record/replay session archive 已由 2026-06-23 landing 确认为 `archive-only`；目标为 `projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`。
 - `pcr02-project-docs-owner-decision-landing-20260623`: PCR02 project docs 7 条 owner gate 已按人工授权落地；证据：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。决策边界为 AGENTS/diag `reference-only`、ASAN `split-approved`、memory auto-curation `teamized-report-only`、DVR plan/motor MCU/DVR session archive `archive-only`；不复制源项目正文、不提升到 embedded standards、不写 memory。
-- `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`: PCR02 camera RAW_PREVIEW 虚拟流架构 decision candidate；证据：`projects/xcrz-sigmastar-demo/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`；仅归档架构候选和实现边界，不生成 owner decision、不声明 release、不提升 active。
+- `pcr02-camera-raw-preview-virtual-stream-architecture-20260711`: PCR02 camera RAW_PREVIEW 虚拟流架构 decision candidate；证据：`projects/gros/decisions/camera-raw-preview-virtual-stream-architecture-20260711.md`；仅归档架构候选和实现边界，不生成 owner decision、不声明 release、不提升 active。
 - `pcr02-st77912-dual-screen-spi-clock-fps-decision-20260711`: PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍 decision candidate；证据：`projects/pcr02-ssc305/decisions/st77912-dual-screen-spi-clock-fps-decision-20260711.md`；需要高温老化、示波器和实机动画验证后才能提升 active。
 - `pcr02-st77912-fb-mi-fb-boundary-decision-20260711`: PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界 decision candidate；证据：`projects/pcr02-ssc305/decisions/st77912-fb-mi-fb-boundary-decision-20260711.md`；需要 owner review 和固件变更后的目标设备复核后才能提升 active。
 - `pcr02-owner-ready-validation-paths-20260713`: PCR02 owner-ready 候选真实验证路径；证据：`artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md`；只定义 owner/实机/发布验证路径，不生成 owner decision、不声明实机通过、不提升 active。
@@ -85,10 +85,10 @@
 - `knowledge-hub-user-path-boundary-20260624`: Knowledge Hub 持久文本和核心只读工具输出统一使用 `~` 用户路径形式；工具内部只在运行时展开真实路径做只读检查；证据：`artifacts/manifests/knowledge-hub-user-path-boundary-20260624.md`。
 - `knowledge-hub-canonical-registry-boundary-20260624`: topic registry、retention rules 和当前治理说明统一使用 `projects/` 与 `notes/personal/`；旧项目/个人目录只保留为历史证据或 provenance record；证据：`artifacts/manifests/knowledge-hub-canonical-registry-boundary-20260624.md`。
 - `knowledge-hub-source-control-unification-20260624`: 18 个 registered source 已建立 Hub 内 sources/<source_id>/ 主控目录，PCR02 owner decision landing 产出的 4 个实际正文目标已落地；证据：`artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`。
-- `pcr02-owner-decision-worksheet-003 output`: ASAN split-approved 项目内目标：`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`；不得整篇提升团队标准。
-- `pcr02-owner-decision-worksheet-005 output`: DVR proto/sensor 解耦计划 archive-only 目标：`projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`；不声明 completed。
-- `pcr02-owner-decision-worksheet-006 output`: motor MCU debug record archive-only 目标：`projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`；不提升验证结论。
-- `pcr02-owner-decision-worksheet-007 output`: DVR record/replay session archive-only 目标：`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`；memory candidates 不写 memory、不进 active facts。
+- `pcr02-owner-decision-worksheet-003 output`: ASAN split-approved 项目内目标：`projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`；不得整篇提升团队标准。
+- `pcr02-owner-decision-worksheet-005 output`: DVR proto/sensor 解耦计划 archive-only 目标：`projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`；不声明 completed。
+- `pcr02-owner-decision-worksheet-006 output`: motor MCU debug record archive-only 目标：`projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`；不提升验证结论。
+- `pcr02-owner-decision-worksheet-007 output`: DVR record/replay session archive-only 目标：`projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`；memory candidates 不写 memory、不进 active facts。
 - `knowledge-hub-archived-summary-full-closeout-20260711`: archived summary_zh 全量缺口收口；证据：`artifacts/manifests/knowledge-hub-archived-summary-full-closeout-20260711.md`；只补 registry 可读摘要，不改变 archived 状态、不生成 owner decision、不提升 active、不写 memory。
 - `knowledge-hub-p1-p2-maintenance-hardening-20260711`: P1/P2 维护增强收口；证据：`artifacts/manifests/knowledge-hub-p1-p2-maintenance-hardening-20260711.md`；补 summary backfill 回归、20 条 archived 摘要抽样审计、15 条 reviewing triage、health dashboard 和 review_after/性能运营节奏，不生成 owner decision、不提升 active、不写 memory。
 - `knowledge-hub-p1-p2-p3-optimization-closeout-20260711`: P1/P2/P3 优化闭环；证据：`artifacts/manifests/knowledge-hub-p1-p2-p3-optimization-closeout-20260711.md`；3 条 PCR02 decision candidate 进入 owner-ready-validation-pending，2 条 EVT2 source-audit 进入 evidence-backed-validation-pending，并优化 regression fixture 与运营状态页表达，不生成 owner decision、不提升 active、不写 memory。

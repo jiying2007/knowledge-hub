@@ -12,8 +12,8 @@ source:
   type: repository-evidence
   from: llm_agent architecture and RC4 verification evidence at 2026-07-19
   source_sha256: e3dabf8e5808c9eb6bd6a30740bbd8080ec2246f9ed815c7058678dcbaaac360
-review_after: '2026-10-19'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -33,7 +33,7 @@ evidence_refs:
 - domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-19'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -45,6 +45,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # 多源外部实践 Intake 终态架构

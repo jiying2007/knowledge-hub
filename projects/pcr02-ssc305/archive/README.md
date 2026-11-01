@@ -6,7 +6,7 @@
 
 - 工程归档主题索引：`projects/pcr02-ssc305/archive/engineering-archive/pcr02/README.md`
 - 来源审计：`projects/pcr02-ssc305/archive/source-audit/`
-- 应用、诊断、媒体、显示应用层、模块联调和会话证据：`projects/xcrz-sigmastar-demo/archive/`
+- 应用、诊断、媒体、显示应用层、模块联调和会话证据：`projects/gros/archive/`
 
 ## 归档主题路径
 
@@ -17,7 +17,7 @@
 
 ## 使用边界
 
-- 新增正文必须符合本项目边界，并同步 registry/index；应用侧材料直接进入 `projects/xcrz-sigmastar-demo/`，不在本目录复制。
+- 新增正文必须符合本项目边界，并同步 registry/index；应用侧材料直接进入 `projects/gros/`，不在本目录复制。
 - 源项目当前 `AGENTS.md`、源码、动态分支和构建状态仍由源项目 Git 管理。
 - 不能把 archive 中的阶段性结论直接提升为 `current/` 事实；需要先补证据、owner 或验证记录。
 - `pcr02` 只作为产品组 ID，不是本目录之外的备用正文入口。

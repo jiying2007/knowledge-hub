@@ -13,8 +13,8 @@ source:
   from: workspace://gd32l235 commit db7ccc5ccaa60abd6c695052abebe29ae8d90bd8 plus local validation captured 2026-07-30
   source_sha256: ea6ee6445eb989b4797fbe18834838827810afb44d27731f37de520caa55acdd
   temporary_source_retained: false
-review_after: '2026-08-30'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-30'
-updated_at: '2026-07-30'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

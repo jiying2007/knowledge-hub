@@ -3,6 +3,14 @@ aliases:
 - 默认配置与执行日志修复交付应用闭环
 related:
 - indexes/obsidian-home.md
+subject_ref:
+  id: codex
+  type: project
+created_subject_ref:
+  id: codex
+  type: project
+principal_id: null
+provider_operation_id: f8fab5f7ef5796515f38916982392bf03277555c452d23522ed7bfe0335efa21
 id: provider-codex-f8fab5f7ef5796515f389169
 title: 默认配置与执行日志修复交付应用闭环
 kind: validation
@@ -18,7 +26,7 @@ source:
   source_sha256: dbe7b3baa871ca259569876bd1f67b13dd080fdc3b3b8050e7021f98f262502c
   temporary_source_retained: false
 review_after: '2027-01-06'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -45,12 +53,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: codex
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: f8fab5f7ef5796515f38916982392bf03277555c452d23522ed7bfe0335efa21
 ---
 
 # 默认配置与执行日志修复交付应用闭环

@@ -13,8 +13,8 @@ source:
   from: 2026-07-28 Codex session, local Git/source inspection, sanitized serial evidence and build artifact inspection
   source_sha256: b1208109ea68c684ad21f4c04a5dc7a543913985f870dc2d940f52c3835787c3
   temporary_source_retained: false
-review_after: '2026-10-28'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +34,7 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-07-28-wifi-wake-shadow-validation.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-28'
-updated_at: '2026-07-28'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

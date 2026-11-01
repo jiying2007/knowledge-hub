@@ -53,7 +53,7 @@ def test_orphan_files_advisory_contract():
         ],
     )
     registered_rel = (
-        "projects/xcrz-sigmastar-demo/archive/debug/"
+        "projects/gros/archive/debug/"
         "registered-regression-fixture.md"
     )
     registered_path = repo / registered_rel
@@ -85,7 +85,7 @@ def test_orphan_files_advisory_contract():
             "20",
         ],
     )
-    orphan_rel = "projects/xcrz-sigmastar-demo/archive/debug/orphan-regression-fixture.md"
+    orphan_rel = "projects/gros/archive/debug/orphan-regression-fixture.md"
     orphan_path = repo / orphan_rel
     orphan_path.parent.mkdir(parents=True, exist_ok=True)
     orphan_path.write_text("# Orphan regression fixture\n\nThis file intentionally has no registry item.\n")

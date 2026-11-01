@@ -1,4 +1,8 @@
 ---
+aliases:
+- ADK 与 Codex 四仓来源和运行资产门禁验证
+related:
+- indexes/obsidian-home.md
 id: adk-four-repo-source-live-validation-20260927
 title: ADK 与 Codex 四仓来源和运行资产门禁验证
 kind: validation
@@ -12,8 +16,8 @@ source:
   type: workspace-report
   from: workspace://llm-agent/reports/adk-four-repo-closure-2026-09-27.md
   source_sha256: a99c6dfd6c7f013d31fb98e809b4a096f4e32b3f7b2256102a8511522cecf3c0
-review_after: '2026-10-04'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -30,7 +34,7 @@ evidence_refs:
 - domains/codex/validation/adk-four-repo-source-live-2026-09-27.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-09-27'
-updated_at: '2026-09-27'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -41,10 +45,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK 与 Codex 四仓来源和运行资产门禁验证
-related:
-- indexes/obsidian-home.md
 ---
 
 # ADK、Codex 与 Knowledge Hub 四仓交付检查点

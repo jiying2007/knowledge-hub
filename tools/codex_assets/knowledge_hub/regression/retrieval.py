@@ -121,7 +121,7 @@ def test_knowledge_search_structured_filters():
 
 def test_knowledge_search_structured_filters_exclude_unregistered_raw():
     repo = copy_repo("knowledge-search-structured-filter-excludes-unregistered-raw")
-    raw_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "unregistered-diag-raw-fixture.md"
+    raw_path = repo / "projects" / "gros" / "current" / "unregistered-diag-raw-fixture.md"
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     raw_path.write_text(
         "# Unregistered diag raw fixture\n\n"

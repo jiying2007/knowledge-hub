@@ -21,7 +21,7 @@ source:
   from: 2026-08-28 板端 ADB 分层取证、SysRq 任务栈与本地 SDK 源码审计；原始设备日志不归档。
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-11-26'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none

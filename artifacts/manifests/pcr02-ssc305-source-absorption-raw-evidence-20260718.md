@@ -21,7 +21,7 @@ tags:
 - source-absorption
 - provenance
 related:
-- projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md
+- projects/gros/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md
 - sources/embedded-knowledge/coverage.md
 - sources/pcr02-project-knowledge/coverage.md
 validation_refs:
@@ -34,7 +34,7 @@ artifact_refs:
 - /tmp/xcrz-demo-dev-docs-knowledge-scratch-20260718.tar.gz
 target_version: cadbf4d6777319c8d43b15f842cbea002cd94cef
 test_environment: host-side Git and filesystem audit; no device validation
-summary_zh: 核验并吸收 xcrz_sigmastar_demo_dev/knowledge 嵌套仓：178 个非缓存文件由远端 origin/main=cadbf4d 精确保留，7 篇 SSC305 方法提炼为项目候选，13 个 pyc
+summary_zh: 核验并吸收 gros/knowledge 嵌套仓：178 个非缓存文件由远端 origin/main=cadbf4d 精确保留，7 篇 SSC305 方法提炼为项目候选，13 个 pyc
   与 Git 元数据按治理规则排除。
 review_status: manual-entry-pending-review
 primary_language: zh-CN
@@ -63,7 +63,7 @@ aliases:
 
 ## 结论
 
-`xcrz_sigmastar_demo_dev/knowledge` 是独立的 `embedded/knowledge` Git 仓副本，不应继续作为项目副本内的第二知识入口。其 178 个非缓存内容文件由远端 `origin/main=cadbf4d6777319c8d43b15f842cbea002cd94cef` 精确保留；Knowledge Hub 通过现有 `domains/embedded/` canonical、source control、本文中文提炼和逐文件 manifest 接管检索与治理。
+`gros/knowledge` 是独立的 `embedded/knowledge` Git 仓副本，不应继续作为项目副本内的第二知识入口。其 178 个非缓存内容文件由远端 `origin/main=cadbf4d6777319c8d43b15f842cbea002cd94cef` 精确保留；Knowledge Hub 通过现有 `domains/embedded/` canonical、source control、本文中文提炼和逐文件 manifest 接管检索与治理。
 
 本轮不把其中声明为 `active` 的旧文档直接提升为 Hub active，也不把项目路径改写成团队标准。7 篇 SSC305 方法是有价值的项目候选，但历史命令仍需按当前 Hub/SDK/设备复验。
 

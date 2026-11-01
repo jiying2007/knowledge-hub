@@ -5,6 +5,14 @@ related:
 - projects/llm-agent/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+subject_ref:
+  id: llm-agent
+  type: project
+created_subject_ref:
+  id: llm-agent
+  type: project
+principal_id: null
+provider_operation_id: 4df030445710dcaf13ede0065013a05a1b1b74d32212e23acfd458b7c18c7dcd
 id: provider-llm-agent-4df030445710dcaf13ede006
 title: M5生产者干净仓库预检修复与正常流程验证
 kind: validation
@@ -20,7 +28,7 @@ source:
   source_sha256: c08167b17d9c9a65a5d07100a4a3d6d85bd8c07bb1951aba7353eab5b55e0797
   temporary_source_retained: false
 review_after: '2027-01-09'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -48,12 +56,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: llm-agent
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 4df030445710dcaf13ede0065013a05a1b1b74d32212e23acfd458b7c18c7dcd
 ---
 
 # M5 执行来源修复验证记录

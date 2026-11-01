@@ -44,7 +44,9 @@ def _pre_before_2(ctx):
         if source.get('review_after'):
             try:
                 source_review_after = ctx['dt'].date.fromisoformat(str(source.get('review_after')))
-                if source_review_after < ctx['today']:
+                # Retired entries keep their original provenance dates. They
+                # must not request periodic current-source authority renewal.
+                if source_review_after < ctx['today'] and source.get('status') == 'registered':
                     ctx['source_check_health']['stale_review_after_ids'].append(source_id)
                     ctx['source_check_health']['stale_review_after_source_ids'].append(source_id)
                     ctx['warnings'].append(f"sources:{source_id} review_after is stale: {source.get('review_after')}")
@@ -195,6 +197,11 @@ def _pre_after_2(ctx):
             target_path = target_decision
         if target_path:
             ctx['owner_target_health']['checked_count'] += 1
+            if not (ctx['root'] / target_path).exists():
+                from .maintenance_lineage import historical_target
+                mapped = historical_target(ctx['root'], target_path)
+                if mapped:
+                    target_path = mapped
             if (ctx['root'] / target_path).exists():
                 ctx['owner_target_health']['present_count'] += 1
                 target_status = 'present'

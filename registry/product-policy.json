@@ -5,7 +5,7 @@
       "id": "pcr02-display-release-v1",
       "project_ids": [
         "pcr02-ssc305",
-        "xcrz-sigmastar-demo",
+        "gros",
         "pcr02-hdi"
       ],
       "validation_expectations_zh": [

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "maintenance_kind": "execution-authorization-only",
+  "exact_execution_scope": {
+    "actor": "local-user",
+    "action": "maintain-content",
+    "expected_hash": "a14d644348c52ceffe5ebd223a29f8aabc6438b5432ecc3a4ca4ca403f7cc26f",
+    "item_ids": [
+      "provider-04e558a1f51560eeb14c5c09fd7b5ec0874cbc3d316a7ddcba42cb146c2bbdc6",
+      "provider-07ca11f20c2a378c9b5e43e1eac0fc636b9a9f0276999fb1ba2fd4dc1ef2d7cd",
+      "provider-103e568c1a1e41fba15d13c3a7545d5019caec70ee678642ad90c3b4f8874be4",
+      "provider-3e7e7ee6118bbf85a4f217b41afc002fe7ff3a194f4f6dc7202f1731344d52dd",
+      "provider-60125f3a949cafe6509c01dbd222918ec494e5aa60aa5b10f1e05e9a09ab8a04",
+      "provider-6af0fe580b21ade759bf89ce3bc00c04a25194924fa2a205fe9b59e349faa14a",
+      "provider-8c3587647922760a39f017bba6e19c46994f8c8bb62c4ee79c9ded4a67c72765",
+      "provider-b07bbea9d1ec8ac9d7f48b7f5a22747c84f36f1f59f89dd4f918d06c42f33cec",
+      "provider-e1cd176672f58235423bbc1eec8444d35a89620160eebbaea7ab5bed58d707cf",
+      "provider-f460a8ce3392035f8f71ffe8371663b3e567fb1403b1b0942733bf7ba82d81bc",
+      "provider-fea29fda6d10205462d939b62ebf0bb26b26e6c31b38875175ce577173ce8718"
+    ],
+    "visibility_change": false
+  },
+  "expected_hash": "6c7c99929055dff6746e72b7384d5f9c86cc362d9cb3c1e09582760c85e27dbb",
+  "request_sha256": "ddf09614665065ae398ec34373b977e986c090fcbfbe859cd63521b44bdea134",
+  "intake_attestation_sha256": "752de927b59fd09836590c5b3538a7621f7ae3a8a29f2abb70d2146a077b94cf",
+  "active_promoted": false,
+  "owner_review_performed": false
+}

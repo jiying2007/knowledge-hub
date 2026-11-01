@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 from .common import KnowledgeHubError, display_path, file_sha256, load_markdown, user_path_prefixes
+from .content_quality import ValidatedBodyBatch
 from .model import FRONTMATTER_MIRROR_FIELDS, validate_item
 from .output_contract import status_contract
 from .security import scan_secret_text
@@ -197,7 +198,9 @@ def build_diagnostics(error_items, warning_items):
             bucket['examples'].append(message)
     warning_examples = list(warning_items[:5])
     return {'summary_zh': f'发现 {len(error_items)} 个错误，{len(warning_items)} 个警告，归类为 {len(buckets)} 类。', 'categories': sorted(buckets.values(), key=lambda item: (-item['count'], item['id'])), 'warnings': {'count': len(warning_items), 'examples': warning_examples, 'action_zh': 'warning 不阻断检查，但应按 review_after、参数边界或外部 source 可用性安排人工复核。'}}
+validated_body_batch = ValidatedBodyBatch()
 validation_ctx = dict(globals())
+validation_ctx['content_quality_body_reader'] = validated_body_batch.body
 validation_ctx.update({'argparse': argparse, 'dt': dt, 'json': json, 'os': os, 'pathlib': pathlib, 're': re, 'subprocess': subprocess, 'sys': sys, 'KnowledgeHubError': KnowledgeHubError, 'display_path': display_path, 'file_sha256': file_sha256, 'load_markdown': load_markdown, 'user_path_prefixes': user_path_prefixes, 'FRONTMATTER_MIRROR_FIELDS': FRONTMATTER_MIRROR_FIELDS, 'validate_item': validate_item, 'status_contract': status_contract, 'scan_secret_text': scan_secret_text, 'select_source_coverage_closeout': select_source_coverage_closeout})
 run_pre_before(validation_ctx)
 
@@ -402,7 +405,9 @@ if not args.sources_only:
         elif rel_path.suffix.lower() == '.md':
             frontmatter_status_health['checked_item_count'] += 1
             try:
-                frontmatter_metadata, _frontmatter_body = load_markdown(root / rel_path)
+                frontmatter_metadata, _frontmatter_body = validated_body_batch.load(
+                    root / rel_path, retain_body=str(item.get('path', '')).startswith('projects/')
+                    and rel_path.suffix == '.md')
             except KnowledgeHubError as exc:
                 errors.append(f'frontmatter-status:{item_id} invalid YAML: {exc}')
                 frontmatter_metadata = {}

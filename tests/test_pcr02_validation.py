@@ -1,4 +1,7 @@
 import datetime as dt
+import hashlib
+import json
+import pytest
 
 from tools.codex_assets.knowledge_hub.common import registry_items, repository_root
 from tools.codex_assets.knowledge_hub.pcr02_validation import (
@@ -57,7 +60,7 @@ def test_pcr02_contract_preserves_owner_evolution():
     result = _initialize_candidate_contract(
         item,
         contract,
-        "projects/xcrz-sigmastar-demo/decisions/example.md",
+        "projects/gros/decisions/example.md",
         dt.date(2026, 7, 13),
     )
     for field in (
@@ -78,3 +81,29 @@ def test_pcr02_existing_managed_section_is_not_rewritten():
         MANAGED_END,
     )
     assert _managed_section(body, "replacement") == body
+
+
+@pytest.mark.parametrize('variant', ['valid', 'no-manifest', 'wrong-before', 'claimed-new-owner-review'])
+def test_normalized_owner_packet_requires_historical_lineage(tmp_path, monkeypatch, variant):
+    from tools.codex_assets.knowledge_hub import pcr02_validation as validation
+    from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+    packet = tmp_path / validation.OWNER_PACKET_PATH
+    packet.parent.mkdir(parents=True)
+    packet.write_text('normalized repository identity; unchanged technical boundary')
+    current = hashlib.sha256(packet.read_bytes()).hexdigest()
+    monkeypatch.setattr(validation, 'OWNER_PACKET_SHA256', current)
+    attestation = tmp_path / validation.OWNER_ATTESTATION_REF
+    original_statement = 'Historical owner statement binds ' + validation.OWNER_PACKET_SOURCE_SHA256
+    attestation.write_text(original_statement)
+    manifest = {'protocol': 'project-migration/v1', 'active_promoted': False,
+                'owner_review_performed': variant == 'claimed-new-owner-review',
+                'before_writes': {validation.OWNER_PACKET_PATH: '0' * 64 if variant == 'wrong-before' else validation.OWNER_PACKET_SOURCE_SHA256},
+                'result_writes': {validation.OWNER_PACKET_PATH: current}}
+    if variant != 'no-manifest':
+        (packet.parent / 'project-migration-test.json').write_text(json.dumps(manifest))
+    if variant == 'valid':
+        validation._require_owner_packet(tmp_path)
+    else:
+        with pytest.raises(KnowledgeHubError, match='migration lineage is missing'):
+            validation._require_owner_packet(tmp_path)
+    assert attestation.read_text() == original_statement

@@ -21,8 +21,8 @@ source:
   type: repository-report
   from: llm_agent committed RC3 closure evidence at root a1f6fa0 and ADK a1b5e2f
   source_sha256: 6744d481fb17d865c490b470b48d02dd25826aa32fa1309aed80ba06eb16f933
-review_after: '2026-10-18'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -42,7 +42,7 @@ evidence_refs:
 - projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-18'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -53,6 +53,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # LLM Agent 与 ADK 3.1.0-rc.3 本地发布候选闭环验证

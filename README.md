@@ -13,13 +13,16 @@ scope: team-general
 visibility: team-internal
 status: active
 owner: leiwenjun
-review_after: '2026-09-16'
-review_status: active-control-plane-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 aliases:
 - Knowledge Hub root
 related:
 - indexes/obsidian-home.md
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: accepted
 ---
 
 # Knowledge Hub

@@ -21,8 +21,8 @@ source:
   type: manual
   from: 用户工程决策与仓库静态配置证据
   source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
-review_after: '2026-10-31'
-review_status: manual-entry-pending-review
+review_after: '2026-11-08'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -39,7 +39,7 @@ evidence_refs:
 - projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-04'
-updated_at: '2026-08-04'
+updated_at: '2026-11-01'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

@@ -17,7 +17,7 @@ First-round acceptance is still blocked until PCR02 EVT2 real board boot and rea
 ## Source state
 
 - Main SDK commit during latest validation: `4f49e49e2e011b4f106b702921594bcc873b5ce5`
-- App repository: `SourceCode/sdk/verify/xcrz_sigmastar_demo`
+- App repository: `SourceCode/sdk/verify/gros`
 - App commit during latest validation: `1e803f0bc035fb4a9e4ef5064a77a0c308e28b75`
 - App repository status after committing PCR02 glibc interface libraries: clean.
 - Full build and OTA validation used `--allow-dirty` because SDK build steps generate tracked artifacts in the vendor tree. This is acceptable for host bring-up evidence, but release-grade strict builds still require resolving the SDK source-check policy below.
@@ -43,7 +43,7 @@ Key evidence:
 
 ```text
 commit_sdk=4f49e49e2
-commit_app_name=xcrz_sigmastar_demo
+commit_app_name=gros
 commit_app=1e803f0b
 hw_ver=v2.0
 ```
@@ -87,7 +87,7 @@ Cleanup check:
 
 Clarification:
 
-- `libbridge.so`, `libcommon.so`, and `libproto.so` are not part of `pcr02_customer`; they belong to the PCR02 app repository library overlays under `SourceCode/sdk/verify/xcrz_sigmastar_demo/libs/...`.
+- `libbridge.so`, `libcommon.so`, and `libproto.so` are not part of `pcr02_customer`; they belong to the PCR02 app repository library overlays under `SourceCode/sdk/verify/gros/libs/...`.
 
 ## Self-check validation
 
@@ -103,7 +103,7 @@ Key output:
 
 ```text
 [self-check] profile=ap6303bh_512m_v20 defconfig=xcrz_ipc_ap6303bh_512M_pcr02_v20_defconfig
-[self-check] app_name=xcrz_sigmastar_demo
+[self-check] app_name=gros
 [self-check] app_build_system=make
 [self-check] vehicle_ota_config=~/Iford_IMSSV05C13/tools/vehicle-ota/pcr02.env
 [self-check] ota_partitions=default_without_rootfs_data

@@ -18,8 +18,8 @@ source:
   type: session-derived-debug-summary
   from: user observations, Serial_mcu_2026-07-18_10_43_24.log, three local PDF sources, schematic and workspace://gd32l235
     source review
-review_after: '2026-08-20'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,7 +47,7 @@ evidence_refs:
 - workspace://gd32l235/App/bsp.c
 - workspace://gd32l235/App/charge.h
 created_at: '2026-07-20'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -60,6 +60,7 @@ primary_language: zh-CN
 source_language: mixed
 translation_status: summarized-in-chinese
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # GD32L235 充电桩持续放电与 CW2217 全零数据初步分析

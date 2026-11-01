@@ -33,6 +33,9 @@ def _body_coverage_1(ctx):
 
 def run_body_coverage(ctx):
     ctx.update(_body_coverage_1(ctx))
+    from .content_quality import findings
+    ctx['errors'].extend('content-quality:' + issue for issue in findings(
+        ctx['root'], ctx.get('items', []), body_reader=ctx.get('content_quality_body_reader')))
 
 def _index_security_1(ctx):
     decision_rows = ctx['load_jsonl'](ctx['root'] / 'registry' / 'decisions.jsonl')

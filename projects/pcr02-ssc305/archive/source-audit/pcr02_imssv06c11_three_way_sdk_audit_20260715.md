@@ -12,9 +12,9 @@ source:
   type: manual
   from: current-session-local-three-way-sdk-audit-2026-07-15
   source_sha256: 9ce9bd782f01e477b1b2a04349e8f4016fedb023bfb64447a336897574c780c9
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -38,7 +38,7 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-15'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -50,6 +50,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND、UBIFS 只读与时钟电气路径
@@ -551,7 +553,7 @@ A/B 必须保持同一板、Flash 批次、SNI、54MHz、pad、供电、分区�
 
 ### Knowledge Hub 相关来源
 
-- `projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`
+- `projects/gros/archive/incomplete/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`
 - `projects/pcr02-ssc305/archive/engineering-archive/pcr02/boot-flash/pcr02_spinand_read_path_bdma_riu_20260529.md`
 - `projects/pcr02-ssc305/archive/engineering-archive/pcr02/boot-flash/pcr02_spi0_pad_drive_8ma_riu_verification_20260618.md`
 - `projects/pcr02-ssc305/archive/engineering-archive/pcr02/boot-flash/pcr02_spinand_flash_read_aging_progress_20260618.md`

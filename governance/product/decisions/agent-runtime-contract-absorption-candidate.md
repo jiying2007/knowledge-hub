@@ -28,9 +28,9 @@ source:
   type: external-reference-synthesis
   from: memdsl@2d87af7 and rawmem@9842be6 public source audit
   source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
-review_after: '2026-10-16'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: adapt accepted; remain reviewing for shadow and adoption evidence; no active promotion
@@ -54,7 +54,7 @@ evidence_refs:
 - governance/external-source-absorption.md
 - governance/evidence-rules.md
 created_at: '2026-07-16'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

@@ -13,7 +13,7 @@ from .provider_subjects import policy, principal, subject, digest, GRANTS_PATH, 
 from .store import RepositoryTransaction, snapshot_inputs
 
 
-def attested_request(raw, request_file):
+def attested_request(raw, request_file, renewal_request_file=''):
     thread = os.environ.get("CODEX_THREAD_ID", "")
     if re.fullmatch(r"[a-f0-9-]{36}", thread) is None:
         raise KnowledgeHubError("DECLARATION_UNATTESTED")
@@ -22,9 +22,12 @@ def attested_request(raw, request_file):
     import json
     runtime_env = dict(os.environ)
     runtime_env.pop("PYTHONPATH", None)
+    command = ["rtk", "python3", "-m", "tools.codex_assets", "execution-policy", "--thread-id", thread,
+               "verify-request", "--request-file", str(pathlib.Path(request_file).absolute())]
+    if renewal_request_file:
+        command.extend(["--renewal-request-file", str(pathlib.Path(renewal_request_file).absolute())])
     try:
-        call = subprocess.run(["rtk", "python3", "-m", "tools.codex_assets", "execution-policy", "--thread-id", thread,
-                               "verify-request", "--request-file", str(pathlib.Path(request_file).absolute())],
+        call = subprocess.run(command,
                               cwd=str(pathlib.Path.home() / "codex"), text=True, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, timeout=10, env=runtime_env)
         receipt = json.loads(call.stdout)
@@ -51,11 +54,28 @@ def _require_exact_scope(root, authorization_id, exact_scope):
         raise KnowledgeHubError("POLICY_DENIED")
 
 
+def _grant_repository_scope(root, args, raw):
+    from .provider_repositories import registration
+    from .provider_onboarding import resolve_workspace
+    # This appends to an existing, explicitly resolved project boundary.
+    # The user's current request is attested above; its exact operation
+    # hash binds the reviewed repository inputs, not literal prose.
+    boundary = resolve_workspace(root, args.cwd)
+    planned = registration(root, args.project, args.repository_id, args.remote_url)
+    if boundary.get("state") != "resolved" or boundary.get("subject_ref") != planned["subject_ref"]:
+        raise KnowledgeHubError("ROUTE_CONFLICT")
+    if args.name:
+        raise KnowledgeHubError("SCHEMA_INVALID")
+    return planned["subject_ref"], planned["expected_hash"], False, {"declaration_sha256": hashlib.sha256(raw.encode()).hexdigest()}
+
+
 def _grant_action_scope(root, args, host, actor, raw):
     action = args.grant_action
     if action not in host["actions"]:
         raise KnowledgeHubError("POLICY_DENIED")
     if action == "register":
+        if args.repository_id or args.remote_url:
+            return _grant_repository_scope(root, args, raw)
         from .provider_onboarding import register_project
         planned = register_project(root, args.project, args.name, args.declaration_file)
         target, expected = planned["subject_ref"], planned["expected_hash"]
@@ -122,17 +142,49 @@ def _grant_action_scope(root, args, host, actor, raw):
     return target, expected, widening, extra
 
 
+def _repository_caller(root, cwd):
+    from .context_support import find_git_config
+    from .common import file_sha256
+    from .provider_onboarding import resolve_workspace
+    from .provider_subjects import signatures
+    config, git_root = find_git_config(cwd)
+    directory = pathlib.Path(cwd).resolve()
+    try:
+        info = directory.stat()
+    except OSError:
+        raise KnowledgeHubError("ROUTE_CONFLICT") from None
+    return {"boundary": resolve_workspace(root, cwd), "directory": [info.st_dev, info.st_ino],
+            "config": str(config) if config else None,
+            "config_sha256": file_sha256(config) if config and config.is_file() else None,
+            "local_inputs": signatures(root)}
+
+
 def issue_grant(root, args):
     host, actor = policy(root), principal(root)
     raw = read_utf8_bounded(pathlib.Path(args.declaration_file), 131072, "actual user request")
     request_sha, attestation = attested_request(raw, args.declaration_file)
     action = args.grant_action
-    target, expected, widening, extra = _grant_action_scope(root, args, host, actor, raw)
-    ident = "grant-" + digest([actor, action, expected, request_sha, dt.date.today().isoformat()])
-    with read_guard(root):
-        inputs = snapshot_inputs(root)
-        rows = load_jsonl(root / GRANTS_PATH)
-        existing = next((r for r in rows if r["id"] == ident), None)
+    repository_action = action == "register" and bool(args.repository_id or args.remote_url)
+    caller = None
+    if repository_action:
+        with read_guard(root):
+            # Snapshot first; retain the same read lock for all Hub dependencies.
+            inputs = snapshot_inputs(root)
+            host, actor = policy(root), principal(root)
+            caller = _repository_caller(root, args.cwd)
+            target, expected, widening, extra = _grant_action_scope(root, args, host, actor, raw)
+            ident = "grant-" + digest([actor, action, expected, request_sha, dt.date.today().isoformat()])
+            rows = load_jsonl(root / GRANTS_PATH)
+            existing = next((r for r in rows if r["id"] == ident), None)
+    else:
+        target, expected, widening, extra = _grant_action_scope(root, args, host, actor, raw)
+        ident = "grant-" + digest([actor, action, expected, request_sha, dt.date.today().isoformat()])
+        with read_guard(root):
+            inputs = snapshot_inputs(root)
+            rows = load_jsonl(root / GRANTS_PATH)
+            existing = next((r for r in rows if r["id"] == ident), None)
+    if repository_action and _repository_caller(root, args.cwd) != caller:
+        raise KnowledgeHubError("ROUTE_CONFLICT")
     if existing:
         if existing.get("status") != "active":
             raise KnowledgeHubError("AUTHORIZATION_REQUIRED")
@@ -142,6 +194,8 @@ def issue_grant(root, args):
            "visibility_change": widening, "request_sha256": request_sha, "intake_attestation_sha256": attestation, **extra}
     transaction = RepositoryTransaction(root, expected_inputs=inputs)
     transaction.add_text(GRANTS_PATH, encode_jsonl(rows + [row]))
+    if repository_action and _repository_caller(root, args.cwd) != caller:
+        raise KnowledgeHubError("ROUTE_CONFLICT")
     result = transaction.apply().to_dict() if args.apply else transaction.plan()
     return {"status": "GRANTED" if args.apply else "PLANNED", "persisted": args.apply,
             "authorization_id": ident, "expected_hash": expected, "transaction": result}

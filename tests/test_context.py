@@ -18,6 +18,27 @@ from tools.codex_assets.knowledge_hub.provider_operations import archive
 from test_provider_subjects import subject_root
 
 
+@pytest.mark.parametrize('boundary', ['same-project', 'private', 'other-project'])
+def test_context_follows_historical_candidate_to_its_governed_successor(tmp_path, boundary):
+    root = _context_root(tmp_path)
+    path = root / 'registry/items.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    (root / 'projects/p1/archive/old.md').write_text('# P1 构建独占词\n')
+    rows.append(dict(rows[1], id='old-candidate', title='P1 构建独占词', searchable=False,
+                     path='projects/p1/archive/old.md',
+                     successor_refs=['projects/p1/current/runbook.md']))
+    if boundary == 'private':
+        rows[-1]['visibility'] = 'personal-local'
+    if boundary == 'other-project':
+        rows[-1]['domain'] = 'projects/p2'
+    path.write_text(_jsonl(rows))
+    payload = assemble_context(root, str(tmp_path), 'P1 构建独占词', 'source', 8, 'normal')
+    current = payload['context']['current']
+    assert current[0]['id'] == 'p1-runbook'
+    assert ('successor-of-matched-historical-candidate' in current[0]['why_selected']) == (boundary == 'same-project')
+    assert not any(row['id'] == 'old-candidate' for row in current)
+
+
 def _jsonl(rows):
     return "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
 
@@ -40,7 +61,7 @@ def _context_root(tmp_path):
             "owner": "owner-a",
             "source": {"type": "manual"},
             "summary_zh": "发布审计 provenance",
-            "review_after": "2026-10-13",
+            "review_after": "2099-10-13",
             "tags": ["p1", "release", "provenance"],
         },
         {
@@ -53,7 +74,7 @@ def _context_root(tmp_path):
             "owner": "owner-a",
             "source": {"type": "manual"},
             "summary_zh": "当前发布候选手册",
-            "review_after": "2026-10-13",
+            "review_after": "2099-10-13",
             "tags": ["p1", "release"],
         },
         {
@@ -66,7 +87,7 @@ def _context_root(tmp_path):
             "owner": "owner-a",
             "source": {"type": "manual"},
             "summary_zh": "历史发布证据",
-            "review_after": "2026-10-13",
+            "review_after": "2099-10-13",
             "tags": ["p1", "release"],
         },
     ]

@@ -10,7 +10,7 @@ import re
 import tempfile
 
 from .common import (KnowledgeHubError, load_jsonl, registry_items, load_markdown, render_markdown,
-                     encode_jsonl, resolve_inside, read_utf8_bounded, file_sha256, utc_timestamp)
+                     encode_jsonl, resolve_inside, read_utf8_bounded, file_sha256, utc_timestamp, repository_root)
 from .provider_policy import SAFE_METADATA, LOW_RISK_KINDS, metadata_tags, checked_archive_policy
 from .security import scan_secret_text
 from .provider_subjects import (OPERATIONS_PATH, digest, subject, authorize, route_subject,
@@ -38,8 +38,13 @@ def safe_text(value):
 
 def operations(root):
     rows = load_jsonl(root / OPERATIONS_PATH)
-    from .schemas import validate_instance
-    if any(validate_instance(root, "provider-operation-ledger-v4", row)["status"] != "pass" for row in rows):
+    from .schemas import _load_contract_schema, _FORMAT_CHECKER
+    from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
+    schema, errors = _load_contract_schema(root, 'provider-operation-ledger-v4')
+    if errors:
+        raise KnowledgeHubError("SCHEMA_INVALID")
+    validator = Draft202012Validator(schema, format_checker=_FORMAT_CHECKER)
+    if any(not validator.is_valid(row) for row in rows):
         raise KnowledgeHubError("SCHEMA_INVALID")
     ids = [r.get("operation_id") for r in rows]
     if len(ids) != len(set(ids)) or any(re.fullmatch(r"[a-f0-9]{64}", str(i)) is None for i in ids):
@@ -134,7 +139,7 @@ def response(status, operation_id=None, item=None, content_hash=None, wrote=Fals
             "owner_review_performed": False, "reason_codes": [reason] if reason else []}
 
 
-def frozen_source(args):
+def frozen_source(args, root=None):
     raw = read_utf8_bounded(pathlib.Path(args.source).expanduser(), 131072, "archive source")
     safe_text(raw)
     if not args.sanitized:
@@ -147,6 +152,9 @@ def frozen_source(args):
         raise SourceRejected("source-metadata", "unsupported-source-metadata", SAFE_METADATA)
     if not body.strip():
         raise SourceRejected("source", "empty-source-body")
+    from .content_quality import template_body
+    if template_body(root or repository_root(), body):
+        raise SourceRejected("source", "unfilled-template-body")
     try:
         metadata_tags(metadata, args.kind)
     except KnowledgeHubError as exc:
@@ -181,15 +189,92 @@ def archive(root, args):
     if args.expected_content_sha256 and re.fullmatch(r"[a-f0-9]{64}", args.expected_content_sha256) is None:
         raise KnowledgeHubError("CONTENT_HASH_REQUIRED")
     archive_policy = checked_archive_policy(root, args.kind)
-    frozen = frozen_source(args)
+    frozen = frozen_source(args, root)
     if len(frozen[0].encode("utf-8")) > archive_policy["maximum_bytes"]:
         raise KnowledgeHubError("POLICY_DENIED")
+    if args.item_id:
+        return revise_metadata(root, args, frozen)
+    if args.expected_before_sha256:
+        raise KnowledgeHubError("SCHEMA_INVALID")
     for attempt in range(3):
         try:
             return _archive(root, args, frozen)
         except WriteConflict:
             if attempt == 2:
                 raise
+
+
+def revise_metadata(root, args, frozen):
+    """Compare-and-swap descriptive metadata; preserve body, identity and history."""
+    if re.fullmatch(r"[a-f0-9]{64}", args.expected_before_sha256) is None:
+        raise KnowledgeHubError("CONTENT_HASH_REQUIRED")
+    _, incoming, incoming_body, title, _ = frozen
+    if args.provenance_file:
+        raise KnowledgeHubError("POLICY_DENIED")
+    target = subject(args.subject)
+    authorize(root, "archive", target)
+    from .provider_onboarding import resolve_workspace
+    origin = resolve_workspace(root, args.cwd)
+    if origin["state"] == "conflict" or (target["type"] == "project" and origin["subject_ref"] and origin["subject_ref"] != target):
+        raise KnowledgeHubError("ROUTE_CONFLICT")
+    with read_guard(root):
+        inputs = snapshot_inputs(root)
+        rows, history = registry_items(root), operations(root)
+        before = next((r for r in rows if r["id"] == args.item_id), None)
+        if not before:
+            raise KnowledgeHubError("ITEM_NOT_FOUND")
+        if (item_subject(before) != target or before.get("kind") != args.kind
+                or before.get("status") != "reviewing" or before.get("promotion") != "none"
+                or before.get("source", {}).get("type") != "provider-candidate-archive"):
+            raise KnowledgeHubError("POLICY_DENIED")
+        actual, metadata, body = verify_current_item(root, before, history)
+        if title != before["title"] or incoming_body != body:
+            raise KnowledgeHubError("CONTENT_DRIFT")
+        after = dict(before)
+        for key in SAFE_METADATA - {"title"}:
+            if key in incoming:
+                after[key] = list(metadata_tags(incoming, args.kind)) if key == "tags" else incoming[key]
+        # Idempotent replay of a revision requires its exact original before hash
+        # and the same resulting descriptive metadata, not merely any stale hash.
+        if all(after.get(key) == before.get(key) for key in SAFE_METADATA):
+            previous = next((r for r in reversed(history) if r["item_id"] == before["id"]
+                             and r["action"] == "metadata" and r.get("before_content_sha256") == args.expected_before_sha256
+                             and r["content_sha256"] == actual), None)
+            if not previous:
+                raise KnowledgeHubError("CONTENT_DRIFT")
+            if args.expected_content_sha256 and args.expected_content_sha256 != actual:
+                raise KnowledgeHubError("CONTENT_DRIFT")
+            return response("ALREADY_ARCHIVED", previous["operation_id"], before, actual)
+        if actual != args.expected_before_sha256:
+            raise KnowledgeHubError("CONTENT_DRIFT")
+        after["updated_at"] = dt.date.today().isoformat()
+        from .model import require_valid_item, merge_frontmatter_mirror
+        require_valid_item(after)
+        rendered = render_markdown(merge_frontmatter_mirror(metadata, after), body)
+        transaction = RepositoryTransaction(root, expected_inputs=inputs)
+        transaction.add_text(before["path"], rendered)
+        next_items = [after if row["id"] == before["id"] else row for row in rows]
+        transaction.add_text("registry/items.jsonl", encode_jsonl(next_items))
+        stage_metadata_update(root, transaction, before, after, rendered)
+        staged_history = [json.loads(line) for line in transaction.writes[OPERATIONS_PATH].content.decode().splitlines()]
+        new_hash = _assignment_views(root, transaction, after, rendered, next_items, staged_history)
+        operation_id = staged_history[-1]["operation_id"]
+        args._operation_id = operation_id
+        if args.expected_content_sha256 and new_hash != args.expected_content_sha256:
+            raise KnowledgeHubError("CONTENT_DRIFT")
+    if not args.apply:
+        return response("PLANNED", operation_id, after, new_hash)
+    # Authorize and bind policy again immediately before the transaction's
+    # snapshot checks; changed inputs fail before the first persistent write.
+    authorize(root, "archive", target)
+    checked_archive_policy(root, args.kind)
+    if resolve_workspace(root, args.cwd) != origin:
+        raise WriteConflict("workspace changed before metadata commit")
+    args._commit_started = True
+    result = transaction.apply()
+    with read_guard(root):
+        actual, _, _ = verify_item(root, after, new_hash)
+    return response("ARCHIVED", operation_id, after, actual, True, result.transaction_id)
 
 
 def _archive_commit_hook(root, args, target, actor, operation_id, item_id, op_rows, op_hash, origin, conflict, route, archive_policy):

@@ -5,7 +5,7 @@ import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-README = ROOT / "projects/xcrz-sigmastar-demo/README.md"
+README = ROOT / "projects/gros/README.md"
 
 
 @pytest.mark.parametrize("required", [
@@ -26,7 +26,7 @@ def test_project_history_has_explicit_scope_and_evidence_boundaries(required):
 
 def test_existing_project_authority_and_version_navigation_are_retained():
     text = README.read_text(encoding="utf-8")
-    for value in ("repo_id=xcrz-sigmastar-demo", "projects/pcr02-ssc305/",
+    for value in ("repo_id=gros", "projects/pcr02-ssc305/",
                   "knowledge-hub-project-readiness:start", "knowledge-hub-project-readiness:end",
                   "hdi-hal-cross-platform-host-development-architecture-20260813-v4.md",
                   "diag-observability-maintenance-cross-platform-plane-20260813-v3.md",

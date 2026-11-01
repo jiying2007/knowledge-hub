@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "maintenance_kind": "owner-cycle-execution-authorization",
+  "exact_execution_scope": {
+    "actor": "local-user",
+    "action": "schedule-review",
+    "proposal_sha256": "c02da5b73d8274def3cb65b2ae9d672d3bcb1788bed1da20468844d5dc94bffd",
+    "item_ids": [
+      "knowledge-hub-p1-p3-optimization-closeout-20260731",
+      "pcr02-prog-pcr02-memory-growth-monitoring-20260731",
+      "pcr02-release-nfs-client-retention-20260804",
+      "pcr02-sensor-audio-queue-ao-retry-20260731",
+      "pcr02-ssc305-active-media-cpu-venc-timeout-20260731",
+      "pcr02-vi-fps-vif-sleep-optimization-20260731"
+    ],
+    "confirmation_sha256": "b5a1dfb0d265056f6348391c05540c5f693b1801e114b693ae151956e8280a63",
+    "visibility_change": false,
+    "expected_hash": "ad4b5aef2bdb42093910ee872b928f725a779bf8d963f195c76860c5c4645b43"
+  },
+  "owner_cycle_decision": {
+    "kind": "owner-cycle-decision",
+    "confirmed_by": "leiwenjun",
+    "authorized_owners": [
+      "leiwenjun"
+    ],
+    "confirmation_token": "KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2",
+    "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity",
+    "identity_basis": "explicit-human-declaration",
+    "human_identity_independently_verified": false,
+    "executor": "Codex",
+    "statements": [
+      {
+        "order": 1,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/decision",
+        "statement": "<send_user_message_question_reply>\n[{\"answer\":\"确认周期安排 KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2；批准包中6条所列日期与pending/defer处理，保留内容、证据及责任待办；仅授权周期安排及其受限执行，不构成内容、设备或发布批准。\",\"question\":\"跨日后新增6条到期知识，旧245条确认包不覆盖它们。请确认新周期包 KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2：NFS责任决定→2026-11-08；CPU/VENC、内存监测、音频AO三条缺证据项→2026-11-15；VIF带限制保留项→2026-12-01；Hub历史记录→2027-01-30。仅调整周期及pending/defer处理，保留原内容、证据状态和全部责任待办，不构成内容、设备或产品发布批准。\",\"questionItemId\":\"[\\\"request_user_input_async\\\",\\\"call_54ce871174214fc0bb734139503d35e9\\\",0]\"}]\n</send_user_message_question_reply>",
+        "sha256": "fb94e34e042e2c22c46036ea69f68ec063e2e5b4670478f0e07b7d5a3c952568"
+      },
+      {
+        "order": 2,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/identity",
+        "statement": "负责人身份：leiwenjun；权限范围：所有周期复核；",
+        "sha256": "7614d151520f0662dab17c6e9217bf3d6428fb39ddfa22e6a5ab7343b664a8dc"
+      }
+    ],
+    "content_approval_performed": false,
+    "human_content_review_performed": false
+  },
+  "expected_hash": "1916d7859fbae2ac13428745fba803e7e2d34d95dbb486cbea66080a2eb5aa07",
+  "application_expected_hash": "ad4b5aef2bdb42093910ee872b928f725a779bf8d963f195c76860c5c4645b43",
+  "original_execution_request_sha256": "ddf09614665065ae398ec34373b977e986c090fcbfbe859cd63521b44bdea134",
+  "original_execution_intake_attestation_sha256": "752de927b59fd09836590c5b3538a7621f7ae3a8a29f2abb70d2146a077b94cf",
+  "active_promoted": false,
+  "owner_review_performed": false
+}

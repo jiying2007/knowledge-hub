@@ -35,9 +35,9 @@ owner: leiwenjun
 source:
   type: manual
   from: Codex analysis of PCR02 framebuffer mapping between fb_st77912 and SigmaStar mi_fb
-review_after: '2026-10-11'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; owner accepted the current fbtft/ST77912 versus SStar/MI_FB boundary; current-firmware, device,
@@ -64,15 +64,15 @@ evidence_refs:
 - device:/proc/fb
 - device:/sys/class/graphics/fb0/name
 - device:/sys/class/graphics/fb1/name
-- SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.h
-- SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display/display_provider.cpp
+- SourceCode/sdk/verify/gros/modules/sensor/display/display_provider.h
+- SourceCode/sdk/verify/gros/modules/sensor/display/display_provider.cpp
 - SourceCode/kernel/arch/arm/boot/dts/iford.dtsi
 - SourceCode/kernel/drivers/staging/fbtft/fb_st77912.c
 - SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
 - SourceCode/sdk/linux/init/fb/fb_init.c
 - SourceCode/project/board/iford/SSC029A-S01A/config/config.json
 created_at: '2026-07-11'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -85,6 +85,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 ST77912 framebuffer 与 SigmaStar mi_fb 边界决策候选
@@ -124,7 +126,7 @@ PCR02 设备当前上报的 framebuffer 顺序为：
 | --- | --- | --- | --- | --- | --- |
 | `cat /proc/fb` | 0 | 设备侧显示 fb0/fb1 为 `fb_st77912`，fb2 为 `SStar FB0`。 | device shell output in current session | Device | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
 | `cat /sys/class/graphics/fb0/name` and `cat /sys/class/graphics/fb1/name` | 0 | fb0/fb1 名称均为 `fb_st77912`。 | device shell output in current session | Device | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
-| `rtk rg -n "fbPath_|/dev/fb0|/dev/fb1" .../modules/sensor/display ...` | 0 | `display_provider.h` 固定 `fbPath_ = {"/dev/fb0", "/dev/fb1"}`，`display_provider.cpp` 按该路径 open。 | SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display | Source | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
+| `rtk rg -n "fbPath_|/dev/fb0|/dev/fb1" .../modules/sensor/display ...` | 0 | `display_provider.h` 固定 `fbPath_ = {"/dev/fb0", "/dev/fb1"}`，`display_provider.cpp` 按该路径 open。 | SourceCode/sdk/verify/gros/modules/sensor/display | Source | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
 | `rtk rg -n "DRVNAME \"fb_st77912\"|FBTFT_REGISTER_DRIVER..." ...` | 0 | ST77912 驱动注册名为 `fb_st77912`，compatible 为 `sitronix,st77912`。 | SourceCode/kernel/drivers/staging/fbtft/fb_st77912.c | Source | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
 | `rtk rg -n "vmem_size = display->width|info->fix.smem_len|info->var.yres_virtual" ...` | 0 | fbtft 按单屏尺寸分配 framebuffer，`yres_virtual = yres`，默认不是 MI_FB 式多 buffer 扫描模型。 | SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c | Source | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
 | `rtk rg -n "st77912@0|st77912@1|compatible = \"sitronix,st77912\"" .../iford.dtsi` | 0 | DTS 存在两个 `st77912` SPI 节点，对应两个 fbtft 小屏。 | SourceCode/kernel/arch/arm/boot/dts/iford.dtsi | Source | pcr02-st77912-fb-mi-fb-boundary-decision-20260711 |
@@ -193,7 +195,7 @@ info->var.yres_virtual = info->var.yres
 
 ### 2. Source 与运行态证据
 
-- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、kernel/DTS/config commit、应用 commit 和构建制品 SHA256。
+- 记录 remote key `airobot/gros`、source commit、kernel/DTS/config commit、应用 commit 和构建制品 SHA256。
 - 在同一目标制品上保存 `/proc/fb`、`/sys/class/graphics/fb*/name`、geometry/stride/smem_len，以及应用进程实际打开节点的 `/proc/<pid>/fd` 或等价证据。
 - 将 `DisplayProvider` 节点配置、两个 ST77912 DTS 节点、fbtft 驱动注册和 `mi_fb` 配置引用到确切 commit/line；目录存在或旧会话输出不能替代当前 source identity。
 

@@ -1,8 +1,31 @@
+import copy
 import json
+import os
 import subprocess
+
+import pytest
 
 from tools.codex_assets.knowledge_hub.common import repository_root
 from tools.codex_assets.knowledge_hub.complexity_budget import evaluate_complexity_budget
+
+
+@pytest.fixture(scope="module")
+def _frozen_repository_complexity_report():
+    # The eleven real-repository cases inspect different slices of one frozen
+    # input. Synthetic repositories and monkeypatched policies remain per-test.
+    root = repository_root()
+    baseline_environment = tuple(os.environ.get(key) for key in (
+        "KNOWLEDGE_COMPLEXITY_BASE_REF", "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE"))
+    return root, baseline_environment, evaluate_complexity_budget(root)
+
+
+@pytest.fixture
+def repository_complexity_report(_frozen_repository_complexity_report):
+    root, baseline_environment, report = _frozen_repository_complexity_report
+    assert root == repository_root()
+    assert baseline_environment == tuple(os.environ.get(key) for key in (
+        "KNOWLEDGE_COMPLEXITY_BASE_REF", "KNOWLEDGE_COMPLEXITY_ENFORCE_BASELINE"))
+    return copy.deepcopy(report)
 
 
 def _write_budget_policy(root, *, module_limit=800, function_limit=80, legacy_caps=None):
@@ -126,8 +149,8 @@ def test_complexity_budget_nonempty_git_index_keeps_untracked_new_code_strict(tm
     assert new_module["tracked_baseline"] is False
 
 
-def test_context_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_context_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
 
     assert report["status"] == "pass"
@@ -137,8 +160,8 @@ def test_context_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/context_assembly.py" not in oversized_paths
 
 
-def test_regression_support_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_regression_support_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
 
     assert report["status"] == "pass"
@@ -148,8 +171,8 @@ def test_regression_support_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/regression/support_fixtures.py" not in oversized_paths
 
 
-def test_regression_model_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_regression_model_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
 
     assert report["status"] == "pass"
@@ -158,8 +181,8 @@ def test_regression_model_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/regression/model_index.py" not in oversized_paths
 
 
-def test_regression_lifecycle_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_regression_lifecycle_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     lifecycle_paths = {
         "tools/codex_assets/knowledge_hub/regression/lifecycle.py",
@@ -173,8 +196,8 @@ def test_regression_lifecycle_split_reduces_repository_oversized_module_debt():
     assert not lifecycle_paths & oversized_paths
 
 
-def test_regression_governance_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_regression_governance_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     governance_paths = {
         "tools/codex_assets/knowledge_hub/regression/governance.py",
@@ -188,8 +211,8 @@ def test_regression_governance_split_reduces_repository_oversized_module_debt():
     assert not governance_paths & oversized_paths
 
 
-def test_product_gate_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_product_gate_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
 
     assert report["status"] == "pass"
@@ -199,8 +222,8 @@ def test_product_gate_split_reduces_repository_oversized_module_debt():
     assert "tools/codex_assets/knowledge_hub/product_gate_parallel.py" not in oversized_paths
 
 
-def test_search_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_search_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     search_paths = {
         "tools/codex_assets/knowledge_hub/search.py",
@@ -215,8 +238,8 @@ def test_search_split_reduces_repository_oversized_module_debt():
     assert not search_paths & oversized_paths
 
 
-def test_status_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_status_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     status_paths = {
         "tools/codex_assets/knowledge_hub/status_cli.py",
@@ -232,8 +255,8 @@ def test_status_split_reduces_repository_oversized_module_debt():
     assert not status_paths & oversized_paths
 
 
-def test_index_plan_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_index_plan_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     index_plan_paths = {
         "tools/codex_assets/knowledge_hub/index_plan_cli.py",
@@ -249,8 +272,8 @@ def test_index_plan_split_reduces_repository_oversized_module_debt():
     assert not index_plan_paths & oversized_paths
 
 
-def test_owner_gates_split_reduces_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_owner_gates_split_reduces_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     owner_gates_paths = {
         "tools/codex_assets/knowledge_hub/owner_gates_cli.py",
@@ -265,8 +288,8 @@ def test_owner_gates_split_reduces_repository_oversized_module_debt():
     assert not owner_gates_paths & oversized_paths
 
 
-def test_check_split_eliminates_repository_oversized_module_debt():
-    report = evaluate_complexity_budget(repository_root())
+def test_check_split_eliminates_repository_oversized_module_debt(repository_complexity_report):
+    report = repository_complexity_report
     oversized_paths = {row["path"] for row in report["oversized_modules"]}
     check_paths = {
         "tools/codex_assets/knowledge_hub/check_cli.py",

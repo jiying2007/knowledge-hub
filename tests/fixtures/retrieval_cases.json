@@ -124,7 +124,7 @@
     {
       "id": "linux-performance",
       "query": "ST77912 dual display CPU ADB triage",
-      "expected_ids": ["xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713"],
+      "expected_ids": ["gros-st77912-dual-display-cpu-adb-triage-20260713"],
       "forbidden_paths": ["domains/embedded/runbooks/embedded-linux-performance-triage-guide.md"]
     },
     {
@@ -171,7 +171,7 @@
     {
       "id": "broad-debug-guide",
       "query": "调试指南",
-      "expected_ids": ["pcr02-asan-debug-guide-project-local-20260624"]
+      "expected_ids": ["pcr02-valgrind-debug-guide-20260929", "pcr02-asan-debug-guide-project-local-20260624"]
     },
     {
       "id": "broad-pcr02-ota-current-first",

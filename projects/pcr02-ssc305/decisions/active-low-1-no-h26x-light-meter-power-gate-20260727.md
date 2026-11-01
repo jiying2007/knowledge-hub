@@ -10,10 +10,10 @@ status: reviewing
 owner: leiwenjun
 source:
   type: internal-project-doc
-  from: xcrz_sigmastar_demo_dev/DESIGN.md
+  from: gros/DESIGN.md
   source_sha256: a8991aebb1dfd71852d376b9a78abda659a25e237a21fd95412d54bbc3ac6cb8
-review_after: '2026-10-25'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -31,7 +31,7 @@ evidence_refs:
 - projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-27'
-updated_at: '2026-07-27'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -48,6 +48,10 @@ related:
 - projects/pcr02-ssc305/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+quality_flags:
+- review-overdue
+- repository-scope-needs-review
+- h26x-gate-contract-needs-reconciliation
 ---
 
 # HDI VI 组件化 Pipeline 与光敏策略设计

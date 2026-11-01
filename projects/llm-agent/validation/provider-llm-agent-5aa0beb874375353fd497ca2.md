@@ -5,6 +5,14 @@ related:
 - projects/llm-agent/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+subject_ref:
+  id: llm-agent
+  type: project
+created_subject_ref:
+  id: llm-agent
+  type: project
+principal_id: null
+provider_operation_id: 5aa0beb874375353fd497ca2fc89c7dac0c0cf2d3de3b4512fc4ccdd03929198
 id: provider-llm-agent-5aa0beb874375353fd497ca2
 title: M5源码完整性Git边界修复与独立验证
 kind: validation
@@ -20,7 +28,7 @@ source:
   source_sha256: 04998b4eadce0ea2956ef2c9f4c31cae416c9ea0a9259249bc4600c16cfdcb39
   temporary_source_retained: false
 review_after: '2027-01-09'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -48,12 +56,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: llm-agent
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 5aa0beb874375353fd497ca2fc89c7dac0c0cf2d3de3b4512fc4ccdd03929198
 ---
 
 # M5 执行来源修复验证记录

@@ -18,8 +18,8 @@ source:
   type: generated
   from: llm_agent-repository
   source_sha256: 2a14e7f304556f0037d805d5ffa7a2fb39cba20342239935fc10c79196315a46
-review_after: '2026-10-23'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,17 +36,20 @@ evidence_refs:
 - projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-23'
 manual_validation_pending: true
-summary_zh: 批准 spec-kit 作为 P1 observe-first active-reference；dry-run 通过，正式 apply 受 dirty workspace 门禁阻塞。
+summary_zh: 2026-07-23 spec-kit 登记决策时的历史检查点：dry-run 已通过，apply 当时受 dirty workspace 阻塞；同日后续实际登记与验证见关联后继记录，不代表当前仍阻塞。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+successor_refs:
+- projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md
+human_review_decision: defer
 ---
 
 # github/spec-kit 长期跟踪落地记录

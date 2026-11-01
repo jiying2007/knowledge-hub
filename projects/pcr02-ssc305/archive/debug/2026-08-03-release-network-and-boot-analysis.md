@@ -13,7 +13,7 @@ source:
   from: 2026-08-03 Codex session, sanitized serial timing evidence and local kernel/init script inspection
   source_sha256: 77fd31d5a87c0d4b93db18e984982f954737edd414615bdd4481137af9202588
 review_after: '2026-11-03'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none

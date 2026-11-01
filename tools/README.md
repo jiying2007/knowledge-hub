@@ -349,11 +349,11 @@ Obsidian 只是在同一份 canonical Markdown 之上的可选本地 workbench�
 
 ```bash
 # 新增一条知识
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/archive/debug/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/gros --owner <owner> --id <id> --path projects/gros/current/runbooks/<file>.md --manual-source-reason field-debug --manual-validation-pending --manual-validation-reason "offline note awaiting rtk validation"
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/gros --owner <owner> --id <id> --path projects/gros/current/runbooks/<file>.md --item-source-id pcr02-project-docs --item-source-path runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind debug-record --domain projects/gros --owner <owner> --id <id> --path projects/gros/archive/debug/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind external-source-note --domain codex --owner <owner> --id <id> --path artifacts/manifests/<file>.md
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path artifacts/worksheets/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind owner-decision-worksheet --domain projects/gros --owner <owner> --id <id> --path artifacts/worksheets/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind patent-disclosure --domain patents --owner <owner> --id <id> --path domains/patents/disclosures/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section all
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
@@ -435,7 +435,7 @@ rtk git rev-parse --short HEAD
 rtk git status --branch --short
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --json --limit 10
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "owner decision" --source knowledge-hub --json
-rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/xcrz-sigmastar-demo --kind project-current --status reviewing --json
+rtk bash ~/knowledge-hub/tools/knowledge-search.sh "ASAN" --domain projects/gros --kind project-current --status reviewing --json
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "diag" --source-id pcr02-project-docs --json
 rtk rg -n "PCR02|pcr02-project-docs|owner decision" ~/knowledge-hub/indexes/by-project.md ~/knowledge-hub/indexes/by-source.md ~/knowledge-hub/indexes/by-topic.md ~/knowledge-hub/indexes/by-decision.md ~/knowledge-hub/indexes/by-status.md
 ```
@@ -480,7 +480,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-projec
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>'
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-plan
 rtk bash ~/knowledge-hub/tools/knowledge-owner-gates.sh --source-id pcr02-project-docs --validate-forms '<owner-decisions.jsonl>' --landing-audit
-rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/xcrz-sigmastar-demo --owner <owner> --id <id> --path projects/xcrz-sigmastar-demo/current/runbooks/<file>.md
+rtk bash ~/knowledge-hub/tools/knowledge-new.sh --kind runbook --domain projects/gros --owner <owner> --id <id> --path projects/gros/current/runbooks/<file>.md
 rtk bash ~/knowledge-hub/tools/knowledge-regression.sh --json
 ```
 
@@ -591,6 +591,20 @@ metadata claim 不等于内容未发生漂移。
 用户明确授权 AI 辅助 review；这允许机器归类、逐条核对来源与生成修改建议，
 不构成人工签收、Active 晋升、设备实测、外部真实性或 GitHub 安全审批授权。
 复用原有 review-after / review-semantic / delegated-content-review 权限与状态合同。
+
+`knowledge-provider.sh maintain-content` 的维护请求可对指定非 active 项添加
+`redactions: [{"kind": "private-network-addresses", "occurrences": [...]}]`。
+每个 occurrence 绑定原正文中的字符偏移 `start/end` 与地址字面量的 `sha256`，
+仅将人工或受托 reviewer 确认的 RFC1918 IPv4 端点替换为设备地址占位符；
+不按点分数字自动推断端点，未指定的版本号与路径保持原样。
+来源说明、摘要或证据文本含同类端点时，可增加 `metadata_occurrences`，
+每项同时指定 `field` 和精确偏移/hash；仅允许 `source.from`、`summary_zh`、
+`evidence_refs.<index>`、`validation_refs.<index>` 展示文本。registry 与
+frontmatter 原值必须一致，来源类型和原 `source_sha256` 保持原样。
+该选项继续校验完整正文哈希及精确执行授权，不允许
+任意正文替换、日期续期、owner 变更或 active 内容修改；维护 manifest 只记录
+脱敏类型、数量和前后哈希，不复制原始地址。修改过正文的历史内容复核仍按
+既有版本绑定规则失效，不能把隐私清理当作新的人类签收。
 
 按 2026-10-17 主线登记元数据：总计 709，Active 17 / Reviewing 398 /
 Archived 288 / Draft 3 / Personal 2 / Rejected 1；Reviewing 中 391 条标记 AI 生成。

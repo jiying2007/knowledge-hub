@@ -49,7 +49,7 @@ def test_session_baseline_is_metadata_only_and_private(tmp_path):
     state = repo / ".tmp/tool-assets/session.json"
 
     payload = start_tool_asset_session(
-        repository_root(), repo, state, source_repo="xcrz-sigmastar-demo", session_id="session-one"
+        repository_root(), repo, state, source_repo="gros", session_id="session-one"
     )
     saved = json.loads(state.read_text(encoding="utf-8"))
 
@@ -69,7 +69,7 @@ def test_two_sessions_promote_local_observation_to_ready(tmp_path):
 
     state1 = repo / ".tmp/tool-assets/session-1.json"
     start_tool_asset_session(
-        repository_root(), repo, state1, source_repo="xcrz-sigmastar-demo", session_id="session-one"
+        repository_root(), repo, state1, source_repo="gros", session_id="session-one"
     )
     tool.write_text(TOOL_TEXT, encoding="utf-8")
     first = close_tool_asset_session(
@@ -87,7 +87,7 @@ def test_two_sessions_promote_local_observation_to_ready(tmp_path):
     _run(repo, "git", "commit", "-qm", "add helper")
     state2 = repo / ".tmp/tool-assets/session-2.json"
     start_tool_asset_session(
-        repository_root(), repo, state2, source_repo="xcrz-sigmastar-demo", session_id="session-two"
+        repository_root(), repo, state2, source_repo="gros", session_id="session-two"
     )
     second = close_tool_asset_session(
         repository_root(),
@@ -114,8 +114,8 @@ def test_three_sessions_across_projects_recommend_global_codex(tmp_path):
     ledger = tmp_path / "cross-project-observations.jsonl"
     signatures = []
     cases = (
-        ("repo-a", "xcrz-sigmastar-demo", "session-a"),
-        ("repo-b", "xcrz-sigmastar-demo", "session-b"),
+        ("repo-a", "gros", "session-a"),
+        ("repo-b", "gros", "session-b"),
         ("repo-c", "pcr02-ssc305", "session-c"),
     )
     last = None
@@ -154,7 +154,7 @@ def test_observation_ledger_is_idempotent_and_hash_chained(tmp_path):
     state = repo / ".tmp/tool-assets/session.json"
     ledger = tmp_path / "ledger.jsonl"
     start_tool_asset_session(
-        repository_root(), repo, state, source_repo="xcrz-sigmastar-demo", session_id="stable-session"
+        repository_root(), repo, state, source_repo="gros", session_id="stable-session"
     )
     tool = repo / "tools/session_helper.py"
     tool.parent.mkdir(parents=True)

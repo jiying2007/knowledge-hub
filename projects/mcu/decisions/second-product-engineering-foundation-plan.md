@@ -21,8 +21,8 @@ source:
   type: manual
   from: 本次用户需求和工作区只读审查，尚无已登记 source id
   source_sha256: 7ce01cdbf3966fc66fbc75c3898372a31cc330dbd363f561e64b2c16eadeb1ed
-review_after: '2026-10-24'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -39,7 +39,7 @@ evidence_refs:
 - projects/mcu/decisions/second-product-engineering-foundation-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-09-24'
-updated_at: '2026-09-24'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

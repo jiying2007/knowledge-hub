@@ -55,6 +55,48 @@ def _bound_cwd_route(root, cwd, routes, cwd_route):
     return cwd_route
 
 
+def _rank_registry_rows(registry_rows, terms, task_type, domain_refs, default_source_ids, route_selected, effective_limit):
+    ranked: List[Tuple[int, Mapping[str, Any], List[str]]] = []
+    by_path = {item.get('path'): item for item in registry_rows}
+    successor_scores: Dict[str, int] = {}
+    for old in registry_rows:
+        if (old.get('visibility') == 'personal-local' or str(old.get('path', '')).startswith('notes/personal/')
+                or old.get('domain') not in domain_refs):
+            continue
+        if old.get('searchable') is not False or not old.get('successor_refs'):
+            continue
+        text = (str(old.get('title', '')) + ' ' + str(old.get('summary_zh', ''))).lower()
+        if not any(term in text for term in terms):
+            continue
+        old_score, _ = _rank_item(dict(old, searchable=True), terms, task_type, domain_refs, default_source_ids, route_selected)
+        if old_score <= 0:
+            continue
+        pending, successor_seen = list(old['successor_refs']), set()
+        while pending:
+            path = pending.pop()
+            if path in successor_seen:
+                continue
+            successor_seen.add(path)
+            target = by_path.get(path)
+            if not target or target.get('domain') != old.get('domain'):
+                continue
+            if target.get('visibility') == 'personal-local' or str(target.get('path', '')).startswith('notes/personal/'):
+                continue
+            if target.get('searchable') is False:
+                pending.extend(target.get('successor_refs', []))
+            else:
+                successor_scores[target['id']] = max(successor_scores.get(target['id'], 0), old_score + 32)
+    for item in registry_rows:
+        score, reasons = _rank_item(item, terms, task_type, domain_refs, default_source_ids, route_selected)
+        if item.get('id') in successor_scores and score > 0:
+            score = max(score, successor_scores[item['id']])
+            reasons = ['successor-of-matched-historical-candidate'] + reasons
+        if score > 0:
+            ranked.append((score, item, reasons))
+    ranked.sort(key=lambda row: (-row[0], str(row[1].get("id", ""))))
+    return [_public_item(score, item, reasons) for score, item, reasons in ranked[:effective_limit]]
+
+
 def assemble_context(
     root: pathlib.Path,
     cwd: str,
@@ -197,13 +239,8 @@ def assemble_context(
     default_source_ids = set(str(value) for value in (best_route or {}).get("default_source_ids", []))
     routing_ready = time.monotonic()
     terms = query_terms(query)
-    ranked: List[Tuple[int, Mapping[str, Any], List[str]]] = []
-    for item in registry_items(root):
-        score, reasons = _rank_item(item, terms, task_type, domain_refs, default_source_ids, bool(best_route))
-        if score > 0:
-            ranked.append((score, item, reasons))
-    ranked.sort(key=lambda row: (-row[0], str(row[1].get("id", ""))))
-    ranked_rows = [_public_item(score, item, reasons) for score, item, reasons in ranked[:effective_limit]]
+    registry_rows = registry_items(root)
+    ranked_rows = _rank_registry_rows(registry_rows, terms, task_type, domain_refs, default_source_ids, bool(best_route), effective_limit)
     registry_rank_ready = time.monotonic()
 
     search_filters = SearchFilters(domains=sorted(domain_refs)) if domain_refs else SearchFilters()

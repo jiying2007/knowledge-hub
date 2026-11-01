@@ -19,8 +19,8 @@ source:
   from: PCR02 sensor/HDI working-tree diffs, Linux 5.10 PM source, bcmdhd.ko symbols and local build evidence captured 2026-07-24
   source_sha256: 70236024be933ffb7696d0e3bd4b7e1fceafe8d9f44a628936d1971ca850ed0c
   temporary_source_retained: false
-review_after: '2026-08-24'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -42,7 +42,7 @@ evidence_refs:
 - projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-24'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -54,6 +54,10 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- historical-source-route-drift
+- tcpka-conditionality-needs-reconciliation
+human_review_decision: defer
 ---
 
 # PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选

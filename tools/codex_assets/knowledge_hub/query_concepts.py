@@ -263,7 +263,7 @@ def extract_concepts(query: str, vocabulary: Mapping[str, int], document_count: 
     if len(vocabulary) > MAX_VOCABULARY:
         raise KnowledgeHubError('concept query vocabulary exceeds budget')
     tokens = TOKEN.findall(parsed_query)
-    natural = bool(re.search(r'[？?]|为什么|怎么|怎样|如何|是否|是不是|\b(?:how|what|why|can|should)\b', query, re.I)
+    natural = bool(re.search(r'[？?]|为什么|怎么|怎样|如何|是否|是不是|是什么|\b(?:how|what|why|can|should)\b', query, re.I)
                    or any(len(token) >= 8 and CJK.fullmatch(token) for token in tokens))
     if not natural:
         positive = tuple(name for name in limits.names if name in aliases)

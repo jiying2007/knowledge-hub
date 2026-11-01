@@ -7,8 +7,8 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
+review_after: '2026-11-14'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 tags:
 - hc32f072
@@ -35,6 +35,8 @@ aliases:
 related:
 - projects/hc32f072/README.md
 - indexes/project-readiness.md
+updated_at: '2026-10-31'
+content_review_status: pending
 ---
 
 # HC32F072 Firmware readiness validation

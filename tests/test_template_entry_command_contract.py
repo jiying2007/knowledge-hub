@@ -31,12 +31,14 @@ def test_removed_source_status_option_is_not_promised_as_supported():
     assert 'parser.add_argument("--source-status"' not in cli
 
 
-def test_active_review_identity_not_changed_by_cli_documentation():
+def test_active_template_remains_pending_after_authorized_cycle_change():
     doc = DOC.read_text(encoding="utf-8")
     frontmatter = doc.split("---", 2)[1]
     assert "id: knowledge-hub-zh-template-set-20260618" in frontmatter
     assert "status: active" in frontmatter
-    assert "review_status: human-reviewed-accepted" in frontmatter
-    assert "review_after: '2026-09-18'" in frontmatter
+    assert "review_status: periodic-review-scheduled-pending-content" in frontmatter
+    assert "review_after: '2026-11-07'" in frontmatter
+    assert "manual_validation_pending: true" in frontmatter
+    assert "content_review_status: accepted" in frontmatter
     assert "进入" in doc and "active" in doc
     assert "不会自动提升 active" in doc

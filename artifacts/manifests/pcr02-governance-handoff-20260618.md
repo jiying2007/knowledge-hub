@@ -8,7 +8,7 @@
 
 - Knowledge Hub 根目录：`~/knowledge-hub`
 - PCR02 source id：`pcr02-project-docs`
-- PCR02 docs source root：`~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`
+- PCR02 docs source root：`~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/gros/docs`
 - Target domain：`domains/projects/pcr02`
 - closeout 日期：`2026-06-18`
 - 已分类源文件总数：32

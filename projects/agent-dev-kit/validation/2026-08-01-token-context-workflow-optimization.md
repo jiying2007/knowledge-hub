@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK Token 与上下文工作流优化验证
+related:
+- projects/agent-dev-kit/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: agent-dev-kit-token-context-workflow-optimization-20260801
 title: ADK Token 与上下文工作流优化验证
 kind: validation
@@ -12,8 +18,8 @@ source:
   type: git-worktree
   from: agent-dev-kit change token-context-workflow-optimization-v1
   source_sha256: 2a39066750701dd4069ceb8041957cdad0c66aee2303f741174577c4eb0aa33e
-review_after: '2026-10-30'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -29,7 +35,7 @@ evidence_refs:
 - projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-01'
-updated_at: '2026-08-01'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -40,12 +46,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK Token 与上下文工作流优化验证
-related:
-- projects/agent-dev-kit/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # 验证证据：token-context-workflow-optimization-v1

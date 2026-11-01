@@ -7,8 +7,8 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
+review_after: '2026-11-14'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 tags:
 - knowledge-hub
@@ -36,6 +36,8 @@ aliases:
 related:
 - README.md
 - indexes/project-readiness.md
+updated_at: '2026-10-31'
+content_review_status: pending
 ---
 
 # Knowledge Hub 当前产品状态与证据缺口
@@ -436,7 +438,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-feedback.sh \
 | B1 普通内容复核 | `llm-agent-wechat-account-research-assessment-20260716`、`software-tool-artifact-restore-drill-20260716`、`llm-agent-exact-source-full-gate-audit-20260717`、`llm-agent-portable-full-gate-remediation-20260717` | 四条均缺 `human_reviewed_by / human_reviewed_at / review_basis`；正文 SHA256 依次为 `47b770cd7f6e6bb20024bd0113b89e65c3574243e112c6d200658eeeeb9e961f`、`4c6c43ad60dc150aa9da11165f388c60ddf00a374e281c09249742602508c96b`、`6b65d4f9c3a61f02c013320401d3ec3927f448e62071b1e0f33c7322278a0958`、`4660c78a574d0d1c011f10577f3d69a318838cc172dc2144966b0ae6726f6d20`；queue 4 | 真人按精确 ID、正文 hash 和边界填写 review queue form；可接受、退回或要求修订。泛化执行授权不是内容确认。 | `knowledge-index-plan.sh --section review-queue --queue-limit 0 --queue-forms-jsonl` |
 | B2 真实反馈 | 当前 retrieval interaction | usage 109、性能样本 12/17 和 P95 已满足门槛；feedback 仍为 0，要求至少 10，found rate 要求 ≥0.8 | 实际使用者在真实 search/context 后绑定 interaction ID 与真实 selected ID；not-found 不得填 selected ID。不得生成 synthetic feedback。 | `knowledge-metrics.sh --json` |
 | B3 已有发布、缺设备与回滚 | `pcr02-ssc305`、`gd32l235`、`hc32f072`、`mm32spin023c` | 4 个 `device_refs`、4 个真实目标/生产级 `rollback_ref` | 设备 owner 提供设备 ID、source commit、artifact SHA、环境、完整命令/退出码、结果、失败恢复和日志引用。 | project readiness + terminal gate |
-| B4 嵌入式全证据波次 | `xcrz-sigmastar-demo`、10 个 PCR02 模块/应用、`app-main`、`app-ota`、`app-product-test`、`app-tool` | 共 15 个 artifact、15 个 device、15 个 release、15 个 rollback；其中现有负向 build 不能改写成通过 | 各项目 owner/实验室/发布人生成可定位 artifact、目标设备 run、immutable release record 和同版本 rollback；先修复已记录的 SDK/header/schema/API/generator 缺口。 | evidence contract + source/设备复测 |
+| B4 嵌入式全证据波次 | `gros`、10 个 PCR02 模块/应用、`app-main`、`app-ota`、`app-product-test`、`app-tool` | 共 15 个 artifact、15 个 device、15 个 release、15 个 rollback；其中现有负向 build 不能改写成通过 | 各项目 owner/实验室/发布人生成可定位 artifact、目标设备 run、immutable release record 和同版本 rollback；先修复已记录的 SDK/header/schema/API/generator 缺口。 | evidence contract + source/设备复测 |
 | B5 软件发布波次 | `agent-dev-kit`、`firmware-release-tools`、`llm-agent` | 各缺 artifact/release/rollback；`firmware-toolchains` 缺 release/rollback；`llm-agent@150fdee` 的源码远端发布与当前主机远端恢复已闭环，但私有 submodule 零配置跨主机恢复仍未证明 | 发布 owner 绑定目标版本、正式制品 URI/SHA、发布记录与隔离恢复；`llm-agent` 还需固化私有 submodule bootstrap 并在另一台主机复验。 | `knowledge-final-gate.sh --final-profile product --json` |
 | B6 控制面/运行时 | `knowledge-hub`、`codex` | 各缺 release/rollback；Knowledge Hub 当前批次还需 committed HEAD restore | 本轮 S6 只能完成 Knowledge Hub 本地 commit/restore；Codex runtime 需独立 source-to-live release 与 rollback 证据。 | candidate/HEAD restore + product gate |
 | B7 Aggregate | `mcu` | `member_project_ids` 只有在成员全部 evidence-ready 后才闭环 | 不单独造 aggregate 证据；等待 MCU 成员真实 ready。 | project readiness evaluator |

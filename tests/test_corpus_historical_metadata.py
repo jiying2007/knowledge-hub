@@ -8,7 +8,7 @@ from tools.codex_assets.knowledge_hub.corpus_review import _document
 
 ITEM_ID = "pcr02-ds2-ai-shm-session-archive-20260710"
 BODY_PATH = (
-    "projects/xcrz-sigmastar-demo/archive/reports/"
+    "projects/gros/archive/reports/"
     "2026-07-10-pcr02-ds2-ai-shm-session-archive.md"
 )
 

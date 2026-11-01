@@ -21,7 +21,7 @@ source:
   from: 2026-07-20 至 2026-07-22 板端命令、串口日志摘要、本地源码与 Git 历史审计、IMSSV06C11 SDK 对照
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
 review_after: '2026-10-20'
-review_status: human-reviewed-accepted
+review_status: content-maintenance-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -60,6 +60,9 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
+human_review_decision: defer
 ---
 
 # PCR02 `/data` UBIFS 单页节点整体偏移 4 字节导致只读排障记录

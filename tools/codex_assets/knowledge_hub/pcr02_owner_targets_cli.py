@@ -16,7 +16,7 @@ args = parser.parse_args(argv)
 
 today = args.as_of or dt.date.today().isoformat()
 home = pathlib.Path.home()
-source_root = home / "work" / "sigmastar" / "pcr02_ssc305" / "SourceCode" / "sdk" / "verify" / "xcrz_sigmastar_demo" / "docs"
+source_root = home / "work" / "sigmastar" / "pcr02_ssc305" / "SourceCode" / "sdk" / "verify" / "gros" / "docs"
 landing_manifest_path = root / "artifacts" / "manifests" / "pcr02-project-docs-owner-decision-landing-20260623.jsonl"
 
 def load_landing_rows():
@@ -41,7 +41,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-003",
         "source_path": "runbooks/asan-debug-guide.md",
-        "target_path": "projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md",
+        "target_path": "projects/gros/current/runbooks/asan-debug-guide.md",
         "title": "PCR02 ASAN 调试指导",
         "status": "project-local-current",
         "boundary": "仅作为 PCR02 project-local runbook；不得整篇提升为团队级 ASAN 标准，团队层方法论必须另行重写和复核。",
@@ -50,7 +50,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-005",
         "source_path": "plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
-        "target_path": "projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
+        "target_path": "projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md",
         "title": "DVR 录像回放 proto/sensor 解耦设计与实施计划",
         "status": "archive-only",
         "boundary": "仅归档原计划；缺少 completed 证据，不声明完成，不作为 current baseline。",
@@ -59,7 +59,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-006",
         "source_path": "reports/2026-05-29-motor-mcu-debug-record.md",
-        "target_path": "projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md",
+        "target_path": "projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md",
         "title": "电机 MCU 调试详细记录",
         "status": "archive-only",
         "boundary": "仅归档调试记录；事实、反馈、推断、建议和 open items 未拆分前不得进入 validation/current。",
@@ -68,7 +68,7 @@ targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-007",
         "source_path": "reports/2026-06-16-dvr-record-replay-session-archive.md",
-        "target_path": "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md",
+        "target_path": "projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md",
         "title": "DVR 录像回放解耦会话归档",
         "status": "archive-only",
         "boundary": "仅归档 session archive；handoff、dirty-state 和 memory candidates 不进入 active facts，不写 memory。",
@@ -125,7 +125,7 @@ generated_at: {today}
 ## 来源
 
 - Hub source path: `sources/pcr02-project-docs`
-- Origin root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/xcrz_sigmastar_demo/docs`（retired provenance only）
+- Origin root: `~/work/sigmastar/pcr02_ssc305/SourceCode/sdk/verify/gros/docs`（retired provenance only）
 - Source path: `{item['source_path']}`
 - Source SHA256: `{source_hash}`
 - Owner decision: `{item['owner_decision']}`
@@ -181,4 +181,3 @@ else:
         print(f"{result['target_path']}: {action}")
 if blocked:
     sys.exit(1)
-

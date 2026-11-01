@@ -30,13 +30,13 @@
 | --- | --- | --- | --- |
 | `CARE-20260710-004` | `debug-notes/20260516-222503-windows-builder-runbook.md` | `9834e36cff48c76b3022f2957c612a140b0f11e19a84281d023139d455a26109` | 已迁移为 llm_tools Windows builder runbook；目标仍为 reviewing |
 | `CARE-20260710-005` | `release-governance/20260516-225144-llm-tools-release-governance-20260516.md` | `d67055f56fccc7b2210bd97b9a173f25291bbab872edfb06358a7d6349966a03` | 已迁移为 llm_tools release governance archive-only 历史记录 |
-| `CARE-20260710-006` | `research-notes/20260514-102409-dual-screen-animation-analysis.md` | `26631926204833ea84e3e8705521cc0020d169c4d6a40aba6d3488d859a2c6a3` | 已迁移为 xcrz_sigmastar_demo historical code analysis |
+| `CARE-20260710-006` | `research-notes/20260514-102409-dual-screen-animation-analysis.md` | `26631926204833ea84e3e8705521cc0020d169c4d6a40aba6d3488d859a2c6a3` | 已迁移为 gros historical code analysis |
 
 ## 保留边界
 
 - `llm-tools-windows-builder-runbook-20260709` 仍是 `reviewing`，未基于当前 `llm_tools` 源仓重新验证，不声明 active/current verified。
 - `llm-tools-release-governance-archive-20260516` 仍是 `archive-only` 历史记录，不声明当前发布基线。
-- `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514` 仍是 historical code snapshot，不代表当前源码事实。
+- `gros-dual-screen-animation-analysis-20260514` 仍是 historical code snapshot，不代表当前源码事实。
 - 旧正文的 source path、source hash、size、迁移目标、rollback 和授权记录保留在本 manifest、`codex-archive-migration-preflight-20260709.jsonl`、`codex-archive-removal-preflight-20260710.jsonl` 和 `codex-archive-phased-migration-removal-20260709.jsonl`。
 
 ## 回滚

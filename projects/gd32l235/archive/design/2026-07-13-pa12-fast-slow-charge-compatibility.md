@@ -12,9 +12,9 @@ source:
   type: codex-session-summary
   from: local Codex session on 2026-07-13 for GD32L235 PA12 fast/slow charge requirement
   source_sha256: 305a608c1911aebcee01ce4cabda50007d4abbc6a53873a57cd44bac2376b5aa
-review_after: '2026-08-13'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -32,7 +32,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-13'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

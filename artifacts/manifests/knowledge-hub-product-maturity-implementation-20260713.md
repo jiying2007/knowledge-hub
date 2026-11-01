@@ -12,9 +12,9 @@ source:
   type: generated
   from: current-session Knowledge Hub product maturity implementation
   source_sha256: 4431af7ccf7ef0c5e5d27cda521b718582b2259d2b2587bde4b842489b249cc9
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -41,7 +41,7 @@ evidence_refs:
 - rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --final-profile product --regression-suite full --as-of 2026-07-13
   --json
 created_at: '2026-07-13'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

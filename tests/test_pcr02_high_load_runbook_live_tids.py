@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RUNBOOK = (
     ROOT
-    / "projects/xcrz-sigmastar-demo/current/runbooks/"
+    / "projects/gros/current/runbooks/"
     "prog-pcr02-high-load-debug.md"
 )
 

@@ -37,9 +37,9 @@ owner: leiwenjun
 source:
   type: manual
   from: Codex analysis of PCR02 ST77912 dual LCD SPI clock/FPS tradeoff
-review_after: '2026-10-11'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; owner accepted 36MHz stable baseline and higher clocks as validation-only; high-temperature, SCLK/EMI,
@@ -69,7 +69,7 @@ evidence_refs:
 - SourceCode/kernel/drivers/sstar/mspi/iford/hal_mspireg.h
 - SourceCode/kernel/drivers/staging/fbtft/fbtft-core.c
 created_at: '2026-07-11'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -82,6 +82,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 ST77912 双屏 SPI 时钟与 FPS 取舍决策候选
@@ -254,7 +256,7 @@ fbtft fps = 25
 
 ### 2. Source 与制品身份
 
-- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、分支、dirty 状态，以及实际使用的 kernel/DTS/config commit。
+- 记录 remote key `airobot/gros`、source commit、分支、dirty 状态，以及实际使用的 kernel/DTS/config commit。
 - 记录可复现构建入口、返回码、构建环境版本和 `uImage`/DTB/rootfs 或目标升级包 SHA256；不得只引用工作区目录或会话结论。
 - 将 36MHz、40/43MHz、54MHz 三档配置 diff 与制品一一对应；无法从当前 commit 重建的制品不得进入设备矩阵。
 

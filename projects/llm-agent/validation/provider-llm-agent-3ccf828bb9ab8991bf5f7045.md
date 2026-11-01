@@ -5,6 +5,14 @@ related:
 - projects/llm-agent/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+subject_ref:
+  id: llm-agent
+  type: project
+created_subject_ref:
+  id: llm-agent
+  type: project
+principal_id: null
+provider_operation_id: 3ccf828bb9ab8991bf5f7045c7cf6297954bf9a63ec93f3cc1af5e69d7d7b9ac
 id: provider-llm-agent-3ccf828bb9ab8991bf5f7045
 title: M5当前main真实签名CI核验
 kind: validation
@@ -20,7 +28,7 @@ source:
   source_sha256: 9abcf934f2a549084996e325b8498fc52f775e9bbedb1df8244c4a67f6b27ed8
   temporary_source_retained: false
 review_after: '2027-01-09'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,12 +55,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: llm-agent
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 3ccf828bb9ab8991bf5f7045c7cf6297954bf9a63ec93f3cc1af5e69d7d7b9ac
 ---
 
 # M5 当前 main 真实签名 CI 核验

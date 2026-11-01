@@ -13,8 +13,8 @@ source:
   from: 2026-07-31 user question, workspace://gd32l235 current master code review, and existing 2026-07-20 debug archive
   source_sha256: aa43c5252d2711c4dcf87792d9298716d758c02ecc9a43558a90e2991713cc5d
   temporary_source_retained: false
-review_after: '2026-08-31'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +34,7 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-31'
-updated_at: '2026-07-31'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

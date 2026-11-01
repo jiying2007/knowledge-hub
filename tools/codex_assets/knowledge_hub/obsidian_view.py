@@ -336,6 +336,53 @@ def _add_text(transaction: RepositoryTransaction, root: pathlib.Path, path: str,
     transaction.add_text(path, content, expected_sha256=file_sha256(target) if target.exists() else "")
 
 
+def _stage_readiness_projection(root, transaction, projects):
+    readiness_path = 'indexes/project-readiness.md'
+    if ((root / readiness_path).is_file() and projects
+            and all({'id', 'name', 'entry', 'validation'} <= set(project) for project in projects)):
+        from .project_readiness import _readiness_index, _project_paths
+        _add_text(transaction, root, readiness_path,
+                  _readiness_index(projects, {project['id']: _project_paths(project) for project in projects}))
+
+
+def _stage_navigation_views(root, transaction, projects, managed, item_rows):
+    _add_text(transaction, root, "indexes/obsidian/projects.md", _projects_moc(projects))
+    _add_text(transaction, root, "indexes/obsidian/topics.md", _topics_moc(managed))
+    _add_text(transaction, root, "indexes/obsidian/catalog.md", _catalog_moc(item_rows))
+    home_relative = "indexes/obsidian-home.md"
+    home_path = root / home_relative
+    home_text = (
+        read_repository_utf8_bounded(
+            root,
+            home_relative,
+            OBSIDIAN_MAX_FILE_BYTES,
+            "Obsidian home Markdown",
+        )
+        if home_path.exists()
+        else "# Knowledge Hub Obsidian Home\n"
+    )
+    _add_text(
+        transaction,
+        root,
+        home_relative,
+        _home_with_views(home_text),
+    )
+    for path, content in BASE_FILES.items():
+        _add_text(transaction, root, path, content)
+
+
+def _property_coverage(property_counts, managed):
+    required = (*CONTENT_FIELDS, *LIFECYCLE_FIELDS, "aliases", "related")
+    return {
+        field: {
+            "declared_count": property_counts[field],
+            "expected_count": len(managed),
+            "coverage_percent": round(property_counts[field] * 100.0 / len(managed), 2) if managed else 100.0,
+        }
+        for field in required
+    }
+
+
 def stage_obsidian_views(
     root: pathlib.Path,
     transaction: RepositoryTransaction,
@@ -349,6 +396,7 @@ def stage_obsidian_views(
     item_rows = [dict(item) for item in (items if items is not None else registry_items(root))]
     overrides = dict(document_overrides or {})
     projects = list((load_json(root / "registry/projects.json", {}) or {}).get("projects", []))
+    _stage_readiness_projection(root, transaction, projects)
     managed = [item for item in item_rows if is_managed_markdown(item)]
     missing_files: List[str] = []
     content_drifts: List[Dict[str, Any]] = []
@@ -369,6 +417,7 @@ def stage_obsidian_views(
             "Obsidian managed Markdown",
         )
         metadata, body = split_frontmatter(source_text)
+        original_metadata, _ = split_frontmatter(source_text)
         had_frontmatter = bool(metadata)
         for field in CONTENT_FIELDS:
             if field in metadata and metadata[field] != item.get(field):
@@ -394,50 +443,22 @@ def stage_obsidian_views(
         for field in (*CONTENT_FIELDS, *LIFECYCLE_FIELDS, "aliases", "related"):
             if metadata.get(field) not in (None, "", []):
                 property_counts[field] += 1
-        rendered[path] = render_markdown(metadata, body if had_frontmatter else source_text)
+        # Preserve proven bytes when only the YAML serializer's wrapping would
+        # change. An unchanged projection must not invalidate Provider proofs.
+        rendered[path] = (source_text if had_frontmatter and metadata == original_metadata
+                          else render_markdown(metadata, body if had_frontmatter else source_text))
 
     for path, content in rendered.items():
         _add_text(transaction, root, path, content)
     if content_reconciliations:
         _add_text(transaction, root, "registry/items.jsonl", encode_jsonl(item_rows))
-    _add_text(transaction, root, "indexes/obsidian/projects.md", _projects_moc(projects))
-    _add_text(transaction, root, "indexes/obsidian/topics.md", _topics_moc(managed))
-    _add_text(transaction, root, "indexes/obsidian/catalog.md", _catalog_moc(item_rows))
-    home_relative = "indexes/obsidian-home.md"
-    home_path = root / home_relative
-    home_text = (
-        read_repository_utf8_bounded(
-            root,
-            home_relative,
-            OBSIDIAN_MAX_FILE_BYTES,
-            "Obsidian home Markdown",
-        )
-        if home_path.exists()
-        else "# Knowledge Hub Obsidian Home\n"
-    )
-    _add_text(
-        transaction,
-        root,
-        home_relative,
-        _home_with_views(home_text),
-    )
-    for path, content in BASE_FILES.items():
-        _add_text(transaction, root, path, content)
-    required = (*CONTENT_FIELDS, *LIFECYCLE_FIELDS, "aliases", "related")
-    coverage = {
-        field: {
-            "declared_count": property_counts[field],
-            "expected_count": len(managed),
-            "coverage_percent": round(property_counts[field] * 100.0 / len(managed), 2) if managed else 100.0,
-        }
-        for field in required
-    }
+    _stage_navigation_views(root, transaction, projects, managed, item_rows)
     return {
         "managed": managed,
         "missing_files": missing_files,
         "content_drifts": content_drifts,
         "content_reconciliations": content_reconciliations,
-        "coverage": coverage,
+        "coverage": _property_coverage(property_counts, managed),
     }
 
 

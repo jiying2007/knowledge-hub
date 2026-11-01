@@ -23,7 +23,7 @@ def test_history_notice_links_originals_without_rewriting_project_identity():
         "manifests/knowledge-hub-manual-recovery-boundary-hardening-20260621.md",
         "manifests/knowledge-hub-recovery-search-manual-hardening-20260622.md",
         "../tools/README.md", "domains/projects/pcr02/",
-        "projects/pcr02-ssc305/", "projects/xcrz-sigmastar-demo/",
+        "projects/pcr02-ssc305/", "projects/gros/",
         "不是可互换命名空间", "不做一对一全局路径替换",
     ):
         assert value in doc

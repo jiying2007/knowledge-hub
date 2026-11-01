@@ -9,7 +9,7 @@
 - Final disposition: `runtime-input-reference-only`
 - Source strategy: `runtime-input-index-primary`
 - Owner: `leiwenjun`
-- Review after: `2026-09-24`
+- Review after: `2026-11-30`
 
 ## Hub 管理方式
 
@@ -31,3 +31,7 @@ session index 只说明历史记录位置，不替代项目事实验证。
 - 清单：`sources/codex-session-index/inventory.jsonl`
 - 覆盖：`sources/codex-session-index/coverage.md`
 - 策略：`sources/codex-session-index/source-policy.md`
+
+## 本次登记契约复核
+
+2026-10-31 由 Codex 核验登记控制面及只读策略；不复核原始输入正文、不代表 owner 签收。证据：`governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md`。

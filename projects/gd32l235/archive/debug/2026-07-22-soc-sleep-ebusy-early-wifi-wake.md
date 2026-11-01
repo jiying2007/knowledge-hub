@@ -16,8 +16,8 @@ source:
   type: source-project-debug-note
   from: workspace://gd32l235/Docs/SOC休眠异常初步排查记录-20260722.md
   source_sha256: 8cc7f2455c9b4328dfcafca6f28e8efddf4b741c3e974ded9a6fa360b7409c2f
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -47,6 +47,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # SOC 休眠异常初步排查记录（2026-07-22）

@@ -17,8 +17,8 @@ source:
   type: source-project-design-document
   from: workspace://gd32l235/Docs/PA11关机禁止充电与SOC上电禁止设计.md
   source_sha256: a55b6c43ee09f2f0eac5ea8ea9a563467aa4b94f59ad495869835f37addc2a5e
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex
@@ -47,6 +47,13 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+successor_refs:
+- projects/gros/archive/reports/2026-07-30-pcr02-deep-sleep-pa8-long-pulse.md
+- projects/gd32l235/archive/debug/2026-08-03-power-key-exit-restart-convergence.md
+quality_flags:
+- obsolete-compatibility-draft
+searchable: false
+human_review_decision: defer
 ---
 
 # PA11 关机禁止充电与 SOC 上电禁止设计

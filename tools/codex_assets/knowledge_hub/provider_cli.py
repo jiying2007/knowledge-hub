@@ -62,6 +62,19 @@ class ProviderParser(argparse.ArgumentParser):
                 "required": ["nonempty body", "--title or frontmatter title or H1", "--sanitized"],
                 "ownership": "subject, kind, owner and status are assigned by Provider; do not copy project frontmatter",
                 "repair": "create a separate sanitized conclusion; keep the original engineering record unchanged",
+                "metadata_revision": "--item-id and --expected-before-sha256 revise a reviewing candidate's descriptive metadata only; body and identity must match",
+            }
+        if operation == "maintain-content":
+            details['source_contract'] = {
+                'generic': 'schema_version=1; exact metadata/path maintenance; explicit active edits and review dates forbidden',
+                'source_links': 'link_repairs accepts hash-bound complete Markdown links to missing local targets only; replace with explicit unmapped source pointers, never invent a Hub document',
+                'execution_authorization': 'knowledge-content-maintenance-authorization/v1 records an exact execution grant only; maintenance apply independently checks it',
+                'request_renewal': '--renewal-request-file explicitly supplies a current native user continuation to renew execution-request provenance only; default expiry and owner gates remain unchanged',
+                'owner_cycle': 'schema_version=knowledge-owner-cycle-application/v1; confirmed proposal plus separate explicit owner statements; cycle-only, never content approval',
+                'owner_cycle_authorization': 'schema_version=knowledge-owner-cycle-authorization/v1 records only a separately scoped execution authorization; application requires its active --authorization-id',
+                'owner_cycle_boundaries': 'exact archived packet/hash/token, actual user-declared identity and owner scope, before/after hashes; pending required; preserve body/owner/status/source; prior bound review defers',
+                'execution': '--declaration-file authenticates the original execution request only; it does not authenticate the newer owner decision; --expected-content-sha256 binds the dry-run transaction',
+                'recovery': 'unknown results require manifest/journal reconciliation; never blindly replay an applied before-state',
             }
         print(json.dumps({"schema_version": "knowledge-provider.help/v4", "status": "HELP",
                           "operation": operation, "read_only": True, "persisted": False,
@@ -74,17 +87,20 @@ class ProviderParser(argparse.ArgumentParser):
 
 def parser():
     p = ProviderParser(description="Knowledge Provider v4: explicit subjects and candidate-only operations.", allow_abbrev=False)
-    p.add_argument("operation", choices=("status", "resolve", "grant", "register", "bind", "archive", "assign", "reconcile", "context", "capture-source"))
+    p.add_argument("operation", choices=("status", "resolve", "grant", "register", "register-repository", "bind", "archive", "assign", "reconcile", "context", "capture-source", "migrate-project", "maintain-content"))
     p.add_argument("--root", default="")
     p.add_argument("--cwd", default=os.environ.get("KNOWLEDGE_PROVIDER_CALLER_CWD", str(pathlib.Path.cwd())))
     p.add_argument("--project", default="")
     p.add_argument("--name", default="")
+    p.add_argument("--repository-id", default="")
+    p.add_argument("--remote-url", default="")
     p.add_argument("--workspace", default="")
     p.add_argument("--path", default="")
     p.add_argument("--coverage", choices=("exact-root", "subtree"), default="subtree")
     p.add_argument("--expected-generation", type=int, default=0)
     p.add_argument("--authorization-id", default="")
     p.add_argument("--declaration-file", default="")
+    p.add_argument("--renewal-request-file", default="")
     p.add_argument("--grant-action", choices=("register", "bind", "archive", "assign"), default="register")
     p.add_argument("--subject", default="")
     p.add_argument("--from-subject", default="")
@@ -100,6 +116,7 @@ def parser():
     p.add_argument("--item-id", default="")
     p.add_argument("--operation-id", default="")
     p.add_argument("--expected-content-sha256", default="")
+    p.add_argument("--expected-before-sha256", default="")
     p.add_argument("--query", default="")
     p.add_argument("--execution-project", default="")
     p.add_argument("--retrieval-project", action="append", default=[])
@@ -157,11 +174,14 @@ def capture_source(args):
 
 PUBLIC_COMMON_FIELDS = {"cwd", "json", "summary_json", "operation", "dry_run", "help"}
 OPERATION_FIELDS = {
+        "maintain-content": {"source", "declaration_file", "renewal_request_file", "authorization_id", "expected_content_sha256", "apply"},
+        "migrate-project": {"from_subject", "project", "remote_url", "declaration_file", "expected_content_sha256", "authorization_id", "apply"},
         "status": set(), "resolve": set(),
         "register": {"project", "name", "declaration_file", "authorization_id", "apply"},
+        "register-repository": {"project", "repository_id", "remote_url", "authorization_id", "apply"},
         "bind": {"workspace", "path", "coverage", "expected_generation", "authorization_id", "apply"},
-        "grant": {"grant_action", "project", "name", "declaration_file", "workspace", "path", "coverage", "expected_generation", "subject", "from_subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "source", "provenance_file", "kind", "title", "sanitized", "apply"},
-        "archive": {"subject", "source", "provenance_file", "kind", "title", "sanitized", "declared_scope", "authorization_id", "expected_content_sha256", "apply"},
+        "grant": {"grant_action", "project", "name", "repository_id", "remote_url", "declaration_file", "workspace", "path", "coverage", "expected_generation", "subject", "from_subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "source", "provenance_file", "kind", "title", "sanitized", "apply"},
+        "archive": {"subject", "source", "provenance_file", "kind", "title", "sanitized", "declared_scope", "authorization_id", "expected_content_sha256", "item_id", "expected_before_sha256", "apply"},
         "assign": {"subject", "from_subject", "item_id", "expected_content_sha256", "authorization_id", "declared_scope", "apply"},
         "reconcile": {"operation_id", "expected_content_sha256"},
         "capture-source": {"file"},
@@ -190,6 +210,12 @@ def run(root, args):
     if args.operation == "status":
         from .provider_capabilities import capabilities
         return capabilities(root)
+    if args.operation == "maintain-content":
+        from .provider_maintenance import maintain
+        return maintain(root, args)
+    if args.operation == "migrate-project":
+        from .project_migration import migrate
+        return migrate(root, args)
     if args.operation == "resolve":
         from .provider_onboarding import resolve_workspace
         with read_guard(root):
@@ -199,6 +225,9 @@ def run(root, args):
     if args.operation == "register":
         from .provider_onboarding import register_project
         return register_project(root, args.project, args.name, args.declaration_file, args.authorization_id, args.apply)
+    if args.operation == "register-repository":
+        from .provider_repositories import registration
+        return registration(root, args.project, args.repository_id, args.remote_url, args.authorization_id, args.apply)
     if args.operation == "grant":
         from .provider_grants import issue_grant
         return issue_grant(root, args)

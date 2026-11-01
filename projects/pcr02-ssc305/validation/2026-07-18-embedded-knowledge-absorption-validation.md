@@ -1,6 +1,6 @@
 ---
 related:
-- projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md
+- projects/gros/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md
 - sources/embedded-knowledge/coverage.md
 - sources/pcr02-project-knowledge/coverage.md
 target_version: cadbf4d6777319c8d43b15f842cbea002cd94cef
@@ -20,8 +20,8 @@ source:
   type: source-absorption
   from: source://embedded-knowledge
   source_sha256: e09afd5d842d6f41af37e1c6d57e621a308a32c412ec7f511765f018b06b0901
-review_after: '2026-10-18'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -45,7 +45,7 @@ evidence_refs:
 - artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl
 - artifacts/manifests/pcr02-ssc305-source-absorption-raw-evidence-20260718.md
 created_at: '2026-07-18'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: extracted
 ai_model_or_tool: Codex
@@ -57,6 +57,9 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 SSC305 方法与工具来源吸收验证

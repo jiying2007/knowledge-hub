@@ -21,8 +21,8 @@ source:
   type: design-review-and-working-tree-inspection
   from: GD32L235 charge-temperature design review and working-tree inspection, 2026-08-18
   source_sha256: b1ff320e9008ca27bb58074b138ce3df6524bbe5b4f7d787bf45be18c045d6e2
-review_after: '2026-09-18'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -41,7 +41,7 @@ evidence_refs:
 - projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-18'
-updated_at: '2026-08-18'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

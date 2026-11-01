@@ -1,6 +1,6 @@
 # PCR02 SSC305 工程历史归档
 
-本目录保存 `pcr02-ssc305` 平台工程历史语料。新增材料应按 SDK、启动链、OTA、存储、硬件或平台验证主题写入 `projects/pcr02-ssc305/archive/engineering-archive/pcr02/`；应用侧材料进入 `projects/xcrz-sigmastar-demo/archive/`。
+本目录保存 `pcr02-ssc305` 平台工程历史语料。新增材料应按 SDK、启动链、OTA、存储、硬件或平台验证主题写入 `projects/pcr02-ssc305/archive/engineering-archive/pcr02/`；应用侧材料进入 `projects/gros/archive/`。
 
 ## Structure
 

@@ -16,8 +16,8 @@ owner: leiwenjun
 source:
   type: user-provided-local-pdf-derived-text
   from: workspace://mcu
-review_after: '2026-10-20'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -43,7 +43,7 @@ evidence_refs:
 - projects/gd32l235/archive/reference/cw2217baad-datasheet-text.txt
 - projects/gd32l235/archive/reference/cxy18650-2s-7v4-2500mah-approval-20260622-text.txt
 created_at: '2026-07-20'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: extracted
 ai_model_or_tool: Codex and pdftotext
@@ -55,6 +55,7 @@ primary_language: zh-CN
 source_language: mixed
 translation_status: source-language-preserved
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # GD32L235 充电链三份 PDF 派生全文索引

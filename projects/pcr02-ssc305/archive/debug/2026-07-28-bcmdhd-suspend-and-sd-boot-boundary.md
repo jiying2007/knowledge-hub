@@ -13,8 +13,8 @@ source:
   from: 2026-07-28 Codex session, local Git/source inspection, sanitized serial evidence and build artifact inspection
   source_sha256: 048287ddcad07ac7183f26992e00995cb6ed7ddf40a96c4fdcc7e82f6469f9ff
   temporary_source_retained: false
-review_after: '2026-10-28'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +34,7 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/debug/2026-07-28-bcmdhd-suspend-and-sd-boot-boundary.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-28'
-updated_at: '2026-07-28'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -45,6 +45,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 BCMDHD suspend 竞态与可启动 SD 边界

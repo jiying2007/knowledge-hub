@@ -5,8 +5,8 @@ maturity: verified
 created: 2026-07-10
 last_updated: 2026-07-13
 related:
-- projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md
-- projects/xcrz-sigmastar-demo/current/runbooks/project-debug-tools-guide.md
+- projects/gros/archive/historical-current/runbooks/project-build-and-deploy-guide.md
+- projects/gros/archive/historical-current/runbooks/project-debug-tools-guide.md
 aliases:
 - PCR02 SSC305 第三方库编译优化基线
 id: pcr02-thirdparty-build-optimization-baseline-20260710
@@ -21,8 +21,8 @@ owner: team-core
 source:
   type: manual
   from: SigmaStar documentation and PCR02 source build-rule analysis
-review_after: '2026-10-13'
-review_status: manual-entry-pending-owner-and-source-project-validation
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: verified
 promotion: none
@@ -46,16 +46,19 @@ evidence_refs:
 - projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md
 - sigdoc/customer/DualOS/EnvironmentSetup/Environmentsetup_zh.html
 - sigdoc/customer/Common/Development/alkaid_defconfig_zh.html
-- workspace://xcrz-sigmastar-demo/3rdparty/build/build_sh/common/env.sh
-- workspace://xcrz-sigmastar-demo/build/compile.mk
+- workspace://gros/3rdparty/build/build_sh/common/env.sh
+- workspace://gros/build/compile.mk
 created_at: '2026-07-10'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 summary_zh: 记录 PCR02/SSC305 第三方库交叉编译、ARMv7-A/NEON/hard-float 优化和接入边界；当前仅作为 source-derived reviewing 基线，仍需项目 owner 复核并在目标构建环境验证，不表示
   active 标准或发布验收完成。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
+manual_validation_pending: true
 ---
 
 # PCR02 SSC305 第三方库编译优化基线

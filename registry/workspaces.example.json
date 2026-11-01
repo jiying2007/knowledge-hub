@@ -9,10 +9,10 @@
       "repo_id": "pcr02-ssc305"
     },
     {
-      "workspace_ref": "workspace://xcrz-sigmastar-demo",
-      "env": "XCRZ_SIGMASTAR_DEMO_HOME",
-      "path_example": "$XCRZ_SIGMASTAR_DEMO_HOME",
-      "repo_id": "xcrz-sigmastar-demo"
+      "workspace_ref": "workspace://gros",
+      "env": "GROS_HOME",
+      "path_example": "$GROS_HOME",
+      "repo_id": "gros"
     },
     {
       "workspace_ref": "workspace://mcu-root",

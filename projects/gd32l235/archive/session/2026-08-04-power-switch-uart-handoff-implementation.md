@@ -10,11 +10,11 @@ status: reviewing
 owner: leiwenjun
 source:
   type: source-project-session-summary
-  from: workspace://gd32l235 + workspace://xcrz_sigmastar_demo implementation and verification
+  from: workspace://gd32l235 + workspace://gros implementation and verification
   source_sha256: 913e549d65e3415b1317800e16fe3ad08e0738df055c6a519b52ddb4ff3a2435
   temporary_source_retained: false
-review_after: '2026-10-04'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -32,7 +32,7 @@ evidence_refs:
 - projects/gd32l235/archive/session/2026-08-04-power-switch-uart-handoff-implementation.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-04'
-updated_at: '2026-08-04'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

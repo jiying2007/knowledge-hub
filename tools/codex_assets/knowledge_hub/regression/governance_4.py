@@ -113,14 +113,14 @@ def test_source_control_raw_copy_body_gate():
 
 def test_owner_target_existence_gate():
     repo = copy_repo("owner-target-existence-gate")
-    target_path = repo / "projects" / "xcrz-sigmastar-demo" / "current" / "runbooks" / "asan-debug-guide.md"
+    target_path = repo / "projects" / "gros" / "current" / "runbooks" / "asan-debug-guide.md"
     if target_path.exists():
         target_path.unlink()
     result = run_cmd(repo, ["rtk", "bash", "tools/knowledge-check.sh", "--dry-run", "--json", "--diagnostics"])
     combined = result["stdout"] + result["stderr"]
     expect(
         result["exit_code"] != 0
-        and "owner-target:pcr02-owner-decision-worksheet-003 target path missing: projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md" in combined,
+        and "owner-target:pcr02-owner-decision-worksheet-003 target path missing: projects/gros/current/runbooks/asan-debug-guide.md" in combined,
         "owner-target-existence-gate",
         "knowledge-check rejects missing owner decision landing target documents",
         {"exit_code": result["exit_code"], "stderr": result["stderr"][:500], "stdout": result["stdout"][:1000]},
@@ -243,7 +243,7 @@ def test_review_after_near_due_json_contract():
         and groups.get("by_owner", {}).get("leiwenjun", {}).get("count") == 4
         and groups.get("by_status", {}).get("reviewing", {}).get("count") == 13
         and groups.get("by_status", {}).get("archived", {}).get("count") == 14
-        and groups.get("by_domain", {}).get("projects/xcrz-sigmastar-demo", {}).get("count") == 22
+        and groups.get("by_domain", {}).get("projects/gros", {}).get("count") == 22
         and groups.get("by_domain", {}).get("projects/pcr02-ssc305", {}).get("count") == 5
         and groups.get("by_source_id", {}).get("pcr02-project-docs", {}).get("count") == 23
         and groups.get("by_source_id", {}).get("<missing-source-id>", {}).get("count") == 4
@@ -371,7 +371,7 @@ def test_review_after_as_of_deterministic():
     body_path = (
         repo
         / "projects"
-        / "xcrz-sigmastar-demo"
+        / "gros"
         / "decisions"
         / "camera-raw-preview-virtual-stream-architecture-20260711.md"
     )
@@ -477,7 +477,7 @@ def test_stale_review_after_warning_surface():
     body_path = (
         repo
         / "projects"
-        / "xcrz-sigmastar-demo"
+        / "gros"
         / "decisions"
         / "camera-raw-preview-virtual-stream-architecture-20260711.md"
     )
@@ -617,7 +617,7 @@ def test_embedded_asan_methodology_deprojectized():
         and not banned_hits
         and not missing_required
         and "status: active" in text
-        and "projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md" in text,
+        and "projects/gros/current/runbooks/asan-debug-guide.md" in text,
         "embedded-asan-methodology-deprojectized",
         "team-level ASAN methodology stays deprojectized with active runbook boundaries",
         {

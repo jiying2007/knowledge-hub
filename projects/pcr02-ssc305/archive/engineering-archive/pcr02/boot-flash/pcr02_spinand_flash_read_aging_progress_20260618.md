@@ -68,7 +68,7 @@ The whole 16-bit register value can contain non-drive bits. Do not require the w
 
 There are useful but not-yet-committed aging aids in the worktree:
 
-- `SourceCode/sdk/verify/xcrz_sigmastar_demo/daemon/daemon_main.c`
+- `SourceCode/sdk/verify/gros/daemon/daemon_main.c`
   - Records abnormal App exits under `/data/daemon_fault`.
   - Counts App signal 7, signal 11, total App faults, and dmesg flash-read evidence.
   - Dumps a bounded dmesg tail to `/data/daemon_fault/app_fault_dmesg.log` when App signal or flash-read evidence is detected.
